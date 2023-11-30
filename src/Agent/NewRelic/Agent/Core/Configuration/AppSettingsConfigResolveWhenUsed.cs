@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Configuration
                 }
                 else
                 {
-                    if (key.Equals("NewRelic.LicenseKey"))
+                    if (key.Equals(Constants.AppSettingsLicenseKey))
                     {
                         value = Strings.ObfuscateLicenseKey(value);
                     }

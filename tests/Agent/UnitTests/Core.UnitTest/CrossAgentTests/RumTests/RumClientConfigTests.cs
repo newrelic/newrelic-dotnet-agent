@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _localConfig.crossApplicationTracingEnabled = true;
             _localConfig.attributes.enabled = true;
             _localConfig.service.licenseKey = testCase.LicenseKey;
-            _localConfig.appSettings.Add(new configurationAdd() { key = "NewRelic.LicenseKey", value = testCase.LicenseKey });
+            _localConfig.appSettings.Add(new configurationAdd() { key = Constants.AppSettingsLicenseKey, value = testCase.LicenseKey });
             _serverConfig.RumSettingsJavaScriptAgentLoader = "JSAGENT";
             _serverConfig.RumSettingsJavaScriptAgentFile = testCase.ConnectReply.JsAgentFile;
             _serverConfig.RumSettingsBeacon = testCase.ConnectReply.Beacon;

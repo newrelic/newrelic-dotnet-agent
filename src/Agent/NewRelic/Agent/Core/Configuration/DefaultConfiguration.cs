@@ -198,7 +198,7 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     lock (_lockObj)
                     {
-                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"),
+                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled),
                             out _appSettingAgentEnabled);
                     }
                 }
@@ -216,7 +216,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (_agentLicenseKey != null)
                     return _agentLicenseKey;
 
-                _agentLicenseKey = _configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey")
+                _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
                     ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
 
                 if (_agentLicenseKey != null)
@@ -243,7 +243,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return runtimeAppNames;
             }
 
-            var appName = _configurationManagerStatic.GetAppSetting("NewRelic.AppName");
+            var appName = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName);
             if (appName != null)
             {
                 Log.Info("Application name from web.config or app.config.");
@@ -1361,7 +1361,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (!_labelsChecked)
                 {
-                    var labels = _configurationManagerStatic.GetAppSetting("NewRelic.Labels");
+                    var labels = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels);
                     if (labels != null)
                     {
                         Log.Info("Application labels from web.config, app.config, or appsettings.json.");
