@@ -38,6 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
                     .SetLogLevel("debug");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
 
                     if (typeof(TFixture).ToString().Contains("HSM"))
                     {
@@ -88,23 +89,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCore70HSM>
+    public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
-        public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70HSM fixture, ITestOutputHelper output)
+        public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCore70CSP>
+    public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
-        public Log4netCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70CSP fixture, ITestOutputHelper output)
+        public Log4netCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -171,12 +168,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCore70CSP>
+    public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
-        public SerilogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70CSP fixture, ITestOutputHelper output)
+        public SerilogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
         }
@@ -204,23 +199,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCore70HSM>
+    public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
-        public NLogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70HSM fixture, ITestOutputHelper output)
+        public NLogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class NLogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCore70CSP>
+    public class NLogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
-        public NLogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70CSP fixture, ITestOutputHelper output)
+        public NLogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }

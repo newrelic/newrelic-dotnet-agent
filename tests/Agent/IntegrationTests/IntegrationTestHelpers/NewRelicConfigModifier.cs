@@ -414,5 +414,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enableBrowserInjection}");
             return this;
         }
+
+        public NewRelicConfigModifier DisableEventListenerSamplers()
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", "false", "urn:newrelic-config");
+            return this;
+        }
     }
 }

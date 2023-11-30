@@ -21,12 +21,10 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
-    // Keep as net7.0.
     [NetCoreTest]
-    public class CustomSpanNameApiTestsCoreLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureCore70>
+    public class CustomSpanNameApiTestsCoreLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public CustomSpanNameApiTestsCoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
+        public CustomSpanNameApiTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -50,6 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 
