@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -79,6 +80,10 @@ namespace NewRelic.Agent.Core.Configuration
                 }
                 else
                 {
+                    if (key.Equals("NewRelic.LicenseKey"))
+                    {
+                        value = Strings.ObfuscateLicenseKey(value);
+                    }
                     Log.Debug($"Reading value from appsettings.json and appsettings.*.json: '{key}={value}'");
                 }
             }
