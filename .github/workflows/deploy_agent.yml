@@ -362,10 +362,10 @@ jobs:
           CONTENT_TYPE='Content-Type: application/json'
 
           # STAGING
-          curl -X POST 'https://staging-api.newrelic.com/v2/system_configuration.json' \
-            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_STAGING }}" -i \
-            -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"
+          # curl -X POST 'https://staging-api.newrelic.com/v2/system_configuration.json' \
+          #   -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_STAGING }}" -i \
+          #   -H "$CONTENT_TYPE" \
+          #   -d "$PAYLOAD"
 
           # PRODUCTION
           curl -X POST 'https://api.newrelic.com/v2/system_configuration.json' \
