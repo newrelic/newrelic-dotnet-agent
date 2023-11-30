@@ -23,104 +23,53 @@ version: "3"
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
 
 services:
-    smoketestapp:
-        container_name: ${CONTAINER_NAME}
-        image: ${CONTAINER_NAME}
-        platform: ${PLATFORM}
-        build:
-            context: .
-            dockerfile: ${TEST_DOCKERFILE}
-            args:
-                DISTRO_TAG: ${DISTRO_TAG}
-                TARGET_ARCH: ${TARGET_ARCH}
-                NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-                NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
-                NEW_RELIC_HOST: ${NEW_RELIC_HOST}
-                DOTNET_VERSION: ${DOTNET_VERSION}
-                APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
-        ports:
-          - "${PORT}:80"
-        volumes:
-          - ${AGENT_PATH}:/usr/local/newrelic-dotnet-agent # AGENT_PATH from .env, points to newrelichome_linux_x64
-          - ${LOG_PATH}:/app/logs # LOG_PATH from .env, should be a folder unique to this run of the smoketest app
     DebianX64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
     UbuntuX64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
     AlpineX64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
     DebianArm64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
     UbuntuArm64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
     CentosX64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.centos   
     CentosArm64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.centos   
     AmazonX64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.amazon
     AmazonArm64SmokeTestApp:
         extends:
+            file: docker-compose-smoketestapp.yml
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.centos
-
-    UbuntuX64Kafka1TestApp:
-        extends:
-            service: smoketestapp
-        depends_on:
-            - kafka-broker
-        environment:
-            - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
-            - NEW_RELIC_KAFKA_CONTAINER_NAME=${NEW_RELIC_KAFKA_CONTAINER_NAME}
-
-    UbuntuX64Kafka2TestApp:
-        extends:
-            service: smoketestapp
-        depends_on:
-            - kafka-broker
-        environment:
-            - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
-            - NEW_RELIC_KAFKA_CONTAINER_NAME=${NEW_RELIC_KAFKA_CONTAINER_NAME}
-
-    kafka-broker:
-        image: confluentinc/cp-kafka:7.5.0
-        container_name: ${NEW_RELIC_KAFKA_CONTAINER_NAME}
-        environment:
-          KAFKA_BROKER_ID: 1
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29092,PLAINTEXT_HOST://${NEW_RELIC_KAFKA_CONTAINER_NAME}:9092
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-          KAFKA_PROCESS_ROLES: broker,controller
-          KAFKA_NODE_ID: 1
-          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@${NEW_RELIC_KAFKA_CONTAINER_NAME}:29093
-          KAFKA_LISTENERS: PLAINTEXT://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29092,CONTROLLER://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29093,PLAINTEXT_HOST://:9092
-          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-        
-            
+           
 networks:
     default:
-        name: ${NETWORK_NAME}
         driver: bridge
         driver_opts:
           com.docker.network.bridge.enable_icc: "true"

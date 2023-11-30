@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -39,9 +39,13 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         {
             var indexOfRequestParams = 3; // unless it's Elasticsearch.Net/NEST and async
 
-            if (instrumentedMethodCall.IsAsync)
+            var isAsync = instrumentedMethodCall.IsAsync ||
+                          instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName == "RequestAsync";
+
+            if (isAsync)
             {
                 transaction.AttachToAsync();
+                transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
                 var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
                 if (parameterTypeNamesList[4] == "Elasticsearch.Net.IRequestParameters")
@@ -70,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
             segment.GetExperimentalApi().SetSegmentData(datastoreSegmentData).MakeLeaf();
 
-            if (instrumentedMethodCall.IsAsync)
+            if (isAsync)
             {
                 return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
