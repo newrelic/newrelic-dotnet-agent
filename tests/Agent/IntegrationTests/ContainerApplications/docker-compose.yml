@@ -66,7 +66,7 @@ services:
             file: docker-compose-smoketestapp.yml
             service: smoketestapp
         build:
-            dockerfile: SmokeTestApp/Dockerfile.centos
+            dockerfile: SmokeTestApp/Dockerfile.amazon
            
 networks:
     default:
