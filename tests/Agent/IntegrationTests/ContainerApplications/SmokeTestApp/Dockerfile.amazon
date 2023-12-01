@@ -20,9 +20,15 @@ RUN dotnet publish "SmokeTestApp.csproj" -c Release -o /app/publish /p:UseAppHos
 
 FROM base AS final
 ARG DOTNET_VERSION
-# install asp.netcore - use the Centos 7 package feed because amazonlinux is rhel based
-RUN rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
-RUN yum install aspnetcore-runtime-${DOTNET_VERSION} -y
+# install asp.netcore the *really* hard way...
+# other methods don't seem to work or take forever
+RUN echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+RUN echo "fastestmirror=true" >> /etc/dnf/dnf.conf
+RUN dnf install -y wget tar findutils gzip libicu
+RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+RUN chmod +x ./dotnet-install.sh
+RUN ./dotnet-install.sh --channel ${DOTNET_VERSION} --runtime aspnetcore
+ENV PATH="${PATH}:/root/.dotnet:/root/.dotnet/tools"
 
 # Enable the agent
 ARG NEW_RELIC_HOST
