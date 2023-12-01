@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -75,18 +76,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void AgentEnabledShouldUseCachedAppSetting()
         {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled)).Returns("false");
 
             Assert.IsFalse(_defaultConfig.AgentEnabled);
             Assert.IsFalse(_defaultConfig.AgentEnabled);
 
-            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"), Occurs.Once());
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled), Occurs.Once());
         }
 
         [Test]
         public void AgentEnabledShouldPreferAppSettingOverLocalConfig()
         {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled)).Returns("false");
 
             _localConfig.agentEnabled = true;
 
@@ -1384,7 +1385,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public string LabelsAreOverriddenProperlyAndAreCached(string appConfigValue, string environment, string local)
         {
             _localConfig.labels = local;
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels")).Returns(appConfigValue);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels)).Returns(appConfigValue);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS")).Returns(environment);
 
             // call Labels accessor multiple times to verify caching behavior
@@ -1395,7 +1396,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             }
 
             // Checking that the underlying abstractions are only ever called once verifies caching behavior
-            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels"), Occurs.AtMost(1));
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels), Occurs.AtMost(1));
             Mock.Assert(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS"), Occurs.AtMost(1));
 
             return result;
@@ -1434,7 +1435,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.service.licenseKey = local;
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY")).Returns(newEnvironmentName);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LICENSEKEY")).Returns(legacyEnvironmentName);
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey")).Returns(appSettingEnvironmentName);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns(appSettingEnvironmentName);
 
             return _defaultConfig.AgentLicenseKey;
         }
@@ -1764,7 +1765,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             _localConfig.application.name = new List<string>();
 
@@ -1778,8 +1779,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationNamesPullsNamesFromRuntimeConfig()
         {
             _runTimeConfig.ApplicationNames = new List<string> { "MyAppName1", "MyAppName2" };
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns((string)null);
             _localConfig.application.name = new List<string>();
@@ -1799,7 +1799,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationNamesPullsSingleNameFromAppSettings()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns("MyAppName");
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns("MyAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("OtherAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
             _localConfig.application.name = new List<string>();
@@ -1818,7 +1818,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationNamesPullsMultipleNamesFromAppSettings()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns("MyAppName1,MyAppName2");
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns("MyAppName1,MyAppName2");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("OtherAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
             _localConfig.application.name = new List<string>();
@@ -1838,7 +1838,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationNamesPullsSingleNameFromIisExpressSitenameEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("MyAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
             _localConfig.application.name = new List<string>();
@@ -1857,7 +1857,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationNamesPullsMultipleNamesFromIisExpressSitenameEnvironmentVariaible()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("MyAppName1,MyAppName2");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
             _localConfig.application.name = new List<string>();
@@ -1881,7 +1881,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("MyAppName");
             _localConfig.application.name = new List<string>();
@@ -1904,7 +1904,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("MyAppName1,MyAppName2");
             _localConfig.application.name = new List<string>();
@@ -1928,7 +1928,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             _localConfig.application.name = new List<string> { "MyAppName1", "MyAppName2" };
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
@@ -1951,7 +1951,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
 
             _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("MyAppName");
@@ -1973,7 +1973,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("MyAppName1,MyAppName2");
@@ -2001,7 +2001,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetCommandLineArgs()).Returns(commandLine.Split(new[] { ' ' }));
@@ -2022,7 +2022,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
             _localConfig.application.name = new List<string>();
 
