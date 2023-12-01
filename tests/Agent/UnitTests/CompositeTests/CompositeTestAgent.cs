@@ -141,7 +141,7 @@ namespace CompositeTests
                 .DoInstead<WaitCallback>(callback => { lock (_queuedCallbacksLockObject) { _queuedCallbacks.Add(callback); } });
 
             var configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
-            Mock.Arrange(() => configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey"))
+            Mock.Arrange(() => configurationManagerStatic.GetAppSetting(NewRelic.Agent.Core.Configuration.Constants.AppSettingsLicenseKey))
                 .Returns("Composite test license key");
 
             // Construct services

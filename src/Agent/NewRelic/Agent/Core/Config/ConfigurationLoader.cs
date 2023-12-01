@@ -4,6 +4,7 @@
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core;
+using NewRelic.Agent.Core.Configuration;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
@@ -15,7 +16,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 #if NETSTANDARD2_0
 using System.Reflection;
-using NewRelic.Agent.Core.Configuration;
 #endif
 
 namespace NewRelic.Agent.Core.Config
@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.Config
             if (fileName != null)
                 return fileName;
 
-            throw new Exception(string.Format("Could not find {0} in NewRelic.ConfigFile path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName));
+            throw new Exception(string.Format("Could not find {0} in {1} path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName, Constants.AppSettingsConfigFile));
         }
 
         private static string TryGetAgentConfigFileFromAppConfig()
@@ -149,13 +149,13 @@ namespace NewRelic.Agent.Core.Config
 
 			try
 			{
-				var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting("NewRelic.ConfigFile");
+				var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
 				if (!File.Exists(fileName))
 				{
 					return null;
 				}
 
-				Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
+				Log.Info("Configuration file found in path pointed to by {0} appSetting: {1}", Constants.AppSettingsConfigFile, fileName);
 				return fileName;
 			}
 			catch (Exception)
@@ -166,13 +166,13 @@ namespace NewRelic.Agent.Core.Config
 #else
             try
             {
-                var fileName = GetConfigSetting("NewRelic.ConfigFile").Value;
+                var fileName = GetConfigSetting(Constants.AppSettingsConfigFile).Value;
                 if (!FileExists(fileName))
                 {
                     return null;
                 }
 
-                Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting of app/web config: {0}", fileName);
+                Log.Info("Configuration file found in path pointed to by {0} appSetting of app/web config: {1}", Constants.AppSettingsConfigFile, fileName);
                 return fileName;
             }
             catch (Exception)
@@ -674,7 +674,7 @@ namespace NewRelic.Agent.Core.Config
 
             try
             {
-                var enabledProvenance = ConfigurationLoader.GetConfigSetting("NewRelic.AgentEnabled");
+                var enabledProvenance = ConfigurationLoader.GetConfigSetting(Constants.AppSettingsAgentEnabled);
                 if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
                 {
                     agentEnabled = false;
@@ -683,7 +683,7 @@ namespace NewRelic.Agent.Core.Config
             }
             catch
             {
-                Log.Error("Failed to read NewRelic.AgentEnabled from local config.");
+                Log.Error($"Failed to read {Constants.AppSettingsAgentEnabled} from local config.");
             }
 
             return this;

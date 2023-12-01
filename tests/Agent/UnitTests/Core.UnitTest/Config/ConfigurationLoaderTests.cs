@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using NewRelic.Agent.Core.Configuration;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Config
@@ -119,7 +120,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 const string expectedFileName = "filenameFromAppConfig";
                 var testWebConfiguration = ConfigurationManager.OpenExeConfiguration(null);
-                testWebConfiguration.AppSettings.Settings.Add("NewRelic.ConfigFile", expectedFileName);
+                testWebConfiguration.AppSettings.Settings.Add(Constants.AppSettingsConfigFile, expectedFileName);
 
                 staticMocks.UseAppDomainAppIdFunc(() => "testAppId");
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
@@ -138,7 +139,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 const string expectedFileName = "filenameFromAppConfig";
                 var testWebConfiguration = ConfigurationManager.OpenExeConfiguration(null);
-                testWebConfiguration.AppSettings.Settings.Add("NewRelic.ConfigFile", expectedFileName);
+                testWebConfiguration.AppSettings.Settings.Add(Constants.AppSettingsConfigFile, expectedFileName);
 
                 staticMocks.UseAppDomainAppIdFunc(() => "testAppId");
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
@@ -157,7 +158,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 const string expectedFileName = "filenameFromAppConfig";
                 var testWebConfiguration = ConfigurationManager.OpenExeConfiguration(null);
-                testWebConfiguration.AppSettings.Settings.Add("NewRelic.ConfigFile", expectedFileName);
+                testWebConfiguration.AppSettings.Settings.Add(Constants.AppSettingsConfigFile, expectedFileName);
 
                 staticMocks.UseAppDomainAppIdFunc(() => "testAppId");
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
