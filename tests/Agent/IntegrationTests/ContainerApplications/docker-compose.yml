@@ -67,6 +67,10 @@ services:
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.amazon
+    LinuxUnicodeLogFileApp:
+        extends:
+            file: docker-compose-smoketestapp.yml
+            service: smoketestapp
            
 networks:
     default:
