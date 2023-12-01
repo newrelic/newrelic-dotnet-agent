@@ -110,7 +110,7 @@ rebuild_yum() {
 
     printf \\n
     if [[ -d "$REPO_DIR" ]]; then
-      createrepo --update --checksum sha "$REPO_DIR"
+      createrepo_c --update --checksum sha "$REPO_DIR"
     fi
   done
 }
