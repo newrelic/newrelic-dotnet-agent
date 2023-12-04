@@ -116,32 +116,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     }
 
     /// <summary>
-    /// Use this fixture for High Security Mode tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldestHSM : ConsoleDynamicMethodFixtureCore60
-    {
-        public override string TestSettingCategory { get { return "HSM"; } }
-        public ConsoleDynamicMethodFixtureCoreOldestHSM()
-        {
-        }
-
-    }
-
-    /// <summary>
-    /// Use this fixture for Configurable Security Policy tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldestCSP : ConsoleDynamicMethodFixtureCore60
-    {
-        public override string TestSettingCategory { get { return "CSP"; } }
-        public ConsoleDynamicMethodFixtureCoreOldestCSP()
-        {
-        }
-
-    }
-
-
-
-    /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
     /// using one of the existing specific version fixtures, or create a new specific version.
@@ -152,30 +126,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
         }
-    }
-
-    /// <summary>
-    /// Use this fixture for High Security Mode tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCore70HSM : ConsoleDynamicMethodFixtureCore70
-    {
-        public override string TestSettingCategory { get { return "HSM"; } }
-        public ConsoleDynamicMethodFixtureCore70HSM()
-        {
-        }
-
-    }
-
-    /// <summary>
-    /// Use this fixture for Configurable Security Policy tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCore70CSP : ConsoleDynamicMethodFixtureCore70
-    {
-        public override string TestSettingCategory { get { return "CSP"; } }
-        public ConsoleDynamicMethodFixtureCore70CSP()
-        {
-        }
-
     }
 
     /// <summary>
