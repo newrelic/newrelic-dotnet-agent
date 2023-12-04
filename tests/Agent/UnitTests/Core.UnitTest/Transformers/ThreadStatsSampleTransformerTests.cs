@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
+                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
             var sample = new ThreadpoolUsageStatsSample(countWorkerThreadsRemaining + countWorkerThreadsInUse, countWorkerThreadsRemaining, countCompletionThreadsRemaining + countCompletionThreadsInUse, countCompletionThreadsRemaining);
 
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
+                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
             var sample = new ThreadpoolThroughputEventsSample(countThreadRequestsQueued, countThreadRequestsDequeued, countThreadRequestQueueLength);
 

@@ -485,7 +485,7 @@ namespace CompositeTests
             segment.End();
             transaction.End();
             _compositeTestAgent.Harvest();
-            var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricName.Name.Contains("AgentTiming"));
+            var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricNameModel.Name.Contains("AgentTiming"));
             Assert.IsEmpty(metrics);
         }
 
@@ -503,7 +503,7 @@ namespace CompositeTests
             segment.End();
             transaction.End();
             _compositeTestAgent.Harvest();
-            var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricName.Name.Contains("AgentTiming"));
+            var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricNameModel.Name.Contains("AgentTiming"));
             Assert.IsNotEmpty(metrics);
         }
 
@@ -528,10 +528,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the WebTransaction metric which should contain the response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -556,10 +556,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the OtherTransaction/all metric which should contain the duration instead of response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -587,8 +587,8 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the WebTransaction metric which should contain the response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
-            Assert.LessOrEqual(timingMetric.Data.Value1, expectedResponseTimeUpperBound);
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
+            Assert.LessOrEqual(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound);
         }
 
         [Test]
@@ -616,10 +616,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the OtherTransaction/all metric which should contain the duration instead of response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.Greater(timingMetric.Data.Value1, expectedResponseTimeUpperBound),
-                    () => Assert.LessOrEqual(timingMetric.Data.Value1, expectedDurationUpperBound)
+                    () => Assert.Greater(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound),
+                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, expectedDurationUpperBound)
                 );
         }
 
@@ -647,10 +647,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the WebTransaction metric which should contain the response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -674,8 +674,8 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the WebTransaction metric which should contain the response time
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
-            Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
+            Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
         }
 
         [Test]
@@ -701,10 +701,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
                     () => Assert.IsFalse(transactionAfterCallToEnd.IsValid, "The current transaction should be the NoOpTransaction."),
-                    () => Assert.AreEqual(1.0, timingMetric.Data.Value0, "The transaction should be harvested.")
+                    () => Assert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
                 );
         }
 
@@ -731,10 +731,10 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
-            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
                     () => Assert.IsTrue(transactionAfterCallToEnd.IsValid, "The current transaction should not be the NoOpTransaction."),
-                    () => Assert.AreEqual(1.0, timingMetric.Data.Value0, "The transaction should be harvested.")
+                    () => Assert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
                 );
         }
     }

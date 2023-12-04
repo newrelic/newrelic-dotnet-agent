@@ -32,18 +32,18 @@ namespace CompositeTests
                     continue;
                 }
 
-                if ((expectedMetric.Value0 != null && matchedMetric.Data.Value0 != expectedMetric.Value0) ||
-                    (expectedMetric.Value1 != null && matchedMetric.Data.Value1 != expectedMetric.Value1) ||
-                    (expectedMetric.Value2 != null && matchedMetric.Data.Value2 != expectedMetric.Value2) ||
-                    (expectedMetric.Value3 != null && matchedMetric.Data.Value3 != expectedMetric.Value3) ||
-                    (expectedMetric.Value4 != null && matchedMetric.Data.Value4 != expectedMetric.Value4) ||
-                    (expectedMetric.Value5 != null && matchedMetric.Data.Value5 != expectedMetric.Value5))
+                if ((expectedMetric.Value0 != null && matchedMetric.DataModel.Value0 != expectedMetric.Value0) ||
+                    (expectedMetric.Value1 != null && matchedMetric.DataModel.Value1 != expectedMetric.Value1) ||
+                    (expectedMetric.Value2 != null && matchedMetric.DataModel.Value2 != expectedMetric.Value2) ||
+                    (expectedMetric.Value3 != null && matchedMetric.DataModel.Value3 != expectedMetric.Value3) ||
+                    (expectedMetric.Value4 != null && matchedMetric.DataModel.Value4 != expectedMetric.Value4) ||
+                    (expectedMetric.Value5 != null && matchedMetric.DataModel.Value5 != expectedMetric.Value5))
                 {
-                    builder.AppendFormat("Metric named {0} scoped to {1} was found in the metric payload, but had unexpected stats.", matchedMetric.MetricName.Name, matchedMetric.MetricName.Scope ?? "nothing");
+                    builder.AppendFormat("Metric named {0} scoped to {1} was found in the metric payload, but had unexpected stats.", matchedMetric.MetricNameModel.Name, matchedMetric.MetricNameModel.Scope ?? "nothing");
                     builder.AppendLine();
                     builder.AppendFormat("Expected: {0}, {1}, {2}, {3}, {4}, {5}", expectedMetric.Value0, expectedMetric.Value1, expectedMetric.Value2, expectedMetric.Value3, expectedMetric.Value4, expectedMetric.Value5);
                     builder.AppendLine();
-                    builder.AppendFormat("Actual: {0}, {1}, {2}, {3}, {4}, {5}", matchedMetric.Data.Value0, matchedMetric.Data.Value1, matchedMetric.Data.Value2, matchedMetric.Data.Value3, matchedMetric.Data.Value4, matchedMetric.Data.Value5);
+                    builder.AppendFormat("Actual: {0}, {1}, {2}, {3}, {4}, {5}", matchedMetric.DataModel.Value0, matchedMetric.DataModel.Value1, matchedMetric.DataModel.Value2, matchedMetric.DataModel.Value3, matchedMetric.DataModel.Value4, matchedMetric.DataModel.Value5);
                     builder.AppendLine();
                     succeeded = false;
                 }
@@ -62,7 +62,7 @@ namespace CompositeTests
 
                 if (matchedMetric != null)
                 {
-                    builder.AppendFormat("Metric named {0} scoped to {1} was found in the metric payload.", matchedMetric.MetricName.Name, matchedMetric.MetricName.Scope ?? "nothing");
+                    builder.AppendFormat("Metric named {0} scoped to {1} was found in the metric payload.", matchedMetric.MetricNameModel.Name, matchedMetric.MetricNameModel.Scope ?? "nothing");
                     builder.AppendLine();
                     succeeded = false;
                 }
@@ -75,11 +75,11 @@ namespace CompositeTests
         {
             foreach (var actualMetric in actualMetrics)
             {
-                if (expectedMetric.IsRegexName && !Regex.IsMatch(actualMetric.MetricName.Name, expectedMetric.Name))
+                if (expectedMetric.IsRegexName && !Regex.IsMatch(actualMetric.MetricNameModel.Name, expectedMetric.Name))
                     continue;
-                if (!expectedMetric.IsRegexName && expectedMetric.Name != actualMetric.MetricName.Name)
+                if (!expectedMetric.IsRegexName && expectedMetric.Name != actualMetric.MetricNameModel.Name)
                     continue;
-                if (expectedMetric.Scope != actualMetric.MetricName.Scope)
+                if (expectedMetric.Scope != actualMetric.MetricNameModel.Scope)
                     continue;
 
                 return actualMetric;

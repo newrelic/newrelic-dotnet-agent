@@ -733,7 +733,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             if (_publishMetricDelegate == null)
             {
-                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
+                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricNameModel.Name);
                 return;
             }
 

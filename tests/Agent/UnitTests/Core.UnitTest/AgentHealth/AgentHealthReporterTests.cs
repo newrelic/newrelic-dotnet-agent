@@ -66,14 +66,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.AreEqual(1, _publishedMetrics.Count);
             var metric1 = _publishedMetrics.ElementAt(0);
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/AgentVersion/1.0", metric1.MetricName.Name),
-                () => Assert.AreEqual(null, metric1.MetricName.Scope),
-                () => Assert.AreEqual(1, metric1.Data.Value0),
-                () => Assert.AreEqual(0, metric1.Data.Value1),
-                () => Assert.AreEqual(0, metric1.Data.Value2),
-                () => Assert.AreEqual(0, metric1.Data.Value3),
-                () => Assert.AreEqual(0, metric1.Data.Value4),
-                () => Assert.AreEqual(0, metric1.Data.Value5)
+                () => Assert.AreEqual("Supportability/AgentVersion/1.0", metric1.MetricNameModel.Name),
+                () => Assert.AreEqual(null, metric1.MetricNameModel.Scope),
+                () => Assert.AreEqual(1, metric1.DataModel.Value0),
+                () => Assert.AreEqual(0, metric1.DataModel.Value1),
+                () => Assert.AreEqual(0, metric1.DataModel.Value2),
+                () => Assert.AreEqual(0, metric1.DataModel.Value3),
+                () => Assert.AreEqual(0, metric1.DataModel.Value4),
+                () => Assert.AreEqual(0, metric1.DataModel.Value5)
                 );
         }
 
@@ -85,9 +85,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             var metric0 = _publishedMetrics.ElementAt(0);
             var metric1 = _publishedMetrics.ElementAt(1);
             var metric2 = _publishedMetrics.ElementAt(2);
-            Assert.AreEqual("Supportability/WrapperShutdown/all", metric0.MetricName.Name);
-            Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/all", metric1.MetricName.Name);
-            Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/String.FooMethod", metric2.MetricName.Name);
+            Assert.AreEqual("Supportability/WrapperShutdown/all", metric0.MetricNameModel.Name);
+            Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/all", metric1.MetricNameModel.Name);
+            Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/String.FooMethod", metric2.MetricNameModel.Name);
         }
 
         [Test]
@@ -96,11 +96,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), HttpStatusCode.InternalServerError);
             Assert.AreEqual(2, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Agent/Collector/HTTPError/500", _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0),
-                () => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[1].MetricName.Name),
-                () => Assert.AreEqual(1, _publishedMetrics[1].Data.Value0),
-                () => Assert.AreEqual(1.5, _publishedMetrics[1].Data.Value1)
+                () => Assert.AreEqual("Supportability/Agent/Collector/HTTPError/500", _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(1, _publishedMetrics[0].DataModel.Value0),
+                () => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[1].MetricNameModel.Name),
+                () => Assert.AreEqual(1, _publishedMetrics[1].DataModel.Value0),
+                () => Assert.AreEqual(1.5, _publishedMetrics[1].DataModel.Value1)
             );
         }
 
@@ -110,9 +110,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), statusCode: null);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0),
-                () => Assert.AreEqual(1.5, _publishedMetrics[0].Data.Value1)
+                () => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(1, _publishedMetrics[0].DataModel.Value0),
+                () => Assert.AreEqual(1.5, _publishedMetrics[0].DataModel.Value1)
             );
         }
 
@@ -123,8 +123,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportSupportabilityCountMetric(MetricName);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual($"Supportability/{MetricName}", _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0)
+                () => Assert.AreEqual($"Supportability/{MetricName}", _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(1, _publishedMetrics[0].DataModel.Value0)
             );
         }
 
@@ -135,8 +135,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportSupportabilityCountMetric(MetricName, 2);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual($"Supportability/{MetricName}", _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(2, _publishedMetrics[0].Data.Value0)
+                () => Assert.AreEqual($"Supportability/{MetricName}", _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(2, _publishedMetrics[0].DataModel.Value0)
             );
         }
 
@@ -147,8 +147,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportCountMetric(MetricName, 2);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(2, _publishedMetrics[0].Data.Value0)
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(2, _publishedMetrics[0].DataModel.Value0)
             );
         }
 
@@ -160,8 +160,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportByteMetric(MetricName, totalBytes);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes), _publishedMetrics[0].Data)
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes), _publishedMetrics[0].DataModel)
             );
         }
 
@@ -174,8 +174,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportByteMetric(MetricName, totalBytes, exclusiveBytes);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), _publishedMetrics[0].Data)
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), _publishedMetrics[0].DataModel)
             );
         }
 
@@ -185,8 +185,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             var agentVersion = AgentInstallConfiguration.AgentVersion;
             _agentHealthReporter.CollectMetrics();
             NrAssert.Multiple(
-                () => Assert.AreEqual($"Supportability/AgentVersion/{agentVersion}", _publishedMetrics[0].MetricName.Name),
-                () => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0)
+                () => Assert.AreEqual($"Supportability/AgentVersion/{agentVersion}", _publishedMetrics[0].MetricNameModel.Name),
+                () => Assert.AreEqual(1, _publishedMetrics[0].DataModel.Value0)
             );
         }
 
@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/InfiniteTracing/Span/Sent", 13 },
                 { "Supportability/InfiniteTracing/Span/Received", 1 }
             };
-            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
         }
@@ -229,11 +229,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             };
 
             _agentHealthReporter.CollectMetrics();
-            var firstCollectionMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            var firstCollectionMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
             CollectionAssert.IsSubsetOf(expectedOneTimeMetrics, firstCollectionMetricNamesAndValues);
 
             _agentHealthReporter.CollectMetrics();
-            var secondCollectionMetricNames = _publishedMetrics.Select(x => x.MetricName);
+            var secondCollectionMetricNames = _publishedMetrics.Select(x => x.MetricNameModel);
             CollectionAssert.IsNotSubsetOf(expectedOneTimeMetrics.Keys, secondCollectionMetricNames);
         }
 
@@ -249,53 +249,53 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.CollectMetrics();
 
             // Verify that top level Unspecified destination metric exists with expected rolled up values
-            var perDestinationUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes").ToArray();
+            var perDestinationUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes").ToArray();
             Assert.AreEqual(1, perDestinationUnspecifiedMetric.Length);
-            Assert.AreEqual(1, perDestinationUnspecifiedMetric[0].Data.Value0); // call count
-            Assert.AreEqual(100, perDestinationUnspecifiedMetric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(100, perDestinationUnspecifiedMetric[0].Data.Value2); // bytes received
+            Assert.AreEqual(1, perDestinationUnspecifiedMetric[0].DataModel.Value0); // call count
+            Assert.AreEqual(100, perDestinationUnspecifiedMetric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(100, perDestinationUnspecifiedMetric[0].DataModel.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector data with unspecified api area
-            var unspecifiedDestinationAndAreaMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes").ToArray();
+            var unspecifiedDestinationAndAreaMetric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes").ToArray();
             Assert.AreEqual(1, unspecifiedDestinationAndAreaMetric.Length);
-            Assert.AreEqual(1, unspecifiedDestinationAndAreaMetric[0].Data.Value0); // call count
-            Assert.AreEqual(100, unspecifiedDestinationAndAreaMetric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(100, unspecifiedDestinationAndAreaMetric[0].Data.Value2); // bytes received
+            Assert.AreEqual(1, unspecifiedDestinationAndAreaMetric[0].DataModel.Value0); // call count
+            Assert.AreEqual(100, unspecifiedDestinationAndAreaMetric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(100, unspecifiedDestinationAndAreaMetric[0].DataModel.Value2); // bytes received
 
             // Verify that top level Collector destination metric exists with expected rolled up values
-            var perDestinationCollectorMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/Output/Bytes").ToArray();
+            var perDestinationCollectorMetric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/Collector/Output/Bytes").ToArray();
             Assert.AreEqual(1, perDestinationCollectorMetric.Length);
-            Assert.AreEqual(5, perDestinationCollectorMetric[0].Data.Value0); // call count
-            Assert.AreEqual(1100, perDestinationCollectorMetric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(1500, perDestinationCollectorMetric[0].Data.Value2); // bytes received
+            Assert.AreEqual(5, perDestinationCollectorMetric[0].DataModel.Value0); // call count
+            Assert.AreEqual(1100, perDestinationCollectorMetric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(1500, perDestinationCollectorMetric[0].DataModel.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector 'connect'
-            var connectMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/connect/Output/Bytes").ToArray();
+            var connectMetric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/Collector/connect/Output/Bytes").ToArray();
             Assert.AreEqual(1, connectMetric.Length);
-            Assert.AreEqual(1, connectMetric[0].Data.Value0, 1); // call count
-            Assert.AreEqual(100, connectMetric[0].Data.Value1, 100); // bytes sent
-            Assert.AreEqual(200, connectMetric[0].Data.Value2, 200); // bytes received
+            Assert.AreEqual(1, connectMetric[0].DataModel.Value0, 1); // call count
+            Assert.AreEqual(100, connectMetric[0].DataModel.Value1, 100); // bytes sent
+            Assert.AreEqual(200, connectMetric[0].DataModel.Value2, 200); // bytes received
 
             // Verify that subarea metric exists for Collector 'doSomething1'
-            var doSomething1Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/doSomething1/Output/Bytes").ToArray();
+            var doSomething1Metric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/Collector/doSomething1/Output/Bytes").ToArray();
             Assert.AreEqual(1, doSomething1Metric.Length);
-            Assert.AreEqual(2, doSomething1Metric[0].Data.Value0); // call count
-            Assert.AreEqual(500, doSomething1Metric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(700, doSomething1Metric[0].Data.Value2); // bytes received
+            Assert.AreEqual(2, doSomething1Metric[0].DataModel.Value0); // call count
+            Assert.AreEqual(500, doSomething1Metric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(700, doSomething1Metric[0].DataModel.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector 'doSomething2'
-            var doSomething2Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/doSomething2/Output/Bytes").ToArray();
+            var doSomething2Metric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/Collector/doSomething2/Output/Bytes").ToArray();
             Assert.AreEqual(1, doSomething2Metric.Length);
-            Assert.AreEqual(1, doSomething2Metric[0].Data.Value0); // call count
-            Assert.AreEqual(400, doSomething2Metric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(500, doSomething2Metric[0].Data.Value2); // bytes received
+            Assert.AreEqual(1, doSomething2Metric[0].DataModel.Value0); // call count
+            Assert.AreEqual(400, doSomething2Metric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(500, doSomething2Metric[0].DataModel.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector data with unspecified api area
-            var collectorUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/UnspecifiedDestinationArea/Output/Bytes").ToArray();
+            var collectorUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricNameModel.Name == "Supportability/DotNET/Collector/UnspecifiedDestinationArea/Output/Bytes").ToArray();
             Assert.AreEqual(1, collectorUnspecifiedMetric.Length);
-            Assert.AreEqual(1, collectorUnspecifiedMetric[0].Data.Value0); // call count
-            Assert.AreEqual(100, collectorUnspecifiedMetric[0].Data.Value1); // bytes sent
-            Assert.AreEqual(100, collectorUnspecifiedMetric[0].Data.Value2); // bytes received
+            Assert.AreEqual(1, collectorUnspecifiedMetric[0].DataModel.Value0); // call count
+            Assert.AreEqual(100, collectorUnspecifiedMetric[0].DataModel.Value1); // bytes sent
+            Assert.AreEqual(100, collectorUnspecifiedMetric[0].DataModel.Value2); // bytes received
         }
 
         [Test]
@@ -312,40 +312,40 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             _agentHealthReporter.CollectLoggingMetrics();
 
-            var infoLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/INFO");
-            var debugLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/DEBUG");
-            var finestLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/FINEST");
-            var missingLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/MISSING_LEVEL");
-            var allLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines");
+            var infoLevelLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/lines/INFO");
+            var debugLevelLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/lines/DEBUG");
+            var finestLevelLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/lines/FINEST");
+            var missingLevelLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/lines/MISSING_LEVEL");
+            var allLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/lines");
 
-            var infoLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/INFO");
-            var debugLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/DEBUG");
-            var finestLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/FINEST");
-            var missingLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/MISSING_LEVEL");
-            var allDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied");
+            var infoLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/denied/INFO");
+            var debugLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/denied/DEBUG");
+            var finestLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/denied/FINEST");
+            var missingLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/denied/MISSING_LEVEL");
+            var allDeniedLines = _publishedMetrics.First(metric => metric.MetricNameModel.Name == "Logging/denied");
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(10, _publishedMetrics.Count),
-                () => Assert.AreEqual($"Logging/lines/INFO", infoLevelLines.MetricName.Name),
-                () => Assert.AreEqual(1, infoLevelLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/lines/DEBUG", debugLevelLines.MetricName.Name),
-                () => Assert.AreEqual(1, debugLevelLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/lines/FINEST", finestLevelLines.MetricName.Name),
-                () => Assert.AreEqual(1, finestLevelLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/lines/MISSING_LEVEL", missingLevelLines.MetricName.Name),
-                () => Assert.AreEqual(1, missingLevelLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/lines", allLines.MetricName.Name),
-                () => Assert.AreEqual(4, allLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/denied/INFO", infoLevelDeniedLines.MetricName.Name),
-                () => Assert.AreEqual(1, infoLevelDeniedLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/denied/DEBUG", debugLevelDeniedLines.MetricName.Name),
-                () => Assert.AreEqual(1, debugLevelDeniedLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/denied/FINEST", finestLevelDeniedLines.MetricName.Name),
-                () => Assert.AreEqual(1, finestLevelDeniedLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/denied/MISSING_LEVEL", missingLevelDeniedLines.MetricName.Name),
-                () => Assert.AreEqual(1, missingLevelDeniedLines.Data.Value0),
-                () => Assert.AreEqual($"Logging/denied", allDeniedLines.MetricName.Name),
-                () => Assert.AreEqual(4, allDeniedLines.Data.Value0)
+                () => Assert.AreEqual($"Logging/lines/INFO", infoLevelLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, infoLevelLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/lines/DEBUG", debugLevelLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, debugLevelLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/lines/FINEST", finestLevelLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, finestLevelLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/lines/MISSING_LEVEL", missingLevelLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, missingLevelLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/lines", allLines.MetricNameModel.Name),
+                () => Assert.AreEqual(4, allLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/denied/INFO", infoLevelDeniedLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, infoLevelDeniedLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/denied/DEBUG", debugLevelDeniedLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, debugLevelDeniedLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/denied/FINEST", finestLevelDeniedLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, finestLevelDeniedLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/denied/MISSING_LEVEL", missingLevelDeniedLines.MetricNameModel.Name),
+                () => Assert.AreEqual(1, missingLevelDeniedLines.DataModel.Value0),
+                () => Assert.AreEqual($"Logging/denied", allDeniedLines.MetricNameModel.Name),
+                () => Assert.AreEqual(4, allDeniedLines.DataModel.Value0)
                 );
         }
 
@@ -377,7 +377,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/Forwarding/DotNET/Framework1/enabled", 1},
                 { "Supportability/Logging/Forwarding/DotNET/Framework2/enabled", 1}
             };
-            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
         }
@@ -389,8 +389,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("log4net");
             _agentHealthReporter.CollectMetrics();
 
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
 
             // Clear out captured metrics, and recollect
             _publishedMetrics = new List<MetricWireModel>();
@@ -400,10 +400,10 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("serilog");
             _agentHealthReporter.CollectMetrics();
 
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/serilog/enabled"));
-            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/serilog/enabled"));
-            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/DotNET/serilog/enabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/Forwarding/DotNET/serilog/enabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
         }
 
         [Test]
@@ -418,7 +418,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
             };
 
-            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
 
@@ -426,7 +426,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.CollectMetrics();
 
-            actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
             CollectionAssert.IsNotSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
         }
 
@@ -442,7 +442,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/DotNET/AgentLogging/Disabled", 1 },
                 { "Supportability/DotNET/AgentLogging/DisabledDueToError", 1 },
             };
-            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
 
@@ -460,8 +460,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/DotNET/AgentLogging/Disabled", 1 },
                 { "Supportability/DotNET/AgentLogging/DisabledDueToError", 1 },
             };
-            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/Disabled"));
-            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/DisabledDueToError"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNET/AgentLogging/Disabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNET/AgentLogging/DisabledDueToError"));
         }
     }
 }

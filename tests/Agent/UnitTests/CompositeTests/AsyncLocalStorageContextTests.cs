@@ -63,8 +63,8 @@ namespace CompositeTests
             Assert.AreEqual(1, transactionEvents.Count);
             Assert.AreEqual("foregroundExternal", transactionEvents.First().AgentAttributes()["request.uri"]);
             CollectionAssert.IsEmpty(errors);
-            CollectionAssert.IsEmpty(metrics.Where(x => x.MetricName.Name.Contains("backgroundExternal")));
-            CollectionAssert.IsNotEmpty(metrics.Where(x => x.MetricName.Name.Contains("foregroundExternal")));
+            CollectionAssert.IsEmpty(metrics.Where(x => x.MetricNameModel.Name.Contains("backgroundExternal")));
+            CollectionAssert.IsNotEmpty(metrics.Where(x => x.MetricNameModel.Name.Contains("foregroundExternal")));
 
             void InstrumentationThatStartsATransaction()
             {
