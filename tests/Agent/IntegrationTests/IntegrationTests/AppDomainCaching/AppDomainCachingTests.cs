@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -39,6 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
                     configModifier
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 },
                 exerciseApplication: () =>
                 {

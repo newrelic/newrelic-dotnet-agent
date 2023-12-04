@@ -415,6 +415,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier DisableEventListenerSamplers()
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", "false", "urn:newrelic-config");
+            return this;
+        }
+
         public void EnableAuditLog(bool enableAuditLog)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "auditLog",

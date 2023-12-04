@@ -47,12 +47,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
-        with:
-          dotnet-version: 7.x
-          dotnet-quality: 'ga'
-
       - name: Restore NuGet Packages
         run: dotnet restore
 

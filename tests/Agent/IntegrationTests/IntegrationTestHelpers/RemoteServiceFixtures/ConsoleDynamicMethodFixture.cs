@@ -95,6 +95,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore80 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore80() : base("net8.0")
+        {
+        }
+    }
+
     /// <summary>
     /// Use this fixture to test against the oldest supported .NET version.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
@@ -109,38 +116,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     }
 
     /// <summary>
-    /// Use this fixture for High Security Mode tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldestHSM : ConsoleDynamicMethodFixtureCore60
-    {
-        public override string TestSettingCategory { get { return "HSM"; } }
-        public ConsoleDynamicMethodFixtureCoreOldestHSM()
-        {
-        }
-
-    }
-
-    /// <summary>
-    /// Use this fixture for Configurable Security Policy tests
-    /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldestCSP : ConsoleDynamicMethodFixtureCore60
-    {
-        public override string TestSettingCategory { get { return "CSP"; } }
-        public ConsoleDynamicMethodFixtureCoreOldestCSP()
-        {
-        }
-
-    }
-
-
-
-    /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore70
+    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore80
     {
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
@@ -150,7 +131,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for High Security Mode tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore70
+    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore80
     {
         public override string TestSettingCategory { get { return "HSM"; } }
         public ConsoleDynamicMethodFixtureCoreLatestHSM()
@@ -162,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore70
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore80
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureCoreLatestCSP()
@@ -180,7 +161,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         /// Use this .ctor to specify a specific .net core version to target.
         /// </summary>
         /// <param name="targetFramework">The netcoreapp target use when publishing and running the application. This parameter must match one of the targetFramework values defined in ConsoleMultiFunctionApplicationCore.csproj </param>
-        public ConsoleDynamicMethodFixtureCoreSpecificVersion(string targetFramework) : base(ApplicationDirectoryName, ExecutableName, targetFramework, true, DefaultTimeout)
+        public ConsoleDynamicMethodFixtureCoreSpecificVersion(string targetFramework) :
+            base(ApplicationDirectoryName,
+                ExecutableName,
+                targetFramework,
+                true,
+                DefaultTimeout)
         {
         }
     }
@@ -233,7 +219,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public override void ShutdownRemoteApplication()
         {
-            RemoteApplication.WriteToStandardInput("exit");
+            try
+            {
+                RemoteApplication.WriteToStandardInput("exit");
+            }
+            catch (System.IO.IOException)
+            {
+                // Starting in .NET 8, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
+            }
 
             base.ShutdownRemoteApplication();
         }

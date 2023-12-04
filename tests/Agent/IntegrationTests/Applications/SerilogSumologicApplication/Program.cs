@@ -11,7 +11,6 @@ using System.Threading;
 using ApplicationLifecycle;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.CodeAnalysis;
 
 namespace SerilogSumologicApplication
 {

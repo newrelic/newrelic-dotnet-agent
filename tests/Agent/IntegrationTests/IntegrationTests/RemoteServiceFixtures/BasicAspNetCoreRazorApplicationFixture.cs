@@ -16,7 +16,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const string ApplicationDirectoryName = @"BasicAspNetCoreRazorApplication";
         private const string ExecutableName = @"BasicAspNetCoreRazorApplication.exe";
         public BasicAspNetCoreRazorApplicationFixture()
-            : base(new RemoteService(ApplicationDirectoryName, ExecutableName, targetFramework: "net7.0", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                targetFramework: "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
         }
 
