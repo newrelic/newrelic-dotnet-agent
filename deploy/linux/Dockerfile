@@ -1,9 +1,9 @@
-FROM debian:buster-20230703-slim@sha256:cddb688e1263b9752275b064171ef6ac9c70ae21a77c774339aecfb53690b9a1
+FROM debian:stable-20231120@sha256:6a798ffaa39776765d80c63afffc5920d09f8003b1b7d6a24026527d826c8de7
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
     dpkg-dev \
-    createrepo \
+    createrepo-c \
     awscli \
     curl \
     dos2unix \
