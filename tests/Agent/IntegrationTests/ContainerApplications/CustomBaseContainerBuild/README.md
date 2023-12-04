@@ -7,12 +7,6 @@ Instructions for building a set of custom base images, used by the Container Int
 https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/
 https://docs.docker.com/engine/reference/commandline/buildx_build/
 
-### Prerequisites:
-* [Azure CLI (32 bit)](https://aka.ms/installazurecliwindows)
-
-## Azure login
-1. Open a Powershell command prompt
-2. Run `az login <your_azure_login_email` and follow the authentication instructions
 
 ## Azure container registry login via Docker
 From a Powershell command prompt in the same folder as this README file:
@@ -41,7 +35,13 @@ docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseIm
 ### Azure Container Registry Changes:
 The DotNetReg container registry was originally created on the Basic SKU. The only way to enable anonymous pull from the container registry is to upgrade to the Standard SKU. For reference, this is the process that was followed:
 
-From a Powershell window, after authenticating to Azure:
+#### Prerequisites:
+* [Azure CLI (32 bit)](https://aka.ms/installazurecliwindows)
+
+#### Azure login
+1. Open a Powershell command prompt
+2. Run `az login <your_azure_login_email` and follow the authentication instructions
+3. Run the following:
 ```
   az acr update --name dotnetreg --sku Standard  # sku was Basic
   az acr update --name dotnetreg --anonymous-pull-enabled
