@@ -33,18 +33,18 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(mNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricName.Name);
-                Assert.AreEqual(null, current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -57,18 +57,18 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual(null, current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -81,19 +81,19 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
             var scopedStats = new MetricStatsDictionary<string, MetricDataWireModel>();
-            scopedStats[metric1.MetricName.Name] = metric1.Data;
-            collection.MergeScopedStats(metric1.MetricName.Scope, scopedStats);
+            scopedStats[metric1.MetricNameModel.Name] = metric1.DataModel;
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, scopedStats);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(mNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricName.Name);
-                Assert.AreEqual("myscope", current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
+                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -103,18 +103,18 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual(null, current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -124,25 +124,25 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual(null, current.MetricName.Scope);
-                Assert.AreEqual(2, current.Data.Value0);
-                Assert.AreEqual(6, current.Data.Value1);
-                Assert.AreEqual(4, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.AreEqual(2, current.DataModel.Value0);
+                Assert.AreEqual(6, current.DataModel.Value1);
+                Assert.AreEqual(4, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
 
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
-            collection.MergeUnscopedStats(metric2.MetricName.Name, metric2.Data);
-            collection.MergeUnscopedStats(metric2.MetricName.Name, metric2.Data);
+            collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
+            collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
             stats = collection.ConvertToJsonForSending(_metricNameService);
 
             count = 0;
@@ -150,11 +150,11 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual(null, current.MetricName.Scope);
-                Assert.AreEqual(4, current.Data.Value0);
-                Assert.AreEqual(16, current.Data.Value1);
-                Assert.AreEqual(12, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.AreEqual(4, current.DataModel.Value0);
+                Assert.AreEqual(16, current.DataModel.Value1);
+                Assert.AreEqual(12, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -166,31 +166,31 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
             var collection = new MetricStatsCollection();
-            collection.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
-            collection.MergeUnscopedStats(metric2.MetricName.Name, metric2.Data);
+            collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
+            collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                if (current.MetricName.Name.Equals("DotNet/name"))
+                if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(5, current.Data.Value1);
-                    Assert.AreEqual(4, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(5, current.DataModel.Value1);
+                    Assert.AreEqual(4, current.DataModel.Value2);
                 }
-                else if (current.MetricName.Name.Equals("DotNet/another"))
+                else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(3, current.Data.Value1);
-                    Assert.AreEqual(2, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(3, current.DataModel.Value1);
+                    Assert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
-                    Assert.Fail("Unexpected Metric: " + current.MetricName.Name);
+                    Assert.Fail("Unexpected Metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(null, current.MetricName.Scope);
+                Assert.AreEqual(null, current.MetricNameModel.Scope);
 
             }
             Assert.AreEqual(2, count);
@@ -205,18 +205,18 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeScopedStats(metric1.MetricName.Scope, metric1.MetricName.Name, metric1.Data);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("DotNet/name", current.MetricName.Name);
-                Assert.AreEqual("myScope", current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("DotNet/name", current.MetricNameModel.Name);
+                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -226,8 +226,8 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
-            collection.MergeScopedStats(metric1.MetricName.Scope, metric1.MetricName.Name, metric1.Data);
-            collection.MergeScopedStats(metric1.MetricName.Scope, metric1.MetricName.Name, metric1.Data);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -235,11 +235,11 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual(metric1.MetricName.Name, current.MetricName.Name);
-                Assert.AreEqual(metric1.MetricName.Scope, current.MetricName.Scope);
-                Assert.AreEqual(2, current.Data.Value0);
-                Assert.AreEqual(6, current.Data.Value1);
-                Assert.AreEqual(4, current.Data.Value2);
+                Assert.AreEqual(metric1.MetricNameModel.Name, current.MetricNameModel.Name);
+                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
+                Assert.AreEqual(2, current.DataModel.Value0);
+                Assert.AreEqual(6, current.DataModel.Value1);
+                Assert.AreEqual(4, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -251,8 +251,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
             var collection = new MetricStatsCollection();
-            collection.MergeScopedStats(metric1.MetricName.Scope, metric1.MetricName.Name, metric1.Data);
-            collection.MergeScopedStats(metric2.MetricName.Scope, metric2.MetricName.Name, metric2.Data);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
+            collection.MergeScopedStats(metric2.MetricNameModel.Scope, metric2.MetricNameModel.Name, metric2.DataModel);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -260,23 +260,23 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                if (current.MetricName.Name.Equals("DotNet/name"))
+                if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(7, current.Data.Value1);
-                    Assert.AreEqual(5, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(7, current.DataModel.Value1);
+                    Assert.AreEqual(5, current.DataModel.Value2);
                 }
-                else if (current.MetricName.Name.Equals("DotNet/another"))
+                else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(3, current.Data.Value1);
-                    Assert.AreEqual(2, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(3, current.DataModel.Value1);
+                    Assert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
-                    Assert.Fail("Unexpected metric: " + current.MetricName.Name);
+                    Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(metric1.MetricName.Scope, current.MetricName.Scope);
+                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
 
             }
             Assert.AreEqual(2, count);
@@ -292,19 +292,19 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-            collection.MergeScopedStats(metric1.MetricName.Scope, txStats);
+            txStats.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, txStats);
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
 
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual("myScope", current.MetricName.Scope);
-                Assert.AreEqual(1, current.Data.Value0);
-                Assert.AreEqual(3, current.Data.Value1);
-                Assert.AreEqual(2, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
+                Assert.AreEqual(1, current.DataModel.Value0);
+                Assert.AreEqual(3, current.DataModel.Value1);
+                Assert.AreEqual(2, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -315,9 +315,9 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-            txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-            collection.MergeScopedStats(metric1.MetricName.Scope, txStats);
+            txStats.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
+            txStats.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, txStats);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -325,11 +325,11 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual("myscope", current.MetricName.Scope);
-                Assert.AreEqual(2, current.Data.Value0);
-                Assert.AreEqual(6, current.Data.Value1);
-                Assert.AreEqual(4, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
+                Assert.AreEqual(2, current.DataModel.Value0);
+                Assert.AreEqual(6, current.DataModel.Value1);
+                Assert.AreEqual(4, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -340,11 +340,11 @@ namespace NewRelic.Agent.Core.Aggregators
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
+            txStats1.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
             MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats2.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-            collection.MergeScopedStats(metric1.MetricName.Scope, txStats1);
-            collection.MergeScopedStats(metric1.MetricName.Scope, txStats2);
+            txStats2.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, txStats1);
+            collection.MergeScopedStats(metric1.MetricNameModel.Scope, txStats2);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -352,11 +352,11 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricName.Name);
-                Assert.AreEqual("scope", current.MetricName.Scope);
-                Assert.AreEqual(2, current.Data.Value0);
-                Assert.AreEqual(6, current.Data.Value1);
-                Assert.AreEqual(4, current.Data.Value2);
+                Assert.AreEqual("name", current.MetricNameModel.Name);
+                Assert.AreEqual("scope", current.MetricNameModel.Scope);
+                Assert.AreEqual(2, current.DataModel.Value0);
+                Assert.AreEqual(6, current.DataModel.Value1);
+                Assert.AreEqual(4, current.DataModel.Value2);
             }
             Assert.AreEqual(1, count);
         }
@@ -369,11 +369,11 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var collection = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
+            txStats1.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
             MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats2.Merge(metric2.MetricName.Name, metric2.Data, MetricDataWireModel.BuildAggregateData);
-            collection.MergeScopedStats(metric2.MetricName.Scope, txStats1);
-            collection.MergeScopedStats(metric2.MetricName.Scope, txStats2);
+            txStats2.Merge(metric2.MetricNameModel.Name, metric2.DataModel, MetricDataWireModel.BuildAggregateData);
+            collection.MergeScopedStats(metric2.MetricNameModel.Scope, txStats1);
+            collection.MergeScopedStats(metric2.MetricNameModel.Scope, txStats2);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -381,23 +381,23 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                if (current.MetricName.Name.Equals("DotNet/name"))
+                if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(2, current.Data.Value1);
-                    Assert.AreEqual(1, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(2, current.DataModel.Value1);
+                    Assert.AreEqual(1, current.DataModel.Value2);
                 }
-                else if (current.MetricName.Name.Equals("DotNet/another"))
+                else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.Data.Value0);
-                    Assert.AreEqual(3, current.Data.Value1);
-                    Assert.AreEqual(2, current.Data.Value2);
+                    Assert.AreEqual(1, current.DataModel.Value0);
+                    Assert.AreEqual(3, current.DataModel.Value1);
+                    Assert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
-                    Assert.Fail("Unexpected metric: " + current.MetricName.Name);
+                    Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual("scope", current.MetricName.Scope);
+                Assert.AreEqual("scope", current.MetricNameModel.Scope);
             }
             Assert.AreEqual(2, count);
         }
@@ -413,18 +413,18 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var collection = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
+            txStats1.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
             MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats2.Merge(metric2.MetricName.Name, metric2.Data, MetricDataWireModel.BuildAggregateData);
+            txStats2.Merge(metric2.MetricNameModel.Name, metric2.DataModel, MetricDataWireModel.BuildAggregateData);
             MetricStatsDictionary<string, MetricDataWireModel> txStats3 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats3.Merge(metric3.MetricName.Name, metric3.Data, MetricDataWireModel.BuildAggregateData);
+            txStats3.Merge(metric3.MetricNameModel.Name, metric3.DataModel, MetricDataWireModel.BuildAggregateData);
             MetricStatsDictionary<string, MetricDataWireModel> txStats4 = new MetricStatsDictionary<string, MetricDataWireModel>();
-            txStats4.Merge(metric4.MetricName.Name, metric4.Data, MetricDataWireModel.BuildAggregateData);
+            txStats4.Merge(metric4.MetricNameModel.Name, metric4.DataModel, MetricDataWireModel.BuildAggregateData);
 
-            collection.MergeScopedStats(metric2.MetricName.Scope, txStats1);
-            collection.MergeScopedStats(metric2.MetricName.Scope, txStats2);
-            collection.MergeScopedStats(metric3.MetricName.Scope, txStats3);
-            collection.MergeScopedStats(metric4.MetricName.Scope, txStats4);
+            collection.MergeScopedStats(metric2.MetricNameModel.Scope, txStats1);
+            collection.MergeScopedStats(metric2.MetricNameModel.Scope, txStats2);
+            collection.MergeScopedStats(metric3.MetricNameModel.Scope, txStats3);
+            collection.MergeScopedStats(metric4.MetricNameModel.Scope, txStats4);
 
             IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
             var count = 0;
@@ -432,41 +432,41 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                if (current.MetricName.Name.Equals("DotNet/name"))
+                if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    if (current.MetricName.Scope.Equals("scope"))
+                    if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.Data.Value0);
-                        Assert.AreEqual(2, current.Data.Value1);
-                        Assert.AreEqual(1, current.Data.Value2);
+                        Assert.AreEqual(1, current.DataModel.Value0);
+                        Assert.AreEqual(2, current.DataModel.Value1);
+                        Assert.AreEqual(1, current.DataModel.Value2);
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricName.Scope);
-                        Assert.AreEqual(1, current.Data.Value0);
-                        Assert.AreEqual(5, current.Data.Value1);
-                        Assert.AreEqual(4, current.Data.Value2);
+                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
+                        Assert.AreEqual(1, current.DataModel.Value0);
+                        Assert.AreEqual(5, current.DataModel.Value1);
+                        Assert.AreEqual(4, current.DataModel.Value2);
                     }
                 }
-                else if (current.MetricName.Name.Equals("DotNet/another"))
+                else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    if (current.MetricName.Scope.Equals("scope"))
+                    if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.Data.Value0);
-                        Assert.AreEqual(3, current.Data.Value1);
-                        Assert.AreEqual(2, current.Data.Value2);
+                        Assert.AreEqual(1, current.DataModel.Value0);
+                        Assert.AreEqual(3, current.DataModel.Value1);
+                        Assert.AreEqual(2, current.DataModel.Value2);
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricName.Scope);
-                        Assert.AreEqual(1, current.Data.Value0);
-                        Assert.AreEqual(7, current.Data.Value1);
-                        Assert.AreEqual(6, current.Data.Value2);
+                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
+                        Assert.AreEqual(1, current.DataModel.Value0);
+                        Assert.AreEqual(7, current.DataModel.Value1);
+                        Assert.AreEqual(6, current.DataModel.Value2);
                     }
                 }
                 else
                 {
-                    Assert.Fail("Unexpected metric: " + current.MetricName.Name);
+                    Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
 
             }
@@ -487,14 +487,14 @@ namespace NewRelic.Agent.Core.Aggregators
             MetricStatsDictionary<string, MetricDataWireModel> scoped1 = new MetricStatsDictionary<string, MetricDataWireModel>();
             scoped1.Merge("DotNet/name1", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)), MetricDataWireModel.BuildAggregateData);
             scoped1.Merge("DotNet/name2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)), MetricDataWireModel.BuildAggregateData);
-            collection1.MergeUnscopedStats(metric5.MetricName.Name, metric5.Data);
+            collection1.MergeUnscopedStats(metric5.MetricNameModel.Name, metric5.DataModel);
             collection1.MergeScopedStats("collection1scope", scoped1);
 
             var collection2 = new MetricStatsCollection();
             MetricStatsDictionary<string, MetricDataWireModel> scoped2 = new MetricStatsDictionary<string, MetricDataWireModel>();
             scoped2.Merge("DotNet/name3", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(1)), MetricDataWireModel.BuildAggregateData);
             scoped2.Merge("DotNet/name4", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2)), MetricDataWireModel.BuildAggregateData);
-            collection1.MergeUnscopedStats(metric6.MetricName.Name, metric6.Data);
+            collection1.MergeUnscopedStats(metric6.MetricNameModel.Name, metric6.DataModel);
             collection1.MergeScopedStats("collection2scope", scoped1);
 
             var collection3 = new MetricStatsCollection();
