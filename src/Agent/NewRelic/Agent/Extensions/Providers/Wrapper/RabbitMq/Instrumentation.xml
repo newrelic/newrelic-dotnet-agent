@@ -30,7 +30,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Consume  Push / Event / Subscribe -->
 		<tracerFactory name="HandleBasicDeliverWrapper">
-      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.ModelBase">
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
         <exactMethodMatcher methodName="HandleBasicDeliver" />
       </match>
 		</tracerFactory>
