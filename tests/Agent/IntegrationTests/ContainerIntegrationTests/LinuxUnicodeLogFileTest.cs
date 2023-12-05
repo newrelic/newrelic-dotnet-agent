@@ -32,7 +32,6 @@ namespace ContainerIntegrationTests
                 // The original problem only seemed to occur with some of the finest level log lines
                 // and it did not occur with console logs.
                 configModifier.SetLogLevel("finest");
-                //configModifier.LogToConsole();
             },
                 exerciseApplication: () =>
                 {
