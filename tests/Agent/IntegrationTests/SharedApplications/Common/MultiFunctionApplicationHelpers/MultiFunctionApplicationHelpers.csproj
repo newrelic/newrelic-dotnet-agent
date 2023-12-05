@@ -251,9 +251,9 @@
     <!-- Requires Serilog 2.8.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
 
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <!-- Requires Serilog 2.9.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" Condition="'$(TargetFramework)' == 'net481'" />
 
@@ -266,9 +266,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- Requires Serilog 2.9.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" Condition="'$(TargetFramework)' == 'net7.0'" />
