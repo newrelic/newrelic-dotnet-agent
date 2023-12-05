@@ -16,11 +16,11 @@ namespace ContainerIntegrationTests
     /// would be created by the test application, with the profiler change, the test transaction should be
     /// created successfully.
     /// </summary>
-    public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<DebianX64SmokeTestFixture>
+    public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFileTestFixture>
     {
-        private readonly DebianX64SmokeTestFixture _fixture;
+        private readonly LinuxUnicodeLogFileTestFixture _fixture;
 
-        public LinuxUnicodeLogFileTest(DebianX64SmokeTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public LinuxUnicodeLogFileTest(LinuxUnicodeLogFileTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -32,6 +32,7 @@ namespace ContainerIntegrationTests
                 // The original problem only seemed to occur with some of the finest level log lines
                 // and it did not occur with console logs.
                 configModifier.SetLogLevel("finest");
+                //configModifier.LogToConsole();
             },
                 exerciseApplication: () =>
                 {
