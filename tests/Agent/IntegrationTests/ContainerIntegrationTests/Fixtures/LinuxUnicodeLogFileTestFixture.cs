@@ -12,6 +12,6 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
         private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
         private const string DistroTag = "jammy";
 
-        public LinuxUnicodeLogFileTestFixture() : base(DockerComposeServiceName, DistroTag, Architecture, Dockerfile) { }
+        public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
     }
 }

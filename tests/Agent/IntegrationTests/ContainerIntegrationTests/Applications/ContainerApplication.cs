@@ -22,7 +22,9 @@ public class ContainerApplication : RemoteApplication
     private readonly string _targetArch;
     private readonly string _agentArch;
     private readonly string _containerPlatform;
-    private readonly string _dockerComposeServiceName;
+
+    private static Random random = new Random();
+    private readonly long _randomId;
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
@@ -37,14 +39,15 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string dockerComposeServiceName, string distroTag, Architecture containerArchitecture,
+    public ContainerApplication(string distroTag, Architecture containerArchitecture,
         string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
-        _dockerComposeServiceName = dockerComposeServiceName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
         _dockerComposeFile = dockerComposeFile;
+
+        _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
 
         DockerDependencies = new List<string>();
 
@@ -63,9 +66,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public override string AppName => $"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}_{_randomId}";
 
-    private string ContainerName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
+    private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
     public override void CopyToRemote()
     {
@@ -78,7 +81,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose -f {_dockerComposeFile} -p {_dockerComposeServiceName.ToLower()} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
+        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
@@ -180,7 +183,7 @@ public class ContainerApplication : RemoteApplication
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
         // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
         Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
     }
@@ -190,7 +193,7 @@ public class ContainerApplication : RemoteApplication
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
-        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
 
 #if DEBUG

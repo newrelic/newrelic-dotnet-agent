@@ -13,13 +13,12 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     protected override int MaxTries => 1;
 
     protected KafkaTestFixtureBase(
-        string dockerComposeServiceName,
         string distroTag,
         ContainerApplication.Architecture containerArchitecture,
         string dockerfile,
         string dotnetVersion,
         string dockerComposeFile = "docker-compose-kafka.yml") :
-        base(new ContainerApplication(dockerComposeServiceName, distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile))
+        base(new ContainerApplication(distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile))
     {
     }
 
@@ -39,21 +38,19 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
 public class KafkaDotNet6TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
-    private const string DockerComposeServiceName = "UbuntuX64KafkaDotNet6TestApp";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "bullseye-slim";
     private const string DotnetVersion = "6.0";
 
-    public KafkaDotNet6TestFixture() : base(DockerComposeServiceName, DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNet6TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
 public class KafkaDotNet7TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
-    private const string DockerComposeServiceName = "UbuntuX64KafkaDotNet7TestApp";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "bullseye-slim";
     private const string DotnetVersion = "7.0";
 
-    public KafkaDotNet7TestFixture() : base(DockerComposeServiceName, DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNet7TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
