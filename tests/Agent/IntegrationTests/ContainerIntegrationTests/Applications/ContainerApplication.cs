@@ -106,6 +106,7 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_APP_NAME");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
