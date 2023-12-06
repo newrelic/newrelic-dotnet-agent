@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
+namespace NewRelic.Agent.ContainerIntegrationTests.Applications;
 
 public class ContainerApplication : RemoteApplication
 {
@@ -22,12 +22,14 @@ public class ContainerApplication : RemoteApplication
     private readonly string _targetArch;
     private readonly string _agentArch;
     private readonly string _containerPlatform;
-    private readonly string _dockerComposeServiceName;
+
+    private static Random random = new Random();
+    private readonly long _randomId;
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
 
-    protected override string ApplicationDirectoryName { get; }
+    protected override string ApplicationDirectoryName { get; } = "ContainerApplication";
 
     protected override string SourceApplicationDirectoryPath
     {
@@ -37,15 +39,15 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture,
+    public ContainerApplication(string distroTag, Architecture containerArchitecture,
         string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
-        ApplicationDirectoryName = applicationDirectoryName;
-        _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
         _dockerComposeFile = dockerComposeFile;
+
+        _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
 
         DockerDependencies = new List<string>();
 
@@ -64,9 +66,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public override string AppName => $"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}_{_randomId}";
 
-    private string ContainerName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
+    private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
     public override void CopyToRemote()
     {
@@ -79,7 +81,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose -f {_dockerComposeFile} -p {_dockerComposeServiceName.ToLower()} up --abort-on-container-exit --remove-orphans --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
@@ -107,6 +109,7 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_APP_NAME");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
@@ -132,9 +135,6 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("AGENT_PATH", newRelicHomeDirectoryPath);
         startInfo.EnvironmentVariables.Add("LOG_PATH", profilerLogDirectoryPath);
         startInfo.EnvironmentVariables.Add("CONTAINER_NAME", ContainerName);
-        // generate a random network name to keep parallel test execution from failing
-        // network name length needs to be less than 15 characters to be compatible with linux containers
-        startInfo.EnvironmentVariables.Add("NETWORK_NAME", $"net-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000000, 10000000)}");
 
         if (AdditionalEnvironmentVariables != null)
         {
@@ -183,7 +183,7 @@ public class ContainerApplication : RemoteApplication
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
         // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
         Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
     }
@@ -193,7 +193,7 @@ public class ContainerApplication : RemoteApplication
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
-        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
 
 #if DEBUG
