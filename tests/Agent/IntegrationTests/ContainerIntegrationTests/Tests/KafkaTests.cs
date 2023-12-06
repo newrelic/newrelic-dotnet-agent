@@ -27,7 +27,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         _fixture.TestLogger = output;
 
         _topicName = GenerateTopic();
-        var brokerName = "kafka-broker";
 
         _fixture.Actions(setupConfiguration: () =>
             {
@@ -37,7 +36,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 configModifier.LogToConsole();
 
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _topicName);
-                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_CONTAINER_NAME", brokerName);
             },
             exerciseApplication: () =>
             {

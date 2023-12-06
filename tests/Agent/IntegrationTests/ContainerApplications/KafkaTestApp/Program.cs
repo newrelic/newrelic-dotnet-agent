@@ -54,7 +54,7 @@ namespace KafkaTestApp
         {
             Thread.Sleep(15 * 1000); // Waiting for Kafka to get ready
 
-            var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_CONTAINER_NAME");
+            var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_BROKER_NAME");
             var kafkaConfig = new ConfigurationBuilder().AddInMemoryCollection().Build();
             kafkaConfig["bootstrap.servers"] = $"{broker}:9092";
             kafkaConfig["group.id"] = "kafka-dotnet-getting-started";
