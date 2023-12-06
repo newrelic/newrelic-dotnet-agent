@@ -1,4 +1,4 @@
-name: .NET Agent Linux Smoke Tests
+name: .NET Agent Linux Container Integration Tests
 
 on:
   workflow_call:
@@ -20,7 +20,7 @@ env:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
-  group: linux-smoke-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: linux-container-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -28,8 +28,8 @@ permissions:
 
 jobs:
 
-  run-linux-smoke-tests:
-    name: Run Linux Smoke Tests
+  run-linux-container-tests:
+    name: Run Linux Container Integration Tests
     runs-on: ubuntu-latest
 
     env:
@@ -72,12 +72,5 @@ jobs:
           path: ${{ github.workspace }}/src/Agent
           repo: ${{ github.repository }}
   
-
-      - name: Set up secrets
-        env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-        run: |
-          echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-
-      - name: Build & Run Linux Smoke Tests
+      - name: Build & Run Linux Container Integration Tests
         run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net7.0

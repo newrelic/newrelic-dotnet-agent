@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
+namespace NewRelic.Agent.ContainerIntegrationTests.Applications;
 
 public class ContainerApplication : RemoteApplication
 {
@@ -27,7 +27,7 @@ public class ContainerApplication : RemoteApplication
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
 
-    protected override string ApplicationDirectoryName { get; }
+    protected override string ApplicationDirectoryName { get; } = "ContainerApplication";
 
     protected override string SourceApplicationDirectoryPath
     {
@@ -37,11 +37,10 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture,
+    public ContainerApplication(string dockerComposeServiceName, string distroTag, Architecture containerArchitecture,
         string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
-        ApplicationDirectoryName = applicationDirectoryName;
-        _dockerComposeServiceName = applicationDirectoryName;
+        _dockerComposeServiceName = dockerComposeServiceName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
@@ -79,7 +78,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose -f {_dockerComposeFile} -p {_dockerComposeServiceName.ToLower()} up --abort-on-container-exit --remove-orphans --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose -f {_dockerComposeFile} -p {_dockerComposeServiceName.ToLower()} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;

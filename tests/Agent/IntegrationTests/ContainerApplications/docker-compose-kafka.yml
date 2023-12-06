@@ -11,6 +11,9 @@ version: "3"
 # PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
 # DOTNET_VERSION  The dotnet version number to use (7.0, 8.0, etc)
 # TEST_DOCKERFILE The path and dockerfile to use for the service.
+#
+# NEW_RELIC_KAFKA_TOPIC
+# NEW_RELIC_KAFKA_CONTAINER_NAME
 # 
 # and the usual suspects:
 # NEW_RELIC_LICENSE_KEY
@@ -22,20 +25,26 @@ version: "3"
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
 
 services:
-    UbuntuX64Kafka1TestApp:
-        extends:
-            file: docker-compose-smoketestapp.yml
-            service: smoketestapp
-        depends_on:
-            - kafka-broker
-        environment:
-            - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
-            - NEW_RELIC_KAFKA_CONTAINER_NAME=${NEW_RELIC_KAFKA_CONTAINER_NAME}
-
-    UbuntuX64Kafka2TestApp:
-        extends:
-            file: docker-compose-smoketestapp.yml
-            service: smoketestapp
+    LinuxSmokeTestApp:
+        container_name: ${CONTAINER_NAME}
+        image: ${CONTAINER_NAME}
+        platform: ${PLATFORM}
+        build:
+            context: .
+            dockerfile: ${TEST_DOCKERFILE}
+            args:
+                DISTRO_TAG: ${DISTRO_TAG}
+                TARGET_ARCH: ${TARGET_ARCH}
+                NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+                NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+                NEW_RELIC_HOST: ${NEW_RELIC_HOST}
+                DOTNET_VERSION: ${DOTNET_VERSION}
+                APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
+        ports:
+          - "${PORT}:80"
+        volumes:
+          - ${AGENT_PATH}:/usr/local/newrelic-dotnet-agent # AGENT_PATH from .env, points to newrelichome_linux_x64
+          - ${LOG_PATH}:/app/logs # LOG_PATH from .env, should be a folder unique to this run of the smoketest app           
         depends_on:
             - kafka-broker
         environment:

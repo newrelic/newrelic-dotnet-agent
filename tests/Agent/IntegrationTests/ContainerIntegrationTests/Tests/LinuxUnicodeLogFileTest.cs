@@ -1,13 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.IntegrationTestHelpers;
-using Xunit.Abstractions;
-using Xunit;
-using NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 using System;
+using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
+using Xunit;
+using Xunit.Abstractions;
 
-namespace ContainerIntegrationTests
+namespace NewRelic.Agent.ContainerIntegrationTests.Tests
 {
     /// <summary>
     /// This test is meant to prevent any regressions from occurring when profiler log lines containing

@@ -18,7 +18,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10922F-3CC6-4497-AF53-DF6808380258}"
 	ProjectSection(SolutionItems) = preProject
 		ContainerApplications\docker-compose-kafka.yml = ContainerApplications\docker-compose-kafka.yml
-		ContainerApplications\docker-compose-smoketestapp.yml = ContainerApplications\docker-compose-smoketestapp.yml
 		ContainerApplications\docker-compose.yml = ContainerApplications\docker-compose.yml
 	EndProjectSection
 EndProject
