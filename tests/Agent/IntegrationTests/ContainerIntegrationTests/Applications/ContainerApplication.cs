@@ -132,9 +132,6 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("AGENT_PATH", newRelicHomeDirectoryPath);
         startInfo.EnvironmentVariables.Add("LOG_PATH", profilerLogDirectoryPath);
         startInfo.EnvironmentVariables.Add("CONTAINER_NAME", ContainerName);
-        // generate a random network name to keep parallel test execution from failing
-        // network name length needs to be less than 15 characters to be compatible with linux containers
-        startInfo.EnvironmentVariables.Add("NETWORK_NAME", $"net-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000000, 10000000)}");
 
         if (AdditionalEnvironmentVariables != null)
         {
