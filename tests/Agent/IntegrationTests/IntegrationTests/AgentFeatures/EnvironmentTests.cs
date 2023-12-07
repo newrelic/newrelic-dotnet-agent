@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             _connectData = _connectData ?? _fixture.AgentLog.GetConnectData();
 
             var nrConfig = _connectData?.Environment?.GetPropertyString("Initial NewRelic Config");
-            var appConfig = _connectData?.Environment?.GetPropertyString("Application Config");
+            var appConfig = _connectData?.Environment?.GetPropertyString("Application Config").Split(',')[0];
 
             NrAssert.Multiple(
                 () => Assert.NotNull(nrConfig),
