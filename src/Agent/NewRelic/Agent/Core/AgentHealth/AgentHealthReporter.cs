@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 Log.Debug(logMessage);
             }
-            
+
             List<string> events = new List<string>();
             foreach (var counter in _agentHealthEventCounters)
             {
@@ -226,20 +226,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportAgentInfo()
         {
-            if (AgentInstallConfiguration.AgentInfo == null)
-            {
-                TrySend(_metricBuilder.TryBuildInstallTypeMetric("Unknown"));
-                return;
-            }
-
-            if (AgentInstallConfiguration.AgentInfo.AzureSiteExtension)
-            {
-                TrySend(_metricBuilder.TryBuildInstallTypeMetric((AgentInstallConfiguration.AgentInfo.InstallType ?? "Unknown") + "SiteExtension"));
-            }
-            else
-            {
-                TrySend(_metricBuilder.TryBuildInstallTypeMetric(AgentInstallConfiguration.AgentInfo.InstallType ?? "Unknown"));
-            }
+            TrySend(_metricBuilder.TryBuildInstallTypeMetric(AgentInstallConfiguration.AgentInfo?.ToString() ?? "Unknown"));
         }
 
         public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
@@ -354,7 +341,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region TraceContext
 
-        /// <summary>Incremented when the agent successfuly processes inbound tracestate and traceparent headers</summary>
+        /// <summary>Incremented when the agent successfuly proceses inbound tracestate and traceparent headers</summary>
         public void ReportSupportabilityTraceContextAcceptSuccess()
         {
             _traceContextAcceptSuccessCounter.Increment();
@@ -661,7 +648,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthEventCounters[AgentHealthEvent.Log]?.Add(count);
         }
 
-        public void ReportLoggingEventsDropped(int droppedCount)=> TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(droppedCount));
+        public void ReportLoggingEventsDropped(int droppedCount) => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(droppedCount));
 
         public void ReportIfAppDomainCachingDisabled()
         {
@@ -678,7 +665,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogDecoratingConfiguredName(_configuration.LogDecoratorEnabled));
         }
 
-#endregion
+        #endregion
 
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {

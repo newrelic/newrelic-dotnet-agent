@@ -198,7 +198,7 @@ namespace NewRelic.Agent.Core
             return System.Environment.GetEnvironmentVariable(NewRelicLogLevelEnvironmentVariable);
         }
 
-        private static AgentInfo GetAgentInfo()
+        public static AgentInfo GetAgentInfo()
         {
             var agentInfoPath = $@"{NewRelicHome}\agentinfo.json";
             if (File.Exists(agentInfoPath))
