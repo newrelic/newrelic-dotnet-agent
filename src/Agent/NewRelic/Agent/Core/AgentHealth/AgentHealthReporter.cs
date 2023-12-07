@@ -67,7 +67,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 Log.Debug(logMessage);
             }
-
             List<string> events = new List<string>();
             foreach (var counter in _agentHealthEventCounters)
             {
@@ -341,7 +340,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region TraceContext
 
-        /// <summary>Incremented when the agent successfuly proceses inbound tracestate and traceparent headers</summary>
+        /// <summary>Incremented when the agent successfuly processes inbound tracestate and traceparent headers</summary>
         public void ReportSupportabilityTraceContextAcceptSuccess()
         {
             _traceContextAcceptSuccessCounter.Increment();
