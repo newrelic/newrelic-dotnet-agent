@@ -3,6 +3,7 @@
 
 #if NETSTANDARD2_0
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using NewRelic.Core;
@@ -39,29 +40,46 @@ namespace NewRelic.Agent.Core.Configuration
                 applicationDirectory = Directory.GetCurrentDirectory();
             }
 
+            // add default appsettings*.json files to config builder
             var builder = new ConfigurationBuilder()
                 .SetBasePath(applicationDirectory)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: false);
 
-            // Determine if there might be an environment-specific appsettings file
-            var env = new SystemInterfaces.Environment();
-            var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            if (string.IsNullOrEmpty(environment))
-            {
-                environment = env.GetEnvironmentVariable("EnvironmentName");
-            }
+            // add default appsettings*.json files to list of file paths that we log were searched
+            var appSettingsPath = Path.Combine(applicationDirectory, "appsettings.json");
+            var appSettingsProductionPath = Path.Combine(applicationDirectory, "appsettings.Production.json");
+            _appSettingsFilePaths = string.Join(", ", appSettingsPath, appSettingsProductionPath);
 
-            if (!string.IsNullOrEmpty(environment))
+
+            // Determine if there might be an environment-specific appsettings file
+            var environment = GetDotnetEnvironment();
+            if (!string.IsNullOrEmpty(environment) && environment != "Production")
             {
                 builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
+                var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
+                _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, appSettingsEnvPath);
             }
 
-            var appSettingsPath = Path.Combine(applicationDirectory, "appsettings.json");
-            var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
-            _appSettingsFilePaths = !string.IsNullOrEmpty(environment) ? string.Join(", ", appSettingsPath, appSettingsEnvPath) : appSettingsPath;
-
             return builder.Build();
+        }
+
+        private static string GetDotnetEnvironment()
+        {
+            var env = new SystemInterfaces.Environment();
+            // Determine the environment (e.g. Production, Development, Staging, etc.) by considering the following env vars in order
+            // "EnvironmentName" is a New Relic proprietary variable and should take precedence over the .NET builtins
+            // "DOTNET_ENVIRONMENT" takes precedence over "ASPNETCORE_ENVIRONMENT", even for ASP.NET Core applications
+            var envVarsToCheck = new List<string>() { "EnvironmentName", "DOTNET_ENVIRONMENT", "ASPNETCORE_ENVIRONMENT" };
+            foreach ( var envVar in envVarsToCheck )
+            {
+                var environment = env.GetEnvironmentVariable(envVar);
+                if (!string.IsNullOrEmpty(environment))
+                {
+                    return environment;
+                }
+            }
+            return null;
         }
 
         public static string GetAppSetting(string key)
