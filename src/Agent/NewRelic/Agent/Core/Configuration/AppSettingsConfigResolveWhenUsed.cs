@@ -41,7 +41,8 @@ namespace NewRelic.Agent.Core.Configuration
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(applicationDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: false);
 
             // Determine if there might be an environment-specific appsettings file
             var env = new SystemInterfaces.Environment();
