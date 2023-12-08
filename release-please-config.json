@@ -7,7 +7,28 @@
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
       "prerelease": false,
-      "changelog-sections": [{"type":"notice","section":"Notice","hidden":false},{"type":"feat","section":"New features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]
+      "changelog-sections": [
+        {
+          "type": "notice",
+          "section": "Notice",
+          "hidden": false
+        },
+        {
+          "type": "feat",
+          "section": "New features",
+          "hidden": false
+        },
+        {
+          "type": "fix",
+          "section": "Fixes",
+          "hidden": false
+        },
+        {
+          "type": "security",
+          "section": "Security",
+          "hidden": false
+        }
+      ]
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
