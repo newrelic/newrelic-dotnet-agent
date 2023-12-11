@@ -66,10 +66,10 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      # - name: Checkout
-      #   uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      #   with:
-      #     fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
       
       - name: Get Release Version and Run ID
         id: step1
@@ -82,6 +82,34 @@ jobs:
           fi
           echo "Found commit sha: $COMMIT_SHA"
 
+          gh release view --json name,isDraft,isPrerelease,publishedAt >> release.json
+
+          # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
+          RELEASE_VERSION=$(cat release.json | jq --raw-output ".name | .[1:]")
+          if [ "$RELEASE_VERSION" == "" ]; then
+            echo "::error::Could not find the latest release."
+            exit 1
+          fi
+          echo Found release version: $RELEASE_VERSION"
+
+          if [ "$(cat release.json | jq --raw-output '.isDraft')" == "true" ]; then
+            echo "::error::$RELEASE_VERSION is marked as 'Draft'. Unable to continue."
+            exit 1
+          fi
+          if [ "$(cat release.json | jq --raw-output '.isPrerelease')" == "true" ]; then
+            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'. Unable to continue."
+            exit 1
+          fi
+          # check release date - should be within the last 7 days (to ensure we don't grab an old release)
+          LAST_WEEK=$(date --date "-7days" -u +"%FT%TZ")
+          PUBLISH_DATE=$(date --date "$(cat release.json | jq --raw-output '.publishedAt')" -u +"%FT%TZ")
+          if [ $LAST_WEEK -ge $PUBLISH_DATE ]; then
+            echo "::error::$RELEASE_VERSION was published more than a week ago. Unable to continue."
+            exit 1
+          fi
+
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
           # get the run id of the most recent successful run of the all_solutions workflow against the given commit sha
           WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
           if [ "$WORKFLOW_RUN_ID" == "" ]; then
@@ -90,11 +118,6 @@ jobs:
           fi
           echo "Found workflow run id: $WORKFLOW_RUN_ID"
           echo "worflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
-
-          # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
-          RELEASE_VERSION=$(gh release view --json name --jq ".name | .[1:]")
-          echo Found release version: $RELEASE_VERSION"
-          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
 
           # for testing, we'll exit here and force the job to fail
           exit 1
