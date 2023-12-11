@@ -133,7 +133,7 @@ jobs:
       - name: Set Output Version and Build Run ID
         id: step2
         run: |
-          if [ "${{ github.event.inputs.get-version-automatically}}" .eq "true" ]; then
+          if [ "${{ github.event.inputs.get-version-automatically}}" == "true" ]; then
             echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
           else
