@@ -3,12 +3,17 @@ name: Deploy the .NET Agent
 on:
   workflow_dispatch:
     inputs:
-      # agent_version:
-      #   description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
-      #   required: true
-      # run_id:
-      #   description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
-      #   required: true
+      get-version-automatically:
+        description: 'Automatically determine the Agent Version and Run ID'
+        type: boolean
+        required: true
+        default: true
+      agent_version:
+       description: 'OVERRIDE: Agent Version to deploy. Format: X.X.X - ignored unless "Automatically determine..." is unchecked'
+       required: false
+      run_id:
+         description: 'OVERRIDE: Run ID of the all_solutions.yml workflow that was triggered by creating a Release in GitHub.  ID can be found in URL for run. Ignored unless "Automatically determine..." is unchecked'
+         required: false
       deploy:
         type: boolean
         description: Deploy Build Artifacts. (If not selected, do everything except deploy.)
@@ -57,8 +62,8 @@ jobs:
     name: Get Release Version and Run ID
     runs-on: ubuntu-latest
     outputs:
-      release_version: ${{ steps.step1.outputs.release_version }}
-      workflow_run_id: ${{ steps.step1.outputs.workflow_run_id }}
+      release_version: ${{ steps.step2.outputs.release_version }}
+      workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
@@ -72,6 +77,7 @@ jobs:
           fetch-depth: 0
       
       - name: Get Release Version and Run ID
+        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
         id: step1
         run: |
           # Get the commit sha for the most recent release
@@ -93,11 +99,11 @@ jobs:
           echo "Found release version: $RELEASE_VERSION"
 
           if [ "$(cat release.json | jq --raw-output '.isDraft')" == "true" ]; then
-            echo "::error::$RELEASE_VERSION is marked as 'Draft'. Unable to continue."
+            echo "::error::$RELEASE_VERSION is marked as 'Draft'.  Use manual overrides to continue."
             exit 1
           fi
           if [ "$(cat release.json | jq --raw-output '.isPrerelease')" == "true" ]; then
-            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'. Unable to continue."
+            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'.  Use manual overrides to continue."
             exit 1
           fi
           # check release date - should be within the last 7 days (to ensure we don't grab an old release)
@@ -105,7 +111,7 @@ jobs:
           PUBLISHED_AT=$(cat release.json | jq --raw-output '.publishedAt')
           PUBLISH_DATE=$(date --date "$PUBLISHED_AT" -u +"%s")
           if [ $LAST_WEEK -ge $PUBLISH_DATE ]; then
-            echo "::error::$RELEASE_VERSION was published more than a week ago. Unable to continue."
+            echo "::error::$RELEASE_VERSION was published more than a week ago. Use manual overrides to continue."
             exit 1
           fi
 
@@ -118,12 +124,34 @@ jobs:
             exit 1
           fi
           echo "Found workflow run id: $WORKFLOW_RUN_ID"
-          echo "worflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "workflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
 
           # for testing, we'll exit here and force the job to fail
           exit 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Output Version and Build Run ID
+        id: step2
+        run: |
+          if [ "${{ github.event.inputs.get-version-automatically}}" .eq "true" ]; then
+            echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
+            echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
+          else
+            if [ "${{github.event.inputs.agent_version}}" .eq ""]; then
+              echo "::error::Agent Version not specified."
+              exit 1
+            fi
+            if [ "${{github.event.inputs.run_id}}" .eq ""]; then
+              echo "::error::Run ID not specified."
+              exit 1
+            fi
+            echo "release_version=${{github.event.inputs.agent_version}}" >> "$GITHUB_OUTPUT"
+            echo "workflow_run_id=${{github.event.inputs.run_id}}" >> "$GITHUB_OUTPUT"
+          fi
+
+          # for testing, we'll exit here and force the job to fail
+          exit 1
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
   get-external-artifacts:
     name: Get and Publish Deploy Artifacts Locally
