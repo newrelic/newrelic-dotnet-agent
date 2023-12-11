@@ -83,7 +83,7 @@ jobs:
         run: |
           # Get the commit sha for the most recent release
           COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
-          if [ "$COMMIT_SHA" == "" ]; then 
+          if [[ -z "$COMMIT_SHA" ]]; then 
             echo "::error::Unable to find SHA of most recent release"
             exit 1 
           fi
@@ -93,17 +93,17 @@ jobs:
 
           # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
           RELEASE_VERSION=$(cat release.json | jq --raw-output ".name | .[1:]")
-          if [ "$RELEASE_VERSION" == "" ]; then
+          if [[ -z "$RELEASE_VERSION" ]]; then
             echo "::error::Could not find the latest release."
             exit 1
           fi
           echo "Found release version: $RELEASE_VERSION"
 
-          if [ "$(cat release.json | jq --raw-output '.isDraft')" == "true" ]; then
+          if [ "$(cat release.json | jq --raw-output '.isDraft')" = "true" ]; then
             echo "::error::$RELEASE_VERSION is marked as 'Draft'.  Use manual overrides to continue."
             exit 1
           fi
-          if [ "$(cat release.json | jq --raw-output '.isPrerelease')" == "true" ]; then
+          if [ "$(cat release.json | jq --raw-output '.isPrerelease')" = "true" ]; then
             echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'.  Use manual overrides to continue."
             exit 1
           fi
@@ -120,7 +120,7 @@ jobs:
 
           # get the run id of the most recent successful run of the all_solutions workflow against the given commit sha
           WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
-          if [ "$WORKFLOW_RUN_ID" == "" ]; then
+          if [[ -z "$WORKFLOW_RUN_ID" ]]; then
             echo "::error::Could not find a successful workflow run against commit SHA $COMMIT_SHA"
             exit 1
           fi
@@ -133,15 +133,15 @@ jobs:
       - name: Set Output Version and Build Run ID
         id: step2
         run: |
-          if [ "${{ github.event.inputs.get-version-automatically}}" == "true" ]; then
+          if [ "${{ github.event.inputs.get-version-automatically}}" = "true" ]; then
             echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
           else
-            if [ "${{github.event.inputs.agent_version}}" == ""]; then
+            if [[ -z "${{github.event.inputs.agent_version}}" ]]; then
               echo "::error::Agent Version not specified."
               exit 1
             fi
-            if [ "${{github.event.inputs.run_id}}" == ""]; then
+            if [[ -z "${{github.event.inputs.run_id}}" ]]; then
               echo "::error::Run ID not specified."
               exit 1
             fi
