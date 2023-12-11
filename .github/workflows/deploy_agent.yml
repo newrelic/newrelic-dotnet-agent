@@ -136,11 +136,11 @@ jobs:
             echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
           else
-            if [ "${{github.event.inputs.agent_version}}" .eq ""]; then
+            if [ "${{github.event.inputs.agent_version}}" == ""]; then
               echo "::error::Agent Version not specified."
               exit 1
             fi
-            if [ "${{github.event.inputs.run_id}}" .eq ""]; then
+            if [ "${{github.event.inputs.run_id}}" == ""]; then
               echo "::error::Run ID not specified."
               exit 1
             fi
