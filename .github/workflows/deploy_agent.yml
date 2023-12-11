@@ -82,7 +82,7 @@ jobs:
           fi
           echo "Found commit sha: $COMMIT_SHA"
 
-          gh release view --json name,isDraft,isPrerelease,publishedAt >> release.json
+          gh release view --json name,isDraft,isPrerelease,publishedAt > release.json
 
           # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
           RELEASE_VERSION=$(cat release.json | jq --raw-output ".name | .[1:]")
@@ -90,7 +90,7 @@ jobs:
             echo "::error::Could not find the latest release."
             exit 1
           fi
-          echo Found release version: $RELEASE_VERSION"
+          echo "Found release version: $RELEASE_VERSION"
 
           if [ "$(cat release.json | jq --raw-output '.isDraft')" == "true" ]; then
             echo "::error::$RELEASE_VERSION is marked as 'Draft'. Unable to continue."
@@ -101,8 +101,9 @@ jobs:
             exit 1
           fi
           # check release date - should be within the last 7 days (to ensure we don't grab an old release)
-          LAST_WEEK=$(date --date "-7days" -u +"%FT%TZ")
-          PUBLISH_DATE=$(date --date "$(cat release.json | jq --raw-output '.publishedAt')" -u +"%FT%TZ")
+          LAST_WEEK=$(date --date "-7days" -u +"%s")
+          PUBLISHED_AT=$(cat release.json | jq --raw-output '.publishedAt')
+          PUBLISH_DATE=$(date --date "$PUBLISHED_AT" -u +"%s")
           if [ $LAST_WEEK -ge $PUBLISH_DATE ]; then
             echo "::error::$RELEASE_VERSION was published more than a week ago. Unable to continue."
             exit 1
