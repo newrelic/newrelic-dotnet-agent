@@ -72,6 +72,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
+        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
