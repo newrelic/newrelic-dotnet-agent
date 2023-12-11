@@ -3,12 +3,12 @@ name: Deploy the .NET Agent
 on:
   workflow_dispatch:
     inputs:
-      agent_version:
-        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
-        required: true
-      run_id:
-        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
-        required: true
+      # agent_version:
+      #   description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+      #   required: true
+      # run_id:
+      #   description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+      #   required: true
       deploy:
         type: boolean
         description: Deploy Build Artifacts. (If not selected, do everything except deploy.)
@@ -53,9 +53,54 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  get-release-info:
+    name: Get Release Version and Run ID
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.step1.outputs.release_version }}
+      workflow_run_id: ${{ steps.step1.outputs.workflow_run_id }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
 
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+      
+      - name: Get Release Version and Run ID
+        id: step1
+        run: |
+          # Get the commit sha for the most recent release
+          COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
+          if [ "$COMMIT_SHA" == "" ]; then 
+            echo "::error::Unable to find SHA of most recent release"
+            exit 1 
+          fi
+
+          # get the run id of the most recent successful run of the all_solutions workflow against the given commit sha
+          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
+          if [ "$WORKFLOW_RUN_ID" == "" ]; then
+            echo "::error::Could not find a successful workflow run against commit SHA $COMMIT_SHA"
+            exit 1
+          fi
+          echo "worflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
+
+          # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
+          RELEASE_VERSION=$(gh release view --json name --jq ".name | .[1:]")
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+          # for testing, we'll exit here and force the job to fail
+          exit 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
   get-external-artifacts:
     name: Get and Publish Deploy Artifacts Locally
+    needs: get-release-info
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -69,7 +114,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
           repo: ${{ github.repository }}
@@ -89,7 +134,7 @@ jobs:
           if-no-files-found: error
 
   deploy-downloadsite:
-    needs: get-external-artifacts
+    needs: [get-release-info, get-external-artifacts]
     if: ${{ github.event.inputs.downloadsite == 'true' }}
     name: Deploy MSI to Download Site
     runs-on: windows-2019
@@ -134,15 +179,15 @@ jobs:
           $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
           $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           $Env:AWS_DEFAULT_REGION="us-west-2"
-          New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
-          Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
-          cd .\previous_releases\${{ github.event.inputs.agent_version }}
+          New-Item -ItemType directory -Path .\previous_releases\${{ needs.get-release-info.outputs.release_version }} -Force
+          Copy-Item .\working_dir\* ".\previous_releases\${{ needs.get-release-info.outputs.release_version }}\" -Force -Recurse
+          cd .\previous_releases\${{ needs.get-release-info.outputs.release_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
@@ -252,7 +297,7 @@ jobs:
         shell: powershell
 
   deploy-linux:
-    needs: get-external-artifacts
+    needs: [get-release-info, get-external-artifacts]
     if: ${{ github.event.inputs.linux == 'true' }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
@@ -298,13 +343,13 @@ jobs:
       - name: Prepare docker.env
         run: |
           # Confirm that the version is in the proper format.
-          IFS='.' read -ra agent_version_array <<< "${{ github.event.inputs.agent_version }}"
+          IFS='.' read -ra agent_version_array <<< "${{ needs.get-release-info.outputs.release_version }}"
           agent_version_count=${#agent_version_array[@]}
           if [ $agent_version_count -ne 3 ] ; then
-            echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like '10.0.0'."
+            echo "::error Supplied agent version from Workflow (${{ needs.get-release-info.outputs.release_version }}) is malformed.  It needs to be like '10.0.0'."
             exit 1
           else
-            AGENT_VERSION=${{ github.event.inputs.agent_version }}
+            AGENT_VERSION=${{ needs.get-release-info.outputs.release_version }}
           fi
 
           # Build the docker.env
@@ -348,6 +393,7 @@ jobs:
 
   update-apm:
     name: Update System Configuration Page
+    needs: get-release-info
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.update-apm-version == 'true' }}
     steps:
@@ -356,7 +402,7 @@ jobs:
           PAYLOAD="{
               \"system_configuration\": {
                 \"key\":   \"dotnet_agent_version\",
-                \"value\": \"${{ github.event.inputs.agent_version }}\"
+                \"value\": \"${{ needs.get-release-info.outputs.release_version }}\"
               }
             }"
           CONTENT_TYPE='Content-Type: application/json'
@@ -374,12 +420,12 @@ jobs:
             -d "$PAYLOAD"
 
   publish-release-notes:
-    needs: [deploy-linux, deploy-nuget, index-download-site]
+    needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
-      agent_version: ${{ github.event.inputs.agent_version }}
+      agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ github.event.inputs.run_id }}
     secrets: inherit
 
@@ -388,11 +434,11 @@ jobs:
       issues: write
       contents: read
       packages: read
-    needs: [deploy-linux, deploy-nuget, index-download-site]
+    needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:
-      agent_version: ${{ github.event.inputs.agent_version }}
+      agent_version: ${{ needs.get-release-info.outputs.release_version }}
     secrets: inherit
 
