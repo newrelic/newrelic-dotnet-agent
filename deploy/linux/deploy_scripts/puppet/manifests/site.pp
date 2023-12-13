@@ -12,7 +12,7 @@ package { "apt-utils":
 }
 
 # YUM repo mgmt
-package { "createrepo-c":
+package { "createrepo":
   ensure => installed
 }
 
