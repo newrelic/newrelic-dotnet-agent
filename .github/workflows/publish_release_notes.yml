@@ -51,7 +51,7 @@ jobs:
           workflow: all_solutions.yml
           run_id: ${{ github.event.inputs.run_id }}
           name: deploy-artifacts
-          path: ${{ github.workspace }}/artifacts
+          path: ${{ github.workspace }}/deploy-artifacts
           repo: ${{ github.repository }}
 
       - name: Set Docs PR Branch Name
@@ -72,7 +72,7 @@ jobs:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
           RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net7.0/
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
-          CHECKSUMS: ${{ github.workspace }}/artifacts/DownloadSite/SHA256/checksums.md
+          CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/build/BuildArtifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
 
       - name: Create branch
