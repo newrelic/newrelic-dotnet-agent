@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.20.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.0...v10.20.1) (2023-12-12)
+
+
+### Fixes
+
+* Fix a crash that can occur when the profiler logs certain characters. ([#1982](https://github.com/newrelic/newrelic-dotnet-agent/issues/1982)) ([#2109](https://github.com/newrelic/newrelic-dotnet-agent/issues/2109)) ([742d232](https://github.com/newrelic/newrelic-dotnet-agent/commit/742d232189ae5c94480711172d5db4219b20c384))
+* Improve handling of .NET environments and settings from appsettings.*.json files ([#2125](https://github.com/newrelic/newrelic-dotnet-agent/issues/2125)) ([3c21fe9](https://github.com/newrelic/newrelic-dotnet-agent/commit/3c21fe9172f5e788f6d4879e50ced2fff9a07983))
+* Obfuscate logged appSettings values ([#2110](https://github.com/newrelic/newrelic-dotnet-agent/issues/2110)) ([2d8da68](https://github.com/newrelic/newrelic-dotnet-agent/commit/2d8da680294b7dd5c0ae30e9ebcb93f1c940f754))
+* Revert RabbitMQ HandleBasicDeliver instrumentation change from [#1972](https://github.com/newrelic/newrelic-dotnet-agent/issues/1972). Resolves [#2047](https://github.com/newrelic/newrelic-dotnet-agent/issues/2047) ([#2118](https://github.com/newrelic/newrelic-dotnet-agent/issues/2118)) ([0525182](https://github.com/newrelic/newrelic-dotnet-agent/commit/05251824d7540d01356760c126c4ec478722a8eb))
+* Update instrumentation to support Elasticsearch v8.11.0 ([#2100](https://github.com/newrelic/newrelic-dotnet-agent/issues/2100)) ([9effb5d](https://github.com/newrelic/newrelic-dotnet-agent/commit/9effb5d952984141af18634f7eb3073fc1bd44c3))
+
 ## [10.20.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.2...v10.20.0) (2023-11-21)
 
 
