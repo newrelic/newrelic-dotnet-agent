@@ -262,17 +262,17 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y dos2unix
         shell: bash
-      
-      - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: deploy-artifacts
-          path: ${{ github.workspace }}/
 
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
+
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}/
 
       # - name: Download Deploy Tooling
       #   uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
