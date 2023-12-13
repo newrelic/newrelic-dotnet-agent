@@ -76,13 +76,6 @@ jobs:
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
-      # - name: Upload Deploy Tooling Locally
-      #   uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-      #   with:
-      #     name: deploy-tooling
-      #     path: ${{ github.workspace }}/deploy/
-      #     if-no-files-found: error
-
   deploy-downloadsite:
     needs: get-external-artifacts
     if: ${{ github.event.inputs.downloadsite == 'true' }}
@@ -273,12 +266,6 @@ jobs:
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
-
-      # - name: Download Deploy Tooling
-      #   uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      #   with:
-      #     name: deploy-tooling
-      #     path: ${{ github.workspace }}/deploy
 
       - name: Get GPG Key
         id: write_gpgkey
