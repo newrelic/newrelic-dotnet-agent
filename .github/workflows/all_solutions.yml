@@ -776,7 +776,6 @@ jobs:
           name: deploy-artifacts
           path: |
             ${{ github.workspace }}\build\BuildArtifacts
-            ${{ github.workspace }}\deploy
           if-no-files-found: error
 
   # This job is necessary in order for us to have a branch protection rule for tests with a matrix
