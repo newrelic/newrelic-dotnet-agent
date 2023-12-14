@@ -121,7 +121,7 @@ jobs:
           # get the run id of the most recent successful run of the all_solutions workflow triggered by a release event, against the given commit sha
           WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
           if [[ -z "$WORKFLOW_RUN_ID" ]]; then
-            echo "::error::Could not find a successful workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
+            echo "::error::Could not find a successful all_solutions workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
             exit 1
           fi
 
