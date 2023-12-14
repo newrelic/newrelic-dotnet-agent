@@ -1,57 +1,39 @@
-# Using a multistage build to work around some expired certificates
-# that prevent cloning the CLR repo from the older ubuntu image.
-# v22.04
-FROM ubuntu@sha256:ca5534a51dd04bbcebe9b23ba05f389466cf0c190f1f8f182d7eea92a9671d00 AS ClrRepoCloner 
+# This builds an Ubuntu image, clones the coreclr github repo and builds it.
+# It then sets up the environment for compiling the New Relic .NET profiler.
 
-RUN apt-get update && apt-get install -y \
-  git
+# **WARNING** this will not build a profiler that works on Alpine Linux.
+# See https://github.com/newrelic/newrelic-dotnet-agent/issues/918
+FROM ubuntu:18.04
+
+RUN apt-get update
+RUN apt-get install -y \
+  wget \
+  curl \
+  git \
+  dos2unix \
+  gnupg
+  
+RUN echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+RUN apt-get update
+
+# Putting this on it's own line, tzdata is a dependency of one of the packages being installed below
+# and it needs to be told what timezone it is in.  Just use UTC.
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+
+RUN apt-get install -y \
+  cmake llvm-7 clang-7 lldb-7 liblldb-7-dev libunwind8 libunwind8-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev \
+  libc++-dev \
+  uuid-dev \
+  zlib1g-dev \
+  locales \
+  locales-all
 
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
-# That probably isn't necessary, but whatever.
+# Not sure how necessary that is.
 RUN mkdir /root/git
 WORKDIR /root/git
 
 RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
 
-# This builds an Ubuntu image, clones the coreclr github repo and builds it.
-# It then sets up the environment for compiling the New Relic .NET profiler.
-# v14.04
-FROM ubuntu@sha256:881afbae521c910f764f7187dbfbca3cc10c26f8bafa458c76dda009a901c29d
-
-RUN apt-get update && apt-get install -y \
-  wget \
-  curl \
-  git \
-  dos2unix \
-  software-properties-common
-
-# Current ca-certificates packages has an expired root CA cert - remove it.
-RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
-RUN update-ca-certificates
-
-RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-
-# The CoreCLR build notes say their repos should be pulled into a `git` directory.
-# That probably isn't necessary, but whatever.
-RUN mkdir /root/git
-COPY --from=ClrRepoCloner /root/git /root/git
-
-# Install the build tools that the profiler requires
-RUN apt-get update && apt-get install -y \
-  make \
-  binutils \
-  libc++-dev \
-  clang-3.9 \
-  lldb-3.9
-
-# Remove expired root CA cert
-RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
-RUN update-ca-certificates
-
-# Install cmake 3.9
-RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
-RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
-
-RUN rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
-RUN rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+RUN ln -sf /usr/bin/clang-7 /usr/bin/cc; ln -sf /usr/bin/clang++-7 /usr/bin/c++
