@@ -48,7 +48,8 @@ namespace NewRelic.Agent.IntegrationTests.CSP
         public void Test()
         {
             // This test looks for the connect response body that was intended to be removed in P17, but was not.  If it does get removed this will fail.
-            var notConnectedLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorResponseLogLinePrefixRegex + "Received HTTP status code Gone with message {\"exception\":{\"message\":\"Account Security Violation: *?");
+            // 12/14/23 - the response status changed from "Gone" to "Conflict". If this test fails in the future, be alert for it possibly changing back.
+            var notConnectedLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorResponseLogLinePrefixRegex + "Received HTTP status code Conflict with message {\"exception\":{\"message\":\"Account Security Violation: *?");
             Assert.NotNull(notConnectedLogLine);
         }
     }
