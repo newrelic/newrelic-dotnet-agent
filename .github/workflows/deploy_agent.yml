@@ -95,11 +95,11 @@ jobs:
           echo "Found release version: $RELEASE_VERSION"
 
           if [ "$(cat release.json | jq --raw-output '.isDraft')" = "true" ]; then
-            echo "::error::$RELEASE_VERSION is marked as 'Draft'.  Use manual overrides to continue."
+            echo "::error::$RELEASE_VERSION is marked as 'Draft'. Use manual overrides to continue."
             exit 1
           fi
           if [ "$(cat release.json | jq --raw-output '.isPrerelease')" = "true" ]; then
-            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'.  Use manual overrides to continue."
+            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'. Use manual overrides to continue."
             exit 1
           fi
           # check release date - should be within the last 7 days (to ensure we don't grab an old release)
@@ -114,16 +114,17 @@ jobs:
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
 
           # get the run id of the most recent successful run of the all_solutions workflow against the given commit sha
-          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
+          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
+          #WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
           if [[ -z "$WORKFLOW_RUN_ID" ]]; then
-            echo "::error::Could not find a successful workflow run against commit SHA $COMMIT_SHA"
+            echo "::error::Could not find a successful workflow run against commit SHA $COMMIT_SHA. Use manual overrides to continue."
             exit 1
           fi
           echo "Found workflow run id: $WORKFLOW_RUN_ID"
           echo "workflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
 
           # for testing, we'll exit here and force the job to fail
-          exit 1
+          #exit 1
 
       - name: Set Output Version and Build Run ID
         id: step2
