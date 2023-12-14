@@ -84,6 +84,7 @@ jobs:
           fi
           echo "Found commit sha: $COMMIT_SHA"
 
+          # get info on the most recent release, writing output to a json file
           gh release view --json name,isDraft,isPrerelease,publishedAt > release.json
 
           # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
@@ -103,8 +104,12 @@ jobs:
             exit 1
           fi
           # check release date - should be within the last 7 days (to ensure we don't grab an old release)
-          LAST_WEEK=$(date --date "-7days" -u +"%s")
           PUBLISHED_AT=$(cat release.json | jq --raw-output '.publishedAt')
+          if [[ -z "$PUBLISHED_AT" ]]; then
+            echo "::error::Release publish date is empty. Use manual overrides to continue."
+            exit 1
+          fi
+          LAST_WEEK=$(date --date "-7days" -u +"%s")
           PUBLISH_DATE=$(date --date "$PUBLISHED_AT" -u +"%s")
           if [ $LAST_WEEK -ge $PUBLISH_DATE ]; then
             echo "::error::$RELEASE_VERSION was published more than a week ago. Use manual overrides to continue."
@@ -113,20 +118,17 @@ jobs:
 
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
 
-          # get the run id of the most recent successful run of the all_solutions workflow against the given commit sha
-          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
-          #WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
+          # get the run id of the most recent successful run of the all_solutions workflow triggered by a release event, against the given commit sha
+          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
           if [[ -z "$WORKFLOW_RUN_ID" ]]; then
-            echo "::error::Could not find a successful workflow run against commit SHA $COMMIT_SHA. Use manual overrides to continue."
+            echo "::error::Could not find a successful workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
             exit 1
           fi
+
           echo "Found workflow run id: $WORKFLOW_RUN_ID"
           echo "workflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
 
-          # for testing, we'll exit here and force the job to fail
-          #exit 1
-
-      - name: Set Output Version and Build Run ID
+      - name: Set Output Release Version and Build Run ID
         id: step2
         run: |
           if [ "${{ github.event.inputs.get-version-automatically}}" = "true" ]; then
@@ -144,9 +146,6 @@ jobs:
             echo "release_version=${{github.event.inputs.agent_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{github.event.inputs.run_id}}" >> "$GITHUB_OUTPUT"
           fi
-
-          # for testing, we'll exit here and force the job to fail
-          exit 1
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
