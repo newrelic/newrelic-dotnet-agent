@@ -31,35 +31,7 @@ env:
 
 jobs:
 
-  get-external-artifacts:
-    name: Get and Publish Deploy Artifacts Locally
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          disable-sudo: true
-          egress-policy: audit
-
-      - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
-          name: deploy-artifacts
-          path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
-      
-      - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: deploy-artifacts
-          path: ${{ github.workspace }}/build/BuildArtifacts
-          if-no-files-found: error
-
   publish-release-notes:
-    needs: get-external-artifacts
     name: Create and Publish Release Notes
     runs-on: ubuntu-latest
     steps:
@@ -74,10 +46,14 @@ jobs:
           fetch-depth: 0
       
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
           name: deploy-artifacts
-          path: ${{ github.workspace }}/artifacts
+          path: ${{ github.workspace }}/deploy-artifacts
+          repo: ${{ github.repository }}
 
       - name: Set Docs PR Branch Name
         run: |
@@ -97,7 +73,7 @@ jobs:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
           RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net7.0/
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
-          CHECKSUMS: ${{ github.workspace }}/artifacts/DownloadSite/SHA256/checksums.md
+          CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/build/BuildArtifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
 
       - name: Create branch

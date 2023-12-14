@@ -44,11 +44,6 @@ on:
         description: Re-Index the Download Site S3 container
         required: true
         default: true
-      update-apm-version:
-        type: boolean
-        description: Update APM Version
-        required: true
-        default: true
 
 permissions:
   contents: read
@@ -180,13 +175,6 @@ jobs:
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/build/BuildArtifacts
-          if-no-files-found: error
-
-      - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: deploy-tooling
-          path: ${{ github.workspace }}/deploy/
           if-no-files-found: error
 
   deploy-downloadsite:
@@ -368,18 +356,17 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y dos2unix
         shell: bash
-        
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
-
-      - name: Download Deploy Tooling
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: deploy-tooling
-          path: ${{ github.workspace }}/deploy
 
       - name: Get GPG Key
         id: write_gpgkey
@@ -446,34 +433,6 @@ jobs:
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
-
-  update-apm:
-    name: Update System Configuration Page
-    needs: get-release-info
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.update-apm-version == 'true' }}
-    steps:
-      - name: Update system configuration page
-        run: |
-          PAYLOAD="{
-              \"system_configuration\": {
-                \"key\":   \"dotnet_agent_version\",
-                \"value\": \"${{ needs.get-release-info.outputs.release_version }}\"
-              }
-            }"
-          CONTENT_TYPE='Content-Type: application/json'
-
-          # STAGING
-          # curl -X POST 'https://staging-api.newrelic.com/v2/system_configuration.json' \
-          #   -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_STAGING }}" -i \
-          #   -H "$CONTENT_TYPE" \
-          #   -d "$PAYLOAD"
-
-          # PRODUCTION
-          curl -X POST 'https://api.newrelic.com/v2/system_configuration.json' \
-            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
-            -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"
 
   publish-release-notes:
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
