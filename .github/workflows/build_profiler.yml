@@ -92,7 +92,7 @@ jobs:
     needs: check-for-changes
     if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
-    runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
+    runs-on: windows-latest
 
     env:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
@@ -106,8 +106,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+      # - name: Add msbuild to PATH
+      #   uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Clean out _profilerBuild directory
         run: |

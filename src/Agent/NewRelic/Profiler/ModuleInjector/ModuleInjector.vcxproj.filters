@@ -5,4 +5,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="IModule.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>

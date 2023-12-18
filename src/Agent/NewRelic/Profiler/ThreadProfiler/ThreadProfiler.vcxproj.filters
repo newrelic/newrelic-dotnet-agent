@@ -4,4 +4,7 @@
     <ClInclude Include="ThreadProfiler.h" />
     <ClInclude Include="namecache.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>
