@@ -106,8 +106,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Add msbuild to PATH
-      #   uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Clean out _profilerBuild directory
         run: |
