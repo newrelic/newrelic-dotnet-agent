@@ -1,0 +1,72 @@
+name: "CodeQL"
+
+on:
+  push:
+    # comment out for testing branches: [ "main",  ]
+  pull_request:
+    branches: [ "main", "feature/*"]
+  schedule:
+    - cron: '20 3 * * 6'
+
+jobs:
+  analyze:
+    name: Analyze
+    # Runner size impacts CodeQL analysis time. To learn more, please see:
+    #   - https://gh.io/recommended-hardware-resources-for-running-codeql
+    #   - https://gh.io/supported-runners-and-hardware-resources
+    #   - https://gh.io/using-larger-runners
+    # Consider using larger runners for possible analysis time improvements.
+    runs-on: windows-latest
+    timeout-minutes: 120
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'c-cpp', 'csharp' ]
+        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+
+    env:
+        profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+        fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        fetch-depth: 0
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Build .NET Agent Solution
+      if: ${{ matrix.language == 'csharp' }}
+      run: |
+        Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+        dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+      shell: powershell
+
+    - name: Add msbuild to PATH for Profiler build
+      if: ${{ matrix.language == 'c-cpp' }}
+      uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+
+    - name: Build .NET Profiler
+      if: ${{ matrix.language == 'c-cpp' }}
+      run: |
+        Write-Host "List NuGet Sources"
+        dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+        Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+        MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      shell: powershell
+   
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
