@@ -3,19 +3,14 @@ name: "CodeQL"
 on:
   push:
     # comment out for testing branches: [ "main",  ]
-  pull_request:
-    branches: [ "main", "feature/*"]
+  #pull_request:
+  #  branches: [ "main", "feature/*"]
   schedule:
-    - cron: '20 3 * * 6'
+    - cron: '20 3 * * 1'
 
 jobs:
   analyze:
     name: Analyze
-    # Runner size impacts CodeQL analysis time. To learn more, please see:
-    #   - https://gh.io/recommended-hardware-resources-for-running-codeql
-    #   - https://gh.io/supported-runners-and-hardware-resources
-    #   - https://gh.io/using-larger-runners
-    # Consider using larger runners for possible analysis time improvements.
     runs-on: windows-latest
     timeout-minutes: 120
     permissions:
@@ -26,8 +21,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'c-cpp', 'csharp' ]
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+        language: [ 'csharp' ]
+        #language: [ 'c-cpp', 'csharp' ] # until we can figure out how to build the Profiler on Windows 2022 (and VS2022)
 
     env:
         profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
@@ -39,16 +34,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        config: |
-          paths: 
-            - src/Agent/NewRelic
-            - src/Agent/NewRelic.Api.Agent
-            - src/NewRelic.Core
 
     - name: Build .NET Agent Solution
       if: ${{ matrix.language == 'csharp' }}
@@ -56,12 +45,6 @@ jobs:
         Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
         dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
       shell: powershell
-
-    - name: Install Windows SDK for Profiler build
-      if: ${{ matrix.language == 'c-cpp' }}
-      uses: GuillaumeFalourd/setup-windows10-sdk-action@cce3ecf1101850047239b3dea39a835e10ffa9d1  #v 1.12
-      with:
-        sdk-version: 18362
 
     - name: Add msbuild to PATH for Profiler build
       if: ${{ matrix.language == 'c-cpp' }}
