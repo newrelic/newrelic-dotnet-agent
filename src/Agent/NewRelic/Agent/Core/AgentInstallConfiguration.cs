@@ -200,19 +200,21 @@ namespace NewRelic.Agent.Core
 
         public static AgentInfo GetAgentInfo()
         {
-            var agentInfoPath = $@"{NewRelicHome}\agentinfo.json";
+            var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
+
             if (File.Exists(agentInfoPath))
             {
                 try
                 {
                     return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
                 }
-                catch
+                catch (Exception e)
                 {
-                    // Fail silently
+                    Log.Debug(e, $"Could not get agent info from {agentInfoPath}.");
                 }
             }
 
+            Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
             return null;
         }
     }
