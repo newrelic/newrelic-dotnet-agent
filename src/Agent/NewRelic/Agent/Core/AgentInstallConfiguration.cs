@@ -210,7 +210,7 @@ namespace NewRelic.Agent.Core
                 }
                 catch (Exception e)
                 {
-                    Log.Debug(e, $"Could not get agent info from {agentInfoPath}.");
+                    Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
                 }
             }
 
