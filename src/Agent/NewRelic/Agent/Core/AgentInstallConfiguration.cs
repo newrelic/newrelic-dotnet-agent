@@ -217,11 +217,11 @@ namespace NewRelic.Agent.Core
                 catch (Exception e)
                 {
                     Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
-                    return null;
                 }
             }
+            else
+                Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
 
-            Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
             return null;
         }
     }
