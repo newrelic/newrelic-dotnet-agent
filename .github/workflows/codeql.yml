@@ -44,6 +44,11 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
+        config: |
+          paths: 
+            - src/Agent/NewRelic
+            - src/Agent/NewRelic.Api.Agent
+            - src/NewRelic.Core
 
     - name: Build .NET Agent Solution
       if: ${{ matrix.language == 'csharp' }}
@@ -51,6 +56,12 @@ jobs:
         Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
         dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
       shell: powershell
+
+    - name: Install Windows SDK for Profiler build
+      if: ${{ matrix.language == 'c-cpp' }}
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@cce3ecf1101850047239b3dea39a835e10ffa9d1  #v 1.12
+      with:
+        sdk-version: 18362
 
     - name: Add msbuild to PATH for Profiler build
       if: ${{ matrix.language == 'c-cpp' }}
