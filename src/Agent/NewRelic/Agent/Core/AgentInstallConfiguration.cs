@@ -200,6 +200,12 @@ namespace NewRelic.Agent.Core
 
         public static AgentInfo GetAgentInfo()
         {
+            if (string.IsNullOrEmpty(NewRelicHome))
+            {
+                Log.Debug($"Could not get agent info. NewRelicHome is null or empty.");
+                return null;
+            }
+
             var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
 
             if (File.Exists(agentInfoPath))
