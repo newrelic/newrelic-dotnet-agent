@@ -76,7 +76,6 @@ jobs:
         MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
       shell: powershell
    
-
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
