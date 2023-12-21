@@ -12,7 +12,7 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   analyze-dotnet:
     name: Analyze .NET
@@ -41,7 +41,6 @@ jobs:
         languages: csharp
 
     - name: Build .NET Agent Solution
-      if: ${{ matrix.language == 'csharp' }}
       run: |
         dotnet build ${{ env.fullagent_solution_path }}
       shell: powershell
