@@ -4,7 +4,6 @@
     <RootNamespace>NewRelic.Agent.ContainerIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.ContainerIntegrationTests</AssemblyName>
     <TargetFramework>net7.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <Import Project="Test.targets" />

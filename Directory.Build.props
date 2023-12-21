@@ -1,7 +1,8 @@
 <Project>
   <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>default</LangVersion>
     <RootProjectDirectory>$(MSBuildThisFileDirectory)</RootProjectDirectory>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>
       VSTHRD200, <!-- Use `Async` suffix for async methods -->
       VSTHRD105, <!-- Avoid method overloads that assume `TaskScheduler.Current` -->
