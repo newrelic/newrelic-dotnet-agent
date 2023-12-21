@@ -77,7 +77,7 @@ jobs:
         Write-Host "List NuGet Sources"
         dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
         Write-Host "MSBuild.exe -restore -m -p:Platform=x64 ${{ env.profiler_solution_path }}"
-        MSBuild.exe -restore -m -p:Platform=x64 - ${{ env.profiler_solution_path }}
+        MSBuild.exe -restore -m -p:Platform=x64 ${{ env.profiler_solution_path }}
       shell: powershell
    
     - name: Perform CodeQL Analysis
