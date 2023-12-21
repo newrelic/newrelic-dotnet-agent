@@ -38,6 +38,7 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
+        debug: true
 
     - name: Build .NET Agent Solution
       if: ${{ matrix.language == 'csharp' }}
