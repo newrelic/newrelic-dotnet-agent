@@ -5,7 +5,7 @@
 
 #include "ClassFactory.hpp"
 
-const IID IID_IUnknown      = { 0x00000000, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+const IID IID_IUnknown = { 0x00000000, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
 
 BOOL STDMETHODCALLTYPE DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -17,17 +17,33 @@ BOOL STDMETHODCALLTYPE DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID
 
 extern "C"
 {
-    HRESULT STDMETHODCALLTYPE DllGetClassObject(REFCLSID /* rclsid */, REFIID riid, void** ppv)
+    HRESULT STDMETHODCALLTYPE DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
     {
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 30));
 
-        auto factory = new NewRelic::Profiler::ClassFactory();
-        if (factory == nullptr)
-        {
+        if (rclsid == CLSID_NULL)
             return E_FAIL;
-        }
 
-        return factory->QueryInterface(riid, ppv);
+        if (rclsid == _uuidof(NewRelic::Profiler::CInstrumentationMethod))
+        {
+            auto factory = new NewRelic::Profiler::CInstrumentationMethodClassFactory();
+            if (factory == nullptr)
+            {
+                return E_FAIL;
+            }
+
+            return factory->QueryInterface(riid, ppv);
+        }
+        else
+        {
+            auto factory = new NewRelic::Profiler::ClassFactory();
+            if (factory == nullptr)
+            {
+                return E_FAIL;
+            }
+
+            return factory->QueryInterface(riid, ppv);
+        }
     }
 
     HRESULT STDMETHODCALLTYPE DllCanUnloadNow()
