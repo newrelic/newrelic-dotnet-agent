@@ -180,11 +180,11 @@ namespace NewRelic {
             virtual HRESULT __stdcall SurvivingReferences2(ULONG cSurvivingObjectIDRanges, ObjectID objectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
 
             // Base profiler initialization method
-            virtual HRESULT __stdcall ICorProfilerCallback4::Initialize(IUnknown* pICorProfilerInfoUnk) override
+            virtual HRESULT __stdcall Initialize(IUnknown* pICorProfilerInfoUnk) override
             {
-//#ifdef DEBUG
-//                DelayProfilerAttach();
-//#endif
+#ifdef DEBUG
+                DelayProfilerAttach();
+#endif
 
                 // initialization stuff, they should be logging their own errors and only throwing up if they want to cancel activation
                 try
@@ -1329,11 +1329,14 @@ namespace NewRelic {
             }
         };
 
+        //
+        // IInstrumentationMethod implementation
+        //
         class
             __declspec(uuid("{D0B26EED-593C-48C9-8DFF-53E96257B772}"))
             CInstrumentationMethod :
             IInstrumentationMethod,
-            ICorProfilerCallback4
+            IInstrumentationMethodJitEvents
         {
         private:
             std::atomic<int> _referenceCount;
@@ -1384,25 +1387,68 @@ namespace NewRelic {
                 return E_NOINTERFACE;
             }
 
-            // unimplemented IInstrumentationMethod
+            // IInstrumentationMethod
             virtual HRESULT STDMETHODCALLTYPE OnAppDomainCreated(__RPC__in_opt IAppDomainInfo* pAppDomainInfo) override { return S_OK; }
             virtual HRESULT STDMETHODCALLTYPE OnAppDomainShutdown(__RPC__in_opt IAppDomainInfo* pAppDomainInfo) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnAssemblyLoaded(__RPC__in_opt IAssemblyInfo* pAssemblyInfo) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnAssemblyUnloaded(__RPC__in_opt IAssemblyInfo* pAssemblyInfo) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnModuleLoaded(__RPC__in_opt IModuleInfo* pModuleInfo) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnModuleUnloaded(__RPC__in_opt IModuleInfo* pModuleInfo) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnShutdown(void) override { return S_OK;}
-            virtual HRESULT STDMETHODCALLTYPE ShouldInstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit, __RPC__out BOOL* pbInstrument) override { *pbInstrument = TRUE; return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE BeforeInstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE InstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE OnInstrumentationComplete(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override { return S_OK; }
-            virtual HRESULT STDMETHODCALLTYPE AllowInlineSite(__RPC__in_opt IMethodInfo* pMethodInfoInlinee,__RPC__in_opt IMethodInfo* pMethodInfoCaller, __RPC__out BOOL* pbAllowInline) override { *pbAllowInline = FALSE; return S_OK; }
-
-            virtual HRESULT STDMETHODCALLTYPE Initialize(IProfilerManager* pProfilerManager) override
+            virtual HRESULT STDMETHODCALLTYPE OnAssemblyLoaded(__RPC__in_opt IAssemblyInfo* pAssemblyInfo) override
             {
-#ifdef DEBUG
+                return S_OK;
+            }
+            virtual HRESULT STDMETHODCALLTYPE OnAssemblyUnloaded(__RPC__in_opt IAssemblyInfo* pAssemblyInfo) override { return S_OK; }
+            virtual HRESULT STDMETHODCALLTYPE OnModuleLoaded(__RPC__in_opt IModuleInfo* pModuleInfo) override
+            {
+                ModuleID moduleId;
+                pModuleInfo->GetModuleID(&moduleId);
+                return m_pProfiler->ModuleLoadFinished(moduleId, S_OK);
+                
+            }
+            virtual HRESULT STDMETHODCALLTYPE OnModuleUnloaded(__RPC__in_opt IModuleInfo* pModuleInfo) override { return S_OK; }
+            virtual HRESULT STDMETHODCALLTYPE OnShutdown(void) override
+            {
+                return m_pProfiler->Shutdown();
+            }
+            virtual HRESULT STDMETHODCALLTYPE ShouldInstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit, __RPC__out BOOL* pbInstrument) override
+            {
+                *pbInstrument = TRUE; return S_OK;
+            }
+            virtual HRESULT STDMETHODCALLTYPE BeforeInstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override
+            {
+                return S_OK;
+            }
+            virtual HRESULT STDMETHODCALLTYPE InstrumentMethod(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override
+            {
+                CComPtr<IMethodInfo2> methodInfo2;
+                pMethodInfo->QueryInterface(__uuidof(IMethodInfo2), (void**)&methodInfo2);
+
+                FunctionID functionId;
+                pMethodInfo->GetFunctionId(&functionId);
+                CComPtr<IModuleInfo> pModuleInfo;
+                pMethodInfo->GetModuleInfo(&pModuleInfo);
+
+                if (isRejit)
+                {
+                    ReJITID unused = 0;
+                    m_pProfiler->ReJITCompilationStarted(functionId, unused, true );
+                }
+                else
+                    return m_pProfiler->JITCompilationStarted(functionId, true);
+
+            }
+
+            virtual HRESULT STDMETHODCALLTYPE OnInstrumentationComplete(__RPC__in_opt IMethodInfo* pMethodInfo,BOOL isRejit) override
+            {
+                return S_OK;
+            }
+            virtual HRESULT STDMETHODCALLTYPE AllowInlineSite(__RPC__in_opt IMethodInfo* pMethodInfoInlinee,__RPC__in_opt IMethodInfo* pMethodInfoCaller, __RPC__out BOOL* pbAllowInline) override
+            {
+                *pbAllowInline = FALSE; return S_OK;
+            }
+
+            virtual HRESULT STDMETHODCALLTYPE IInstrumentationMethod::Initialize(IProfilerManager* pProfilerManager) override
+            {
+    #ifdef DEBUG
                 DelayProfilerAttach();
-#endif
+    #endif
                 CComPtr<ICorProfilerInfo10> pICorProfilerInfo;
                 HRESULT hrGetCorProfilerInfo = pProfilerManager->GetCorProfilerInfo((IUnknown**)&pICorProfilerInfo);
                 if (FAILED(hrGetCorProfilerInfo))
@@ -1414,101 +1460,24 @@ namespace NewRelic {
                 return m_pProfiler->Initialize((IUnknown*)pICorProfilerInfo);
             }
 
-            // Unimplemented ICorProfilerCallback
-            virtual HRESULT __stdcall Initialize(IUnknown *pICorProfilerInfoUnk) override { return S_OK;}
-            virtual HRESULT __stdcall AppDomainCreationStarted(AppDomainID appDomainId) override { return S_OK; }
-            virtual HRESULT __stdcall AppDomainCreationFinished(AppDomainID appDomainId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall AppDomainShutdownStarted(AppDomainID appDomainId) override { return S_OK; }
-            virtual HRESULT __stdcall AppDomainShutdownFinished(AppDomainID appDomainId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall AssemblyLoadStarted(AssemblyID assemblyId) override { return S_OK; }
-            virtual HRESULT __stdcall AssemblyLoadFinished(AssemblyID assemblyId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall AssemblyUnloadStarted(AssemblyID assemblyId) override { return S_OK; }
-            virtual HRESULT __stdcall AssemblyUnloadFinished(AssemblyID assemblyId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall ModuleLoadStarted(ModuleID moduleId) override { return S_OK; }
-            virtual HRESULT __stdcall ModuleUnloadStarted(ModuleID moduleId) override { return S_OK; }
-            virtual HRESULT __stdcall ModuleUnloadFinished(ModuleID moduleId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall ModuleAttachedToAssembly(ModuleID moduleId, AssemblyID AssemblyId) override { return S_OK; }
-            virtual HRESULT __stdcall ClassLoadStarted(ClassID classId) override { return S_OK; }
-            virtual HRESULT __stdcall ClassLoadFinished(ClassID classId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall ClassUnloadStarted(ClassID classId) override { return S_OK; }
-            virtual HRESULT __stdcall ClassUnloadFinished(ClassID classId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall FunctionUnloadStarted(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall JITCompilationFinished(FunctionID functionId, HRESULT hrStatus, BOOL fIsSafeToBlock) override { return S_OK; }
-            virtual HRESULT __stdcall JITCachedFunctionSearchStarted(FunctionID functionId, BOOL* pbUseCachedFunction) override { return S_OK; }
-            virtual HRESULT __stdcall JITCachedFunctionSearchFinished(FunctionID functionId, COR_PRF_JIT_CACHE result) override { return S_OK; }
-            virtual HRESULT __stdcall JITFunctionPitched(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall JITInlining(FunctionID callerId, FunctionID calleeId, BOOL* pfShouldInline) override { return S_OK; }
-            virtual HRESULT __stdcall ThreadCreated(ThreadID threadId) override { return S_OK; }
-            virtual HRESULT __stdcall ThreadAssignedToOSThread(ThreadID managedThreadId, DWORD osThreadId) override { return S_OK; }
-            virtual HRESULT __stdcall RemotingClientInvocationStarted() override { return S_OK; }
-            virtual HRESULT __stdcall RemotingClientSendingMessage(GUID* pCookie, BOOL fIsAsync) override { return S_OK; }
-            virtual HRESULT __stdcall RemotingClientReceivingReply(GUID* pCookie, BOOL fIsAsync) override { return S_OK; }
-            virtual HRESULT __stdcall RemotingClientInvocationFinished(void) override { return S_OK; }
-            virtual HRESULT __stdcall RemotingServerReceivingMessage(GUID* pCookie, BOOL fIsAsync) override { return S_OK; }
-            virtual HRESULT __stdcall RemotingServerInvocationStarted() override { return S_OK; }
-            virtual HRESULT __stdcall RemotingServerInvocationReturned() override { return S_OK; }
-            virtual HRESULT __stdcall RemotingServerSendingReply(GUID* pCookie, BOOL fIsAsync) override { return S_OK; }
-            virtual HRESULT __stdcall UnmanagedToManagedTransition(FunctionID functionId, COR_PRF_TRANSITION_REASON reason) override { return S_OK; }
-            virtual HRESULT __stdcall ManagedToUnmanagedTransition(FunctionID functionId, COR_PRF_TRANSITION_REASON reason) override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeSuspendStarted(COR_PRF_SUSPEND_REASON suspendReason) override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeSuspendFinished() override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeSuspendAborted() override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeResumeStarted() override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeResumeFinished() override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeThreadSuspended(ThreadID threadId) override { return S_OK; }
-            virtual HRESULT __stdcall RuntimeThreadResumed(ThreadID threadId) override { return S_OK; }
-            virtual HRESULT __stdcall MovedReferences(ULONG cMovedObjectIDRanges, ObjectID oldObjectIDRangeStart[], ObjectID newObjectIDRangeStart[], ULONG cObjectIDRangeLength[]) override { return S_OK; }
-            virtual HRESULT __stdcall ObjectAllocated(ObjectID objectId, ClassID classId) override { return S_OK; }
-            virtual HRESULT __stdcall ObjectReferences(ObjectID objectId, ClassID classId, ULONG cObjectRefs, ObjectID objectRefIds[]) override { return S_OK; }
-            virtual HRESULT __stdcall ObjectsAllocatedByClass(ULONG cClassCount, ClassID classIds[], ULONG cObjects[]) override { return S_OK; }
-            virtual HRESULT __stdcall RootReferences(ULONG cRootRefs, ObjectID rootRefIds[]) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionThrown(ObjectID thrownObjectId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionSearchFunctionEnter(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionSearchFunctionLeave() override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionSearchFilterEnter(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionSearchFilterLeave() override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionSearchCatcherFound(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionOSHandlerEnter(UINT_PTR __unused) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionOSHandlerLeave(UINT_PTR __unused) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionUnwindFunctionEnter(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionUnwindFunctionLeave() override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionUnwindFinallyEnter(FunctionID functionId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionUnwindFinallyLeave() override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionCatcherEnter(FunctionID functionId, ObjectID objectId) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionCatcherLeave() override { return S_OK; }
-            virtual HRESULT __stdcall COMClassicVTableCreated(ClassID wrappedClassId, REFGUID implementedIID, void* pVTable, ULONG cSlots) override { return S_OK; }
-            virtual HRESULT __stdcall COMClassicVTableDestroyed(ClassID wrappedClassId, REFGUID implementedIID, void* pVTable) override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionCLRCatcherFound() override { return S_OK; }
-            virtual HRESULT __stdcall ExceptionCLRCatcherExecute() override { return S_OK; }
+            //IInstrumentationMethodJitEvents
+            virtual HRESULT STDMETHODCALLTYPE JitStarted(FunctionID functionID, BOOL isRejit) override
+            {
+                
+            }
 
-            // Unimplemented ICorProfilerCallback2
-            virtual HRESULT __stdcall FinalizeableObjectQueued(DWORD finalizerFlags, ObjectID objectID) override { return S_OK; }
-            virtual HRESULT __stdcall GarbageCollectionFinished(void) override { return S_OK; }
-            virtual HRESULT __stdcall GarbageCollectionStarted(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason) override { return S_OK; }
-            virtual HRESULT __stdcall HandleCreated(GCHandleID handleId, ObjectID initialObjectId) override { return S_OK; }
-            virtual HRESULT __stdcall HandleDestroyed(GCHandleID handleId) override { return S_OK; }
-            virtual HRESULT __stdcall RootReferences2(ULONG cRootRefs, ObjectID rootRefIds[], COR_PRF_GC_ROOT_KIND rootKinds[], COR_PRF_GC_ROOT_FLAGS rootFlags[], UINT_PTR rootIds[]) override { return S_OK; }
-            virtual HRESULT __stdcall SurvivingReferences(ULONG cSurvivingObjectIDRanges, ObjectID objectIDRangeStart[], ULONG cObjectIDRangeLength[]) override { return S_OK; }
-            virtual HRESULT __stdcall ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]) override { return S_OK; }
+            virtual HRESULT STDMETHODCALLTYPE JitComplete(FunctionID functionID,BOOL isRejit, HRESULT jitResult) override
+            {
+                
+            }
 
-            // Unimplemented ICorProfilerCallback3
-            virtual HRESULT __stdcall InitializeForAttach(IUnknown* pCorProfilerInfoUnk, void* pvClientData, UINT cbClientData) override { return S_OK; }
-            virtual HRESULT __stdcall ProfilerAttachComplete(void) override { return S_OK; }
-            virtual HRESULT __stdcall ProfilerDetachSucceeded(void) override { return S_OK; }
+            // Old ICorProfilerCallback methods - pass through to m_pProfiler
+            //virtual HRESULT __stdcall ICorProfilerCallback::Initialize(IUnknown *pICorProfilerInfoUnk) override { return m_pProfiler->Initialize(pICorProfilerInfoUnk);}
+            //virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId,HRESULT hrStatus) override { return m_pProfiler->ModuleLoadFinished(moduleId, hrStatus);}
+            //virtual HRESULT __stdcall JITCompilationStarted(FunctionID functionId, BOOL fIsSafeToBlock) override { return m_pProfiler->JITCompilationStarted(functionId, fIsSafeToBlock);}
+            //virtual HRESULT __stdcall ReJITCompilationStarted(FunctionID functionId, ReJITID rejitId, BOOL fIsSafeToBlock) override { return m_pProfiler->ReJITCompilationStarted(functionId, rejitId, fIsSafeToBlock);}
+            //virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override { return m_pProfiler->GetReJITParameters(moduleId, methodId, pFunctionControl);}
 
-            // Unimplemented ICorProfilerCallback4
-            virtual HRESULT __stdcall ReJITCompilationFinished(FunctionID functionId, ReJITID rejitId, HRESULT hrStatus, BOOL fIsSafeToBlock) override { return S_OK; }
-            virtual HRESULT __stdcall ReJITError(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus) override { return S_OK; }
-            virtual HRESULT __stdcall MovedReferences2(ULONG cMovedObjectIDRanges, ObjectID oldObjectIDRangeStart[], ObjectID newObjectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
-            virtual HRESULT __stdcall SurvivingReferences2(ULONG cSurvivingObjectIDRanges, ObjectID objectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
-
-            // Passthrough to m_pProfiler
-            virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId,HRESULT hrStatus) override { return m_pProfiler->ModuleLoadFinished(moduleId, hrStatus);}
-            virtual HRESULT __stdcall JITCompilationStarted(FunctionID functionId, BOOL fIsSafeToBlock) override { return m_pProfiler->JITCompilationStarted(functionId, fIsSafeToBlock);}
-            virtual HRESULT __stdcall ReJITCompilationStarted(FunctionID functionId, ReJITID rejitId, BOOL fIsSafeToBlock) override { return m_pProfiler->ReJITCompilationStarted(functionId, rejitId, fIsSafeToBlock);}
-            virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override { return m_pProfiler->GetReJITParameters(moduleId, methodId, pFunctionControl);}
-            virtual HRESULT __stdcall Shutdown( void) override { return m_pProfiler->Shutdown();}
-            virtual HRESULT __stdcall ThreadDestroyed(ThreadID threadId) override {return m_pProfiler->ThreadDestroyed(threadId);}
         protected:
             std::shared_ptr<SystemCalls> _systemCalls;
             unique_ptr<CorProfilerCallbackImpl> m_pProfiler;
@@ -1531,95 +1500,6 @@ namespace NewRelic {
 
         };
 
-
-        // called by managed code to get function information from function IDs
-        extern "C" __declspec(dllexport) HRESULT __cdecl InstrumentationRefresh()
-        {
-            LogInfo("Refreshing instrumentation");
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError("Unable to refresh instrumentation because the profiler reference is invalid.");
-                return E_FAIL;
-            }
-            return profiler->InstrumentationRefresh();
-        }
-
-        extern "C" __declspec(dllexport) HRESULT __cdecl AddCustomInstrumentation(const char* fileName, const char* xml)
-        {
-            LogTrace("Adding custom instrumentation");
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError("Unable to add custom instrumentation because the profiler reference is invalid.");
-                return E_FAIL;
-            }
-            return profiler->AddCustomInstrumentation(ToWideString(fileName), ToWideString(xml));
-        }
-
-        extern "C" __declspec(dllexport) HRESULT __cdecl ApplyCustomInstrumentation()
-        {
-            LogTrace("Applying custom instrumentation");
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError("Unable to apply custom instrumentation because the profiler reference is invalid.");
-                return E_FAIL;
-            }
-            return profiler->ApplyCustomInstrumentation();
-        }
-
-        extern "C" __declspec(dllexport) void __cdecl ReleaseProfile() noexcept
-        {
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError(L"ReleaseProfile: entry point called before the profiler has been initialized");
-                return;
-            }
-            profiler->ReleaseProfile();
-        }
-
-        // called by managed code to request a thread profile
-        // failureCallback error codes are 1 - stack too deep, 2 - no Stack Snapshooter supplied, or error codes returned by DoStackSnapshot
-        extern "C" __declspec(dllexport) HRESULT __cdecl RequestProfile(void** snapshots, int* length) noexcept
-        {
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError(L"RequestProfile: entry point called before the profiler has been initialized");
-                return E_UNEXPECTED;
-            }
-            // call into the ThreadProfiler singleton
-            return profiler->RequestProfile(snapshots, length);
-        }
-
-        // called by managed code to get function information from function IDs
-        extern "C" __declspec(dllexport) HRESULT __cdecl RequestFunctionNames(UINT_PTR * functionIds, int length, void** results) noexcept
-        {
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError(L"RequestFunctionNames: entry point called before the profiler has been initialized");
-                return E_UNEXPECTED;
-            }
-            return profiler->RequestFunctionNames(functionIds, length, results);
-        }
-
-        extern "C" __declspec(dllexport) void __cdecl ShutdownThreadProfiler() noexcept
-        {
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError(L"ShutdownThreadProfiler: entry point called before the profiler has been initialized");
-                return;
-            }
-            profiler->ShutdownThreadProfiler();
-        }
-
-        //This method is used only to verify thread profiling.  It is only used by tests in ProfiledMethod project.
-        extern "C" __declspec(dllexport) uintptr_t __cdecl GetCurrentExecutionEngineThreadId()
-        {
-            auto profiler = CorProfilerCallbackImpl::GetSingletonish();
-            if (profiler == nullptr) {
-                LogError(L"GetCurrentExecutionEngineThreadId: entry point called before the profiler has been initialized");
-                return 0;
-            }
-            return profiler->GetCurrentThreadId();
-        }
 
 #pragma warning(pop)
     }
