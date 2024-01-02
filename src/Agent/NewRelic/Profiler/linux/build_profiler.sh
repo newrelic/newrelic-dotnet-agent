@@ -4,7 +4,7 @@
 cd /profiler
 rm -f CMakeCache.txt libNewRelicProfiler.so
 cmake \
-	-DCORECLR_PATH=/root/git/coreclr \
+	-DCORECLR_PATH=/root/git/runtime \
 	.
 make clean && make 
 retVal=$?

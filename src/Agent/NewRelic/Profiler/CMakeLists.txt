@@ -20,7 +20,7 @@ if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
 else()
   set(DefaultBuildArch "x86")
 endif()
-set(CORECLR_PATH "~/coreclr" CACHE PATH "Path to coreclr repository.")
+set(CORECLR_PATH "~/runtime" CACHE PATH "Path to coreclr repository.")
 set(BuildOS ${DefaultBuildOS} CACHE STRING "Operating system for build.")
 set(BuildArch ${DefaultBuildArch} CACHE STRING "Build architecture (x64, x86)")
 set(BuildType "Debug" CACHE STRING "Build type (Release, Debug)")
@@ -39,7 +39,7 @@ else()
 endif()
 
 file(GLOB SOURCES
-  "${CORECLR_PATH}/src/inc/corhlpr.cpp"
+  "${CORECLR_PATH}/src/coreclr/inc/corhlpr.cpp"
   "Common/*.cpp"
   "Logging/*.cpp"
   "MethodRewriter/*.cpp"
@@ -56,13 +56,14 @@ add_library(${Output} SHARED ${SOURCES})
 
 # We include files in two steps to force the order that the compiler chooses
 include_directories(SYSTEM
-  "${CORECLR_PATH}/src/pal/inc/rt"
+  "${CORECLR_PATH}/src/coreclr/pal/inc/rt"
   "${CORECLR_PATH}/src/inc"
+  "${CORECLR_PATH}/src/coreclr/inc"
 )
 
 include_directories(
-  "${CORECLR_PATH}/src/pal/prebuilt/inc"
-  "${CORECLR_PATH}/src/pal/inc"
+  "${CORECLR_PATH}/src/coreclr/pal/prebuilt/inc"
+  "${CORECLR_PATH}/src/coreclr/pal/inc"
 )
 
 target_link_libraries(${Output} ${LinkedLibs} Threads::Threads)
