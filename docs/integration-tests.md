@@ -255,7 +255,7 @@ First, a few caveats:
 * Only tests with the `[NetCoreTest]` attribute (which sets an XUnit trait named `RuntimeFramework` to `NetCore`) can run on Linux.
 * The agent solution still needs to be built on Windows in Visual Studio, or from the command line using the [build.ps1](../build/build.ps1) script (which uses Visual Studio tooling).
 
-We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to install an Ubuntu 20.04+ VM on your Windows 10 development system.
+We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to install an Ubuntu 20.04+ VM on your Windows 10+ development system.
 
 ### Linux system setup
 
