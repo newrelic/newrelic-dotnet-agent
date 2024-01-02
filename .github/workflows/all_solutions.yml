@@ -364,19 +364,19 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: integration-test-artifacts-${{ matrix.namespace }}
+          name: integration-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
           if-no-files-found: error
 
-      # - name: Archive Test Artifacts
-      #   if: ${{ always() }}
-      #   uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-      #   with:
-      #     name: integration-test-artifacts
-      #     path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-      #     if-no-files-found: error
+      - name: Archive Test Artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        with:
+          name: integration-test-results-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+          if-no-files-found: error
 
   run-integration-tests-linux-arm64:
     needs: build-fullagent-msi
@@ -441,17 +441,17 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: integration-test-artifacts-linux-arm64
+          name: integration-test-working-directory-linux-arm64
           path: ${{ env.test_path }}/**/*
           if-no-files-found: error
 
-      # - name: Archive Test Artifacts
-      #   uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-      #   if: ${{ always() }}
-      #   with:
-      #     name: integration-test-artifacts-linux-arm64
-      #     path: ${{ env.test_path }}/*.trx
-      #     if-no-files-found: error
+      - name: Archive Test Results on failure
+        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        if: ${{ failure() }}
+        with:
+          name: integration-test-results-linux-arm64
+          path: ${{ env.test_path }}/*.trx
+          if-no-files-found: error
 
   run-unbounded-tests:
     needs: [build-unbounded-tests]
@@ -576,19 +576,19 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: unbounded-test-artifacts-${{ matrix.namespace }}
+          name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
           if-no-files-found: error
 
-      # - name: Archive Test Artifacts
-      #   if: ${{ always() }}
-      #   uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-      #   with:
-      #     name: integration-test-artifacts
-      #     path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-      #     if-no-files-found: error
+      - name: Archive Test Results on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        with:
+          name: unbounded-test-results-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+          if-no-files-found: error
 
   create-package-rpm:
     needs: build-fullagent-msi
