@@ -132,10 +132,8 @@ jobs:
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
-        #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
@@ -143,10 +141,8 @@ jobs:
       
       - name: Download Integration Tests
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
-      #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: integrationtests
           path: ${{ github.workspace }}
@@ -192,7 +188,7 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive integration test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
@@ -201,14 +197,7 @@ jobs:
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\**\appsettings.json
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        with:
-          name: integration-test-results-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   run-unbounded-tests:
@@ -236,10 +225,8 @@ jobs:
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
-        #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
@@ -247,10 +234,8 @@ jobs:
       
       - name: Download Integration Tests
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
-      #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: unboundedintegrationtests
           path: ${{ github.workspace }}
@@ -326,7 +311,7 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive unbounded test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
@@ -335,14 +320,7 @@ jobs:
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\**\appsettings.json
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        with:
-          name: unbounded-test-results-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
 
