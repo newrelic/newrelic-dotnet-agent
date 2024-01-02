@@ -15,11 +15,11 @@ on:
         - UnboundedIntegrationTests
         - Both
       integration-test-namespaces:
-        description: 'A comma-separated, single-quoted list of integration test namespaces to run (e.g. "''AgentFeatures'', ''BasicInstrumentation''").  If not specified, all integration tests will be run.'
+        description: 'A comma-separated, single-quoted list of integration test namespaces to run (e.g. "''AgentFeatures'', ''BasicInstrumentation''").  If set to ALL, all integration tests will be run.'
         required: true
         default: 'ALL'
       unbounded-test-namespaces:
-        description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If not specified, all unbounded tests will be run.'
+        description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If set to ALL, all unbounded tests will be run.'
         required: true
         default: 'ALL'
       parallelize:
@@ -134,23 +134,23 @@ jobs:
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Download Integration Tests
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
       #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: integrationtests
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
 
       - name: Install dependencies
         run: |
@@ -238,23 +238,23 @@ jobs:
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Download Integration Tests
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
       #uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          #workflow: all_solutions.yml
           run-id: ${{ github.event.inputs.run_id }}
           name: unboundedintegrationtests
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Disable TLS 1.3
         run: |
