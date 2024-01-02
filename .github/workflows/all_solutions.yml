@@ -360,22 +360,15 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive integration test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: integration-test-artifacts
+          name: integration-test-results-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        with:
-          name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   run-integration-tests-linux-arm64:
@@ -437,20 +430,14 @@ jobs:
             echo $test_secrets | dotnet user-secrets set --project "../Shared"
             dotnet test -f netcoreapp3.1 -c Release -l "trx" --filter "FullyQualifiedName~ApiCallsTestsCore|FullyQualifiedName~InfiniteTracingNetCoreLatestTests"
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive integration test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: integration-test-artifacts-linux-arm64
-          path: ${{ env.test_path }}/**/*
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        if: ${{ always() }}
-        with:
-          name: integration-test-artifacts-linux-arm64
-          path: ${{ env.test_path }}/*.trx
+          name: integration-test-results-linux-arm64
+          path: |
+            ${{ env.test_path }}/**/*
+            ${{ env.test_path }}/*.trx
           if-no-files-found: error
 
   run-unbounded-tests:
@@ -502,7 +489,7 @@ jobs:
           path: src/Agent
 
       - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -572,22 +559,15 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive unbounded test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: integration-test-artifacts
+          name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        with:
-          name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   create-package-rpm:
