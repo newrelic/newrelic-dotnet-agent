@@ -161,14 +161,13 @@ jobs:
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0

@@ -15,41 +15,12 @@ env:
   DOTNET_NOLOGO: true
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
 
-  get-external-artifacts:
-    permissions:
-      actions: read  # for dawidd6/action-download-artifact to query and download artifacts
-      pull-requests: read  # for dawidd6/action-download-artifact to query commit hash
-    name: Get and Publish Deploy Artifacts Locally
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          egress-policy: audit 
-
-      - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: siteextension_release.yml
-          run_id: ${{ github.event.inputs.run_id }}
-          name: deploy-artifacts
-          path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
-      
-      - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-        with:
-          name: deploy-artifacts
-          path: ${{ github.workspace }}
-          if-no-files-found: error
-  
   deploy-nuget:
-    needs: get-external-artifacts
     name: Deploy to NuGet
     runs-on: windows-2019
 
@@ -60,8 +31,11 @@ jobs:
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.inputs.run_id }}
           name: deploy-artifacts
-          path: ${{ github.workspace }}\working_dir
+          path: ${{ github.workspace }}
+          repository: ${{ github.repository }}
 
       - name: Setup NuGet API Key
         run: |
@@ -70,8 +44,8 @@ jobs:
 
       - name: Deploy New Relic Azure Site Extension to Nuget
         run: |
-          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
-          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\AzureSiteExtension\$packageName
+          $packageName = Get-ChildItem ${{ github.workspace }}\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\AzureSiteExtension\$packageName
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
