@@ -10,15 +10,11 @@ on:
 env:
   DOTNET_NOLOGO: true
 
-permissions:
-  contents: read
-
 jobs:
 
   get-release-checksums:
     permissions:
-      actions: read  # for download-artifact to query and download artifacts (unsure if needed since moving from dawidd6/actions-download-artifact?)
-      pull-requests: read  # for download-artifact to query commit hash (same?)
+      actions: read
     name: Get Deploy Artifacts and output release checksum information
     runs-on: ubuntu-latest
     steps:

@@ -19,37 +19,7 @@ permissions:
   contents: read
 
 jobs:
-
-  # get-external-artifacts:
-  #   permissions:
-  #     actions: read  # for download-artifact to query and download artifacts (unsure if needed since moving from dawidd6/actions-download-artifact?)
-  #     #pull-requests: read  # for download-artifact to query commit hash (same?)
-  #   name: Get and Publish Deploy Artifacts Locally
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Harden Runner
-  #       uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-  #       with:
-  #         egress-policy: audit 
-
-  #     - name: Download Deploy Artifacts
-  #       uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         run-id: ${{ github.event.inputs.run_id }}
-  #         name: deploy-artifacts
-  #         path: ${{ github.workspace }}
-  #         repository: ${{ github.repository }}
-      
-  #     - name: Upload Deploy Artifacts Locally
-  #       uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
-  #       with:
-  #         name: deploy-artifacts
-  #         path: ${{ github.workspace }}
-  #         if-no-files-found: error
-  
     deploy-nuget:
-      #needs: get-external-artifacts
       name: Deploy to NuGet
       runs-on: windows-2019
 
