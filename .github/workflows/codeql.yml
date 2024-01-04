@@ -52,7 +52,7 @@ jobs:
 
   analyze-cpp:
     name: Analyze C++
-    runs-on: windows-2019
+    runs-on: windows-latest
     timeout-minutes: 120
     permissions:
       actions: read
