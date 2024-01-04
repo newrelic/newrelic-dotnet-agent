@@ -5,7 +5,6 @@
     
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
-    <LangVersion>default</LangVersion>
   </PropertyGroup>
  
   <ItemGroup>

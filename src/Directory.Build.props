@@ -1,7 +1,4 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
   <Import Project="$(MSBuildThisFileDirectory)..\build\Common.src.props" />
-  <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
-  </PropertyGroup>
 </Project>
