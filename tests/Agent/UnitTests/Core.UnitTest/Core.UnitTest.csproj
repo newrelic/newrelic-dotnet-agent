@@ -7,7 +7,6 @@
     <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0">
