@@ -22,7 +22,9 @@ RUN apt-get update
 # and it needs to be told what timezone it is in.  Just use UTC.
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
-RUN apt-get install -y cmake llvm-17 clang-17 lldb-17 liblldb-17-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev libc++-dev uuid-dev zlib1g-dev locales
+RUN apt-get install -y cmake llvm-17 clang-17 lldb-17 liblldb-17-dev \
+  gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev \
+  libc++-dev uuid-dev zlib1g-dev locales
 
 #RUN apt-get install -y \
 #  cmake llvm-17 clang-17 lldb-17 liblldb-17-dev libunwind libunwind-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev \
