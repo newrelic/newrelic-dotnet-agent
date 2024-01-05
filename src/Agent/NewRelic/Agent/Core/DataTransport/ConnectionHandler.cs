@@ -308,7 +308,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 identifier,
                 _labelsService.Labels,
                 metadata ?? new Dictionary<string, string>(),
-                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
+                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(metadata?.SingleOrDefault(kvp => kvp.Key == "NEW_RELIC_METADATA_KUBERNETES_CONTAINER_ID").Value,
                 _configuration.CollectorSendEnvironmentInfo ? _environment : null,
                 _configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
                 new EventHarvestConfigModel(_configuration),

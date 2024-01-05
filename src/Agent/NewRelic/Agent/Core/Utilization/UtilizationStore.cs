@@ -30,14 +30,14 @@ namespace NewRelic.Agent.Core.Utilization
             _agentHealthReporter = agentHealthReporter;
         }
 
-        public UtilizationSettingsModel GetUtilizationSettings()
+        public UtilizationSettingsModel GetUtilizationSettings(string k8sContainerId)
         {
             var totalMemory = _systemInfo.GetTotalPhysicalMemoryBytes();
             var logicalProcessors = _systemInfo.GetTotalLogicalProcessors();
             var hostname = _configuration.UtilizationHostName;
             var fullHostName = _configuration.UtilizationFullHostName;
             var ipAddress = _dnsStatic.GetIpAddresses();
-            var vendors = GetVendorSettings();
+            var vendors = GetVendorSettings(k8sContainerId);
             var bootIdResult = _systemInfo.GetBootId();
 
             if (!bootIdResult.IsValid)
@@ -56,10 +56,10 @@ namespace NewRelic.Agent.Core.Utilization
             return bootId?.Length > maxLength ? bootId.Substring(0, maxLength) : bootId;
         }
 
-        public IDictionary<string, IVendorModel> GetVendorSettings()
+        public IDictionary<string, IVendorModel> GetVendorSettings(string k8sContainerId)
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SystemInterfaces.Environment(), new VendorHttpApiRequestor());
-            return vendorInfo.GetVendors();
+            return vendorInfo.GetVendors(k8sContainerId);
         }
 
         private UtilitizationConfig GetUtilitizationConfig()
