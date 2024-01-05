@@ -66,7 +66,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}_{_randomId}";
+    public string NRAppName =>$"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
+
+    public override string AppName => $"{NRAppName}_{_randomId}";
 
     private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
@@ -123,7 +125,7 @@ public class ContainerApplication : RemoteApplication
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
 
         startInfo.EnvironmentVariables.Add("TEST_DOCKERFILE", _dockerfile);
-        startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", AppName);
+        startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", NRAppName);
         startInfo.EnvironmentVariables.Add("DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("APP_DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
