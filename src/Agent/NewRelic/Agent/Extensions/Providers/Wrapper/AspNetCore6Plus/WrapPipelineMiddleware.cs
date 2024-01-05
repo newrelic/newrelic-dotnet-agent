@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             {
                 _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Not instrumenting incoming OPTIONS request.");
 
-                await _next(context);
+                await _next(context).ConfigureAwait(false);
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             try
             {
-                await _next(context);
+                await _next(context).ConfigureAwait(false);
                 EndTransaction(segment, transaction, context, null);
             }
             catch (Exception ex)

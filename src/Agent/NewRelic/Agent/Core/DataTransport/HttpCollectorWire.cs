@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport
             {
 
                 var httpClient = _httpClientFactory.CreateClient(connectionInfo.Proxy, _configuration);
-
+                
                 request = new HttpRequest(_configuration)
                 {
                     Endpoint = method,
@@ -62,9 +62,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 foreach (var header in _requestHeadersMap)
                     request.Headers.Add(header.Key, header.Value);
 
-                using var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
+                using var response = httpClient.SendAsync(request).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                var responseContent = response.GetContentAsync().GetAwaiter().GetResult();
+                var responseContent = response.GetContentAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                 if (!response.IsSuccessStatusCode)
                 {

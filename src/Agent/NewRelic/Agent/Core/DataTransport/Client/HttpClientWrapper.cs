@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public async Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message)
         {
             var cts = new CancellationTokenSource(_timeoutMilliseconds);
-            return new HttpResponseMessageWrapper(await _httpClient.SendAsync(message, cts.Token));
+            return new HttpResponseMessageWrapper(await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false));
         }
 
         public TimeSpan Timeout

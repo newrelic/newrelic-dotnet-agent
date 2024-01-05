@@ -322,10 +322,10 @@ namespace NewRelic.Agent.Core
             if (rumBytes == null)
             {
                 transaction.LogFinest("Skipping RUM Injection: No script was available.");
-                await baseStream.WriteAsync(buffer, 0, buffer.Length);
+                await baseStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
             }
             else
-                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
+                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction).ConfigureAwait(false);
         }
 
         private string TryGetRUMScriptInternal(string contentType, string requestPath)

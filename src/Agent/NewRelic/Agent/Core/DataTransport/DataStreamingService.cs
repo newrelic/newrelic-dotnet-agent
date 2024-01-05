@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var success = false;
             try
             {
-                success = await _responseStream.MoveNext(_streamCancellationToken);
+                success = await _responseStream.MoveNext(_streamCancellationToken).ConfigureAwait(false);
             }
             catch (RpcException rpcEx)
             {
@@ -774,7 +774,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Wait until there are both no spans to be sent and no workers pending. Performance ?????
                 while (_collection?.Count > 0 || _workCounter?.Value > 0)
                 {
-                    await Task.Delay(100);
+                    await Task.Delay(100).ConfigureAwait(false);
                 }
             });
 

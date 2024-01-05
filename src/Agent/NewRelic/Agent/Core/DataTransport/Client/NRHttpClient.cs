@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     req.Content.Headers.Add(contentHeader.Key, contentHeader.Value);
                 }
 
-                var response = await _httpClientWrapper.SendAsync(req);
+                var response = await _httpClientWrapper.SendAsync(req).ConfigureAwait(false);
 
                 var httpResponse = new HttpResponse(request.RequestGuid, response);
                 return httpResponse;

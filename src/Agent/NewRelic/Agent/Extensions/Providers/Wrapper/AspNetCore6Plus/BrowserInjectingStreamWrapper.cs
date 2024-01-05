@@ -77,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     StartInjecting();
                     _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
-                        .GetAwaiter().GetResult();
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
                 }
                 finally
                 {
@@ -102,7 +102,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     StartInjecting();
-                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -113,7 +113,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
 
             if (_baseStream != null)
-                await _baseStream.WriteAsync(buffer, cancellationToken);
+                await _baseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
 
         private const string InjectingRUM = "InjectingRUM";
@@ -126,7 +126,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             _context = null;
 
-            await _baseStream.DisposeAsync();
+            await _baseStream.DisposeAsync().ConfigureAwait(false);
             _baseStream = null;
         }
 

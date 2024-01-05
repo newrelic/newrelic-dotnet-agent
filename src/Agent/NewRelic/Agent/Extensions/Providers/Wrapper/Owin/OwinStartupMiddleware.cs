@@ -56,7 +56,7 @@ namespace NewRelic.Providers.Wrapper.Owin
 
             try
             {
-                await _next.Invoke(context);
+                await _next.Invoke(context).ConfigureAwait(false);
                 EndTransaction(segment, transaction, context, null);
             }
             catch (Exception ex)

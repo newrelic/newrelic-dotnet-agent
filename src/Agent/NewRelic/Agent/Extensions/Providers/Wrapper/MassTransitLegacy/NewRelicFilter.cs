@@ -55,7 +55,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 
-            await next.Send(context);
+            await next.Send(context).ConfigureAwait(false);
             segment.End();
             transaction.End();
 
@@ -93,7 +93,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
             InsertDistributedTraceHeaders(context.Headers, transaction);
             var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
-            await next.Send(context);
+            await next.Send(context).ConfigureAwait(false);
             segment.End();
         }
 
@@ -110,7 +110,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
             InsertDistributedTraceHeaders(context.Headers, transaction);
             var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
-            await next.Send(context);
+            await next.Send(context).ConfigureAwait(false);
             segment.End();
         }
 

@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             {
                 // not found, can't inject anything
                 transaction?.LogFinest("Skipping RUM Injection: No suitable location found to inject script.");
-                await baseStream.WriteAsync(buffer, 0, buffer.Length);
+                await baseStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                 return;
             }
 
@@ -34,13 +34,13 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if (index < buffer.Length) // validate index is less than buffer length
             {
                 // Write everything up to the insertion index
-                await baseStream.WriteAsync(buffer, 0, index);
+                await baseStream.WriteAsync(buffer, 0, index).ConfigureAwait(false);
 
                 // Write the RUM script
-                await baseStream.WriteAsync(rumBytes, 0, rumBytes.Length);
+                await baseStream.WriteAsync(rumBytes, 0, rumBytes.Length).ConfigureAwait(false);
 
                 // Write the rest of the doc, starting after the insertion index
-                await baseStream.WriteAsync(buffer, index, buffer.Length - index);
+                await baseStream.WriteAsync(buffer, index, buffer.Length - index).ConfigureAwait(false) ;
             }
             else
                 transaction?.LogFinest($"Skipping RUM Injection: Insertion index was invalid.");

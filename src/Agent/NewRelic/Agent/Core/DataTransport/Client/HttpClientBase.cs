@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     wc.DownloadString(testAddress);
                 }
 #else
-                _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
+                _lazyHttpClient.Value.GetAsync(testAddress).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
                 Log.Info("Connection test to \"{0}\" succeeded", testAddress);
             }
