@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '20 3 * * 1'
 
+permissions:
+  contents: read    
+  
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -36,7 +39,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@012739e5082ff0c22ca6d6ab32e07c36df03c4a4 # v3.22.12
       with:
         languages: csharp
 
@@ -46,13 +49,13 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@012739e5082ff0c22ca6d6ab32e07c36df03c4a4 # v3.22.12
       with:
         category: "/language:csharp"
 
   analyze-cpp:
     name: Analyze C++
-    runs-on: windows-2019
+    runs-on: windows-latest
     timeout-minutes: 120
     permissions:
       actions: read
@@ -69,7 +72,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@012739e5082ff0c22ca6d6ab32e07c36df03c4a4 # v3.22.12
       with:
         languages: c-cpp
 
@@ -85,6 +88,6 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@012739e5082ff0c22ca6d6ab32e07c36df03c4a4 # v3.22.12
       with:
         category: "/language:c-cpp"

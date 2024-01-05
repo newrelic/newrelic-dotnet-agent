@@ -92,7 +92,7 @@ jobs:
     needs: check-for-changes
     if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
-    runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
+    runs-on: windows-latest
 
     env:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
@@ -158,7 +158,7 @@ jobs:
       - name: Archive Artifacts
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: profiler
+          name: profiler-windows
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
@@ -210,7 +210,7 @@ jobs:
       - name: Archive Artifacts
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: profiler
+          name: profiler-amd64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
@@ -284,7 +284,7 @@ jobs:
       - name: Archive Artifacts
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
-          name: profiler
+          name: profiler-arm64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
@@ -312,12 +312,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Profiler Artifacts to working Directory
-        uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - name: Download Windows Profiler Artifacts to working Directory
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
-          name: profiler
+          name: profiler-windows
           path: ${{ github.workspace }}/_workingDir
       
+      - name: Download Linux amd64 Profiler Artifacts to working Directory
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
+        with:
+          name: profiler-amd64
+          path: ${{ github.workspace }}/_workingDir
+
+      - name: Download Linux arm64 Profiler Artifacts to working Directory
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
+        with:
+          name: profiler-arm64
+          path: ${{ github.workspace }}/_workingDir
+
       - name: Determine Package Version from Git history
         id: agentVersion
         run: |

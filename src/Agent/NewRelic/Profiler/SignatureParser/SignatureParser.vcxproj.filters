@@ -8,4 +8,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ByteVectorManipulator.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>
