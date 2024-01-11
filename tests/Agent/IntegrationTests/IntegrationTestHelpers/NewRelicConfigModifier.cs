@@ -64,6 +64,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 host);
         }
 
+        public void SetHostPort(int port)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "port",
+                port.ToString());
+        }
+
         public void SetRequestTimeout(TimeSpan duration)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "requestTimeout",
