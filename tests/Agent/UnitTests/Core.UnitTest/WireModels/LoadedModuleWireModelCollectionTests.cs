@@ -196,7 +196,7 @@ namespace NewRelic.Agent.Core.WireModels
         {
             _baseTestAssembly = new TestAssembly();
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
-            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
+            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
             _baseTestAssembly.SetHashCode = BaseHashCode;
 
 
