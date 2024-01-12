@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -10,6 +10,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
 using NewRelic.Parsing.ConnectionString;
 using StackExchange.Redis.Profiling;
 
@@ -81,10 +82,10 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
         private void CleanUp()
         {
-            var cleanedSessions = 0;
-
             try
             {
+                var cleanedSessions = 0;
+
                 foreach (var pair in _sessionCache)
                 {
                     // This can happen outside the lock since the object transaction was garbage collected.
@@ -107,10 +108,11 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                         }
                     }
                 }
+
+                Log.Finest($"SessionCache.Cleanup() removed {cleanedSessions}");
+                _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, cleanedSessions);
             }
             catch { } // Don't want to log here, just want to prevent collection problems from breaking things.
-
-            _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, cleanedSessions);
         }
 
         private ConnectionInfo GetConnectionInfo(EndPoint endpoint)

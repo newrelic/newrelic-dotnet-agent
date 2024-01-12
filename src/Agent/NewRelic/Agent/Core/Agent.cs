@@ -28,8 +28,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +63,6 @@ namespace NewRelic.Agent.Core
         private readonly ILogEventAggregator _logEventAggregator;
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
-        private volatile IStackExchangeRedisCache _stackExchangeRedisCache;
         private readonly ISimpleSchedulingService _simpleSchedulingService;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
@@ -419,11 +416,7 @@ namespace NewRelic.Agent.Core
             get { return _simpleSchedulingService; }
         }
 
-        public IStackExchangeRedisCache StackExchangeRedisCache
-        {
-            get { return _stackExchangeRedisCache; }
-            set { _stackExchangeRedisCache = value; }
-        }
+        public IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
 
         public void RecordSupportabilityMetric(string metricName, long count = 1)
         {

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Runtime.CompilerServices;
@@ -14,6 +14,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "stackexchangeredis-connect";
+        private static readonly object _lock = new();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -23,22 +24,26 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, Agent.Api.ITransaction transaction)
         {
             return Delegates.GetDelegateFor<ConnectionMultiplexer>(
-                onSuccess: muxer =>
-                {
-                    RegisterProfIler(muxer);
-                });
+                onSuccess: RegisterProfiler);
 
-            void RegisterProfIler(IConnectionMultiplexer multiplexer)
+            void RegisterProfiler(IConnectionMultiplexer multiplexer)
             {
                 var xAgent = (IAgentExperimental)agent;
 
                 // The SessionCache is not connection-specific.  This checks for an existing cache and creates one if there is none.
-                if (((IAgentExperimental)agent).StackExchangeRedisCache == null)
+                if (xAgent.StackExchangeRedisCache == null)
                 {
-                    // We only need the hashcode since nothing will change for the methodCall
-                    var hashCode = RuntimeHelpers.GetHashCode(multiplexer);
-                    var sessionCache = new SessionCache(agent, hashCode);
-                    xAgent.StackExchangeRedisCache = sessionCache;
+                    lock (_lock)
+                    {
+                        if (xAgent.StackExchangeRedisCache == null)
+                        {
+                            // We only need the hashcode since nothing will change for the methodCall
+                            var hashCode = RuntimeHelpers.GetHashCode(multiplexer);
+                            var sessionCache = new SessionCache(agent, hashCode);
+
+                            xAgent.StackExchangeRedisCache = sessionCache;
+                        }
+                    }
                 }
 
                 // Registers the profiling function from the shared SessionCache.
