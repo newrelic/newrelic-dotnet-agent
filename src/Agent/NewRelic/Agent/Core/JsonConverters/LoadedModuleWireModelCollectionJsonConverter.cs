@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 foreach (var item in loadedModule.Data)
                 {
                     jsonWriter.WritePropertyName(item.Key);
-                    jsonWriter.WriteValue(item.Value.ToString());
+                    jsonWriter.WriteValue(item.Value?.ToString() ?? " ");
                 }
 
                 jsonWriter.WriteEndObject();

@@ -37,12 +37,36 @@ namespace NewRelic.Agent.Core.Utilities
             baseTestAssembly.SetAssemblyName = baseAssemblyName;
             baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
-            baseTestAssembly.SetLocation = BaseAssemblyPath;
             baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
             baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
 
             var assemblies = new List<Assembly>();
             assemblies.Add(baseTestAssembly);
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
+            Assert.AreEqual(expected, serialized);
+        }
+
+        [Test]
+        public void LoadedModuleWireModelCollectionHandlesNulls()
+        {
+            var expected = @"[""Jars"",[[""MyTestAssembly"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42""}]]]";
+
+            var baseAssemblyName = new AssemblyName();
+            baseAssemblyName.Name = BaseAssemblyName;
+            baseAssemblyName.Version = new Version(BaseAssemblyVersion);
+            baseAssemblyName.SetPublicKeyToken(Encoding.ASCII.GetBytes(BasePublicKeyToken));
+
+            var baseTestAssembly = new TestAssembly();
+            baseTestAssembly.SetAssemblyName = baseAssemblyName;
+            baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
+            baseTestAssembly.SetHashCode = BaseHashCode;
+            baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
+            baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
+
+            var assemblies = new List<Assembly> { baseTestAssembly };
+
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
             var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
