@@ -37,6 +37,7 @@ namespace NewRelic.Agent.Core.Utilities
             baseTestAssembly.SetAssemblyName = baseAssemblyName;
             baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
+            baseTestAssembly.SetLocation = BaseAssemblyPath;
             baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
             baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
 

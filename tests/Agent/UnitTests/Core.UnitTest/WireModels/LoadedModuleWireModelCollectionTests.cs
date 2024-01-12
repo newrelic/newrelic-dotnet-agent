@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
+using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -15,6 +16,7 @@ namespace NewRelic.Agent.Core.WireModels
         private const string BaseAssemblyName = "MyTestAssembly";
 
         private string BaseAssemblyVersion;
+        private string BaseAssemblyPath;
         private string BaseCompanyName;
         private string BaseCopyrightValue;
         private int    BaseHashCode;
@@ -29,6 +31,7 @@ namespace NewRelic.Agent.Core.WireModels
         {
             
             BaseAssemblyVersion = "1.0.0";
+            BaseAssemblyPath = @"C:\path\to\assembly\MyTestAssembly.dll";
             BaseCompanyName = "MyCompany";
             BaseCopyrightValue = "Copyright 2008";
             BaseHashCode = 42;
@@ -44,6 +47,7 @@ namespace NewRelic.Agent.Core.WireModels
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
             _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             _baseTestAssembly.SetHashCode = BaseHashCode;
+            _baseTestAssembly.SetLocation = BaseAssemblyPath;
             _baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
             _baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
         }
@@ -61,7 +65,10 @@ namespace NewRelic.Agent.Core.WireModels
         public int TryGetAssemblyName_UsingCollectionCount(string assemblyName, bool isDynamic)
         {
             _baseAssemblyName.Name = assemblyName;
-
+            if (string.IsNullOrWhiteSpace(assemblyName))
+            {
+                _baseTestAssembly.SetLocation = null;
+            }
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
             _baseTestAssembly.SetDynamic = isDynamic;
             
@@ -255,6 +262,8 @@ namespace NewRelic.Agent.Core.WireModels
 
         private int _hashCode;
 
+        private string _location;
+
         private List<object> _customAttributes = new List<object>();
 
         public AssemblyName SetAssemblyName
@@ -284,6 +293,12 @@ namespace NewRelic.Agent.Core.WireModels
             return _hashCode;
         }
 
+        public string SetLocation
+        {
+            set { _location = value; }
+        }
+
+        public override string Location => _location;
         public void AddCustomAttribute(object attribute)
         {
             _customAttributes.Add(attribute);
@@ -347,6 +362,19 @@ namespace NewRelic.Agent.Core.WireModels
             }
 
             throw new Exception();
+        }
+
+        public override string Location
+        {
+            get
+            {
+                if (ItemToTest != "Location")
+                {
+                    return _assembly.Location;
+                }
+
+                throw new Exception();
+            }
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
