@@ -82,12 +82,7 @@ namespace NewRelic.Agent.Core.WireModels
                     assemblyName = Path.GetFileName(assembly.Location);
                 }
 
-                if (string.IsNullOrWhiteSpace(assemblyName))
-                {
-                    return false;
-                }
-
-                return true;
+                return !string.IsNullOrWhiteSpace(assemblyName);
             }
             catch
             {
@@ -101,12 +96,7 @@ namespace NewRelic.Agent.Core.WireModels
             try
             {
                 publicKey = BitConverter.ToString(assemblyDetails.GetPublicKeyToken()).Replace("-", "");
-                if (string.IsNullOrWhiteSpace(publicKey))
-                {
-                    return false;
-                }
-
-                return true;
+                return !string.IsNullOrWhiteSpace(publicKey);
             }
             catch
             {
@@ -154,7 +144,7 @@ namespace NewRelic.Agent.Core.WireModels
                     sha512.Dispose();
                 }
 
-                return true;
+                return !string.IsNullOrWhiteSpace(sha1FileHash) && !string.IsNullOrWhiteSpace(sha512FileHash);
             }
             catch
             {
@@ -169,7 +159,7 @@ namespace NewRelic.Agent.Core.WireModels
             try
             {
                 assemblyHashCode = assembly.GetHashCode().ToString();
-                return true;
+                return !string.IsNullOrWhiteSpace(assemblyHashCode);
             }
             catch
             {
@@ -190,7 +180,7 @@ namespace NewRelic.Agent.Core.WireModels
                 }
 
                 companyName = ((AssemblyCompanyAttribute)attributes[0]).Company;
-                return true;
+                return !string.IsNullOrWhiteSpace(companyName);
             }
             catch
             {
@@ -211,7 +201,7 @@ namespace NewRelic.Agent.Core.WireModels
                 }
 
                 copyright = ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
-                return true;
+                return !string.IsNullOrWhiteSpace(copyright);
             }
             catch
             {

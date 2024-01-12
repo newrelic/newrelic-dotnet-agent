@@ -1,16 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Collections;
 using NUnit.Framework;
-using Telerik.JustMock;
 using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -19,13 +14,14 @@ namespace NewRelic.Agent.Core.WireModels
     public class LoadedModuleWireModelCollectionTests
     {
         private const string BaseAssemblyName = "MyTestAssembly";
-        private const string BaseAssemblyVersion = "1.0.0";
-        private const string BaseAssemblyPath = @"C:\path\to\assembly\MyTestAssembly.dll";
-        private const string BaseCompanyName = "MyCompany";
-        private const string BaseCopyrightValue = "Copyright 2008";
-        private const int BaseHashCode = 42;
-        private const string BasePublicKeyToken = "publickeytoken";
-        private const string BasePublicKey = "7075626C69636B6579746F6B656E";
+
+        private string BaseAssemblyVersion;
+        private string BaseAssemblyPath;
+        private string BaseCompanyName;
+        private string BaseCopyrightValue;
+        private int    BaseHashCode;
+        private string BasePublicKeyToken;
+        private string BasePublicKey;
 
         private AssemblyName _baseAssemblyName;
         private TestAssembly _baseTestAssembly;
@@ -33,6 +29,15 @@ namespace NewRelic.Agent.Core.WireModels
         [SetUp]
         public void SetUp()
         {
+            
+            BaseAssemblyVersion = "1.0.0";
+            BaseAssemblyPath = @"C:\path\to\assembly\MyTestAssembly.dll";
+            BaseCompanyName = "MyCompany";
+            BaseCopyrightValue = "Copyright 2008";
+            BaseHashCode = 42;
+            BasePublicKeyToken = "publickeytoken";
+            BasePublicKey = "7075626C69636B6579746F6B656E";
+
             _baseAssemblyName = new AssemblyName();
             _baseAssemblyName.Name = BaseAssemblyName;
             _baseAssemblyName.Version = new Version(BaseAssemblyVersion);
@@ -64,7 +69,6 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 _baseTestAssembly.SetLocation = null;
             }
-
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
             _baseTestAssembly.SetDynamic = isDynamic;
             
@@ -195,6 +199,35 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         [Test]
+        public void ErrorsHandled_GetCustomAttributes_HandlesNulls()
+        {
+            _baseTestAssembly = new TestAssembly();
+            _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
+            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
+            _baseTestAssembly.SetHashCode = BaseHashCode;
+
+
+            _baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
+            _baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
+
+
+            var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
+            evilAssembly.ItemToTest = "";
+
+            var assemblies = new List<Assembly>();
+            assemblies.Add(evilAssembly);
+
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+
+            var loadedModule = loadedModules.LoadedModules[0];
+
+            Assert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
+            Assert.False(loadedModule.Data.ContainsKey("copyright"));
+        }
+
+        [Test]
         public void ErrorsHandled_PublickeyToken()
         {
             var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
@@ -266,7 +299,6 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         public override string Location => _location;
-
         public void AddCustomAttribute(object attribute)
         {
             _customAttributes.Add(attribute);
