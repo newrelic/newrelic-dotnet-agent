@@ -57,8 +57,8 @@
     <PackageReference Include="npgsql" Version="7.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     <!--System.Data.SqlClient (.NET Core/5+ only) -->
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <!--<PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net8.0'" />-->
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <!--<PackageReference Include="System.Data.SqlClient" Version="4.8.6" Condition="'$(TargetFramework)' == 'net8.0'" />-->
     <!-- Package does not support net8.0 -->
 
     <!--Microsoft.Data.SqlClient-->
