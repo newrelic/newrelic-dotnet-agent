@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -38,6 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
                     .SetLogLevel("debug");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
 
                     if (typeof(TFixture).ToString().Contains("HSM"))
                     {
@@ -96,6 +97,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         {
         }
     }
+
     [NetCoreTest]
     public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
@@ -165,6 +167,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         {
         }
     }
+
     [NetCoreTest]
     public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
@@ -204,6 +207,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         {
         }
     }
+
     [NetCoreTest]
     public class NLogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {

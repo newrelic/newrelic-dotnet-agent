@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -366,11 +366,11 @@ namespace CompositeTests
             const int maxLoops = 30;
             var loops = 0;
             _compositeTestAgent.Harvest();
-            var cleanupCount = _compositeTestAgent.Metrics.FirstOrDefault(m => m.MetricName.Name == "Supportability/Dotnet/RedisSessionCacheCleanup/Count");
+            var cleanupCount = _compositeTestAgent.Metrics.FirstOrDefault(m => m.MetricNameModel.Name == "Supportability/Dotnet/RedisSessionCacheCleanup/Count");
             while (cleanupCount == null && loops < maxLoops)
             {
                 _compositeTestAgent.Harvest();
-                cleanupCount = _compositeTestAgent.Metrics.FirstOrDefault(m => m.MetricName.Name == "Supportability/Dotnet/RedisSessionCacheCleanup/Count");
+                cleanupCount = _compositeTestAgent.Metrics.FirstOrDefault(m => m.MetricNameModel.Name == "Supportability/Dotnet/RedisSessionCacheCleanup/Count");
                 loops++;
                 Thread.Sleep(100);
             }

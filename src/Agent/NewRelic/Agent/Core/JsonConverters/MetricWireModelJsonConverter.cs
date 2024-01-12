@@ -19,9 +19,9 @@ namespace NewRelic.Agent.Core.JsonConverters
         {
             jsonWriter.WriteStartArray();
 
-            MetricNameWireModelJsonConverter.WriteJsonImpl(jsonWriter, value.MetricName, serializer);
+            MetricNameWireModelJsonConverter.WriteJsonImpl(jsonWriter, value.MetricNameModel, serializer);
 
-            MetricDataWireModelJsonConverter.WriteJsonImpl(jsonWriter, value.Data, serializer);
+            MetricDataWireModelJsonConverter.WriteJsonImpl(jsonWriter, value.DataModel, serializer);
 
             jsonWriter.WriteEndArray();
         }

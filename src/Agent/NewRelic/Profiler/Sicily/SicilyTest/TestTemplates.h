@@ -21,10 +21,10 @@ namespace Microsoft
             using namespace sicily::ast;
             using namespace sicily::codegen;
 
-            template<> std::wstring ToString<uint16_t>(const uint16_t& t)
-            {
-                RETURN_WIDE_STRING(t);
-            }
+            //template<> std::wstring ToString<uint16_t>(const uint16_t& t)
+            //{
+            //    RETURN_WIDE_STRING(t);
+            //}
 
             template<> std::wstring ToString<Type::Kind>(const Type::Kind& t)
             {

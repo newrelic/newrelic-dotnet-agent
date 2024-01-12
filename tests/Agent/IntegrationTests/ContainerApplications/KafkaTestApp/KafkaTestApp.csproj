@@ -4,7 +4,6 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

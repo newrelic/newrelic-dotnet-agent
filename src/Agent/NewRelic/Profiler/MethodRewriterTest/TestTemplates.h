@@ -77,7 +77,7 @@ namespace Microsoft { namespace VisualStudio { namespace CppUnitTestFramework
         }
     }
 
-    template<> std::wstring ToString<uint16_t> (const uint16_t& t) { RETURN_WIDE_STRING(t); }
+    //template<> std::wstring ToString<uint16_t> (const uint16_t& t) { RETURN_WIDE_STRING(t); }
 
     template <> std::wstring ToString<std::vector<uint8_t>>(const std::vector<uint8_t>& t)
     {

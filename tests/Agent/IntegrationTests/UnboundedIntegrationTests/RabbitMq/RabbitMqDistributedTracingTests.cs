@@ -53,7 +53,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             {
                 new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 }
+                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod"} ,
+                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();

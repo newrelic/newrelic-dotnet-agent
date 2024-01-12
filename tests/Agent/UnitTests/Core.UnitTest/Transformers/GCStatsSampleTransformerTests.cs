@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Transformers
             //Collect metrics that are generated from sample data
             var generatedMetrics = new Dictionary<string, MetricWireModel>();
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricName.Name, metric); });
+                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricNameModel.Name, metric); });
 
             //Act
             _transformer.Transform(_sampleData);
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Transformers
             //Assert
             Assert.AreEqual(_sampleTypesCount, generatedMetrics.Count, $"{_sampleTypesCount} metrics should have been generated, but {generatedMetrics.Count} were.");
             Assert.IsFalse(generatedMetrics.Any(x => x.Value == null));
-            Assert.IsFalse(generatedMetrics.Any(x => x.Value.Data == null));
+            Assert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel == null));
         }
 
         /// <summary>
@@ -155,12 +155,12 @@ namespace NewRelic.Agent.Core.Transformers
             //Collect metrics that are generated from sample data
             var generatedMetrics = new Dictionary<string, MetricWireModel>();
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricName.Name, metric); });
+                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricNameModel.Name, metric); });
 
             //Act
             _transformer.Transform(_sampleData);
 
-            Assert.IsFalse(generatedMetrics.Any(x => x.Value.Data.Value0 < 0));
+            Assert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel.Value0 < 0));
         }
     }
 }

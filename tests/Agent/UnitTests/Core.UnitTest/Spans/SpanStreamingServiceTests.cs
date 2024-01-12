@@ -650,13 +650,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [Test]
-        public void MultpleConsumersItemsSentOnlyOnce()
+        public void MultipleConsumersItemsSentOnlyOnce()
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(4);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceCountConsumers).Returns(3);
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-            var actualItems = new List<TRequest>();
+            var actualItems = new ConcurrentBag<TRequest>();
             var requestItems = new ConcurrentBag<TRequest>();
             for (var i = 0; i < 100; i++)
             {
@@ -668,7 +668,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _grpcWrapper.WithTrySendDataImpl = (stream, requestBatch, timeout, token) =>
                 {
                     var requests = GetBatchItems(requestBatch);
-                    actualItems.AddRange(requests);
+                    foreach (var streamingModel in requests)
+                        actualItems.Add(streamingModel);
 
                     return true;
                 };

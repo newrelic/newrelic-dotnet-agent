@@ -1,0 +1,15 @@
+FROM fedora:latest AS base
+
+# configure dnf and upgrade all packages
+RUN echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+RUN echo "fastestmirror=true" >> /etc/dnf/dnf.conf
+RUN dnf update --refresh -y
+RUN dnf upgrade-minimal -y
+
+# install the asp.netcore runtime. Based on https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual
+ARG DOTNET_VERSION
+RUN dnf install -y wget tar findutils gzip libicu
+RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+RUN chmod +x ./dotnet-install.sh
+RUN ./dotnet-install.sh --channel ${DOTNET_VERSION} --runtime aspnetcore
+ENV PATH="${PATH}:/root/.dotnet:/root/.dotnet/tools"

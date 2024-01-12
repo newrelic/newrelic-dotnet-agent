@@ -8,4 +8,7 @@
     <ClInclude Include="xplat.h" />
     <ClInclude Include="AssemblyVersion.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>

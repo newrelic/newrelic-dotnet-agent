@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
@@ -38,6 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
                     configModifier
                     .SetLogForwardingMaxSamplesStored(1) // must be 1 since 0 causes it to return the default
                     .SetLogLevel("debug");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 

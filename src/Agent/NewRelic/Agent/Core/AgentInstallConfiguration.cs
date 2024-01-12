@@ -198,20 +198,29 @@ namespace NewRelic.Agent.Core
             return System.Environment.GetEnvironmentVariable(NewRelicLogLevelEnvironmentVariable);
         }
 
-        private static AgentInfo GetAgentInfo()
+        public static AgentInfo GetAgentInfo()
         {
-            var agentInfoPath = $@"{NewRelicHome}\agentinfo.json";
+            if (string.IsNullOrEmpty(NewRelicHome))
+            {
+                Log.Debug($"Could not get agent info. NewRelicHome is null or empty.");
+                return null;
+            }
+
+            var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
+
             if (File.Exists(agentInfoPath))
             {
                 try
                 {
                     return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
                 }
-                catch
+                catch (Exception e)
                 {
-                    // Fail silently
+                    Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
                 }
             }
+            else
+                Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
 
             return null;
         }

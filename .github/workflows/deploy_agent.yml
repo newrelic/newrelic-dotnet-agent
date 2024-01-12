@@ -3,12 +3,17 @@ name: Deploy the .NET Agent
 on:
   workflow_dispatch:
     inputs:
+      get-version-automatically:
+        description: 'Automatically determine the Agent Version and Run ID'
+        type: boolean
+        required: true
+        default: true
       agent_version:
-        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
-        required: true
+       description: 'OVERRIDE: Agent Version to deploy. Format: X.X.X - ignored unless "Automatically determine..." is unchecked'
+       required: false
       run_id:
-        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
-        required: true
+         description: 'OVERRIDE: Run ID of the all_solutions.yml workflow that was triggered by creating a Release in GitHub.  ID can be found in URL for run. Ignored unless "Automatically determine..." is unchecked'
+         required: false
       deploy:
         type: boolean
         description: Deploy Build Artifacts. (If not selected, do everything except deploy.)
@@ -39,11 +44,6 @@ on:
         description: Re-Index the Download Site S3 container
         required: true
         default: true
-      update-apm-version:
-        type: boolean
-        description: Update APM Version
-        required: true
-        default: true
 
 permissions:
   contents: read
@@ -53,9 +53,105 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  get-release-info:
+    name: Get Release Version and Run ID
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.step2.outputs.release_version }}
+      workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
 
+      - name: Checkout
+        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+      
+      - name: Get Release Version and Run ID
+        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
+        id: step1
+        run: |
+          # Get the commit sha for the most recent release
+          COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
+          if [[ -z "$COMMIT_SHA" ]]; then 
+            echo "::error::Unable to find SHA of most recent release"
+            exit 1 
+          fi
+          echo "Found commit sha: $COMMIT_SHA"
+
+          # get info on the most recent release, writing output to a json file
+          gh release view --json name,isDraft,isPrerelease,publishedAt > release.json
+
+          # Get the version id of the most recent release (reported as "v99.99.99" so we strip off the "v")
+          RELEASE_VERSION=$(cat release.json | jq --raw-output ".name | .[1:]")
+          if [[ -z "$RELEASE_VERSION" ]]; then
+            echo "::error::Could not find the latest release."
+            exit 1
+          fi
+          echo "Found release version: $RELEASE_VERSION"
+
+          if [ "$(cat release.json | jq --raw-output '.isDraft')" = "true" ]; then
+            echo "::error::$RELEASE_VERSION is marked as 'Draft'. Use manual overrides to continue."
+            exit 1
+          fi
+          if [ "$(cat release.json | jq --raw-output '.isPrerelease')" = "true" ]; then
+            echo "::error::$RELEASE_VERSION is marked as 'Pre-Release'. Use manual overrides to continue."
+            exit 1
+          fi
+          # check release date - should be within the last 7 days (to ensure we don't grab an old release)
+          PUBLISHED_AT=$(cat release.json | jq --raw-output '.publishedAt')
+          if [[ -z "$PUBLISHED_AT" ]]; then
+            echo "::error::Release publish date is empty. Use manual overrides to continue."
+            exit 1
+          fi
+          LAST_WEEK=$(date --date "-7days" -u +"%s")
+          PUBLISH_DATE=$(date --date "$PUBLISHED_AT" -u +"%s")
+          if [ $LAST_WEEK -ge $PUBLISH_DATE ]; then
+            echo "::error::$RELEASE_VERSION was published more than a week ago. Use manual overrides to continue."
+            exit 1
+          fi
+
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+          # get the run id of the most recent successful run of the all_solutions workflow triggered by a release event, against the given commit sha
+          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
+          if [[ -z "$WORKFLOW_RUN_ID" ]]; then
+            echo "::error::Could not find a successful all_solutions workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
+            exit 1
+          fi
+
+          echo "Found workflow run id: $WORKFLOW_RUN_ID"
+          echo "workflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Set Output Release Version and Build Run ID
+        id: step2
+        run: |
+          if [ "${{ github.event.inputs.get-version-automatically}}" = "true" ]; then
+            echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
+            echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
+          else
+            if [[ -z "${{github.event.inputs.agent_version}}" ]]; then
+              echo "::error::Agent Version not specified."
+              exit 1
+            fi
+            if [[ -z "${{github.event.inputs.run_id}}" ]]; then
+              echo "::error::Run ID not specified."
+              exit 1
+            fi
+            echo "release_version=${{github.event.inputs.agent_version}}" >> "$GITHUB_OUTPUT"
+            echo "workflow_run_id=${{github.event.inputs.run_id}}" >> "$GITHUB_OUTPUT"
+          fi
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
   get-external-artifacts:
     name: Get and Publish Deploy Artifacts Locally
+    needs: get-release-info
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -65,38 +161,30 @@ jobs:
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
-      - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: deploy-tooling
-          path: ${{ github.workspace }}/deploy/
-          if-no-files-found: error
-
   deploy-downloadsite:
-    needs: get-external-artifacts
+    needs: [get-release-info, get-external-artifacts]
     if: ${{ github.event.inputs.downloadsite == 'true' }}
     name: Deploy MSI to Download Site
     runs-on: windows-2019
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -134,15 +222,15 @@ jobs:
           $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
           $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           $Env:AWS_DEFAULT_REGION="us-west-2"
-          New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
-          Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
-          cd .\previous_releases\${{ github.event.inputs.agent_version }}
+          New-Item -ItemType directory -Path .\previous_releases\${{ needs.get-release-info.outputs.release_version }} -Force
+          Copy-Item .\working_dir\* ".\previous_releases\${{ needs.get-release-info.outputs.release_version }}\" -Force -Recurse
+          cd .\previous_releases\${{ needs.get-release-info.outputs.release_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
@@ -171,7 +259,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -252,7 +340,7 @@ jobs:
         shell: powershell
 
   deploy-linux:
-    needs: get-external-artifacts
+    needs: [get-release-info, get-external-artifacts]
     if: ${{ github.event.inputs.linux == 'true' }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
@@ -267,18 +355,17 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y dos2unix
         shell: bash
-        
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
-
-      - name: Download Deploy Tooling
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: deploy-tooling
-          path: ${{ github.workspace }}/deploy
 
       - name: Get GPG Key
         id: write_gpgkey
@@ -298,13 +385,13 @@ jobs:
       - name: Prepare docker.env
         run: |
           # Confirm that the version is in the proper format.
-          IFS='.' read -ra agent_version_array <<< "${{ github.event.inputs.agent_version }}"
+          IFS='.' read -ra agent_version_array <<< "${{ needs.get-release-info.outputs.release_version }}"
           agent_version_count=${#agent_version_array[@]}
           if [ $agent_version_count -ne 3 ] ; then
-            echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like '10.0.0'."
+            echo "::error Supplied agent version from Workflow (${{ needs.get-release-info.outputs.release_version }}) is malformed.  It needs to be like '10.0.0'."
             exit 1
           else
-            AGENT_VERSION=${{ github.event.inputs.agent_version }}
+            AGENT_VERSION=${{ needs.get-release-info.outputs.release_version }}
           fi
 
           # Build the docker.env
@@ -346,40 +433,13 @@ jobs:
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
 
-  update-apm:
-    name: Update System Configuration Page
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.update-apm-version == 'true' }}
-    steps:
-      - name: Update system configuration page
-        run: |
-          PAYLOAD="{
-              \"system_configuration\": {
-                \"key\":   \"dotnet_agent_version\",
-                \"value\": \"${{ github.event.inputs.agent_version }}\"
-              }
-            }"
-          CONTENT_TYPE='Content-Type: application/json'
-
-          # STAGING
-          curl -X POST 'https://staging-api.newrelic.com/v2/system_configuration.json' \
-            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_STAGING }}" -i \
-            -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"
-
-          # PRODUCTION
-          curl -X POST 'https://api.newrelic.com/v2/system_configuration.json' \
-            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
-            -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"
-
   publish-release-notes:
-    needs: [deploy-linux, deploy-nuget, index-download-site]
+    needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
-      agent_version: ${{ github.event.inputs.agent_version }}
+      agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ github.event.inputs.run_id }}
     secrets: inherit
 
@@ -388,11 +448,11 @@ jobs:
       issues: write
       contents: read
       packages: read
-    needs: [deploy-linux, deploy-nuget, index-download-site]
+    needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:
-      agent_version: ${{ github.event.inputs.agent_version }}
+      agent_version: ${{ needs.get-release-info.outputs.release_version }}
     secrets: inherit
 

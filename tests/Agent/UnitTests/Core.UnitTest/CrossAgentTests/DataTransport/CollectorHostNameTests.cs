@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
         [TestCaseSource("CollectorHostnameTestData")]
         public void RunCrossAgentCollectorHostnameTests(string configFileKey, string envKey, string configOverrideHost, string envOverrideHost, string hostname)
         {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns<string>(null);
 
             if (envKey != null)
             {

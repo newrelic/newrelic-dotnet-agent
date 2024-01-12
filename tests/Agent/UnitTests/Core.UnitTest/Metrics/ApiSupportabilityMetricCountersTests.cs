@@ -45,8 +45,8 @@ namespace NewRelic.Agent.Core.Metrics
             _apiSupportabilityMetricCounters.Record(apiMethod);
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(SupportabilityPrefix + apiMethod, metric.MetricName.Name);
-            Assert.AreEqual(1, metric.Data.Value0);
+            Assert.AreEqual(SupportabilityPrefix + apiMethod, metric.MetricNameModel.Name);
+            Assert.AreEqual(1, metric.DataModel.Value0);
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
 
             _apiSupportabilityMetricCounters.CollectMetrics();
-            var actualMetricNames = _publishedMetrics.Select(metric => metric.MetricName.Name).ToList();
+            var actualMetricNames = _publishedMetrics.Select(metric => metric.MetricNameModel.Name).ToList();
             var expectedMetricNames = ApiMethods.Select(x => SupportabilityPrefix + x.ToString()).ToList();
 
             CollectionAssert.AreEquivalent(expectedMetricNames, actualMetricNames);
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(recordCount, metric.Data.Value0);
+            Assert.AreEqual(recordCount, metric.DataModel.Value0);
         }
     }
 }

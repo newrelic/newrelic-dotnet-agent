@@ -6,19 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
+using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ContainerIntegrationTests;
+namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
-public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : LinuxKafkaTestFixtureBase
+public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : KafkaTestFixtureBase
 {
     private const int TopicNameLength = 15;
 
-    internal string _topicName;
+    private readonly string _topicName;
     private readonly T _fixture;
 
     protected LinuxKafkaTest(T fixture, ITestOutputHelper output) : base(fixture)
@@ -27,8 +27,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
         _fixture.TestLogger = output;
 
         _topicName = GenerateTopic();
-        var brokerName = "broker" + _topicName;
-        ((ContainerApplication)_fixture.RemoteApplication).DockerDependencies.Add(brokerName);
 
         _fixture.Actions(setupConfiguration: () =>
             {
@@ -38,7 +36,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
                 configModifier.LogToConsole();
 
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _topicName);
-                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_CONTAINER_NAME", brokerName);
             },
             exerciseApplication: () =>
             {
@@ -113,18 +110,16 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
     }
 }
 
-[Collection("Sequential")]
-public class UbuntuX64Kafka1Test : LinuxKafkaTest<UbuntuX64Kafka1TestFixture>
+public class KafkaDotNet6Test : LinuxKafkaTest<KafkaDotNet6TestFixture>
 {
-    public UbuntuX64Kafka1Test(UbuntuX64Kafka1TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet6Test(KafkaDotNet6TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
 
-[Collection("Sequential")]
-public class UbuntuX64Kafka2Test : LinuxKafkaTest<UbuntuX64Kafka2TestFixture>
+public class KafkaDotNet7Test : LinuxKafkaTest<KafkaDotNet7TestFixture>
 {
-    public UbuntuX64Kafka2Test(UbuntuX64Kafka2TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet7Test(KafkaDotNet7TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

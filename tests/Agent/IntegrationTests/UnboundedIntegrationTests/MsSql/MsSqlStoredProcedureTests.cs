@@ -152,10 +152,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region System.Data.SqlClient (.NET Core/5+ only)
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlStoredProcedureTests_SystemDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -165,10 +166,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -261,10 +263,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -274,10 +277,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

@@ -4,7 +4,6 @@
     <AssemblyName>NewRelic.Providers.Wrapper.AspNetCore6Plus</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.AspNetCore6Plus</RootNamespace>
     <Description>ASP.NET Core 6+ Wrapper Provider for New Relic .NET Agent</Description>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

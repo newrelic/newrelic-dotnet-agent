@@ -11,22 +11,25 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
+namespace NewRelic.Agent.ContainerIntegrationTests.Applications;
 
 public class ContainerApplication : RemoteApplication
 {
     private readonly string _dockerfile;
+    private readonly string _dockerComposeFile;
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
     private readonly string _agentArch;
     private readonly string _containerPlatform;
-    private readonly string _dockerComposeServiceName;
+
+    private static Random random = new Random();
+    private readonly long _randomId;
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
 
-    protected override string ApplicationDirectoryName { get; }
+    protected override string ApplicationDirectoryName { get; } = "ContainerApplication";
 
     protected override string SourceApplicationDirectoryPath
     {
@@ -36,13 +39,16 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion, string dockerfile) : base(applicationType: ApplicationType.Container, isCoreApp: true)
+    public ContainerApplication(string distroTag, Architecture containerArchitecture,
+        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
-        ApplicationDirectoryName = applicationDirectoryName;
-        _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
+        _dockerComposeFile = dockerComposeFile;
+
+        _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
+
         DockerDependencies = new List<string>();
 
         switch (containerArchitecture)
@@ -60,9 +66,11 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"ContainerApplication: {_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public string NRAppName =>$"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
 
-    private string ContainerName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
+    public override string AppName => $"{NRAppName}_{_randomId}";
+
+    private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
     public override void CopyToRemote()
     {
@@ -75,7 +83,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose up --abort-on-container-exit --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
@@ -103,6 +111,7 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_APP_NAME");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
         startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
@@ -116,7 +125,7 @@ public class ContainerApplication : RemoteApplication
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
 
         startInfo.EnvironmentVariables.Add("TEST_DOCKERFILE", _dockerfile);
-        startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", AppName);
+        startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", NRAppName);
         startInfo.EnvironmentVariables.Add("DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("APP_DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
@@ -128,9 +137,6 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("AGENT_PATH", newRelicHomeDirectoryPath);
         startInfo.EnvironmentVariables.Add("LOG_PATH", profilerLogDirectoryPath);
         startInfo.EnvironmentVariables.Add("CONTAINER_NAME", ContainerName);
-        // generate a random network name to keep parallel test execution from failing
-        // network name length needs to be less than 15 characters to be compatible with linux containers
-        startInfo.EnvironmentVariables.Add("NETWORK_NAME", $"net-{System.Security.Cryptography.RandomNumberGenerator.GetInt32(1000000, 10000000)}");
 
         if (AdditionalEnvironmentVariables != null)
         {
@@ -179,30 +185,18 @@ public class ContainerApplication : RemoteApplication
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
         // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"container stop {ContainerName} -t 5");
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
         Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
-
-        CleanupContainer();
     }
 
     private void CleanupContainer()
     {
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
-        // ensure there's no stray containers or images laying around
-        Process.Start("docker", $"container rm --force {ContainerName}");
-        Process.Start("docker", $"image rm --force {ContainerName}");
 
-        if (DockerDependencies.Count > 0)
-        {
-            foreach (var dep in DockerDependencies)
-            {
-                Console.WriteLine($"[{AppName} {DateTime.Now}] Removing dependent container: {dep}.");
-                TestLogger?.WriteLine($"[{AppName}] Removing dependent container: {dep}.");
-                Process.Start("docker", $"container rm --force {dep}");
-            }
-        }
+        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
+
 
 #if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
