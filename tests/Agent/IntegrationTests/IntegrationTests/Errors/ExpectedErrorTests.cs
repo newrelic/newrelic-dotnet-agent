@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(12); // long enough to ensure metric harvest runs before error traces
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.AddExpectedStatusCodes("410-450")
                     .AddExpectedErrorMessages("System.Exception", new List<string> { "test exception"})
