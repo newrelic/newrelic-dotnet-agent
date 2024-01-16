@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Utils
 {
@@ -40,21 +38,21 @@ namespace NewRelic.Agent.Core.Utils
         {
             var trimmedBuffer = new TrimmedEncodedBuffer(encoding, buffer, offset, count);
 
-            Assert.AreEqual(expectedLeadingBytes.Length, trimmedBuffer.LeadingExtraBytesCount);
-            Assert.AreEqual(expectedTrailingBytes.Length, trimmedBuffer.TrailingExtraBytesCount);
-            Assert.AreEqual(trimmedBuffer.LeadingExtraBytesOffset + trimmedBuffer.LeadingExtraBytesCount, trimmedBuffer.Offset);
-            Assert.AreEqual(count, trimmedBuffer.LeadingExtraBytesCount + trimmedBuffer.Length + trimmedBuffer.TrailingExtraBytesCount);
+            ClassicAssert.AreEqual(expectedLeadingBytes.Length, trimmedBuffer.LeadingExtraBytesCount);
+            ClassicAssert.AreEqual(expectedTrailingBytes.Length, trimmedBuffer.TrailingExtraBytesCount);
+            ClassicAssert.AreEqual(trimmedBuffer.LeadingExtraBytesOffset + trimmedBuffer.LeadingExtraBytesCount, trimmedBuffer.Offset);
+            ClassicAssert.AreEqual(count, trimmedBuffer.LeadingExtraBytesCount + trimmedBuffer.Length + trimmedBuffer.TrailingExtraBytesCount);
 
             for (var i = 0; i < expectedLeadingBytes.Length; ++i)
             {
                 var bufferIndex = i + trimmedBuffer.LeadingExtraBytesOffset;
-                Assert.AreEqual(expectedLeadingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in leading extra bytes at index {bufferIndex}");
+                ClassicAssert.AreEqual(expectedLeadingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in leading extra bytes at index {bufferIndex}");
             }
 
             for (var i = 0; i < expectedTrailingBytes.Length; ++i)
             {
                 var bufferIndex = i + trimmedBuffer.TrailingExtraBytesOffset;
-                Assert.AreEqual(expectedTrailingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in trailing extra bytes at index {bufferIndex}");
+                ClassicAssert.AreEqual(expectedTrailingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in trailing extra bytes at index {bufferIndex}");
             }
         }
 
@@ -71,7 +69,7 @@ namespace NewRelic.Agent.Core.Utils
         public void Test_GetLeadingBytesCount(Encoding encoding, int offset, int count, int expectedLeadingByteCount, byte[] bytes, string description)
         {
             var trimmedBuffer = new TrimmedEncodedBuffer(encoding, bytes, offset, count);
-            Assert.AreEqual(expectedLeadingByteCount, trimmedBuffer.LeadingExtraBytesCount);
+            ClassicAssert.AreEqual(expectedLeadingByteCount, trimmedBuffer.LeadingExtraBytesCount);
         }
 
         private static IEnumerable<object[]> LeadingBytesCountTestData()

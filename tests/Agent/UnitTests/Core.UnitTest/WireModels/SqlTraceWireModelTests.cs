@@ -1,16 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
@@ -52,7 +48,7 @@ namespace NewRelic.Agent.Core.WireModels
             const string expectedResult = "[\"WebTransaction/ASP/post.aspx\",\"http://localhost:8080/post.aspx\",1530282818,\"Select * from meh\",\"Database/be_datastoresettings/delete\",1,1000.0,1000.0,1000.0,{}]";
 
             var actualResult = JsonConvert.SerializeObject(_sqlTraceWireModel);
-            Assert.AreEqual(expectedResult, actualResult);
+            ClassicAssert.AreEqual(expectedResult, actualResult);
         }
 
         [Test]
@@ -94,68 +90,68 @@ namespace NewRelic.Agent.Core.WireModels
             foreach (SqlTraceWireModel traceData in traceDatas)
             {
                 var numberOfDigits = Math.Floor(Math.Log10(traceData.SqlId) + 1);
-                Assert.IsTrue(numberOfDigits != 9);
+                ClassicAssert.IsTrue(numberOfDigits != 9);
             }
         }
 
         [Test]
         public void when_construtor_used_TransactionName_property_is_set()
         {
-            Assert.AreEqual(TrxDisplayName, _sqlTraceWireModel.TransactionName);
+            ClassicAssert.AreEqual(TrxDisplayName, _sqlTraceWireModel.TransactionName);
         }
 
         [Test]
         public void when_construtor_used_uri_property_is_set()
         {
-            Assert.AreEqual(Uri, _sqlTraceWireModel.Uri);
+            ClassicAssert.AreEqual(Uri, _sqlTraceWireModel.Uri);
         }
 
         [Test]
         public void when_construtor_used_sqlId_property_is_set()
         {
-            Assert.AreEqual(SqlId, _sqlTraceWireModel.SqlId);
+            ClassicAssert.AreEqual(SqlId, _sqlTraceWireModel.SqlId);
         }
 
         [Test]
         public void when_construtor_used_sql_property_is_set()
         {
-            Assert.AreEqual(Sql, _sqlTraceWireModel.Sql);
+            ClassicAssert.AreEqual(Sql, _sqlTraceWireModel.Sql);
         }
 
         [Test]
         public void when_construtor_used_databaseMetricName_property_is_set()
         {
-            Assert.AreEqual(DatabaseMetricName, _sqlTraceWireModel.DatastoreMetricName);
+            ClassicAssert.AreEqual(DatabaseMetricName, _sqlTraceWireModel.DatastoreMetricName);
         }
 
         [Test]
         public void when_construtor_used_callcount_property_is_set()
         {
-            Assert.AreEqual(CallCount, _sqlTraceWireModel.CallCount);
+            ClassicAssert.AreEqual(CallCount, _sqlTraceWireModel.CallCount);
         }
 
         [Test]
         public void when_construtor_used_totalcalltime_property_is_set()
         {
-            Assert.AreEqual(TotalCallTime, _sqlTraceWireModel.TotalCallTime);
+            ClassicAssert.AreEqual(TotalCallTime, _sqlTraceWireModel.TotalCallTime);
         }
 
         [Test]
         public void when_construtor_used_mincalltime_property_is_set()
         {
-            Assert.AreEqual(MinCallTime, _sqlTraceWireModel.MinCallTime);
+            ClassicAssert.AreEqual(MinCallTime, _sqlTraceWireModel.MinCallTime);
         }
 
         [Test]
         public void when_construtor_used_maxcalltime_property_is_set()
         {
-            Assert.AreEqual(MaxCallTime, _sqlTraceWireModel.MaxCallTime);
+            ClassicAssert.AreEqual(MaxCallTime, _sqlTraceWireModel.MaxCallTime);
         }
 
         [Test]
         public void when_construtor_used_parameterdate_property_is_set()
         {
-            Assert.AreEqual(_parameterData, _sqlTraceWireModel.ParameterData);
+            ClassicAssert.AreEqual(_parameterData, _sqlTraceWireModel.ParameterData);
         }
     }
 }

@@ -1,11 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.SystemExtensions.Collections.Generic;
-using NUnit.Framework;
 
 
 namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
@@ -23,7 +19,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             // The Unless(Func<T,bool>) method is very simple and thus needs only a few very simple tests
             var result = input.Unless(item => item == 9);
-            Assert.AreEqual(result, expectedOutput);
+            ClassicAssert.AreEqual(result, expectedOutput);
         }
 
         #endregion Unless(Func<T,bool>)
@@ -43,7 +39,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             // The Unless(Func<T,T,bool>) method is a little more complicated and thus deserves a few more tests
             var result = input.Unless((last, current) => last == current);
-            Assert.AreEqual(result, expectedOutput);
+            ClassicAssert.AreEqual(result, expectedOutput);
         }
 
         #endregion Unless(Func<T,T,bool>)
@@ -71,14 +67,14 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var dictionary = kvps.ToDictionary();
 
-            Assert.AreEqual(pairCount, dictionary.Count);
+            ClassicAssert.AreEqual(pairCount, dictionary.Count);
             for (var index = 0; index < input.Length; index += 2)
             {
                 var key = input[index];
                 var value = input[index + 1];
 
-                Assert.True(dictionary.ContainsKey(key));
-                Assert.AreEqual(value, dictionary[key]);
+                Assert.That(dictionary.ContainsKey(key));
+                ClassicAssert.AreEqual(value, dictionary[key]);
             }
         }
 
@@ -105,9 +101,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var dictionary = kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 
-            Assert.AreEqual(1, dictionary.Count);
-            Assert.True(dictionary.ContainsKey(1));
-            Assert.AreEqual(2, dictionary[1]);
+            ClassicAssert.AreEqual(1, dictionary.Count);
+            Assert.That(dictionary.ContainsKey(1));
+            ClassicAssert.AreEqual(2, dictionary[1]);
         }
 
         [Test]
@@ -121,9 +117,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var dictionary = kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast);
 
-            Assert.AreEqual(1, dictionary.Count);
-            Assert.True(dictionary.ContainsKey(1));
-            Assert.AreEqual(3, dictionary[1]);
+            ClassicAssert.AreEqual(1, dictionary.Count);
+            Assert.That(dictionary.ContainsKey(1));
+            ClassicAssert.AreEqual(3, dictionary[1]);
         }
 
         [Test]
@@ -137,15 +133,15 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var dictionary = kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast, StringComparer.OrdinalIgnoreCase);
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("foo"));
-            Assert.True(dictionary.ContainsKey("FOO"));
-            Assert.True(dictionary.ContainsKey("bar"));
-            Assert.True(dictionary.ContainsKey("BAR"));
-            Assert.AreEqual(1, dictionary["foo"]);
-            Assert.AreEqual(1, dictionary["FOO"]);
-            Assert.AreEqual(2, dictionary["bar"]);
-            Assert.AreEqual(2, dictionary["BAR"]);
+            ClassicAssert.AreEqual(2, dictionary.Count);
+            Assert.That(dictionary.ContainsKey("foo"));
+            Assert.That(dictionary.ContainsKey("FOO"));
+            Assert.That(dictionary.ContainsKey("bar"));
+            Assert.That(dictionary.ContainsKey("BAR"));
+            ClassicAssert.AreEqual(1, dictionary["foo"]);
+            ClassicAssert.AreEqual(1, dictionary["FOO"]);
+            ClassicAssert.AreEqual(2, dictionary["bar"]);
+            ClassicAssert.AreEqual(2, dictionary["BAR"]);
         }
 
         #endregion ToDictionary(DuplicateKeyBehavior)
@@ -155,7 +151,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object>();
             var notNullItems = items.NotNull();
-            Assert.AreEqual(0, notNullItems.Count());
+            ClassicAssert.AreEqual(0, notNullItems.Count());
         }
 
         [Test]
@@ -163,7 +159,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object> { null, null };
             var notNullItems = items.NotNull();
-            Assert.AreEqual(0, notNullItems.Count());
+            ClassicAssert.AreEqual(0, notNullItems.Count());
         }
 
         [Test]
@@ -171,7 +167,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object> { null, new object() };
             var notNullItems = items.NotNull();
-            Assert.AreEqual(1, notNullItems.Count());
+            ClassicAssert.AreEqual(1, notNullItems.Count());
         }
 
         [Test]
@@ -179,7 +175,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object> { new object(), new object() };
             var notNullItems = items.NotNull();
-            Assert.AreEqual(2, notNullItems.Count());
+            ClassicAssert.AreEqual(2, notNullItems.Count());
         }
 
         [Test]
@@ -187,7 +183,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object> { new object() };
             var selector = items.Select<object, object>(item => { throw new Exception(); }).Swallow();
-            Assert.AreEqual(0, selector.Count());
+            ClassicAssert.AreEqual(0, selector.Count());
         }
 
         [Test]
@@ -195,7 +191,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<object> { new object(), new object() };
             var selector = items.Select<object, object>(item => { throw new Exception(); }).Swallow();
-            Assert.AreEqual(0, selector.Count());
+            ClassicAssert.AreEqual(0, selector.Count());
         }
 
         [Test]
@@ -203,7 +199,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<bool> { false, true, false };
             var selector = items.Select(item => { if (item) throw new Exception(); return item; }).Swallow();
-            Assert.AreEqual(2, selector.Count());
+            ClassicAssert.AreEqual(2, selector.Count());
         }
 
         [Test]
@@ -221,9 +217,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         {
             var items = new List<Foo> { new Foo() };
             var selector = items.Select(item => { item.Bar = true; return item; }).Swallow();
-            Assert.AreEqual(false, items[0].Bar);
+            ClassicAssert.AreEqual(false, items[0].Bar);
             selector.ToList();
-            Assert.AreEqual(true, items[0].Bar);
+            ClassicAssert.AreEqual(true, items[0].Bar);
         }
 
         [Test]
@@ -232,9 +228,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             var items = new[] { 1, 2, 3, 4 };
             var total = 0;
             var enumerable = items.ForEachLazy(item => total += item);
-            Assert.AreEqual(0, total);
+            ClassicAssert.AreEqual(0, total);
             enumerable.ToList();
-            Assert.AreEqual(10, total);
+            ClassicAssert.AreEqual(10, total);
         }
 
         [Test]
@@ -243,7 +239,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             var items = new[] { 1, 2, 3, 4 };
             var total = 0;
             items.ForEachNow(item => total += item);
-            Assert.AreEqual(10, total);
+            ClassicAssert.AreEqual(10, total);
         }
 
         #region Flatten
@@ -255,8 +251,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var flattened = node.Flatten(child => child.Children).ToList();
 
-            Assert.AreEqual(1, flattened.Count);
-            Assert.AreSame(node, flattened.First());
+            ClassicAssert.AreEqual(1, flattened.Count);
+            ClassicAssert.AreSame(node, flattened.First());
         }
 
         [Test]
@@ -268,9 +264,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var flattened = node.Flatten(child => child.Children).ToList();
 
-            Assert.AreEqual(2, flattened.Count);
-            Assert.AreSame(node, flattened[0]);
-            Assert.AreSame(childNode, flattened[1]);
+            ClassicAssert.AreEqual(2, flattened.Count);
+            ClassicAssert.AreSame(node, flattened[0]);
+            ClassicAssert.AreSame(childNode, flattened[1]);
         }
 
         [Test]
@@ -284,10 +280,10 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var flattened = node.Flatten(child => child.Children).ToList();
 
-            Assert.AreEqual(3, flattened.Count);
-            Assert.AreSame(node, flattened[0]);
-            Assert.AreSame(outerChild, flattened[1]);
-            Assert.AreSame(innerChild, flattened[2]);
+            ClassicAssert.AreEqual(3, flattened.Count);
+            ClassicAssert.AreSame(node, flattened[0]);
+            ClassicAssert.AreSame(outerChild, flattened[1]);
+            ClassicAssert.AreSame(innerChild, flattened[2]);
         }
 
         [Test]
@@ -301,10 +297,10 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
             var flattened = node.Flatten(child => child.Children).ToList();
 
-            Assert.AreEqual(3, flattened.Count);
-            Assert.AreSame(node, flattened[0]);
-            Assert.AreSame(firstChild, flattened[2]);
-            Assert.AreSame(secondChild, flattened[1]);
+            ClassicAssert.AreEqual(3, flattened.Count);
+            ClassicAssert.AreSame(node, flattened[0]);
+            ClassicAssert.AreSame(firstChild, flattened[2]);
+            ClassicAssert.AreSame(secondChild, flattened[1]);
         }
 
         private class Node

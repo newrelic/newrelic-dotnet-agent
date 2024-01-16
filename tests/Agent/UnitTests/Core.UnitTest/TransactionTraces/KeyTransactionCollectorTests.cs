@@ -5,10 +5,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Telerik.JustMock;
 
@@ -42,14 +38,14 @@ namespace NewRelic.Agent.Core.TransactionTraces
         {
             ObjectUnderTest.Collect(null);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            ClassicAssert.IsEmpty(samples);
         }
 
         [Test]
         public void GettingCollectedSamplesWorksWhenEmpty()
         {
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            ClassicAssert.IsEmpty(samples);
         }
 
         [Test]
@@ -60,8 +56,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(input, samples[0]);
+            ClassicAssert.AreEqual(1, samples.Length);
+            ClassicAssert.AreSame(input, samples[0]);
         }
 
         [Test]
@@ -72,7 +68,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.IsEmpty(samples);
+            ClassicAssert.IsEmpty(samples);
         }
 
         [Test]
@@ -83,8 +79,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
             var firstHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
             var secondHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, firstHarvest.Length);
-            Assert.IsEmpty(secondHarvest);
+            ClassicAssert.AreEqual(1, firstHarvest.Length);
+            ClassicAssert.IsEmpty(secondHarvest);
         }
 
         [Test]
@@ -95,7 +91,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.IsEmpty(samples);
+            ClassicAssert.IsEmpty(samples);
         }
 
         [Test]
@@ -109,8 +105,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(slowestTransactionTrace, samples[0]);
+            ClassicAssert.AreEqual(1, samples.Length);
+            ClassicAssert.AreSame(slowestTransactionTrace, samples[0]);
 
             // Now do it in reverse order :)
             ObjectUnderTest.Collect(slowestTransactionTrace);
@@ -118,8 +114,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(slowestTransactionTrace, samples[0]);
+            ClassicAssert.AreEqual(1, samples.Length);
+            ClassicAssert.AreSame(slowestTransactionTrace, samples[0]);
         }
 
         [Test]
@@ -134,8 +130,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(secondTransactionTrace, samples[0]);
+            ClassicAssert.AreEqual(1, samples.Length);
+            ClassicAssert.AreSame(secondTransactionTrace, samples[0]);
         }
 
         [Test]
@@ -160,8 +156,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
                 var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-                Assert.AreEqual(1, samples.Length);
-                Assert.AreEqual(transactionTraces.Last().Duration, samples[0].Duration);
+                ClassicAssert.AreEqual(1, samples.Length);
+                ClassicAssert.AreEqual(transactionTraces.Last().Duration, samples[0].Duration);
             }
         }
     }

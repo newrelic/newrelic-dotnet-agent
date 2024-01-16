@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
@@ -12,9 +9,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -148,15 +143,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Agent, actualConfigurationData.Agent),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationId, actualConfigurationData.ApplicationId),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds, actualConfigurationData.ApplicationTimeMilliseconds),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Beacon, actualConfigurationData.Beacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.BrowserLicenseKey, actualConfigurationData.BrowserLicenseKey),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ErrorBeacon, actualConfigurationData.ErrorBeacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedTransactionName, actualConfigurationData.ObfuscatedTransactionName),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes, actualConfigurationData.ObfuscatedUserAttributes),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.QueueTimeMilliseconds, actualConfigurationData.QueueTimeMilliseconds)
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.Agent, actualConfigurationData.Agent),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.ApplicationId, actualConfigurationData.ApplicationId),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds, actualConfigurationData.ApplicationTimeMilliseconds),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.Beacon, actualConfigurationData.Beacon),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.BrowserLicenseKey, actualConfigurationData.BrowserLicenseKey),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.ErrorBeacon, actualConfigurationData.ErrorBeacon),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedTransactionName, actualConfigurationData.ObfuscatedTransactionName),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes, actualConfigurationData.ObfuscatedUserAttributes),
+                () => ClassicAssert.AreEqual(testCase.ExpectedConfigurationData.QueueTimeMilliseconds, actualConfigurationData.QueueTimeMilliseconds)
             );
 
             Teardown();
@@ -247,7 +242,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

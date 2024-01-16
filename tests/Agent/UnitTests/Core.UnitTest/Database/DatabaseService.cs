@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Database.UnitTest
 {
@@ -36,9 +35,9 @@ namespace NewRelic.Agent.Core.Database.UnitTest
                 var obfuscatedSql = _databaseService.GetObfuscatedSql(unobfuscatedSql, DatastoreVendor.MSSQL);
 
                 // ASSERT
-                Assert.IsNotNull(obfuscatedSql);
-                Assert.IsNotEmpty(unobfuscatedSql);
-                Assert.AreNotEqual(unobfuscatedSql, obfuscatedSql);
+                ClassicAssert.IsNotNull(obfuscatedSql);
+                ClassicAssert.IsNotEmpty(unobfuscatedSql);
+                ClassicAssert.AreNotEqual(unobfuscatedSql, obfuscatedSql);
             }
         }
     }

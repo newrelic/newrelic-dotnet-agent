@@ -6,11 +6,6 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.AgentHealth;
@@ -96,7 +91,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var aggregator = CreateAggregator(streamingSvc);
             FireAgentConnectedEvent();
 
-            Assert.AreEqual(expectedQueueCapacity, actualQueue.Capacity, "Queue Capacity");
+            ClassicAssert.AreEqual(expectedQueueCapacity, actualQueue.Capacity, "Queue Capacity");
         }
 
         [Test]
@@ -143,8 +138,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedCapacityInitial, actualCapacityInitial, "Initial Queue Capacity"),
-                () => Assert.AreEqual(expectedCapacityUpdated, actualCapacityUpdated, "Updated Queue Capacity")
+                () => ClassicAssert.AreEqual(expectedCapacityInitial, actualCapacityInitial, "Initial Queue Capacity"),
+                () => ClassicAssert.AreEqual(expectedCapacityUpdated, actualCapacityUpdated, "Updated Queue Capacity")
             );
         }
 
@@ -192,26 +187,26 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsAvailable, aggregator.IsServiceAvailable, "Aggregator is Available"),
-                () => Assert.AreEqual(1, countShutdown, "Number of times Shutdown was called")
+                () => ClassicAssert.AreEqual(expectedIsAvailable, aggregator.IsServiceAvailable, "Aggregator is Available"),
+                () => ClassicAssert.AreEqual(1, countShutdown, "Number of times Shutdown was called")
             );
 
             if (expectedIsAvailable)
             {
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(1, countStartConsuming, "StartConsuming SHOULD have been called"),
-                    () => Assert.IsNotNull(actualQueue),
-                    () => Assert.AreEqual(configQueueSize, actualQueue.Capacity),
-                    () => Assert.AreEqual(Math.Min(5, configQueueSize), actualQueue.Count, "Items in the queue")
+                    () => ClassicAssert.AreEqual(1, countStartConsuming, "StartConsuming SHOULD have been called"),
+                    () => ClassicAssert.IsNotNull(actualQueue),
+                    () => ClassicAssert.AreEqual(configQueueSize, actualQueue.Capacity),
+                    () => ClassicAssert.AreEqual(Math.Min(5, configQueueSize), actualQueue.Count, "Items in the queue")
                 );
             }
             else
             {
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(0, countStartConsuming, "StartConsuming should NOT have been called."),
-                    () => Assert.IsNull(actualQueue)
+                    () => ClassicAssert.AreEqual(0, countStartConsuming, "StartConsuming should NOT have been called."),
+                    () => ClassicAssert.IsNull(actualQueue)
                 );
             }
         }
@@ -286,8 +281,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedShutdownCalls, actualShudownCalls),
-                () => Assert.AreEqual(expectedStartCalls, actualStartConsumingCalls)
+                () => ClassicAssert.AreEqual(expectedShutdownCalls, actualShudownCalls),
+                () => ClassicAssert.AreEqual(expectedStartCalls, actualStartConsumingCalls)
             );
 
             // If the INITIAL config was valid, test that the queue is correctly 
@@ -299,8 +294,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     .Select(x => x.Span).ToList();
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectedInitialCapacity, initialQueue.Capacity, $"Initial Queue Size."),
-                    () => Assert.AreEqual(expectedInitialCapacity, initialQueueItems.Count),
+                    () => ClassicAssert.AreEqual(expectedInitialCapacity, initialQueue.Capacity, $"Initial Queue Size."),
+                    () => ClassicAssert.AreEqual(expectedInitialCapacity, initialQueueItems.Count),
                     () => CollectionAssert.AreEqual(expectedQueueItems, initialQueueItems, "Initial Queue Items")
                 );
             }
@@ -308,7 +303,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             {
                 NrAssert.Multiple
                 (
-                    () => Assert.IsNull(initialQueue)
+                    () => ClassicAssert.IsNull(initialQueue)
                 );
             }
 
@@ -322,8 +317,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectedUpdatedCapacity, updatedQueue.Capacity, $"Updated Queue Size."),
-                    () => Assert.AreEqual(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity), updatedQueueItems.Count),
+                    () => ClassicAssert.AreEqual(expectedUpdatedCapacity, updatedQueue.Capacity, $"Updated Queue Size."),
+                    () => ClassicAssert.AreEqual(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity), updatedQueueItems.Count),
                     () => CollectionAssert.AreEqual(expectedQueueItems, updatedQueueItems, "Items In updated queue")
                 );
             }
@@ -332,10 +327,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
             //If the config sizes are the same, the queue should not have changed
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(expectedInitialCapacity != expectedUpdatedCapacity || initialQueue == updatedQueue),
-                () => Assert.IsTrue(expectedInitialCapacity == expectedUpdatedCapacity || initialQueue != updatedQueue),
-                () => Assert.AreEqual(expectedInitialCapacity, actualCountSpansSeen, "Count Seen Items"),
-                () => Assert.AreEqual(expectedDroppedSpans, actualCountSpansDropped, "Count Dropped")
+                () => ClassicAssert.IsTrue(expectedInitialCapacity != expectedUpdatedCapacity || initialQueue == updatedQueue),
+                () => ClassicAssert.IsTrue(expectedInitialCapacity == expectedUpdatedCapacity || initialQueue != updatedQueue),
+                () => ClassicAssert.AreEqual(expectedInitialCapacity, actualCountSpansSeen, "Count Seen Items"),
+                () => ClassicAssert.AreEqual(expectedDroppedSpans, actualCountSpansDropped, "Count Dropped")
             );
         }
 
@@ -359,8 +354,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(aggregator.IsServiceAvailable, streamingSvcAvailable && streamingSvcEnabled && aggregatorHasValidConfig),
-                () => Assert.AreEqual(aggregator.IsServiceEnabled, streamingSvcEnabled)
+                () => ClassicAssert.AreEqual(aggregator.IsServiceAvailable, streamingSvcAvailable && streamingSvcEnabled && aggregatorHasValidConfig),
+                () => ClassicAssert.AreEqual(aggregator.IsServiceEnabled, streamingSvcEnabled)
             );
         }
 
@@ -386,7 +381,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsServiceEnabledValue, aggregator.IsServiceEnabled)
+                () => ClassicAssert.AreEqual(expectedIsServiceEnabledValue, aggregator.IsServiceEnabled)
             );
         }
 
@@ -446,8 +441,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             //Assert
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedSeen, actualCountSpansSeen, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Seen Items"),
-                () => Assert.AreEqual(expectedCountDrops, actualCountSpansDropped, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Dropped")
+                () => ClassicAssert.AreEqual(expectedSeen, actualCountSpansSeen, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Seen Items"),
+                () => ClassicAssert.AreEqual(expectedCountDrops, actualCountSpansDropped, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Dropped")
             );
         }
 
@@ -478,7 +473,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             aggregator.ReportSupportabilityMetrics();
 
-            Assert.AreEqual(rptQueueSize, collectionSize, "Queue Size Supportability Metric");
+            ClassicAssert.AreEqual(rptQueueSize, collectionSize, "Queue Size Supportability Metric");
         }
 
 
@@ -560,8 +555,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(configQueueSize, aggregator.Capacity),
-                () => Assert.AreEqual(configQueueSize, actualCollection.Capacity)
+                () => ClassicAssert.AreEqual(configQueueSize, aggregator.Capacity),
+                () => ClassicAssert.AreEqual(configQueueSize, actualCollection.Capacity)
             );
         }
 

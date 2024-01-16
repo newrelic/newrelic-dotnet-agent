@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core
 {
 
@@ -13,7 +10,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public static void TestReentrant()
         {
-            Assert.IsTrue(MockAgent.Instance.Enabled);
+            ClassicAssert.IsTrue(MockAgent.Instance.Enabled);
         }
     }
 
@@ -47,7 +44,7 @@ namespace NewRelic.Agent.Core
                 if (count == 0)
                 {
                     IAgentMock instance = MockAgent.Instance;
-                    Assert.IsFalse(instance.Enabled);
+                    ClassicAssert.IsFalse(instance.Enabled);
                 }
 
                 count++;

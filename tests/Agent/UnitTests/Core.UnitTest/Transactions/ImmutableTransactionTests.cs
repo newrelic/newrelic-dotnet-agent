@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System;
-
 namespace NewRelic.Agent.Core.Transactions
 {
     [TestFixture]
@@ -16,7 +13,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .IsWebTransaction("category", "name")
                 .Build();
 
-            Assert.True(transaction.IsWebTransaction());
+            Assert.That(transaction.IsWebTransaction());
         }
 
         [Test]
@@ -26,7 +23,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .IsOtherTransaction("category", "name")
                 .Build();
 
-            Assert.False(transaction.IsWebTransaction());
+            ClassicAssert.False(transaction.IsWebTransaction());
         }
 
         [Test]
@@ -38,7 +35,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithResponseTime(TimeSpan.FromSeconds(1))
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(1), transaction.ResponseTimeOrDuration);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), transaction.ResponseTimeOrDuration);
         }
 
         [Test]
@@ -50,7 +47,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithNoResponseTime()
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
         }
 
         [Test]
@@ -62,7 +59,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithResponseTime(TimeSpan.FromSeconds(1))
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
         }
     }
 }

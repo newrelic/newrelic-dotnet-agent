@@ -1,14 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Reflection;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System.Linq;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -29,7 +24,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var simpleObject = new SimpleProperties();
             var serialized = JsonConvert.SerializeObject(simpleObject);
-            Assert.AreEqual("[false,0]", serialized);
+            ClassicAssert.AreEqual("[false,0]", serialized);
         }
 
         [Test]
@@ -38,8 +33,8 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[true,1]";
             var deserialized = JsonConvert.DeserializeObject<SimpleProperties>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32)
                 );
         }
 
@@ -57,7 +52,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var outOfOrderObject = new OutOfOrderProperties();
             var serialized = JsonConvert.SerializeObject(outOfOrderObject);
-            Assert.AreEqual("[0,false]", serialized);
+            ClassicAssert.AreEqual("[0,false]", serialized);
         }
 
         [Test]
@@ -66,8 +61,8 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[1,true]";
             var deserialized = JsonConvert.DeserializeObject<OutOfOrderProperties>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32)
                 );
         }
 
@@ -85,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var sparseObject = new SparseProperties();
             var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseObject));
-            Assert.NotNull(exception);
+            ClassicAssert.NotNull(exception);
         }
 
         [JsonConverter(typeof(JsonArrayConverter))]
@@ -103,7 +98,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var partiallySerializedObject = new PartiallySerializedProperties();
             var serialized = JsonConvert.SerializeObject(partiallySerializedObject);
-            Assert.AreEqual("[0,false]", serialized);
+            ClassicAssert.AreEqual("[0,false]", serialized);
         }
 
         [Test]
@@ -112,9 +107,9 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[1,true]";
             var deserialized = JsonConvert.DeserializeObject<PartiallySerializedProperties>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32),
-                () => Assert.AreEqual("Foo", deserialized.MyString)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32),
+                () => ClassicAssert.AreEqual("Foo", deserialized.MyString)
                 );
         }
 
@@ -151,7 +146,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var timesObject = new TimesObject();
             var serialized = JsonConvert.SerializeObject(timesObject);
-            Assert.AreEqual(@"[-23890247268.0,""1111-11-11T11:11:11"",1234.0,4321.0,""01:12:01""]", serialized);
+            ClassicAssert.AreEqual(@"[-23890247268.0,""1111-11-11T11:11:11"",1234.0,4321.0,""01:12:01""]", serialized);
         }
 
         [Test]
@@ -160,11 +155,11 @@ namespace NewRelic.Agent.Core.Utilities
             var json = @"[-23890247267.0,""1111-11-11T11:11:12"",1235.0,4322.0,""01:12:02""]";
             var deserialized = JsonConvert.DeserializeObject<TimesObject>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(new DateTime(1212, 12, 12, 12, 12, 13), deserialized.TimestampAsUnixTime),
-                () => Assert.AreEqual(new DateTime(1111, 11, 11, 11, 11, 12), deserialized.TimestampAsDateTime),
-                () => Assert.AreEqual(TimeSpan.FromMilliseconds(1235), deserialized.TimeSpanAsMilliseconds),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(4322), deserialized.TimeSpanAsSeconds),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(4322), deserialized.TimeSpanAsTimeSpan)
+                () => ClassicAssert.AreEqual(new DateTime(1212, 12, 12, 12, 12, 13), deserialized.TimestampAsUnixTime),
+                () => ClassicAssert.AreEqual(new DateTime(1111, 11, 11, 11, 11, 12), deserialized.TimestampAsDateTime),
+                () => ClassicAssert.AreEqual(TimeSpan.FromMilliseconds(1235), deserialized.TimeSpanAsMilliseconds),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(4322), deserialized.TimeSpanAsSeconds),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(4322), deserialized.TimeSpanAsTimeSpan)
                 );
         }
 
@@ -183,7 +178,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var simpleFields = new SimpleFields();
             var serialized = JsonConvert.SerializeObject(simpleFields);
-            Assert.AreEqual("[false,0]", serialized);
+            ClassicAssert.AreEqual("[false,0]", serialized);
         }
 
         [Test]
@@ -192,8 +187,8 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[true,1]";
             var deserialized = JsonConvert.DeserializeObject<SimpleFields>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32)
                 );
         }
 
@@ -212,7 +207,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var outOfOrderFields = new OutOfOrderFields();
             var serialized = JsonConvert.SerializeObject(outOfOrderFields);
-            Assert.AreEqual("[0,false]", serialized);
+            ClassicAssert.AreEqual("[0,false]", serialized);
         }
 
         [Test]
@@ -221,8 +216,8 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[1,true]";
             var deserialized = JsonConvert.DeserializeObject<OutOfOrderFields>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32)
                 );
         }
 
@@ -279,7 +274,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var sparseFields = new TestClass_Bad_NonContiguous();
             var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
-            Assert.NotNull(exception);
+            ClassicAssert.NotNull(exception);
         }
 
         [Test]
@@ -287,7 +282,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var sparseFields = new TestClass_Bad_DuplicateIndex();
             var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
-            Assert.NotNull(exception);
+            ClassicAssert.NotNull(exception);
         }
 
         [Test]
@@ -295,7 +290,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var sparseFields = new TestClass_Bad_NotStartAtZero();
             var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
-            Assert.NotNull(exception);
+            ClassicAssert.NotNull(exception);
         }
 
         [Test]
@@ -303,7 +298,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var sparseFields = new TestClass_Bad_NoMembersWithAttribute();
             var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
-            Assert.NotNull(exception);
+            ClassicAssert.NotNull(exception);
         }
 
         [JsonConverter(typeof(JsonArrayConverter))]
@@ -323,7 +318,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var partiallySerializedFields = new PartiallySerializedFields();
             var serialized = JsonConvert.SerializeObject(partiallySerializedFields);
-            Assert.AreEqual("[0,false]", serialized);
+            ClassicAssert.AreEqual("[0,false]", serialized);
         }
 
         [Test]
@@ -332,8 +327,8 @@ namespace NewRelic.Agent.Core.Utilities
             var json = "[1,true]";
             var deserialized = JsonConvert.DeserializeObject<PartiallySerializedFields>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, deserialized.MyBoolean),
-                () => Assert.AreEqual(1, deserialized.MyUInt32)
+                () => ClassicAssert.AreEqual(true, deserialized.MyBoolean),
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32)
                 );
         }
 
@@ -361,7 +356,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var PartiallySerializedOutOfOrderFieldsAndProperties = new PartiallySerializedOutOfOrderFieldsAndProperties();
             var serialized = JsonConvert.SerializeObject(PartiallySerializedOutOfOrderFieldsAndProperties);
-            Assert.AreEqual(@"[0,0,false,""Bar""]", serialized);
+            ClassicAssert.AreEqual(@"[0,0,false,""Bar""]", serialized);
         }
 
         [Test]
@@ -370,10 +365,10 @@ namespace NewRelic.Agent.Core.Utilities
             var json = @"[1,2,true,""Baz""]";
             var deserialized = JsonConvert.DeserializeObject<PartiallySerializedOutOfOrderFieldsAndProperties>(json);
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, deserialized.MyUInt32Field),
-                () => Assert.AreEqual(2, deserialized.MyUInt32Property),
-                () => Assert.AreEqual(true, deserialized.MyBooleanField),
-                () => Assert.AreEqual("Baz", deserialized.MyStringProperty)
+                () => ClassicAssert.AreEqual(1, deserialized.MyUInt32Field),
+                () => ClassicAssert.AreEqual(2, deserialized.MyUInt32Property),
+                () => ClassicAssert.AreEqual(true, deserialized.MyBooleanField),
+                () => ClassicAssert.AreEqual("Baz", deserialized.MyStringProperty)
                 );
         }
 
@@ -408,10 +403,10 @@ namespace NewRelic.Agent.Core.Utilities
                         .ToArray();
 
                     NrAssert.Multiple(
-                        () => Assert.IsNotEmpty(members, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex attributes"),
-                        () => Assert.AreEqual(0, members[0].Key, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex with Index of 0"),
-                        () => Assert.IsTrue(members.IsSequential(x => x.Key), $"Type {type.FullName} has noncontiguous members"),
-                        () => Assert.AreEqual(members.Select(x => x.Key).Count(), members.Select(x => x.Key).Distinct().Count(), $"Type {type.FullName} has duplicated index values"));
+                        () => ClassicAssert.IsNotEmpty(members, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex attributes"),
+                        () => ClassicAssert.AreEqual(0, members[0].Key, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex with Index of 0"),
+                        () => ClassicAssert.IsTrue(members.IsSequential(x => x.Key), $"Type {type.FullName} has noncontiguous members"),
+                        () => ClassicAssert.AreEqual(members.Select(x => x.Key).Count(), members.Select(x => x.Key).Distinct().Count(), $"Type {type.FullName} has duplicated index values"));
                 }
             }
         }

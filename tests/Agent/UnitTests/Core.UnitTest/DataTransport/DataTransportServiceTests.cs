@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using NewRelic.Agent.Configuration;
@@ -15,7 +13,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -100,7 +97,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
+            ClassicAssert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
         }
 
         [TestCase((HttpStatusCode)400, DataTransportResponseStatus.Discard)]
@@ -131,7 +128,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var actual = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -142,7 +139,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            ClassicAssert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
@@ -153,7 +150,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            ClassicAssert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
@@ -164,7 +161,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            ClassicAssert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
@@ -175,7 +172,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Discard, result);
+            ClassicAssert.AreEqual(DataTransportResponseStatus.Discard, result);
         }
 
         [TestCase(HttpStatusCode.Unauthorized)]

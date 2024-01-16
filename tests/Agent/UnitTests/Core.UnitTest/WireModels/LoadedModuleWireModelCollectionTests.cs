@@ -1,11 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using NUnit.Framework;
 using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -88,19 +85,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(1, loadedModules.LoadedModules.Count);
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
+            ClassicAssert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
+            ClassicAssert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
+            ClassicAssert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
+            ClassicAssert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
+            ClassicAssert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
         }
 
         [Test]
@@ -114,7 +111,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(0, loadedModules.LoadedModules.Count);
         }
 
         [Test]
@@ -128,7 +125,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(0, loadedModules.LoadedModules.Count);
         }
 
         [Test]
@@ -142,19 +139,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(1, loadedModules.LoadedModules.Count);
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.False(loadedModule.Data.ContainsKey("assemblyHashCode"));
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
+            ClassicAssert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("assemblyHashCode"));
+            ClassicAssert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
+            ClassicAssert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
+            ClassicAssert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
         }
 
         [Test]
@@ -169,7 +166,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(0, loadedModules.LoadedModules.Count);
         }
 
         [Test]
@@ -183,19 +180,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(1, loadedModules.LoadedModules.Count);
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
-            Assert.False(loadedModule.Data.ContainsKey("copyright"));
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
+            ClassicAssert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
+            ClassicAssert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
+            ClassicAssert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("copyright"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
         }
 
         [Test]
@@ -219,12 +216,12 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(1, loadedModules.LoadedModules.Count);
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
-            Assert.False(loadedModule.Data.ContainsKey("copyright"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("copyright"));
         }
 
         [Test]
@@ -238,19 +235,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            ClassicAssert.AreEqual(1, loadedModules.LoadedModules.Count);
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.False(loadedModule.Data.ContainsKey("publicKeyToken"));
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
+            ClassicAssert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
+            ClassicAssert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
+            ClassicAssert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("publicKeyToken"));
+            ClassicAssert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
+            ClassicAssert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
+            ClassicAssert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
         }
     }
 

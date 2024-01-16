@@ -1,17 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace CompositeTests.CrossAgentTests.SqlObfuscation
 {
@@ -50,7 +46,7 @@ namespace CompositeTests.CrossAgentTests.SqlObfuscation
 
                     var exists = testData.ObfuscatedSql.Contains(obfuscatedSql);
                     Console.WriteLine(obfuscatedSql);
-                    Assert.IsTrue(exists, "Failed for " + dialect.ToUpper());
+                    ClassicAssert.IsTrue(exists, "Failed for " + dialect.ToUpper());
                 }
             }
         }

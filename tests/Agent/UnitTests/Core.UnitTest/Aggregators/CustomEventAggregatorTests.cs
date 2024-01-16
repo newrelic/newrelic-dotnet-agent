@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -16,7 +13,6 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -94,7 +90,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            ClassicAssert.Null(sentEvents);
         }
 
         [Test]
@@ -164,8 +160,8 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(3, sentEvents.Count());
-            Assert.AreEqual(sentEvents, eventsToSend);
+            ClassicAssert.AreEqual(3, sentEvents.Count());
+            ClassicAssert.AreEqual(sentEvents, eventsToSend);
         }
 
         [Test]
@@ -227,7 +223,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            ClassicAssert.False(sendCalled);
         }
 
         [Test]
@@ -251,7 +247,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            ClassicAssert.Null(sentEvents);
         }
 
         [Test]
@@ -274,7 +270,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            ClassicAssert.Null(sentEvents);
         }
 
         [Test]
@@ -297,7 +293,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(2, sentEventCount);
+            ClassicAssert.AreEqual(2, sentEventCount);
             Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(2));
         }
 
@@ -321,7 +317,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentEventCount);
+            ClassicAssert.AreEqual(1, sentEventCount);
             Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(2));
         }
 
@@ -344,7 +340,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            ClassicAssert.Null(sentEvents);
             Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(1));
         }
 
@@ -404,7 +400,7 @@ namespace NewRelic.Agent.Core.Aggregators
         [Test]
         public void Harvest_cycle_should_match_configured_cycle()
         {
-            Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+            ClassicAssert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
         }
 
         #region Helpers

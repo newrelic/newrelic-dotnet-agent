@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Threading;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -26,7 +25,7 @@ namespace NewRelic.Agent.Core.Utilities
             Thread.Sleep(20);
             action.Signal();
             Thread.Sleep(20);
-            Assert.AreEqual(2, called);
+            ClassicAssert.AreEqual(2, called);
         }
     }
 }

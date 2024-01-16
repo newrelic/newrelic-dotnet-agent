@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Fixtures
 {
@@ -20,7 +18,7 @@ namespace NewRelic.Agent.Core.Fixtures
         public void Dispose()
         {
             _subscription.Dispose();
-            Assert.True(_eventWasFired, "Expected event {0} was not fired", typeof(T).Name);
+            Assert.That(_eventWasFired, "Expected event {0} was not fired", typeof(T).Name);
         }
     }
 }

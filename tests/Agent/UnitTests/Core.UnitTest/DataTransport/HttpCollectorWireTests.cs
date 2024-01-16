@@ -3,11 +3,8 @@
 
 using System.Net.Http;
 using System.Net;
-using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using System.Collections.Generic;
-using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
@@ -59,10 +56,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -72,7 +69,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
-            Assert.AreEqual(expected, response);
+            ClassicAssert.AreEqual(expected, response);
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
@@ -91,7 +88,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
@@ -121,10 +118,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.InternalServerError);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(false);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -153,10 +150,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -166,7 +163,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var result = collectorWire.SendData("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
 
             // Assert
-            Assert.AreEqual("{}", result);
+            ClassicAssert.AreEqual("{}", result);
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit("test_method"), Occurs.Once());
         }
 
@@ -187,10 +184,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 

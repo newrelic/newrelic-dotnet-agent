@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Labels;
@@ -10,7 +8,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.JsonConverters
@@ -54,7 +51,7 @@ namespace NewRelic.Agent.Core.JsonConverters
             var model = new MetricWireModelCollection[] { _wellformedMetricData };
 
             var serializedMetrics = Newtonsoft.Json.JsonConvert.SerializeObject(model);
-            Assert.AreEqual(_wellformedJson, serializedMetrics);
+            ClassicAssert.AreEqual(_wellformedJson, serializedMetrics);
         }
     }
 }

@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.SystemExtensions.Threading;
-using NUnit.Framework;
 
 
 namespace NewRelic.SystemExtensions.UnitTests.Threading
@@ -48,8 +46,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             var secondCompletedSuccessfully = secondAcquire.Wait(timeout);
 
             // assert
-            Assert.True(firstCompletedSuccessfully);
-            Assert.True(secondCompletedSuccessfully);
+            Assert.That(firstCompletedSuccessfully);
+            Assert.That(secondCompletedSuccessfully);
         }
 
         [Test]
@@ -67,7 +65,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.False(innerCompletedSuccessfully);
+            ClassicAssert.False(innerCompletedSuccessfully);
         }
 
         [Test]
@@ -85,7 +83,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.True(innerCompletedSuccessfully);
+            Assert.That(innerCompletedSuccessfully);
         }
 
         [Test]
@@ -103,7 +101,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.False(innerCompletedSuccessfully);
+            ClassicAssert.False(innerCompletedSuccessfully);
         }
 
     }

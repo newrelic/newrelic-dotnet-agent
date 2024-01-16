@@ -1,10 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
-
 namespace NewRelic.SystemExtensions.UnitTests
 {
     public class TimeSpanExtensionsTests
@@ -17,7 +13,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var sactual = oneSecond.Multiply(2);
 
-            Assert.AreEqual(expected, sactual);
+            ClassicAssert.AreEqual(expected, sactual);
         }
 
         [Test]
@@ -28,7 +24,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = twoSeconds.Multiply(1.5);
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -39,7 +35,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -49,7 +45,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 
-            Assert.AreEqual(null, actual);
+            ClassicAssert.AreEqual(null, actual);
         }
     }
 }

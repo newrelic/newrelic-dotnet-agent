@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -14,7 +11,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -90,7 +86,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            ClassicAssert.Null(sentErrors);
         }
 
         #endregion
@@ -116,8 +112,8 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(3, sentErrors.Count());
-            Assert.AreEqual(sentErrors, errorsToSend);
+            ClassicAssert.AreEqual(3, sentErrors.Count());
+            ClassicAssert.AreEqual(sentErrors, errorsToSend);
         }
 
         [Test]
@@ -136,7 +132,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            ClassicAssert.False(sendCalled);
         }
 
         #endregion
@@ -163,7 +159,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            ClassicAssert.Null(sentErrors);
         }
 
         [Test]
@@ -186,7 +182,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            ClassicAssert.Null(sentErrors);
         }
 
         [Test]
@@ -208,7 +204,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentErrorsCount);
+            ClassicAssert.AreEqual(1, sentErrorsCount);
         }
 
         [Test]
@@ -230,7 +226,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            ClassicAssert.Null(sentErrors);
         }
 
         #endregion

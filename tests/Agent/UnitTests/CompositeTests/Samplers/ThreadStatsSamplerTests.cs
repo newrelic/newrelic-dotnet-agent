@@ -1,12 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using CompositeTests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Samplers
@@ -71,7 +69,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(threadpoolUsageStatsSample);
+            ClassicAssert.NotNull(threadpoolUsageStatsSample);
         }
 
         [Test]
@@ -86,7 +84,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(threadpoolThroughputStatsSample);
+            ClassicAssert.NotNull(threadpoolThroughputStatsSample);
         }
 
         private ISampledEventListener<ThreadpoolThroughputEventsSample> GetThreadEventsListener()

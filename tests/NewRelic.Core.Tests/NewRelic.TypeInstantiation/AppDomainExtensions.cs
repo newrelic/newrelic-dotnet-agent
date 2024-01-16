@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using System;
 using System.Reflection;
 
 namespace NewRelic.TypeInstantiation.UnitTests

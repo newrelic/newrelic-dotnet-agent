@@ -1,10 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
-
 namespace NewRelic.Memoization.UnitTests
 {
     public class MemozierTests
@@ -14,7 +10,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = 5;
             Memoizer.Memoize(ref backingVariable, () => 7);
-            Assert.AreEqual(5, backingVariable);
+            ClassicAssert.AreEqual(5, backingVariable);
         }
 
         [Test]
@@ -22,7 +18,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = null;
             var result = Memoizer.Memoize(ref backingVariable, () => 5);
-            Assert.AreEqual(5, result);
+            ClassicAssert.AreEqual(5, result);
         }
 
         [Test]
@@ -30,7 +26,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = null;
             Memoizer.Memoize(ref backingVariable, () => 5);
-            Assert.AreEqual(5, backingVariable);
+            ClassicAssert.AreEqual(5, backingVariable);
         }
 
         [Test]
@@ -38,7 +34,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = "foo";
             Memoizer.Memoize(ref backingVariable, () => "bar");
-            Assert.AreEqual("foo", backingVariable);
+            ClassicAssert.AreEqual("foo", backingVariable);
         }
 
         [Test]
@@ -46,7 +42,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = null;
             var result = Memoizer.Memoize(ref backingVariable, () => "foo");
-            Assert.AreEqual("foo", result);
+            ClassicAssert.AreEqual("foo", result);
         }
 
         [Test]
@@ -54,7 +50,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = null;
             Memoizer.Memoize(ref backingVariable, () => "foo");
-            Assert.AreEqual("foo", backingVariable);
+            ClassicAssert.AreEqual("foo", backingVariable);
         }
 
         [Test]

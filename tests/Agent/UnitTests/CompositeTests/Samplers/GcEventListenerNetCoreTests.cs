@@ -1,11 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Linq;
 
 namespace NewRelic.Agent.Core.Samplers
 {
@@ -64,13 +60,13 @@ namespace NewRelic.Agent.Core.Samplers
 
                 var sampleValues = listener.Sample();
 
-                Assert.AreEqual(expectedValues.Count, sampleValues.Count);
+                ClassicAssert.AreEqual(expectedValues.Count, sampleValues.Count);
 
                 //Validate that each SampleType generated the expected MetricType
                 foreach (var q in expectedValues)
                 {
-                    Assert.IsTrue(sampleValues.ContainsKey(q.Key), $"Missing value for {q.Key}");
-                    Assert.AreEqual(q.Value, sampleValues[q.Key], $"Mismatch on {q.Key}, expected {q.Value}, actual {q.Key}");
+                    ClassicAssert.IsTrue(sampleValues.ContainsKey(q.Key), $"Missing value for {q.Key}");
+                    ClassicAssert.AreEqual(q.Value, sampleValues[q.Key], $"Mismatch on {q.Key}, expected {q.Value}, actual {q.Key}");
                 }
             }
         }
@@ -91,7 +87,7 @@ namespace NewRelic.Agent.Core.Samplers
 
                 var sampleValues = listener.Sample();
 
-                Assert.AreEqual(2, sampleValues[GCSampleType.InducedCount]);
+                ClassicAssert.AreEqual(2, sampleValues[GCSampleType.InducedCount]);
             }
         }
 
@@ -115,9 +111,9 @@ namespace NewRelic.Agent.Core.Samplers
 
                 var sampleValues = listener.Sample();
 
-                Assert.AreEqual(6, sampleValues[GCSampleType.Gen0CollectionCount]);
-                Assert.AreEqual(5, sampleValues[GCSampleType.Gen1CollectionCount]);
-                Assert.AreEqual(3, sampleValues[GCSampleType.Gen2CollectionCount]);
+                ClassicAssert.AreEqual(6, sampleValues[GCSampleType.Gen0CollectionCount]);
+                ClassicAssert.AreEqual(5, sampleValues[GCSampleType.Gen1CollectionCount]);
+                ClassicAssert.AreEqual(3, sampleValues[GCSampleType.Gen2CollectionCount]);
             }
         }
 
@@ -171,13 +167,13 @@ namespace NewRelic.Agent.Core.Samplers
 
                 var sampleValues = listener.Sample();
 
-                Assert.AreEqual(expectedValues2.Count, sampleValues.Count);
+                ClassicAssert.AreEqual(expectedValues2.Count, sampleValues.Count);
 
                 //Validate that each SampleType generated the expected MetricType
                 foreach (var q in expectedValues2)
                 {
-                    Assert.IsTrue(sampleValues.ContainsKey(q.Key), $"Missing value for {q.Key}");
-                    Assert.AreEqual(q.Value, sampleValues[q.Key], $"Mismatch on {q.Key}, expected {q.Value}, actual {q.Key}");
+                    ClassicAssert.IsTrue(sampleValues.ContainsKey(q.Key), $"Missing value for {q.Key}");
+                    ClassicAssert.AreEqual(q.Value, sampleValues[q.Key], $"Mismatch on {q.Key}, expected {q.Value}, actual {q.Key}");
                 }
             }
         }
@@ -195,7 +191,7 @@ namespace NewRelic.Agent.Core.Samplers
 
                 var sampleValues = listener.Sample();
 
-                Assert.AreEqual(1, sampleValues[GCSampleType.InducedCount]);
+                ClassicAssert.AreEqual(1, sampleValues[GCSampleType.InducedCount]);
 
                 src.GCStart_V1(1, 1, reasonCDInduced1, 1, 1);
                 src.GCStart_V1(1, 1, reasonCDInduced2, 1, 1);
@@ -204,7 +200,7 @@ namespace NewRelic.Agent.Core.Samplers
 
                 sampleValues = listener.Sample();
 
-                Assert.AreEqual(4, sampleValues[GCSampleType.InducedCount]);
+                ClassicAssert.AreEqual(4, sampleValues[GCSampleType.InducedCount]);
             }
         }
 

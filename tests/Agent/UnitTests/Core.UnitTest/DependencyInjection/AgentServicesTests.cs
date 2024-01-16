@@ -4,7 +4,6 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Wrapper;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DependencyInjection

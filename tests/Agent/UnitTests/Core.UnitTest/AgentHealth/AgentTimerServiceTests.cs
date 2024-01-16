@@ -6,8 +6,6 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth
@@ -73,7 +71,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             var expectedIsTimed = isEnabled && frequency > 0;
 
-            Assert.AreEqual(expectedIsTimed, timer != null, $"IsEnabled={isEnabled}; Frequency={frequency}; should be {expectedIsTimed}.");
+            ClassicAssert.AreEqual(expectedIsTimed, timer != null, $"IsEnabled={isEnabled}; Frequency={frequency}; should be {expectedIsTimed}.");
         }
 
         [TestCase(true, 1, 5, 5)]
@@ -111,8 +109,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers A"),
-                () => Assert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers B")
+                () => ClassicAssert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers A"),
+                () => ClassicAssert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers B")
             );
         }
 

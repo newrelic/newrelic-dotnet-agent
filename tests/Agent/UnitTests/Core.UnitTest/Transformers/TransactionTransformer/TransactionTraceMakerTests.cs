@@ -1,16 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
@@ -59,13 +54,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("sql"));
+            ClassicAssert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("sql"));
 
             var actualParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["sql"];
 
-            Assert.IsNotNull(actualParameter);
-            Assert.IsNotEmpty(actualParameter as string);
-            Assert.AreNotEqual(expectedParameter, actualParameter);
+            ClassicAssert.IsNotNull(actualParameter);
+            ClassicAssert.IsNotEmpty(actualParameter as string);
+            ClassicAssert.AreNotEqual(expectedParameter, actualParameter);
         }
 
         [Test]
@@ -82,17 +77,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("database_name"));
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("host"));
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("port_path_or_id"));
+            ClassicAssert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("database_name"));
+            ClassicAssert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("host"));
+            ClassicAssert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("port_path_or_id"));
 
             var actualDatabaseParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["database_name"];
             var actualHostParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["host"];
             var actualPathPortParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["port_path_or_id"];
 
-            Assert.AreEqual(expectedDatabaseParameter, actualDatabaseParameter);
-            Assert.AreEqual(expectedHostParameter, actualHostParameter);
-            Assert.AreEqual(expectedPortParameter, actualPathPortParameter);
+            ClassicAssert.AreEqual(expectedDatabaseParameter, actualDatabaseParameter);
+            ClassicAssert.AreEqual(expectedHostParameter, actualHostParameter);
+            ClassicAssert.AreEqual(expectedPortParameter, actualPathPortParameter);
         }
 
         [Test]
@@ -106,7 +101,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedStartTime, trace.StartTime);
+            ClassicAssert.AreEqual(expectedStartTime, trace.StartTime);
         }
 
         [Test]
@@ -120,7 +115,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedDuration, trace.Duration);
+            ClassicAssert.AreEqual(expectedDuration, trace.Duration);
         }
 
         [Test]
@@ -135,7 +130,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedResponseTime, trace.Duration);
+            ClassicAssert.AreEqual(expectedResponseTime, trace.Duration);
         }
 
         [Test]
@@ -154,7 +149,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // Query parameters should be stripped out
             const string expectedUri = "http://www.google.com/test";
-            Assert.AreEqual(expectedUri, trace.Uri);
+            ClassicAssert.AreEqual(expectedUri, trace.Uri);
         }
 
         [Test]
@@ -168,7 +163,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedGuid, trace.Guid);
+            ClassicAssert.AreEqual(expectedGuid, trace.Guid);
         }
 
         [Test]
@@ -198,16 +193,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple(
                 // ROOT
-                () => Assert.AreEqual(expectedStartTimeDifference, root.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, root.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual("ROOT", root.Name),
-                () => Assert.AreEqual(1, root.Children.Count),
+                () => ClassicAssert.AreEqual(expectedStartTimeDifference, root.TimeBetweenTransactionStartAndSegmentStart),
+                () => ClassicAssert.AreEqual(expectedEndTimeDifference, root.TimeBetweenTransactionStartAndSegmentEnd),
+                () => ClassicAssert.AreEqual("ROOT", root.Name),
+                () => ClassicAssert.AreEqual(1, root.Children.Count),
 
                 // Faux top-level segment
-                () => Assert.AreEqual(expectedStartTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual("Transaction", fauxTopLevelSegment.Name),
-                () => Assert.AreEqual(1, fauxTopLevelSegment.Children.Count)
+                () => ClassicAssert.AreEqual(expectedStartTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentStart),
+                () => ClassicAssert.AreEqual(expectedEndTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentEnd),
+                () => ClassicAssert.AreEqual("Transaction", fauxTopLevelSegment.Name),
+                () => ClassicAssert.AreEqual(1, fauxTopLevelSegment.Children.Count)
                 );
         }
 
@@ -234,13 +229,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var firstSegment = realSegments.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedStartTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual(expectedName, firstSegment.Name),
-                () => Assert.AreEqual(expectedClassName, firstSegment.ClassName),
-                () => Assert.AreEqual(expectedMethodName, firstSegment.MethodName),
-                () => Assert.AreEqual(0, firstSegment.Children.Count),
-                () => Assert.True(expectedParameters.All(kvp => expectedParameters[kvp.Key] == firstSegment.Parameters[kvp.Key]))
+                () => ClassicAssert.AreEqual(expectedStartTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentStart),
+                () => ClassicAssert.AreEqual(expectedEndTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentEnd),
+                () => ClassicAssert.AreEqual(expectedName, firstSegment.Name),
+                () => ClassicAssert.AreEqual(expectedClassName, firstSegment.ClassName),
+                () => ClassicAssert.AreEqual(expectedMethodName, firstSegment.MethodName),
+                () => ClassicAssert.AreEqual(0, firstSegment.Children.Count),
+                () => Assert.That(expectedParameters.All(kvp => expectedParameters[kvp.Key] == firstSegment.Parameters[kvp.Key]))
                 );
         }
 
@@ -267,9 +262,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var segment11 = segment1.Children.ElementAt(0);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(750, segment1.Parameters["exclusive_duration_millis"]),
-                () => Assert.AreEqual(500, segment2.Parameters["exclusive_duration_millis"]),
-                () => Assert.AreEqual(250, segment11.Parameters["exclusive_duration_millis"])
+                () => ClassicAssert.AreEqual(750, segment1.Parameters["exclusive_duration_millis"]),
+                () => ClassicAssert.AreEqual(500, segment2.Parameters["exclusive_duration_millis"]),
+                () => ClassicAssert.AreEqual(250, segment11.Parameters["exclusive_duration_millis"])
                 );
         }
 
@@ -301,11 +296,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var segment121 = segment12.Children.ElementAt(0);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("1", segment1.Name),
-                () => Assert.AreEqual("2", segment2.Name),
-                () => Assert.AreEqual("1.1", segment11.Name),
-                () => Assert.AreEqual("1.2", segment12.Name),
-                () => Assert.AreEqual("1.2.1", segment121.Name)
+                () => ClassicAssert.AreEqual("1", segment1.Name),
+                () => ClassicAssert.AreEqual("2", segment2.Name),
+                () => ClassicAssert.AreEqual("1.1", segment11.Name),
+                () => ClassicAssert.AreEqual("1.2", segment12.Name),
+                () => ClassicAssert.AreEqual("1.2.1", segment121.Name)
                 );
         }
 

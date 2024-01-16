@@ -10,10 +10,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -57,10 +53,10 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => ClassicAssert.AreEqual(1, rootSegment.Children.Count),
 
-                () => Assert.AreEqual("childSegment", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count)
+                () => ClassicAssert.AreEqual("childSegment", rootSegment.Children[0].Name),
+                () => ClassicAssert.AreEqual(0, rootSegment.Children[0].Children.Count)
                 );
         }
 
@@ -82,13 +78,13 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, rootSegment.Children.Count),
+                () => ClassicAssert.AreEqual(2, rootSegment.Children.Count),
 
-                () => Assert.AreEqual("childSegment1", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count),
+                () => ClassicAssert.AreEqual("childSegment1", rootSegment.Children[0].Name),
+                () => ClassicAssert.AreEqual(0, rootSegment.Children[0].Children.Count),
 
-                () => Assert.AreEqual("childSegment2", rootSegment.Children[1].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[1].Children.Count)
+                () => ClassicAssert.AreEqual("childSegment2", rootSegment.Children[1].Name),
+                () => ClassicAssert.AreEqual(0, rootSegment.Children[1].Children.Count)
                 );
         }
 
@@ -111,15 +107,15 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var rootSegment = GetFirstSegmentOrThrow();
-            Assert.AreEqual(2, rootSegment.Children.Count);
+            ClassicAssert.AreEqual(2, rootSegment.Children.Count);
             var finishedSegment = rootSegment.Children.ElementAt(0);
             var unfinishedSegment = rootSegment.Children.ElementAt(1);
             NrAssert.Multiple(
-                () => Assert.AreEqual("segmentName1", finishedSegment.Name),
-                () => Assert.IsFalse(finishedSegment.Parameters.ContainsKey("unfinished")),
+                () => ClassicAssert.AreEqual("segmentName1", finishedSegment.Name),
+                () => ClassicAssert.IsFalse(finishedSegment.Parameters.ContainsKey("unfinished")),
 
-                () => Assert.AreEqual("segmentName2", unfinishedSegment.Name),
-                () => Assert.IsTrue(unfinishedSegment.Parameters.ContainsKey("unfinished"))
+                () => ClassicAssert.AreEqual("segmentName2", unfinishedSegment.Name),
+                () => ClassicAssert.IsTrue(unfinishedSegment.Parameters.ContainsKey("unfinished"))
                 );
         }
 
@@ -144,10 +140,10 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => ClassicAssert.AreEqual(1, rootSegment.Children.Count),
 
-                () => Assert.AreEqual("childSegment", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count)
+                () => ClassicAssert.AreEqual("childSegment", rootSegment.Children[0].Name),
+                () => ClassicAssert.AreEqual(0, rootSegment.Children[0].Children.Count)
                 );
         }
 
@@ -169,13 +165,13 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => ClassicAssert.AreEqual(1, rootSegment.Children.Count),
 
-                () => Assert.AreEqual("childSegment1", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(1, rootSegment.Children[0].Children.Count),
+                () => ClassicAssert.AreEqual("childSegment1", rootSegment.Children[0].Name),
+                () => ClassicAssert.AreEqual(1, rootSegment.Children[0].Children.Count),
 
-                () => Assert.AreEqual("childSegment2", rootSegment.Children[0].Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children[0].Children.Count)
+                () => ClassicAssert.AreEqual("childSegment2", rootSegment.Children[0].Children[0].Name),
+                () => ClassicAssert.AreEqual(0, rootSegment.Children[0].Children[0].Children.Count)
                 );
         }
 
@@ -710,7 +706,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Less(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+            ClassicAssert.Less(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
         }
 
         [Test]
@@ -733,7 +729,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Greater(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+            ClassicAssert.Greater(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
         }
 
         [Test]
@@ -761,7 +757,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Less(segment.ExclusiveDurationOrZero, childSegmentDuration);
+            ClassicAssert.Less(segment.ExclusiveDurationOrZero, childSegmentDuration);
         }
 
         [Test]
@@ -780,7 +776,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -807,7 +803,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -836,7 +832,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
         }
 
         [Test]
@@ -856,7 +852,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(3, spanEvents.Length);
+            ClassicAssert.AreEqual(3, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {

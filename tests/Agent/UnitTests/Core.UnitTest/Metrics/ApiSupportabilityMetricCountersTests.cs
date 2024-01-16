@@ -3,10 +3,6 @@
 
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System;
 
 namespace NewRelic.Agent.Core.Metrics
 {
@@ -45,8 +41,8 @@ namespace NewRelic.Agent.Core.Metrics
             _apiSupportabilityMetricCounters.Record(apiMethod);
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(SupportabilityPrefix + apiMethod, metric.MetricNameModel.Name);
-            Assert.AreEqual(1, metric.DataModel.Value0);
+            ClassicAssert.AreEqual(SupportabilityPrefix + apiMethod, metric.MetricNameModel.Name);
+            ClassicAssert.AreEqual(1, metric.DataModel.Value0);
         }
 
         [Test]
@@ -74,7 +70,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(recordCount, metric.DataModel.Value0);
+            ClassicAssert.AreEqual(recordCount, metric.DataModel.Value0);
         }
     }
 }

@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Core.DataTransport;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -28,7 +26,7 @@ namespace NewRelic.Agent.Core.Configuration
             };
 
             var missingExpectedPolicies = SecurityPoliciesConfiguration.GetMissingExpectedSeverPolicyNames(serverPoliciesWithExtras);
-            Assert.IsEmpty(missingExpectedPolicies);
+            ClassicAssert.IsEmpty(missingExpectedPolicies);
         }
 
         [Test]
@@ -46,7 +44,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedMissing = new List<string> { "custom_parameters", "custom_instrumentation_editor" };
 
             var missingExpectedPolicies = SecurityPoliciesConfiguration.GetMissingExpectedSeverPolicyNames(serverPoliciesWithMissing);
-            Assert.AreEqual(expectedMissing, missingExpectedPolicies);
+            ClassicAssert.AreEqual(expectedMissing, missingExpectedPolicies);
         }
 
         [Test]
@@ -64,7 +62,7 @@ namespace NewRelic.Agent.Core.Configuration
             };
 
             var missingRequiredPolicies = SecurityPoliciesConfiguration.GetMissingRequiredPolicies(serverPoliciesAllRequiredKnown);
-            Assert.IsEmpty(missingRequiredPolicies);
+            ClassicAssert.IsEmpty(missingRequiredPolicies);
         }
 
         [Test]
@@ -84,7 +82,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedMissing = new List<string> { "dotnet_unknown_setting" };
 
             var missingRequiredPolicies = SecurityPoliciesConfiguration.GetMissingRequiredPolicies(serverPoliciesAllRequiredKnown);
-            Assert.AreEqual(expectedMissing, missingRequiredPolicies);
+            ClassicAssert.AreEqual(expectedMissing, missingRequiredPolicies);
         }
     }
 }

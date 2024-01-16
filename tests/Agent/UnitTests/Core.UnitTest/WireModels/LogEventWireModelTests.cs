@@ -1,12 +1,9 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Collections;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -27,14 +24,14 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLevel, expectedSpanId, expectedTraceId, _testContextData);
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
-            Assert.AreEqual(expectedMessage, objectUnderTest.Message);
-            Assert.AreEqual(expectedLevel, objectUnderTest.Level);
-            Assert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
-            Assert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
-            Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
-            Assert.AreEqual(_testContextData, objectUnderTest.ContextData);
+            ClassicAssert.NotNull(objectUnderTest);
+            ClassicAssert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
+            ClassicAssert.AreEqual(expectedMessage, objectUnderTest.Message);
+            ClassicAssert.AreEqual(expectedLevel, objectUnderTest.Level);
+            ClassicAssert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
+            ClassicAssert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
+            ClassicAssert.AreEqual(expectedPriority, objectUnderTest.Priority);
+            ClassicAssert.AreEqual(_testContextData, objectUnderTest.ContextData);
         }
 
         [Test]
@@ -46,8 +43,8 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = baseObject as IHasPriority;
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
+            ClassicAssert.NotNull(objectUnderTest);
+            ClassicAssert.AreEqual(expectedPriority, objectUnderTest.Priority);
         }
 
         [Test]
@@ -64,7 +61,7 @@ namespace NewRelic.Agent.Core.WireModels
             };
 
             Assert.Throws<ArgumentException>(() => { objectUnderTest.Priority = priority; });
-            Assert.AreEqual(startingPriority, objectUnderTest.Priority);
+            ClassicAssert.AreEqual(startingPriority, objectUnderTest.Priority);
         }
 
         [Test]
@@ -78,7 +75,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var messageStringFromLogEvent = logEvent.Message;
 
-            Assert.AreEqual(Encoding.UTF8.GetByteCount(messageStringFromLogEvent), maxLogMessageLengthInBytes);
+            ClassicAssert.AreEqual(Encoding.UTF8.GetByteCount(messageStringFromLogEvent), maxLogMessageLengthInBytes);
         }
     }
 }

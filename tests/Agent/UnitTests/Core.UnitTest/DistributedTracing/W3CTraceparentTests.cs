@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Core.DistributedTracing;
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

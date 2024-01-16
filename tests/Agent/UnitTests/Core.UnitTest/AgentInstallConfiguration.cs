@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core
 {
     [TestFixture]
@@ -11,7 +9,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public void AgentVersionTimeStampIsGreaterThanZero()
         {
-            Assert.Greater(AgentInstallConfiguration.AgentVersionTimestamp, 0);
+            ClassicAssert.Greater(AgentInstallConfiguration.AgentVersionTimestamp, 0);
         }
     }
 }

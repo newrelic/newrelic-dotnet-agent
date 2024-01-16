@@ -1,14 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.OpenTracing.AmazonLambda;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.TestUtilities;
-using NUnit.Framework;
 using OpenTracing.Propagation;
 using System;
 using System.Threading;
-using System.Collections.Generic;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
@@ -61,12 +58,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             Thread.Sleep(500);
             span.Finish();
 
-            Assert.NotNull(span, "span must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span.Guid().Length, $"span guid length must be {ExpectedGuidLength}");
-            Assert.AreSame(activeSpan, span, "The span we created should be the active span");
-            Assert.AreEqual(name, span.GetOperationName(), $"span operation name should be {name} but got {span.GetOperationName()} instead");
-            Assert.IsTrue(span.GetDurationInSeconds() > 0.0, $"span duration must be greater than 0 but got {span.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span.Guid()), "span guid must not be null or empty");
+            ClassicAssert.NotNull(span, "span must not be null");
+            ClassicAssert.AreEqual(ExpectedGuidLength, span.Guid().Length, $"span guid length must be {ExpectedGuidLength}");
+            ClassicAssert.AreSame(activeSpan, span, "The span we created should be the active span");
+            ClassicAssert.AreEqual(name, span.GetOperationName(), $"span operation name should be {name} but got {span.GetOperationName()} instead");
+            ClassicAssert.IsTrue(span.GetDurationInSeconds() > 0.0, $"span duration must be greater than 0 but got {span.GetDurationInSeconds()} instead");
+            ClassicAssert.IsFalse(string.IsNullOrEmpty(span.Guid()), "span guid must not be null or empty");
         }
 
         [Test]
@@ -78,25 +75,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             LambdaRootSpan span1 = (LambdaRootSpan)spanBuilder.Start();
             LambdaRootSpan span2 = (LambdaRootSpan)spanBuilder.Start();
 
-            Assert.IsNull(tracer.ActiveSpan);
+            ClassicAssert.IsNull(tracer.ActiveSpan);
             Thread.Sleep(500);
 
             span1.Finish();
             span2.Finish();
 
-            Assert.NotNull(span1, "span1 must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span1.Guid().Length, $"span1 guid length must be {ExpectedGuidLength}");
-            Assert.AreEqual(name, span1.GetOperationName(), $"span1 operation name should be {name} but got {span1.GetOperationName()} instead");
-            Assert.IsTrue(span1.GetDurationInSeconds() > 0.0, $"span1 duration must be greater than 0 but got {span1.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span1.Guid()), "span1 guid must not be null or empty");
+            ClassicAssert.NotNull(span1, "span1 must not be null");
+            ClassicAssert.AreEqual(ExpectedGuidLength, span1.Guid().Length, $"span1 guid length must be {ExpectedGuidLength}");
+            ClassicAssert.AreEqual(name, span1.GetOperationName(), $"span1 operation name should be {name} but got {span1.GetOperationName()} instead");
+            ClassicAssert.IsTrue(span1.GetDurationInSeconds() > 0.0, $"span1 duration must be greater than 0 but got {span1.GetDurationInSeconds()} instead");
+            ClassicAssert.IsFalse(string.IsNullOrEmpty(span1.Guid()), "span1 guid must not be null or empty");
 
-            Assert.NotNull(span2, "span2 must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span2.Guid().Length, $"span2 guid length must be {ExpectedGuidLength}");
-            Assert.AreEqual(name, span2.GetOperationName(), $"span2 operation name should be {name} but got {span2.GetOperationName()} instead");
-            Assert.IsTrue(span2.GetDurationInSeconds() > 0.0, $"span2 duration must be greater than 0 but got {span2.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span2.Guid()), "span2 guid must not be null or empty");
+            ClassicAssert.NotNull(span2, "span2 must not be null");
+            ClassicAssert.AreEqual(ExpectedGuidLength, span2.Guid().Length, $"span2 guid length must be {ExpectedGuidLength}");
+            ClassicAssert.AreEqual(name, span2.GetOperationName(), $"span2 operation name should be {name} but got {span2.GetOperationName()} instead");
+            ClassicAssert.IsTrue(span2.GetDurationInSeconds() > 0.0, $"span2 duration must be greater than 0 but got {span2.GetDurationInSeconds()} instead");
+            ClassicAssert.IsFalse(string.IsNullOrEmpty(span2.Guid()), "span2 guid must not be null or empty");
 
-            Assert.AreNotEqual(span1.Guid(), span2.Guid(), "span1 and span2 must have different guids");
+            ClassicAssert.AreNotEqual(span1.Guid(), span2.Guid(), "span1 and span2 must have different guids");
         }
 
         [Test]
@@ -111,7 +108,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var childSpanBuilder = tracer.BuildSpan(childName).AsChildOf(rootSpan);
             LambdaSpan childSpan = (LambdaSpan)childSpanBuilder.Start();
 
-            Assert.AreEqual(rootSpan.Guid(), childSpan.RootSpan.Guid(), "The guid of the child span's RootSpan should match the guid of the root span");
+            ClassicAssert.AreEqual(rootSpan.Guid(), childSpan.RootSpan.Guid(), "The guid of the child span's RootSpan should match the guid of the root span");
         }
 
         [Test]

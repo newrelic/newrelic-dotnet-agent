@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,7 +11,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
 using Telerik.JustMock;
 using HttpException = NewRelic.Agent.Core.DataTransport.HttpException;
 
@@ -191,28 +189,28 @@ namespace NewRelic.Agent.Core.DataTransport
                 connectionManager.AttemptAutoStart();
 
                 Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
-                Assert.AreEqual(15, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(15, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(15, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(15, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(30, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(30, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(60, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(60, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(120, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(120, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(300, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(300, scheduledTime.TotalSeconds);
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                ClassicAssert.AreEqual(300, scheduledTime.TotalSeconds);
             }
         }
     }

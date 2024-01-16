@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Threading;
 using NewRelic.Agent.Core.Fixtures;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Time
 {
@@ -99,7 +97,7 @@ namespace NewRelic.Agent.Core.Time
             wasExecuted = false;
             Thread.Sleep(TimeSpan.FromMilliseconds(5));
 
-            Assert.False(wasExecuted);
+            ClassicAssert.False(wasExecuted);
         }
 
         [Test]

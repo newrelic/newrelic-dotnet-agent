@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
@@ -11,8 +8,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
@@ -83,17 +78,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
-            Assert.NotNull(errorTrace);
+            ClassicAssert.NotNull(errorTrace);
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
+                () => ClassicAssert.AreEqual("WebTransaction/Name", errorTrace.Path),
 #if NET
-                () => Assert.AreEqual("404", errorTrace.Message),
+                () => ClassicAssert.AreEqual("404", errorTrace.Message),
 #else
-                () => Assert.AreEqual("Not Found", errorTrace.Message),
+                () => ClassicAssert.AreEqual("Not Found", errorTrace.Message),
 #endif
-                () => Assert.AreEqual("404", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-                () => Assert.AreEqual(null, errorTrace.Attributes.StackTrace)
+                () => ClassicAssert.AreEqual("404", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(transaction.Guid, errorTrace.Guid),
+                () => ClassicAssert.AreEqual(null, errorTrace.Attributes.StackTrace)
                 );
         }
 
@@ -107,12 +102,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
-            Assert.NotNull(errorTrace);
+            ClassicAssert.NotNull(errorTrace);
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
-                () => Assert.AreEqual("Out of Memory Message", errorTrace.Message),
-                () => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
+                () => ClassicAssert.AreEqual("WebTransaction/Name", errorTrace.Path),
+                () => ClassicAssert.AreEqual("Out of Memory Message", errorTrace.Message),
+                () => ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(transaction.Guid, errorTrace.Guid)
             );
         }
 
@@ -127,12 +122,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
-            Assert.NotNull(errorTrace);
+            ClassicAssert.NotNull(errorTrace);
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
-                () => Assert.AreEqual("Out of Memory Message", errorTrace.Message),
-                () => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
+                () => ClassicAssert.AreEqual("WebTransaction/Name", errorTrace.Path),
+                () => ClassicAssert.AreEqual("Out of Memory Message", errorTrace.Message),
+                () => ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(transaction.Guid, errorTrace.Guid)
             );
         }
 
@@ -146,12 +141,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
-            Assert.NotNull(errorTrace);
+            ClassicAssert.NotNull(errorTrace);
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
-                () => Assert.AreEqual("Out of Memory Message", errorTrace.Message),
-                () => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
+                () => ClassicAssert.AreEqual("WebTransaction/Name", errorTrace.Path),
+                () => ClassicAssert.AreEqual("Out of Memory Message", errorTrace.Message),
+                () => ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(transaction.Guid, errorTrace.Guid)
             );
         }
 
@@ -166,12 +161,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
-            Assert.NotNull(errorTrace);
+            ClassicAssert.NotNull(errorTrace);
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
-                () => Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message),
-                () => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
+                () => ClassicAssert.AreEqual("WebTransaction/Name", errorTrace.Path),
+                () => ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message),
+                () => ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(transaction.Guid, errorTrace.Guid)
             );
         }
 
@@ -191,7 +186,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]
@@ -234,7 +229,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]
@@ -284,10 +279,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.IsNotNull(passedInDict);
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("exception"));
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]
@@ -335,10 +330,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.IsNotNull(passedInDict);
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("exception"));
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]

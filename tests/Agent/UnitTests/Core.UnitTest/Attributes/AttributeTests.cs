@@ -1,11 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using NewRelic.Testing.Assertions;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using NUnit.Framework.Internal;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
@@ -48,8 +43,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(actualAttribVal),
-                () => Assert.AreEqual(expectedResult, actualAttribVal.Value)
+                () => ClassicAssert.IsNotNull(actualAttribVal),
+                () => ClassicAssert.AreEqual(expectedResult, actualAttribVal.Value)
             );
         }
 
@@ -95,8 +90,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsFalse(trySetResult),
-                () => Assert.IsNull(actualAttribVal)
+                () => ClassicAssert.IsFalse(trySetResult),
+                () => ClassicAssert.IsNull(actualAttribVal)
             );
         }
 
@@ -117,8 +112,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                .FirstOrDefault(x => x.AttributeDefinition == attribDef);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(trySetResult),
-                () => Assert.AreEqual(string.Empty, actualAttribVal.Value)
+                () => ClassicAssert.IsTrue(trySetResult),
+                () => ClassicAssert.AreEqual(string.Empty, actualAttribVal.Value)
             );
         }
 
@@ -140,8 +135,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(trySetResult),
-                () => Assert.AreEqual(" ", actualAttribVal.Value)
+                () => ClassicAssert.IsTrue(trySetResult),
+                () => ClassicAssert.AreEqual(" ", actualAttribVal.Value)
             );
         }
 
@@ -175,12 +170,12 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             }
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(testResults[0]),
-                () => Assert.IsFalse(testResults[1]),
-                () => Assert.IsFalse(testResults[2]),
-                () => Assert.IsFalse(testResults[3]),
-                () => Assert.IsFalse(testResults[4]),
-                () => Assert.AreEqual(1, attribVals.GetAttributeValues(AttributeClassification.UserAttributes).Count())
+                () => ClassicAssert.IsTrue(testResults[0]),
+                () => ClassicAssert.IsFalse(testResults[1]),
+                () => ClassicAssert.IsFalse(testResults[2]),
+                () => ClassicAssert.IsFalse(testResults[3]),
+                () => ClassicAssert.IsFalse(testResults[4]),
+                () => ClassicAssert.AreEqual(1, attribVals.GetAttributeValues(AttributeClassification.UserAttributes).Count())
             );
         }
 
@@ -213,13 +208,13 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(attribDefTestResults[0]),
-                () => Assert.IsTrue(attribDefTestResults[1]),
-                () => Assert.IsTrue(attribDefTestResults[2]),
-                () => Assert.AreEqual(3, values.Count()),
-                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
-                () => Assert.AreEqual(1023, values.ElementAt(1).Value.ToString().Length),
-                () => Assert.AreEqual(1023, values.ElementAt(2).Value.ToString().Length)
+                () => ClassicAssert.IsTrue(attribDefTestResults[0]),
+                () => ClassicAssert.IsTrue(attribDefTestResults[1]),
+                () => ClassicAssert.IsTrue(attribDefTestResults[2]),
+                () => ClassicAssert.AreEqual(3, values.Count()),
+                () => ClassicAssert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
+                () => ClassicAssert.AreEqual(1023, values.ElementAt(1).Value.ToString().Length),
+                () => ClassicAssert.AreEqual(1023, values.ElementAt(2).Value.ToString().Length)
             );
         }
 
@@ -252,13 +247,13 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(attribDefTestResults[0]),
-                () => Assert.IsTrue(attribDefTestResults[1]),
-                () => Assert.IsTrue(attribDefTestResults[2]),
-                () => Assert.AreEqual(3, values.Count()),
-                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
-                () => Assert.AreEqual(255, values.ElementAt(1).Value.ToString().Length),
-                () => Assert.AreEqual(255, values.ElementAt(2).Value.ToString().Length)
+                () => ClassicAssert.IsTrue(attribDefTestResults[0]),
+                () => ClassicAssert.IsTrue(attribDefTestResults[1]),
+                () => ClassicAssert.IsTrue(attribDefTestResults[2]),
+                () => ClassicAssert.AreEqual(3, values.Count()),
+                () => ClassicAssert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
+                () => ClassicAssert.AreEqual(255, values.ElementAt(1).Value.ToString().Length),
+                () => ClassicAssert.AreEqual(255, values.ElementAt(2).Value.ToString().Length)
             );
         }
     }

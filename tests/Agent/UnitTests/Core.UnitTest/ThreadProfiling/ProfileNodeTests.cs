@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -21,7 +19,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var json = JsonConvert.SerializeObject(profileNode);
 
             const string expectedJson = @"[[""myClass"",""myMethod"",4],2,0,[]]";
-            Assert.AreEqual(expectedJson, json);
+            ClassicAssert.AreEqual(expectedJson, json);
         }
 
         [Test]
@@ -41,7 +39,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var json = JsonConvert.SerializeObject(profileNode1);
 
             const string expectedJson = @"[[""myClass1"",""myMethod1"",4],2,0,[[[""myClass2"",""myMethod2"",14],12,0,[]]]]";
-            Assert.AreEqual(expectedJson, json);
+            ClassicAssert.AreEqual(expectedJson, json);
         }
     }
 }

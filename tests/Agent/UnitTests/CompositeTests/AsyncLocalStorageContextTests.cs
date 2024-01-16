@@ -4,9 +4,6 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
-using NUnit.Framework;
-using System;
-using System.Linq;
 using System.Threading;
 
 namespace CompositeTests
@@ -59,9 +56,9 @@ namespace CompositeTests
             var metrics = _compositeTestAgent.Metrics;
             var errors = _compositeTestAgent.ErrorEvents;
 
-            Assert.AreEqual(true, transactionFlowedToBackgroundThread);
-            Assert.AreEqual(1, transactionEvents.Count);
-            Assert.AreEqual("foregroundExternal", transactionEvents.First().AgentAttributes()["request.uri"]);
+            ClassicAssert.AreEqual(true, transactionFlowedToBackgroundThread);
+            ClassicAssert.AreEqual(1, transactionEvents.Count);
+            ClassicAssert.AreEqual("foregroundExternal", transactionEvents.First().AgentAttributes()["request.uri"]);
             CollectionAssert.IsEmpty(errors);
             CollectionAssert.IsEmpty(metrics.Where(x => x.MetricNameModel.Name.Contains("backgroundExternal")));
             CollectionAssert.IsNotEmpty(metrics.Where(x => x.MetricNameModel.Name.Contains("foregroundExternal")));

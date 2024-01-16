@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using NUnit.Framework;
 using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace NewRelic.Agent.Core.Commands
@@ -15,7 +13,7 @@ namespace NewRelic.Agent.Core.Commands
         {
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
-            Assert.IsNotNull(response);
+            ClassicAssert.IsNotNull(response);
         }
 
         [Test]
@@ -24,7 +22,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsNotNull(respDict);
+            ClassicAssert.IsNotNull(respDict);
         }
 
         [Test]
@@ -33,7 +31,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.AreEqual(1, respDict.Count);
+            ClassicAssert.AreEqual(1, respDict.Count);
         }
 
         [Test]
@@ -42,7 +40,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            ClassicAssert.IsTrue(respDict.ContainsKey("error"));
         }
 
         #region Profile Id Tests
@@ -56,7 +54,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(respDict.ContainsKey("error"));
+            ClassicAssert.IsFalse(respDict.ContainsKey("error"));
         }
 
         [Test]
@@ -70,7 +68,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(respDict.ContainsKey("error"));
+            ClassicAssert.IsFalse(respDict.ContainsKey("error"));
         }
 
         [Test]
@@ -83,7 +81,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            ClassicAssert.IsTrue(respDict.ContainsKey("error"));
         }
         #endregion
 
@@ -98,7 +96,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(service.ReportData);
+            ClassicAssert.IsTrue(service.ReportData);
         }
 
         [Test]
@@ -112,7 +110,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(service.ReportData);
+            ClassicAssert.IsTrue(service.ReportData);
         }
 
         [Test]
@@ -126,7 +124,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(service.ReportData);
+            ClassicAssert.IsFalse(service.ReportData);
         }
 
         #endregion

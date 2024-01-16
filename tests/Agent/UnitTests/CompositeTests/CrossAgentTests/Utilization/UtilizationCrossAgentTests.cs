@@ -5,9 +5,6 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Utilization;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 

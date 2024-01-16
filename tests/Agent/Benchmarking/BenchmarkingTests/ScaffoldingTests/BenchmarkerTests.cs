@@ -4,9 +4,6 @@
 using BenchmarkingTests.Scaffolding.Benchmarker;
 using BenchmarkingTests.Scaffolding.CodeExerciser;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Threading;
 
 namespace BenchmarkingTests.ScaffoldingTests
 {
@@ -53,14 +50,14 @@ namespace BenchmarkingTests.ScaffoldingTests
             var benchmarkResult = SimpleThroughputBenchmark.Execute();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, benchmarkResult.CountExceptions),
-                () => Assert.Greater(benchmarkResult.CountUnitsOfWorkExecuted_Min, 0),
-                () => Assert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Mean, benchmarkResult.CountUnitsOfWorkExecuted_Min),
-                () => Assert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Max, benchmarkResult.CountUnitsOfWorkExecuted_Mean),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Min_Nanoseconds, SimpleThroughputBenchmark.DurationMilliseconds),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Mean_Nanoseconds, benchmarkResult.Duration_Min_Nanoseconds),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Max_Nanoseconds, benchmarkResult.Duration_Mean_Nanoseconds),
-                () => Assert.Greater(benchmarkResult.EndTime, benchmarkResult.StartTime)
+                () => ClassicAssert.AreEqual(0, benchmarkResult.CountExceptions),
+                () => ClassicAssert.Greater(benchmarkResult.CountUnitsOfWorkExecuted_Min, 0),
+                () => ClassicAssert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Mean, benchmarkResult.CountUnitsOfWorkExecuted_Min),
+                () => ClassicAssert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Max, benchmarkResult.CountUnitsOfWorkExecuted_Mean),
+                () => ClassicAssert.GreaterOrEqual(benchmarkResult.Duration_Min_Nanoseconds, SimpleThroughputBenchmark.DurationMilliseconds),
+                () => ClassicAssert.GreaterOrEqual(benchmarkResult.Duration_Mean_Nanoseconds, benchmarkResult.Duration_Min_Nanoseconds),
+                () => ClassicAssert.GreaterOrEqual(benchmarkResult.Duration_Max_Nanoseconds, benchmarkResult.Duration_Mean_Nanoseconds),
+                () => ClassicAssert.Greater(benchmarkResult.EndTime, benchmarkResult.StartTime)
             );
         }
 
@@ -68,7 +65,7 @@ namespace BenchmarkingTests.ScaffoldingTests
         public void ExerciserFailureBubblesUp_ReportsError()
         {
             var benchmarkResult = SimpleFailingBenchmark.Execute(false);
-            Assert.Greater(benchmarkResult.CountExceptions, 0);
+            ClassicAssert.Greater(benchmarkResult.CountExceptions, 0);
         }
 
         [Test]

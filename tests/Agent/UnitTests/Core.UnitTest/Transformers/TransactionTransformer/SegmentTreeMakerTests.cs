@@ -1,15 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -31,7 +26,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(0, treeRoots.Count());
+            ClassicAssert.AreEqual(0, treeRoots.Count());
         }
 
         [Test]
@@ -45,11 +40,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(0, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(0, node1.Children.Count());
         }
 
         [Test]
@@ -64,14 +59,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            ClassicAssert.AreEqual(2, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
             var node2 = treeRoots.ElementAt(1);
-            Assert.NotNull(node1);
-            Assert.NotNull(node2);
-            Assert.AreEqual(0, node1.Children.Count());
-            Assert.AreEqual(0, node2.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(0, node1.Children.Count());
+            ClassicAssert.AreEqual(0, node2.Children.Count());
         }
 
         [Test]
@@ -88,17 +83,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(id1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node1.Children.Count());
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(id2, node2.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node2.Children.Count());
         }
 
         [Test]
@@ -130,42 +125,42 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            ClassicAssert.AreEqual(2, treeRoots.Count);
 
             var node1 = treeRoots.First(node => node.Segment.UniqueId.Equals(1));
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(id1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node1.Children.Count());
 
             var node2 = node1.Children.First(node => node.Segment.UniqueId.Equals(2));
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(2, node2.Children.Count());
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(id2, node2.Segment.UniqueId);
+            ClassicAssert.AreEqual(2, node2.Children.Count());
 
             var node3 = node2.Children.First(node => node.Segment.UniqueId.Equals(3));
-            Assert.NotNull(node3);
-            Assert.AreEqual(id3, node3.Segment.UniqueId);
-            Assert.AreEqual(1, node3.Children.Count());
+            ClassicAssert.NotNull(node3);
+            ClassicAssert.AreEqual(id3, node3.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node3.Children.Count());
 
             var node4 = node3.Children.First(node => node.Segment.UniqueId.Equals(4));
-            Assert.NotNull(node4);
-            Assert.AreEqual(id4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
+            ClassicAssert.NotNull(node4);
+            ClassicAssert.AreEqual(id4, node4.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node4.Children.Count());
 
             var node5 = node2.Children.First(node => node.Segment.UniqueId.Equals(5));
-            Assert.NotNull(node5);
-            Assert.AreEqual(id5, node5.Segment.UniqueId);
-            Assert.AreEqual(0, node5.Children.Count());
+            ClassicAssert.NotNull(node5);
+            ClassicAssert.AreEqual(id5, node5.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node5.Children.Count());
 
             var node6 = treeRoots.First(node => node.Segment.UniqueId.Equals(6));
-            Assert.NotNull(node6);
-            Assert.AreEqual(id6, node6.Segment.UniqueId);
-            Assert.AreEqual(1, node6.Children.Count());
+            ClassicAssert.NotNull(node6);
+            ClassicAssert.AreEqual(id6, node6.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node6.Children.Count());
 
             var node7 = node6.Children.First(node => node.Segment.UniqueId.Equals(7));
-            Assert.NotNull(node7);
-            Assert.AreEqual(id7, node7.Segment.UniqueId);
-            Assert.AreEqual(0, node7.Children.Count());
+            ClassicAssert.NotNull(node7);
+            ClassicAssert.AreEqual(id7, node7.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node7.Children.Count());
         }
 
         [Test]
@@ -201,42 +196,42 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            ClassicAssert.AreEqual(2, treeRoots.Count);
 
             var node1 = treeRoots.First();
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(id1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node1.Children.Count());
 
             var node2 = node1.Children.First();
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(2, node2.Children.Count());
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(id2, node2.Segment.UniqueId);
+            ClassicAssert.AreEqual(2, node2.Children.Count());
 
             var node3 = node2.Children.First();
-            Assert.NotNull(node3);
-            Assert.AreEqual(id3, node3.Segment.UniqueId);
-            Assert.AreEqual(1, node3.Children.Count());
+            ClassicAssert.NotNull(node3);
+            ClassicAssert.AreEqual(id3, node3.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node3.Children.Count());
 
             var node4 = node3.Children.First();
-            Assert.NotNull(node4);
-            Assert.AreEqual(id4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
+            ClassicAssert.NotNull(node4);
+            ClassicAssert.AreEqual(id4, node4.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node4.Children.Count());
 
             var node5 = node2.Children.ElementAt(1);
-            Assert.NotNull(node5);
-            Assert.AreEqual(id5, node5.Segment.UniqueId);
-            Assert.AreEqual(0, node5.Children.Count());
+            ClassicAssert.NotNull(node5);
+            ClassicAssert.AreEqual(id5, node5.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node5.Children.Count());
 
             var node6 = treeRoots.ElementAt(1);
-            Assert.NotNull(node6);
-            Assert.AreEqual(id6, node6.Segment.UniqueId);
-            Assert.AreEqual(1, node6.Children.Count());
+            ClassicAssert.NotNull(node6);
+            ClassicAssert.AreEqual(id6, node6.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node6.Children.Count());
 
             var node7 = node6.Children.First();
-            Assert.NotNull(node7);
-            Assert.AreEqual(id7, node7.Segment.UniqueId);
-            Assert.AreEqual(0, node7.Children.Count());
+            ClassicAssert.NotNull(node7);
+            ClassicAssert.AreEqual(id7, node7.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node7.Children.Count());
         }
 
         [Test]
@@ -249,27 +244,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node1.Children.Count());
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
+            ClassicAssert.NotNull(node2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, node2.Children.Count()),
+                () => ClassicAssert.AreEqual(0, node2.Children.Count()),
 
                 // The combined segment's start time should be the earliest start time of the original segments
-                () => Assert.AreEqual(1, node2.Segment.RelativeStartTime.TotalSeconds),
+                () => ClassicAssert.AreEqual(1, node2.Segment.RelativeStartTime.TotalSeconds),
 
                 // The combined segment's duration should be the sum of the original segments' durations
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
 
                 // call_count parameter should be added and should equal the number of nodes that were combined
-                () => Assert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
+                () => ClassicAssert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
                 );
         }
 
@@ -283,27 +278,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(1, node1.Children.Count());
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
+            ClassicAssert.NotNull(node2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, node2.Children.Count()),
+                () => ClassicAssert.AreEqual(0, node2.Children.Count()),
 
                 // The combined segment's start time should be the earliest start time of the original segments
-                () => Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime),
 
                 // The combined segment's duration should be the sum of the original segments' durations
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
 
                 // call_count parameter should be added and should equal the number of nodes that were combined
-                () => Assert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
+                () => ClassicAssert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
                 );
         }
 
@@ -320,37 +315,37 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(3, node1.Children.Count());
-            Assert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(3, node1.Children.Count());
+            ClassicAssert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
-            Assert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(2, node2.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node2.Children.Count());
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
+            ClassicAssert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
 
             var node3 = node1.Children.ElementAt(1);
-            Assert.NotNull(node3);
-            Assert.AreEqual(3, node3.Segment.UniqueId);
-            Assert.AreEqual(0, node3.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node3.Segment.Duration);
-            Assert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node3);
+            ClassicAssert.AreEqual(3, node3.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node3.Children.Count());
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.RelativeStartTime);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node3.Segment.Duration);
+            ClassicAssert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
 
             var node4 = node1.Children.ElementAt(2);
-            Assert.NotNull(node4);
-            Assert.AreEqual(4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(5), node4.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node4.Segment.Duration);
-            Assert.False(node4.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node4);
+            ClassicAssert.AreEqual(4, node4.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node4.Children.Count());
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), node4.Segment.RelativeStartTime);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(2), node4.Segment.Duration);
+            ClassicAssert.False(node4.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
         }
 
         [Test]
@@ -365,29 +360,29 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            ClassicAssert.AreEqual(1, treeRoots.Count);
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(2, node1.Children.Count());
-            Assert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node1);
+            ClassicAssert.AreEqual(1, node1.Segment.UniqueId);
+            ClassicAssert.AreEqual(2, node1.Children.Count());
+            ClassicAssert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
-            Assert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node2);
+            ClassicAssert.AreEqual(2, node2.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node2.Children.Count());
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
+            ClassicAssert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
 
             var node3 = node1.Children.ElementAt(1);
-            Assert.NotNull(node3);
-            Assert.AreEqual(3, node3.Segment.UniqueId);
-            Assert.AreEqual(0, node3.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(5), node3.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.Duration);
-            Assert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            ClassicAssert.NotNull(node3);
+            ClassicAssert.AreEqual(3, node3.Segment.UniqueId);
+            ClassicAssert.AreEqual(0, node3.Children.Count());
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), node3.Segment.RelativeStartTime);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.Duration);
+            ClassicAssert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
         }
 
         private static IEnumerable<Segment> CreateSegmentListFromUniqueIds(IEnumerable<KeyValuePair<int, int?>> uniqueIds)

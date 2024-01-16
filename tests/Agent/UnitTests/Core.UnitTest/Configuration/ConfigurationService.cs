@@ -8,9 +8,6 @@ using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
@@ -45,7 +42,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
                 }
 
-                Assert.IsTrue(wasCalled);
+                ClassicAssert.IsTrue(wasCalled);
             }
         }
 
@@ -66,7 +63,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                ClassicAssert.IsTrue(wasCalled);
             }
         }
 
@@ -84,7 +81,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                ClassicAssert.IsTrue(wasCalled);
             }
 
         }
@@ -117,7 +114,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsTrue(wasCalled);
+                ClassicAssert.IsTrue(wasCalled);
             }
 
             [Test]
@@ -132,7 +129,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsFalse(wasCalled);
+                ClassicAssert.IsFalse(wasCalled);
             }
         }
 
@@ -160,7 +157,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
+                ClassicAssert.NotNull(configuration);
             }
 
             [Test]
@@ -177,8 +174,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
-                Assert.AreEqual(TimeSpan.FromSeconds(42), configuration.TransactionTraceApdexT);
+                ClassicAssert.NotNull(configuration);
+                ClassicAssert.AreEqual(TimeSpan.FromSeconds(42), configuration.TransactionTraceApdexT);
             }
         }
     }

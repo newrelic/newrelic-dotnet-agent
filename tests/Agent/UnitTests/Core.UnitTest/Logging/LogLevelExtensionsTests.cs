@@ -1,8 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
 using Serilog.Events;
 using Telerik.JustMock;
 using ILogger = Serilog.ILogger;

@@ -1,14 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
 using Telerik.JustMock;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
@@ -64,9 +60,9 @@ namespace NewRelic.Agent.Core.Transformers
             _transformer.Transform(_sampleData);
 
             //Assert
-            Assert.AreEqual(_sampleTypesCount, generatedMetrics.Count, $"{_sampleTypesCount} metrics should have been generated, but {generatedMetrics.Count} were.");
-            Assert.IsFalse(generatedMetrics.Any(x => x.Value == null));
-            Assert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel == null));
+            ClassicAssert.AreEqual(_sampleTypesCount, generatedMetrics.Count, $"{_sampleTypesCount} metrics should have been generated, but {generatedMetrics.Count} were.");
+            ClassicAssert.IsFalse(generatedMetrics.Any(x => x.Value == null));
+            ClassicAssert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel == null));
         }
 
         /// <summary>
@@ -124,12 +120,12 @@ namespace NewRelic.Agent.Core.Transformers
             //Assert
             //Ensure that all of the sample types have a corresponding expected metric shape
             //A failure here indicates that new GCSampleTypes have been added, but the type of metric that it generates has not been identified.
-            Assert.AreEqual(_sampleTypesCount, expectationsDict.Count, "Not all GCSampleTypes have a metric shape associated with them.  expectationsDic is missing entries");
+            ClassicAssert.AreEqual(_sampleTypesCount, expectationsDict.Count, "Not all GCSampleTypes have a metric shape associated with them.  expectationsDic is missing entries");
 
             //Validate that each SampleType generated the expected MetricType
             foreach (var q in expectationsDict)
             {
-                Assert.Contains(q.Key, q.Value, $"GC Sample Type {q.Key} was not of the expected metric type.");
+                ClassicAssert.Contains(q.Key, q.Value, $"GC Sample Type {q.Key} was not of the expected metric type.");
             }
         }
 
@@ -160,7 +156,7 @@ namespace NewRelic.Agent.Core.Transformers
             //Act
             _transformer.Transform(_sampleData);
 
-            Assert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel.Value0 < 0));
+            ClassicAssert.IsFalse(generatedMetrics.Any(x => x.Value.DataModel.Value0 < 0));
         }
     }
 }

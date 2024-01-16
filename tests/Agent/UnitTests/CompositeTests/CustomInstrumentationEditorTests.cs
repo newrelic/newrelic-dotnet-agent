@@ -1,12 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace CompositeTests

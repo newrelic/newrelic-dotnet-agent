@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Utilities
 {
     public class Class_DisposableCollection
@@ -41,8 +38,8 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Dispose();
 
             // ASSERT
-            Assert.IsTrue(_disposable1.HasBeenDisposed);
-            Assert.IsTrue(_disposable2.HasBeenDisposed);
+            ClassicAssert.IsTrue(_disposable1.HasBeenDisposed);
+            ClassicAssert.IsTrue(_disposable2.HasBeenDisposed);
         }
 
         [Test]
@@ -52,7 +49,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Dispose();
 
             // ASSERT
-            Assert.IsEmpty(_disposableCollection);
+            ClassicAssert.IsEmpty(_disposableCollection);
         }
 
         [Test]
@@ -62,7 +59,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Add(null);
 
             // ASSERT
-            Assert.AreEqual(2, _disposableCollection.Count);
+            ClassicAssert.AreEqual(2, _disposableCollection.Count);
         }
 
         [Test]
@@ -82,8 +79,8 @@ namespace NewRelic.Agent.Core.Utilities
             }
 
             // ASSERT
-            Assert.IsTrue(disposable1Seen);
-            Assert.IsTrue(disposable2Seen);
+            ClassicAssert.IsTrue(disposable1Seen);
+            ClassicAssert.IsTrue(disposable2Seen);
         }
 
         [Test]
@@ -93,8 +90,8 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Clear();
 
             // ASSERT
-            Assert.IsTrue(_disposable1.HasBeenDisposed);
-            Assert.IsTrue(_disposable2.HasBeenDisposed);
+            ClassicAssert.IsTrue(_disposable1.HasBeenDisposed);
+            ClassicAssert.IsTrue(_disposable2.HasBeenDisposed);
         }
 
         [Test]
@@ -104,7 +101,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Clear();
 
             // ASSERT
-            Assert.IsEmpty(_disposableCollection);
+            ClassicAssert.IsEmpty(_disposableCollection);
         }
 
         [Test]
@@ -114,7 +111,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Contains(_disposable1);
 
             // ASSERT
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -124,7 +121,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Contains(new Disposable());
 
             // ASSERT
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -134,7 +131,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Contains(null);
 
             // ASSERT
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -157,15 +154,15 @@ namespace NewRelic.Agent.Core.Utilities
                     disposable2Found = true;
             }
 
-            Assert.IsTrue(disposable1Found);
-            Assert.IsTrue(disposable2Found);
+            ClassicAssert.IsTrue(disposable1Found);
+            ClassicAssert.IsTrue(disposable2Found);
         }
 
         [Test]
         public void IsReadOnly_returns_false()
         {
             // ASSERT
-            Assert.IsFalse(_disposableCollection.IsReadOnly);
+            ClassicAssert.IsFalse(_disposableCollection.IsReadOnly);
         }
 
         [Test]
@@ -175,7 +172,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Remove(null);
 
             // ASSERT
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -185,7 +182,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Remove(null);
 
             // ASSERT
-            Assert.AreEqual(2, _disposableCollection.Count);
+            ClassicAssert.AreEqual(2, _disposableCollection.Count);
         }
 
         [Test]
@@ -195,7 +192,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Remove(new Disposable());
 
             // ASSERT
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -205,7 +202,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Remove(new Disposable());
 
             // ASSERT
-            Assert.AreEqual(2, _disposableCollection.Count);
+            ClassicAssert.AreEqual(2, _disposableCollection.Count);
         }
 
         [Test]
@@ -215,7 +212,7 @@ namespace NewRelic.Agent.Core.Utilities
             var result = _disposableCollection.Remove(_disposable1);
 
             // ASSERT
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -225,7 +222,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Remove(_disposable1);
 
             // ASSERT
-            Assert.AreEqual(1, _disposableCollection.Count);
+            ClassicAssert.AreEqual(1, _disposableCollection.Count);
         }
 
         [Test]
@@ -235,7 +232,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Remove(_disposable1);
 
             // ASSERT
-            Assert.IsTrue(_disposable1.HasBeenDisposed);
+            ClassicAssert.IsTrue(_disposable1.HasBeenDisposed);
         }
 
         [Test]
@@ -245,7 +242,7 @@ namespace NewRelic.Agent.Core.Utilities
             _disposableCollection.Remove(_disposable1);
 
             // ASSERT
-            Assert.IsFalse(_disposable2.HasBeenDisposed);
+            ClassicAssert.IsFalse(_disposable2.HasBeenDisposed);
         }
 
     }

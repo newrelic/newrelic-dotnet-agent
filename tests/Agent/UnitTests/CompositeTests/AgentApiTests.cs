@@ -13,10 +13,6 @@ using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Primitives;
 
 namespace CompositeTests
@@ -95,7 +91,7 @@ namespace CompositeTests
 
             // ASSERT
             var customEvents = _compositeTestAgent.CustomEvents;
-            Assert.IsEmpty(customEvents);
+            ClassicAssert.IsEmpty(customEvents);
         }
 
         [Test]
@@ -280,10 +276,10 @@ namespace CompositeTests
 
             // ASSERT
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
-            Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
             var expectedErrorAttributes = new List<ExpectedAttribute>
             {
@@ -292,15 +288,15 @@ namespace CompositeTests
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -334,10 +330,10 @@ namespace CompositeTests
             // ASSERT
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
-            Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
             var expectedErrorAttributes = new List<ExpectedAttribute>
             {
@@ -346,15 +342,15 @@ namespace CompositeTests
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -388,10 +384,10 @@ namespace CompositeTests
             // ASSERT
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
-            Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
             var expectedErrorAttributes = new List<ExpectedAttribute>
             {
@@ -400,15 +396,15 @@ namespace CompositeTests
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -432,16 +428,16 @@ namespace CompositeTests
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
 
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
         [Test]
@@ -458,16 +454,16 @@ namespace CompositeTests
             // ASSERT
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
 
@@ -486,16 +482,16 @@ namespace CompositeTests
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.UserAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
 
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
         [Test]
@@ -534,9 +530,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -544,12 +540,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -600,9 +596,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -610,12 +606,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -666,9 +662,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -676,12 +672,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -713,16 +709,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
 
@@ -753,16 +749,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
         [Test]
@@ -784,16 +780,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
         [Test]
@@ -815,16 +811,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
         }
 
         [Test]
@@ -863,9 +859,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -873,12 +869,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -929,9 +925,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -939,12 +935,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -995,9 +991,9 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
             ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -1005,12 +1001,12 @@ namespace CompositeTests
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
-            Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes()["spanId"]);
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            ClassicAssert.AreEqual(2, spanEvents.Length);
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -1038,16 +1034,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
         }
 
 
@@ -1077,16 +1073,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(ExceptionMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(ExceptionMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes()["error.message"]);
         }
 
 
@@ -1109,16 +1105,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
         }
 
         [Test]
@@ -1140,16 +1136,16 @@ namespace CompositeTests
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-            Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-            Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-            Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+            ClassicAssert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+            ClassicAssert.IsEmpty(errorTrace.Attributes.Intrinsics);
             ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
-            Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
+            ClassicAssert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes()["transactionName"]);
+            ClassicAssert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes()["error.message"]);
         }
 
         [Test]
@@ -1565,8 +1561,8 @@ namespace CompositeTests
             };
 
             MetricAssertions.MetricsDoNotExist(unexpectedMetrics, actualMetrics);
-            Assert.IsEmpty(_compositeTestAgent.TransactionTraces);
-            Assert.IsEmpty(_compositeTestAgent.TransactionEvents);
+            ClassicAssert.IsEmpty(_compositeTestAgent.TransactionTraces);
+            ClassicAssert.IsEmpty(_compositeTestAgent.TransactionEvents);
         }
 
         #endregion
@@ -1634,7 +1630,7 @@ namespace CompositeTests
                 new ExpectedCountMetric { Name = "Supportability/ApiInvocation/GetBrowserTimingHeader", CallCount = 1 }
             };
 
-            Assert.IsTrue(browserHeader.Contains("NREUM")); // Asserting that the header DOES contains a known RUM identifier
+            ClassicAssert.IsTrue(browserHeader.Contains("NREUM")); // Asserting that the header DOES contains a known RUM identifier
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
         }
 
@@ -1662,9 +1658,9 @@ namespace CompositeTests
             transaction.End();
 
 
-            Assert.AreNotEqual(string.Empty, firstHeader);
-            Assert.AreEqual(string.Empty, secondHeader);
-            Assert.AreEqual(string.Empty, thirdHeader);
+            ClassicAssert.AreNotEqual(string.Empty, firstHeader);
+            ClassicAssert.AreEqual(string.Empty, secondHeader);
+            ClassicAssert.AreEqual(string.Empty, thirdHeader);
         }
 
         #endregion
@@ -1697,7 +1693,7 @@ namespace CompositeTests
                 new ExpectedCountMetric { Name = "Supportability/ApiInvocation/DisableBrowserMonitoring", CallCount = 1 }
             };
 
-            Assert.IsEmpty(browserHeader); // Asserting that the header DOES NOT contains a known RUM identifier
+            ClassicAssert.IsEmpty(browserHeader); // Asserting that the header DOES NOT contains a known RUM identifier
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
         }
 
@@ -1738,7 +1734,7 @@ namespace CompositeTests
             _compositeTestAgent.PushConfiguration();
             var appNames = _compositeTestAgent.CurrentConfiguration.ApplicationNames;
 
-            Assert.True(appNames.Contains("MyApplicationName"));
+            Assert.That(appNames.Contains("MyApplicationName"));
         }
 
         #endregion
@@ -1755,7 +1751,7 @@ namespace CompositeTests
             _compositeTestAgent.PushConfiguration();
             var errorGroupCallback = _compositeTestAgent.CurrentConfiguration.ErrorGroupCallback;
 
-            Assert.AreSame(myCallback, errorGroupCallback);
+            ClassicAssert.AreSame(myCallback, errorGroupCallback);
         }
 
         #endregion
@@ -1786,24 +1782,24 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             // ASSERT
-            Assert.IsTrue(requestMetadata.Count() == 2);
+            ClassicAssert.IsTrue(requestMetadata.Count() == 2);
             NrAssert.Multiple(
-                () => Assert.IsTrue(requestMetadata.ContainsKey(NewRelicIdHttpHeader)),
-                () => Assert.IsTrue(requestMetadata.ContainsKey(TransactionDataHttpHeader))
+                () => ClassicAssert.IsTrue(requestMetadata.ContainsKey(NewRelicIdHttpHeader)),
+                () => ClassicAssert.IsTrue(requestMetadata.ContainsKey(TransactionDataHttpHeader))
                 );
 
             var crossProcessId = Strings.TryBase64Decode(requestMetadata[NewRelicIdHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
-            Assert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossProcessId);
+            ClassicAssert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossProcessId);
 
             var crossApplicationRequestData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(requestMetadata[TransactionDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 
-            Assert.NotNull(crossApplicationRequestData);
+            ClassicAssert.NotNull(crossApplicationRequestData);
 
             NrAssert.Multiple(
-                () => Assert.NotNull(crossApplicationRequestData.TransactionGuid),
-                () => Assert.AreEqual(false, crossApplicationRequestData.Unused),
-                () => Assert.NotNull(crossApplicationRequestData.TripId),
-                () => Assert.NotNull(crossApplicationRequestData.PathHash)
+                () => ClassicAssert.NotNull(crossApplicationRequestData.TransactionGuid),
+                () => ClassicAssert.AreEqual(false, crossApplicationRequestData.Unused),
+                () => ClassicAssert.NotNull(crossApplicationRequestData.TripId),
+                () => ClassicAssert.NotNull(crossApplicationRequestData.PathHash)
                 );
         }
         #endregion
@@ -1840,20 +1836,20 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             // ASSERT
-            Assert.IsTrue(responseMetadata.Count() == 1);
-            Assert.IsTrue(responseMetadata.ContainsKey(AppDataHttpHeader));
+            ClassicAssert.IsTrue(responseMetadata.Count() == 1);
+            ClassicAssert.IsTrue(responseMetadata.ContainsKey(AppDataHttpHeader));
 
             var crossApplicationResponseData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 
-            Assert.NotNull(crossApplicationResponseData);
+            ClassicAssert.NotNull(crossApplicationResponseData);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossApplicationResponseData.CrossProcessId),
-                () => Assert.AreEqual("WebTransaction/StatusCode/300", crossApplicationResponseData.TransactionName),
-                () => Assert.NotNull(crossApplicationResponseData.QueueTimeInSeconds),
-                () => Assert.IsTrue(crossApplicationResponseData.ResponseTimeInSeconds > 0),
-                () => Assert.NotNull(crossApplicationResponseData.ContentLength),
-                () => Assert.NotNull(crossApplicationResponseData.TransactionGuid)
+                () => ClassicAssert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossApplicationResponseData.CrossProcessId),
+                () => ClassicAssert.AreEqual("WebTransaction/StatusCode/300", crossApplicationResponseData.TransactionName),
+                () => ClassicAssert.NotNull(crossApplicationResponseData.QueueTimeInSeconds),
+                () => ClassicAssert.IsTrue(crossApplicationResponseData.ResponseTimeInSeconds > 0),
+                () => ClassicAssert.NotNull(crossApplicationResponseData.ContentLength),
+                () => ClassicAssert.NotNull(crossApplicationResponseData.TransactionGuid)
                 );
 
             IEnumerable<string> GetHeaderValue(IEnumerable<KeyValuePair<string, string>> carrier, string key)
@@ -1888,8 +1884,8 @@ namespace CompositeTests
             AgentApi.InitializePublicAgent(agent);
 
             //ASSERT
-            Assert.NotNull(agent.WrappedAgent);
-            Assert.IsInstanceOf<AgentBridgeApi>(agent.WrappedAgent);
+            ClassicAssert.NotNull(agent.WrappedAgent);
+            ClassicAssert.IsInstanceOf<AgentBridgeApi>(agent.WrappedAgent);
         }
 
         public class DummyAgent
@@ -1925,9 +1921,9 @@ namespace CompositeTests
             var transactionAttributes = transactionEvent.IntrinsicAttributes();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(transactionAttributes["traceId"], traceId),
-                () => Assert.AreEqual(segment.SpanId, spanId),
-                () => Assert.AreEqual(transactionAttributes["sampled"], isSampled)
+                () => ClassicAssert.AreEqual(transactionAttributes["traceId"], traceId),
+                () => ClassicAssert.AreEqual(segment.SpanId, spanId),
+                () => ClassicAssert.AreEqual(transactionAttributes["sampled"], isSampled)
             );
         }
 
@@ -1947,9 +1943,9 @@ namespace CompositeTests
             var isSampled = traceMetadata.IsSampled;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(string.Empty, traceId),
-                () => Assert.AreEqual(string.Empty, spanId),
-                () => Assert.AreEqual(false, isSampled)
+                () => ClassicAssert.AreEqual(string.Empty, traceId),
+                () => ClassicAssert.AreEqual(string.Empty, spanId),
+                () => ClassicAssert.AreEqual(false, isSampled)
             );
         }
 
@@ -1973,12 +1969,12 @@ namespace CompositeTests
             Dictionary<string, string> linkingMetadata = agentWrapperApi.GetLinkingMetadata();
 
             NrAssert.Multiple(
-                () => Assert.IsFalse(linkingMetadata.ContainsKey("trace.id"), "Key trace.id should not be found"),
-                () => Assert.IsFalse(linkingMetadata.ContainsKey("span.id"), "Key span.id should not be found"),
-                () => Assert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
-                () => Assert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
-                () => Assert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
-                () => Assert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname was empty")
+                () => ClassicAssert.IsFalse(linkingMetadata.ContainsKey("trace.id"), "Key trace.id should not be found"),
+                () => ClassicAssert.IsFalse(linkingMetadata.ContainsKey("span.id"), "Key span.id should not be found"),
+                () => ClassicAssert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
+                () => ClassicAssert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
+                () => ClassicAssert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
+                () => ClassicAssert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname was empty")
             );
         }
 
@@ -1995,13 +1991,13 @@ namespace CompositeTests
             Dictionary<string, string> linkingMetadata = agentWrapperApi.GetLinkingMetadata();
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(linkingMetadata.ContainsKey("trace.id"), "Key trace.id not found"),
-                () => Assert.IsNotEmpty(linkingMetadata["trace.id"]),
-                () => Assert.AreEqual(linkingMetadata["span.id"], segment.SpanId),
-                () => Assert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
-                () => Assert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
-                () => Assert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
-                () => Assert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname is empty")
+                () => ClassicAssert.IsTrue(linkingMetadata.ContainsKey("trace.id"), "Key trace.id not found"),
+                () => ClassicAssert.IsNotEmpty(linkingMetadata["trace.id"]),
+                () => ClassicAssert.AreEqual(linkingMetadata["span.id"], segment.SpanId),
+                () => ClassicAssert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
+                () => ClassicAssert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
+                () => ClassicAssert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
+                () => ClassicAssert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname is empty")
             );
         }
 
@@ -2069,7 +2065,7 @@ namespace CompositeTests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allSpans.Count),
+                () => ClassicAssert.AreEqual(2, allSpans.Count),
                 () => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, testSpan),
                 () => SpanAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, testSpan)
             );

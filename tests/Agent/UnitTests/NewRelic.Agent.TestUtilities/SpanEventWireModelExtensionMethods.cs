@@ -4,7 +4,6 @@
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace NewRelic.Agent.TestUtilities
 {

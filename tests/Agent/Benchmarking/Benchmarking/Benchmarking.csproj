@@ -11,8 +11,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBench" Version="0.3.4.0" />
-    <PackageReference Include="NBench.Runner" Version="0.3.4.0" />
+    <PackageReference Include="NBench" Version="2.0.1" />
+    <PackageReference Include="NBench.Runner" Version="1.2.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>  

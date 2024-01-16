@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -97,7 +95,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -176,7 +174,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -207,7 +205,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 
         }
 
@@ -231,7 +229,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"ip_address", new[] { "1.2.3.4","5.6.7.8" }}
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -254,7 +252,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -285,7 +283,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -314,7 +312,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            ClassicAssert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         //Same method used in main code, except this one take the config vs having it be global.

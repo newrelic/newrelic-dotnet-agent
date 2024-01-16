@@ -26,12 +26,7 @@ using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
@@ -131,17 +126,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(11, transactionAttributes.Count()),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.NotNull(transactionAttributes["nr.tripId"]),
-                () => Assert.NotNull(transactionAttributes["trip_id"]),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(11, transactionAttributes.Count()),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", transactionAttributes["type"]),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+                () => ClassicAssert.AreEqual(0.5f, transactionAttributes["duration"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["totalTime"]),
+                () => ClassicAssert.NotNull(transactionAttributes["nr.tripId"]),
+                () => ClassicAssert.NotNull(transactionAttributes["trip_id"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -170,20 +165,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(13, transactionAttributes.Count()),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.NotNull(transactionAttributes["nr.tripId"]),
-                () => Assert.NotNull(transactionAttributes["databaseDuration"]),
-                () => Assert.AreEqual(5, transactionAttributes["databaseDuration"]),
-                () => Assert.NotNull(transactionAttributes["databaseCallCount"]),
-                () => Assert.AreEqual(1, transactionAttributes["databaseCallCount"]),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(13, transactionAttributes.Count()),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", transactionAttributes["type"]),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+                () => ClassicAssert.AreEqual(0.5f, transactionAttributes["duration"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["totalTime"]),
+                () => ClassicAssert.NotNull(transactionAttributes["nr.tripId"]),
+                () => ClassicAssert.NotNull(transactionAttributes["databaseDuration"]),
+                () => ClassicAssert.AreEqual(5, transactionAttributes["databaseDuration"]),
+                () => ClassicAssert.NotNull(transactionAttributes["databaseCallCount"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["databaseCallCount"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -215,20 +210,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.NotNull(transactionAttributes["nr.tripId"]),
-                () => Assert.NotNull(transactionAttributes["databaseDuration"]),
-                () => Assert.AreEqual(11, transactionAttributes["databaseDuration"]),
-                () => Assert.NotNull(transactionAttributes["databaseCallCount"]),
-                () => Assert.AreEqual(3, transactionAttributes["databaseCallCount"]),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", transactionAttributes["type"]),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+                () => ClassicAssert.AreEqual(0.5f, transactionAttributes["duration"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["totalTime"]),
+                () => ClassicAssert.NotNull(transactionAttributes["nr.tripId"]),
+                () => ClassicAssert.NotNull(transactionAttributes["databaseDuration"]),
+                () => ClassicAssert.AreEqual(11, transactionAttributes["databaseDuration"]),
+                () => ClassicAssert.NotNull(transactionAttributes["databaseCallCount"]),
+                () => ClassicAssert.AreEqual(3, transactionAttributes["databaseCallCount"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -257,20 +252,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.NotNull(transactionAttributes["nr.tripId"]),
-                () => Assert.NotNull(transactionAttributes["externalDuration"]),
-                () => Assert.AreEqual(5, transactionAttributes["externalDuration"]),
-                () => Assert.NotNull(transactionAttributes["externalCallCount"]),
-                () => Assert.AreEqual(1, transactionAttributes["externalCallCount"]),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", transactionAttributes["type"]),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+                () => ClassicAssert.AreEqual(0.5f, transactionAttributes["duration"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["totalTime"]),
+                () => ClassicAssert.NotNull(transactionAttributes["nr.tripId"]),
+                () => ClassicAssert.NotNull(transactionAttributes["externalDuration"]),
+                () => ClassicAssert.AreEqual(5, transactionAttributes["externalDuration"]),
+                () => ClassicAssert.NotNull(transactionAttributes["externalCallCount"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["externalCallCount"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -302,20 +297,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.NotNull(transactionAttributes["nr.tripId"]),
-                () => Assert.NotNull(transactionAttributes["externalDuration"]),
-                () => Assert.AreEqual(11, transactionAttributes["externalDuration"]),
-                () => Assert.NotNull(transactionAttributes["externalCallCount"]),
-                () => Assert.AreEqual(3, transactionAttributes["externalCallCount"]),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(13, transactionAttributes.Count),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", transactionAttributes["type"]),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+                () => ClassicAssert.AreEqual(0.5f, transactionAttributes["duration"]),
+                () => ClassicAssert.AreEqual(1, transactionAttributes["totalTime"]),
+                () => ClassicAssert.NotNull(transactionAttributes["nr.tripId"]),
+                () => ClassicAssert.NotNull(transactionAttributes["externalDuration"]),
+                () => ClassicAssert.AreEqual(11, transactionAttributes["externalDuration"]),
+                () => ClassicAssert.NotNull(transactionAttributes["externalCallCount"]),
+                () => ClassicAssert.AreEqual(3, transactionAttributes["externalCallCount"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -383,56 +378,56 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(44, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual(immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.NoticedAt.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent)),
-                () => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
-                () => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
-                () => Assert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
-                () => Assert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
-                () => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
-                () => Assert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
-                () => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
-                () => Assert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "externalCallCount")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
-                () => Assert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
-                () => Assert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
-                () => Assert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
-                () => Assert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
-                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "response.status")),
-                () => Assert.AreEqual(400, GetAttributeValue(transactionAttributes, "http.statusCode")),
-                () => Assert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
-                () => Assert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
-                () => Assert.AreEqual("referrerProcessId", GetAttributeValue(transactionAttributes, "client_cross_process_id")),
-                () => Assert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "trip_id")),
-                () => Assert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "nr.tripId")),
-                () => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
-                () => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
-                () => Assert.AreEqual("referringPathHash", GetAttributeValue(transactionAttributes, "nr.referringPathHash")),
-                () => Assert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "referring_transaction_guid")),
-                () => Assert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "nr.referringTransactionGuid")),
-                () => Assert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
-                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.class")),
-                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorType")),
+                () => ClassicAssert.AreEqual(44, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual(immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.NoticedAt.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent)),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
+                () => ClassicAssert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
+                () => ClassicAssert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
+                () => ClassicAssert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
+                () => ClassicAssert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
+                () => ClassicAssert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
+                () => ClassicAssert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "externalCallCount")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
+                () => ClassicAssert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
+                () => ClassicAssert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
+                () => ClassicAssert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
+                () => ClassicAssert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
+                () => ClassicAssert.AreEqual("400", GetAttributeValue(transactionAttributes, "response.status")),
+                () => ClassicAssert.AreEqual(400, GetAttributeValue(transactionAttributes, "http.statusCode")),
+                () => ClassicAssert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
+                () => ClassicAssert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
+                () => ClassicAssert.AreEqual("referrerProcessId", GetAttributeValue(transactionAttributes, "client_cross_process_id")),
+                () => ClassicAssert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "trip_id")),
+                () => ClassicAssert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "nr.tripId")),
+                () => ClassicAssert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
+                () => ClassicAssert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
+                () => ClassicAssert.AreEqual("referringPathHash", GetAttributeValue(transactionAttributes, "nr.referringPathHash")),
+                () => ClassicAssert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "referring_transaction_guid")),
+                () => ClassicAssert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "nr.referringTransactionGuid")),
+                () => ClassicAssert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
+                () => ClassicAssert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.class")),
+                () => ClassicAssert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorType")),
 #if NET
-                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorMessage")),
-                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.message")),
+                () => ClassicAssert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorMessage")),
+                () => ClassicAssert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.message")),
 #else
-                () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
-                () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
+                () => ClassicAssert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
+                () => ClassicAssert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
 #endif
-                () => Assert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName")),
-                () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
-                () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
-                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
-                () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4")),
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")), //test to make sure query string is removed.
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")), //test to make sure query string is removed.
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh")) //test to make sure query string is removed.
+                () => ClassicAssert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "host.displayName")),
+                () => ClassicAssert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
+                () => ClassicAssert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
+                () => ClassicAssert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
+                () => ClassicAssert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4")),
+                () => ClassicAssert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")), //test to make sure query string is removed.
+                () => ClassicAssert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")), //test to make sure query string is removed.
+                () => ClassicAssert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh")) //test to make sure query string is removed.
             );
         }
 
@@ -483,12 +478,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(15, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(15, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
 
-                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key1")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key2")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key3")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key4"))
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "request.headers.key1")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "request.headers.key2")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "request.headers.key3")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "request.headers.key4"))
             );
         }
 
@@ -530,33 +525,33 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var tripId = immutableTransaction.Guid;
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
-                () => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
-                () => Assert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
-                () => Assert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
-                () => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
-                () => Assert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
-                () => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
-                () => Assert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "externalCallCount")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
-                () => Assert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
-                () => Assert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
-                () => Assert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
-                () => Assert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
-                () => Assert.AreEqual("200", GetAttributeValue(transactionAttributes, "response.status")),
-                () => Assert.AreEqual(200, GetAttributeValue(transactionAttributes, "http.statusCode")),
-                () => Assert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
-                () => Assert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
-                () => Assert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "trip_id")),
-                () => Assert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "nr.tripId")),
-                () => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
-                () => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
-                () => Assert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName"))
+                () => ClassicAssert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
+                () => ClassicAssert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
+                () => ClassicAssert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
+                () => ClassicAssert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
+                () => ClassicAssert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
+                () => ClassicAssert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
+                () => ClassicAssert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "externalCallCount")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
+                () => ClassicAssert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
+                () => ClassicAssert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
+                () => ClassicAssert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
+                () => ClassicAssert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
+                () => ClassicAssert.AreEqual("200", GetAttributeValue(transactionAttributes, "response.status")),
+                () => ClassicAssert.AreEqual(200, GetAttributeValue(transactionAttributes, "http.statusCode")),
+                () => ClassicAssert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
+                () => ClassicAssert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
+                () => ClassicAssert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "trip_id")),
+                () => ClassicAssert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "nr.tripId")),
+                () => ClassicAssert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
+                () => ClassicAssert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
+                () => ClassicAssert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
+                () => Assert.That(DoAttributesContain(transactionAttributes, "host.displayName"))
             );
         }
 
@@ -587,7 +582,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 
             // ASSERT
-            Assert.False(DoAttributesContain(transactionAttributes, "originalUri"));
+            ClassicAssert.False(DoAttributesContain(transactionAttributes, "originalUri"));
         }
 
         [Test]
@@ -629,7 +624,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(38, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(38, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "type", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.CustomEvent, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "name", AttributeDestinations.TransactionEvent),
@@ -708,7 +703,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(31, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(31, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => CollectionAssert.Contains(transactionAttributes, "type"),
                 () => CollectionAssert.Contains(transactionAttributes, "timestamp"),
                 () => CollectionAssert.Contains(transactionAttributes, "name"),
@@ -787,7 +782,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(33, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(33, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "type", AttributeDestinations.TransactionEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent, AttributeDestinations.CustomEvent),
                 () => CollectionAssert.Contains(intrinsicAttributes, "name"),
@@ -840,7 +835,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transactionAttributes = attributes.ToDictionary();
 
             // ASSERT
-            Assert.False(DoAttributesContain(attributes,"webDuration"));
+            ClassicAssert.False(DoAttributesContain(attributes,"webDuration"));
         }
 
         [Test]
@@ -871,12 +866,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "error.class")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "errorType")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "errorMessage")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "error.message")),
-                () => Assert.False(DoAttributesContain(transactionAttributes, "error"))
+                () => Assert.That(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "error.class")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "errorType")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "errorMessage")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "error.message")),
+                () => ClassicAssert.False(DoAttributesContain(transactionAttributes, "error"))
             );
         }
 
@@ -906,7 +901,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, GetAttributeValue(transactionAttributes, "error"))
+                () => ClassicAssert.AreEqual(false, GetAttributeValue(transactionAttributes, "error"))
             );
         }
 
@@ -940,7 +935,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             }
             else
             {
-                Assert.False(DoAttributesContain(attributes, "error.expected"));
+                ClassicAssert.False(DoAttributesContain(attributes, "error.expected"));
             }
         }
 
@@ -985,8 +980,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.False(intrinsicAttribs.ContainsKey("nr.tripId"), "nr.tripId should not have been included"),
-                () => Assert.False(intrinsicAttribs.ContainsKey("trip_id"), "trip_id should not have been included")
+                () => ClassicAssert.False(intrinsicAttribs.ContainsKey("nr.tripId"), "nr.tripId should not have been included"),
+                () => ClassicAssert.False(intrinsicAttribs.ContainsKey("trip_id"), "trip_id should not have been included")
             );
         }
 
@@ -1014,35 +1009,35 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", intrinsicAttribValues["type"]),
-                () => Assert.True(intrinsicAttribValues.ContainsKey("timestamp")),
-                () => Assert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["transactionName"]),
-                () => Assert.True(intrinsicAttribValues.ContainsKey("duration")),
-                () => Assert.AreEqual(1, intrinsicAttribValues["totalTime"]),
-                () => Assert.True(intrinsicAttribValues.ContainsKey("webDuration")),
-                () => Assert.True(intrinsicAttribValues.ContainsKey("nr.apdexPerfZone")),
-                () => Assert.AreEqual("/Unknown", agentAttribValues["request.uri"]),
-                () => Assert.AreEqual(IncomingTraceId, intrinsicAttribValues["traceId"]),
-                () => Assert.AreEqual(IncomingType.ToString(), intrinsicAttribValues["parent.type"]),
-                () => Assert.AreEqual(IncomingAppId, intrinsicAttribValues["parent.app"]),
-                () => Assert.AreEqual(IncomingAcctId, intrinsicAttribValues["parent.account"]),
-                () => Assert.AreEqual(IncomingTransportType, intrinsicAttribValues["parent.transportType"]),
-                () => Assert.True(intrinsicAttribValues.ContainsKey("parent.transportDuration")),
+                () => ClassicAssert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("Transaction", intrinsicAttribValues["type"]),
+                () => Assert.That(intrinsicAttribValues.ContainsKey("timestamp")),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["name"]),
+                () => ClassicAssert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["transactionName"]),
+                () => Assert.That(intrinsicAttribValues.ContainsKey("duration")),
+                () => ClassicAssert.AreEqual(1, intrinsicAttribValues["totalTime"]),
+                () => Assert.That(intrinsicAttribValues.ContainsKey("webDuration")),
+                () => Assert.That(intrinsicAttribValues.ContainsKey("nr.apdexPerfZone")),
+                () => ClassicAssert.AreEqual("/Unknown", agentAttribValues["request.uri"]),
+                () => ClassicAssert.AreEqual(IncomingTraceId, intrinsicAttribValues["traceId"]),
+                () => ClassicAssert.AreEqual(IncomingType.ToString(), intrinsicAttribValues["parent.type"]),
+                () => ClassicAssert.AreEqual(IncomingAppId, intrinsicAttribValues["parent.app"]),
+                () => ClassicAssert.AreEqual(IncomingAcctId, intrinsicAttribValues["parent.account"]),
+                () => ClassicAssert.AreEqual(IncomingTransportType, intrinsicAttribValues["parent.transportType"]),
+                () => Assert.That(intrinsicAttribValues.ContainsKey("parent.transportDuration")),
 
-                () => Assert.AreEqual(IncomingType.ToString(), agentAttribValues["parent.type"]),
-                () => Assert.AreEqual(IncomingAppId, agentAttribValues["parent.app"]),
-                () => Assert.AreEqual(IncomingAcctId, agentAttribValues["parent.account"]),
-                () => Assert.AreEqual(IncomingTransportType, agentAttribValues["parent.transportType"]),
-                () => Assert.True(agentAttribValues.ContainsKey("parent.transportDuration")),
+                () => ClassicAssert.AreEqual(IncomingType.ToString(), agentAttribValues["parent.type"]),
+                () => ClassicAssert.AreEqual(IncomingAppId, agentAttribValues["parent.app"]),
+                () => ClassicAssert.AreEqual(IncomingAcctId, agentAttribValues["parent.account"]),
+                () => ClassicAssert.AreEqual(IncomingTransportType, agentAttribValues["parent.transportType"]),
+                () => Assert.That(agentAttribValues.ContainsKey("parent.transportDuration")),
 
-                () => Assert.AreEqual(IncomingTransactionId, intrinsicAttribValues["parentId"]),
-                () => Assert.AreEqual(immutableTransaction.Guid, intrinsicAttribValues["guid"]),
-                () => Assert.AreEqual(IncomingPriority, intrinsicAttribValues["priority"]),
-                () => Assert.AreEqual(IncomingSampled, intrinsicAttribValues["sampled"]),
-                () => Assert.AreEqual(IncomingGuid, intrinsicAttribValues["parentSpanId"]),
-                () => Assert.True(agentAttribValues.ContainsKey("host.displayName"))
+                () => ClassicAssert.AreEqual(IncomingTransactionId, intrinsicAttribValues["parentId"]),
+                () => ClassicAssert.AreEqual(immutableTransaction.Guid, intrinsicAttribValues["guid"]),
+                () => ClassicAssert.AreEqual(IncomingPriority, intrinsicAttribValues["priority"]),
+                () => ClassicAssert.AreEqual(IncomingSampled, intrinsicAttribValues["sampled"]),
+                () => ClassicAssert.AreEqual(IncomingGuid, intrinsicAttribValues["parentSpanId"]),
+                () => Assert.That(agentAttribValues.ContainsKey("host.displayName"))
             );
         }
 
@@ -1072,12 +1067,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.False(transactionAttributes.ContainsKey("parent.type")),
-                () => Assert.False(transactionAttributes.ContainsKey("parent.app")),
-                () => Assert.False(transactionAttributes.ContainsKey("parent.account")),
-                () => Assert.False(transactionAttributes.ContainsKey("parent.transportType")),
-                () => Assert.False(transactionAttributes.ContainsKey("parent.transportDuration")),
-                () => Assert.False(transactionAttributes.ContainsKey("parentId"))
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parent.type")),
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parent.app")),
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parent.account")),
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parent.transportType")),
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parent.transportDuration")),
+                () => ClassicAssert.False(transactionAttributes.ContainsKey("parentId"))
             );
         }
 
@@ -1103,13 +1098,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parent.type")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parent.app")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parent.account")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parent.transportType")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parent.transportDuration")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parentId")),
-                () => Assert.False(transactionIntrinsicsAttributes.ContainsKey("parentSpanId"))
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parent.type")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parent.app")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parent.account")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parent.transportType")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parent.transportDuration")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parentId")),
+                () => ClassicAssert.False(transactionIntrinsicsAttributes.ContainsKey("parentSpanId"))
             );
         }
 
@@ -1132,7 +1127,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes,"type", AttributeDestinations.TransactionEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes,"timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent, AttributeDestinations.CustomEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes,"name", AttributeDestinations.TransactionEvent),
@@ -1178,7 +1173,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(27, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => CollectionAssert.Contains(intrinsicAttributes, "type"),
                 () => CollectionAssert.Contains(intrinsicAttributes, "timestamp"),
                 () => CollectionAssert.Contains(intrinsicAttributes, "name"),
@@ -1223,9 +1218,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeClassification.Intrinsics)),
-                () => Assert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual(IncomingGuid, GetAttributeValue(attributes,ParentSpanIdAttributeName))
+                () => ClassicAssert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeClassification.Intrinsics)),
+                () => ClassicAssert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual(IncomingGuid, GetAttributeValue(attributes,ParentSpanIdAttributeName))
             );
         }
 
@@ -1248,9 +1243,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-               () => Assert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeClassification.Intrinsics)),
-               () => Assert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent)),
-               () => Assert.AreEqual(IncomingParentId, GetAttributeValue(attributes, ParentSpanIdAttributeName))
+               () => ClassicAssert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeClassification.Intrinsics)),
+               () => ClassicAssert.IsTrue(DoAttributesContain(attributes, ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent)),
+               () => ClassicAssert.AreEqual(IncomingParentId, GetAttributeValue(attributes, ParentSpanIdAttributeName))
             );
 
         }
@@ -1272,7 +1267,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ACT
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 
-            Assert.False(DoAttributesContain(attributes,ParentSpanIdAttributeName));
+            ClassicAssert.False(DoAttributesContain(attributes,ParentSpanIdAttributeName));
         }
 
         private static DistributedTracePayload BuildSampleDistributedTracePayload(string guid = IncomingGuid)
@@ -1408,30 +1403,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
-                () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
-                () => Assert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
-                () => Assert.AreEqual("1000", txBuilderAttributes["queue_wait_time_ms"]),
-                () => Assert.AreEqual("400", txBuilderAttributes["response.status"]),
-                () => Assert.AreEqual(400, txBuilderAttributes["http.statusCode"]),
-                () => Assert.AreEqual("requestParameterValue", txBuilderAttributes["request.parameters.requestParameterKey"]),
-                () => Assert.AreEqual("userAttributeValue", txBuilderAttributes["userAttributeKey"]),
-                () => Assert.AreEqual("userErrorAttributeValue", txBuilderAttributes["userErrorAttributeKey"]),
-                () => Assert.Contains("host.displayName", txBuilderAttributes.Keys)
+                () => ClassicAssert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
+                () => ClassicAssert.AreEqual("uri", transactionAttributes["request.uri"]),
+                () => ClassicAssert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
+                () => ClassicAssert.AreEqual("1000", txBuilderAttributes["queue_wait_time_ms"]),
+                () => ClassicAssert.AreEqual("400", txBuilderAttributes["response.status"]),
+                () => ClassicAssert.AreEqual(400, txBuilderAttributes["http.statusCode"]),
+                () => ClassicAssert.AreEqual("requestParameterValue", txBuilderAttributes["request.parameters.requestParameterKey"]),
+                () => ClassicAssert.AreEqual("userAttributeValue", txBuilderAttributes["userAttributeKey"]),
+                () => ClassicAssert.AreEqual("userErrorAttributeValue", txBuilderAttributes["userErrorAttributeKey"]),
+                () => ClassicAssert.Contains("host.displayName", txBuilderAttributes.Keys)
             );
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-                () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
-                () => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
-                () => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
-                () => Assert.AreEqual("400", transactionAttributes["response.status"]),
-                () => Assert.AreEqual(400, transactionAttributes["http.statusCode"]),
-                () => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-                () => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
-                () => Assert.AreEqual("userErrorAttributeValue", transactionAttributes["userErrorAttributeKey"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => ClassicAssert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual("originalUri", transactionAttributes["original_url"]),
+                () => ClassicAssert.AreEqual("uri", transactionAttributes["request.uri"]),
+                () => ClassicAssert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
+                () => ClassicAssert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
+                () => ClassicAssert.AreEqual("400", transactionAttributes["response.status"]),
+                () => ClassicAssert.AreEqual(400, transactionAttributes["http.statusCode"]),
+                () => ClassicAssert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
+                () => ClassicAssert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
+                () => ClassicAssert.AreEqual("userErrorAttributeValue", transactionAttributes["userErrorAttributeKey"]),
+                () => ClassicAssert.Contains("host.displayName", transactionAttributes.Keys)
             );
         }
 
@@ -1460,8 +1455,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.True(DoAttributesContain(attributes, "userAttributeKey")),
-                () => Assert.False(DoAttributesContain(attributes, "userErrorAttributeKey"))
+                () => Assert.That(DoAttributesContain(attributes, "userAttributeKey")),
+                () => ClassicAssert.False(DoAttributesContain(attributes, "userErrorAttributeKey"))
             );
         }
 
@@ -1493,8 +1488,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transactionAttributes = attributes.ToDictionary();
 
             // ASSERT
-            Assert.False(txBuilderAttributes.ContainsKey("originalUri"));
-            Assert.False(transactionAttributes.ContainsKey("originalUri"));
+            ClassicAssert.False(txBuilderAttributes.ContainsKey("originalUri"));
+            ClassicAssert.False(transactionAttributes.ContainsKey("originalUri"));
         }
 
         [Test]
@@ -1540,7 +1535,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "original_url" , AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace),
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "request.referer", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
@@ -1555,7 +1550,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "original_url", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "request.referer", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
@@ -1607,17 +1602,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => Assert.IsTrue(agentAttributes.ContainsKey("original_url")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("request.uri")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("request.referer")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("queue_wait_time_ms")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("response.status")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("http.statusCode")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("request.parameters.requestParameterKey")),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("host.displayName")),
-                () => Assert.IsTrue(userAttributes.ContainsKey("userAttributeKey")),
-                () => Assert.IsTrue(userAttributes.ContainsKey("userErrorAttributeKey"))
+                () => ClassicAssert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("original_url")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("request.uri")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("request.referer")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("queue_wait_time_ms")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("response.status")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("http.statusCode")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("request.parameters.requestParameterKey")),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("host.displayName")),
+                () => ClassicAssert.IsTrue(userAttributes.ContainsKey("userAttributeKey")),
+                () => ClassicAssert.IsTrue(userAttributes.ContainsKey("userErrorAttributeKey"))
             );
         }
 
@@ -1691,9 +1686,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes,"duration",AttributeClassification.Intrinsics)),
-                () => Assert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes, "webDuration", AttributeClassification.Intrinsics)),
-                () => Assert.AreEqual("S", GetAttributeValue(attributes, "nr.apdexPerfZone", AttributeClassification.Intrinsics))
+                () => ClassicAssert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes,"duration",AttributeClassification.Intrinsics)),
+                () => ClassicAssert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes, "webDuration", AttributeClassification.Intrinsics)),
+                () => ClassicAssert.AreEqual("S", GetAttributeValue(attributes, "nr.apdexPerfZone", AttributeClassification.Intrinsics))
             );
         }
 
@@ -1715,10 +1710,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes, "duration", AttributeClassification.Intrinsics)),
+                () => ClassicAssert.AreEqual(expectedResponseTimeInSeconds, GetAttributeValue(attributes, "duration", AttributeClassification.Intrinsics)),
                 //This is not a web transction
-                () => Assert.AreEqual(null, GetAttributeValue(attributes, "webDuration", AttributeClassification.Intrinsics)),
-                () => Assert.AreEqual("T", GetAttributeValue(attributes, "nr.apdexPerfZone", AttributeClassification.Intrinsics))
+                () => ClassicAssert.AreEqual(null, GetAttributeValue(attributes, "webDuration", AttributeClassification.Intrinsics)),
+                () => ClassicAssert.AreEqual("T", GetAttributeValue(attributes, "nr.apdexPerfZone", AttributeClassification.Intrinsics))
             );
         }
 

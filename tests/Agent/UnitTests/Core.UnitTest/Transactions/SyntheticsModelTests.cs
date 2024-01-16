@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Core;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transactions.UnitTest
 {
@@ -42,7 +39,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-            Assert.IsNull(syntheticsData);
+            ClassicAssert.IsNull(syntheticsData);
         }
 
         [Test]
@@ -53,7 +50,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-            Assert.IsNull(syntheticsData);
+            ClassicAssert.IsNull(syntheticsData);
         }
 
         [Test]
@@ -66,12 +63,12 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(syntheticsData),
-                () => Assert.AreEqual(1, syntheticsData.Version),
-                () => Assert.AreEqual(2, syntheticsData.AccountId),
-                () => Assert.AreEqual("3", syntheticsData.ResourceId),
-                () => Assert.AreEqual("4", syntheticsData.JobId),
-                () => Assert.AreEqual("5", syntheticsData.MonitorId)
+                () => ClassicAssert.IsNotNull(syntheticsData),
+                () => ClassicAssert.AreEqual(1, syntheticsData.Version),
+                () => ClassicAssert.AreEqual(2, syntheticsData.AccountId),
+                () => ClassicAssert.AreEqual("3", syntheticsData.ResourceId),
+                () => ClassicAssert.AreEqual("4", syntheticsData.JobId),
+                () => ClassicAssert.AreEqual("5", syntheticsData.MonitorId)
                 );
         }
 
@@ -87,7 +84,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var obfuscatedHeader = syntheticsHeader.TryGetObfuscated();
 
             var deobfuscatedHeader = Strings.Base64Decode(obfuscatedHeader, EncodingKey);
-            Assert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
+            ClassicAssert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
         }
 
         #endregion

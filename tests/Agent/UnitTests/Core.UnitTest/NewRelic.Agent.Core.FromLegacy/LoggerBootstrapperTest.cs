@@ -1,13 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Core.Logging;
-using NUnit.Framework;
 using System.IO;
-using NewRelic.Testing.Assertions;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core
 {
@@ -57,11 +53,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
             NrAssert.Multiple(
-                () => Assert.IsFalse(Log.IsFinestEnabled),
-                () => Assert.IsFalse(Log.IsDebugEnabled),
-                () => Assert.IsFalse(Log.IsInfoEnabled),
-                () => Assert.IsFalse(Log.IsWarnEnabled),
-                () => Assert.IsFalse(Log.IsErrorEnabled)
+                () => ClassicAssert.IsFalse(Log.IsFinestEnabled),
+                () => ClassicAssert.IsFalse(Log.IsDebugEnabled),
+                () => ClassicAssert.IsFalse(Log.IsInfoEnabled),
+                () => ClassicAssert.IsFalse(Log.IsWarnEnabled),
+                () => ClassicAssert.IsFalse(Log.IsErrorEnabled)
             );
         }
 
@@ -73,11 +69,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.ConfigureLogger(config);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(Log.IsFinestEnabled),
-                () => Assert.IsTrue(Log.IsDebugEnabled),
-                () => Assert.IsTrue(Log.IsInfoEnabled),
-                () => Assert.IsTrue(Log.IsWarnEnabled),
-                () => Assert.IsTrue(Log.IsErrorEnabled)
+                () => ClassicAssert.IsTrue(Log.IsFinestEnabled),
+                () => ClassicAssert.IsTrue(Log.IsDebugEnabled),
+                () => ClassicAssert.IsTrue(Log.IsInfoEnabled),
+                () => ClassicAssert.IsTrue(Log.IsWarnEnabled),
+                () => ClassicAssert.IsTrue(Log.IsErrorEnabled)
             );
         }
 
@@ -97,7 +93,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("info");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsDebugEnabled);
+            ClassicAssert.IsFalse(Log.IsDebugEnabled);
         }
 
         [Test]
@@ -115,7 +111,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("debug");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsFinestEnabled);
+            ClassicAssert.IsFalse(Log.IsFinestEnabled);
 
         }
 
@@ -130,7 +126,7 @@ namespace NewRelic.Agent.Core
         public static void Config_IsAuditEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.IsAuditLogEnabled);
+            ClassicAssert.IsFalse(config.IsAuditLogEnabled);
         }
 
         [Test]
@@ -144,15 +140,15 @@ namespace NewRelic.Agent.Core
         public static void Config_IsConsoleEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.Console);
+            ClassicAssert.IsFalse(config.Console);
         }
 
         [Test]
         public static void Fatal_exception_can_be_recorded()
         {
-            Assert.IsFalse(Log.FileLoggingHasFailed);
+            ClassicAssert.IsFalse(Log.FileLoggingHasFailed);
             Log.FileLoggingHasFailed = true;
-            Assert.IsTrue(Log.FileLoggingHasFailed);
+            ClassicAssert.IsTrue(Log.FileLoggingHasFailed);
         }
 
         [Test]
@@ -176,7 +172,7 @@ namespace NewRelic.Agent.Core
                 SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", envVarValue);
             }
             config = LogConfigFixtureWithLogEnabled(logsEnabledInConfig);
-            Assert.AreEqual(config.Enabled, expectedLogConfig);
+            ClassicAssert.AreEqual(config.Enabled, expectedLogConfig);
         }
 
         [Test]
@@ -196,14 +192,14 @@ namespace NewRelic.Agent.Core
             ILogConfig config;
 
             config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
+            ClassicAssert.IsTrue(config.Console);
 
             if (envVarValue != null)
             {
                 SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", envVarValue);
             }
             config = LogConfigFixtureWithConsoleEnabled(consoleLogEnabledInConfig);
-            Assert.AreEqual(config.Console, expectedConsoleLogConfig);
+            ClassicAssert.AreEqual(config.Console, expectedConsoleLogConfig);
         }
 
 

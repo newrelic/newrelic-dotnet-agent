@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -11,8 +8,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -119,26 +114,26 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(7, intrinsicAttributes.Length),
-                () => Assert.AreEqual(0, userAttributes.Length),
+                () => ClassicAssert.AreEqual(false, errorEvent.IsSynthetics),
+                () => ClassicAssert.AreEqual(7, agentAttributes.Length),
+                () => ClassicAssert.AreEqual(7, intrinsicAttributes.Length),
+                () => ClassicAssert.AreEqual(0, userAttributes.Length),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => ClassicAssert.Contains("queue_wait_time_ms", agentAttributes),
+                () => ClassicAssert.Contains("response.status", agentAttributes),
+                () => ClassicAssert.Contains("http.statusCode", agentAttributes),
+                () => ClassicAssert.Contains("original_url", agentAttributes),
+                () => ClassicAssert.Contains("request.uri", agentAttributes),
+                () => ClassicAssert.Contains("request.referer", agentAttributes),
+                () => ClassicAssert.Contains("host.displayName", agentAttributes),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes)
+                () => ClassicAssert.Contains("duration", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.class", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.message", intrinsicAttributes),
+                () => ClassicAssert.Contains("queueDuration", intrinsicAttributes),
+                () => ClassicAssert.Contains("transactionName", intrinsicAttributes),
+                () => ClassicAssert.Contains("timestamp", intrinsicAttributes),
+                () => ClassicAssert.Contains("type", intrinsicAttributes)
             );
         }
 
@@ -162,26 +157,26 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(7, intrinsicAttributes.Length),
-                () => Assert.AreEqual(0, userAttributes.Length),
+                () => ClassicAssert.AreEqual(false, errorEvent.IsSynthetics),
+                () => ClassicAssert.AreEqual(7, agentAttributes.Length),
+                () => ClassicAssert.AreEqual(7, intrinsicAttributes.Length),
+                () => ClassicAssert.AreEqual(0, userAttributes.Length),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => ClassicAssert.Contains("queue_wait_time_ms", agentAttributes),
+                () => ClassicAssert.Contains("response.status", agentAttributes),
+                () => ClassicAssert.Contains("original_url", agentAttributes),
+                () => ClassicAssert.Contains("request.uri", agentAttributes),
+                () => ClassicAssert.Contains("http.statusCode", agentAttributes),
+                () => ClassicAssert.Contains("request.referer", agentAttributes),
+                () => ClassicAssert.Contains("host.displayName", agentAttributes),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes)
+                () => ClassicAssert.Contains("duration", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.class", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.message", intrinsicAttributes),
+                () => ClassicAssert.Contains("queueDuration", intrinsicAttributes),
+                () => ClassicAssert.Contains("transactionName", intrinsicAttributes),
+                () => ClassicAssert.Contains("timestamp", intrinsicAttributes),
+                () => ClassicAssert.Contains("type", intrinsicAttributes)
             );
         }
 
@@ -213,38 +208,38 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, errorEvent.IsSynthetics),
+                () => ClassicAssert.AreEqual(true, errorEvent.IsSynthetics),
 
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(16, intrinsicAttributes.Length),
-                () => Assert.AreEqual(1, userAttributes.Length),
+                () => ClassicAssert.AreEqual(7, agentAttributes.Length),
+                () => ClassicAssert.AreEqual(16, intrinsicAttributes.Length),
+                () => ClassicAssert.AreEqual(1, userAttributes.Length),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => ClassicAssert.Contains("queue_wait_time_ms", agentAttributes),
+                () => ClassicAssert.Contains("response.status", agentAttributes),
+                () => ClassicAssert.Contains("http.statusCode", agentAttributes),
+                () => ClassicAssert.Contains("original_url", agentAttributes),
+                () => ClassicAssert.Contains("request.uri", agentAttributes),
+                () => ClassicAssert.Contains("request.referer", agentAttributes),
+                () => ClassicAssert.Contains("host.displayName", agentAttributes),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsJobId", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsResourceId", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsMonitorId", intrinsicAttributes),
-                () => Assert.Contains("nr.referringTransactionGuid", intrinsicAttributes),
-                () => Assert.Contains("databaseDuration", intrinsicAttributes),
-                () => Assert.Contains("databaseCallCount", intrinsicAttributes),
-                () => Assert.Contains("externalDuration", intrinsicAttributes),
-                () => Assert.Contains("externalCallCount", intrinsicAttributes),
-                () => Assert.Contains("nr.guid", intrinsicAttributes),
+                () => ClassicAssert.Contains("duration", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.class", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.message", intrinsicAttributes),
+                () => ClassicAssert.Contains("queueDuration", intrinsicAttributes),
+                () => ClassicAssert.Contains("transactionName", intrinsicAttributes),
+                () => ClassicAssert.Contains("timestamp", intrinsicAttributes),
+                () => ClassicAssert.Contains("type", intrinsicAttributes),
+                () => ClassicAssert.Contains("nr.syntheticsJobId", intrinsicAttributes),
+                () => ClassicAssert.Contains("nr.syntheticsResourceId", intrinsicAttributes),
+                () => ClassicAssert.Contains("nr.syntheticsMonitorId", intrinsicAttributes),
+                () => ClassicAssert.Contains("nr.referringTransactionGuid", intrinsicAttributes),
+                () => ClassicAssert.Contains("databaseDuration", intrinsicAttributes),
+                () => ClassicAssert.Contains("databaseCallCount", intrinsicAttributes),
+                () => ClassicAssert.Contains("externalDuration", intrinsicAttributes),
+                () => ClassicAssert.Contains("externalCallCount", intrinsicAttributes),
+                () => ClassicAssert.Contains("nr.guid", intrinsicAttributes),
 
-                () => Assert.Contains("sample.user.attribute", userAttributes)
+                () => ClassicAssert.Contains("sample.user.attribute", userAttributes)
             );
         }
 
@@ -266,17 +261,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(0, agentAttributes.Length),
-                () => Assert.AreEqual(4, intrinsicAttributes.Length),
-                () => Assert.AreEqual(1, userAttributes.Length),
+                () => ClassicAssert.AreEqual(false, errorEvent.IsSynthetics),
+                () => ClassicAssert.AreEqual(0, agentAttributes.Length),
+                () => ClassicAssert.AreEqual(4, intrinsicAttributes.Length),
+                () => ClassicAssert.AreEqual(1, userAttributes.Length),
 
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.class", intrinsicAttributes),
+                () => ClassicAssert.Contains("error.message", intrinsicAttributes),
+                () => ClassicAssert.Contains("timestamp", intrinsicAttributes),
+                () => ClassicAssert.Contains("type", intrinsicAttributes),
 
-                () => Assert.Contains("custom attribute name", userAttributes)
+                () => ClassicAssert.Contains("custom attribute name", userAttributes)
             );
         }
 
@@ -292,7 +287,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]
@@ -340,7 +335,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [Test]
@@ -411,10 +406,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.IsNotNull(passedInDict);
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("exception"));
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [TestCase(null)]
@@ -467,10 +462,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            ClassicAssert.IsNotNull(passedInDict);
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            ClassicAssert.IsTrue(passedInDict.ContainsKey("exception"));
+            ClassicAssert.AreEqual("test group", errorGroupAttribute);
         }
 
         [Test]

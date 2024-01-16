@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Events;
@@ -15,7 +12,6 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi

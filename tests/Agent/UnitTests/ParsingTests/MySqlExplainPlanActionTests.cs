@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -8,7 +8,6 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace ParsingTests
@@ -52,7 +51,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(invalidCommand);
 
-            Assert.IsNull(explainPlan);
+            ClassicAssert.IsNull(explainPlan);
         }
 
         [Test]
@@ -68,7 +67,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(command);
 
-            Assert.IsNull(explainPlan);
+            ClassicAssert.IsNull(explainPlan);
         }
 
         [Test]
@@ -110,12 +109,12 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(command);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(explainPlan, "An explain plan should be returned."),
-                () => Assert.IsNull(command.Transaction, "The transaction should be null."),
+                () => ClassicAssert.IsNotNull(explainPlan, "An explain plan should be returned."),
+                () => ClassicAssert.IsNull(command.Transaction, "The transaction should be null."),
                 () => StringAssert.StartsWith("EXPLAIN ", command.CommandText),
                 () => CollectionAssert.IsEmpty(explainPlan.ObfuscatedHeaders, "Expected there to be no obfuscated headers."),
                 () => CollectionAssert.AreEquivalent(new[] {"header0", "header1", "header2"}, explainPlan.ExplainPlanHeaders, "Expected the headers collections to match."),
-                () => Assert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
+                () => ClassicAssert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
                 () => CollectionAssert.AreEquivalent(new[] {"value0", "value1", "value2"}, explainPlan.ExplainPlanDatas[0], "Expected the explain plan results to match.")
             );
         }
@@ -127,7 +126,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var resources = MySqlExplainPlanActions.AllocateResources(mockDbCommand);
 
-            Assert.IsNull(resources);
+            ClassicAssert.IsNull(resources);
         }
 
         [Test]
@@ -143,10 +142,10 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var resources = MySqlExplainPlanActions.AllocateResources(mockDbCommand);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(resources, "Expected the new resource to be not null."),
-                () => Assert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
-                () => Assert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
-                () => Assert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
+                () => ClassicAssert.IsNotNull(resources, "Expected the new resource to be not null."),
+                () => ClassicAssert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
+                () => ClassicAssert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
+                () => ClassicAssert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
             );
         }
 
@@ -171,8 +170,8 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var result = MySqlExplainPlanActions.ShouldGenerateExplainPlan(rawSql, parsedSql);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedIsValid, result.IsValid, "Expected the validation result IsValid property to match the expected value."),
-                () => Assert.AreEqual(expectedMessage, result.ValidationMessage, "Expected the validation result ValidationMessage property to match the expected value.")
+                () => ClassicAssert.AreEqual(expectedIsValid, result.IsValid, "Expected the validation result IsValid property to match the expected value."),
+                () => ClassicAssert.AreEqual(expectedMessage, result.ValidationMessage, "Expected the validation result ValidationMessage property to match the expected value.")
             );
         }
     }

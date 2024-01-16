@@ -1,9 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Extensions.Logging;
-using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Serilog;
 using Serilog.Events;
@@ -46,7 +44,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
 
             var result = _logger.IsEnabledFor(level);
 
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -54,7 +52,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             var result = _logger.IsEnabledFor((Level)9999);
 
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -108,7 +106,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
 
             var result = _logger.IsErrorEnabled;
 
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]

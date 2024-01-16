@@ -10,11 +10,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -113,23 +108,23 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentSqlTraces.Count());
+            ClassicAssert.AreEqual(1, sentSqlTraces.Count());
             var trace = sentSqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, sentSqlTraces.Count()),
-                () => Assert.AreEqual(1, trace.SqlId),
-                () => Assert.AreEqual("transactionName1", trace.TransactionName),
-                () => Assert.AreEqual("sql1", trace.Sql),
-                () => Assert.AreEqual("uri1", trace.Uri),
-                () => Assert.AreEqual("datastoreMetricName1", trace.DatastoreMetricName),
-                () => Assert.AreEqual(2, trace.CallCount),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), trace.MinCallTime),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(5), trace.MaxCallTime),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(8), trace.TotalCallTime),
+                () => ClassicAssert.AreEqual(1, sentSqlTraces.Count()),
+                () => ClassicAssert.AreEqual(1, trace.SqlId),
+                () => ClassicAssert.AreEqual("transactionName1", trace.TransactionName),
+                () => ClassicAssert.AreEqual("sql1", trace.Sql),
+                () => ClassicAssert.AreEqual("uri1", trace.Uri),
+                () => ClassicAssert.AreEqual("datastoreMetricName1", trace.DatastoreMetricName),
+                () => ClassicAssert.AreEqual(2, trace.CallCount),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(3), trace.MinCallTime),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), trace.MaxCallTime),
+                () => ClassicAssert.AreEqual(TimeSpan.FromSeconds(8), trace.TotalCallTime),
 
-                () => Assert.AreEqual(1, trace.ParameterData.Count),
-                () => Assert.AreEqual("bar", trace.ParameterData["foo"])
+                () => ClassicAssert.AreEqual(1, trace.ParameterData.Count),
+                () => ClassicAssert.AreEqual("bar", trace.ParameterData["foo"])
                 );
         }
 
@@ -152,7 +147,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            ClassicAssert.Null(sentSqlTraces);
         }
 
         [Test]
@@ -182,12 +177,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
+                () => ClassicAssert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
                 );
         }
 
@@ -213,7 +208,7 @@ namespace NewRelic.Agent.Core.Aggregators
             sqlTrStats.Insert(GetSqlTrace(10, maxCallTime: TimeSpan.FromSeconds(100)));
             sqlTrStats.Insert(GetSqlTrace(11, maxCallTime: TimeSpan.FromSeconds(110)));
 
-            Assert.AreEqual(maxTraces, sqlTrStats.Collection.Count);
+            ClassicAssert.AreEqual(maxTraces, sqlTrStats.Collection.Count);
         }
 
         [Test]
@@ -248,12 +243,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
+                () => ClassicAssert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
                 );
         }
 
@@ -283,12 +278,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 3)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 1))
+                () => ClassicAssert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 3)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 1))
                 );
         }
 
@@ -327,12 +322,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
+                () => ClassicAssert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
                 );
         }
 
@@ -371,12 +366,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
+                () => ClassicAssert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
+                () => ClassicAssert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
                 );
         }
 
@@ -402,8 +397,8 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(3, sentSqlTraces.Count());
-            Assert.AreEqual(sentSqlTraces, sqlTracesToSend.Collection.Values.ToList());
+            ClassicAssert.AreEqual(3, sentSqlTraces.Count());
+            ClassicAssert.AreEqual(sentSqlTraces, sqlTracesToSend.Collection.Values.ToList());
         }
 
         [Test]
@@ -422,7 +417,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            ClassicAssert.False(sendCalled);
         }
 
         #endregion
@@ -453,7 +448,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            ClassicAssert.Null(sentSqlTraces);
         }
 
         [Test]
@@ -480,7 +475,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            ClassicAssert.Null(sentSqlTraces);
         }
 
         [Test]
@@ -505,7 +500,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentSqlTracesCount);
+            ClassicAssert.AreEqual(1, sentSqlTracesCount);
         }
 
         [Test]
@@ -530,7 +525,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            ClassicAssert.Null(sentSqlTraces);
         }
 
         #endregion

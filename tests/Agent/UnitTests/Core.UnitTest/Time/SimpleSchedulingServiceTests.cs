@@ -1,11 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Time
 {
     public class SimpleSchedulingServiceTests
@@ -40,13 +35,13 @@ namespace NewRelic.Agent.Core.Time
 
             var action = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.NotNull(action);
+            ClassicAssert.NotNull(action);
 
             _simpleSchedulingService.StopExecuting(DoWork);
 
             var noAction = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.Null(noAction);
+            ClassicAssert.Null(noAction);
             Assert.That(value.Count, Is.EqualTo(1));
         }
 
@@ -59,13 +54,13 @@ namespace NewRelic.Agent.Core.Time
             var value = sssFieldType.GetValue(_simpleSchedulingService) as List<Action>;
             var action = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.NotNull(action);
+            ClassicAssert.NotNull(action);
 
             _simpleSchedulingService.Dispose();
 
             var noAction = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.Null(noAction);
+            ClassicAssert.Null(noAction);
         }
 
         private void DoWork()

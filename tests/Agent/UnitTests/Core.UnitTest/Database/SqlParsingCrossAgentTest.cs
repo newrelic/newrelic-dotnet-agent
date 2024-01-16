@@ -4,12 +4,8 @@
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -22,8 +18,8 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
         public void SqlParsingTest(string inputSql, string expectedOperation, string expectedTable)
         {
             var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, inputSql);
-            Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
-            Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
+            ClassicAssert.AreEqual(expectedOperation.ToLower(), parsed.Operation, string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
+            ClassicAssert.AreEqual(expectedTable?.ToLower(), parsed.Model, string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
         }
 
 

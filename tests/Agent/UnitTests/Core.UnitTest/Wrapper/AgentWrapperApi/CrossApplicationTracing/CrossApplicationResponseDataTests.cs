@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
@@ -16,7 +14,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var data = new CrossApplicationResponseData("crossProcessId", "transactionName", 1.1f, 2.2f, 3, "guid");
             var serialized = JsonConvert.SerializeObject(data);
 
-            Assert.AreEqual("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]", serialized);
+            ClassicAssert.AreEqual("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]", serialized);
         }
 
         [Test]
@@ -25,15 +23,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             const string json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]";
             var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
 
-            Assert.NotNull(deserialized);
+            ClassicAssert.NotNull(deserialized);
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", deserialized.CrossProcessId),
-                () => Assert.AreEqual("transactionName", deserialized.TransactionName),
-                () => Assert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
-                () => Assert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
-                () => Assert.AreEqual(3, deserialized.ContentLength),
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(false, deserialized.Unused)
+                () => ClassicAssert.AreEqual("crossProcessId", deserialized.CrossProcessId),
+                () => ClassicAssert.AreEqual("transactionName", deserialized.TransactionName),
+                () => ClassicAssert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
+                () => ClassicAssert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
+                () => ClassicAssert.AreEqual(3, deserialized.ContentLength),
+                () => ClassicAssert.AreEqual("guid", deserialized.TransactionGuid),
+                () => ClassicAssert.AreEqual(false, deserialized.Unused)
                 );
         }
 
@@ -43,15 +41,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             const string json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\"]";
             var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
 
-            Assert.NotNull(deserialized);
+            ClassicAssert.NotNull(deserialized);
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", deserialized.CrossProcessId),
-                () => Assert.AreEqual("transactionName", deserialized.TransactionName),
-                () => Assert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
-                () => Assert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
-                () => Assert.AreEqual(3, deserialized.ContentLength),
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(false, deserialized.Unused)
+                () => ClassicAssert.AreEqual("crossProcessId", deserialized.CrossProcessId),
+                () => ClassicAssert.AreEqual("transactionName", deserialized.TransactionName),
+                () => ClassicAssert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
+                () => ClassicAssert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
+                () => ClassicAssert.AreEqual(3, deserialized.ContentLength),
+                () => ClassicAssert.AreEqual("guid", deserialized.TransactionGuid),
+                () => ClassicAssert.AreEqual(false, deserialized.Unused)
                 );
         }
 
@@ -61,15 +59,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             const string json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3]";
             var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
 
-            Assert.NotNull(deserialized);
+            ClassicAssert.NotNull(deserialized);
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", deserialized.CrossProcessId),
-                () => Assert.AreEqual("transactionName", deserialized.TransactionName),
-                () => Assert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
-                () => Assert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
-                () => Assert.AreEqual(3, deserialized.ContentLength),
-                () => Assert.AreEqual(null, deserialized.TransactionGuid),
-                () => Assert.AreEqual(false, deserialized.Unused)
+                () => ClassicAssert.AreEqual("crossProcessId", deserialized.CrossProcessId),
+                () => ClassicAssert.AreEqual("transactionName", deserialized.TransactionName),
+                () => ClassicAssert.AreEqual(1.1f, deserialized.QueueTimeInSeconds),
+                () => ClassicAssert.AreEqual(2.2f, deserialized.ResponseTimeInSeconds),
+                () => ClassicAssert.AreEqual(3, deserialized.ContentLength),
+                () => ClassicAssert.AreEqual(null, deserialized.TransactionGuid),
+                () => ClassicAssert.AreEqual(false, deserialized.Unused)
                 );
         }
 
@@ -77,7 +75,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         public void CannotDeserialize_IfOnly4Elements()
         {
             const string json = "[\"crossProcessId\",\"transactionName\",1.1,2.2]";
-            Assert.IsNull(JsonConvert.DeserializeObject<CrossApplicationResponseData>(json));
+            ClassicAssert.IsNull(JsonConvert.DeserializeObject<CrossApplicationResponseData>(json));
         }
     }
 }

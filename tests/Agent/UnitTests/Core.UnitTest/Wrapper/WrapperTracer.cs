@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
             wrapperTracer.Finish(null, null);
 
-            Assert.True(called);
+            Assert.That(called);
         }
     }
 }

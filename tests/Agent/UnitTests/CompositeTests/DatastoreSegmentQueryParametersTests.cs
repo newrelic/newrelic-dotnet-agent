@@ -7,9 +7,6 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 
 namespace CompositeTests
@@ -68,7 +65,7 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            Assert.AreEqual(segmentData.QueryParameters, null);
+            ClassicAssert.AreEqual(segmentData.QueryParameters, null);
         }
 
         [Test]
@@ -214,9 +211,9 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, segmentData.QueryParameters.Count),
-                () => Assert.IsInstanceOf(typeof(string), segmentData.QueryParameters["myDateTime"]),
-                () => Assert.AreEqual(now.ToString(CultureInfo.InvariantCulture), segmentData.QueryParameters["myDateTime"])
+                () => ClassicAssert.AreEqual(1, segmentData.QueryParameters.Count),
+                () => ClassicAssert.IsInstanceOf(typeof(string), segmentData.QueryParameters["myDateTime"]),
+                () => ClassicAssert.AreEqual(now.ToString(CultureInfo.InvariantCulture), segmentData.QueryParameters["myDateTime"])
             );
         }
 
@@ -260,9 +257,9 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, segmentData.QueryParameters.Count),
-                () => Assert.IsInstanceOf(typeof(string), segmentData.QueryParameters["longConvertible"]),
-                () => Assert.AreEqual(new string('l', Agent.QueryParameterMaxStringLength), segmentData.QueryParameters["longConvertible"])
+                () => ClassicAssert.AreEqual(1, segmentData.QueryParameters.Count),
+                () => ClassicAssert.IsInstanceOf(typeof(string), segmentData.QueryParameters["longConvertible"]),
+                () => ClassicAssert.AreEqual(new string('l', Agent.QueryParameterMaxStringLength), segmentData.QueryParameters["longConvertible"])
             );
         }
 
@@ -275,7 +272,7 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            Assert.IsNull(segmentData.QueryParameters);
+            ClassicAssert.IsNull(segmentData.QueryParameters);
         }
 
         private void SetupConfiguration(bool enableQueryParameters)

@@ -1,12 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Spans;
 
@@ -32,7 +27,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
-            Assert.IsTrue(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsTrue(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -41,7 +36,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -50,7 +45,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -59,7 +54,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -68,7 +63,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -77,7 +72,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -86,7 +81,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType2", "declaredMethod", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -95,7 +90,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod2", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         [Test]
@@ -104,7 +99,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
             var segment2 = SimpleSegmentDataTests.createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            ClassicAssert.IsFalse(segment1.IsCombinableWith(segment2));
         }
 
         #endregion IsCombinableWith
@@ -125,20 +120,20 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var newSegment = oldSegment.CreateSimilar(newStartTime, newDuration, newParameters);
 
             var newSegmentData = newSegment.Data as MethodSegmentData;
-            Assert.NotNull(newSegmentData);
+            ClassicAssert.NotNull(newSegmentData);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(newStartTime, newSegment.RelativeStartTime),
-                () => Assert.AreEqual(newDuration, newSegment.Duration),
-                () => Assert.AreEqual("type", newSegment.MethodCallData.TypeName),
-                () => Assert.AreEqual("method", newSegment.MethodCallData.MethodName),
-                () => Assert.AreEqual(1, newSegment.MethodCallData.InvocationTargetHashCode),
-                () => Assert.AreEqual("declaredType", newSegmentData.Type),
-                () => Assert.AreEqual("declaredMethod", newSegmentData.Method),
-                () => Assert.AreEqual(2, newSegment.Parameters.Count()),
-                () => Assert.AreEqual("bar", newSegment.Parameters.ToDictionary()["foo"]),
-                () => Assert.AreEqual("zap", newSegment.Parameters.ToDictionary()["zip"]),
-                () => Assert.AreEqual(true, newSegment.Combinable)
+                () => ClassicAssert.AreEqual(newStartTime, newSegment.RelativeStartTime),
+                () => ClassicAssert.AreEqual(newDuration, newSegment.Duration),
+                () => ClassicAssert.AreEqual("type", newSegment.MethodCallData.TypeName),
+                () => ClassicAssert.AreEqual("method", newSegment.MethodCallData.MethodName),
+                () => ClassicAssert.AreEqual(1, newSegment.MethodCallData.InvocationTargetHashCode),
+                () => ClassicAssert.AreEqual("declaredType", newSegmentData.Type),
+                () => ClassicAssert.AreEqual("declaredMethod", newSegmentData.Method),
+                () => ClassicAssert.AreEqual(2, newSegment.Parameters.Count()),
+                () => ClassicAssert.AreEqual("bar", newSegment.Parameters.ToDictionary()["foo"]),
+                () => ClassicAssert.AreEqual("zap", newSegment.Parameters.ToDictionary()["zip"]),
+                () => ClassicAssert.AreEqual(true, newSegment.Combinable)
                 );
         }
 

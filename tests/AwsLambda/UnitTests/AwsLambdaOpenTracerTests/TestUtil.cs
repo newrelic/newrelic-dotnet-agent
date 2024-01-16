@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.OpenTracing.AmazonLambda;
 using NewRelic.OpenTracing.AmazonLambda.State;
 using NewRelic.OpenTracing.AmazonLambda.Util;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;

@@ -6,7 +6,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core
@@ -26,20 +25,20 @@ namespace NewRelic.Agent.Core
             using (new ConfigurationAutoResponder(configurationService.Configuration))
             {
                 var env = new Environment(systemInfo, processStatic, configurationService);
-                Assert.Greater(env.TotalPhysicalMemory, 0);
+                ClassicAssert.Greater(env.TotalPhysicalMemory, 0);
             }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "WWW"), Test]
         public static void TestGetAppPathWithWWWRoot()
         {
-            Assert.AreEqual("myapp", Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "myapp" + Path.DirectorySeparatorChar + "WwwRoot"));
+            ClassicAssert.AreEqual("myapp", Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "myapp" + Path.DirectorySeparatorChar + "WwwRoot"));
         }
 
         [Test]
         public static void TestGetAppPathTrailingSlash()
         {
-            Assert.AreEqual("Dude", Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "Dude" + Path.DirectorySeparatorChar));
+            ClassicAssert.AreEqual("Dude", Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "Dude" + Path.DirectorySeparatorChar));
         }
     }
 }

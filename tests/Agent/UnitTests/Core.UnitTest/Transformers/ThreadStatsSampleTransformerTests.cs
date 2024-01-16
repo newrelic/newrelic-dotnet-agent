@@ -1,13 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
@@ -51,7 +48,7 @@ namespace NewRelic.Agent.Core.Transformers
             _threadStatsTransformer.Transform(sample);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(4, generatedMetrics.Count),
+                () => ClassicAssert.AreEqual(4, generatedMetrics.Count),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.InUse), countWorkerThreadsInUse),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.Available), countWorkerThreadsRemaining),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.InUse), countCompletionThreadsInUse),
@@ -77,7 +74,7 @@ namespace NewRelic.Agent.Core.Transformers
             _threadStatsTransformer.Transform(sample);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(3, generatedMetrics.Count),
+                () => ClassicAssert.AreEqual(3, generatedMetrics.Count),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Requested), countThreadRequestsQueued),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Started), countThreadRequestsDequeued),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.QueueLength), countThreadRequestQueueLength)

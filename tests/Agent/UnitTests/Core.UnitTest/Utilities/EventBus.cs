@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System;
-
 namespace NewRelic.Agent.Core.Utilities.UnitTest
 {
     [TestFixture]
@@ -24,7 +21,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Publish(new object());
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.IsTrue(wasCalled);
+            ClassicAssert.IsTrue(wasCalled);
         }
 
         [Test]
@@ -40,8 +37,8 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(firstCallback);
             EventBus<object>.Unsubscribe(secondCallback);
 
-            Assert.IsTrue(firstWasCalled);
-            Assert.IsTrue(secondWasCalled);
+            ClassicAssert.IsTrue(firstWasCalled);
+            ClassicAssert.IsTrue(secondWasCalled);
         }
 
         [Test]
@@ -53,7 +50,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            ClassicAssert.IsFalse(wasCalled);
         }
 
         [Test]
@@ -66,7 +63,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.AreEqual(1, callCount);
+            ClassicAssert.AreEqual(1, callCount);
         }
 
         [Test]
@@ -78,7 +75,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<string>.Publish(string.Empty);
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.IsFalse(wasCalled);
+            ClassicAssert.IsFalse(wasCalled);
         }
 
         [Test]
@@ -91,7 +88,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Publish(new object());
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.AreEqual(1, callCount);
+            ClassicAssert.AreEqual(1, callCount);
         }
 
         [Test]
@@ -104,7 +101,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            ClassicAssert.IsFalse(wasCalled);
         }
 
         [Test]
@@ -134,8 +131,8 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.IsTrue(firstCalled);
-            Assert.IsTrue(secondCalled);
+            ClassicAssert.IsTrue(firstCalled);
+            ClassicAssert.IsTrue(secondCalled);
         }
 
         [Test]
@@ -146,7 +143,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             {
                 EventBus<object>.Publish(new object());
 
-                Assert.AreEqual(1, logger.ErrorCount);
+                ClassicAssert.AreEqual(1, logger.ErrorCount);
             }
         }
     }

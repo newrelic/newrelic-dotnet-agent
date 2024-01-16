@@ -1,18 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
@@ -64,13 +59,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void AgentEnabledShouldPassThroughToLocalConfig()
         {
-            Assert.IsTrue(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.AgentEnabled);
 
             _localConfig.agentEnabled = false;
-            Assert.IsFalse(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.AgentEnabled);
 
             _localConfig.agentEnabled = true;
-            Assert.IsTrue(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.AgentEnabled);
         }
 
         [Test]
@@ -78,8 +73,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled)).Returns("false");
 
-            Assert.IsFalse(_defaultConfig.AgentEnabled);
-            Assert.IsFalse(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.AgentEnabled);
 
             Mock.Assert(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled), Occurs.Once());
         }
@@ -91,7 +86,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _localConfig.agentEnabled = true;
 
-            Assert.IsFalse(_defaultConfig.AgentEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.AgentEnabled);
         }
 
         [TestCase(null, true, ExpectedResult = true)]
@@ -114,37 +109,37 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             var newConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(_defaultConfig.ConfigurationVersion, newConfig.ConfigurationVersion - 1);
+            ClassicAssert.AreEqual(_defaultConfig.ConfigurationVersion, newConfig.ConfigurationVersion - 1);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenTransactionEventsAreEnabled()
         {
-            Assert.IsTrue(_defaultConfig.TransactionEventsEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.TransactionEventsEnabled);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenPutForDataSendIsDisabled()
         {
-            Assert.IsFalse(_defaultConfig.PutForDataSend);
+            ClassicAssert.IsFalse(_defaultConfig.PutForDataSend);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenInstanceReportingEnabledIsEnabled()
         {
-            Assert.IsTrue(_defaultConfig.InstanceReportingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.InstanceReportingEnabled);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenDatabaseNameReportingEnabledIsEnabled()
         {
-            Assert.IsTrue(_defaultConfig.DatabaseNameReportingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.DatabaseNameReportingEnabled);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenDatastoreTracerQueryParametersEnabledIsDisabled()
         {
-            Assert.IsFalse(_defaultConfig.DatastoreTracerQueryParametersEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.DatastoreTracerQueryParametersEnabled);
         }
 
         [TestCase(true, false, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = true)]
@@ -174,39 +169,39 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CompressedContentEncodingShouldBeDeflateWhenConfigsAreDefault()
         {
-            Assert.AreEqual("deflate", _defaultConfig.CompressedContentEncoding);
+            ClassicAssert.AreEqual("deflate", _defaultConfig.CompressedContentEncoding);
         }
 
         [Test]
         public void WhenTransactionEventsAreEnabledInLocalConfigAndDoNotExistInServerConfigThenTransactionEventsAreEnabled()
         {
             _localConfig.transactionEvents.enabled = true;
-            Assert.IsTrue(_defaultConfig.TransactionEventsEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.TransactionEventsEnabled);
         }
 
         [Test]
         public void WhenConfigsAreDefaultThenCaptureAgentTimingIsDisabled()
         {
-            Assert.AreEqual(false, _defaultConfig.DiagnosticsCaptureAgentTiming);
+            ClassicAssert.AreEqual(false, _defaultConfig.DiagnosticsCaptureAgentTiming);
         }
 
         [Test]
         public void WhenTransactionEventsAreDisabledInLocalConfigAndDoNotExistInServerConfigThenTransactionEventsAreDisabled()
         {
             _localConfig.transactionEvents.enabled = false;
-            Assert.IsFalse(_defaultConfig.TransactionEventsEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.TransactionEventsEnabled);
         }
 
         [Test]
         public void TransactionEventsMaxSamplesStoredPassesThroughToLocalConfig()
         {
-            Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaximumSamplesStored);
+            ClassicAssert.AreEqual(10000, _defaultConfig.TransactionEventsMaximumSamplesStored);
 
             _localConfig.transactionEvents.maximumSamplesStored = 10001;
-            Assert.AreEqual(10001, _defaultConfig.TransactionEventsMaximumSamplesStored);
+            ClassicAssert.AreEqual(10001, _defaultConfig.TransactionEventsMaximumSamplesStored);
 
             _localConfig.transactionEvents.maximumSamplesStored = 9999;
-            Assert.AreEqual(9999, _defaultConfig.TransactionEventsMaximumSamplesStored);
+            ClassicAssert.AreEqual(9999, _defaultConfig.TransactionEventsMaximumSamplesStored);
         }
 
         [Test]
@@ -219,7 +214,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
             };
 
-            Assert.AreEqual(10, _defaultConfig.TransactionEventsMaximumSamplesStored);
+            ClassicAssert.AreEqual(10, _defaultConfig.TransactionEventsMaximumSamplesStored);
         }
 
         [TestCase("10", 20, 30, ExpectedResult = 30)]
@@ -254,27 +249,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void TransactionEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.TransactionEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.TransactionEventsHarvestCycle);
 
             _serverConfig.EventHarvestConfig = new EventHarvestConfig
             {
                 ReportPeriodMs = 5000,
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
             };
-            Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.TransactionEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.TransactionEventsHarvestCycle);
         }
 
         [Test]
         public void TransactionEventsMaxSamplesOf0ShouldDisableTransactionEvents()
         {
             _localConfig.transactionEvents.maximumSamplesStored = 0;
-            Assert.IsFalse(_defaultConfig.TransactionEventsEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.TransactionEventsEnabled);
         }
 
         [Test]
         public void DisableServerConfigIsFalseByDefault()
         {
-            Assert.IsFalse(_defaultConfig.IgnoreServerSideConfiguration);
+            ClassicAssert.IsFalse(_defaultConfig.IgnoreServerSideConfiguration);
         }
 
         [TestCase("true", ExpectedResult = true)]
@@ -313,13 +308,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void ErrorsMaximumPerPeriodReturnsStatic20()
         {
-            Assert.AreEqual(20, _defaultConfig.ErrorsMaximumPerPeriod);
+            ClassicAssert.AreEqual(20, _defaultConfig.ErrorsMaximumPerPeriod);
         }
 
         [Test]
         public void SqlTracesPerPeriodReturnsStatic10()
         {
-            Assert.AreEqual(10, _defaultConfig.SqlTracesPerPeriod);
+            ClassicAssert.AreEqual(10, _defaultConfig.SqlTracesPerPeriod);
         }
 
         [Test]
@@ -328,7 +323,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.SlowSqlEnabled = true;
             _localConfig.slowSql.enabled = false;
 
-            Assert.AreEqual(true, _defaultConfig.SlowSqlEnabled);
+            ClassicAssert.AreEqual(true, _defaultConfig.SlowSqlEnabled);
         }
 
         [Test]
@@ -336,27 +331,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.RpmConfig.SlowSqlEnabled = false;
 
-            Assert.AreEqual(false, _defaultConfig.SlowSqlEnabled);
+            ClassicAssert.AreEqual(false, _defaultConfig.SlowSqlEnabled);
         }
 
         [Test]
         public void SlowSqlDefaultIsTrue()
         {
-            Assert.IsTrue(_defaultConfig.SlowSqlEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.SlowSqlEnabled);
         }
 
         [Test]
         public void SlowSqlLocalConfigSetToFalse()
         {
             _localConfig.slowSql.enabled = false;
-            Assert.IsFalse(_defaultConfig.SlowSqlEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.SlowSqlEnabled);
         }
 
         [Test]
         public void WhenStackTraceMaximumFramesIsSet()
         {
             _localConfig.maxStackTraceLines = 100;
-            Assert.AreEqual(100, _defaultConfig.StackTraceMaximumFrames);
+            ClassicAssert.AreEqual(100, _defaultConfig.StackTraceMaximumFrames);
         }
 
         [TestCase(null, ExpectedResult = 80)]
@@ -422,8 +417,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsEnabled, _defaultConfig.DiagnosticsCaptureAgentTiming, "Performance Timing Enabled"),
-                () => Assert.AreEqual(expectedFrequency, _defaultConfig.DiagnosticsCaptureAgentTimingFrequency, "Perforamcne Timing Frequency")
+                () => ClassicAssert.AreEqual(expectedIsEnabled, _defaultConfig.DiagnosticsCaptureAgentTiming, "Performance Timing Enabled"),
+                () => ClassicAssert.AreEqual(expectedFrequency, _defaultConfig.DiagnosticsCaptureAgentTimingFrequency, "Perforamcne Timing Frequency")
             );
         }
 
@@ -532,27 +527,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
             };
 
-            Assert.AreEqual(10, _defaultConfig.ErrorCollectorMaxEventSamplesStored);
+            ClassicAssert.AreEqual(10, _defaultConfig.ErrorCollectorMaxEventSamplesStored);
         }
 
         [Test]
         public void ErrorEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.ErrorEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.ErrorEventsHarvestCycle);
 
             _serverConfig.EventHarvestConfig = new EventHarvestConfig
             {
                 ReportPeriodMs = 5000,
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
             };
-            Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.ErrorEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.ErrorEventsHarvestCycle);
         }
 
         [Test]
         public void ErrorEventsMaxSamplesOf0ShouldDisableErrorEvents()
         {
             _localConfig.errorCollector.maxEventSamplesStored = 0;
-            Assert.IsFalse(_defaultConfig.ErrorCollectorCaptureEvents);
+            ClassicAssert.IsFalse(_defaultConfig.ErrorCollectorCaptureEvents);
         }
 
 
@@ -616,7 +611,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void SqlStatementsPerTransactionAlwaysReturns500()
         {
-            Assert.AreEqual(500, _defaultConfig.SqlStatementsPerTransaction);
+            ClassicAssert.AreEqual(500, _defaultConfig.SqlStatementsPerTransaction);
         }
 
         [TestCase(true, true, ExpectedResult = true)]
@@ -787,7 +782,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.highSecurity.enabled = true;
             _localConfig.browserMonitoring.sslForHttp = false;
 
-            Assert.IsTrue(_defaultConfig.BrowserMonitoringUseSsl);
+            ClassicAssert.IsTrue(_defaultConfig.BrowserMonitoringUseSsl);
         }
 
         [TestCase(true, true, ExpectedResult = false)]
@@ -846,13 +841,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.ApdexT = 42;
             _localConfig.transactionTracer.transactionThreshold = "apdex_f";
 
-            Assert.AreEqual(42 * 4, _defaultConfig.TransactionTraceThreshold.TotalSeconds);
+            ClassicAssert.AreEqual(42 * 4, _defaultConfig.TransactionTraceThreshold.TotalSeconds);
         }
 
         [Test]
         public void CaptureCustomParametersSetFromLocalDefaultsToTrue()
         {
-            Assert.IsTrue(_defaultConfig.CaptureCustomParameters);
+            ClassicAssert.IsTrue(_defaultConfig.CaptureCustomParameters);
         }
 
         [TestCase(false, false, false, ExpectedResult = true)]
@@ -876,13 +871,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CaptureIdentityParametersSetFromLocalDefaultsToFalse()
         {
-            Assert.IsTrue(_defaultConfig.CaptureAttributesDefaultExcludes.Contains("identity.*"));
+            ClassicAssert.IsTrue(_defaultConfig.CaptureAttributesDefaultExcludes.Contains("identity.*"));
         }
 
         [Test]
         public void CaptureResponseHeaderParametersSetFromLocalDefaultsToTrue()
         {
-            Assert.IsFalse(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*"));
+            ClassicAssert.IsFalse(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*"));
         }
 
         [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
@@ -955,11 +950,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
 
             var expectedErrorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
-            Assert.NotNull(expectedErrorClass2);
-            Assert.IsFalse(expectedErrorClass2.Value.Any());
+            ClassicAssert.NotNull(expectedErrorClass2);
+            ClassicAssert.IsFalse(expectedErrorClass2.Value.Any());
 
             var expectedErrorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
-            Assert.NotNull(expectedErrorClass3);
+            ClassicAssert.NotNull(expectedErrorClass3);
             Assert.That(expectedErrorClass3.Value.Contains("error message 1 in ErrorClass3"));
             Assert.That(expectedErrorClass3.Value.Contains("error message 2 in ErrorClass3"));
 
@@ -968,11 +963,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.That(ignoreMessages.ContainsKey("ErrorClass1"));
 
             var ignoreErrorClass2 = ignoreMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
-            Assert.NotNull(ignoreErrorClass2);
-            Assert.IsFalse(ignoreErrorClass2.Value.Any());
+            ClassicAssert.NotNull(ignoreErrorClass2);
+            ClassicAssert.IsFalse(ignoreErrorClass2.Value.Any());
 
             var ignoreErrorClass3 = ignoreMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
-            Assert.NotNull(ignoreErrorClass3);
+            ClassicAssert.NotNull(ignoreErrorClass3);
             Assert.That(ignoreErrorClass3.Value.Contains("error message 1 in ErrorClass3"));
             Assert.That(ignoreErrorClass3.Value.Contains("error message 2 in ErrorClass3"));
 
@@ -1260,19 +1255,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void StaticFieldInstanceIsNotNull()
         {
-            Assert.NotNull(DefaultConfiguration.Instance);
+            ClassicAssert.NotNull(DefaultConfiguration.Instance);
         }
 
         [Test]
         public void StaticRequestPathExclusionListIsNotNull()
         {
-            Assert.NotNull(DefaultConfiguration.Instance.RequestPathExclusionList);
+            ClassicAssert.NotNull(DefaultConfiguration.Instance.RequestPathExclusionList);
         }
 
         [Test]
         public void RequestPathExclusionListIsEmptyIfNoRequestPathsInList()
         {
-            Assert.IsEmpty(DefaultConfiguration.Instance.RequestPathExclusionList);
+            ClassicAssert.IsEmpty(DefaultConfiguration.Instance.RequestPathExclusionList);
         }
 
         [Test]
@@ -1283,7 +1278,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _localConfig.browserMonitoring.requestPathsExcluded.Add(path);
 
-            Assert.AreEqual(1, _defaultConfig.RequestPathExclusionList.Count());
+            ClassicAssert.AreEqual(1, _defaultConfig.RequestPathExclusionList.Count());
         }
 
         [Test]
@@ -1298,7 +1293,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.browserMonitoring.requestPathsExcluded.Add(path1);
             _localConfig.browserMonitoring.requestPathsExcluded.Add(path2);
 
-            Assert.AreEqual(2, _defaultConfig.RequestPathExclusionList.Count());
+            ClassicAssert.AreEqual(2, _defaultConfig.RequestPathExclusionList.Count());
         }
 
         [Test]
@@ -1309,13 +1304,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _localConfig.browserMonitoring.requestPathsExcluded.Add(path);
 
-            Assert.AreEqual(0, _defaultConfig.RequestPathExclusionList.Count());
+            ClassicAssert.AreEqual(0, _defaultConfig.RequestPathExclusionList.Count());
         }
 
         [Test]
         public void BrowserMonitoringJavaScriptAgentLoaderTypeSetToDefaultRum()
         {
-            Assert.AreEqual("rum", _defaultConfig.BrowserMonitoringJavaScriptAgentLoaderType);
+            ClassicAssert.AreEqual("rum", _defaultConfig.BrowserMonitoringJavaScriptAgentLoaderType);
         }
 
         [Test]
@@ -1341,7 +1336,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(_defaultConfig.ThreadProfilingIgnoreMethods.Contains("System.Threading.WaitHandle:WaitAny"));
+            ClassicAssert.IsTrue(_defaultConfig.ThreadProfilingIgnoreMethods.Contains("System.Threading.WaitHandle:WaitAny"));
         }
 
         [Test]
@@ -1349,7 +1344,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.browserMonitoring.attributes.enabledSpecified = false;
 
-            Assert.IsFalse(_defaultConfig.CaptureBrowserMonitoringAttributes);
+            ClassicAssert.IsFalse(_defaultConfig.CaptureBrowserMonitoringAttributes);
         }
 
         [Test]
@@ -1357,7 +1352,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.errorCollector.attributes.enabledSpecified = false;
 
-            Assert.IsTrue(_defaultConfig.CaptureErrorCollectorAttributes);
+            ClassicAssert.IsTrue(_defaultConfig.CaptureErrorCollectorAttributes);
         }
 
         [Test]
@@ -1365,13 +1360,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.transactionTracer.attributes.enabledSpecified = false;
 
-            Assert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);
+            ClassicAssert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);
         }
 
         [Test]
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
-            Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
         }
 
         [TestCase(null, null, null, ExpectedResult = null)]
@@ -1520,25 +1515,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.UrlRegexRules.Count()),
+                () => ClassicAssert.AreEqual(2, _defaultConfig.UrlRegexRules.Count()),
 
                 // Rule 1
-                () => Assert.AreEqual("apple", _defaultConfig.UrlRegexRules.ElementAt(0).MatchExpression),
-                () => Assert.AreEqual("banana", _defaultConfig.UrlRegexRules.ElementAt(0).Replacement),
-                () => Assert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).EachSegment),
-                () => Assert.AreEqual(1, _defaultConfig.UrlRegexRules.ElementAt(0).EvaluationOrder),
-                () => Assert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).Ignore),
-                () => Assert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).ReplaceAll),
-                () => Assert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).TerminateChain),
+                () => ClassicAssert.AreEqual("apple", _defaultConfig.UrlRegexRules.ElementAt(0).MatchExpression),
+                () => ClassicAssert.AreEqual("banana", _defaultConfig.UrlRegexRules.ElementAt(0).Replacement),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).EachSegment),
+                () => ClassicAssert.AreEqual(1, _defaultConfig.UrlRegexRules.ElementAt(0).EvaluationOrder),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).Ignore),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).ReplaceAll),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.UrlRegexRules.ElementAt(0).TerminateChain),
 
                 // Rule 2
-                () => Assert.AreEqual("pie", _defaultConfig.UrlRegexRules.ElementAt(1).MatchExpression),
-                () => Assert.AreEqual(null, _defaultConfig.UrlRegexRules.ElementAt(1).Replacement),
-                () => Assert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).EachSegment),
-                () => Assert.AreEqual(0, _defaultConfig.UrlRegexRules.ElementAt(1).EvaluationOrder),
-                () => Assert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).Ignore),
-                () => Assert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).ReplaceAll),
-                () => Assert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).TerminateChain)
+                () => ClassicAssert.AreEqual("pie", _defaultConfig.UrlRegexRules.ElementAt(1).MatchExpression),
+                () => ClassicAssert.AreEqual(null, _defaultConfig.UrlRegexRules.ElementAt(1).Replacement),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).EachSegment),
+                () => ClassicAssert.AreEqual(0, _defaultConfig.UrlRegexRules.ElementAt(1).EvaluationOrder),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).Ignore),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).ReplaceAll),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.UrlRegexRules.ElementAt(1).TerminateChain)
                 );
         }
 
@@ -1559,7 +1554,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 },
             };
 
-            Assert.AreEqual(expectedOutput, _defaultConfig.UrlRegexRules.ElementAt(0).Replacement);
+            ClassicAssert.AreEqual(expectedOutput, _defaultConfig.UrlRegexRules.ElementAt(0).Replacement);
         }
 
         [Test]
@@ -1584,25 +1579,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.MetricNameRegexRules.Count()),
+                () => ClassicAssert.AreEqual(2, _defaultConfig.MetricNameRegexRules.Count()),
 
                 // Rule 1
-                () => Assert.AreEqual("apple", _defaultConfig.MetricNameRegexRules.ElementAt(0).MatchExpression),
-                () => Assert.AreEqual("banana", _defaultConfig.MetricNameRegexRules.ElementAt(0).Replacement),
-                () => Assert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).EachSegment),
-                () => Assert.AreEqual(1, _defaultConfig.MetricNameRegexRules.ElementAt(0).EvaluationOrder),
-                () => Assert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).Ignore),
-                () => Assert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).ReplaceAll),
-                () => Assert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).TerminateChain),
+                () => ClassicAssert.AreEqual("apple", _defaultConfig.MetricNameRegexRules.ElementAt(0).MatchExpression),
+                () => ClassicAssert.AreEqual("banana", _defaultConfig.MetricNameRegexRules.ElementAt(0).Replacement),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).EachSegment),
+                () => ClassicAssert.AreEqual(1, _defaultConfig.MetricNameRegexRules.ElementAt(0).EvaluationOrder),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).Ignore),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).ReplaceAll),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.MetricNameRegexRules.ElementAt(0).TerminateChain),
 
                 // Rule 2
-                () => Assert.AreEqual("pie", _defaultConfig.MetricNameRegexRules.ElementAt(1).MatchExpression),
-                () => Assert.AreEqual(null, _defaultConfig.MetricNameRegexRules.ElementAt(1).Replacement),
-                () => Assert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).EachSegment),
-                () => Assert.AreEqual(0, _defaultConfig.MetricNameRegexRules.ElementAt(1).EvaluationOrder),
-                () => Assert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).Ignore),
-                () => Assert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).ReplaceAll),
-                () => Assert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).TerminateChain)
+                () => ClassicAssert.AreEqual("pie", _defaultConfig.MetricNameRegexRules.ElementAt(1).MatchExpression),
+                () => ClassicAssert.AreEqual(null, _defaultConfig.MetricNameRegexRules.ElementAt(1).Replacement),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).EachSegment),
+                () => ClassicAssert.AreEqual(0, _defaultConfig.MetricNameRegexRules.ElementAt(1).EvaluationOrder),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).Ignore),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).ReplaceAll),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.MetricNameRegexRules.ElementAt(1).TerminateChain)
                 );
         }
 
@@ -1623,7 +1618,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 },
             };
 
-            Assert.AreEqual(expectedOutput, _defaultConfig.MetricNameRegexRules.ElementAt(0).Replacement);
+            ClassicAssert.AreEqual(expectedOutput, _defaultConfig.MetricNameRegexRules.ElementAt(0).Replacement);
         }
 
         [Test]
@@ -1648,25 +1643,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.TransactionNameRegexRules.Count()),
+                () => ClassicAssert.AreEqual(2, _defaultConfig.TransactionNameRegexRules.Count()),
 
                 // Rule 1
-                () => Assert.AreEqual("apple", _defaultConfig.TransactionNameRegexRules.ElementAt(0).MatchExpression),
-                () => Assert.AreEqual("banana", _defaultConfig.TransactionNameRegexRules.ElementAt(0).Replacement),
-                () => Assert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).EachSegment),
-                () => Assert.AreEqual(1, _defaultConfig.TransactionNameRegexRules.ElementAt(0).EvaluationOrder),
-                () => Assert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).Ignore),
-                () => Assert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).ReplaceAll),
-                () => Assert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).TerminateChain),
+                () => ClassicAssert.AreEqual("apple", _defaultConfig.TransactionNameRegexRules.ElementAt(0).MatchExpression),
+                () => ClassicAssert.AreEqual("banana", _defaultConfig.TransactionNameRegexRules.ElementAt(0).Replacement),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).EachSegment),
+                () => ClassicAssert.AreEqual(1, _defaultConfig.TransactionNameRegexRules.ElementAt(0).EvaluationOrder),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).Ignore),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).ReplaceAll),
+                () => ClassicAssert.AreEqual(true, _defaultConfig.TransactionNameRegexRules.ElementAt(0).TerminateChain),
 
                 // Rule 2
-                () => Assert.AreEqual("pie", _defaultConfig.TransactionNameRegexRules.ElementAt(1).MatchExpression),
-                () => Assert.AreEqual(null, _defaultConfig.TransactionNameRegexRules.ElementAt(1).Replacement),
-                () => Assert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).EachSegment),
-                () => Assert.AreEqual(0, _defaultConfig.TransactionNameRegexRules.ElementAt(1).EvaluationOrder),
-                () => Assert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).Ignore),
-                () => Assert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).ReplaceAll),
-                () => Assert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).TerminateChain)
+                () => ClassicAssert.AreEqual("pie", _defaultConfig.TransactionNameRegexRules.ElementAt(1).MatchExpression),
+                () => ClassicAssert.AreEqual(null, _defaultConfig.TransactionNameRegexRules.ElementAt(1).Replacement),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).EachSegment),
+                () => ClassicAssert.AreEqual(0, _defaultConfig.TransactionNameRegexRules.ElementAt(1).EvaluationOrder),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).Ignore),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).ReplaceAll),
+                () => ClassicAssert.AreEqual(false, _defaultConfig.TransactionNameRegexRules.ElementAt(1).TerminateChain)
                 );
         }
 
@@ -1687,7 +1682,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 },
             };
 
-            Assert.AreEqual(expectedOutput, _defaultConfig.TransactionNameRegexRules.ElementAt(0).Replacement);
+            ClassicAssert.AreEqual(expectedOutput, _defaultConfig.TransactionNameRegexRules.ElementAt(0).Replacement);
         }
 
         [Test]
@@ -1700,11 +1695,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.WebTransactionsApdex.Count),
-                () => Assert.IsTrue(_defaultConfig.WebTransactionsApdex.ContainsKey("apple")),
-                () => Assert.AreEqual(0.2, _defaultConfig.WebTransactionsApdex["apple"]),
-                () => Assert.IsTrue(_defaultConfig.WebTransactionsApdex.ContainsKey("banana")),
-                () => Assert.AreEqual(0.1, _defaultConfig.WebTransactionsApdex["banana"])
+                () => ClassicAssert.AreEqual(2, _defaultConfig.WebTransactionsApdex.Count),
+                () => ClassicAssert.IsTrue(_defaultConfig.WebTransactionsApdex.ContainsKey("apple")),
+                () => ClassicAssert.AreEqual(0.2, _defaultConfig.WebTransactionsApdex["apple"]),
+                () => ClassicAssert.IsTrue(_defaultConfig.WebTransactionsApdex.ContainsKey("banana")),
+                () => ClassicAssert.AreEqual(0.1, _defaultConfig.WebTransactionsApdex["banana"])
                 );
         }
 
@@ -1726,19 +1721,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules.Count()),
+                () => ClassicAssert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules.Count()),
 
                 // Rule 1
-                () => Assert.IsTrue(_defaultConfig.TransactionNameWhitelistRules.ContainsKey("apple/banana")),
-                () => Assert.NotNull(_defaultConfig.TransactionNameWhitelistRules["apple/banana"]),
-                () => Assert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules["apple/banana"].Count()),
-                () => Assert.AreEqual("pie", _defaultConfig.TransactionNameWhitelistRules["apple/banana"].ElementAt(0)),
-                () => Assert.AreEqual("cake", _defaultConfig.TransactionNameWhitelistRules["apple/banana"].ElementAt(1)),
+                () => ClassicAssert.IsTrue(_defaultConfig.TransactionNameWhitelistRules.ContainsKey("apple/banana")),
+                () => ClassicAssert.NotNull(_defaultConfig.TransactionNameWhitelistRules["apple/banana"]),
+                () => ClassicAssert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules["apple/banana"].Count()),
+                () => ClassicAssert.AreEqual("pie", _defaultConfig.TransactionNameWhitelistRules["apple/banana"].ElementAt(0)),
+                () => ClassicAssert.AreEqual("cake", _defaultConfig.TransactionNameWhitelistRules["apple/banana"].ElementAt(1)),
 
                 // Rule 2
-                () => Assert.IsTrue(_defaultConfig.TransactionNameWhitelistRules.ContainsKey("mango/peach")),
-                () => Assert.NotNull(_defaultConfig.TransactionNameWhitelistRules["mango/peach"]),
-                () => Assert.AreEqual(0, _defaultConfig.TransactionNameWhitelistRules["mango/peach"].Count())
+                () => ClassicAssert.IsTrue(_defaultConfig.TransactionNameWhitelistRules.ContainsKey("mango/peach")),
+                () => ClassicAssert.NotNull(_defaultConfig.TransactionNameWhitelistRules["mango/peach"]),
+                () => ClassicAssert.AreEqual(0, _defaultConfig.TransactionNameWhitelistRules["mango/peach"].Count())
                 );
         }
 
@@ -1788,10 +1783,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("API", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("API", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1808,9 +1803,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1827,10 +1822,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1847,9 +1842,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1866,10 +1861,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1890,9 +1885,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1913,10 +1908,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1936,10 +1931,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("NewRelic Config", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("NewRelic Config", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1959,9 +1954,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -1981,10 +1976,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
-                () => Assert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => ClassicAssert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -2009,8 +2004,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("W3WP");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expected, _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual(expectedSource, _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(expected, _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual(expectedSource, _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -2030,9 +2025,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("MyAppName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("Process Name", _defaultConfig.ApplicationNamesSource)
+                () => ClassicAssert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
+                () => ClassicAssert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => ClassicAssert.AreEqual("Process Name", _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -2044,10 +2039,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void AutostartAgentPullsFromLocalConfig()
         {
             _localConfig.service.autoStart = false;
-            Assert.IsFalse(_defaultConfig.AutoStartAgent);
+            ClassicAssert.IsFalse(_defaultConfig.AutoStartAgent);
 
             _localConfig.service.autoStart = true;
-            Assert.IsTrue(_defaultConfig.AutoStartAgent);
+            ClassicAssert.IsTrue(_defaultConfig.AutoStartAgent);
         }
 
         [Test]
@@ -2061,14 +2056,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(defaultConfig.UseResourceBasedNamingForWCFEnabled);
+            ClassicAssert.IsTrue(defaultConfig.UseResourceBasedNamingForWCFEnabled);
         }
 
         [Test]
         public void UseResourceBasedNamingIsDisabledByDefault()
         {
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-            Assert.IsFalse(defaultConfig.UseResourceBasedNamingForWCFEnabled);
+            ClassicAssert.IsFalse(defaultConfig.UseResourceBasedNamingForWCFEnabled);
         }
 
 
@@ -2082,7 +2077,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.CrossApplicationTracerEnabled = true;
             _serverConfig.CatId = "123#456";
 
-            Assert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2093,7 +2088,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.CrossApplicationTracerEnabled = true;
             _serverConfig.CatId = "123#456";
 
-            Assert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2104,7 +2099,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.CrossApplicationTracerEnabled = true;
             _serverConfig.CatId = "123#456";
 
-            Assert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2115,7 +2110,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.CrossApplicationTracerEnabled = false;
             _serverConfig.CatId = "123#456";
 
-            Assert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2126,7 +2121,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.CrossApplicationTracerEnabled = true;
             _serverConfig.CatId = null;
 
-            Assert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2138,7 +2133,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.CatId = "123#456";
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         [Test]
@@ -2150,7 +2145,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.CatId = "123#456";
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.CrossApplicationTracingEnabled);
         }
 
         #endregion CrossApplicationTracingEnabled
@@ -2163,7 +2158,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void DistributedTracingEnabled(bool localConfig, bool expectedResult)
         {
             _localConfig.distributedTracing.enabled = localConfig;
-            Assert.AreEqual(expectedResult, _defaultConfig.DistributedTracingEnabled);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.DistributedTracingEnabled);
         }
 
         [Test]
@@ -2171,7 +2166,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(_defaultConfig.DistributedTracingEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.DistributedTracingEnabled);
         }
 
         [Test]
@@ -2181,7 +2176,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.PrimaryApplicationId = server;
 
-            Assert.AreEqual(_defaultConfig.PrimaryApplicationId, expectedResult);
+            ClassicAssert.AreEqual(_defaultConfig.PrimaryApplicationId, expectedResult);
         }
 
         [Test]
@@ -2191,7 +2186,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.TrustedAccountKey = server;
 
-            Assert.AreEqual(_defaultConfig.TrustedAccountKey, expectedResult);
+            ClassicAssert.AreEqual(_defaultConfig.TrustedAccountKey, expectedResult);
         }
 
 
@@ -2202,7 +2197,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.AccountId = server;
 
-            Assert.AreEqual(_defaultConfig.AccountId, expectedResult);
+            ClassicAssert.AreEqual(_defaultConfig.AccountId, expectedResult);
         }
 
         [Test]
@@ -2212,7 +2207,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.SamplingTarget = server;
 
-            Assert.AreEqual(_defaultConfig.SamplingTarget, expectedResult);
+            ClassicAssert.AreEqual(_defaultConfig.SamplingTarget, expectedResult);
         }
 
         [Test]
@@ -2222,7 +2217,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.SamplingTargetPeriodInSeconds = server;
 
-            Assert.AreEqual(_defaultConfig.SamplingTargetPeriodInSeconds, expectedResult);
+            ClassicAssert.AreEqual(_defaultConfig.SamplingTargetPeriodInSeconds, expectedResult);
         }
 
         #endregion Distributed Tracing
@@ -2232,7 +2227,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void SpanEventsEnabledIsTrueInLocalConfigByDefault()
         {
-            Assert.IsTrue(_localConfig.spanEvents.enabled);
+            ClassicAssert.IsTrue(_localConfig.spanEvents.enabled);
         }
 
         [TestCase(true, true, ExpectedResult = true)]
@@ -2254,7 +2249,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.spanEvents.maximumSamplesStored = 100;
 
-            Assert.AreEqual(100, _defaultConfig.SpanEventsMaxSamplesStored);
+            ClassicAssert.AreEqual(100, _defaultConfig.SpanEventsMaxSamplesStored);
 
             _serverConfig.SpanEventHarvestConfig = new SingleEventHarvestConfig
             {
@@ -2262,13 +2257,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimit = 10
             };
 
-            Assert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
+            ClassicAssert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
         }
 
         [Test]
         public void SpanEventsHarvestCycleUsesDefaultOrSpanEventHarvestConfig()
         {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.SpanEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.SpanEventsHarvestCycle);
 
             _serverConfig.SpanEventHarvestConfig = new SingleEventHarvestConfig
             {
@@ -2276,7 +2271,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimit = 10
             };
 
-            Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
         }
 
         [TestCase(false, false, false)]
@@ -2287,7 +2282,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.attributes.enabled = globalAttributes;
             _localConfig.spanEvents.attributes.enabled = localAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.SpanEventsAttributesEnabled);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.SpanEventsAttributesEnabled);
         }
 
         [TestCase(true, true, new[] { "att1", "att2" }, new string[] { })]
@@ -2299,7 +2294,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.highSecurity.enabled = highSecurity;
             _localConfig.spanEvents.attributes.enabled = localAttributesEnabled;
             _localConfig.spanEvents.attributes.include = new List<string>(attributes);
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -2308,14 +2303,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
             _localConfig.spanEvents.attributes.include = new List<string>(attributes);
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
         }
 
         [TestCase(new[] { "att1", "att2" }, new[] { "att1", "att2" })]
         public void SpanEventsAttributesExclude(string[] attributes, string[] expectedResult)
         {
             _localConfig.spanEvents.attributes.exclude = new List<string>(attributes);
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesExclude.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesExclude.Count());
         }
 
         #endregion
@@ -2389,9 +2384,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedHost, defaultConfig.InfiniteTracingTraceObserverHost),
-                () => Assert.AreEqual(expectedPort, defaultConfig.InfiniteTracingTraceObserverPort),
-                () => Assert.AreEqual(expectedSsl, defaultConfig.InfiniteTracingTraceObserverSsl)
+                () => ClassicAssert.AreEqual(expectedHost, defaultConfig.InfiniteTracingTraceObserverHost),
+                () => ClassicAssert.AreEqual(expectedPort, defaultConfig.InfiniteTracingTraceObserverPort),
+                () => ClassicAssert.AreEqual(expectedSsl, defaultConfig.InfiniteTracingTraceObserverSsl)
             );
         }
 
@@ -2541,7 +2536,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(expectedResult, defaultConfig.InfiniteTracingTraceCountConsumers);
+            ClassicAssert.AreEqual(expectedResult, defaultConfig.InfiniteTracingTraceCountConsumers);
         }
 
         [TestCase("true", "false", ExpectedResult = true)]
@@ -2720,13 +2715,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void ApplicationLogging_MetricsEnabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsTrue(_defaultConfig.LogMetricsCollectorEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.LogMetricsCollectorEnabled);
         }
 
         [Test]
         public void ApplicationLogging_Enabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsTrue(_defaultConfig.ApplicationLoggingEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.ApplicationLoggingEnabled);
         }
 
         [TestCase(false, false, false, false, false, false, false)]
@@ -2748,16 +2743,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.applicationLogging.metrics.enabled = metricsEnabledInConfig;
             _localConfig.applicationLogging.localDecorating.enabled = localDecoratingEnabledInConfig;
 
-            Assert.AreEqual(_defaultConfig.ApplicationLoggingEnabled, applicationLoggingEnabledInConfig);
-            Assert.AreEqual(_defaultConfig.LogEventCollectorEnabled, forwardingActuallyEnabled);
-            Assert.AreEqual(_defaultConfig.LogMetricsCollectorEnabled, metricsActuallyEnabled);
-            Assert.AreEqual(_defaultConfig.LogDecoratorEnabled, localDecoratingActuallyEnabled);
+            ClassicAssert.AreEqual(_defaultConfig.ApplicationLoggingEnabled, applicationLoggingEnabledInConfig);
+            ClassicAssert.AreEqual(_defaultConfig.LogEventCollectorEnabled, forwardingActuallyEnabled);
+            ClassicAssert.AreEqual(_defaultConfig.LogMetricsCollectorEnabled, metricsActuallyEnabled);
+            ClassicAssert.AreEqual(_defaultConfig.LogDecoratorEnabled, localDecoratingActuallyEnabled);
         }
 
         [Test]
         public void ApplicationLogging_ForwardingEnabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsTrue(_defaultConfig.LogEventCollectorEnabled);
+            ClassicAssert.IsTrue(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
@@ -2766,7 +2761,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.applicationLogging.forwarding.enabled = true;
             _localConfig.highSecurity.enabled = true;
 
-            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
@@ -2774,7 +2769,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.applicationLogging.forwarding.maxSamplesStored = 0;
 
-            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
@@ -2786,20 +2781,20 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.LogEventHarvestLimitKey, 0 } }
             };
 
-            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
         public void ApplicationLogging_LocalDecoratingEnabled_IsFalseInLocalConfigByDefault()
         {
-            Assert.IsFalse(_defaultConfig.LogDecoratorEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.LogDecoratorEnabled);
         }
 
         [Test]
         public void ApplicationLogging_ForwardingMaxSamplesStored_HasCorrectValue()
         {
             _localConfig.applicationLogging.forwarding.maxSamplesStored = 1;
-            Assert.AreEqual(1, _defaultConfig.LogEventsMaxSamplesStored);
+            ClassicAssert.AreEqual(1, _defaultConfig.LogEventsMaxSamplesStored);
         }
 
         [Test]
@@ -2807,9 +2802,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.applicationLogging.forwarding.logLevelDenyList = " SomeValue, SomeOtherValue  ";
 
-            Assert.AreEqual(2, _defaultConfig.LogLevelDenyList.Count);
-            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEVALUE"));
-            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEOTHERVALUE"));
+            ClassicAssert.AreEqual(2, _defaultConfig.LogLevelDenyList.Count);
+            Assert.That(_defaultConfig.LogLevelDenyList.Contains("SOMEVALUE"));
+            Assert.That(_defaultConfig.LogLevelDenyList.Contains("SOMEOTHERVALUE"));
         }
 
         [Test]
@@ -2818,7 +2813,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             const string LogEventHarvestLimitKey = "log_event_data";
 
             // Confirm default is 5.
-            Assert.AreEqual(5, _defaultConfig.LogEventsHarvestCycle.Seconds);
+            ClassicAssert.AreEqual(5, _defaultConfig.LogEventsHarvestCycle.Seconds);
 
             _serverConfig.EventHarvestConfig = new EventHarvestConfig();
             _serverConfig.EventHarvestConfig.ReportPeriodMs = 10000;
@@ -2826,13 +2821,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.EventHarvestConfig.HarvestLimits.Add(LogEventHarvestLimitKey, 100); // limit does not matter here
 
             // Confirm value is set to provided value not default
-            Assert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
+            ClassicAssert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
         }
 
         [Test]
         public void ApplicationLogging_ContextDataEnabled_IsFalseInLocalConfigByDefault()
         {
-            Assert.IsFalse(_defaultConfig.ContextDataEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.ContextDataEnabled);
         }
 
         [TestCase(null, null, ExpectedResult = new string[] { })]
@@ -2888,7 +2883,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.allowAllHeaders.enabled = enabled.Value;
             }
 
-            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
         }
 
         [TestCase(true, false)]
@@ -2898,8 +2893,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.allowAllHeaders.enabled = enabled;
             _localConfig.highSecurity.enabled = true;
 
-            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
-            Assert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
+            ClassicAssert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
         }
 
         [TestCase(true, true)]
@@ -2907,7 +2902,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void CaptureAttributes(bool captureAttributes, bool expectedResult)
         {
             _localConfig.attributes.enabled = captureAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureAttributes);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.CaptureAttributes);
         }
 
         [TestCase(true, true, new[] { "att1", "att2" }, new string[] { })]
@@ -2920,7 +2915,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.attributes.enabled = attributesEnabled;
             _localConfig.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureAttributesIncludes.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -2930,7 +2925,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
             _localConfig.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureAttributesIncludes.Count());
         }
 
         [TestCase(false, false, false)]
@@ -2941,7 +2936,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.attributes.enabled = globalAttributes;
             _localConfig.transactionEvents.attributes.enabled = localAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.TransactionEventsAttributesEnabled);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.TransactionEventsAttributesEnabled);
         }
 
 
@@ -2955,7 +2950,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.transactionEvents.attributes.enabled = localAttributesEnabled;
             _localConfig.transactionEvents.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -2965,7 +2960,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
             _localConfig.transactionEvents.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
         }
 
         [TestCase(false, false, false)]
@@ -2976,7 +2971,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.attributes.enabled = globalAttributes;
             _localConfig.transactionTracer.attributes.enabled = localAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureTransactionTraceAttributes);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.CaptureTransactionTraceAttributes);
         }
 
 
@@ -2990,7 +2985,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.transactionTracer.attributes.enabled = localAttributesEnabled;
             _localConfig.transactionTracer.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionTraceAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionTraceAttributesIncludes.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -3000,7 +2995,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
             _localConfig.transactionTracer.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionTraceAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionTraceAttributesIncludes.Count());
         }
 
         [TestCase(false, false, false)]
@@ -3011,7 +3006,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.attributes.enabled = globalAttributes;
             _localConfig.errorCollector.attributes.enabled = localAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureErrorCollectorAttributes);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.CaptureErrorCollectorAttributes);
         }
 
 
@@ -3025,7 +3020,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.errorCollector.attributes.enabled = localAttributesEnabled;
             _localConfig.errorCollector.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureErrorCollectorAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureErrorCollectorAttributesIncludes.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -3035,7 +3030,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
             _localConfig.errorCollector.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureErrorCollectorAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureErrorCollectorAttributesIncludes.Count());
         }
 
         [TestCase(false, false, false)]
@@ -3046,7 +3041,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.attributes.enabled = globalAttributes;
             _localConfig.browserMonitoring.attributes.enabled = localAttributes;
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureBrowserMonitoringAttributes);
+            ClassicAssert.AreEqual(expectedResult, _defaultConfig.CaptureBrowserMonitoringAttributes);
         }
 
         [TestCase(true, true, new[] { "att1", "att2" }, new string[] { })]
@@ -3059,7 +3054,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.browserMonitoring.attributes.enabled = localAttributesEnabled;
             _localConfig.browserMonitoring.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count());
         }
 
         [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -3070,7 +3065,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.browserMonitoring.attributes.enabled = true;
             _localConfig.browserMonitoring.attributes.include = new List<string>(attributes);
 
-            Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count());
+            ClassicAssert.AreEqual(expectedResult.Length, _defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count());
         }
 
         [TestCase(true, true, true, ExpectedResult = false)]
@@ -3137,7 +3132,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
             };
 
-            Assert.AreEqual(10, _defaultConfig.CustomEventsMaximumSamplesStored);
+            ClassicAssert.AreEqual(10, _defaultConfig.CustomEventsMaximumSamplesStored);
         }
 
         [TestCase("10", 20, 30, ExpectedResult = 30)]
@@ -3173,21 +3168,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CustomEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.CustomEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.CustomEventsHarvestCycle);
 
             _serverConfig.EventHarvestConfig = new EventHarvestConfig
             {
                 ReportPeriodMs = 5000,
                 HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
             };
-            Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.CustomEventsHarvestCycle);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.CustomEventsHarvestCycle);
         }
 
         [Test]
         public void CustomEventsMaxSamplesOf0ShouldDisableCustomEvents()
         {
             _localConfig.customEvents.maximumSamplesStored = 0;
-            Assert.IsFalse(_defaultConfig.CustomEventsEnabled);
+            ClassicAssert.IsFalse(_defaultConfig.CustomEventsEnabled);
         }
 
         #endregion
@@ -3280,7 +3275,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CodeLevelMetricsAreEnabledByDefault()
         {
-            Assert.IsTrue(_defaultConfig.CodeLevelMetricsEnabled, "Code Level Metrics should be enabled by default");
+            ClassicAssert.IsTrue(_defaultConfig.CodeLevelMetricsEnabled, "Code Level Metrics should be enabled by default");
         }
 
         [TestCase(true, null, ExpectedResult = true)]
@@ -3320,13 +3315,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
-            Assert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3344,7 +3339,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3362,7 +3357,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3380,7 +3375,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3398,7 +3393,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3416,7 +3411,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3434,7 +3429,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3452,7 +3447,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
+            ClassicAssert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         [Test]
@@ -3467,7 +3462,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3476,7 +3471,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3491,7 +3486,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3500,7 +3495,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3515,7 +3510,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3524,7 +3519,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3539,7 +3534,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3548,7 +3543,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3563,7 +3558,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3572,7 +3567,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
         }
 
         [Test]
@@ -3587,7 +3582,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3596,7 +3591,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3611,7 +3606,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3620,7 +3615,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
+            ClassicAssert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         #endregion

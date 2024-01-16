@@ -3,9 +3,6 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CompositeTests
 {
@@ -56,7 +53,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            Assert.IsEmpty(_compositeTestAgent.TransactionTraces);
+            ClassicAssert.IsEmpty(_compositeTestAgent.TransactionTraces);
         }
 
         [Test]
@@ -86,7 +83,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            Assert.IsEmpty(_compositeTestAgent.TransactionTraces);
+            ClassicAssert.IsEmpty(_compositeTestAgent.TransactionTraces);
         }
 
         [Test]
@@ -118,7 +115,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 
-            Assert.AreEqual("WebTransaction/Action/name", transactionTrace.TransactionMetricName);
+            ClassicAssert.AreEqual("WebTransaction/Action/name", transactionTrace.TransactionMetricName);
         }
 
         [Test]
@@ -161,7 +158,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 
-            Assert.AreEqual("WebTransaction/Action/name2", transactionTrace.TransactionMetricName);
+            ClassicAssert.AreEqual("WebTransaction/Action/name2", transactionTrace.TransactionMetricName);
         }
     }
 }

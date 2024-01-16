@@ -4,14 +4,11 @@
 using BenchmarkingTests.Scaffolding.Benchmarker;
 using BenchmarkingTests.Scaffolding.CodeExerciser;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NUnit.Framework;
-using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data;
 using NewRelic.Core;
 using NewRelic.Parsing;
-using System.Threading;
 
 namespace BenchmarkingTests.Tests
 {
@@ -40,7 +37,7 @@ namespace BenchmarkingTests.Tests
             var iterativeExerciserResults = iterativeExerciser.ExecAll();
 
             //10 threads each running 1K units of work can produce 10K results
-            Assert.AreEqual(10000, iterativeExerciserResults.CountUnitsOfWorkPerformed);
+            ClassicAssert.AreEqual(10000, iterativeExerciserResults.CountUnitsOfWorkPerformed);
         }
 
         [Test]
@@ -49,8 +46,8 @@ namespace BenchmarkingTests.Tests
             //Benchmarker wrapping exerciser
             var benchmarkResult = NewRelicGuidGeneratorBenchmark.Execute();
 
-            Assert.AreEqual(NewRelicGuidGeneratorBenchmark.CountUowTotal, benchmarkResult.CountUnitsOfWorkExecuted_Mean);
-            Assert.LessOrEqual(1000, benchmarkResult.Duration_Mean_Nanoseconds);
+            ClassicAssert.AreEqual(NewRelicGuidGeneratorBenchmark.CountUowTotal, benchmarkResult.CountUnitsOfWorkExecuted_Mean);
+            ClassicAssert.LessOrEqual(1000, benchmarkResult.Duration_Mean_Nanoseconds);
         }
 
 
@@ -88,7 +85,7 @@ namespace BenchmarkingTests.Tests
 
             // the time it takes to generate 1000 guids on 10 threads should never run longer than 4x
             // the time it takes to generate 1000 strings on 10-threads should never run mmor
-            Assert.Less(comparer.Duration_Mean_Nanoseconds_Ratio, 4);
+            ClassicAssert.Less(comparer.Duration_Mean_Nanoseconds_Ratio, 4);
         }
 
 
@@ -148,10 +145,10 @@ namespace BenchmarkingTests.Tests
                 .ExecAll();
 
             //Caching makes things better
-            Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed);
+            ClassicAssert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed);
 
             //Chaching makes things 50% better
-            //Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed * 1.5);
+            //ClassicAssert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed * 1.5);
         }
 
     }

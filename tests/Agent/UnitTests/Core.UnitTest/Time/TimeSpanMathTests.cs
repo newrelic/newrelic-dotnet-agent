@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Time
 {
     [TestFixture]
@@ -21,7 +18,7 @@ namespace NewRelic.Agent.Core.Time
 
             var actualTime = TimeSpanMath.Min(time1, time2);
 
-            Assert.AreEqual(expectedTime, actualTime);
+            ClassicAssert.AreEqual(expectedTime, actualTime);
         }
 
         [Test]
@@ -36,7 +33,7 @@ namespace NewRelic.Agent.Core.Time
 
             var actualTime = TimeSpanMath.Max(time1, time2);
 
-            Assert.AreEqual(expectedTime, actualTime);
+            ClassicAssert.AreEqual(expectedTime, actualTime);
         }
     }
 }

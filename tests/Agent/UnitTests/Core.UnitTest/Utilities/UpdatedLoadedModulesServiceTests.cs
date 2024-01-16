@@ -1,7 +1,6 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NewRelic.Agent.Configuration;
@@ -10,7 +9,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 
@@ -69,8 +67,8 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.NotNull(loadedModulesCollection);
-            Assert.IsTrue(loadedModules.Count > 0);
+            ClassicAssert.NotNull(loadedModulesCollection);
+            ClassicAssert.IsTrue(loadedModules.Count > 0);
         }
 
         [Test]
@@ -94,7 +92,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            ClassicAssert.AreEqual(initialModules.Count, loadedModules.Count);
         }
 
         [Test]
@@ -113,9 +111,9 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.Greater(initialModules.Count, 0);
-            Assert.Greater(loadedModules.Count, 0);
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            ClassicAssert.Greater(initialModules.Count, 0);
+            ClassicAssert.Greater(loadedModules.Count, 0);
+            ClassicAssert.AreEqual(initialModules.Count, loadedModules.Count);
         }
     }
 }

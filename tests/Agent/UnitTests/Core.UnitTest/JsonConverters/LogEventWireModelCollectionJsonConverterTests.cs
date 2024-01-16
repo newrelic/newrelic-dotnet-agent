@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Utilities
@@ -29,7 +27,7 @@ namespace NewRelic.Agent.Core.Utilities
             });
 
             var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            ClassicAssert.AreEqual(expected, serialized);
         }
     }
 }

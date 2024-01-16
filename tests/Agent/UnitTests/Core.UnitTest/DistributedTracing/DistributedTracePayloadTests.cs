@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
-using NUnit.Framework;
-using System;
 using Telerik.JustMock;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Core;
@@ -54,7 +52,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void BuildOutgoingPayload_ReturnsNull_WhenRequiredFieldsNotPresent(string type, string accountId, string appId, string traceId)
         {
             var payload = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, Guid, traceId, TrustKey, Priority, Sampled, Timestamp, TransactionId);
-            Assert.Null(payload);
+            ClassicAssert.Null(payload);
         }
 
         [TestCase(null, null)]
@@ -63,7 +61,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         {
             var payload = DistributedTracePayload.TryBuildOutgoingPayload(TransportType, AccountId, AppId, guid, TraceId,
                 TrustKey, Priority, Sampled, Timestamp, transactionId);
-            Assert.Null(payload);
+            ClassicAssert.Null(payload);
         }
 
         [Test]
@@ -74,7 +72,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var encodedJsonString = Strings.Base64Encode(jsonString);
             var serializedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 
-            Assert.AreEqual(encodedJsonString, serializedPayload);
+            ClassicAssert.AreEqual(encodedJsonString, serializedPayload);
         }
 
         [Test]

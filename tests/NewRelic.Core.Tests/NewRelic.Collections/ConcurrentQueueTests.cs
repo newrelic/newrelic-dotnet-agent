@@ -1,13 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections;
-using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
-
-
 
 
 namespace NewRelic.Collections.UnitTests
@@ -35,42 +30,42 @@ namespace NewRelic.Collections.UnitTests
 
             // Peek
             var head = _concurrentQueue.Peek();
-            Assert.AreEqual(numbersToAdd.First(), head);
+            ClassicAssert.AreEqual(numbersToAdd.First(), head);
 
             // GetEnumerator<T>
             var index = 0;
             var genericEnumerator = _concurrentQueue.GetEnumerator();
             while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                ClassicAssert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
+            ClassicAssert.AreEqual(numbersToAdd.Length, index);
 
             // GetEnumerator
             index = 0;
             var nongenericEnumerator = ((IEnumerable)_concurrentQueue).GetEnumerator();
             while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                ClassicAssert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
+            ClassicAssert.AreEqual(numbersToAdd.Length, index);
 
             // Count
-            Assert.AreEqual(_concurrentQueue.Count, numbersToAdd.Length);
+            ClassicAssert.AreEqual(_concurrentQueue.Count, numbersToAdd.Length);
 
             // CopyTo
             var destinationArray = new int[numbersToAdd.Length];
             _concurrentQueue.CopyTo(destinationArray, 0);
-            Assert.True(numbersToAdd.SequenceEqual(destinationArray));
+            Assert.That(numbersToAdd.SequenceEqual(destinationArray));
 
             // Contains
-            Assert.True(numbersToAdd.All(_concurrentQueue.Contains));
+            Assert.That(numbersToAdd.All(_concurrentQueue.Contains));
 
             // Dequeue
             head = _concurrentQueue.Dequeue();
-            Assert.AreEqual(numbersToAdd.First(), head);
-            Assert.True(_concurrentQueue.SequenceEqual(numbersToAdd.Skip(1)));
+            ClassicAssert.AreEqual(numbersToAdd.First(), head);
+            Assert.That(_concurrentQueue.SequenceEqual(numbersToAdd.Skip(1)));
 
             // Clear
             _concurrentQueue.Clear();
-            Assert.AreEqual(0, _concurrentQueue.Count);
-            Assert.False(numbersToAdd.Any(_concurrentQueue.Contains));
+            ClassicAssert.AreEqual(0, _concurrentQueue.Count);
+            ClassicAssert.False(numbersToAdd.Any(_concurrentQueue.Contains));
         }
 
         [Test]

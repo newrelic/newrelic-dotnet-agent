@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Utilities.UnitTest
 {
     [TestFixture]
@@ -19,7 +16,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            ClassicAssert.IsFalse(wasCalled);
         }
 
         [Test]
@@ -31,7 +28,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.IsTrue(wasCalled);
+            ClassicAssert.IsTrue(wasCalled);
         }
 
         [Test]
@@ -45,7 +42,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.AreEqual(1, callCount);
+            ClassicAssert.AreEqual(1, callCount);
         }
     }
 }

@@ -1,13 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections;
-using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
-
-
 
 
 namespace NewRelic.Collections.UnitTests
@@ -38,35 +33,35 @@ namespace NewRelic.Collections.UnitTests
             var index = 0;
             var genericEnumerator = _concurrentHashSet.GetEnumerator();
             while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-                Assert.AreEqual(distinctNumbers[index++], genericEnumerator.Current);
-            Assert.AreEqual(distinctNumbers.Count, index);
+                ClassicAssert.AreEqual(distinctNumbers[index++], genericEnumerator.Current);
+            ClassicAssert.AreEqual(distinctNumbers.Count, index);
 
             // GetEnumerator
             index = 0;
             var nongenericEnumerator = ((IEnumerable)_concurrentHashSet).GetEnumerator();
             while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-                Assert.AreEqual(distinctNumbers[index++], nongenericEnumerator.Current);
-            Assert.AreEqual(distinctNumbers.Count, index);
+                ClassicAssert.AreEqual(distinctNumbers[index++], nongenericEnumerator.Current);
+            ClassicAssert.AreEqual(distinctNumbers.Count, index);
 
             // Count
-            Assert.AreEqual(_concurrentHashSet.Count, distinctNumbers.Count);
+            ClassicAssert.AreEqual(_concurrentHashSet.Count, distinctNumbers.Count);
 
             // CopyTo
             var destinationArray = new int[distinctNumbers.Count];
             _concurrentHashSet.CopyTo(destinationArray, 0);
-            Assert.True(distinctNumbers.SequenceEqual(destinationArray));
+            Assert.That(distinctNumbers.SequenceEqual(destinationArray));
 
             // Contains
-            Assert.True(distinctNumbers.All(_concurrentHashSet.Contains));
+            Assert.That(distinctNumbers.All(_concurrentHashSet.Contains));
 
             // Remove
             _concurrentHashSet.Remove(distinctNumbers.First());
-            Assert.False(_concurrentHashSet.Contains(distinctNumbers.First()));
+            ClassicAssert.False(_concurrentHashSet.Contains(distinctNumbers.First()));
 
             // Clear
             _concurrentHashSet.Clear();
-            Assert.AreEqual(0, _concurrentHashSet.Count);
-            Assert.False(distinctNumbers.Any(_concurrentHashSet.Contains));
+            ClassicAssert.AreEqual(0, _concurrentHashSet.Count);
+            ClassicAssert.False(distinctNumbers.Any(_concurrentHashSet.Contains));
         }
 
         [Test]

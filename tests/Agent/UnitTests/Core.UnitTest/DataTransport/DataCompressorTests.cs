@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -21,7 +19,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var compressed = DataCompressor.Compress(input);
             var decompressed = DataCompressor.Decompress(compressed);
 
-            Assert.AreEqual(input, decompressed);
+            ClassicAssert.AreEqual(input, decompressed);
         }
 
         [Test]
@@ -32,7 +30,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var compressed = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.GzipCompression);
             var decompressed = DecompressGzip(compressed);
-            Assert.AreEqual(input, decompressed);
+            ClassicAssert.AreEqual(input, decompressed);
         }
 
         [Test]
@@ -41,7 +39,7 @@ namespace NewRelic.Agent.Core.DataTransport
             const string input = "input";
             var defaultCompression = DataCompressor.Compress(input);
             var explicitCompression = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.DeflateCompression);
-            Assert.AreEqual(defaultCompression, explicitCompression);
+            ClassicAssert.AreEqual(defaultCompression, explicitCompression);
         }
 
         [Test]

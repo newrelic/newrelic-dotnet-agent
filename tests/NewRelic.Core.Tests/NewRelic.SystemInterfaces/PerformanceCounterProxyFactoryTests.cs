@@ -3,10 +3,6 @@
 
 #if NETFRAMEWORK
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
@@ -67,8 +63,8 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			var performanceCounter = _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName);
 			
 			//Assert
-			Assert.NotNull(performanceCounter);
-			Assert.AreEqual(_expectedPerformanceCounter, performanceCounter);
+			ClassicAssert.NotNull(performanceCounter);
+			ClassicAssert.AreEqual(_expectedPerformanceCounter, performanceCounter);
 		}
 
 		[Test]
@@ -96,7 +92,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter2", processInstanceName1);
 			_factory.CreatePerformanceCounterProxy(newCatName2, "mycounter", processInstanceName2);
 
-			Assert.AreEqual(2, _instanceNameLookupCount);
+			ClassicAssert.AreEqual(2, _instanceNameLookupCount);
 		}
 
 		[Test]
@@ -138,7 +134,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
+            ClassicAssert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
         [Test]
@@ -202,7 +198,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
+            ClassicAssert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
 		private void GivenCurrentProcessHasThisNameAndId(string processName, int processId)

@@ -1,8 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.OpenTracing.AmazonLambda;
-
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
     public class MockFileSystemManager : IFileSystemManager

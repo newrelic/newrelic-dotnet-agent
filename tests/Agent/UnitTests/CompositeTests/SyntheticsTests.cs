@@ -11,10 +11,6 @@ using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace CompositeTests
@@ -244,8 +240,8 @@ namespace CompositeTests
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
-            Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]);
+            ClassicAssert.NotNull(headers);
+            ClassicAssert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]);
         }
 
         [Test]
@@ -282,7 +278,7 @@ namespace CompositeTests
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
+            ClassicAssert.NotNull(headers);
 
             var configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => configurationService.Configuration).Returns(() => _compositeTestAgent.CurrentConfiguration);
@@ -291,12 +287,12 @@ namespace CompositeTests
             SyntheticsHeader decodedSyntheticsHeader = syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]),
-                () => Assert.AreEqual(decodedSyntheticsHeader.Version, version),
-                () => Assert.AreEqual(decodedSyntheticsHeader.JobId, jobId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.AccountId, clientAccountId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.MonitorId, monitorId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.ResourceId, resourceId)
+                () => ClassicAssert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]),
+                () => ClassicAssert.AreEqual(decodedSyntheticsHeader.Version, version),
+                () => ClassicAssert.AreEqual(decodedSyntheticsHeader.JobId, jobId),
+                () => ClassicAssert.AreEqual(decodedSyntheticsHeader.AccountId, clientAccountId),
+                () => ClassicAssert.AreEqual(decodedSyntheticsHeader.MonitorId, monitorId),
+                () => ClassicAssert.AreEqual(decodedSyntheticsHeader.ResourceId, resourceId)
             );
 
             List<string> GetHeaderValue(Dictionary<string, string> carrier, string key)

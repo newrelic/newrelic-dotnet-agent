@@ -1,14 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers
@@ -60,7 +57,7 @@ namespace NewRelic.Agent.Core.Transformers
             Transform(sample);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, generatedMetrics.Count),
+                () => ClassicAssert.AreEqual(2, generatedMetrics.Count),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryPhysical, expectedMemoryPhysicalValueAsFloat),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryWorkingSet, expectedMemoryWorkingSetValueAsFloat)
             );
@@ -79,7 +76,7 @@ namespace NewRelic.Agent.Core.Transformers
             var sample = new ImmutableMemorySample(expectedMemoryPhysicalValue, expectedMemoryWorkingSetValue);
             Transform(sample);
 
-            Assert.IsEmpty(generatedMetrics);
+            ClassicAssert.IsEmpty(generatedMetrics);
         }
 
         [TestCase(true, PrivateBytesTestValue / BytesPerMb, WorkingSetTestValue / BytesPerMb)]
@@ -94,7 +91,7 @@ namespace NewRelic.Agent.Core.Transformers
             Transform(sample, isWindows);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, generatedMetrics.Count),
+                () => ClassicAssert.AreEqual(2, generatedMetrics.Count),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryPhysical, expectedMemoryPhysicalValue),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryWorkingSet, expectedWorkingSetValue)
             );

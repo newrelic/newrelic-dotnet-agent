@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Core.DistributedTracing;
-using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using System;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {

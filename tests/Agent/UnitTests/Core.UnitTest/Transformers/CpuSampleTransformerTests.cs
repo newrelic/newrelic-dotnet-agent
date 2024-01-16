@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers
@@ -43,8 +41,8 @@ namespace NewRelic.Agent.Core.Transformers
 
             Mock.Assert(() => _metricBuilder.TryBuildCpuUserTimeMetric(TimeSpan.FromSeconds(1)));
             Mock.Assert(() => _metricBuilder.TryBuildCpuUserUtilizationMetric(0.5f));
-            //Assert.IsTrue(generatedMetrics.Contains(expectedCpuTimeMetric));
-            //Assert.IsTrue(generatedMetrics.Contains(expectedCpuUtilizationMetric));
+            //ClassicAssert.IsTrue(generatedMetrics.Contains(expectedCpuTimeMetric));
+            //ClassicAssert.IsTrue(generatedMetrics.Contains(expectedCpuUtilizationMetric));
         }
     }
 }

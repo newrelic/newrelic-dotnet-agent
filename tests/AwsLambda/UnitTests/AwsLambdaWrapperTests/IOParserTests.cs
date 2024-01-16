@@ -1,19 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.KinesisFirehoseEvents;
 using Amazon.Lambda.S3Events;
 using Amazon.Lambda.SNSEvents;
 using Amazon.Lambda.SQSEvents;
-using NewRelic.OpenTracing.AmazonLambda;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Net;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
 {

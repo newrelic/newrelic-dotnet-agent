@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 using realWireModels = NewRelic.Agent.Core.WireModels;
 
@@ -29,8 +27,8 @@ namespace NewRelic.Agent.Core.WireModels
             const int RawBytes = 1024;
             var actualMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(RawBytes);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.MemoryPhysical, actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.MemoryPhysical, actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.DataModel)
             );
         }
 
@@ -40,8 +38,8 @@ namespace NewRelic.Agent.Core.WireModels
             const int RawBytes = 1536;
             var actualMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(RawBytes);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.MemoryWorkingSet, actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.MemoryWorkingSet, actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.DataModel)
             );
         }
 
@@ -53,8 +51,8 @@ namespace NewRelic.Agent.Core.WireModels
             var threadStatus = Samplers.ThreadStatus.Available;
             var actualMetric = _metricBuilder.TryBuildThreadpoolUsageStatsMetric(threadType, threadStatus, RawValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetThreadpoolUsageStatsName(threadType, threadStatus), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetThreadpoolUsageStatsName(threadType, threadStatus), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
             );
         }
 
@@ -65,8 +63,8 @@ namespace NewRelic.Agent.Core.WireModels
             var throughputStatsType = Samplers.ThreadpoolThroughputStatsType.Started;
             var actualMetric = _metricBuilder.TryBuildThreadpoolThroughputStatsMetric(throughputStatsType, RawValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetThreadpoolThroughputStatsName(throughputStatsType), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetThreadpoolThroughputStatsName(throughputStatsType), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
             );
         }
 
@@ -77,8 +75,8 @@ namespace NewRelic.Agent.Core.WireModels
             var gcSampleType = Samplers.GCSampleType.Gen0Size;
             var actualMetric = _metricBuilder.TryBuildGCBytesMetric(gcSampleType, RawByteValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawByteValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildByteData(RawByteValue), actualMetric.DataModel)
             );
         }
 
@@ -89,8 +87,8 @@ namespace NewRelic.Agent.Core.WireModels
             var gcSampleType = Samplers.GCSampleType.Gen0CollectionCount;
             var actualMetric = _metricBuilder.TryBuildGCCountMetric(gcSampleType, RawCountValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildCountData(RawCountValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildCountData(RawCountValue), actualMetric.DataModel)
             );
         }
 
@@ -101,8 +99,8 @@ namespace NewRelic.Agent.Core.WireModels
             var gcSampleType = Samplers.GCSampleType.PercentTimeInGc;
             var actualMetric = _metricBuilder.TryBuildGCPercentMetric(gcSampleType, RawPercentageValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildPercentageData(RawPercentageValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildPercentageData(RawPercentageValue), actualMetric.DataModel)
             );
         }
 
@@ -113,8 +111,8 @@ namespace NewRelic.Agent.Core.WireModels
             var gcSampleType = Samplers.GCSampleType.HandlesCount;
             var actualMetric = _metricBuilder.TryBuildGCGaugeMetric(gcSampleType, RawValue);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.DataModel)
             );
         }
 
@@ -124,8 +122,8 @@ namespace NewRelic.Agent.Core.WireModels
             const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
             var actualMetric = _metricBuilder.TryBuildSupportabilityCountMetric(MetricName);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildCountData(1), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildCountData(1), actualMetric.DataModel)
             );
         }
 
@@ -135,8 +133,8 @@ namespace NewRelic.Agent.Core.WireModels
             const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
             var actualMetric = _metricBuilder.TryBuildSupportabilityCountMetric(MetricName, 2);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(MetricDataWireModel.BuildCountData(2), actualMetric.DataModel)
+                () => ClassicAssert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildCountData(2), actualMetric.DataModel)
             );
         }
     }

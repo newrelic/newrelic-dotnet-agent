@@ -1,11 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using NewRelic.Agent.Core.Attributes.Tests.Models;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
@@ -414,7 +411,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 var expectedCount = expectedDestinations.Contains(testDestination) ? 1 : 0;
 
-                Assert.AreEqual(expectedCount, countMatchAttribValues, $"{testDestination}");
+                ClassicAssert.AreEqual(expectedCount, countMatchAttribValues, $"{testDestination}");
 
             }
         }

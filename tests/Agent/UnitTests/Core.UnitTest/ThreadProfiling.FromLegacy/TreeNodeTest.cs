@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
     [TestFixture]
@@ -14,14 +11,14 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             var ipTest = new UIntPtr(10);
             ProfileNode node = new ProfileNode(ipTest, 1, 0);
-            Assert.AreEqual(new UIntPtr(10), node.FunctionId);
+            ClassicAssert.AreEqual(new UIntPtr(10), node.FunctionId);
         }
 
         [Test]
         public void verify_CallCount_value_on_creation_of_a_new_tree_node()
         {
             ProfileNode node = new ProfileNode(new UIntPtr(10), 35, 0);
-            Assert.AreEqual(35, node.RunnableCount);
+            ClassicAssert.AreEqual(35, node.RunnableCount);
         }
 
         [Test]
@@ -30,7 +27,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var ipTest = new UIntPtr(20);
             ProfileNode node = new ProfileNode(new UIntPtr(), 1, 0);
             node.AddChild(new ProfileNode(ipTest, 1, 0));
-            Assert.AreEqual(1, node.Children.Count);
+            ClassicAssert.AreEqual(1, node.Children.Count);
         }
 
         [Test]
@@ -43,7 +40,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var ipExpected = new UIntPtr(IP_CHILD_VALUE);
             var ipChild = new UIntPtr(IP_CHILD_VALUE);
             rootProfileNode.AddChild(new ProfileNode(ipChild, 1, 1));
-            Assert.AreEqual(ipExpected, GetProfileNodeChildByIndex(rootProfileNode, 0).FunctionId);
+            ClassicAssert.AreEqual(ipExpected, GetProfileNodeChildByIndex(rootProfileNode, 0).FunctionId);
         }
 
         [Test]
@@ -54,7 +51,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ProfileNode rootProfileNode = new ProfileNode(ipRoot, 0, 0);
 
             rootProfileNode.AddChild(new ProfileNode(new UIntPtr(1), EXPECTED_CALL_COUNT, 1));
-            Assert.AreEqual(EXPECTED_CALL_COUNT, GetProfileNodeChildByIndex(rootProfileNode, 0).RunnableCount);
+            ClassicAssert.AreEqual(EXPECTED_CALL_COUNT, GetProfileNodeChildByIndex(rootProfileNode, 0).RunnableCount);
         }
 
         [Test]
@@ -65,7 +62,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ProfileNode rootProfileNode = new ProfileNode(ipRoot, 1, 0);
 
             rootProfileNode.AddChild(new ProfileNode(new UIntPtr(1), 1, EXPECTED_DEPTH_VALUE));
-            Assert.AreEqual(EXPECTED_DEPTH_VALUE, GetProfileNodeChildByIndex(rootProfileNode, 0).Depth);
+            ClassicAssert.AreEqual(EXPECTED_DEPTH_VALUE, GetProfileNodeChildByIndex(rootProfileNode, 0).Depth);
         }
 
         [Test]
@@ -79,7 +76,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Add second child.
             rootProfileNode.AddChild(new ProfileNode(new UIntPtr(3), 1, 1));
-            Assert.AreEqual(2, rootProfileNode.Children.Count);
+            ClassicAssert.AreEqual(2, rootProfileNode.Children.Count);
         }
 
         [Test]
@@ -97,7 +94,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Add second child.
             rootProfileNode.AddChild(new ProfileNode(ipChild, 1, 1));
-            Assert.AreEqual(ipExpected, GetProfileNodeChildByIndex(rootProfileNode, 1).FunctionId);
+            ClassicAssert.AreEqual(ipExpected, GetProfileNodeChildByIndex(rootProfileNode, 1).FunctionId);
         }
 
         [Test]
@@ -113,7 +110,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Add second child.
             rootProfileNode.AddChild(new ProfileNode(new UIntPtr(11), EXPECTED_CALL_COUNT, 1));
-            Assert.AreEqual(EXPECTED_CALL_COUNT, GetProfileNodeChildByIndex(rootProfileNode, 1).RunnableCount);
+            ClassicAssert.AreEqual(EXPECTED_CALL_COUNT, GetProfileNodeChildByIndex(rootProfileNode, 1).RunnableCount);
         }
 
         [Test]
@@ -129,7 +126,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Add second child.
             rootProfileNode.AddChild(new ProfileNode(new UIntPtr(11), 1, EXPECTED_DEPTH));
-            Assert.AreEqual(EXPECTED_DEPTH, GetProfileNodeChildByIndex(rootProfileNode, 1).Depth);
+            ClassicAssert.AreEqual(EXPECTED_DEPTH, GetProfileNodeChildByIndex(rootProfileNode, 1).Depth);
         }
 
         [Test]
@@ -144,7 +141,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Add grandchild.
             child.AddChild(new ProfileNode(new UIntPtr(3), 1, 1));
-            Assert.AreEqual(1, GetProfileNodeChildByIndex(rootProfileNode, 0).Children.Count);
+            ClassicAssert.AreEqual(1, GetProfileNodeChildByIndex(rootProfileNode, 0).Children.Count);
         }
 
         private ProfileNode GetProfileNodeChildByIndex(ProfileNode parent, int index)

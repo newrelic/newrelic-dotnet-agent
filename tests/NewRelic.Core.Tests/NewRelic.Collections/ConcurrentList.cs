@@ -1,14 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
-
-
 
 
 namespace NewRelic.Collections.UnitTests
@@ -38,55 +32,55 @@ namespace NewRelic.Collections.UnitTests
             var index = 0;
             var genericEnumerator = _concurrentList.GetEnumerator();
             while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                ClassicAssert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
+            ClassicAssert.AreEqual(numbersToAdd.Length, index);
 
             // GetEnumerator
             index = 0;
             var nongenericEnumerator = ((IEnumerable)_concurrentList).GetEnumerator();
             while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                ClassicAssert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
+            ClassicAssert.AreEqual(numbersToAdd.Length, index);
 
             // Count
-            Assert.AreEqual(_concurrentList.Count, numbersToAdd.Length);
+            ClassicAssert.AreEqual(_concurrentList.Count, numbersToAdd.Length);
 
             // CopyTo
             var destinationArray = new int[numbersToAdd.Length];
             _concurrentList.CopyTo(destinationArray, 0);
-            Assert.True(numbersToAdd.SequenceEqual(destinationArray));
+            Assert.That(numbersToAdd.SequenceEqual(destinationArray));
 
             // Contains
-            Assert.True(numbersToAdd.All(_concurrentList.Contains));
+            Assert.That(numbersToAdd.All(_concurrentList.Contains));
 
             // Remove
             _concurrentList.Remove(numbersToAdd.First());
-            Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
+            Assert.That(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
 
             // Insert
             _concurrentList.Insert(0, numbersToAdd.First());
-            Assert.True(_concurrentList.SequenceEqual(numbersToAdd));
+            Assert.That(_concurrentList.SequenceEqual(numbersToAdd));
 
             // IndexOf
             index = _concurrentList.IndexOf(numbersToAdd.First());
-            Assert.AreEqual(0, index);
+            ClassicAssert.AreEqual(0, index);
 
             // RemoveAt
             _concurrentList.RemoveAt(0);
-            Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
+            Assert.That(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
 
             // Indexer -- Set
             _concurrentList.Insert(0, numbersToAdd.First());
             _concurrentList[0] = _concurrentList[0] + 1;
-            Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList.First());
+            ClassicAssert.AreEqual(numbersToAdd.First() + 1, _concurrentList.First());
 
             // Indexer -- Get
-            Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList[0]);
+            ClassicAssert.AreEqual(numbersToAdd.First() + 1, _concurrentList[0]);
 
             // Clear
             _concurrentList.Clear();
-            Assert.AreEqual(0, _concurrentList.Count);
-            Assert.False(numbersToAdd.Any(_concurrentList.Contains));
+            ClassicAssert.AreEqual(0, _concurrentList.Count);
+            ClassicAssert.False(numbersToAdd.Any(_concurrentList.Contains));
         }
 
         [Test]

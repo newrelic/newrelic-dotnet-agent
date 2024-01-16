@@ -5,11 +5,7 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Core;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -36,7 +32,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var wireModelString = wireModel.ToString();
 
-            Assert.AreEqual("originalName ()NewRelic.Agent.Core.WireModels.MetricDataWireModel", wireModelString);
+            ClassicAssert.AreEqual("originalName ()NewRelic.Agent.Core.WireModels.MetricDataWireModel", wireModelString);
         }
 
         [Test]
@@ -55,7 +51,7 @@ namespace NewRelic.Agent.Core.WireModels
             var metricData = MetricDataWireModel.BuildGaugeValue(1);
             var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", "theScope", metricData);
 
-            Assert.IsTrue(metricWireModel.Equals(metricWireModel));
+            ClassicAssert.IsTrue(metricWireModel.Equals(metricWireModel));
         }
 
         [TestCase("metric", "scope", 1, "metric", "scope", 1, ExpectedResult = true)]
@@ -76,7 +72,7 @@ namespace NewRelic.Agent.Core.WireModels
         {
             var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
 
-            Assert.IsFalse(metricWireModel.Equals(null));
+            ClassicAssert.IsFalse(metricWireModel.Equals(null));
         }
 
         [TestCase("metric", "scope", 1, "metric", "scope", 1, ExpectedResult = false)]
@@ -101,10 +97,10 @@ namespace NewRelic.Agent.Core.WireModels
                 MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             Assert.That(metric1, Is.Not.Null);
             var data = metric1.DataModel;
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
+            ClassicAssert.NotNull(data);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(3, data.Value1);
+            ClassicAssert.AreEqual(2, data.Value2);
 
             var collection = new MetricStatsCollection();
             metric1.AddMetricsToCollection(collection);
@@ -130,14 +126,14 @@ namespace NewRelic.Agent.Core.WireModels
                 }
             }
 
-            Assert.AreEqual(1, scopedCount);
-            Assert.AreEqual(0, unscopedCount);
-            Assert.AreEqual("scope", theScope);
-            Assert.AreEqual("DotNet/name", metricName);
-            Assert.IsNotNull(scopedData);
-            Assert.AreEqual(1, scopedData.Value0);
-            Assert.AreEqual(3, scopedData.Value1);
-            Assert.AreEqual(2, scopedData.Value2);
+            ClassicAssert.AreEqual(1, scopedCount);
+            ClassicAssert.AreEqual(0, unscopedCount);
+            ClassicAssert.AreEqual("scope", theScope);
+            ClassicAssert.AreEqual("DotNet/name", metricName);
+            ClassicAssert.IsNotNull(scopedData);
+            ClassicAssert.AreEqual(1, scopedData.Value0);
+            ClassicAssert.AreEqual(3, scopedData.Value1);
+            ClassicAssert.AreEqual(2, scopedData.Value2);
         }
 
         [TestCase("")]
@@ -149,10 +145,10 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.That(metric1, Is.Not.Null);
 
             var data = metric1.DataModel;
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
+            ClassicAssert.NotNull(data);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(3, data.Value1);
+            ClassicAssert.AreEqual(2, data.Value2);
 
             var collection = new MetricStatsCollection();
             metric1.AddMetricsToCollection(collection);
@@ -161,12 +157,12 @@ namespace NewRelic.Agent.Core.WireModels
 
             foreach (var current in stats)
             {
-                Assert.AreEqual("DotNet/name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual("DotNet/name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
                 var myData = current.DataModel;
-                Assert.AreEqual(1, myData.Value0);
-                Assert.AreEqual(3, myData.Value1);
-                Assert.AreEqual(2, myData.Value2);
+                ClassicAssert.AreEqual(1, myData.Value0);
+                ClassicAssert.AreEqual(3, myData.Value1);
+                ClassicAssert.AreEqual(2, myData.Value2);
             }
         }
 
@@ -182,13 +178,13 @@ namespace NewRelic.Agent.Core.WireModels
             var mergedMetric = MetricWireModel.Merge(new[] { metric1 });
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(1, mergedMetric.DataModel.Value0),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value1),
-                () => Assert.AreEqual(1, mergedMetric.DataModel.Value2),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value3),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value4),
-                () => Assert.AreEqual(9, mergedMetric.DataModel.Value5)
+                () => ClassicAssert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(1, mergedMetric.DataModel.Value0),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value1),
+                () => ClassicAssert.AreEqual(1, mergedMetric.DataModel.Value2),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value3),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value4),
+                () => ClassicAssert.AreEqual(9, mergedMetric.DataModel.Value5)
             );
         }
 
@@ -203,13 +199,13 @@ namespace NewRelic.Agent.Core.WireModels
             var mergedMetric = MetricWireModel.Merge(metric1, metric2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(2, mergedMetric.DataModel.Value0),
-                () => Assert.AreEqual(10, mergedMetric.DataModel.Value1),
-                () => Assert.AreEqual(6, mergedMetric.DataModel.Value2),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value3),
-                () => Assert.AreEqual(7, mergedMetric.DataModel.Value4),
-                () => Assert.AreEqual(58, mergedMetric.DataModel.Value5)
+                () => ClassicAssert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(2, mergedMetric.DataModel.Value0),
+                () => ClassicAssert.AreEqual(10, mergedMetric.DataModel.Value1),
+                () => ClassicAssert.AreEqual(6, mergedMetric.DataModel.Value2),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value3),
+                () => ClassicAssert.AreEqual(7, mergedMetric.DataModel.Value4),
+                () => ClassicAssert.AreEqual(58, mergedMetric.DataModel.Value5)
             );
         }
 
@@ -226,13 +222,13 @@ namespace NewRelic.Agent.Core.WireModels
             var mergedMetric = MetricWireModel.Merge(new[] { metric1, metric2, metric3 });
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value0),
-                () => Assert.AreEqual(23, mergedMetric.DataModel.Value1),
-                () => Assert.AreEqual(17, mergedMetric.DataModel.Value2),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value3),
-                () => Assert.AreEqual(13, mergedMetric.DataModel.Value4),
-                () => Assert.AreEqual(227, mergedMetric.DataModel.Value5)
+                () => ClassicAssert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value0),
+                () => ClassicAssert.AreEqual(23, mergedMetric.DataModel.Value1),
+                () => ClassicAssert.AreEqual(17, mergedMetric.DataModel.Value2),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value3),
+                () => ClassicAssert.AreEqual(13, mergedMetric.DataModel.Value4),
+                () => ClassicAssert.AreEqual(227, mergedMetric.DataModel.Value5)
             );
         }
 
@@ -250,13 +246,13 @@ namespace NewRelic.Agent.Core.WireModels
             mergedMetric = MetricWireModel.Merge(new[] { mergedMetric, metric3 });
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value0),
-                () => Assert.AreEqual(23, mergedMetric.DataModel.Value1),
-                () => Assert.AreEqual(17, mergedMetric.DataModel.Value2),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value3),
-                () => Assert.AreEqual(13, mergedMetric.DataModel.Value4),
-                () => Assert.AreEqual(227, mergedMetric.DataModel.Value5)
+                () => ClassicAssert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value0),
+                () => ClassicAssert.AreEqual(23, mergedMetric.DataModel.Value1),
+                () => ClassicAssert.AreEqual(17, mergedMetric.DataModel.Value2),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value3),
+                () => ClassicAssert.AreEqual(13, mergedMetric.DataModel.Value4),
+                () => ClassicAssert.AreEqual(227, mergedMetric.DataModel.Value5)
             );
         }
 
@@ -269,13 +265,13 @@ namespace NewRelic.Agent.Core.WireModels
             var mergedMetric = MetricWireModel.Merge(new[] { null, metric1, null });
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(1, mergedMetric.DataModel.Value0),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value1),
-                () => Assert.AreEqual(1, mergedMetric.DataModel.Value2),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value3),
-                () => Assert.AreEqual(3, mergedMetric.DataModel.Value4),
-                () => Assert.AreEqual(9, mergedMetric.DataModel.Value5)
+                () => ClassicAssert.AreEqual("DotNet/name", mergedMetric.MetricNameModel.Name),
+                () => ClassicAssert.AreEqual(1, mergedMetric.DataModel.Value0),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value1),
+                () => ClassicAssert.AreEqual(1, mergedMetric.DataModel.Value2),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value3),
+                () => ClassicAssert.AreEqual(3, mergedMetric.DataModel.Value4),
+                () => ClassicAssert.AreEqual(9, mergedMetric.DataModel.Value5)
             );
         }
 
@@ -331,7 +327,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var serializedMetric = JsonConvert.SerializeObject(metric1);
 
-            Assert.AreEqual(expectedJson, serializedMetric);
+            ClassicAssert.AreEqual(expectedJson, serializedMetric);
         }
 
         [Test]
@@ -343,7 +339,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var serializedMetric = JsonConvert.SerializeObject(metric1);
 
-            Assert.AreEqual(expectedJson, serializedMetric);
+            ClassicAssert.AreEqual(expectedJson, serializedMetric);
         }
 
         #endregion
@@ -354,7 +350,7 @@ namespace NewRelic.Agent.Core.WireModels
         public void BuildMetricWireModelUsesOriginalName()
         {
             var actual = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
-            Assert.AreEqual("originalName", actual.MetricNameModel.Name);
+            ClassicAssert.AreEqual("originalName", actual.MetricNameModel.Name);
         }
 
         [Test]
@@ -364,7 +360,7 @@ namespace NewRelic.Agent.Core.WireModels
             Mock.Arrange(() => mockNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(null);
 
             var actual = MetricWireModel.BuildMetric(mockNameService, "originalName", null, null);
-            Assert.IsNull(actual);
+            ClassicAssert.IsNull(actual);
         }
 
         [Test]
@@ -373,12 +369,12 @@ namespace NewRelic.Agent.Core.WireModels
             var one = MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4));
             var two = MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(2));
             var actual = MetricDataWireModel.BuildAggregateData(one, two);
-            Assert.AreEqual(2, actual.Value0);
-            Assert.AreEqual(12, actual.Value1);
-            Assert.AreEqual(6, actual.Value2);
-            Assert.AreEqual(5, actual.Value3);
-            Assert.AreEqual(7, actual.Value4);
-            Assert.AreEqual(one.Value5 + two.Value5, actual.Value5);
+            ClassicAssert.AreEqual(2, actual.Value0);
+            ClassicAssert.AreEqual(12, actual.Value1);
+            ClassicAssert.AreEqual(6, actual.Value2);
+            ClassicAssert.AreEqual(5, actual.Value3);
+            ClassicAssert.AreEqual(7, actual.Value4);
+            ClassicAssert.AreEqual(one.Value5 + two.Value5, actual.Value5);
         }
 
         [Test]
@@ -389,12 +385,12 @@ namespace NewRelic.Agent.Core.WireModels
             var metricData = MetricDataWireModel.BuildGaugeValue(expectedValue);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, metricData.Value0),
-                () => Assert.AreEqual(expectedValue, metricData.Value1),
-                () => Assert.AreEqual(expectedValue, metricData.Value2),
-                () => Assert.AreEqual(expectedValue, metricData.Value3),
-                () => Assert.AreEqual(expectedValue, metricData.Value4),
-                () => Assert.AreEqual(expectedValue * expectedValue, metricData.Value5)
+                () => ClassicAssert.AreEqual(1, metricData.Value0),
+                () => ClassicAssert.AreEqual(expectedValue, metricData.Value1),
+                () => ClassicAssert.AreEqual(expectedValue, metricData.Value2),
+                () => ClassicAssert.AreEqual(expectedValue, metricData.Value3),
+                () => ClassicAssert.AreEqual(expectedValue, metricData.Value4),
+                () => ClassicAssert.AreEqual(expectedValue * expectedValue, metricData.Value5)
             );
         }
 
@@ -410,12 +406,12 @@ namespace NewRelic.Agent.Core.WireModels
             var metricData = MetricDataWireModel.BuildSummaryValue(count, value, min, max);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(count, metricData.Value0),
-                () => Assert.AreEqual(value, metricData.Value1),
-                () => Assert.AreEqual(value, metricData.Value2),
-                () => Assert.AreEqual(min, metricData.Value3),
-                () => Assert.AreEqual(max, metricData.Value4),
-                () => Assert.AreEqual(sumSquares, metricData.Value5)
+                () => ClassicAssert.AreEqual(count, metricData.Value0),
+                () => ClassicAssert.AreEqual(value, metricData.Value1),
+                () => ClassicAssert.AreEqual(value, metricData.Value2),
+                () => ClassicAssert.AreEqual(min, metricData.Value3),
+                () => ClassicAssert.AreEqual(max, metricData.Value4),
+                () => ClassicAssert.AreEqual(sumSquares, metricData.Value5)
             );
         }
 
@@ -429,9 +425,9 @@ namespace NewRelic.Agent.Core.WireModels
             var metricData = MetricDataWireModel.BuildDataUsageValue(callCount, dataSent, dataReceived);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(callCount, metricData.Value0),
-                () => Assert.AreEqual(dataSent, metricData.Value1),
-                () => Assert.AreEqual(dataReceived, metricData.Value2)
+                () => ClassicAssert.AreEqual(callCount, metricData.Value0),
+                () => ClassicAssert.AreEqual(dataSent, metricData.Value1),
+                () => ClassicAssert.AreEqual(dataReceived, metricData.Value2)
             );
         }
 
@@ -442,9 +438,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildCpuTimeRollupMetric(isWebTransaction, TimeSpan.FromSeconds(2));
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedMetricName, actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value1)
+                () => ClassicAssert.AreEqual(expectedMetricName, actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value1)
             );
         }
 
@@ -456,9 +452,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildCpuTimeMetric(transactionMetricName, TimeSpan.FromSeconds(2));
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedMetricName, actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value1)
+                () => ClassicAssert.AreEqual(expectedMetricName, actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value1)
             );
         }
 
@@ -468,9 +464,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildSupportabilityGaugeMetric("metricName", 2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/metricName", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value1)
+                () => ClassicAssert.AreEqual("Supportability/metricName", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value1)
             );
         }
 
@@ -480,9 +476,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildDotnetCoreVersionMetric(DotnetCoreVersion.Other);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Dotnet/NetCore/Other", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Dotnet/NetCore/Other", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -492,9 +488,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildAgentVersionByHostMetric("hostName", "10.0.0.0");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/AgentVersion/hostName/10.0.0.0", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/AgentVersion/hostName/10.0.0.0", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -504,9 +500,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildMetricHarvestAttemptMetric();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/MetricHarvest/transmit", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/MetricHarvest/transmit", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -516,9 +512,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildTransactionEventReservoirResizedMetric();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/AnalyticsEvents/TryResizeReservoir", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/AnalyticsEvents/TryResizeReservoir", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -528,9 +524,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildTransactionEventsRecollectedMetric(2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/AnalyticsEvents/TotalEventsRecollected", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/AnalyticsEvents/TotalEventsRecollected", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -540,9 +536,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildCustomEventReservoirResizedMetric();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Events/Customer/TryResizeReservoir", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Events/Customer/TryResizeReservoir", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -552,9 +548,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildCustomEventsRecollectedMetric(2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Events/Customer/TotalEventsRecollected", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Events/Customer/TotalEventsRecollected", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -564,9 +560,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildErrorTracesRecollectedMetric(2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Errors/TotalErrorsRecollected", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Errors/TotalErrorsRecollected", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -576,9 +572,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildSqlTracesRecollectedMetric(2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/SqlTraces/TotalSqlTracesRecollected", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/SqlTraces/TotalSqlTracesRecollected", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -588,9 +584,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildFeatureEnabledMetric("featureName");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/FeatureEnabled/featureName", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/FeatureEnabled/featureName", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -601,9 +597,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildLinuxOsMetric(isLinux);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/OS/Linux", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(expectedCount, actual.DataModel.Value1)
+                () => ClassicAssert.AreEqual("Supportability/OS/Linux", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(expectedCount, actual.DataModel.Value1)
             );
         }
 
@@ -613,9 +609,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildBootIdError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/boot_id/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/boot_id/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -625,9 +621,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildKubernetesUsabilityError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/kubernetes/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/kubernetes/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -637,9 +633,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildAwsUsabilityError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/aws/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/aws/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -649,9 +645,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildAzureUsabilityError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/azure/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/azure/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -661,9 +657,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildPcfUsabilityError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/pcf/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/pcf/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -673,9 +669,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildGcpUsabilityError();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/utilization/gcp/error", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/utilization/gcp/error", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -685,9 +681,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildSupportabilityEndpointMethodErrorAttempts("endpoint");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Agent/Collector/endpoint/Attempts", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Agent/Collector/endpoint/Attempts", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(1, actual.DataModel.Value0)
             );
         }
 
@@ -697,9 +693,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit("endpoint", 2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/DotNet/Collector/MaxPayloadSizeLimit/endpoint", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/DotNet/Collector/MaxPayloadSizeLimit/endpoint", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -709,9 +705,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(2);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Supportability/Logging/Forwarding/Dropped", actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual("Supportability/Logging/Forwarding/Dropped", actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(2, actual.DataModel.Value0)
             );
         }
 
@@ -724,9 +720,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildCountMetric(metricName, count);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(metricName, actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(count, actual.DataModel.Value0)
+                () => ClassicAssert.AreEqual(metricName, actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(count, actual.DataModel.Value0)
             );
         }
 
@@ -739,9 +735,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildByteMetric(metricName, byteCount);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(metricName, actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(byteCount), actual.DataModel)
+                () => ClassicAssert.AreEqual(metricName, actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildByteData(byteCount), actual.DataModel)
             );
         }
 
@@ -755,9 +751,9 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = _metricBuilder.TryBuildByteMetric(metricName, totalBytes, exclusiveBytes);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(metricName, actual.MetricNameModel.Name),
-                () => Assert.IsNull(actual.MetricNameModel.Scope),
-                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), actual.DataModel)
+                () => ClassicAssert.AreEqual(metricName, actual.MetricNameModel.Name),
+                () => ClassicAssert.IsNull(actual.MetricNameModel.Scope),
+                () => ClassicAssert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), actual.DataModel)
             );
         }
 

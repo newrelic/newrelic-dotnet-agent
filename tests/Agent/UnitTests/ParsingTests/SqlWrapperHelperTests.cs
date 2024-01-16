@@ -1,14 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.OracleClient;
 using System.Data.SqlClient;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
-using NUnit.Framework;
 
 namespace SqlTests
 {
@@ -54,7 +52,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.MSSQL, datastoreName);
+            ClassicAssert.AreEqual(DatastoreVendor.MSSQL, datastoreName);
         }
 
         [Test]
@@ -66,7 +64,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.Oracle, datastoreName);
+            ClassicAssert.AreEqual(DatastoreVendor.Oracle, datastoreName);
         }
 
         [Test]
@@ -76,7 +74,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.Other, datastoreName);
+            ClassicAssert.AreEqual(DatastoreVendor.Other, datastoreName);
         }
 
         public class UnknownDbCommand : IDbCommand

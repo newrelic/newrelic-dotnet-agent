@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Specialized;
 using NewRelic.SystemExtensions.Collections;
-using NUnit.Framework;
 
 
 namespace NewRelic.SystemExtensions.UnitTests.Collections
@@ -22,11 +20,11 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
+            ClassicAssert.AreEqual(2, dictionary.Count);
+            Assert.That(dictionary.ContainsKey("fruit"));
+            ClassicAssert.AreEqual("apple", dictionary["fruit"]);
+            Assert.That(dictionary.ContainsKey("dessert"));
+            ClassicAssert.AreEqual("pie", dictionary["dessert"]);
         }
 
         [Test]
@@ -41,11 +39,11 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
+            ClassicAssert.AreEqual(2, dictionary.Count);
+            Assert.That(dictionary.ContainsKey("fruit"));
+            ClassicAssert.AreEqual("apple", dictionary["fruit"]);
+            Assert.That(dictionary.ContainsKey("dessert"));
+            ClassicAssert.AreEqual("pie", dictionary["dessert"]);
         }
 
         [Test]
@@ -59,15 +57,15 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.True(dictionary.ContainsKey("FRUIT"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.AreEqual("apple", dictionary["FRUIT"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.True(dictionary.ContainsKey("DESSERT"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
-            Assert.AreEqual("pie", dictionary["DESSERT"]);
+            ClassicAssert.AreEqual(2, dictionary.Count);
+            Assert.That(dictionary.ContainsKey("fruit"));
+            Assert.That(dictionary.ContainsKey("FRUIT"));
+            ClassicAssert.AreEqual("apple", dictionary["fruit"]);
+            ClassicAssert.AreEqual("apple", dictionary["FRUIT"]);
+            Assert.That(dictionary.ContainsKey("dessert"));
+            Assert.That(dictionary.ContainsKey("DESSERT"));
+            ClassicAssert.AreEqual("pie", dictionary["dessert"]);
+            ClassicAssert.AreEqual("pie", dictionary["DESSERT"]);
         }
 
         [Test]
@@ -81,14 +79,14 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary(StringComparer.CurrentCulture);
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("DESSERT"));
-            Assert.AreEqual("pie", dictionary["DESSERT"]);
+            ClassicAssert.AreEqual(2, dictionary.Count);
+            Assert.That(dictionary.ContainsKey("fruit"));
+            ClassicAssert.AreEqual("apple", dictionary["fruit"]);
+            Assert.That(dictionary.ContainsKey("DESSERT"));
+            ClassicAssert.AreEqual("pie", dictionary["DESSERT"]);
 
-            Assert.False(dictionary.ContainsKey("FRUIT"));
-            Assert.False(dictionary.ContainsKey("dessert"));
+            ClassicAssert.False(dictionary.ContainsKey("FRUIT"));
+            ClassicAssert.False(dictionary.ContainsKey("dessert"));
         }
     }
 }

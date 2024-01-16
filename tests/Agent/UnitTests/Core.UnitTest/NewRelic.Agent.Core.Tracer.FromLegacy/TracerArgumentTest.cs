@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Tracer
 {
@@ -13,8 +12,8 @@ namespace NewRelic.Agent.Core.Tracer
         [Test]
         public static void TestTransactionNamingPriority()
         {
-            Assert.AreEqual(TransactionNamePriority.Handler, TracerArgument.GetTransactionNamingPriority(0x000012F | (3 << 24)));
-            Assert.AreEqual((TransactionNamePriority)7, TracerArgument.GetTransactionNamingPriority(0x0000076 | (7 << 24)));
+            ClassicAssert.AreEqual(TransactionNamePriority.Handler, TracerArgument.GetTransactionNamingPriority(0x000012F | (3 << 24)));
+            ClassicAssert.AreEqual((TransactionNamePriority)7, TracerArgument.GetTransactionNamingPriority(0x0000076 | (7 << 24)));
         }
     }
 }

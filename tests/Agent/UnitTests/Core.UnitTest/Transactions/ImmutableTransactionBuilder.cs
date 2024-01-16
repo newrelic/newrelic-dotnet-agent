@@ -6,10 +6,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Core;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transactions

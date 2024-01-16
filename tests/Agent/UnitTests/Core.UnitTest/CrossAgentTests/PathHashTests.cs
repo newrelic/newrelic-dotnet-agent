@@ -1,17 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
@@ -49,7 +44,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
             var newPathHash = _pathHashMaker.CalculatePathHash(testCase.TransactionName, testCase.ReferringPathHash);
 
-            Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
+            ClassicAssert.AreEqual(testCase.ExpectedPathHash, newPathHash);
         }
 
         private static ITransactionName GetTransactionNameFromString(string transactionName)
@@ -100,7 +95,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

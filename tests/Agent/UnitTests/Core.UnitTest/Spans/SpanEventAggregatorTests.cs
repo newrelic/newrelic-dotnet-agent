@@ -13,12 +13,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Core;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
-using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -409,13 +404,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
-            Assert.AreEqual(expectedShouldHarvest, _actualWillHarvest, "Is Harvesting");
+            ClassicAssert.AreEqual(expectedShouldHarvest, _actualWillHarvest, "Is Harvesting");
         }
 
         [Test]
         public void Harvest_cycle_should_match_configured_cycle()
         {
-            Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+            ClassicAssert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
         }
 
         [Test]
@@ -436,8 +431,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceEnabled, "Service Enabled"),
-                () => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceAvailable, "Service Enabled")
+                () => ClassicAssert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceEnabled, "Service Enabled"),
+                () => ClassicAssert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceAvailable, "Service Enabled")
             );
         }
 

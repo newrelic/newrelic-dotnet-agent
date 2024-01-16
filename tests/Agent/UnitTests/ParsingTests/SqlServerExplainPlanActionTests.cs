@@ -7,7 +7,6 @@ using System.Data.SqlClient;
 using System.Linq;
 using NewRelic.Parsing;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace ParsingTests
@@ -22,7 +21,7 @@ namespace ParsingTests
 
             var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(invalidCommand);
 
-            Assert.IsNull(explainPlan);
+            ClassicAssert.IsNull(explainPlan);
         }
 
         [Test]
@@ -38,7 +37,7 @@ namespace ParsingTests
 
             var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command);
 
-            Assert.IsNull(explainPlan);
+            ClassicAssert.IsNull(explainPlan);
         }
 
         [Test]
@@ -88,12 +87,12 @@ namespace ParsingTests
             var actualCreatedCommands = mockConnection.CreatedMockCommands.Select(c => c.CommandText);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(explainPlan, "An explain plan should be returned."),
-                () => Assert.AreEqual("EXEC mystoredproc", command.CommandText, "Expected the command text to not be modified."),
+                () => ClassicAssert.IsNotNull(explainPlan, "An explain plan should be returned."),
+                () => ClassicAssert.AreEqual("EXEC mystoredproc", command.CommandText, "Expected the command text to not be modified."),
                 () => CollectionAssert.AreEquivalent(expectedCreatedCommands, actualCreatedCommands, "Expected 2 commands for enabling and disabling explain plans for the connection."),
                 () => CollectionAssert.AreEquivalent(new[] { 0, 1 }, explainPlan.ObfuscatedHeaders, "Expected the first 2 headers to be obfuscated."),
                 () => CollectionAssert.AreEquivalent(expectedHeaders, explainPlan.ExplainPlanHeaders, "Expected the headers collections to match."),
-                () => Assert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
+                () => ClassicAssert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
                 () => CollectionAssert.AreEquivalent(new[] {"value0", "value1", "value2"}, explainPlan.ExplainPlanDatas[0], "Expected the explain plan results to match.")
             );
         }
@@ -105,7 +104,7 @@ namespace ParsingTests
 
             var resources = SqlServerExplainPlanActions.AllocateResources(mockDbCommand);
 
-            Assert.IsNull(resources);
+            ClassicAssert.IsNull(resources);
         }
 
         [Test]
@@ -121,10 +120,10 @@ namespace ParsingTests
             var resources = SqlServerExplainPlanActions.AllocateResources(mockDbCommand);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(resources, "Expected the new resource to be not null."),
-                () => Assert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
-                () => Assert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
-                () => Assert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
+                () => ClassicAssert.IsNotNull(resources, "Expected the new resource to be not null."),
+                () => ClassicAssert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
+                () => ClassicAssert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
+                () => ClassicAssert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
             );
         }
 

@@ -3,9 +3,6 @@
 
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -40,13 +37,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         #endregion MergeUnscopedStats (PreCreated)
@@ -64,13 +61,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -89,13 +86,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
-                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual("myscope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -110,13 +107,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -132,13 +129,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(2, current.DataModel.Value0);
+                ClassicAssert.AreEqual(6, current.DataModel.Value1);
+                ClassicAssert.AreEqual(4, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
 
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
             collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
@@ -150,13 +147,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(4, current.DataModel.Value0);
-                Assert.AreEqual(16, current.DataModel.Value1);
-                Assert.AreEqual(12, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(4, current.DataModel.Value0);
+                ClassicAssert.AreEqual(16, current.DataModel.Value1);
+                ClassicAssert.AreEqual(12, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -176,24 +173,24 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(5, current.DataModel.Value1);
-                    Assert.AreEqual(4, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(5, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(4, current.DataModel.Value2);
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
                     Assert.Fail("Unexpected Metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(null, current.MetricNameModel.Scope);
 
             }
-            Assert.AreEqual(2, count);
+            ClassicAssert.AreEqual(2, count);
         }
 
         #endregion MergeUnscopedStats (NotCreated)
@@ -212,13 +209,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("DotNet/name", current.MetricNameModel.Name);
-                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("DotNet/name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual("myScope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -235,13 +232,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual(metric1.MetricNameModel.Name, current.MetricNameModel.Name);
-                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                ClassicAssert.AreEqual(metric1.MetricNameModel.Name, current.MetricNameModel.Name);
+                ClassicAssert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(2, current.DataModel.Value0);
+                ClassicAssert.AreEqual(6, current.DataModel.Value1);
+                ClassicAssert.AreEqual(4, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -262,24 +259,24 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(7, current.DataModel.Value1);
-                    Assert.AreEqual(5, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(7, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(5, current.DataModel.Value2);
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
                     Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
 
             }
-            Assert.AreEqual(2, count);
+            ClassicAssert.AreEqual(2, count);
         }
 
         #endregion MergeScopedStats (String Scope Data)
@@ -300,13 +297,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual("myScope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                ClassicAssert.AreEqual(2, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -325,13 +322,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual("myscope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(2, current.DataModel.Value0);
+                ClassicAssert.AreEqual(6, current.DataModel.Value1);
+                ClassicAssert.AreEqual(4, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -352,13 +349,13 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("scope", current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                ClassicAssert.AreEqual("name", current.MetricNameModel.Name);
+                ClassicAssert.AreEqual("scope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual(2, current.DataModel.Value0);
+                ClassicAssert.AreEqual(6, current.DataModel.Value1);
+                ClassicAssert.AreEqual(4, current.DataModel.Value2);
             }
-            Assert.AreEqual(1, count);
+            ClassicAssert.AreEqual(1, count);
         }
 
         [Test]
@@ -383,23 +380,23 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(2, current.DataModel.Value1);
-                    Assert.AreEqual(1, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(2, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value2);
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                    ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                    ClassicAssert.AreEqual(2, current.DataModel.Value2);
                 }
                 else
                 {
                     Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual("scope", current.MetricNameModel.Scope);
+                ClassicAssert.AreEqual("scope", current.MetricNameModel.Scope);
             }
-            Assert.AreEqual(2, count);
+            ClassicAssert.AreEqual(2, count);
         }
 
         [Test]
@@ -436,32 +433,32 @@ namespace NewRelic.Agent.Core.Aggregators
                 {
                     if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(2, current.DataModel.Value1);
-                        Assert.AreEqual(1, current.DataModel.Value2);
+                        ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                        ClassicAssert.AreEqual(2, current.DataModel.Value1);
+                        ClassicAssert.AreEqual(1, current.DataModel.Value2);
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(5, current.DataModel.Value1);
-                        Assert.AreEqual(4, current.DataModel.Value2);
+                        ClassicAssert.AreEqual("myotherscope", current.MetricNameModel.Scope);
+                        ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                        ClassicAssert.AreEqual(5, current.DataModel.Value1);
+                        ClassicAssert.AreEqual(4, current.DataModel.Value2);
                     }
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
                     if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(3, current.DataModel.Value1);
-                        Assert.AreEqual(2, current.DataModel.Value2);
+                        ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                        ClassicAssert.AreEqual(3, current.DataModel.Value1);
+                        ClassicAssert.AreEqual(2, current.DataModel.Value2);
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(7, current.DataModel.Value1);
-                        Assert.AreEqual(6, current.DataModel.Value2);
+                        ClassicAssert.AreEqual("myotherscope", current.MetricNameModel.Scope);
+                        ClassicAssert.AreEqual(1, current.DataModel.Value0);
+                        ClassicAssert.AreEqual(7, current.DataModel.Value1);
+                        ClassicAssert.AreEqual(6, current.DataModel.Value2);
                     }
                 }
                 else
@@ -470,7 +467,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 }
 
             }
-            Assert.AreEqual(4, count);
+            ClassicAssert.AreEqual(4, count);
         }
 
         #endregion MergeScopedStats (SimpleStatsEngine)
@@ -507,7 +504,7 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 count++;
             }
-            Assert.AreEqual(6, count);
+            ClassicAssert.AreEqual(6, count);
 
         }
 

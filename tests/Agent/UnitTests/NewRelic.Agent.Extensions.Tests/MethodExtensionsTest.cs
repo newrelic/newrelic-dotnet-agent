@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace Agent.Extensions.Tests
 {
@@ -18,7 +17,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
         }
 
         [Test]
@@ -31,7 +30,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
         }
 
         [Test]
@@ -44,7 +43,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
         }
 
         [Test]
@@ -58,7 +57,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -71,7 +70,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
         }
 
         [Test]
@@ -85,7 +84,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -99,7 +98,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -113,7 +112,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -126,7 +125,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName));
         }
 
         [Test]
@@ -140,7 +139,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -154,7 +153,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -169,7 +168,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.Object");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
         }
 
         [Test]
@@ -184,7 +183,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
         }
 
         [Test]
@@ -199,7 +198,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.Object");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
         }
 
         [Test]
@@ -214,7 +213,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
         }
 
         [Test]
@@ -229,7 +228,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, expectedMethodName, new[] { expectedParamSignature1, expectedParamSignature2 }));
         }
 
         [Test]
@@ -243,7 +242,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
+            Assert.That(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
         }
 
         [Test]
@@ -257,7 +256,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
         }
 
         [Test]
@@ -271,7 +270,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
         }
 
         [Test]
@@ -285,7 +284,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName));
         }
 
         [Test]
@@ -302,7 +301,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            Assert.That(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -319,7 +318,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -336,7 +335,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -353,7 +352,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String, System.Double");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -370,7 +369,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.Double");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -387,7 +386,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, new[] { expectedMethodName1, expectedMethodName2 }, expectedParamSignature));
         }
 
         [Test]
@@ -403,7 +402,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName, expectedParamSignature));
+            Assert.That(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -419,7 +418,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, new[] { expectedTypeName1, expectedTypeName2 }, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -434,7 +433,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, expectedTypeName, expectedMethodName, expectedParamSignature));
+            Assert.That(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -449,7 +448,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, expectedTypeName, expectedMethodName, expectedParamSignature));
+            ClassicAssert.False(method.MatchesAny(new[] { expectedAssemblyName1, expectedAssemblyName2 }, expectedTypeName, expectedMethodName, expectedParamSignature));
         }
 
         [Test]
@@ -462,7 +461,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
         }
 
         [Test]
@@ -475,7 +474,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
         }
 
         [Test]
@@ -488,7 +487,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
         }
 
         [Test]
@@ -501,7 +500,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
         }
 
         [Test]
@@ -514,7 +513,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature }));
         }
 
         [Test]
@@ -530,7 +529,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
         }
 
         [Test]
@@ -546,7 +545,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Double");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
         }
 
         [Test]
@@ -562,7 +561,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
             // ACT & ASSERT
-            Assert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
+            ClassicAssert.False(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
         }
 
         [Test]
@@ -576,7 +575,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2 }));
         }
 
         [Test]
@@ -593,7 +592,7 @@ namespace Agent.Extensions.Tests
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.Object,System.String");
 
             // ACT & ASSERT
-            Assert.True(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2, methodSignature3, methodSignature4, methodSignature5 }));
+            Assert.That(method.MatchesAny(expectedAssemblyName, expectedTypeName, new[] { methodSignature1, methodSignature2, methodSignature3, methodSignature4, methodSignature5 }));
         }
     }
 }

@@ -3,7 +3,6 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Utilities
@@ -31,8 +30,8 @@ namespace NewRelic.Agent.Core.Utilities
 
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(1, testService.ConfigUpdateCount);
-            Assert.AreEqual(2, testService.Configuration.ConfigurationVersion);
+            ClassicAssert.AreEqual(1, testService.ConfigUpdateCount);
+            ClassicAssert.AreEqual(2, testService.Configuration.ConfigurationVersion);
         }
 
         [Test]
@@ -47,8 +46,8 @@ namespace NewRelic.Agent.Core.Utilities
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(3);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(2, testService.ConfigUpdateCount);
-            Assert.AreEqual(3, testService.Configuration.ConfigurationVersion);
+            ClassicAssert.AreEqual(2, testService.ConfigUpdateCount);
+            ClassicAssert.AreEqual(3, testService.Configuration.ConfigurationVersion);
         }
 
         [Test]
@@ -63,8 +62,8 @@ namespace NewRelic.Agent.Core.Utilities
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(1);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(1, testService.ConfigUpdateCount);
-            Assert.AreEqual(2, testService.Configuration.ConfigurationVersion);
+            ClassicAssert.AreEqual(1, testService.ConfigUpdateCount);
+            ClassicAssert.AreEqual(2, testService.Configuration.ConfigurationVersion);
         }
     }
 }

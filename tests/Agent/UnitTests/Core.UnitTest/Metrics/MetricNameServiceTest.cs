@@ -1,18 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Metrics
@@ -58,7 +53,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var actualOutput = _metricNameService.NormalizeUrl(input);
 
-            Assert.AreEqual(expectedOutput, actualOutput);
+            ClassicAssert.AreEqual(expectedOutput, actualOutput);
         }
 
         [Test]
@@ -90,7 +85,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var result = _metricNameService.NormalizeUrl("/customer/get?ssn=4356334443");
 
-            Assert.AreEqual("/customer/put", result);
+            ClassicAssert.AreEqual("/customer/put", result);
         }
 
         [TestCaseSource(typeof(MetricNameServiceTest), "CrossAgentRegexRuleTestCases")]
@@ -114,7 +109,7 @@ namespace NewRelic.Agent.Core.Metrics
                     actualOutput = null;
                 }
 
-                Assert.AreEqual(test.Expected, actualOutput);
+                ClassicAssert.AreEqual(test.Expected, actualOutput);
             }
         }
 
@@ -135,8 +130,8 @@ namespace NewRelic.Agent.Core.Metrics
 
             var apdexResult = _metricNameService.TryGetApdex_t(input);
 
-            Assert.NotNull(apdexResult);
-            Assert.AreEqual(TimeSpan.FromSeconds(expectedOutput), apdexResult.Value);
+            ClassicAssert.NotNull(apdexResult);
+            ClassicAssert.AreEqual(TimeSpan.FromSeconds(expectedOutput), apdexResult.Value);
         }
 
         [Test]
@@ -151,7 +146,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var apdexResult = _metricNameService.TryGetApdex_t(input);
 
-            Assert.IsNull(apdexResult);
+            ClassicAssert.IsNull(apdexResult);
         }
 
         #endregion TryGetApdex_t
@@ -176,8 +171,8 @@ namespace NewRelic.Agent.Core.Metrics
 
             var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
 
-            Assert.NotNull(actualOutput);
-            Assert.AreEqual(expectedOutput, actualOutput.PrefixedName);
+            ClassicAssert.NotNull(actualOutput);
+            ClassicAssert.AreEqual(expectedOutput, actualOutput.PrefixedName);
         }
 
         [Test]
@@ -197,12 +192,12 @@ namespace NewRelic.Agent.Core.Metrics
 
             if (expectedOutput == null)
             {
-                Assert.IsTrue(actualOutput.ShouldIgnore);
+                ClassicAssert.IsTrue(actualOutput.ShouldIgnore);
             }
             else
             {
-                Assert.IsFalse(actualOutput.ShouldIgnore);
-                Assert.AreEqual(expectedOutput, actualOutput.PrefixedName);
+                ClassicAssert.IsFalse(actualOutput.ShouldIgnore);
+                ClassicAssert.AreEqual(expectedOutput, actualOutput.PrefixedName);
             }
         }
 
@@ -218,8 +213,8 @@ namespace NewRelic.Agent.Core.Metrics
             var originalMetricName = new TransactionMetricName("WebTransaction", "foo/bar");
             var newName = _metricNameService.RenameTransaction(originalMetricName);
 
-            Assert.NotNull(newName);
-            Assert.AreEqual(originalMetricName.PrefixedName, newName.PrefixedName);
+            ClassicAssert.NotNull(newName);
+            ClassicAssert.AreEqual(originalMetricName.PrefixedName, newName.PrefixedName);
         }
 
         private void CallRenameTransactionAndAssert(string originalName, string expectedRename, bool isWebTransaction = true)
@@ -227,8 +222,8 @@ namespace NewRelic.Agent.Core.Metrics
             var originalMetricName = AsTransactionMetricName(originalName);
             var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
 
-            Assert.NotNull(newMetricName);
-            Assert.AreEqual(expectedRename, newMetricName.PrefixedName);
+            ClassicAssert.NotNull(newMetricName);
+            ClassicAssert.AreEqual(expectedRename, newMetricName.PrefixedName);
         }
 
         private TransactionMetricName AsTransactionMetricName(string originalName)
@@ -254,8 +249,8 @@ namespace NewRelic.Agent.Core.Metrics
 
             // The URL rule should transform it into "WebTransaction/Uri/ValidSegment/OtherInvalidSegment",
             // then the transaction segment should transform it into "WebTransaction/Uri/ValidSegment/*"
-            Assert.NotNull(newMetricName);
-            Assert.AreEqual("WebTransaction/Uri/ValidSegment/*", newMetricName.PrefixedName);
+            ClassicAssert.NotNull(newMetricName);
+            ClassicAssert.AreEqual("WebTransaction/Uri/ValidSegment/*", newMetricName.PrefixedName);
         }
 
         [TestCaseSource(typeof(MetricNameServiceTest), "CrossAgentWhitelistRuleTestCases")]
@@ -282,12 +277,12 @@ namespace NewRelic.Agent.Core.Metrics
 
                 if (test.Expected == null)
                 {
-                    Assert.IsTrue(actualOutput.ShouldIgnore);
+                    ClassicAssert.IsTrue(actualOutput.ShouldIgnore);
                 }
                 else
                 {
-                    Assert.IsFalse(actualOutput.ShouldIgnore);
-                    Assert.AreEqual(test.Expected, actualOutput.PrefixedName);
+                    ClassicAssert.IsFalse(actualOutput.ShouldIgnore);
+                    ClassicAssert.AreEqual(test.Expected, actualOutput.PrefixedName);
                 }
             }
         }
@@ -313,7 +308,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var actualOutput = _metricNameService.RenameMetric(input);
 
-            Assert.AreEqual(expectedOutput, actualOutput);
+            ClassicAssert.AreEqual(expectedOutput, actualOutput);
         }
 
         [Test]
@@ -329,7 +324,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var actualOutput = _metricNameService.RenameMetric(input);
 
-            Assert.AreEqual(expectedOutput, actualOutput);
+            ClassicAssert.AreEqual(expectedOutput, actualOutput);
         }
 
         [TestCaseSource(typeof(MetricNameServiceTest), "CrossAgentRegexRuleTestCases")]
@@ -345,7 +340,7 @@ namespace NewRelic.Agent.Core.Metrics
 
                 var actualOutput = _metricNameService.RenameMetric(test.Input);
 
-                Assert.AreEqual(test.Expected, actualOutput);
+                ClassicAssert.AreEqual(test.Expected, actualOutput);
             }
         }
 
@@ -558,7 +553,7 @@ namespace NewRelic.Agent.Core.Metrics
                 #endregion JSON
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<RegexRuleTestCase>>(json);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });
@@ -948,7 +943,7 @@ namespace NewRelic.Agent.Core.Metrics
                 #endregion JSON
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<WhitelistRuleTestCase>>(json);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

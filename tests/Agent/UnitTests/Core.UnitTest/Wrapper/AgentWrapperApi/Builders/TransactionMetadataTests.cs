@@ -1,15 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
@@ -24,8 +20,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(null, immutableMetadata.CrossApplicationPathHash),
-                () => Assert.AreEqual(0, immutableMetadata.CrossApplicationAlternatePathHashes.Count())
+                () => ClassicAssert.AreEqual(null, immutableMetadata.CrossApplicationPathHash),
+                () => ClassicAssert.AreEqual(0, immutableMetadata.CrossApplicationAlternatePathHashes.Count())
                 );
         }
 
@@ -33,48 +29,48 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         public void Getters_HttpResponseStatusCode()
         {
             var metadata = new TransactionMetadata("transactionGuid");
-            Assert.IsNull(metadata.HttpResponseStatusCode);
+            ClassicAssert.IsNull(metadata.HttpResponseStatusCode);
 
             metadata.SetHttpResponseStatusCode(200, null, Mock.Create<IErrorService>());
-            Assert.AreEqual(200, metadata.HttpResponseStatusCode);
+            ClassicAssert.AreEqual(200, metadata.HttpResponseStatusCode);
 
             metadata.SetHttpResponseStatusCode(400, null, Mock.Create<IErrorService>());
-            Assert.AreEqual(400, metadata.HttpResponseStatusCode);
+            ClassicAssert.AreEqual(400, metadata.HttpResponseStatusCode);
             var immutableMetadata = metadata.ConvertToImmutableMetadata();
-            Assert.AreEqual(400, immutableMetadata.HttpResponseStatusCode);
-            Assert.IsNull(immutableMetadata.HttpResponseSubStatusCode);
+            ClassicAssert.AreEqual(400, immutableMetadata.HttpResponseStatusCode);
+            ClassicAssert.IsNull(immutableMetadata.HttpResponseSubStatusCode);
 
             metadata.SetHttpResponseStatusCode(404, 420, Mock.Create<IErrorService>());
-            Assert.AreEqual(404, metadata.HttpResponseStatusCode);
+            ClassicAssert.AreEqual(404, metadata.HttpResponseStatusCode);
             immutableMetadata = metadata.ConvertToImmutableMetadata();
-            Assert.AreEqual(404, immutableMetadata.HttpResponseStatusCode);
-            Assert.AreEqual(420, immutableMetadata.HttpResponseSubStatusCode);
+            ClassicAssert.AreEqual(404, immutableMetadata.HttpResponseStatusCode);
+            ClassicAssert.AreEqual(420, immutableMetadata.HttpResponseSubStatusCode);
         }
 
         [Test]
         public void Getters_QueueTime()
         {
             var metadata = new TransactionMetadata("transactionGuid");
-            Assert.IsNull(metadata.QueueTime);
+            ClassicAssert.IsNull(metadata.QueueTime);
 
             metadata.SetQueueTime(TimeSpan.FromSeconds(20));
-            Assert.AreEqual(20, metadata.QueueTime?.Seconds);
+            ClassicAssert.AreEqual(20, metadata.QueueTime?.Seconds);
 
             metadata.SetQueueTime(TimeSpan.FromSeconds(55));
-            Assert.AreEqual(55, metadata.QueueTime?.Seconds);
+            ClassicAssert.AreEqual(55, metadata.QueueTime?.Seconds);
         }
 
         [Test]
         public void Getters_CATContentLength()
         {
             var metadata = new TransactionMetadata("transactionGuid");
-            Assert.AreEqual(-1, metadata.GetCrossApplicationReferrerContentLength());
+            ClassicAssert.AreEqual(-1, metadata.GetCrossApplicationReferrerContentLength());
 
             metadata.SetCrossApplicationReferrerContentLength(44444);
-            Assert.AreEqual(44444, metadata.GetCrossApplicationReferrerContentLength());
+            ClassicAssert.AreEqual(44444, metadata.GetCrossApplicationReferrerContentLength());
 
             metadata.SetCrossApplicationReferrerContentLength(5432);
-            Assert.AreEqual(5432, metadata.GetCrossApplicationReferrerContentLength());
+            ClassicAssert.AreEqual(5432, metadata.GetCrossApplicationReferrerContentLength());
         }
 
         [Test]
@@ -85,8 +81,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableMetadata = metadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("pathHash1", immutableMetadata.CrossApplicationPathHash),
-                () => Assert.AreEqual(0, immutableMetadata.CrossApplicationAlternatePathHashes.Count())
+                () => ClassicAssert.AreEqual("pathHash1", immutableMetadata.CrossApplicationPathHash),
+                () => ClassicAssert.AreEqual(0, immutableMetadata.CrossApplicationAlternatePathHashes.Count())
                 );
         }
 
@@ -100,10 +96,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableMetadata = metadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("pathHash3", immutableMetadata.CrossApplicationPathHash),
-                () => Assert.AreEqual(2, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
-                () => Assert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash1")),
-                () => Assert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash2"))
+                () => ClassicAssert.AreEqual("pathHash3", immutableMetadata.CrossApplicationPathHash),
+                () => ClassicAssert.AreEqual(2, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
+                () => ClassicAssert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash1")),
+                () => ClassicAssert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash2"))
                 );
         }
 
@@ -119,10 +115,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableMetadata = metadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("pathHash1", immutableMetadata.CrossApplicationPathHash),
-                () => Assert.AreEqual(2, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
-                () => Assert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash2")),
-                () => Assert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash3"))
+                () => ClassicAssert.AreEqual("pathHash1", immutableMetadata.CrossApplicationPathHash),
+                () => ClassicAssert.AreEqual(2, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
+                () => ClassicAssert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash2")),
+                () => ClassicAssert.IsTrue(immutableMetadata.CrossApplicationAlternatePathHashes.Contains("pathHash3"))
                 );
         }
 
@@ -136,9 +132,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual($"pathHash{PathHashMaker.AlternatePathHashMaxSize + 1}", immutableMetadata.CrossApplicationPathHash),
-                () => Assert.AreEqual(PathHashMaker.AlternatePathHashMaxSize, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
-                () => Assert.IsFalse(immutableMetadata.CrossApplicationAlternatePathHashes.Contains($"pathHash{PathHashMaker.AlternatePathHashMaxSize + 1}"))
+                () => ClassicAssert.AreEqual($"pathHash{PathHashMaker.AlternatePathHashMaxSize + 1}", immutableMetadata.CrossApplicationPathHash),
+                () => ClassicAssert.AreEqual(PathHashMaker.AlternatePathHashMaxSize, immutableMetadata.CrossApplicationAlternatePathHashes.Count()),
+                () => ClassicAssert.IsFalse(immutableMetadata.CrossApplicationAlternatePathHashes.Contains($"pathHash{PathHashMaker.AlternatePathHashMaxSize + 1}"))
                 );
         }
 

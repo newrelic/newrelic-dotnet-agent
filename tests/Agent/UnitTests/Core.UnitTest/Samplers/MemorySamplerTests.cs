@@ -1,13 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Samplers
@@ -50,7 +48,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(memorySample);
+            ClassicAssert.NotNull(memorySample);
         }
 
         [Test]
@@ -84,8 +82,8 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             // Assert
-            Assert.Less(memorySampleBefore.MemoryPrivate, memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
-            Assert.Less(memorySampleBefore.MemoryWorkingSet, memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
+            ClassicAssert.Less(memorySampleBefore.MemoryPrivate, memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
+            ClassicAssert.Less(memorySampleBefore.MemoryWorkingSet, memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

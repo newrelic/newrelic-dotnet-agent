@@ -1,10 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
-
 namespace NewRelic.SystemExtensions.UnitTests
 {
     public class ObjectArrayExtensionsTests
@@ -19,7 +15,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
         #region ExtractAs
 
-        [Test]
+        [Test] 
         public void ExtractAs_Throws_IfSourceIsNull()
         {
             Assert.Throws<NullReferenceException>(() => ((object[])null).ExtractAs<string>(1));
@@ -56,7 +52,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<string>(1);
 
-            Assert.AreEqual("banana", result);
+            ClassicAssert.AreEqual("banana", result);
         }
 
         [Test]
@@ -67,7 +63,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<Foo>(0);
 
-            Assert.AreEqual(fooBar, result);
+            ClassicAssert.AreEqual(fooBar, result);
         }
 
         [Test]
@@ -77,7 +73,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<string>(0);
 
-            Assert.Null(result);
+            ClassicAssert.Null(result);
         }
 
         #endregion ExtractAs
@@ -121,7 +117,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractNotNullAs<string>(1);
 
-            Assert.AreEqual("banana", result);
+            ClassicAssert.AreEqual("banana", result);
         }
 
         [Test]
@@ -132,7 +128,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractNotNullAs<Foo>(0);
 
-            Assert.AreEqual(fooBar, result);
+            ClassicAssert.AreEqual(fooBar, result);
         }
 
         [Test]

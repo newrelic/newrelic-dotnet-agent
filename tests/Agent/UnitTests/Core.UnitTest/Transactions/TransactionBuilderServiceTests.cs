@@ -11,10 +11,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.DistributedTracing;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transactions.UnitTest
@@ -59,7 +55,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var transaction = _transactionService.GetCurrentInternalTransaction();
 
             // ASSERT
-            Assert.IsNull(transaction);
+            ClassicAssert.IsNull(transaction);
         }
 
         [Test]
@@ -72,8 +68,8 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var newTransaction = _transactionService.GetCurrentInternalTransaction();
 
             // ASSERT
-            Assert.IsNotNull(newTransaction);
-            Assert.AreSame(oldTransaction, newTransaction);
+            ClassicAssert.IsNotNull(newTransaction);
+            ClassicAssert.AreSame(oldTransaction, newTransaction);
         }
 
         [Test]
@@ -83,10 +79,10 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var newTransaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.IsNotNull(newTransaction);
+            ClassicAssert.IsNotNull(newTransaction);
 
             var transactionName = newTransaction.ConvertToImmutableTransaction().TransactionName;
-            Assert.AreEqual(_initialTransactionName.Name, transactionName.Name);
+            ClassicAssert.AreEqual(_initialTransactionName.Name, transactionName.Name);
         }
 
         [Test]
@@ -99,8 +95,8 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var newTransaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.IsNotNull(newTransaction);
-            Assert.AreSame(oldTransaction, newTransaction);
+            ClassicAssert.IsNotNull(newTransaction);
+            ClassicAssert.AreSame(oldTransaction, newTransaction);
         }
 
         [Test]
@@ -113,7 +109,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             _transactionService.GetOrCreateInternalTransaction(_initialTransactionName, () => wasRun = true);
 
             // ASSERT
-            Assert.True(wasRun);
+            Assert.That(wasRun);
         }
 
         [Test]
@@ -127,7 +123,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             _transactionService.GetOrCreateInternalTransaction(_initialTransactionName, () => wasRun = true);
 
             // ASSERT
-            Assert.False(wasRun);
+            ClassicAssert.False(wasRun);
         }
 
         [Test]
@@ -136,13 +132,13 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             // ARRANGE
             var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
-            Assert.AreEqual(1, transaction.UnitOfWorkCount);
+            ClassicAssert.AreEqual(1, transaction.UnitOfWorkCount);
 
             // ACT
             _transactionService.GetOrCreateInternalTransaction(_initialTransactionName, doNotTrackAsUnitOfWork: false);
 
             // ASSERT
-            Assert.AreEqual(2, transaction.UnitOfWorkCount);
+            ClassicAssert.AreEqual(2, transaction.UnitOfWorkCount);
         }
 
         [Test]
@@ -151,13 +147,13 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             // ARRANGE
             var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
-            Assert.AreEqual(1, transaction.UnitOfWorkCount);
+            ClassicAssert.AreEqual(1, transaction.UnitOfWorkCount);
 
             // ACT
             _transactionService.GetOrCreateInternalTransaction(_initialTransactionName, doNotTrackAsUnitOfWork: true);
 
             // ASSERT
-            Assert.AreEqual(1, transaction.UnitOfWorkCount);
+            ClassicAssert.AreEqual(1, transaction.UnitOfWorkCount);
         }
 
         [Test]
@@ -167,15 +163,15 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var oldTransaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
             Enumerable.Range(0, 101).ForEach(_ => oldTransaction.NoticeNestedTransactionAttempt());
 
-            Assert.AreEqual(101, oldTransaction.NestedTransactionAttempts);
+            ClassicAssert.AreEqual(101, oldTransaction.NestedTransactionAttempts);
 
             // ACT
             var newTransaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
             var newTransaction2 = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.AreNotSame(oldTransaction, newTransaction);
-            Assert.AreSame(newTransaction, newTransaction2);
+            ClassicAssert.AreNotSame(oldTransaction, newTransaction);
+            ClassicAssert.AreSame(newTransaction, newTransaction2);
         }
 
         [Test]
@@ -189,7 +185,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.IsNotNull(transaction);
+            ClassicAssert.IsNotNull(transaction);
         }
 
         [Test]
@@ -203,7 +199,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.IsNotNull(transaction);
+            ClassicAssert.IsNotNull(transaction);
         }
 
         [Test]
@@ -216,7 +212,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
 
             // ASSERT
-            Assert.IsNull(transaction);
+            ClassicAssert.IsNull(transaction);
         }
 
         private static void ThrowingTransactionContext(IContextStorage<IInternalTransaction> transactionContext)

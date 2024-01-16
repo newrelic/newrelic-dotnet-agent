@@ -1,12 +1,9 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth
@@ -63,13 +60,13 @@ namespace NewRelic.Agent.Core.AgentHealth
                 scheduler.ForceExecute();
 
                 NrAssert.Multiple(
-                    () => Assert.IsTrue(logger.HasMessageThatContains("1 Transaction")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("2 Custom")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("3 Error")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("4 Span")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("5 InfiniteTracingSpan")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("6 Log")),
-                    () => Assert.IsFalse(logger.HasMessageThatContains("No events"))
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("1 Transaction")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("2 Custom")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("3 Error")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("4 Span")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("5 InfiniteTracingSpan")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("6 Log")),
+                    () => ClassicAssert.IsFalse(logger.HasMessageThatContains("No events"))
                     );
 
                 // Make sure they all update their cumulative counts
@@ -85,19 +82,19 @@ namespace NewRelic.Agent.Core.AgentHealth
 
                 scheduler.ForceExecute();
                 NrAssert.Multiple(
-                    () => Assert.IsTrue(logger.HasMessageThatContains("2 Transaction")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("4 Custom")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("6 Error")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("8 Span")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("10 InfiniteTracingSpan")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("12 Log")),
-                    () => Assert.IsFalse(logger.HasMessageThatContains("No events"))
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("2 Transaction")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("4 Custom")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("6 Error")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("8 Span")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("10 InfiniteTracingSpan")),
+                    () => ClassicAssert.IsTrue(logger.HasMessageThatContains("12 Log")),
+                    () => ClassicAssert.IsFalse(logger.HasMessageThatContains("No events"))
                     );
 
                 // Make sure they get cleared out between triggers
                 scheduler.ForceExecute();
 
-                Assert.IsTrue(logger.HasMessageThatContains("No events"));
+                ClassicAssert.IsTrue(logger.HasMessageThatContains("No events"));
             }
         }
     }

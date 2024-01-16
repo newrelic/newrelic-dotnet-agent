@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -10,14 +8,12 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
-using System.Collections.Generic;
 using NewRelic.Agent.TestUtilities;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
@@ -73,13 +69,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         {
             // If our Transaction class is IDisposable, 3rd party libraries can potentially dispose of it thereby leading to unexpected behavior.
             // See: https://source.datanerd.us/dotNetAgent/dotnet_agent/pull/2323
-            Assert.IsNotInstanceOf<IDisposable>(_transaction);
+            ClassicAssert.IsNotInstanceOf<IDisposable>(_transaction);
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsPublished_IfNotEndedCleanly()
         {
-            Assert.NotNull(_transaction);
+            ClassicAssert.NotNull(_transaction);
 
             _transaction = null;
 
@@ -87,13 +83,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(_publishedEvent);
+            ClassicAssert.NotNull(_publishedEvent);
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsNotPublished_IfEndedCleanly()
         {
-            Assert.NotNull(_transaction);
+            ClassicAssert.NotNull(_transaction);
 
             _transaction.Finish();
             _transaction = null;
@@ -102,20 +98,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.Null(_publishedEvent);
+            ClassicAssert.Null(_publishedEvent);
         }
 
         [Test]
         public void TransactionShouldOnlyFinishOnce()
         {
-            Assert.NotNull(_transaction);
-            Assert.False(_transaction.IsFinished, "The transaction should not be finished yet.");
+            ClassicAssert.NotNull(_transaction);
+            ClassicAssert.False(_transaction.IsFinished, "The transaction should not be finished yet.");
 
             var finishedTransaction = _transaction.Finish();
 
-            Assert.True(finishedTransaction, "Transaction was not finished when it should have been finished.");
-            Assert.True(_transaction.IsFinished, "transaction.IsFinished should be true.");
-            Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered after the first call to finish.");
+            Assert.That(finishedTransaction, "Transaction was not finished when it should have been finished.");
+            Assert.That(_transaction.IsFinished, "transaction.IsFinished should be true.");
+            ClassicAssert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered after the first call to finish.");
 
             finishedTransaction = _transaction.Finish();
             var isFinished = _transaction.IsFinished;
@@ -125,15 +121,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.False(finishedTransaction, "Transaction was finished again when it should only be finished once.");
-            Assert.True(isFinished, "transaction.IsFinished should still be true.");
-            Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered when the transaction is already finished.");
+            ClassicAssert.False(finishedTransaction, "Transaction was finished again when it should only be finished once.");
+            Assert.That(isFinished, "transaction.IsFinished should still be true.");
+            ClassicAssert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered when the transaction is already finished.");
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsNotPublishedASecondTime_IfBuilderGoesOutOfScopeAgain()
         {
-            Assert.NotNull(_transaction);
+            ClassicAssert.NotNull(_transaction);
 
             _transaction = null;
 
@@ -141,7 +137,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(_publishedEvent);
+            ClassicAssert.NotNull(_publishedEvent);
 
             // The builder is now pinned to the event, but we can unpin it by unpinning the event
             _publishedEvent = null;
@@ -150,7 +146,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.Null(_publishedEvent);
+            ClassicAssert.Null(_publishedEvent);
         }
 
         [Test]
@@ -201,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             );
 
             // Assert
-            Assert.AreEqual(32, tx.TraceId.Length);
+            ClassicAssert.AreEqual(32, tx.TraceId.Length);
         }
 
         /// <summary>
@@ -229,25 +225,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         public void TransactionShouldOnlyCaptureResponseTimeOnce()
         {
             //Verify initial state
-            Assert.Null(_transaction.ResponseTime, "ResponseTime should initially be null.");
+            ClassicAssert.Null(_transaction.ResponseTime, "ResponseTime should initially be null.");
 
             //First attempt to capture the response time
-            Assert.True(_transaction.TryCaptureResponseTime(), "ResponseTime should have been captured but was not captured.");
+            Assert.That(_transaction.TryCaptureResponseTime(), "ResponseTime should have been captured but was not captured.");
 
             //Verify that the response time was captured
             var capturedResponseTime = _transaction.ResponseTime;
-            Assert.NotNull(capturedResponseTime, "ResponseTime should have a value.");
+            ClassicAssert.NotNull(capturedResponseTime, "ResponseTime should have a value.");
 
             //Second attempt to capture the response time
-            Assert.False(_transaction.TryCaptureResponseTime(), "ResponseTime should not be captured again, but it was.");
-            Assert.AreEqual(capturedResponseTime, _transaction.ResponseTime, "ResponseTime should still have the same value as the originally captured ResponseTime.");
+            ClassicAssert.False(_transaction.TryCaptureResponseTime(), "ResponseTime should not be captured again, but it was.");
+            ClassicAssert.AreEqual(capturedResponseTime, _transaction.ResponseTime, "ResponseTime should still have the same value as the originally captured ResponseTime.");
         }
 
         [Test]
         public void TransactionGetWrapperTokenEqualsPassedInToken()
         {
             _transaction.SetWrapperToken(_wrapperToken);
-            Assert.AreEqual(_wrapperToken, _transaction.GetWrapperToken());
+            ClassicAssert.AreEqual(_wrapperToken, _transaction.GetWrapperToken());
         }
 
         [Test]
@@ -271,7 +267,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var result = requestParameters[outputKey];
 
-            Assert.AreEqual(result, valueB);
+            ClassicAssert.AreEqual(result, valueB);
         }
 
         [Test]
@@ -294,7 +290,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var result = userAttributes[outputKey];
 
-            Assert.AreEqual(result, valueB);
+            ClassicAssert.AreEqual(result, valueB);
         }
 
         #region User Tracking Tests
@@ -305,7 +301,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.False(hasUserIdAttribute);
+            ClassicAssert.False(hasUserIdAttribute);
         }
 
         [Test]
@@ -322,10 +318,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
 
-            Assert.AreEqual(endUserAttributeShouldExist, hasUserIdAttribute);
+            ClassicAssert.AreEqual(endUserAttributeShouldExist, hasUserIdAttribute);
             if (endUserAttributeShouldExist)
             {
-                Assert.AreEqual(expectedUserId, userIdValue);
+                ClassicAssert.AreEqual(expectedUserId, userIdValue);
             }
         }
 
@@ -340,8 +336,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.True(hasUserIdAttribute);
-            Assert.AreEqual(expectedUserId2, userIdValue);
+            Assert.That(hasUserIdAttribute);
+            ClassicAssert.AreEqual(expectedUserId2, userIdValue);
         }
         #endregion
 

@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System;
-
 namespace NewRelic.Agent.Core.Utilization
 {
     [TestFixture]
@@ -20,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilization
                 var response = requestor.CallVendorApi(BogusUri, "GET", "bogus");
 
                 Assert.That(response, Is.Null);
-                Assert.True(logging.HasMessageThatContains("CallVendorApi"));
+                Assert.That(logging.HasMessageThatContains("CallVendorApi"));
             }
         }
     }

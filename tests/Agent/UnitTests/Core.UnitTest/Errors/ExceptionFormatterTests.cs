@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Errors.UnitTest
 {
     [TestFixture]
@@ -20,7 +17,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             var expected = exception.ToString();
             var actual = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage: false);
 
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -32,7 +29,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             var hasExceptionMessage = actual.Contains(OuterExceptionMessage);
 
-            Assert.False(hasExceptionMessage);
+            ClassicAssert.False(hasExceptionMessage);
         }
 
         [Test]
@@ -44,7 +41,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             var hasExceptionMessage = actual.Contains(InnerExceptionMessage);
 
-            Assert.False(hasExceptionMessage);
+            ClassicAssert.False(hasExceptionMessage);
         }
 
         private static Exception GetRealNestedException()

@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Core.DistributedTracing;
-using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -23,15 +21,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "33");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
-            Assert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636025);
+            ClassicAssert.AreEqual(tracestate.Version, 0);
+            ClassicAssert.AreEqual((int)tracestate.ParentType, 0);
+            ClassicAssert.AreEqual(tracestate.AccountId, "33");
+            ClassicAssert.AreEqual(tracestate.AppId, "5043");
+            ClassicAssert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
+            ClassicAssert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
+            ClassicAssert.AreEqual(tracestate.Sampled, 1);
+            ClassicAssert.AreEqual(tracestate.Priority, 1.23456f);
+            ClassicAssert.AreEqual(tracestate.Timestamp, 1518469636025);
 
             Assert.That(tracestate.VendorstateEntries.Count == 2, Is.True);
             Assert.That(tracestate.VendorstateEntries.Contains("dd=YzRiMTIxODk1NmVmZTE4ZQ"), Is.True);
@@ -52,15 +50,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "33");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
-            Assert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636025);
+            ClassicAssert.AreEqual(tracestate.Version, 0);
+            ClassicAssert.AreEqual((int)tracestate.ParentType, 0);
+            ClassicAssert.AreEqual(tracestate.AccountId, "33");
+            ClassicAssert.AreEqual(tracestate.AppId, "5043");
+            ClassicAssert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
+            ClassicAssert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
+            ClassicAssert.AreEqual(tracestate.Sampled, 1);
+            ClassicAssert.AreEqual(tracestate.Priority, 1.23456f);
+            ClassicAssert.AreEqual(tracestate.Timestamp, 1518469636025);
 
             Assert.That(tracestate.VendorstateEntries.Count == 1, Is.True);
             Assert.That(tracestate.VendorstateEntries.Contains("othervendorkey1=othervendorvalue1"), Is.True);
@@ -79,15 +77,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "55");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "1238890283aasdfs");
-            Assert.AreEqual(tracestate.TransactionId, "4569065a5b131bbg");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636020);
+            ClassicAssert.AreEqual(tracestate.Version, 0);
+            ClassicAssert.AreEqual((int)tracestate.ParentType, 0);
+            ClassicAssert.AreEqual(tracestate.AccountId, "55");
+            ClassicAssert.AreEqual(tracestate.AppId, "5043");
+            ClassicAssert.AreEqual(tracestate.SpanId, "1238890283aasdfs");
+            ClassicAssert.AreEqual(tracestate.TransactionId, "4569065a5b131bbg");
+            ClassicAssert.AreEqual(tracestate.Sampled, 1);
+            ClassicAssert.AreEqual(tracestate.Priority, 1.23456f);
+            ClassicAssert.AreEqual(tracestate.Timestamp, 1518469636020);
 
             Assert.That(tracestate.VendorstateEntries.Count == 0, Is.True);
         }
@@ -159,7 +157,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             else if (expectedOtherVendors != null)
             {
                 Assert.That(tracestate.VendorstateEntries.Count > 0);
-                Assert.AreEqual(expectedOtherVendors, string.Join(",", tracestate.VendorstateEntries));
+                ClassicAssert.AreEqual(expectedOtherVendors, string.Join(",", tracestate.VendorstateEntries));
             }
 
             Assert.That(tracestate.Priority == expectedPriority, $@"Expects Priority {expectedPriority} but gets Priority {tracestate.Priority } instead.");

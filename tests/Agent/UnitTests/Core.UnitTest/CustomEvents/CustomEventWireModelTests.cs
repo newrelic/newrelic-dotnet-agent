@@ -1,15 +1,13 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Attributes;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.TestUtilities;
-using System;
 using NewRelic.Core;
+using AttributeComparer = NewRelic.Agent.TestUtilities.AttributeComparer;
 
 namespace NewRelic.Agent.Core.CustomEvents.Tests
 {
@@ -78,7 +76,7 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
 
             Assert.That(deserialized, Is.Not.Null);
 
-            Assert.AreEqual(customEvents.Length, deserialized.Count);
+            ClassicAssert.AreEqual(customEvents.Length, deserialized.Count);
             AttributeComparer.CompareDictionaries(expectedSerializations[0], deserialized[0]);
             AttributeComparer.CompareDictionaries(expectedSerializations[1], deserialized[1]);
         }

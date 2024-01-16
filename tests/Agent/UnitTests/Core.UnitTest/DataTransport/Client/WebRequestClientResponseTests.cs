@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -38,7 +36,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var content = await webRequestClientResponse.GetContentAsync();
 
             // Assert
-            Assert.AreEqual("Test Response", content);
+            ClassicAssert.AreEqual("Test Response", content);
         }
 
         [Test]
@@ -52,7 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var content = await webRequestClientResponse.GetContentAsync();
 
             // Assert
-            Assert.AreEqual(Constants.EmptyResponseBody, content);
+            ClassicAssert.AreEqual(Constants.EmptyResponseBody, content);
         }
 
         [Test]
@@ -67,7 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var content = await webRequestClientResponse.GetContentAsync();
 
             // Assert
-            Assert.AreEqual(Constants.EmptyResponseBody, content);
+            ClassicAssert.AreEqual(Constants.EmptyResponseBody, content);
         }
         [Test]
         public async Task GetContentAsync_ShouldReturnEmpty_WhenResponseHeadersIsNull()
@@ -81,7 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var content = await webRequestClientResponse.GetContentAsync();
 
             // Assert
-            Assert.AreEqual(Constants.EmptyResponseBody, content);
+            ClassicAssert.AreEqual(Constants.EmptyResponseBody, content);
         }
 
         [Test]
@@ -99,7 +97,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var content = await webRequestClientResponse.GetContentAsync();
 
             // Assert
-            Assert.AreEqual(originalText, content);
+            ClassicAssert.AreEqual(originalText, content);
         }
 
         [Test]
@@ -110,7 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act & Assert
-            Assert.IsTrue(webRequestClientResponse.IsSuccessStatusCode);
+            ClassicAssert.IsTrue(webRequestClientResponse.IsSuccessStatusCode);
         }
 
         [Test]
@@ -121,7 +119,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act & Assert
-            Assert.IsFalse(webRequestClientResponse.IsSuccessStatusCode);
+            ClassicAssert.IsFalse(webRequestClientResponse.IsSuccessStatusCode);
         }
 
         [Test]
@@ -132,7 +130,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act & Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, webRequestClientResponse.StatusCode);
+            ClassicAssert.AreEqual(HttpStatusCode.NotFound, webRequestClientResponse.StatusCode);
         }
 
         private byte[] CompressString(string text)

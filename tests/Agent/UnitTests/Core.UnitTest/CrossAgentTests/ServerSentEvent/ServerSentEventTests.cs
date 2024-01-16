@@ -19,11 +19,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.TestUtilities;
 using Telerik.JustMock;
@@ -210,7 +206,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 var jsonString = File.ReadAllText(jsonPath);
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(jsonString);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
 using NewRelic.Agent.Configuration;
 using Telerik.JustMock;
 
@@ -20,9 +19,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test", connectionInfo.ProxyHost);
-            Assert.AreEqual("path/htap.aspx", connectionInfo.ProxyUriPath);
-            Assert.AreEqual(12345, connectionInfo.ProxyPort);
+            ClassicAssert.AreEqual("https://hostname.test", connectionInfo.ProxyHost);
+            ClassicAssert.AreEqual("path/htap.aspx", connectionInfo.ProxyUriPath);
+            ClassicAssert.AreEqual(12345, connectionInfo.ProxyPort);
         }
 
         [Test]
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
+            ClassicAssert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
         }
 
         [Test]
@@ -47,7 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/", connectionInfo.Proxy.Address.ToString());
+            ClassicAssert.AreEqual("https://hostname.test:12345/", connectionInfo.Proxy.Address.ToString());
         }
 
         [Test]
@@ -60,7 +59,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
+            ClassicAssert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
         }
     }
 }

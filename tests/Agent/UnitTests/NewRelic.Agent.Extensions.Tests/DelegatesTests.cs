@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace Agent.Extensions.Tests
 {
@@ -22,7 +20,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onSuccess: () => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.True(called);
+            ClassicAssert.That(called);
         }
 
         [Test]
@@ -36,7 +34,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: value => passedValue = value);
             myDelegate(result: expectedValue, exception: null);
 
-            Assert.AreEqual(expectedValue, passedValue);
+            ClassicAssert.AreEqual(expectedValue, passedValue);
         }
 
         [Test]
@@ -49,7 +47,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: _ => called = true);
             myDelegate(result: 42, exception: null);
 
-            Assert.False(called);
+            ClassicAssert.False(called);
         }
 
         [Test]
@@ -62,7 +60,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onSuccess: () => called = true);
             myDelegate(result: null, exception: new Exception());
 
-            Assert.False(called);
+            ClassicAssert.False(called);
         }
 
         #endregion OnSuccess
@@ -80,7 +78,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onFailure: ex => passedException = ex);
             myDelegate(result: null, exception: expectedException);
 
-            Assert.AreEqual(expectedException, passedException);
+            ClassicAssert.AreEqual(expectedException, passedException);
         }
 
         [Test]
@@ -93,7 +91,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onFailure: _ => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.False(called);
+            ClassicAssert.False(called);
         }
 
         #endregion OnFailure
@@ -110,7 +108,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onComplete: () => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.True(called);
+            Assert.That(called);
         }
 
         [Test]
@@ -123,7 +121,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onComplete: () => called = true);
             myDelegate(result: null, exception: new Exception());
 
-            Assert.True(called);
+            Assert.That(called);
         }
 
         #endregion OnComplete
@@ -144,7 +142,7 @@ namespace Agent.Extensions.Tests
                 );
             myDelegate(result: null, exception: null);
 
-            Assert.AreEqual(expectedThingsCalled, thingsCalled);
+            ClassicAssert.AreEqual(expectedThingsCalled, thingsCalled);
         }
 
         [Test]
@@ -161,7 +159,7 @@ namespace Agent.Extensions.Tests
                 );
             myDelegate(result: null, exception: new Exception());
 
-            Assert.AreEqual(expectedThingsCalled, thingsCalled);
+            ClassicAssert.AreEqual(expectedThingsCalled, thingsCalled);
         }
 
         #endregion Order of calls

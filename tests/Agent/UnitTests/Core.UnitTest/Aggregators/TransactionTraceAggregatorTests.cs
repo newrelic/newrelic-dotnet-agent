@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -14,8 +11,6 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -95,9 +90,9 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, sentTraces.Count()),
-                () => Assert.IsTrue(sentTraces.Contains(trace1)),
-                () => Assert.IsTrue(sentTraces.Contains(trace2))
+                () => ClassicAssert.AreEqual(2, sentTraces.Count()),
+                () => ClassicAssert.IsTrue(sentTraces.Contains(trace1)),
+                () => ClassicAssert.IsTrue(sentTraces.Contains(trace2))
                 );
         }
 
@@ -130,7 +125,7 @@ namespace NewRelic.Agent.Core.Aggregators
             sentTraces = Enumerable.Empty<TransactionTraceWireModel>(); //reset
             _harvestAction();
 
-            Assert.AreEqual(1, sentTraces.Count());
+            ClassicAssert.AreEqual(1, sentTraces.Count());
         }
 
         [Test]

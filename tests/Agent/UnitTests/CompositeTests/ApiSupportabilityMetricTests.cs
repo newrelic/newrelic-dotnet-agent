@@ -7,9 +7,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace CompositeTests
 {

@@ -4,10 +4,6 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CompositeTests
 {
@@ -51,7 +47,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
-            Assert.AreEqual("SELECT * FROM Table1", parameters["sql"]);
+            ClassicAssert.AreEqual("SELECT * FROM Table1", parameters["sql"]);
         }
 
         [Test]
@@ -79,11 +75,11 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
-            Assert.IsNotNull(transactionTrace);
+            ClassicAssert.IsNotNull(transactionTrace);
 
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
-            Assert.IsTrue(parameters.ContainsKey("query_parameters"));
+            ClassicAssert.IsTrue(parameters.ContainsKey("query_parameters"));
             CollectionAssert.AreEquivalent((Dictionary<string, IConvertible>)parameters["query_parameters"], new Dictionary<string, IConvertible>
             {
                 {"myKey1", "myValue1"},
@@ -115,11 +111,11 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
-            Assert.IsNotNull(transactionTrace);
+            ClassicAssert.IsNotNull(transactionTrace);
 
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
-            Assert.IsFalse(parameters.ContainsKey("query_parameters"));
+            ClassicAssert.IsFalse(parameters.ContainsKey("query_parameters"));
         }
 
         [Test]
@@ -142,11 +138,11 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
-            Assert.IsNotNull(transactionTrace);
+            ClassicAssert.IsNotNull(transactionTrace);
 
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
-            Assert.IsFalse(parameters.ContainsKey("query_parameters"));
+            ClassicAssert.IsFalse(parameters.ContainsKey("query_parameters"));
         }
     }
 }

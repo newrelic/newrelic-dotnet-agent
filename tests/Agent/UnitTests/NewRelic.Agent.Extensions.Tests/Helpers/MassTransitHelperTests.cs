@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Helpers;
 
@@ -23,7 +21,7 @@ namespace Agent.Extensions.Tests.Helpers
             var queueName = MassTransitHelpers.GetQueueData(uri).QueueName;
 
             // Assert
-            Assert.AreEqual(expectedQueueName, queueName, "Did not get expected queue name");
+            ClassicAssert.AreEqual(expectedQueueName, queueName, "Did not get expected queue name");
         }
 
         [Test]
@@ -37,7 +35,7 @@ namespace Agent.Extensions.Tests.Helpers
             var destType = MassTransitHelpers.GetQueueData(uri).DestinationType;
 
             // Assert
-            Assert.AreEqual(expectedDestType, destType, "Did not get expected queue type");
+            ClassicAssert.AreEqual(expectedDestType, destType, "Did not get expected queue type");
         }
     }
 

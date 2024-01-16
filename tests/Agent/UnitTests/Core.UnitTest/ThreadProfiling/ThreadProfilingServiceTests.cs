@@ -1,12 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using NewRelic.Agent.Core.DataTransport;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
@@ -35,7 +31,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             var result = _threadProfilingService.StartThreadProfilingSession(profileSessionId, frequencyInMsec, durationInMsec);
 
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -48,7 +44,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingService.StartThreadProfilingSession(profileSessionId, frequencyInMsec, durationInMsec);
             var result = _threadProfilingService.StopThreadProfilingSession(profileSessionId);
 
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -56,7 +52,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             var result = _threadProfilingService.StopThreadProfilingSession(9999);
 
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
 
@@ -72,7 +68,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var bogusProfileSessionId = 9999;
             var result = _threadProfilingService.StopThreadProfilingSession(bogusProfileSessionId);
 
-            Assert.IsFalse(result);
+            ClassicAssert.IsFalse(result);
         }
 
         [Test]
@@ -91,7 +87,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingService.SampleAcquired(threadSnapshots);
 
             // Assert
-            Assert.AreEqual(expectedBucketNodeCount, _threadProfilingService.GetTotalBucketNodeCount());
+            ClassicAssert.AreEqual(expectedBucketNodeCount, _threadProfilingService.GetTotalBucketNodeCount());
         }
 
         [Test]
@@ -109,7 +105,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingService.SampleAcquired(threadSnapshots);
 
             // Assert
-            Assert.AreEqual(0, _threadProfilingService.GetTotalBucketNodeCount());
+            ClassicAssert.AreEqual(0, _threadProfilingService.GetTotalBucketNodeCount());
         }
 
         [Test]
@@ -152,10 +148,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Assert
             Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
-            Assert.AreEqual(1, actualModels.Count);
-            Assert.AreEqual(2, actualModels[0].TotalThreadCount);
-            Assert.AreEqual(1, actualModels[0].NumberOfSamples);
-            Assert.AreEqual(0, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
+            ClassicAssert.AreEqual(1, actualModels.Count);
+            ClassicAssert.AreEqual(2, actualModels[0].TotalThreadCount);
+            ClassicAssert.AreEqual(1, actualModels[0].NumberOfSamples);
+            ClassicAssert.AreEqual(0, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
 
             // Teardown
             Marshal.FreeHGlobal(fidGizmoIntPtr);
@@ -189,8 +185,8 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Assert
             var actualCount = _threadProfilingService.PruningList.Count;
-            Assert.AreEqual(1, actualCount);
-            Assert.AreEqual(node, _threadProfilingService.PruningList[0]);
+            ClassicAssert.AreEqual(1, actualCount);
+            ClassicAssert.AreEqual(node, _threadProfilingService.PruningList[0]);
         }
 
         [Test]
@@ -210,10 +206,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Assert
             var pruningList = _threadProfilingService.PruningList;
-            Assert.AreEqual(3, pruningList.Count);
-            Assert.AreEqual(node1, pruningList[0]);
-            Assert.AreEqual(node2, pruningList[1]);
-            Assert.AreEqual(node3, pruningList[2]);
+            ClassicAssert.AreEqual(3, pruningList.Count);
+            ClassicAssert.AreEqual(node1, pruningList[0]);
+            ClassicAssert.AreEqual(node2, pruningList[1]);
+            ClassicAssert.AreEqual(node3, pruningList[2]);
         }
 
         [Test]
@@ -235,10 +231,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             // Assert
             var pruningList = threadProfilingService.PruningList;
-            Assert.AreEqual(3, pruningList.Count);
-            Assert.AreEqual(node2, pruningList[0]);
-            Assert.AreEqual(node3, pruningList[1]);
-            Assert.AreEqual(node1, pruningList[2]);
+            ClassicAssert.AreEqual(3, pruningList.Count);
+            ClassicAssert.AreEqual(node2, pruningList[0]);
+            ClassicAssert.AreEqual(node3, pruningList[1]);
+            ClassicAssert.AreEqual(node1, pruningList[2]);
         }
 
         [Test]
@@ -257,7 +253,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingService.ResetCache();
 
             // Assert
-            Assert.IsEmpty(_threadProfilingService.PruningList);
+            ClassicAssert.IsEmpty(_threadProfilingService.PruningList);
         }
     }
 }

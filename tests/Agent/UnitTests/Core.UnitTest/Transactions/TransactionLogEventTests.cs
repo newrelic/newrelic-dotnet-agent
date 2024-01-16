@@ -1,14 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -26,9 +22,9 @@ namespace NewRelic.Agent.Core.Transactions
             transaction.AddLogEvent(logEvent);
             var harvestedLogs = transaction.HarvestLogEvents();
 
-            Assert.NotNull(harvestedLogs);
-            Assert.AreEqual(1, harvestedLogs.Count);
-            Assert.AreSame(logEvent, harvestedLogs.First());
+            ClassicAssert.NotNull(harvestedLogs);
+            ClassicAssert.AreEqual(1, harvestedLogs.Count);
+            ClassicAssert.AreSame(logEvent, harvestedLogs.First());
 
         }
 
@@ -42,7 +38,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             var result = transaction.AddLogEvent(logEvent);
 
-            Assert.False(result);
+            ClassicAssert.False(result);
         }
     }
 }

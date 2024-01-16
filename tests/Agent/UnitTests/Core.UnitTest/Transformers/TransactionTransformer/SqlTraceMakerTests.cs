@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
@@ -11,7 +8,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
@@ -59,15 +55,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var datastoreSegment = BuildSegment(DatastoreVendor.MSSQL, "Table1", commandText, new TimeSpan(), duration, null, null, null, "myhost", "myport", "mydatabase");
 
             var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
-            Assert.IsNotNull(sqlTrace);
-            Assert.AreEqual(commandText, sqlTrace.Sql);
-            Assert.AreEqual(uri, sqlTrace.Uri);
-            Assert.AreEqual(duration, sqlTrace.TotalCallTime);
-            Assert.AreEqual(3, sqlTrace.ParameterData.Count); // Explain plans will go here
-            Assert.AreEqual("myhost", sqlTrace.ParameterData["host"]);
-            Assert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]);
-            Assert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"]);
-            Assert.AreEqual("WebTransaction/Name", sqlTrace.TransactionName);
+            ClassicAssert.IsNotNull(sqlTrace);
+            ClassicAssert.AreEqual(commandText, sqlTrace.Sql);
+            ClassicAssert.AreEqual(uri, sqlTrace.Uri);
+            ClassicAssert.AreEqual(duration, sqlTrace.TotalCallTime);
+            ClassicAssert.AreEqual(3, sqlTrace.ParameterData.Count); // Explain plans will go here
+            ClassicAssert.AreEqual("myhost", sqlTrace.ParameterData["host"]);
+            ClassicAssert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]);
+            ClassicAssert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"]);
+            ClassicAssert.AreEqual("WebTransaction/Name", sqlTrace.TransactionName);
         }
 
         [Test]
@@ -80,7 +76,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var datastoreSegment = BuildSegment(DatastoreVendor.MSSQL, "Table1", commandText, new TimeSpan(), null);
 
             var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
-            Assert.IsNull(sqlTrace);
+            ClassicAssert.IsNull(sqlTrace);
         }
 
         [Test]
@@ -93,8 +89,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var datastoreSegment = BuildSegment(DatastoreVendor.MSSQL, "Table1", commandText, new TimeSpan(), duration, null, null, null, "myhost", "myport", "mydatabase");
 
             var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
-            Assert.IsNotNull(sqlTrace);
-            Assert.AreEqual("<unknown>", sqlTrace.Uri);
+            ClassicAssert.IsNotNull(sqlTrace);
+            ClassicAssert.AreEqual("<unknown>", sqlTrace.Uri);
         }
 
         [Test]
@@ -127,8 +123,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var sqlTrace = sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
 
             //Assert
-            Assert.IsNotNull(sqlTrace);
-            Assert.AreEqual("<unknown>", sqlTrace.Uri);
+            ClassicAssert.IsNotNull(sqlTrace);
+            ClassicAssert.AreEqual("<unknown>", sqlTrace.Uri);
         }
 
         private ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null, IAttributeDefinitions attribDefs = null)

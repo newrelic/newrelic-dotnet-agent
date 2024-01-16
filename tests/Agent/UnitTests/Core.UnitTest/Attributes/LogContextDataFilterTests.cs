@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System.Linq;
-using System.Collections.Generic;
 using NUnit.Framework.Internal;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
@@ -90,7 +87,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual(expectedAttributeNames, string.Join(",", filteredData.Keys.ToList()));
+            ClassicAssert.AreEqual(expectedAttributeNames, string.Join(",", filteredData.Keys.ToList()));
         }
 
         [Test]
@@ -105,7 +102,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual("key1,key2", string.Join(",", filteredData.Keys.ToList()));
+            ClassicAssert.AreEqual("key1,key2", string.Join(",", filteredData.Keys.ToList()));
 
             // Update config
 
@@ -114,7 +111,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             UpdateConfig();
 
             filteredData = filter.FilterLogContextData(_unfilteredContextData);
-            Assert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
+            ClassicAssert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
         }
 
         [Test]
@@ -133,7 +130,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 var filteredData = filter.FilterLogContextData(unfilteredContextData);
 
-                Assert.IsTrue(logging.HasMessageThatContains("LogContextDataFilter: max #"));
+                ClassicAssert.IsTrue(logging.HasMessageThatContains("LogContextDataFilter: max #"));
             }
 
         }
@@ -145,10 +142,10 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void LogContextDataFilterRule(string inputRuleText, bool isInclude, string expectedRuleText, bool isWildcard, int specificity)
         {
             var rule = new LogContextDataFilterRule(inputRuleText, isInclude);
-            Assert.AreEqual(isInclude, rule.Include);
-            Assert.AreEqual(expectedRuleText, rule.Text);
-            Assert.AreEqual(isWildcard, rule.IsWildCard);
-            Assert.AreEqual(specificity, rule.Specificity);
+            ClassicAssert.AreEqual(isInclude, rule.Include);
+            ClassicAssert.AreEqual(expectedRuleText, rule.Text);
+            ClassicAssert.AreEqual(isWildcard, rule.IsWildCard);
+            ClassicAssert.AreEqual(specificity, rule.Specificity);
 
         }
         private void UpdateConfig()

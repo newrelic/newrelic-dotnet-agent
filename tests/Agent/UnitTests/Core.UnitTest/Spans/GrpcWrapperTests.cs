@@ -1,10 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using Grpc.Core;
 using System.Threading;
-using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport;
 using System.Threading.Tasks;
 
@@ -113,23 +111,23 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
         {
             // Trying a real connection should fail
             var grpc = new FakeGrpcWrapper(false, null);
-            Assert.IsFalse(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
-            Assert.IsFalse(grpc.IsConnected);
+            ClassicAssert.IsFalse(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
+            ClassicAssert.IsFalse(grpc.IsConnected);
 
             // Even if it's SSL
             grpc = new FakeGrpcWrapper(false, null);
-            Assert.IsFalse(grpc.CreateChannel("localhost", 0, true, null, 0, new CancellationToken()));
-            Assert.IsFalse(grpc.IsConnected);
+            ClassicAssert.IsFalse(grpc.CreateChannel("localhost", 0, true, null, 0, new CancellationToken()));
+            ClassicAssert.IsFalse(grpc.IsConnected);
 
             // A fake connection should succeed
             grpc = new FakeGrpcWrapper();
-            Assert.IsTrue(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
-            Assert.IsTrue(grpc.IsConnected);
+            ClassicAssert.IsTrue(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
+            ClassicAssert.IsTrue(grpc.IsConnected);
 
             // A fake connection that throws an error should fail (error is eaten)
             grpc = new FakeGrpcWrapper(true, new Exception());
-            Assert.IsFalse(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
-            Assert.IsFalse(grpc.IsConnected);
+            ClassicAssert.IsFalse(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
+            ClassicAssert.IsFalse(grpc.IsConnected);
         }
 #endif
 
@@ -139,9 +137,9 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             IClientStreamWriter<FakeGrpcRequest> requestStream;
             IAsyncStreamReader<FakeGrpcResponse> reponseStream;
 
-            Assert.IsTrue(new FakeGrpcWrapper().CreateStreams(null, 0, new CancellationToken(), out requestStream, out reponseStream));
+            ClassicAssert.IsTrue(new FakeGrpcWrapper().CreateStreams(null, 0, new CancellationToken(), out requestStream, out reponseStream));
 
-            Assert.IsFalse(new FakeGrpcWrapper(new GrpcWrapperChannelNotAvailableException()).CreateStreams(null, 0, new CancellationToken(), out requestStream, out reponseStream));
+            ClassicAssert.IsFalse(new FakeGrpcWrapper(new GrpcWrapperChannelNotAvailableException()).CreateStreams(null, 0, new CancellationToken(), out requestStream, out reponseStream));
 
             Assert.Throws<GrpcWrapperException>(() => new FakeGrpcWrapper(true, new RpcException(Status.DefaultCancelled)).CreateStreams(null, 0, new CancellationToken(), out requestStream, out reponseStream));
 
@@ -154,7 +152,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             var grpc = new FakeGrpcWrapper();
             var stream = new FakeGrpcStreamWriter();
 
-            Assert.IsTrue(grpc.TrySendData(stream, null, 0, new CancellationToken()));
+            ClassicAssert.IsTrue(grpc.TrySendData(stream, null, 0, new CancellationToken()));
 
             stream = new FakeGrpcStreamWriter(new InvalidOperationException("Request stream has already been completed."));
             Assert.Throws<GrpcWrapperStreamNotAvailableException>(() => grpc.TrySendData(stream, null, 0, new CancellationToken()));
@@ -166,7 +164,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             Assert.Throws<GrpcWrapperException>(() => grpc.TrySendData(stream, null, 0, new CancellationToken()));
 
             stream = new FakeGrpcStreamWriter(new Exception());
-            Assert.IsFalse(grpc.TrySendData(stream, null, 0, new CancellationToken(true)));
+            ClassicAssert.IsFalse(grpc.TrySendData(stream, null, 0, new CancellationToken(true)));
 
         }
 
@@ -176,7 +174,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             var grpc = new FakeGrpcWrapper();
             // No active connection, will just exit
             Assert.DoesNotThrow(() => grpc.Shutdown());
-            Assert.IsFalse(grpc.IsConnected);
+            ClassicAssert.IsFalse(grpc.IsConnected);
 
             // "Active" connection, will attempt to shut down
             grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken());
@@ -190,16 +188,16 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             var grpc = new FakeGrpcWrapper();
             var goodStream = new FakeGrpcStreamWriter();
             Assert.DoesNotThrow(() => grpc.TryCloseRequestStream(goodStream));
-            Assert.IsTrue(goodStream.IsComplete);
+            ClassicAssert.IsTrue(goodStream.IsComplete);
 
             // It eats the error
             var badStream = new FakeGrpcStreamWriter(new GrpcWrapperChannelNotAvailableException());
             Assert.DoesNotThrow(() => grpc.TryCloseRequestStream(badStream));
-            Assert.IsFalse(badStream.IsComplete);
+            ClassicAssert.IsFalse(badStream.IsComplete);
 
             badStream = new FakeGrpcStreamWriter(new GrpcWrapperChannelNotAvailableException("Oh no!", new Exception()));
             Assert.DoesNotThrow(() => grpc.TryCloseRequestStream(badStream));
-            Assert.IsFalse(badStream.IsComplete);
+            ClassicAssert.IsFalse(badStream.IsComplete);
         }
     }
 }

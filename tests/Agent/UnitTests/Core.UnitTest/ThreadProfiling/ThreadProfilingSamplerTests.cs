@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
 using Telerik.JustMock;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +34,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var result = _threadProfiler.Start(frequencyInMsec, durationInMsec, _sampleSink, _nativeMethods);
 
             // Assert
-            Assert.IsTrue(result);
+            ClassicAssert.IsTrue(result);
         }
 
         [Test]
@@ -122,7 +120,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var result = _threadProfiler.Start(frequencyInMsec, durationInMsec, _sampleSink, _nativeMethods);
 
             // Assert
-            Assert.IsFalse(result); // Assert that a second worker wasn't started
+            ClassicAssert.IsFalse(result); // Assert that a second worker wasn't started
         }
 
         [Test]

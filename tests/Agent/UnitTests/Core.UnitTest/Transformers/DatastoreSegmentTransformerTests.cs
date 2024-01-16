@@ -1,14 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Segments;
@@ -67,37 +65,37 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(6, unscoped.Count);
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(operationMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(statementMetric));
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
         }
 
@@ -119,37 +117,37 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(6, unscoped.Count);
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(operationMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(statementMetric));
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
         }
 
@@ -171,38 +169,38 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(5, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(5, unscoped.Count);
 
             //no statement metric for null model
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
-            Assert.IsFalse(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
+            ClassicAssert.IsFalse(unscoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(operationMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(operationMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(operationMetric));
 
             var data = scoped[operationMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsWithExclusiveTime = new string[] { operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
         }
 
@@ -227,47 +225,47 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(7, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(7, unscoped.Count);
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
             const string instanceMetric = "Datastore/instance/MSSQL/HOST/8080";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
-            Assert.IsTrue(unscoped.ContainsKey(instanceMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(operationMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(instanceMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(statementMetric));
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
 
             data = unscoped[instanceMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
         }
         #endregion Transform
 

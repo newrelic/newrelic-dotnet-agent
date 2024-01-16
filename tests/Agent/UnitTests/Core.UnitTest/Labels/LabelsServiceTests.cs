@@ -1,11 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Labels.Tests
@@ -257,7 +254,7 @@ namespace NewRelic.Agent.Core.Labels.Tests
                 #endregion
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .ToArray();
@@ -281,11 +278,11 @@ namespace NewRelic.Agent.Core.Labels.Tests
                 var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
 
                 // assert
-                Assert.AreEqual(expectedResults, actualResults);
+                ClassicAssert.AreEqual(expectedResults, actualResults);
                 if (testCase.Warning)
-                    Assert.AreNotEqual(0, logger.WarnCount);
+                    ClassicAssert.AreNotEqual(0, logger.WarnCount);
                 else
-                    Assert.AreEqual(0, logger.MessageCount);
+                    ClassicAssert.AreEqual(0, logger.MessageCount);
             }
         }
     }

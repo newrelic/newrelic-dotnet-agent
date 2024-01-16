@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Linq;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -36,33 +34,33 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 0, 7);
 
-            Assert.AreEqual(7, result.Length);
-            Assert.AreEqual("1", result[0]);
-            Assert.AreEqual("single quoted string", result[1]);
-            Assert.AreEqual("True", result[2]);
-            Assert.AreEqual("double quoted string", result[3]);
-            Assert.AreEqual(null, result[4]);
-            Assert.AreEqual("4.32", result[5]);
-            Assert.AreEqual("5", result[6]);
+            ClassicAssert.AreEqual(7, result.Length);
+            ClassicAssert.AreEqual("1", result[0]);
+            ClassicAssert.AreEqual("single quoted string", result[1]);
+            ClassicAssert.AreEqual("True", result[2]);
+            ClassicAssert.AreEqual("double quoted string", result[3]);
+            ClassicAssert.AreEqual(null, result[4]);
+            ClassicAssert.AreEqual("4.32", result[5]);
+            ClassicAssert.AreEqual("5", result[6]);
         }
 
         [Test]
         public void Deserialize_ArraySizeMatchesUpperBound()
         {
             var result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 0, 7);
-            Assert.AreEqual(7, result.Length);
+            ClassicAssert.AreEqual(7, result.Length);
 
             result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 0, 10);
-            Assert.AreEqual(10, result.Length);
+            ClassicAssert.AreEqual(10, result.Length);
         }
 
         public void Deserialize_EmptyJsonArray_ResultsInNotNull()
         {
             var result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_EmptyArray, 0, 7);
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(7, result.Length);
-            Assert.IsTrue(result.All(x => x == null));
+            ClassicAssert.IsNotNull(result);
+            ClassicAssert.AreEqual(7, result.Length);
+            ClassicAssert.IsTrue(result.All(x => x == null));
         }
 
         [Test]
@@ -71,23 +69,23 @@ namespace NewRelic.Agent.Core.Utilities
             for (var i = 0; i < 7; i++)
             {
                 var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 0, i);
-                Assert.IsNull(resultExpectedNull);
+                ClassicAssert.IsNull(resultExpectedNull);
             }
 
             var resultExpectedNotNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 0, 8);
-            Assert.IsNotNull(resultExpectedNotNull);
+            ClassicAssert.IsNotNull(resultExpectedNotNull);
         }
 
         [Test]
         public void Deserialize_UndersizedJsonArray_ResultsInNull()
         {
             var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, 8, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
 
             for (var i = 0; i <= 7; i++)
             {
                 var resultExpectedNotNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson, i, 100);
-                Assert.IsNotNull(resultExpectedNotNull);
+                ClassicAssert.IsNotNull(resultExpectedNotNull);
             }
         }
 
@@ -95,48 +93,48 @@ namespace NewRelic.Agent.Core.Utilities
         public void Deserialize_WellFormedJson_MalformedJsonArray_ResultsInNull()
         {
             var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_malformedJson_ArrayNotClosed, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
 
             resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_NotAnArray1, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
 
             resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_NotAnArray2, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
         }
 
         [Test]
         public void Deserialize_WellFormedJson_BooleansMatchDotNetStringRepresentation()
         {
             var result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_Booleans, 0, 3);
-            Assert.AreEqual(true.ToString(), result[0]);
-            Assert.AreEqual(false.ToString(), result[1]);
-            Assert.AreEqual(true.ToString(), result[2]);
-            Assert.AreNotEqual("true", result[0]);
-            Assert.AreNotEqual("false", result[1]);
+            ClassicAssert.AreEqual(true.ToString(), result[0]);
+            ClassicAssert.AreEqual(false.ToString(), result[1]);
+            ClassicAssert.AreEqual(true.ToString(), result[2]);
+            ClassicAssert.AreNotEqual("true", result[0]);
+            ClassicAssert.AreNotEqual("false", result[1]);
         }
 
         [Test]
         public void Deserialize_EmptyString_ResultsInNull()
         {
             var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(string.Empty, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
 
             resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(" ", 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
         }
 
         [Test]
         public void Deserialize_EmptyElement_ResultsInNull()
         {
             var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_malformedJson_EmptyElement, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
         }
 
         [Test]
         public void Deserialize_EmbeddedArray_ResultsInNull()
         {
             var resultExpectedNull = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_EmbeddedArray, 0, 100);
-            Assert.IsNull(resultExpectedNull);
+            ClassicAssert.IsNull(resultExpectedNull);
         }
 
         [Test]
@@ -153,8 +151,8 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var result = CrossApplicationTracingJsonHelper.ConvertJsonToStringArrayForCat(_wellformedJson_MixedQuotes, 0, 2);
 
-            Assert.AreEqual("this 'is' valid", result[0]);
-            Assert.AreEqual("so \"is\" this", result[1]);
+            ClassicAssert.AreEqual("this 'is' valid", result[0]);
+            ClassicAssert.AreEqual("so \"is\" this", result[1]);
         }
     }
 }

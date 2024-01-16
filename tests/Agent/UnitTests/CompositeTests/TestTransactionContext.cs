@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.SystemExtensions.Collections.Generic;
 

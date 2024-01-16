@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -16,8 +15,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<string>>(json);
 
-            Assert.NotNull(result);
-            Assert.AreEqual("Hello!", result.ReturnValue);
+            ClassicAssert.NotNull(result);
+            ClassicAssert.AreEqual("Hello!", result.ReturnValue);
         }
     }
 }

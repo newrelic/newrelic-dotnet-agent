@@ -3,7 +3,6 @@
 
 using System.Reflection;
 using NewRelic.Agent.Configuration;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
@@ -33,24 +32,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         public void CalculatePathHash_ReturnsCorrectPathHash_IfReferringPathHashIsNull()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", null);
-            Assert.AreEqual("9d743449", pathHash);
+            ClassicAssert.AreEqual("9d743449", pathHash);
         }
 
         [Test]
         public void CalculatePathHash_ReturnsCorrectPathHash_IfReferringPathHashIsNotNull()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", ReferringPathHash);
-            Assert.AreEqual("b91c98b9", pathHash);
+            ClassicAssert.AreEqual("b91c98b9", pathHash);
         }
 
         [Test]
         public void CalculatePathHash_ReturnsReversiblePathHash()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", ReferringPathHash);
-            Assert.NotNull(pathHash);
+            ClassicAssert.NotNull(pathHash);
 
             var reversedPathHash = ReversePathHash("transactionName", AppName, pathHash);
-            Assert.AreEqual(ReferringPathHash, reversedPathHash);
+            ClassicAssert.AreEqual(ReferringPathHash, reversedPathHash);
         }
 
         private static string ReversePathHash(string transactionName, string appName, string pathHash)

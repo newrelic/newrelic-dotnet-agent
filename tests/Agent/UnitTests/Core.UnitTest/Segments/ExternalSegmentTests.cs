@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Spans;
 
@@ -25,8 +23,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
             segment.End();
 
-            Assert.IsTrue(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
-            Assert.AreEqual("guid", segment.Parameters.ToDictionary()[TransactionGuidSegmentParameterKey]);
+            ClassicAssert.IsTrue(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
+            ClassicAssert.AreEqual("guid", segment.Parameters.ToDictionary()[TransactionGuidSegmentParameterKey]);
         }
 
         [Test]
@@ -35,7 +33,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
-            Assert.IsFalse(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
+            ClassicAssert.IsFalse(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
         }
     }
 }

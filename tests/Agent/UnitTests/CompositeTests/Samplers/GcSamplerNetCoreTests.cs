@@ -4,10 +4,6 @@
 using CompositeTests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Samplers
@@ -116,8 +112,8 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Sample();
 
             //Assert
-            Assert.IsTrue(samplerWasStopped);
-            Assert.IsTrue(listenerWasDisposed);
+            ClassicAssert.IsTrue(samplerWasStopped);
+            ClassicAssert.IsTrue(listenerWasDisposed);
         }
 
         [Test]
@@ -142,7 +138,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Dispose();
 
             //Assert
-            Assert.IsTrue(listenerWasDisposed);
+            ClassicAssert.IsTrue(listenerWasDisposed);
         }
 
         [Test]
@@ -162,7 +158,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
 
             //Assert
-            Assert.IsTrue(wasStarted);
+            ClassicAssert.IsTrue(wasStarted);
         }
 
         [Test]
@@ -218,8 +214,8 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.IsTrue(sampleAttempted);
-            Assert.IsTrue(samplerWasStopped);
+            ClassicAssert.IsTrue(sampleAttempted);
+            ClassicAssert.IsTrue(samplerWasStopped);
         }
 
         [Test]
@@ -239,7 +235,7 @@ namespace NewRelic.Agent.Core.Samplers
             var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(false));
             sampler.Start();
 
-            Assert.IsFalse(listenerWasStarted);
+            ClassicAssert.IsFalse(listenerWasStarted);
         }
 
         [Test]
@@ -259,7 +255,7 @@ namespace NewRelic.Agent.Core.Samplers
             var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
             sampler.Start();
 
-            Assert.IsTrue(listenerWasStarted);
+            ClassicAssert.IsTrue(listenerWasStarted);
         }
 
         [Test]
@@ -286,7 +282,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.AreEqual(1, collectedSamples.Count, $"Transform should have only been called once, it was called {collectedSamples.Count} time(s).");
+            ClassicAssert.AreEqual(1, collectedSamples.Count, $"Transform should have only been called once, it was called {collectedSamples.Count} time(s).");
         }
 
         [Test]
@@ -313,7 +309,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.AreEqual(1, collectedSamples.Count, "Only one sample should have been taken");
+            ClassicAssert.AreEqual(1, collectedSamples.Count, "Only one sample should have been taken");
             Assert.That(collectedSamples[0].Keys.ToArray(), Is.EquivalentTo(ExpectedSampleTypes), $"Mismatch between the GSampleTypes returned from Sample to the expectedList");
         }
     }

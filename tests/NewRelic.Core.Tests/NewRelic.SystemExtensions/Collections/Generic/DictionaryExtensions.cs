@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using System;
-using System.Collections.Generic;
 using NewRelic.SystemExtensions.Collections.Generic;
-using NUnit.Framework;
 
 
 namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
@@ -23,7 +20,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 					var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
+					ClassicAssert.AreEqual(expectedValue, actualValue);
 				}
 
 			[Test]
@@ -35,7 +32,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 					var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
+					ClassicAssert.AreEqual(expectedValue, actualValue);
 				}
 
 			[Test]
@@ -47,7 +44,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 					var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
+					ClassicAssert.AreEqual(expectedValue, actualValue);
 				}
 
 			[Test]
@@ -59,7 +56,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, "default");
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -71,7 +68,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -83,7 +80,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -95,7 +92,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => "default");
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -107,7 +104,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -119,7 +116,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -131,7 +128,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -143,7 +140,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -155,7 +152,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -167,7 +164,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -179,7 +176,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]
@@ -191,7 +188,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
 				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
+				ClassicAssert.AreEqual(expectedValue, actualValue);
 			}
 
 			[Test]

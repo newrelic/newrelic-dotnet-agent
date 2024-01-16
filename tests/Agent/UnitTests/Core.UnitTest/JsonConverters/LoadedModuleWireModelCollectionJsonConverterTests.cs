@@ -1,12 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using NewRelic.Agent.Core.WireModels;
 using System.Reflection;
-using System;
 using System.Text;
 
 namespace NewRelic.Agent.Core.Utilities
@@ -46,7 +43,7 @@ namespace NewRelic.Agent.Core.Utilities
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
             var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            ClassicAssert.AreEqual(expected, serialized);
         }
 
         [Test]
@@ -71,7 +68,7 @@ namespace NewRelic.Agent.Core.Utilities
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
             var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            ClassicAssert.AreEqual(expected, serialized);
         }
     }
 }

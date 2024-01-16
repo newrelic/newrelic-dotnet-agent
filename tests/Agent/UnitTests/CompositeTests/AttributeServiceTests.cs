@@ -1,12 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 
 namespace CompositeTests
 {
@@ -96,7 +94,7 @@ namespace CompositeTests
             _attribDefs.HostDisplayName.TrySetValue(_attribValues, null as string);
             _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, null);
 
-            Assert.AreEqual(0, _attribValues.ToDictionary().Count);
+            ClassicAssert.AreEqual(0, _attribValues.ToDictionary().Count);
         }
     }
 }

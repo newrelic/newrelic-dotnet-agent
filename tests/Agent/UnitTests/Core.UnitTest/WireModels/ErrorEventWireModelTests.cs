@@ -3,14 +3,12 @@
 
 using NewRelic.Core;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using NewRelic.Agent.TestUtilities;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
+using AttributeComparer = NewRelic.Agent.TestUtilities.AttributeComparer;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -111,7 +109,7 @@ namespace NewRelic.Agent.Core.WireModels
             var errorEventWireModel = new ErrorEventWireModel(attribValues, isSyntheticsEvent, priority);
 
             // Assert
-            Assert.IsTrue(errorEventWireModel.IsSynthetics);
+            ClassicAssert.IsTrue(errorEventWireModel.IsSynthetics);
         }
 
         [Test]

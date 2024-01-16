@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using Telerik.JustMock;

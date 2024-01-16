@@ -1,10 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -28,7 +25,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var json = JsonConvert.SerializeObject(threadProfilingModel);
 
             const string expectedJson = @"[1,-62135596800.0,-62135596800.0,4,{""OTHER"":[[null,null,0],6,0,[]]},10,11]";
-            Assert.AreEqual(expectedJson, json);
+            ClassicAssert.AreEqual(expectedJson, json);
         }
     }
 }

@@ -1,10 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
@@ -19,8 +16,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Core.DistributedTracing;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
@@ -78,8 +73,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
 
             // ASSERT
-            Assert.NotNull(transactionEvent);
-            Assert.IsTrue(transactionEvent.IsSynthetics);
+            ClassicAssert.NotNull(transactionEvent);
+            ClassicAssert.IsTrue(transactionEvent.IsSynthetics);
         }
 
 
@@ -121,17 +116,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple(
                 () => CollectionAssert.AreEquivalent(unfilteredIntrinsicsDic.Keys, filteredIntrinsicsDic.Keys),
-                () => Assert.AreEqual(19, intrinsicAttributes.Count),
-                () => Assert.AreEqual("Transaction", intrinsicAttributes["type"]),
-                () => Assert.AreEqual(4, agentAttributes.Count),
-                () => Assert.AreEqual("200", agentAttributes["response.status"]),
-                () => Assert.AreEqual(200, agentAttributes["http.statusCode"]),
-                () => Assert.AreEqual("http://foo.com", agentAttributes["request.uri"]),
-                () => Assert.IsTrue(agentAttributes.ContainsKey("host.displayName")),
-                () => Assert.AreEqual(1, userAttributes.Count),
-                () => Assert.AreEqual("bar", userAttributes["foo"])
+                () => ClassicAssert.AreEqual(19, intrinsicAttributes.Count),
+                () => ClassicAssert.AreEqual("Transaction", intrinsicAttributes["type"]),
+                () => ClassicAssert.AreEqual(4, agentAttributes.Count),
+                () => ClassicAssert.AreEqual("200", agentAttributes["response.status"]),
+                () => ClassicAssert.AreEqual(200, agentAttributes["http.statusCode"]),
+                () => ClassicAssert.AreEqual("http://foo.com", agentAttributes["request.uri"]),
+                () => ClassicAssert.IsTrue(agentAttributes.ContainsKey("host.displayName")),
+                () => ClassicAssert.AreEqual(1, userAttributes.Count),
+                () => ClassicAssert.AreEqual("bar", userAttributes["foo"])
                 //This should be on the error event
-                //() => Assert.AreEqual("baz", userAttributes["fiz"])
+                //() => ClassicAssert.AreEqual("baz", userAttributes["fiz"])
             );
         }
 
@@ -150,8 +145,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
 
             // ASSERT
-            Assert.NotNull(transactionEvent);
-            Assert.IsFalse(transactionEvent.IsSynthetics);
+            ClassicAssert.NotNull(transactionEvent);
+            ClassicAssert.IsFalse(transactionEvent.IsSynthetics);
         }
 
         [Test]
@@ -173,18 +168,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(19, intrinsicAttributes.Count, "intrinsicAttributes.Count"),
-                () => Assert.Contains("guid", intrinsicAttributes.Keys.ToArray(), "IntrinsicAttributes.Keys.Contains('guid')"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.Type.ToString(), intrinsicAttributes["parent.type"], "parent.type"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.AppId, intrinsicAttributes["parent.app"], "parent.app"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.AccountId, intrinsicAttributes["parent.account"], "parent.account"),
-                () => Assert.AreEqual(EnumNameCache<TransportType>.GetName(immutableTransaction.TracingState.TransportType), intrinsicAttributes["parent.transportType"], "parent.transportType"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.TransportDuration.TotalSeconds, (double)intrinsicAttributes["parent.transportDuration"], 0.000001d, "parent.transportDuration"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.TransactionId, intrinsicAttributes["parentId"], "parentId"),
-                () => Assert.AreEqual(immutableTransaction.TracingState.ParentId, intrinsicAttributes["parentSpanId"], "parentSpanId"),
-                () => Assert.AreEqual(immutableTransaction.TraceId, intrinsicAttributes["traceId"], "traceId"),
-                () => Assert.AreEqual(immutableTransaction.Priority, intrinsicAttributes["priority"], "priority"),
-                () => Assert.AreEqual(immutableTransaction.Sampled, intrinsicAttributes["sampled"], "sampled")
+                () => ClassicAssert.AreEqual(19, intrinsicAttributes.Count, "intrinsicAttributes.Count"),
+                () => ClassicAssert.Contains("guid", intrinsicAttributes.Keys.ToArray(), "IntrinsicAttributes.Keys.Contains('guid')"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.Type.ToString(), intrinsicAttributes["parent.type"], "parent.type"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.AppId, intrinsicAttributes["parent.app"], "parent.app"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.AccountId, intrinsicAttributes["parent.account"], "parent.account"),
+                () => ClassicAssert.AreEqual(EnumNameCache<TransportType>.GetName(immutableTransaction.TracingState.TransportType), intrinsicAttributes["parent.transportType"], "parent.transportType"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.TransportDuration.TotalSeconds, (double)intrinsicAttributes["parent.transportDuration"], 0.000001d, "parent.transportDuration"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.TransactionId, intrinsicAttributes["parentId"], "parentId"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TracingState.ParentId, intrinsicAttributes["parentSpanId"], "parentSpanId"),
+                () => ClassicAssert.AreEqual(immutableTransaction.TraceId, intrinsicAttributes["traceId"], "traceId"),
+                () => ClassicAssert.AreEqual(immutableTransaction.Priority, intrinsicAttributes["priority"], "priority"),
+                () => ClassicAssert.AreEqual(immutableTransaction.Sampled, intrinsicAttributes["sampled"], "sampled")
             );
         }
 

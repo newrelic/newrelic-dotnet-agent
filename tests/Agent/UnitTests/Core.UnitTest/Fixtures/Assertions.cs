@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Threading;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Fixtures
 {
@@ -15,7 +13,7 @@ namespace NewRelic.Agent.Core.Fixtures
             while (!predicate() && DateTime.Now < giveUpTime)
                 Thread.Sleep(1);
 
-            Assert.True(predicate());
+            Assert.That(predicate());
         }
     }
 }

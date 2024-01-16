@@ -6,10 +6,6 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
@@ -149,7 +145,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var privateSqlTraceStatsInAggregator = new PrivateAccessor(_sqlTraceAggregator).GetField("_sqlTraceStats");
             var privateSqlTraceStatsCollection = (SqlTraceStatsCollection)privateSqlTraceStatsInAggregator;
             var tracesCount = ((IDictionary<long, SqlTraceWireModel>)privateSqlTraceStatsCollection.Collection).Count;
-            Assert.AreEqual(tracesCount, 1);
+            ClassicAssert.AreEqual(tracesCount, 1);
         }
 
         [Test]
@@ -193,8 +189,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             privateTransactionTransformer.CallMethod("Transform", args);
 
             string sqlTracesCollectedMetricName = "Supportability/SqlTraces/TotalSqlTracesCollected";
-            Assert.IsTrue(generatedMetrics.TryGetValue(sqlTracesCollectedMetricName, out MetricDataWireModel data));
-            Assert.AreEqual(3, data.Value0);
+            ClassicAssert.IsTrue(generatedMetrics.TryGetValue(sqlTracesCollectedMetricName, out MetricDataWireModel data));
+            ClassicAssert.AreEqual(3, data.Value0);
         }
 
         #region Helpers

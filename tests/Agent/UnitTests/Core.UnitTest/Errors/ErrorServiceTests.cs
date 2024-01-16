@@ -1,17 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Errors
@@ -54,7 +50,7 @@ namespace NewRelic.Agent.Core.Errors
         {
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: errorCollectorEnabledSetting);
 
-            Assert.AreEqual(errorCollectorEnabledSetting, _errorService.ShouldCollectErrors);
+            ClassicAssert.AreEqual(errorCollectorEnabledSetting, _errorService.ShouldCollectErrors);
         }
 
         [Test]
@@ -63,7 +59,7 @@ namespace NewRelic.Agent.Core.Errors
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new Exception();
-            Assert.IsFalse(_errorService.ShouldIgnoreException(exception));
+            ClassicAssert.IsFalse(_errorService.ShouldIgnoreException(exception));
         }
 
         [Test]
@@ -72,7 +68,7 @@ namespace NewRelic.Agent.Core.Errors
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new ArithmeticException();
-            Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
+            ClassicAssert.IsTrue(_errorService.ShouldIgnoreException(exception));
         }
 
         [Test]
@@ -81,7 +77,7 @@ namespace NewRelic.Agent.Core.Errors
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new Exception("OuterException", new ArithmeticException("InnerException"));
-            Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
+            ClassicAssert.IsTrue(_errorService.ShouldIgnoreException(exception));
         }
 
         [Test]
@@ -90,7 +86,7 @@ namespace NewRelic.Agent.Core.Errors
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, true);
 
             var exception = new ArithmeticException("OuterException", new Exception("InnerException"));
-            Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
+            ClassicAssert.IsTrue(_errorService.ShouldIgnoreException(exception));
         }
 
         [Test]
@@ -99,7 +95,7 @@ namespace NewRelic.Agent.Core.Errors
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, false, null, null, null, true);
 
             var exception = new ExceptionWithTypeParameter<string>();
-            Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
+            ClassicAssert.IsTrue(_errorService.ShouldIgnoreException(exception));
         }
 
         [TestCase(404, null, ExpectedResult = true)]
@@ -133,13 +129,13 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasIgnoreError)
             {
-                Assert.True(_errorService.ShouldIgnoreException(ignoreExceptionRoot));
-                Assert.True(_errorService.ShouldIgnoreException(ignoreInnterExceptionChild));
+                Assert.That(_errorService.ShouldIgnoreException(ignoreExceptionRoot));
+                Assert.That(_errorService.ShouldIgnoreException(ignoreInnterExceptionChild));
             }
             else
             {
-                Assert.False(_errorService.ShouldIgnoreException(ignoreExceptionRoot));
-                Assert.False(_errorService.ShouldIgnoreException(ignoreInnterExceptionChild));
+                ClassicAssert.False(_errorService.ShouldIgnoreException(ignoreExceptionRoot));
+                ClassicAssert.False(_errorService.ShouldIgnoreException(ignoreInnterExceptionChild));
             }
         }
 
@@ -163,13 +159,13 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasIgnoreError)
             {
-                Assert.True(_errorService.ShouldIgnoreException(ignoreException1));
-                Assert.True(_errorService.ShouldIgnoreException(ignoreException2));
+                Assert.That(_errorService.ShouldIgnoreException(ignoreException1));
+                Assert.That(_errorService.ShouldIgnoreException(ignoreException2));
             }
             else
             {
-                Assert.False(_errorService.ShouldIgnoreException(ignoreException1));
-                Assert.False(_errorService.ShouldIgnoreException(ignoreException2));
+                ClassicAssert.False(_errorService.ShouldIgnoreException(ignoreException1));
+                ClassicAssert.False(_errorService.ShouldIgnoreException(ignoreException2));
             }
         }
 
@@ -184,19 +180,19 @@ namespace NewRelic.Agent.Core.Errors
 
             if (!stripExceptionMessages)
             {
-                Assert.AreEqual(exception.Message, errorData.ErrorMessage);
-                Assert.IsNotNull(errorData.StackTrace);
+                ClassicAssert.AreEqual(exception.Message, errorData.ErrorMessage);
+                ClassicAssert.IsNotNull(errorData.StackTrace);
             }
             else
             {
-                Assert.AreEqual(ErrorData.StripExceptionMessagesMessage, errorData.ErrorMessage);
-                Assert.IsTrue(errorData.StackTrace.Contains(ErrorData.StripExceptionMessagesMessage));
+                ClassicAssert.AreEqual(ErrorData.StripExceptionMessagesMessage, errorData.ErrorMessage);
+                ClassicAssert.IsTrue(errorData.StackTrace.Contains(ErrorData.StripExceptionMessagesMessage));
             }
 
-            Assert.AreEqual(exception.GetType().FullName, errorData.ErrorTypeName);
-            Assert.AreEqual(DateTimeKind.Utc, errorData.NoticedAt.Kind);
-            Assert.IsNull(errorData.Path);
-            Assert.IsEmpty(errorData.CustomAttributes);
+            ClassicAssert.AreEqual(exception.GetType().FullName, errorData.ErrorTypeName);
+            ClassicAssert.AreEqual(DateTimeKind.Utc, errorData.NoticedAt.Kind);
+            ClassicAssert.IsNull(errorData.Path);
+            ClassicAssert.IsEmpty(errorData.CustomAttributes);
         }
 
         [TestCase(true)]
@@ -221,13 +217,13 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                Assert.IsTrue(errorData1.IsExpected);
-                Assert.IsTrue(errorData2.IsExpected);
+                ClassicAssert.IsTrue(errorData1.IsExpected);
+                ClassicAssert.IsTrue(errorData2.IsExpected);
             }
             else
             {
-                Assert.IsFalse(errorData1.IsExpected);
-                Assert.IsFalse(errorData2.IsExpected);
+                ClassicAssert.IsFalse(errorData1.IsExpected);
+                ClassicAssert.IsFalse(errorData2.IsExpected);
             }
         }
 
@@ -253,13 +249,13 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                Assert.IsTrue(errorData1.IsExpected);
-                Assert.IsTrue(errorData2.IsExpected);
+                ClassicAssert.IsTrue(errorData1.IsExpected);
+                ClassicAssert.IsTrue(errorData2.IsExpected);
             }
             else
             {
-                Assert.IsFalse(errorData1.IsExpected);
-                Assert.IsFalse(errorData2.IsExpected);
+                ClassicAssert.IsFalse(errorData1.IsExpected);
+                ClassicAssert.IsFalse(errorData2.IsExpected);
             }
         }
 
@@ -281,17 +277,17 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                Assert.IsTrue(errorData1.IsExpected);
-                Assert.IsTrue(errorData2.IsExpected);
-                Assert.IsTrue(errorData3.IsExpected);
-                Assert.IsFalse(errorData4.IsExpected);
+                ClassicAssert.IsTrue(errorData1.IsExpected);
+                ClassicAssert.IsTrue(errorData2.IsExpected);
+                ClassicAssert.IsTrue(errorData3.IsExpected);
+                ClassicAssert.IsFalse(errorData4.IsExpected);
             }
             else
             {
-                Assert.IsFalse(errorData1.IsExpected);
-                Assert.IsFalse(errorData2.IsExpected);
-                Assert.IsFalse(errorData3.IsExpected);
-                Assert.IsFalse(errorData4.IsExpected);
+                ClassicAssert.IsFalse(errorData1.IsExpected);
+                ClassicAssert.IsFalse(errorData2.IsExpected);
+                ClassicAssert.IsFalse(errorData3.IsExpected);
+                ClassicAssert.IsFalse(errorData4.IsExpected);
             }
         }
 
@@ -313,7 +309,7 @@ namespace NewRelic.Agent.Core.Errors
 
             var errorData = _errorService.FromException(expectedException);
 
-            Assert.IsTrue(errorData.IsExpected);
+            ClassicAssert.IsTrue(errorData.IsExpected);
 
         }
 

@@ -7,10 +7,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Metrics
 {
@@ -22,45 +18,45 @@ namespace NewRelic.Agent.Core.Metrics
         {
             var metricName = MetricNames.GetDotNetInvocation("class", "method");
             var sameMetricName = MetricNames.GetDotNetInvocation("class", "method");
-            Assert.AreEqual("DotNet/class/method", metricName.ToString());
-            Assert.AreEqual(metricName.GetHashCode(), sameMetricName.GetHashCode());
-            Assert.AreEqual(metricName, sameMetricName);
+            ClassicAssert.AreEqual("DotNet/class/method", metricName.ToString());
+            ClassicAssert.AreEqual(metricName.GetHashCode(), sameMetricName.GetHashCode());
+            ClassicAssert.AreEqual(metricName, sameMetricName);
         }
 
         [Test]
         public void GetDatastoreVendorAll()
         {
-            Assert.AreEqual("Datastore/MySQL/all", DatastoreVendor.MySQL.GetDatastoreVendorAll().ToString());
+            ClassicAssert.AreEqual("Datastore/MySQL/all", DatastoreVendor.MySQL.GetDatastoreVendorAll().ToString());
         }
 
         [Test]
         public void GetDatastoreVendorAllWeb()
         {
-            Assert.AreEqual("Datastore/MSSQL/allWeb", DatastoreVendor.MSSQL.GetDatastoreVendorAllWeb().ToString());
+            ClassicAssert.AreEqual("Datastore/MSSQL/allWeb", DatastoreVendor.MSSQL.GetDatastoreVendorAllWeb().ToString());
         }
 
         [Test]
         public void GetDatastoreVendorAllOther()
         {
-            Assert.AreEqual("Datastore/Oracle/allOther", DatastoreVendor.Oracle.GetDatastoreVendorAllOther().ToString());
+            ClassicAssert.AreEqual("Datastore/Oracle/allOther", DatastoreVendor.Oracle.GetDatastoreVendorAllOther().ToString());
         }
 
         [Test]
         public void GetDatastoreOperation()
         {
-            Assert.AreEqual("Datastore/operation/MSSQL/select", DatastoreVendor.MSSQL.GetDatastoreOperation("select").ToString());
+            ClassicAssert.AreEqual("Datastore/operation/MSSQL/select", DatastoreVendor.MSSQL.GetDatastoreOperation("select").ToString());
         }
 
         [Test]
         public void GetDatastoreStatement()
         {
-            Assert.AreEqual("Datastore/statement/MySQL/users/select", MetricNames.GetDatastoreStatement(DatastoreVendor.MySQL, "users", "select").ToString());
+            ClassicAssert.AreEqual("Datastore/statement/MySQL/users/select", MetricNames.GetDatastoreStatement(DatastoreVendor.MySQL, "users", "select").ToString());
         }
 
         [Test]
         public void GetDatastoreInstance()
         {
-            Assert.AreEqual("Datastore/instance/MSSQL/compy64/808", MetricNames.GetDatastoreInstance(DatastoreVendor.MSSQL, "compy64", "808").ToString());
+            ClassicAssert.AreEqual("Datastore/instance/MSSQL/compy64/808", MetricNames.GetDatastoreInstance(DatastoreVendor.MSSQL, "compy64", "808").ToString());
         }
 
         #region GetTransactionApdex
@@ -75,7 +71,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             var expectedName = "Apdex/foo/bar";
 
-            Assert.AreEqual(expectedName, transactionApdex);
+            ClassicAssert.AreEqual(expectedName, transactionApdex);
         }
 
         #endregion
@@ -109,13 +105,13 @@ namespace NewRelic.Agent.Core.Metrics
             foreach (var d in testDic)
             {
                 var catCond = d;
-                assertions.Add(() => Assert.AreEqual(catCond.Value, MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key), $"Expected '{catCond.Value}', actual '{MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key)}'"));
+                assertions.Add(() => ClassicAssert.AreEqual(catCond.Value, MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key), $"Expected '{catCond.Value}', actual '{MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key)}'"));
             }
 
             var countTests = testDic.Count;
             var countEnumValues = Enum.GetValues(typeof(CATSupportabilityCondition)).Length;
 
-            assertions.Add(() => Assert.True(countTests == countEnumValues, $"Test Coverage - there are {countEnumValues - countTests} enums missing from this test"));
+            assertions.Add(() => Assert.That(countTests == countEnumValues, $"Test Coverage - there are {countEnumValues - countTests} enums missing from this test"));
 
             NrAssert.Multiple(assertions.ToArray());
         }
@@ -292,7 +288,7 @@ namespace NewRelic.Agent.Core.Metrics
             };
 
             //Ensure that we have covered all sample types with our tests
-            Assert.AreEqual(countGCSampleTypes, expectedMetricNames.Count);
+            ClassicAssert.AreEqual(countGCSampleTypes, expectedMetricNames.Count);
 
             foreach (var sampleType in expectedMetricNames)
             {

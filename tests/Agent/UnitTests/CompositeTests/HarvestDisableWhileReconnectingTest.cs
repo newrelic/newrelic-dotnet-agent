@@ -6,8 +6,6 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
-using System;
 using Telerik.JustMock;
 
 namespace CompositeTests

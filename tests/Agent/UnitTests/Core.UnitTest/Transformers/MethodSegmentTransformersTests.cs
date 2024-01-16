@@ -1,13 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
@@ -59,26 +56,26 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(1, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(1, unscoped.Count);
 
             const string metricName = "DotNet/type/method";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(scoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(metricName));
 
             var data = scoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(3, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             data = unscoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(3, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
         }
 
         [Test]
@@ -96,18 +93,18 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(1, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(1, unscoped.Count);
 
             const string metricName = "DotNet/type/method";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(scoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(metricName));
 
             var nameScoped = scoped[metricName];
             var nameUnscoped = unscoped[metricName];
 
-            Assert.AreEqual(2, nameScoped.Value0);
-            Assert.AreEqual(2, nameUnscoped.Value0);
+            ClassicAssert.AreEqual(2, nameScoped.Value0);
+            ClassicAssert.AreEqual(2, nameUnscoped.Value0);
         }
 
         [Test]
@@ -130,28 +127,28 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(2, scoped.Count);
-            Assert.AreEqual(2, unscoped.Count);
+            ClassicAssert.AreEqual(2, scoped.Count);
+            ClassicAssert.AreEqual(2, unscoped.Count);
 
             const string metricName = "DotNet/type/method";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(scoped.ContainsKey(metricName));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(metricName));
 
             var nameScoped = scoped[metricName];
             var nameUnscoped = unscoped[metricName];
 
-            Assert.AreEqual(1, nameScoped.Value0);
-            Assert.AreEqual(1, nameUnscoped.Value0);
+            ClassicAssert.AreEqual(1, nameScoped.Value0);
+            ClassicAssert.AreEqual(1, nameUnscoped.Value0);
 
             const string metricName1 = "DotNet/type1/method1";
-            Assert.IsTrue(scoped.ContainsKey(metricName1));
-            Assert.IsTrue(unscoped.ContainsKey(metricName1));
+            ClassicAssert.IsTrue(scoped.ContainsKey(metricName1));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(metricName1));
 
             nameScoped = scoped[metricName1];
             nameUnscoped = unscoped[metricName1];
 
-            Assert.AreEqual(1, nameScoped.Value0);
-            Assert.AreEqual(1, nameUnscoped.Value0);
+            ClassicAssert.AreEqual(1, nameScoped.Value0);
+            ClassicAssert.AreEqual(1, nameUnscoped.Value0);
         }
 
         #endregion Transform
@@ -167,7 +164,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             var transactionTraceName = segment.GetTransactionTraceName();
 
-            Assert.AreEqual("DotNet/type/method", transactionTraceName);
+            ClassicAssert.AreEqual("DotNet/type/method", transactionTraceName);
         }
 
         #endregion GetTransactionTraceName

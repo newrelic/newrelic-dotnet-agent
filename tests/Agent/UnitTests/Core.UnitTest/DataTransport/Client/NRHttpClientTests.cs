@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -55,13 +55,13 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Mock.Arrange(() => mockHttpResponseMessage.IsSuccessStatusCode).Returns(true);
 
             Mock.Arrange(() => _mockHttpClientWrapper.SendAsync(Arg.IsAny<HttpRequestMessage>()))
-                .TaskResult(mockHttpResponseMessage);
+                .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
             var response = await _client.SendAsync(request);
 
             // Assert
-            Assert.IsNotNull(response);
+            ClassicAssert.IsNotNull(response);
         }
 
         [Test]

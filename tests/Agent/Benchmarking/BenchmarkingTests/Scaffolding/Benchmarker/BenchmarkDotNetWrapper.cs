@@ -8,8 +8,6 @@ using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Validators;
-using System;
-using System.Linq;
 using BenchmarkingTests.Scaffolding.CodeExerciser;
 
 namespace BenchmarkingTests.Scaffolding.Benchmarker

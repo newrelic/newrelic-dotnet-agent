@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Collections;
-using NUnit.Framework;
 
 namespace NewRelic.Core.Tests.NewRelic.Collections
 {

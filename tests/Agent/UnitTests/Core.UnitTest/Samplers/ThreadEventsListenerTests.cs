@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
 using System.Diagnostics.Tracing;
 using System.Threading;
 
@@ -36,9 +33,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(3, sample.CountThreadRequestsQueued),
-                    () => Assert.GreaterOrEqual(3, sample.CountThreadRequestsDequeued),
-                    () => Assert.GreaterOrEqual(0, sample.ThreadRequestQueueLength)
+                    () => ClassicAssert.GreaterOrEqual(3, sample.CountThreadRequestsQueued),
+                    () => ClassicAssert.GreaterOrEqual(3, sample.CountThreadRequestsDequeued),
+                    () => ClassicAssert.GreaterOrEqual(0, sample.ThreadRequestQueueLength)
                 );
             }
         }
@@ -59,9 +56,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.AreEqual(3, sample.CountThreadRequestsQueued),
-                    () => Assert.AreEqual(2, sample.CountThreadRequestsDequeued),
-                    () => Assert.AreEqual(1, sample.ThreadRequestQueueLength)
+                    () => ClassicAssert.AreEqual(3, sample.CountThreadRequestsQueued),
+                    () => ClassicAssert.AreEqual(2, sample.CountThreadRequestsDequeued),
+                    () => ClassicAssert.AreEqual(1, sample.ThreadRequestQueueLength)
                 );
             }
         }
@@ -84,9 +81,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.AreEqual(0, sample.CountThreadRequestsQueued),
-                    () => Assert.AreEqual(0, sample.CountThreadRequestsDequeued),
-                    () => Assert.AreEqual(1, sample.ThreadRequestQueueLength) //Queue length does not reset
+                    () => ClassicAssert.AreEqual(0, sample.CountThreadRequestsQueued),
+                    () => ClassicAssert.AreEqual(0, sample.CountThreadRequestsDequeued),
+                    () => ClassicAssert.AreEqual(1, sample.ThreadRequestQueueLength) //Queue length does not reset
                 );
             }
         }
@@ -105,9 +102,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.AreEqual(0, sample.CountThreadRequestsQueued),
-                    () => Assert.AreEqual(4, sample.CountThreadRequestsDequeued),
-                    () => Assert.AreEqual(0, sample.ThreadRequestQueueLength)
+                    () => ClassicAssert.AreEqual(0, sample.CountThreadRequestsQueued),
+                    () => ClassicAssert.AreEqual(4, sample.CountThreadRequestsDequeued),
+                    () => ClassicAssert.AreEqual(0, sample.ThreadRequestQueueLength)
                 );
             }
         }
@@ -134,9 +131,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.AreEqual(5, sample.CountThreadRequestsQueued),
-                    () => Assert.AreEqual(0, sample.CountThreadRequestsDequeued),
-                    () => Assert.AreEqual(5, sample.ThreadRequestQueueLength) //Would be 1 if the queueLength was not reset
+                    () => ClassicAssert.AreEqual(5, sample.CountThreadRequestsQueued),
+                    () => ClassicAssert.AreEqual(0, sample.CountThreadRequestsDequeued),
+                    () => ClassicAssert.AreEqual(5, sample.ThreadRequestQueueLength) //Would be 1 if the queueLength was not reset
                 );
             }
         }

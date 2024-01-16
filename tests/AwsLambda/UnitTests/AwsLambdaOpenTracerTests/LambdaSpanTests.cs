@@ -1,11 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using System.Collections.Generic;
 using System;
 using System.Threading;
-using NewRelic.OpenTracing.AmazonLambda;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
@@ -22,8 +19,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var endTime = DateTimeOffset.UtcNow;
             var maxDuration = (endTime - startTime).TotalSeconds;
             var spanDuration = rootSpan.GetDurationInSeconds();
-            Assert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
-            Assert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            ClassicAssert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
+            ClassicAssert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
         }
 
         [Test]
@@ -37,8 +34,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var endTime = DateTimeOffset.UtcNow;
             var maxDuration = (endTime - startTime).TotalSeconds;
             var spanDuration = childSpan.GetDurationInSeconds();
-            Assert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
-            Assert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            ClassicAssert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
+            ClassicAssert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
         }
 
         [Test]
@@ -55,14 +52,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             rootSpan.SetTag(new global::OpenTracing.Tag.IntTag("IntTagKey"), 1);
             rootSpan.SetTag(new global::OpenTracing.Tag.StringTag("StringTagKey"), "stringValue");
 
-            Assert.AreEqual(rootSpan.GetTag("key1"), "stringValue");
-            Assert.AreEqual(rootSpan.GetTag("key2"), true);
-            Assert.AreEqual(rootSpan.GetTag("key3"), 1.0);
-            Assert.AreEqual(rootSpan.GetTag("key4"), 1);
-            Assert.AreEqual(rootSpan.GetTag("BooleanTagKey"), true);
-            Assert.AreEqual(rootSpan.GetTag("IntOrStringTagKey"), "stringValue");
-            Assert.AreEqual(rootSpan.GetTag("IntTagKey"), 1);
-            Assert.AreEqual(rootSpan.GetTag("StringTagKey"), "stringValue");
+            ClassicAssert.AreEqual(rootSpan.GetTag("key1"), "stringValue");
+            ClassicAssert.AreEqual(rootSpan.GetTag("key2"), true);
+            ClassicAssert.AreEqual(rootSpan.GetTag("key3"), 1.0);
+            ClassicAssert.AreEqual(rootSpan.GetTag("key4"), 1);
+            ClassicAssert.AreEqual(rootSpan.GetTag("BooleanTagKey"), true);
+            ClassicAssert.AreEqual(rootSpan.GetTag("IntOrStringTagKey"), "stringValue");
+            ClassicAssert.AreEqual(rootSpan.GetTag("IntTagKey"), 1);
+            ClassicAssert.AreEqual(rootSpan.GetTag("StringTagKey"), "stringValue");
         }
         [Test]
         public void ChildSpan_Set_Get_Tags()
@@ -79,14 +76,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             childSpan.SetTag(new global::OpenTracing.Tag.IntTag("IntTagKey"), 1);
             childSpan.SetTag(new global::OpenTracing.Tag.StringTag("StringTagKey"), "stringValue");
 
-            Assert.AreEqual(childSpan.GetTag("key1"), "stringValue");
-            Assert.AreEqual(childSpan.GetTag("key2"), true);
-            Assert.AreEqual(childSpan.GetTag("key3"), 1.0);
-            Assert.AreEqual(childSpan.GetTag("key4"), 1);
-            Assert.AreEqual(childSpan.GetTag("BooleanTagKey"), true);
-            Assert.AreEqual(childSpan.GetTag("IntOrStringTagKey"), "stringValue");
-            Assert.AreEqual(childSpan.GetTag("IntTagKey"), 1);
-            Assert.AreEqual(childSpan.GetTag("StringTagKey"), "stringValue");
+            ClassicAssert.AreEqual(childSpan.GetTag("key1"), "stringValue");
+            ClassicAssert.AreEqual(childSpan.GetTag("key2"), true);
+            ClassicAssert.AreEqual(childSpan.GetTag("key3"), 1.0);
+            ClassicAssert.AreEqual(childSpan.GetTag("key4"), 1);
+            ClassicAssert.AreEqual(childSpan.GetTag("BooleanTagKey"), true);
+            ClassicAssert.AreEqual(childSpan.GetTag("IntOrStringTagKey"), "stringValue");
+            ClassicAssert.AreEqual(childSpan.GetTag("IntTagKey"), 1);
+            ClassicAssert.AreEqual(childSpan.GetTag("StringTagKey"), "stringValue");
         }
 
         [Test]
@@ -102,8 +99,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             rootSpan.SetTag("span.kind", "client");
             rootSpan.Finish();
 
-            Assert.AreEqual("http", childSpan.Intrinsics["category"]);
-            Assert.AreEqual("http", rootSpan.Intrinsics["category"]);
+            ClassicAssert.AreEqual("http", childSpan.Intrinsics["category"]);
+            ClassicAssert.AreEqual("http", rootSpan.Intrinsics["category"]);
         }
 
         [Test]
@@ -114,9 +111,9 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var childSpan = TestUtil.CreateSpan("childOperation", startTime, new Dictionary<string, object>(), rootSpan, "childguid");
             var grandChildSpan = TestUtil.CreateSpan("grandChildOperation", startTime, new Dictionary<string, object>(), childSpan, "grandchildguid");
 
-            Assert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
-            Assert.AreEqual("rootguid", childSpan.Intrinsics["parentId"]);
-            Assert.AreEqual("childguid", grandChildSpan.Intrinsics["parentId"]);
+            ClassicAssert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
+            ClassicAssert.AreEqual("rootguid", childSpan.Intrinsics["parentId"]);
+            ClassicAssert.AreEqual("childguid", grandChildSpan.Intrinsics["parentId"]);
         }
 
         [Test]
@@ -132,35 +129,35 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             childSpan.Finish();
             rootSpan.Finish();
 
-            Assert.AreEqual(rootSpan.Intrinsics["type"], "Span");
-            Assert.AreEqual(rootSpan.Intrinsics["name"], "rootOperation");
-            Assert.NotNull(rootSpan.Intrinsics["duration"]);
-            Assert.NotNull(rootSpan.Intrinsics["timestamp"]);
-            Assert.AreEqual(rootSpan.Intrinsics["category"], "http");
-            Assert.AreEqual(rootSpan.Intrinsics["nr.entryPoint"], true);
-            Assert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
-            Assert.AreEqual(rootSpan.Intrinsics["transactionId"], rootSpan.TransactionState.TransactionId);
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["type"], "Span");
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["name"], "rootOperation");
+            ClassicAssert.NotNull(rootSpan.Intrinsics["duration"]);
+            ClassicAssert.NotNull(rootSpan.Intrinsics["timestamp"]);
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["category"], "http");
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["nr.entryPoint"], true);
+            ClassicAssert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["transactionId"], rootSpan.TransactionState.TransactionId);
 
-            Assert.AreEqual(rootSpan.Intrinsics["span.kind"], "client");
-            Assert.IsFalse(rootSpan.UserAttributes.ContainsKey("http.status_code"));
+            ClassicAssert.AreEqual(rootSpan.Intrinsics["span.kind"], "client");
+            ClassicAssert.IsFalse(rootSpan.UserAttributes.ContainsKey("http.status_code"));
 
-            Assert.AreEqual(rootSpan.AgentAttributes["response.status"], "200");
-            Assert.AreEqual(rootSpan.AgentAttributes["http.statusCode"], 200);
+            ClassicAssert.AreEqual(rootSpan.AgentAttributes["response.status"], "200");
+            ClassicAssert.AreEqual(rootSpan.AgentAttributes["http.statusCode"], 200);
 
-            Assert.AreEqual(childSpan.Intrinsics["type"], "Span");
-            Assert.AreEqual(childSpan.Intrinsics["name"], "childOperation");
-            Assert.NotNull(childSpan.Intrinsics["duration"]);
-            Assert.NotNull(childSpan.Intrinsics["timestamp"]);
-            Assert.AreEqual(childSpan.Intrinsics["category"], "http");
-            Assert.IsFalse(childSpan.Intrinsics.ContainsKey("nr.entryPoint"));
-            Assert.AreEqual(childSpan.Intrinsics["parentId"], "rootguid");
-            Assert.AreEqual(childSpan.Intrinsics["transactionId"], childSpan.RootSpan.TransactionState.TransactionId);
+            ClassicAssert.AreEqual(childSpan.Intrinsics["type"], "Span");
+            ClassicAssert.AreEqual(childSpan.Intrinsics["name"], "childOperation");
+            ClassicAssert.NotNull(childSpan.Intrinsics["duration"]);
+            ClassicAssert.NotNull(childSpan.Intrinsics["timestamp"]);
+            ClassicAssert.AreEqual(childSpan.Intrinsics["category"], "http");
+            ClassicAssert.IsFalse(childSpan.Intrinsics.ContainsKey("nr.entryPoint"));
+            ClassicAssert.AreEqual(childSpan.Intrinsics["parentId"], "rootguid");
+            ClassicAssert.AreEqual(childSpan.Intrinsics["transactionId"], childSpan.RootSpan.TransactionState.TransactionId);
 
-            Assert.AreEqual(childSpan.Intrinsics["span.kind"], "client");
-            Assert.IsFalse(childSpan.UserAttributes.ContainsKey("http.status_code"));
+            ClassicAssert.AreEqual(childSpan.Intrinsics["span.kind"], "client");
+            ClassicAssert.IsFalse(childSpan.UserAttributes.ContainsKey("http.status_code"));
 
-            Assert.AreEqual(childSpan.AgentAttributes["response.status"], "500");
-            Assert.AreEqual(childSpan.AgentAttributes["http.statusCode"], 500);
+            ClassicAssert.AreEqual(childSpan.AgentAttributes["response.status"], "500");
+            ClassicAssert.AreEqual(childSpan.AgentAttributes["http.statusCode"], 500);
         }
     }
 }

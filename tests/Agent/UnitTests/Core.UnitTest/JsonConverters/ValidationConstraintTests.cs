@@ -4,8 +4,6 @@
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.JsonConverters;
 using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using System;
 
 
 namespace NewRelic.Agent.Core.JsonConverters
@@ -53,9 +51,9 @@ namespace NewRelic.Agent.Core.JsonConverters
 
             testInstance.Version = new[] { 42, 42 };
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual(1, testInstance.Version[0]);
-            Assert.AreEqual(0, testInstance.Version[1]);
+            ClassicAssert.IsNotNull(testInstance.Version);
+            ClassicAssert.AreEqual(1, testInstance.Version[0]);
+            ClassicAssert.AreEqual(0, testInstance.Version[1]);
         }
 
         [Test]
@@ -67,9 +65,9 @@ namespace NewRelic.Agent.Core.JsonConverters
             testInstance.Version = new[] { 42, 42 };
 
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual(1, testInstance.Version[0]);
-            Assert.AreEqual(0, testInstance.Version[1]);
+            ClassicAssert.IsNotNull(testInstance.Version);
+            ClassicAssert.AreEqual(1, testInstance.Version[0]);
+            ClassicAssert.AreEqual(0, testInstance.Version[1]);
         }
 
         [Test]
@@ -80,8 +78,8 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.StringField = s.ToObject<string>());
             testInstance.StringField = null;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual("string value", testInstance.StringField);
+            ClassicAssert.IsNotNull(testInstance.Version);
+            ClassicAssert.AreEqual("string value", testInstance.StringField);
         }
 
         [Test]
@@ -92,8 +90,8 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.StringField = s.ToObject<string>());
             testInstance.StringField = null;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.StringField);
-            Assert.AreEqual("string value", testInstance.StringField);
+            ClassicAssert.IsNotNull(testInstance.StringField);
+            ClassicAssert.AreEqual("string value", testInstance.StringField);
         }
 
         [Test]
@@ -104,7 +102,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.BoolField = s.ToObject<bool>());
             testInstance.BoolField = true;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(false, testInstance.BoolField);
+            ClassicAssert.AreEqual(false, testInstance.BoolField);
         }
 
         [Test]
@@ -115,7 +113,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.BoolField = s.ToObject<bool>());
             testInstance.BoolField = true;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(false, testInstance.BoolField);
+            ClassicAssert.AreEqual(false, testInstance.BoolField);
         }
 
         [Test]
@@ -126,7 +124,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.FloatField = s.ToObject<float>());
             testInstance.FloatField = 42.42f;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(0.666f, testInstance.FloatField);
+            ClassicAssert.AreEqual(0.666f, testInstance.FloatField);
         }
 
         [Test]
@@ -137,7 +135,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.FloatField = s.ToObject<float>());
             testInstance.FloatField = 42.42f;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(0.666f, testInstance.FloatField);
+            ClassicAssert.AreEqual(0.666f, testInstance.FloatField);
         }
 
         [Test]

@@ -4,9 +4,6 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Linq;
 
 namespace CompositeTests
 {
@@ -39,9 +36,9 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", sqlTrace.ParameterData["host"]),
-                () => Assert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]),
-                () => Assert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"])
+                () => ClassicAssert.AreEqual("myhost", sqlTrace.ParameterData["host"]),
+                () => ClassicAssert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]),
+                () => ClassicAssert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"])
             );
         }
 
@@ -53,9 +50,9 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("host")),
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("port_path_or_id")),
-                () => Assert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"])
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.AreEqual("mydatabase", sqlTrace.ParameterData["database_name"])
             );
         }
 
@@ -67,9 +64,9 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", sqlTrace.ParameterData["host"]),
-                () => Assert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]),
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("database_name"))
+                () => ClassicAssert.AreEqual("myhost", sqlTrace.ParameterData["host"]),
+                () => ClassicAssert.AreEqual("myport", sqlTrace.ParameterData["port_path_or_id"]),
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("database_name"))
             );
         }
 
@@ -81,9 +78,9 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("host")),
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("port_path_or_id")),
-                () => Assert.IsTrue(!sqlTrace.ParameterData.ContainsKey("database_name"))
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.IsTrue(!sqlTrace.ParameterData.ContainsKey("database_name"))
             );
         }
 
@@ -96,9 +93,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", parameters["host"]),
-                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
-                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+                () => ClassicAssert.AreEqual("myhost", parameters["host"]),
+                () => ClassicAssert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => ClassicAssert.AreEqual("mydatabase", parameters["database_name"])
             );
         }
 
@@ -111,9 +108,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!parameters.ContainsKey("host")),
-                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
-                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.AreEqual("mydatabase", parameters["database_name"])
             );
         }
 
@@ -126,9 +123,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", parameters["host"]),
-                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
-                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+                () => ClassicAssert.AreEqual("myhost", parameters["host"]),
+                () => ClassicAssert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("database_name"))
             );
         }
 
@@ -141,9 +138,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!parameters.ContainsKey("host")),
-                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
-                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("database_name"))
             );
         }
 
@@ -177,9 +174,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", parameters["host"]),
-                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
-                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+                () => ClassicAssert.AreEqual("myhost", parameters["host"]),
+                () => ClassicAssert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => ClassicAssert.AreEqual("mydatabase", parameters["database_name"])
             );
         }
 
@@ -192,9 +189,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!parameters.ContainsKey("host")),
-                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
-                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.AreEqual("mydatabase", parameters["database_name"])
             );
         }
 
@@ -207,9 +204,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("myhost", parameters["host"]),
-                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
-                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+                () => ClassicAssert.AreEqual("myhost", parameters["host"]),
+                () => ClassicAssert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("database_name"))
             );
         }
 
@@ -222,9 +219,9 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(!parameters.ContainsKey("host")),
-                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
-                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("host")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => ClassicAssert.IsTrue(!parameters.ContainsKey("database_name"))
             );
         }
 

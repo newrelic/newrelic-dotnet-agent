@@ -1,10 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
     internal class TestNode
@@ -70,8 +66,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
         private void AssertTree(TestNode expected, TrieNode<string> actual)
         {
-            Assert.AreEqual(expected.Key, actual.Data);
-            Assert.AreEqual(expected.Children.Count(), actual.Children.Count);
+            ClassicAssert.AreEqual(expected.Key, actual.Data);
+            ClassicAssert.AreEqual(expected.Children.Count(), actual.Children.Count);
 
             foreach (var expectedChild in expected.Children)
             {
@@ -79,7 +75,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                     .Where(potentialChild => expectedChild.Key == potentialChild.Data)
                     .FirstOrDefault();
 
-                Assert.NotNull(actualChild);
+                ClassicAssert.NotNull(actualChild);
                 AssertTree(expectedChild, actualChild);
             }
         }

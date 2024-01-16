@@ -1,9 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
@@ -17,7 +15,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var serialized = JsonConvert.SerializeObject(data);
 
-            Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
+            ClassicAssert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
         }
 
         [Test]
@@ -26,12 +24,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
             var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
 
-            Assert.NotNull(deserialized);
+            ClassicAssert.NotNull(deserialized);
             NrAssert.Multiple(
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(true, deserialized.Unused),
-                () => Assert.AreEqual("tripId", deserialized.TripId),
-                () => Assert.AreEqual("pathHash", deserialized.PathHash)
+                () => ClassicAssert.AreEqual("guid", deserialized.TransactionGuid),
+                () => ClassicAssert.AreEqual(true, deserialized.Unused),
+                () => ClassicAssert.AreEqual("tripId", deserialized.TripId),
+                () => ClassicAssert.AreEqual("pathHash", deserialized.PathHash)
                 );
         }
     }

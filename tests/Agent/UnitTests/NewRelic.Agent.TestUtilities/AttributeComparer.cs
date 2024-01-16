@@ -3,10 +3,6 @@
 
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NewRelic.Agent.TestUtilities
 {
@@ -44,8 +40,8 @@ namespace NewRelic.Agent.TestUtilities
 
             foreach (var expectedKVP in expectedDic)
             {
-                Assert.IsTrue(actualDic.ContainsKey(expectedKVP.Key));
-                Assert.IsTrue(IsEqualTo(expectedKVP.Value, actualDic[expectedKVP.Key]), $"expected {expectedKVP.Key}-{expectedKVP.Value}, actual {actualDic[expectedKVP.Key]}");
+                ClassicAssert.IsTrue(actualDic.ContainsKey(expectedKVP.Key));
+                ClassicAssert.IsTrue(IsEqualTo(expectedKVP.Value, actualDic[expectedKVP.Key]), $"expected {expectedKVP.Key}-{expectedKVP.Value}, actual {actualDic[expectedKVP.Key]}");
             }
         }
 
@@ -54,7 +50,7 @@ namespace NewRelic.Agent.TestUtilities
             var actualKeys = actualDic.Keys.ToList();
             var overlap = actualKeys.Intersect(shouldNotHaveKeys).ToArray();
 
-            Assert.IsEmpty(overlap, $"The following keys should not exist in the dictionary: {string.Join(", ", overlap)}");
+            ClassicAssert.IsEmpty(overlap, $"The following keys should not exist in the dictionary: {string.Join(", ", overlap)}");
         }
 
         public static bool IsEqualTo(this object val1, object val2)

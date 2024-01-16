@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
     [TestFixture]
@@ -43,7 +40,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 null, null);
             ProfileNode node = new ProfileNode(new UIntPtr(10), 1, 2);
             service.AddNodeToPruningList(node);
-            Assert.AreEqual(1, service.PruningList.Count);
+            ClassicAssert.AreEqual(1, service.PruningList.Count);
         }
 
         [Test]
@@ -57,7 +54,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 ProfileNode node = new ProfileNode(new UIntPtr(i), 1, 2);
                 service.AddNodeToPruningList(node);
             }
-            Assert.AreEqual(expectedCount, service.PruningList.Count);
+            ClassicAssert.AreEqual(expectedCount, service.PruningList.Count);
         }
         #endregion
 
@@ -70,7 +67,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             bucket.UpdateTree(fids);
 
             service.ResetCache();
-            Assert.AreEqual(0, service.GetTotalBucketNodeCount());
+            ClassicAssert.AreEqual(0, service.GetTotalBucketNodeCount());
 
         }
 
@@ -87,7 +84,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
 
             service.ResetCache();
-            Assert.AreEqual(0, service.PruningList.Count);
+            ClassicAssert.AreEqual(0, service.PruningList.Count);
         }
 
         #region Pruning Tests
@@ -103,7 +100,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node2);
 
             service.SortPruningTree();
-            Assert.IsTrue(((ProfileNode)service.PruningList[0]).RunnableCount > ((ProfileNode)service.PruningList[1]).RunnableCount);
+            ClassicAssert.IsTrue(((ProfileNode)service.PruningList[0]).RunnableCount > ((ProfileNode)service.PruningList[1]).RunnableCount);
         }
 
         [Test]
@@ -118,7 +115,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node2);
 
             service.SortPruningTree();
-            Assert.IsTrue(((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth);
+            ClassicAssert.IsTrue(((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth);
         }
 
         [Test]
@@ -136,7 +133,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node3);
 
             service.SortPruningTree();
-            Assert.IsTrue(
+            ClassicAssert.IsTrue(
                 (((ProfileNode)service.PruningList[0]).RunnableCount > ((ProfileNode)service.PruningList[1]).RunnableCount) &&
                 (((ProfileNode)service.PruningList[1]).RunnableCount > ((ProfileNode)service.PruningList[2]).RunnableCount));
         }
@@ -157,7 +154,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node3);
 
             service.SortPruningTree();
-            Assert.IsTrue(
+            ClassicAssert.IsTrue(
                 (((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth) &&
                 (((ProfileNode)service.PruningList[1]).Depth < ((ProfileNode)service.PruningList[2]).Depth));
         }
@@ -180,10 +177,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             service.SortPruningTree();
 
-            Assert.IsFalse(((ProfileNode)service.PruningList[0]).IgnoreForReporting);
-            Assert.IsFalse(((ProfileNode)service.PruningList[1]).IgnoreForReporting);
-            Assert.IsFalse(((ProfileNode)service.PruningList[2]).IgnoreForReporting);
-            Assert.IsTrue(((ProfileNode)service.PruningList[3]).IgnoreForReporting);
+            ClassicAssert.IsFalse(((ProfileNode)service.PruningList[0]).IgnoreForReporting);
+            ClassicAssert.IsFalse(((ProfileNode)service.PruningList[1]).IgnoreForReporting);
+            ClassicAssert.IsFalse(((ProfileNode)service.PruningList[2]).IgnoreForReporting);
+            ClassicAssert.IsTrue(((ProfileNode)service.PruningList[3]).IgnoreForReporting);
         }
 
         #endregion

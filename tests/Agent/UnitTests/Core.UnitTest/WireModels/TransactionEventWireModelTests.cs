@@ -6,10 +6,8 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
+using AttributeComparer = NewRelic.Agent.TestUtilities.AttributeComparer;
 
 namespace NewRelic.Agent.Core.WireModels.UnitTest
 {

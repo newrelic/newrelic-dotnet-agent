@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Database
 {
@@ -17,7 +16,7 @@ namespace NewRelic.Agent.Core.Database
         {
             SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("raw");
             string sql = "Select * from users where ssn = 433871122";
-            Assert.AreEqual(sql, ob.GetObfuscatedSql(sql));
+            ClassicAssert.AreEqual(sql, ob.GetObfuscatedSql(sql));
         }
 
         [Test]
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.Database
         {
             SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("raw");
             string sql = "Select * from users where name = 'dude'";
-            Assert.AreEqual(sql, ob.GetObfuscatedSql(sql));
+            ClassicAssert.AreEqual(sql, ob.GetObfuscatedSql(sql));
         }
 
         [Test]
@@ -33,7 +32,7 @@ namespace NewRelic.Agent.Core.Database
         {
             SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("off");
             string sql = "Select * from users where ssn = 433871122";
-            Assert.IsNull(ob.GetObfuscatedSql(sql));
+            ClassicAssert.IsNull(ob.GetObfuscatedSql(sql));
         }
 
         [Test]
@@ -41,69 +40,69 @@ namespace NewRelic.Agent.Core.Database
         {
             SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("off");
             string sql = "Select * from users where name = 'dude'";
-            Assert.IsNull(ob.GetObfuscatedSql(sql));
+            ClassicAssert.IsNull(ob.GetObfuscatedSql(sql));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_id_with_questionmark()
         {
-            Assert.AreEqual("Select * from users where ssn = ?",
+            ClassicAssert.AreEqual("Select * from users where ssn = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_id_with_questionmark_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where ssn = ?",
+            ClassicAssert.AreEqual("Select * from users where ssn = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122", DatastoreVendor.MSSQL));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_id_with_questionmark_having_multi_parameters()
         {
-            Assert.AreEqual("Select * from users where ssn = ? and True",
+            ClassicAssert.AreEqual("Select * from users where ssn = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122 and True"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_id_with_questionmark_having_multi_parameters_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where ssn = ? and True",
+            ClassicAssert.AreEqual("Select * from users where ssn = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122 and True", DatastoreVendor.MSSQL));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_decimal_no_remainder_with_questionmark_having_multi_parameters()
         {
-            Assert.AreEqual("Select * from users where number = ? and True",
+            ClassicAssert.AreEqual("Select * from users where number = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where number = 3. and True"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_decimal_no_remainder_with_questionmark_having_multi_parameters_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where number = ? and True",
+            ClassicAssert.AreEqual("Select * from users where number = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where number = 3. and True", DatastoreVendor.MSSQL));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_decimal_with_questionmark_having_multi_parameters()
         {
-            Assert.AreEqual("Select * from users where number = ? and True",
+            ClassicAssert.AreEqual("Select * from users where number = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where number = 3.14159 and True"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_decimal_with_questionmark_having_multi_parameters_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where number = ? and True",
+            ClassicAssert.AreEqual("Select * from users where number = ? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where number = 3.14159 and True", DatastoreVendor.MSSQL));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_with_int_and_ticks_with_questionmark_having_multi_parameters()
         {
-            Assert.AreEqual("Select * from users where number = ?food? and True",
+            ClassicAssert.AreEqual("Select * from users where number = ?food? and True",
                 obfuscator.GetObfuscatedSql("Select * from users where number = 3.14food'' and True"));
 
         }
@@ -111,7 +110,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_with_ticks_with_questionmark()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where name = 'dude'"));
 
         }
@@ -119,7 +118,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_with_ticks_with_questionmark_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where name = 'dude'", DatastoreVendor.MSSQL));
 
         }
@@ -127,7 +126,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_multi_string_with_escapes_with_questionmarks()
         {
-            Assert.AreEqual("Select * from users where name = ???",
+            ClassicAssert.AreEqual("Select * from users where name = ???",
                 obfuscator.GetObfuscatedSql("Select * from users where name = 'dude''fude'\"bube\""));
 
         }
@@ -135,7 +134,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_having_escapes_with_questionmarks()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where name = \"dude\""));
 
         }
@@ -143,7 +142,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_and_date_having_escapes_with_questionmarks()
         {
-            Assert.AreEqual("Select * from users where name = ? and dob = ? ",
+            ClassicAssert.AreEqual("Select * from users where name = ? and dob = ? ",
                 obfuscator.GetObfuscatedSql("Select * from users where name = \"dude\" and dob = '10/31/1955' "));
 
         }
@@ -151,7 +150,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_having_ticks_with_questionmark()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where name = 'Sacksman D\\'iablo'"));
 
         }
@@ -159,7 +158,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void verify_GetObfuscatedSql_replaces_string_having_ticks_and_escapes_with_questionmark()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where name = \"Adouble\\\"Quote\""));
 
         }
@@ -167,7 +166,7 @@ namespace NewRelic.Agent.Core.Database
         [Test, Description("Tests handling a query which is only valid in MS SQL")]
         public void verify_GetObfuscatedSql_ignores_backslashes_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql(@"Select * from users where name = 'foo\''bar'", DatastoreVendor.MSSQL));
 
         }
@@ -175,7 +174,7 @@ namespace NewRelic.Agent.Core.Database
         [Test, Description("Tests handling a query which is only valid in MS SQL")]
         public void verify_GetObfuscatedSql_handles_literal_single_quote_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql(@"Select * from users where name = 'Sacksman D''iablo'", DatastoreVendor.MSSQL));
 
         }
@@ -183,7 +182,7 @@ namespace NewRelic.Agent.Core.Database
         [Test, Description("Tests handling a query which is only valid in MS SQL")]
         public void verify_GetObfuscatedSql_handles_literal_double_quotes_when_datastore_vendor_is_MSSQL()
         {
-            Assert.AreEqual("Select * from users where name = ?",
+            ClassicAssert.AreEqual("Select * from users where name = ?",
                 obfuscator.GetObfuscatedSql(@"Select * from users where name = ""Quoty O""""Quoterson""", DatastoreVendor.MSSQL));
 
         }
@@ -192,13 +191,13 @@ namespace NewRelic.Agent.Core.Database
         public void TestObfuscationFromGibberish()
         {
             string stim = "qrx *().<'\"mumblefrob";  // That's an unterminated single quoted string.
-            Assert.AreEqual("qrx *().<?", obfuscator.GetObfuscatedSql(stim));
+            ClassicAssert.AreEqual("qrx *().<?", obfuscator.GetObfuscatedSql(stim));
         }
 
         [Test]
         public void TestNumbersInTableNames1()
         {
-            Assert.AreEqual("Select * from users22 where ssn = ?",
+            ClassicAssert.AreEqual("Select * from users22 where ssn = ?",
                 obfuscator.GetObfuscatedSql("Select * from users22 where ssn = 433871122"));
         }
 
@@ -209,41 +208,41 @@ namespace NewRelic.Agent.Core.Database
                 "INNER JOIN Bar AS [T2] ON [T1].someId = [T2].someId and [T1].id in (?)";
             string stimul = "SELECT [T1].startDate AS [startDate1], [T2].startDate AS [startDate2] FROM Foo AS [T1] " +
                 "INNER JOIN Bar AS [T2] ON [T1].someId = [T2].someId and [T1].id in (5)";
-            Assert.AreEqual(expect, obfuscator.GetObfuscatedSql(stimul));
+            ClassicAssert.AreEqual(expect, obfuscator.GetObfuscatedSql(stimul));
         }
 
         [Test]
         public void TestSqlObfuscationNumberIn()
         {
-            Assert.AreEqual("Select * from users where ssn in (?) ",
+            ClassicAssert.AreEqual("Select * from users where ssn in (?) ",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn in (666666666) "));
         }
 
         [Test]
         public void TestSqlObfuscationNumberLessThan()
         {
-            Assert.AreEqual("Select * from users where salary < ?\n",
+            ClassicAssert.AreEqual("Select * from users where salary < ?\n",
                 obfuscator.GetObfuscatedSql("Select * from users where salary < 12345\n"));
         }
 
         [Test]
         public void TestSqlObfuscationNumberGreaterThan()
         {
-            Assert.AreEqual("Select * from users where salary > ?",
+            ClassicAssert.AreEqual("Select * from users where salary > ?",
                 obfuscator.GetObfuscatedSql("Select * from users where salary > 12345"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_numbers_on_left_of_equals_sign_with_a_question_mark()
         {
-            Assert.AreEqual("Select * from users where ? = ssn",
+            ClassicAssert.AreEqual("Select * from users where ? = ssn",
                 obfuscator.GetObfuscatedSql("Select * from users where 666666 = ssn"));
         }
 
         [Test]
         public void verify_GetObfuscatedSql_replaces_numbers_on_right_of_equals_sign_with_a_question_mark()
         {
-            Assert.AreEqual("Select * from users where ssn = ?",
+            ClassicAssert.AreEqual("Select * from users where ssn = ?",
                 obfuscator.GetObfuscatedSql("Select * from users where ssn = 7777777"));
         }
 

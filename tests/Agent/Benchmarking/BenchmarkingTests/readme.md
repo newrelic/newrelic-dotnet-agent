@@ -410,10 +410,10 @@ Ensuring that throughput changes as expected when a performance enhancement, suc
 			.ExecAll();
 
 		//Caching makes things better
-		Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed);
+		ClassicAssert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed);
 
 		//Chaching makes things 50% better
-		Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed * 1.5);
+		ClassicAssert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed * 1.5);
 	}
 ```
 * **Performance Characteristics**<br>
@@ -437,7 +437,7 @@ A class that accepts the results of two benchmarks and provides helper functions
 
 		// the time it takes to generate 1000 guids on 10 threads should never run longer than 2x
 		// the time it takes to generate 1000 strings on 10-threads should never run mmor
-		Assert.Less(comparer.Duration_Mean_Nanoseconds_Ratio,2);
+		ClassicAssert.Less(comparer.Duration_Mean_Nanoseconds_Ratio,2);
 	}
 ```
 

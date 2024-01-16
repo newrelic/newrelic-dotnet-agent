@@ -1,10 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.IO;
 using System.Text;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
@@ -23,10 +21,10 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
 
-            Assert.AreEqual(baseStream.CanRead, injector.CanRead);
-            Assert.AreEqual(baseStream.CanSeek, injector.CanSeek);
-            Assert.AreEqual(baseStream.CanWrite, injector.CanWrite);
-            Assert.AreEqual(baseStream.Length, injector.Length);
+            ClassicAssert.AreEqual(baseStream.CanRead, injector.CanRead);
+            ClassicAssert.AreEqual(baseStream.CanSeek, injector.CanSeek);
+            ClassicAssert.AreEqual(baseStream.CanWrite, injector.CanWrite);
+            ClassicAssert.AreEqual(baseStream.Length, injector.Length);
         }
 
         [Test]
@@ -42,9 +40,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
 
-            Assert.AreEqual(123, injector.Position);
+            ClassicAssert.AreEqual(123, injector.Position);
             injector.Position = 456;
-            Assert.AreEqual(456, baseStream.Position);
+            ClassicAssert.AreEqual(456, baseStream.Position);
         }
 
         [Test]
@@ -86,7 +84,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
             var result = injector.Seek(123, SeekOrigin.Begin);
 
-            Assert.AreEqual(456, result);
+            ClassicAssert.AreEqual(456, result);
             Mock.Assert(() => baseStream.Seek(123, SeekOrigin.Begin), Occurs.Once());
         }
 
@@ -115,7 +113,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
             var result = injector.Read(buffer, 10, 50);
 
-            Assert.AreEqual(30, result);
+            ClassicAssert.AreEqual(30, result);
             Mock.Assert(() => baseStream.Read(buffer, 10, 50), Occurs.Once());
         }
 
@@ -151,8 +149,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.IsTrue(content.Contains(SampleJavaScript), "JavaScript was not injected.");
-                Assert.IsTrue(content.Contains(body), "body was not written without modification.");
+                ClassicAssert.IsTrue(content.Contains(SampleJavaScript), "JavaScript was not injected.");
+                ClassicAssert.IsTrue(content.Contains(body), "body was not written without modification.");
             }
         }
 
@@ -176,7 +174,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.AreEqual(Encoding.UTF8.GetString(buffer), content, "Content should be written without modification.");
+                ClassicAssert.AreEqual(Encoding.UTF8.GetString(buffer), content, "Content should be written without modification.");
             }
         }
 
@@ -196,7 +194,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.IsEmpty(content, "Content should be empty.");
+                ClassicAssert.IsEmpty(content, "Content should be empty.");
             }
         }
     }

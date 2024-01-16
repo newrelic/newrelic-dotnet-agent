@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Core;
-using NUnit.Framework;
-using System;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -15,7 +13,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var dateTime = (-23890247268d).ToDateTime();
 
-            Assert.AreEqual(new DateTime(1212, 12, 12, 12, 12, 12), dateTime);
+            ClassicAssert.AreEqual(new DateTime(1212, 12, 12, 12, 12, 12), dateTime);
         }
 
         [Test]
@@ -23,7 +21,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTime = new DateTime(1212, 12, 12, 12, 12, 12).ToUnixTimeSeconds();
 
-            Assert.AreEqual(-23890247268d, unixTime);
+            ClassicAssert.AreEqual(-23890247268d, unixTime);
         }
 
 
@@ -32,7 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTimeMilliseconds = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).ToUnixTimeMilliseconds();
 
-            Assert.AreEqual(0, unixTimeMilliseconds);
+            ClassicAssert.AreEqual(0, unixTimeMilliseconds);
         }
 
         [Test]
@@ -40,7 +38,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTimeMilliseconds = new DateTime(1970, 1, 1, 0, 0, 1, DateTimeKind.Utc).ToUnixTimeMilliseconds();
 
-            Assert.AreEqual(1000, unixTimeMilliseconds);
+            ClassicAssert.AreEqual(1000, unixTimeMilliseconds);
         }
 
         [Test]
@@ -49,7 +47,7 @@ namespace NewRelic.Agent.Core.Utilities
             var expected = new DateTime(2018, 7, 4, 12, 0, 0, DateTimeKind.Local);
             var unixTimeMilliseconds = expected.ToUnixTimeMilliseconds();
             var actual = unixTimeMilliseconds.FromUnixTimeMilliseconds().ToLocalTime();
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -57,7 +55,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var expected = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var actual = 0L.FromUnixTimeMilliseconds();
-            Assert.AreEqual(expected, actual);
+            ClassicAssert.AreEqual(expected, actual);
         }
     }
 }

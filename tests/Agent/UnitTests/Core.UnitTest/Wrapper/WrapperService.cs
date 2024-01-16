@@ -1,13 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NUnit.Framework;
 using Telerik.JustMock;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Api;
 
@@ -93,7 +90,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            ClassicAssert.AreEqual("foo", result);
         }
 
         [Test]
@@ -116,7 +113,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            ClassicAssert.AreEqual("foo", result);
         }
 
         [Test]
@@ -138,7 +135,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            ClassicAssert.AreEqual("foo", result);
         }
 
         [Test]
@@ -272,8 +269,8 @@ namespace NewRelic.Agent.Core.Wrapper
             {
                 var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
-                Assert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
-                Assert.False(logging.HasMessage("skipping method"));
+                ClassicAssert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
+                ClassicAssert.False(logging.HasMessage("skipping method"));
             }
         }
     }

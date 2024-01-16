@@ -1,13 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {
@@ -19,7 +16,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public void TestFilesCanEnumerate()
         {
             var testCases = GetRumTestData();
-            Assert.Greater(testCases.Count(), 0);
+            ClassicAssert.Greater(testCases.Count(), 0);
         }
 
         [Test, TestCaseSource(nameof(GetRumTestData))]
@@ -27,7 +24,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         {
             var writer = new BrowserMonitoringWriter(() => "EXPECTED_RUM_LOADER_LOCATION");
             var result = writer.WriteScriptHeaders(data);
-            Assert.AreEqual(expected, result);
+            ClassicAssert.AreEqual(expected, result);
         }
 
         [Test, TestCaseSource(nameof(GetRumTestData))]
@@ -44,7 +41,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
                 var resultBytes = ms.ToArray();
                 var result = Encoding.UTF8.GetString(resultBytes);
 
-                Assert.AreEqual(expected, result);
+                ClassicAssert.AreEqual(expected, result);
 
             }
         }

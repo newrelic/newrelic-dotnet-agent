@@ -3,8 +3,6 @@
 
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
-using System;
 using NewRelic.Agent.Core.Metrics;
 
 namespace NewRelic.Agent.Core.Segments.Tests
@@ -19,9 +17,9 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.End(new Exception("Unhandled exception"));
 
-            Assert.IsNotNull(segment.ErrorData);
-            Assert.AreEqual("System.Exception", segment.ErrorData.ErrorTypeName);
-            Assert.AreEqual("Unhandled exception", segment.ErrorData.ErrorMessage);
+            ClassicAssert.IsNotNull(segment.ErrorData);
+            ClassicAssert.AreEqual("System.Exception", segment.ErrorData.ErrorTypeName);
+            ClassicAssert.AreEqual("Unhandled exception", segment.ErrorData.ErrorMessage);
         }
 
         [Test]
@@ -33,7 +31,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.SetMessageBrokerDestination("destination");
 
-            Assert.AreEqual("destination", ((MessageBrokerSegmentData)segment.SegmentData).Destination );
+            ClassicAssert.AreEqual("destination", ((MessageBrokerSegmentData)segment.SegmentData).Destination );
         }
     }
 }

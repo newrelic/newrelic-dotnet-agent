@@ -3,12 +3,9 @@
 
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
-using NewRelic.OpenTracing.AmazonLambda;
 using NewRelic.OpenTracing.AmazonLambda.Util;
-using NUnit.Framework;
 using OpenTracing.Propagation;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
@@ -50,7 +47,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var tracer1 = LambdaTracer.Instance;
             var tracer2 = LambdaTracer.Instance;
 
-            Assert.AreSame(tracer1, tracer2);
+            ClassicAssert.AreSame(tracer1, tracer2);
         }
 
         [Test]

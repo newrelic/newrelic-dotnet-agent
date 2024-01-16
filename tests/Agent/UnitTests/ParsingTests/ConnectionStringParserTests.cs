@@ -4,7 +4,6 @@
 using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
-using NUnit.Framework;
 
 namespace ParsingTests
 {
@@ -54,10 +53,10 @@ namespace ParsingTests
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
             var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString, "hostname_of_localhost");
-            Assert.True(connectionInfo.Host == expectedHost);
-            Assert.True(connectionInfo.PortPathOrId == expectedPathPortOrId);
-            Assert.True(connectionInfo.DatabaseName == expectedDatabaseName);
-            Assert.True(connectionInfo.InstanceName == expectedInstanceName);
+            Assert.That(connectionInfo.Host == expectedHost);
+            Assert.That(connectionInfo.PortPathOrId == expectedPathPortOrId);
+            Assert.That(connectionInfo.DatabaseName == expectedDatabaseName);
+            Assert.That(connectionInfo.InstanceName == expectedInstanceName);
         }
 
         [Test]
@@ -69,7 +68,7 @@ namespace ParsingTests
             var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
-            Assert.AreSame(connectionInfo1, connectionInfo2);
+            ClassicAssert.AreSame(connectionInfo1, connectionInfo2);
         }
 
         [Test]
@@ -81,7 +80,7 @@ namespace ParsingTests
             var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
-            Assert.AreNotSame(connectionInfo1, connectionInfo2);
+            ClassicAssert.AreNotSame(connectionInfo1, connectionInfo2);
         }
     }
 }

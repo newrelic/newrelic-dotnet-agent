@@ -3,6 +3,7 @@
 
 using NewRelic.Providers.Storage.CallContext;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace NewRelic.Providers.CallStack.AsyncLocalTests
 {
@@ -22,8 +23,8 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             var localContainer = remoteContainer;
 
             //ASSERT
-            Assert.NotNull(localContainer);
-            Assert.Null(localContainer.GetValue());
+            ClassicAssert.NotNull(localContainer);
+            ClassicAssert.Null(localContainer.GetValue());
         }
     }
 }

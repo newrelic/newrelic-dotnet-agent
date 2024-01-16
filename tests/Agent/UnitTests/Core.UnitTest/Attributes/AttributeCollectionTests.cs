@@ -1,11 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Linq;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
     [TestFixture]
@@ -37,11 +32,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allAttribs.Count),
-                () => Assert.AreEqual(1, agentAttribsDic.Count()),
-                () => Assert.AreEqual("banana", agentAttribsDic["original_url"]),
-                () => Assert.AreEqual(1, userAttribsDic.Count()),
-                () => Assert.AreEqual("cake", userAttribsDic["pie"])
+                () => ClassicAssert.AreEqual(2, allAttribs.Count),
+                () => ClassicAssert.AreEqual(1, agentAttribsDic.Count()),
+                () => ClassicAssert.AreEqual("banana", agentAttribsDic["original_url"]),
+                () => ClassicAssert.AreEqual(1, userAttribsDic.Count()),
+                () => ClassicAssert.AreEqual("cake", userAttribsDic["pie"])
             );
         }
 
@@ -75,8 +70,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             attrToUpdate.TrySetValue(_attribValues, 9001);
             var attributeUnderTest = _attribValues.GetAttributeValues(attributeType).FirstOrDefault(x => x.AttributeDefinition.Guid == attrToUpdate.Guid);
 
-            Assert.NotNull(attributeUnderTest);
-            Assert.AreEqual(9001, attributeUnderTest.Value);
+            ClassicAssert.NotNull(attributeUnderTest);
+            ClassicAssert.AreEqual(9001, attributeUnderTest.Value);
         }
 
         [TestCase(AttributeClassification.Intrinsics)]
@@ -120,8 +115,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             attrToUpdate.TrySetValue(_attribValues, 9001);
             var attributeUnderTest = _attribValues.GetAttributeValues(attributeType).FirstOrDefault(x => x.AttributeDefinition.Guid == attrToUpdate.Guid);
 
-            Assert.NotNull(attributeUnderTest);
-            Assert.AreEqual(9001, attributeUnderTest.Value);
+            ClassicAssert.NotNull(attributeUnderTest);
+            ClassicAssert.AreEqual(9001, attributeUnderTest.Value);
         }
         
         [TestCase(AttributeClassification.Intrinsics, 255)]
@@ -147,9 +142,9 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedLimit, attributeValues.Length),
-                () => Assert.Contains(1, attributeValues),
-                () => Assert.Contains(expectedLimit, attributeValues),
+                () => ClassicAssert.AreEqual(expectedLimit, attributeValues.Length),
+                () => ClassicAssert.Contains(1, attributeValues),
+                () => ClassicAssert.Contains(expectedLimit, attributeValues),
                 () => Assert.That(attributeValues, Does.Not.Contain(expectedLimit + 1), "A wrong attribute was captured :(")
             );
 
@@ -164,7 +159,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             if (attributeType == AttributeClassification.UserAttributes)
             {
                 // The user attribute limit is lower than the agent attribute limit, so we expect to see the new attribute in this case
-                Assert.Contains(_attribDefs.OriginalUrl.Name, agentAttributeKeys);
+                ClassicAssert.Contains(_attribDefs.OriginalUrl.Name, agentAttributeKeys);
             }
             else
             {
@@ -177,7 +172,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             if (attributeType == AttributeClassification.UserAttributes)
             {
                 // The user attribute limit is lower than the intrinsic attribute limit, so we expect to see the new attribute in this case
-                Assert.Contains(_attribDefs.TimestampForError.Name, intrinsicAttributeKeys);
+                ClassicAssert.Contains(_attribDefs.TimestampForError.Name, intrinsicAttributeKeys);
             }
             else
             {
@@ -202,11 +197,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allAttribs.Count),
-                () => Assert.AreEqual(1, agentAttribsDic.Count()),
-                () => Assert.AreEqual("banana2", agentAttribsDic[_attribDefs.OriginalUrl.Name]),
-                () => Assert.AreEqual(1, userAttribsDic.Count()),
-                () => Assert.AreEqual("cake2", userAttribsDic[_attribDefs.GetCustomAttributeForTransaction("pie").Name])
+                () => ClassicAssert.AreEqual(2, allAttribs.Count),
+                () => ClassicAssert.AreEqual(1, agentAttribsDic.Count()),
+                () => ClassicAssert.AreEqual("banana2", agentAttribsDic[_attribDefs.OriginalUrl.Name]),
+                () => ClassicAssert.AreEqual(1, userAttribsDic.Count()),
+                () => ClassicAssert.AreEqual("cake2", userAttribsDic[_attribDefs.GetCustomAttributeForTransaction("pie").Name])
             );
         }
 
@@ -251,7 +246,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             var allValues = _attribValues.GetAllAttributeValuesDic();
 
-            Assert.AreEqual(expectedResult, allValues[userKey].ToString());
+            ClassicAssert.AreEqual(expectedResult, allValues[userKey].ToString());
         }
     }
 }

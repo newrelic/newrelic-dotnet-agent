@@ -1,14 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Api
@@ -58,7 +54,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetRequestMetadata();
 
             //Assert
-            Assert.IsEmpty(result);
+            ClassicAssert.IsEmpty(result);
         }
 
         [Test]
@@ -76,7 +72,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetRequestMetadata();
 
             //Assert
-            Assert.IsNotNull(result);
+            ClassicAssert.IsNotNull(result);
         }
 
         [Test]
@@ -94,7 +90,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsEmpty(result);
+            ClassicAssert.IsEmpty(result);
         }
 
         [Test]
@@ -112,7 +108,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsNotNull(result);
+            ClassicAssert.IsNotNull(result);
         }
 
         [Test]
@@ -123,8 +119,8 @@ namespace NewRelic.Agent.Core.Api
             _agentApi.SetErrorGroupCallback(myCallback);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _errorGroupCallbackUpdateEvents.Count, "Expected only one update event to be triggered."),
-                () => Assert.AreSame(myCallback, _errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, "Expected the callback in the event to match the callback passed to the API.")
+                () => ClassicAssert.AreEqual(1, _errorGroupCallbackUpdateEvents.Count, "Expected only one update event to be triggered."),
+                () => ClassicAssert.AreSame(myCallback, _errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, "Expected the callback in the event to match the callback passed to the API.")
                 );
         }
 

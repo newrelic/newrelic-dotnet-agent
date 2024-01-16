@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.AutoMock.Ninject.Activation;
 using Telerik.JustMock.Helpers;
@@ -54,7 +52,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.GetRequestStream()).Returns(new MemoryStream());
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).TaskResult((WebResponse)fakeResponse);
+                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).ReturnsAsync((WebResponse)fakeResponse);
                 return mockWebRequest;
             });
 
@@ -62,7 +60,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var response = await _client.SendAsync(_request);
 
             // Assert
-            Assert.IsNotNull(response);
+            ClassicAssert.IsNotNull(response);
         }
 
         [Test]
@@ -117,8 +115,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var response = await _client.SendAsync(_request);
 
             // Assert
-            Assert.IsNotNull(response);
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            ClassicAssert.IsNotNull(response);
+            ClassicAssert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
         private IHttpRequest CreateHttpRequest()
         {

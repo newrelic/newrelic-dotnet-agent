@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
@@ -11,8 +9,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transformers
@@ -105,13 +101,13 @@ namespace NewRelic.Agent.Core.Transformers
             //ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(errorType, errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(errorMsg, errorTrace.Message),
-                () => Assert.AreEqual(errorNoticedAt, errorTrace.TimeStamp),
+                () => ClassicAssert.AreEqual(errorType, errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual(errorMsg, errorTrace.Message),
+                () => ClassicAssert.AreEqual(errorNoticedAt, errorTrace.TimeStamp),
 
-                () => Assert.AreEqual(2, userAttribs.Count),
-                () => Assert.AreEqual("TrxEventValue", userAttribs["TrxEventAttrib"]),
-                () => Assert.AreEqual("ErrorEventValue", userAttribs["ErrorEventAttrib"])
+                () => ClassicAssert.AreEqual(2, userAttribs.Count),
+                () => ClassicAssert.AreEqual("TrxEventValue", userAttribs["TrxEventAttrib"]),
+                () => ClassicAssert.AreEqual("ErrorEventValue", userAttribs["ErrorEventAttrib"])
             );
 
         }

@@ -1,12 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Commands
@@ -32,7 +30,7 @@ namespace NewRelic.Agent.Core.Commands
 
             var results = commandService.ProcessCommands(commands);
 
-            Assert.AreEqual(2, results.Count);
+            ClassicAssert.AreEqual(2, results.Count);
         }
 
         [Test]
@@ -45,8 +43,8 @@ namespace NewRelic.Agent.Core.Commands
 
             var processingResults = commandService.ProcessCommands(serverCommand);
 
-            Assert.IsTrue(processingResults.ContainsKey("666"));
-            Assert.IsNull(processingResults["666"]);
+            ClassicAssert.IsTrue(processingResults.ContainsKey("666"));
+            ClassicAssert.IsNull(processingResults["666"]);
         }
 
         [Test]
@@ -57,9 +55,9 @@ namespace NewRelic.Agent.Core.Commands
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
-            Assert.AreEqual(0, command.Attempts);
+            ClassicAssert.AreEqual(0, command.Attempts);
             commandService.ProcessCommands(commands);
-            Assert.AreEqual(1, command.Attempts);
+            ClassicAssert.AreEqual(1, command.Attempts);
         }
 
         [Test]
@@ -83,9 +81,9 @@ namespace NewRelic.Agent.Core.Commands
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"stop_profiler\",arguments:{}}]]");
 
-            Assert.AreEqual(0, command.Attempts);
+            ClassicAssert.AreEqual(0, command.Attempts);
             commandService.ProcessCommands(commands);
-            Assert.AreEqual(1, command.Attempts);
+            ClassicAssert.AreEqual(1, command.Attempts);
         }
     }
 

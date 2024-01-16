@@ -8,11 +8,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
 namespace CompositeTests
@@ -53,7 +49,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
-            Assert.AreEqual("/Unknown", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
+            ClassicAssert.AreEqual("/Unknown", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
         }
 
         [Test]
@@ -72,7 +68,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
-            Assert.AreEqual("myuri", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
+            ClassicAssert.AreEqual("myuri", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
         }
 
         [Test]
@@ -93,7 +89,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
-            Assert.IsFalse(transactionEvent.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri"));
+            ClassicAssert.IsFalse(transactionEvent.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri"));
         }
         #endregion
 
@@ -114,8 +110,8 @@ namespace CompositeTests
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
-                () => Assert.AreEqual("/Unknown", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
-                () => Assert.AreEqual("/Unknown", transactionTrace.Uri)
+                () => ClassicAssert.AreEqual("/Unknown", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
+                () => ClassicAssert.AreEqual("/Unknown", transactionTrace.Uri)
             );
         }
 
@@ -136,8 +132,8 @@ namespace CompositeTests
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
-                () => Assert.AreEqual("myuri", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
-                () => Assert.AreEqual("myuri", transactionTrace.Uri)
+                () => ClassicAssert.AreEqual("myuri", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
+                () => ClassicAssert.AreEqual("myuri", transactionTrace.Uri)
             );
         }
 
@@ -161,8 +157,8 @@ namespace CompositeTests
 
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
-                () => Assert.IsFalse(transactionTrace.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri")),
-                () => Assert.AreEqual(null, transactionTrace.Uri)
+                () => ClassicAssert.IsFalse(transactionTrace.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri")),
+                () => ClassicAssert.AreEqual(null, transactionTrace.Uri)
             );
         }
         #endregion
@@ -178,7 +174,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.IsFalse(errorEvent.AgentAttributes().ContainsKey("request.uri"));
+            ClassicAssert.IsFalse(errorEvent.AgentAttributes().ContainsKey("request.uri"));
         }
 
         [Test]
@@ -197,7 +193,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual("/Unknown", errorEvent.AgentAttributes()["request.uri"]);
+            ClassicAssert.AreEqual("/Unknown", errorEvent.AgentAttributes()["request.uri"]);
         }
 
         [Test]
@@ -217,7 +213,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.AreEqual("myuri", errorEvent.AgentAttributes()["request.uri"]);
+            ClassicAssert.AreEqual("myuri", errorEvent.AgentAttributes()["request.uri"]);
         }
 
         [Test]
@@ -239,7 +235,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorEvent = _compositeTestAgent.ErrorEvents.First();
-            Assert.IsFalse(errorEvent.AgentAttributes().ContainsKey("request.uri"));
+            ClassicAssert.IsFalse(errorEvent.AgentAttributes().ContainsKey("request.uri"));
         }
 
         [Test]
@@ -267,7 +263,7 @@ namespace CompositeTests
 
             var exEvents = _compositeTestAgent.ErrorEvents;
 
-            Assert.AreEqual(0, exEvents.Count);
+            ClassicAssert.AreEqual(0, exEvents.Count);
         }
 
         #endregion
@@ -290,7 +286,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
-            Assert.IsTrue(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri" && (string)kv.Value == "myuri"));
+            ClassicAssert.IsTrue(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri" && (string)kv.Value == "myuri"));
         }
 
         [Test]
@@ -312,7 +308,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var errorTrace = _compositeTestAgent.ErrorTraces.First();
-            Assert.IsFalse(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri"));
+            ClassicAssert.IsFalse(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri"));
         }
 
         [Test]
@@ -343,19 +339,19 @@ namespace CompositeTests
             var txEvents = _compositeTestAgent.TransactionEvents;
             var exEvents = _compositeTestAgent.ErrorEvents;
 
-            Assert.AreEqual(1, txEvents.Count);
-            Assert.AreEqual(1, exEvents.Count);
+            ClassicAssert.AreEqual(1, txEvents.Count);
+            ClassicAssert.AreEqual(1, exEvents.Count);
 
             var txEvent = txEvents.First();
             var exEvent = exEvents.First();
 
-            Assert.IsTrue(txEvent.IntrinsicAttributes().ContainsKey("timestamp"));
-            Assert.IsTrue(exEvent.IntrinsicAttributes().ContainsKey("timestamp"));
+            ClassicAssert.IsTrue(txEvent.IntrinsicAttributes().ContainsKey("timestamp"));
+            ClassicAssert.IsTrue(exEvent.IntrinsicAttributes().ContainsKey("timestamp"));
 
             var txEventTimeStamp = (long)txEvent.IntrinsicAttributes()["timestamp"];
             var exEventTimeStamp = (long)exEvent.IntrinsicAttributes()["timestamp"];
 
-            Assert.Less(txEventTimeStamp, exEventTimeStamp);
+            ClassicAssert.Less(txEventTimeStamp, exEventTimeStamp);
         }
 
         #endregion
@@ -377,10 +373,10 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
             var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
             NrAssert.Multiple(
-                () => Assert.AreEqual("WebTransaction/Action/name", transactionTrace.TransactionMetricName),
+                () => ClassicAssert.AreEqual("WebTransaction/Action/name", transactionTrace.TransactionMetricName),
 
-                () => Assert.AreEqual("WebTransaction/Action/name", transactionEvent.IntrinsicAttributes()["name"]),
-                () => Assert.AreEqual("Transaction", transactionEvent.IntrinsicAttributes()["type"])
+                () => ClassicAssert.AreEqual("WebTransaction/Action/name", transactionEvent.IntrinsicAttributes()["name"]),
+                () => ClassicAssert.AreEqual("Transaction", transactionEvent.IntrinsicAttributes()["type"])
                 );
         }
 
@@ -401,8 +397,8 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, _compositeTestAgent.TransactionTraces.Count),
-                () => Assert.AreEqual(1, _compositeTestAgent.TransactionEvents.Count)
+                () => ClassicAssert.AreEqual(0, _compositeTestAgent.TransactionTraces.Count),
+                () => ClassicAssert.AreEqual(1, _compositeTestAgent.TransactionEvents.Count)
                 );
         }
 
@@ -422,8 +418,8 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(_compositeTestAgent.TransactionTraces.Any()),
-                () => Assert.IsTrue(_compositeTestAgent.TransactionEvents.Any())
+                () => ClassicAssert.IsTrue(_compositeTestAgent.TransactionTraces.Any()),
+                () => ClassicAssert.IsTrue(_compositeTestAgent.TransactionEvents.Any())
                 );
         }
 
@@ -439,8 +435,8 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             NrAssert.Multiple(
-                () => Assert.IsFalse(_compositeTestAgent.TransactionTraces.Any()),
-                () => Assert.IsFalse(_compositeTestAgent.TransactionEvents.Any())
+                () => ClassicAssert.IsFalse(_compositeTestAgent.TransactionTraces.Any()),
+                () => ClassicAssert.IsFalse(_compositeTestAgent.TransactionEvents.Any())
                 );
         }
 
@@ -463,11 +459,11 @@ namespace CompositeTests
             var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
             var errorTrace = _compositeTestAgent.ErrorTraces.FirstOrDefault();
             NrAssert.Multiple(
-                () => Assert.AreEqual("System.Exception", transactionEvent.IntrinsicAttributes()["errorType"]),
-                () => Assert.AreEqual("Oh no!", transactionEvent.IntrinsicAttributes()["errorMessage"]),
-                () => Assert.AreEqual("WebTransaction/Action/rootSegmentMetricName", errorTrace.Path),
-                () => Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName),
-                () => Assert.AreEqual("Oh no!", errorTrace.Message)
+                () => ClassicAssert.AreEqual("System.Exception", transactionEvent.IntrinsicAttributes()["errorType"]),
+                () => ClassicAssert.AreEqual("Oh no!", transactionEvent.IntrinsicAttributes()["errorMessage"]),
+                () => ClassicAssert.AreEqual("WebTransaction/Action/rootSegmentMetricName", errorTrace.Path),
+                () => ClassicAssert.AreEqual("System.Exception", errorTrace.ExceptionClassName),
+                () => ClassicAssert.AreEqual("Oh no!", errorTrace.Message)
                 );
         }
 
@@ -486,7 +482,7 @@ namespace CompositeTests
             transaction.End();
             _compositeTestAgent.Harvest();
             var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricNameModel.Name.Contains("AgentTiming"));
-            Assert.IsEmpty(metrics);
+            ClassicAssert.IsEmpty(metrics);
         }
 
         [Test]
@@ -504,7 +500,7 @@ namespace CompositeTests
             transaction.End();
             _compositeTestAgent.Harvest();
             var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricNameModel.Name.Contains("AgentTiming"));
-            Assert.IsNotEmpty(metrics);
+            ClassicAssert.IsNotEmpty(metrics);
         }
 
         [Test]
@@ -530,8 +526,8 @@ namespace CompositeTests
             //Use the WebTransaction metric which should contain the response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => ClassicAssert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -558,8 +554,8 @@ namespace CompositeTests
             //Use the OtherTransaction/all metric which should contain the duration instead of response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => ClassicAssert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -588,7 +584,7 @@ namespace CompositeTests
 
             //Use the WebTransaction metric which should contain the response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
-            Assert.LessOrEqual(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound);
+            ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound);
         }
 
         [Test]
@@ -618,8 +614,8 @@ namespace CompositeTests
             //Use the OtherTransaction/all metric which should contain the duration instead of response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.Greater(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound),
-                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, expectedDurationUpperBound)
+                    () => ClassicAssert.Greater(timingMetric.DataModel.Value1, expectedResponseTimeUpperBound),
+                    () => ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, expectedDurationUpperBound)
                 );
         }
 
@@ -649,8 +645,8 @@ namespace CompositeTests
             //Use the WebTransaction metric which should contain the response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
             NrAssert.Multiple(
-                    () => Assert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
-                    () => Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+                    () => ClassicAssert.GreaterOrEqual(timingMetric.DataModel.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+                    () => ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
                 );
         }
 
@@ -675,7 +671,7 @@ namespace CompositeTests
 
             //Use the WebTransaction metric which should contain the response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "WebTransaction");
-            Assert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
+            ClassicAssert.LessOrEqual(timingMetric.DataModel.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
         }
 
         [Test]
@@ -703,8 +699,8 @@ namespace CompositeTests
             //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.IsFalse(transactionAfterCallToEnd.IsValid, "The current transaction should be the NoOpTransaction."),
-                    () => Assert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
+                    () => ClassicAssert.IsFalse(transactionAfterCallToEnd.IsValid, "The current transaction should be the NoOpTransaction."),
+                    () => ClassicAssert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
                 );
         }
 
@@ -733,8 +729,8 @@ namespace CompositeTests
             //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricNameModel.Name == "OtherTransaction/all");
             NrAssert.Multiple(
-                    () => Assert.IsTrue(transactionAfterCallToEnd.IsValid, "The current transaction should not be the NoOpTransaction."),
-                    () => Assert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
+                    () => ClassicAssert.IsTrue(transactionAfterCallToEnd.IsValid, "The current transaction should not be the NoOpTransaction."),
+                    () => ClassicAssert.AreEqual(1.0, timingMetric.DataModel.Value0, "The transaction should be harvested.")
                 );
         }
     }

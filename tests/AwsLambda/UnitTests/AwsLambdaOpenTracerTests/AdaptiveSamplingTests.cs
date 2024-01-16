@@ -1,11 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.OpenTracing.AmazonLambda;
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
@@ -127,7 +123,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
                 var expectedSamplingResult = sampleSequence[callCounter];
                 var actualSamplingResult = _adaptiveSampler.ComputeSampled();
                 var message = $"callCounter: {callCounter}";
-                Assert.AreEqual(expectedSamplingResult, actualSamplingResult, message);
+                ClassicAssert.AreEqual(expectedSamplingResult, actualSamplingResult, message);
             }
         }
 

@@ -1,10 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -13,7 +10,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.StackExchangeRedis2Plus;
-using NUnit.Framework;
 using StackExchange.Redis.Profiling;
 
 namespace CompositeTests
@@ -75,9 +71,9 @@ namespace CompositeTests
 
             var cacheSizeAfter = GetSessionCacheSize(sessionCache);
 
-            Assert.NotNull(session);
-            Assert.True(cacheSizeBefore == 1);
-            Assert.True(cacheSizeAfter == 0);
+            ClassicAssert.NotNull(session);
+            Assert.That(cacheSizeBefore == 1);
+            Assert.That(cacheSizeAfter == 0);
         }
 
         [Test]
@@ -104,9 +100,9 @@ namespace CompositeTests
 
             var cacheSizeAfter = GetSessionCacheSize(sessionCache);
 
-            Assert.NotNull(session);
-            Assert.True(cacheSizeBefore == 1);
-            Assert.True(cacheSizeAfter == 1);
+            ClassicAssert.NotNull(session);
+            Assert.That(cacheSizeBefore == 1);
+            Assert.That(cacheSizeAfter == 1);
         }
 
         [Test]
@@ -128,13 +124,13 @@ namespace CompositeTests
 
             transaction.End();
 
-            Assert.True(transaction.IsFinished);
-            Assert.NotNull(session);
-            Assert.True(cacheSizeBefore == 1);
+            Assert.That(transaction.IsFinished);
+            ClassicAssert.NotNull(session);
+            Assert.That(cacheSizeBefore == 1);
             Assert.DoesNotThrow(() => sessionCache.Harvest(segment));
 
             var cacheSizeAfter = GetSessionCacheSize(sessionCache);
-            Assert.True(cacheSizeAfter == 0);
+            Assert.That(cacheSizeAfter == 0);
         }
 
         #endregion
@@ -160,9 +156,9 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.True(((ISegmentExperimental)segment).IsDone);
-            Assert.Null(session);
-            Assert.True(cacheSize == 0);
+            Assert.That(((ISegmentExperimental)segment).IsDone);
+            ClassicAssert.Null(session);
+            Assert.That(cacheSize == 0);
         }
 
         [Test]
@@ -183,9 +179,9 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.False(segment.IsValid);
-            Assert.Null(session);
-            Assert.True(cacheSize == 0);
+            ClassicAssert.False(segment.IsValid);
+            ClassicAssert.Null(session);
+            Assert.That(cacheSize == 0);
         }
 
         [Test]
@@ -206,8 +202,8 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.Null(session);
-            Assert.True(cacheSize == 0);
+            ClassicAssert.Null(session);
+            Assert.That(cacheSize == 0);
         }
 
         [Test]
@@ -229,9 +225,9 @@ namespace CompositeTests
             var cleanupCount = WaitForMetric();
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.False(((ISegmentExperimental)segment).IsDone);
-            Assert.True(cleanupCount != null);
-            Assert.True(cacheSize == 1);
+            ClassicAssert.False(((ISegmentExperimental)segment).IsDone);
+            Assert.That(cleanupCount != null);
+            Assert.That(cacheSize == 1);
         }
 
         [Test]
@@ -256,8 +252,8 @@ namespace CompositeTests
             var cleanupCount = WaitForMetric();
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.True(cleanupCount != null);
-            Assert.True(cacheSize == 0);
+            Assert.That(cleanupCount != null);
+            Assert.That(cacheSize == 0);
         }
 
         #endregion
@@ -284,9 +280,9 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.True(transaction.IsFinished);
-            Assert.Null(session);
-            Assert.True(cacheSize == 0);
+            Assert.That(transaction.IsFinished);
+            ClassicAssert.Null(session);
+            Assert.That(cacheSize == 0);
         }
 
         [Test]
@@ -301,9 +297,9 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.False(transaction.IsValid);
-            Assert.Null(session);
-            Assert.True(cacheSize == 0);
+            ClassicAssert.False(transaction.IsValid);
+            ClassicAssert.Null(session);
+            Assert.That(cacheSize == 0);
         }
 
         [Test]
@@ -325,9 +321,9 @@ namespace CompositeTests
             var cleanupCount = WaitForMetric();
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.False(transaction.IsFinished);
-            Assert.True(cleanupCount != null);
-            Assert.True(cacheSize == 1);
+            ClassicAssert.False(transaction.IsFinished);
+            Assert.That(cleanupCount != null);
+            Assert.That(cacheSize == 1);
         }
 
         #endregion
@@ -343,13 +339,13 @@ namespace CompositeTests
 
             var cleanupAction = value.FirstOrDefault(a => a.Method.Name == "CleanUp");
 
-            Assert.NotNull(cleanupAction);
+            ClassicAssert.NotNull(cleanupAction);
 
             sessionCache.Dispose();
 
             var noAction = value.FirstOrDefault(a => a.Method.Name == "CleanUp");
 
-            Assert.Null(noAction);
+            ClassicAssert.Null(noAction);
         }
 
         private int GetSessionCacheSize(SessionCache sessionCache)

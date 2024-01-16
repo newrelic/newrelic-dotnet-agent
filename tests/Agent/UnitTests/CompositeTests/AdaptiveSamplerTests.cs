@@ -3,9 +3,6 @@
 
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace CompositeTests
 {

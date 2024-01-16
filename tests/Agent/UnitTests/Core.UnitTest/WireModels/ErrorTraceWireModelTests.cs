@@ -9,9 +9,6 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Errors.UnitTest
@@ -135,7 +132,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"123\"]";
 
                 var actualResult = JsonConvert.SerializeObject(errorTraceData);
-                Assert.AreEqual(expectedResult, actualResult);
+                ClassicAssert.AreEqual(expectedResult, actualResult);
             }
 
             [Test]
@@ -154,7 +151,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"" + IntrinsicsKey + "\":{}}";
 
                 var actualResult = JsonConvert.SerializeObject(attributes);
-                Assert.AreEqual(expectedResult, actualResult);
+                ClassicAssert.AreEqual(expectedResult, actualResult);
             }
 
             [Test]
@@ -173,7 +170,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"" + IntrinsicsKey + "\":{}}";
 
                 var actualResult = JsonConvert.SerializeObject(attributes);
-                Assert.AreEqual(expectedResult, actualResult);
+                ClassicAssert.AreEqual(expectedResult, actualResult);
             }
 
             [Test]
@@ -184,7 +181,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_timestamp, errorTraceData.TimeStamp);
+                ClassicAssert.AreEqual(_timestamp, errorTraceData.TimeStamp);
             }
 
             [Test]
@@ -195,7 +192,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_path, errorTraceData.Path);
+                ClassicAssert.AreEqual(_path, errorTraceData.Path);
             }
 
             [Test]
@@ -206,7 +203,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_message, errorTraceData.Message);
+                ClassicAssert.AreEqual(_message, errorTraceData.Message);
             }
 
             [Test]
@@ -217,7 +214,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_exceptionClassName, errorTraceData.ExceptionClassName);
+                ClassicAssert.AreEqual(_exceptionClassName, errorTraceData.ExceptionClassName);
             }
 
             [Test]
@@ -228,7 +225,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(attributes, errorTraceData.Attributes);
+                ClassicAssert.AreEqual(attributes, errorTraceData.Attributes);
             }
 
             [Test]
@@ -239,7 +236,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues,_stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_guid, errorTraceData.Guid);
+                ClassicAssert.AreEqual(_guid, errorTraceData.Guid);
             }
 
             [Test]

@@ -9,10 +9,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace CompositeTests
@@ -730,15 +726,15 @@ namespace CompositeTests
 
             NrAssert.Multiple(
 
-                () => Assert.IsEmpty(missingConditions, $"The following expected conditions were not captured: {string.Join(", ", missingConditions)}"),
-                () => Assert.IsEmpty(unexpectedConditions, $"The following unexpected conditions were detected: {string.Join(", ", unexpectedConditions)}")
+                () => ClassicAssert.IsEmpty(missingConditions, $"The following expected conditions were not captured: {string.Join(", ", missingConditions)}"),
+                () => ClassicAssert.IsEmpty(unexpectedConditions, $"The following unexpected conditions were detected: {string.Join(", ", unexpectedConditions)}")
             );
         }
 
         private void TestConditionValue(Dictionary<CATSupportabilityCondition, int> dic, CATSupportabilityCondition condition, int expectedValue)
         {
-            Assert.IsTrue(dic.ContainsKey(condition), $"Unable To find {condition} in result");
-            Assert.AreEqual(expectedValue, dic[condition], $"Count Mismatch - {condition} - Expected {expectedValue}, Actual {dic[condition]}");
+            ClassicAssert.IsTrue(dic.ContainsKey(condition), $"Unable To find {condition} in result");
+            ClassicAssert.AreEqual(expectedValue, dic[condition], $"Count Mismatch - {condition} - Expected {expectedValue}, Actual {dic[condition]}");
         }
     }
 }

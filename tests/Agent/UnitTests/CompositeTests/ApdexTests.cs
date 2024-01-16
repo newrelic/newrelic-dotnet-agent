@@ -5,10 +5,6 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace CompositeTests

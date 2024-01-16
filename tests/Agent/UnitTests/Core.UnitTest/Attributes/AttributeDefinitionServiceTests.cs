@@ -1,9 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using NewRelic.Testing.Assertions;
-using System;
 using NUnit.Framework.Internal;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -18,7 +15,6 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Segments;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
@@ -135,9 +131,9 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent))
+                () => ClassicAssert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace)),
+                () => ClassicAssert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
+                () => ClassicAssert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent))
             );
         }
 
@@ -182,8 +178,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.SpanEvent))
+                () => ClassicAssert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
+                () => ClassicAssert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.SpanEvent))
             );
         }
 
@@ -222,11 +218,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.SpanEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace))
+                    () => ClassicAssert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
+                    () => ClassicAssert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.SpanEvent)),
+                    () => ClassicAssert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent)),
+                    () => ClassicAssert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
+                    () => ClassicAssert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace))
                 );
             }
         }
@@ -259,10 +255,10 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsNotNull(userAttribsDic[_lazyTest_AttribNameDtm], "Lazy value that resolves to NOT NULL should be included"),
-                () => Assert.AreEqual(_lazyTest_ExpectedValDtmm, userAttribsDic[_lazyTest_AttribNameDtm]),
-                () => Assert.IsFalse(userAttribsDic.ContainsKey(_lazyTest_AttribNameEmpty), "Lazy value that resolves to NULL should NOT be included"),
-                () => Assert.AreEqual(1, countAll, "There should only be 1 value in the output collection")
+                () => ClassicAssert.IsNotNull(userAttribsDic[_lazyTest_AttribNameDtm], "Lazy value that resolves to NOT NULL should be included"),
+                () => ClassicAssert.AreEqual(_lazyTest_ExpectedValDtmm, userAttribsDic[_lazyTest_AttribNameDtm]),
+                () => ClassicAssert.IsFalse(userAttribsDic.ContainsKey(_lazyTest_AttribNameEmpty), "Lazy value that resolves to NULL should NOT be included"),
+                () => ClassicAssert.AreEqual(1, countAll, "There should only be 1 value in the output collection")
             );
         }
 

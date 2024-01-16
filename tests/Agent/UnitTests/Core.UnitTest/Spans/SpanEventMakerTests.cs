@@ -1,9 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
@@ -28,8 +25,6 @@ using NewRelic.Core;
 using NewRelic.Parsing;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Spans.UnitTest
@@ -206,7 +201,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             // +1 is for the faux root segment.
-            Assert.AreEqual(segments.Count + 1, spanEvents.Count());
+            ClassicAssert.AreEqual(segments.Count + 1, spanEvents.Count());
         }
 
         [Test]
@@ -230,18 +225,18 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
 
             // ASSERT
-            Assert.AreEqual("Span", (string)spanEventIntrinsicAttributes["type"]);
-            Assert.AreEqual(DistributedTraceTraceId, (string)spanEventIntrinsicAttributes["traceId"]);
-            Assert.AreEqual(_childGenericSegment.SpanId, (string)spanEventIntrinsicAttributes["guid"]);
-            Assert.AreEqual(_baseGenericSegment.SpanId, (string)spanEventIntrinsicAttributes["parentId"]);
-            Assert.AreEqual(_transactionGuid, (string)spanEventIntrinsicAttributes["transactionId"]);
-            Assert.AreEqual(true, (bool)spanEventIntrinsicAttributes["sampled"]);
-            Assert.AreEqual(Priority, (double)spanEventIntrinsicAttributes["priority"]);
-            Assert.AreEqual(1531897200001, (long)spanEventIntrinsicAttributes["timestamp"]);
-            Assert.AreEqual(0.005, (double)spanEventIntrinsicAttributes["duration"]);
-            Assert.AreEqual(SegmentName, (string)spanEventIntrinsicAttributes["name"]);
-            Assert.AreEqual(GenericCategory, (string)spanEventIntrinsicAttributes["category"]);
-            Assert.False(spanEventIntrinsicAttributes.ContainsKey("nr.entryPoint"));
+            ClassicAssert.AreEqual("Span", (string)spanEventIntrinsicAttributes["type"]);
+            ClassicAssert.AreEqual(DistributedTraceTraceId, (string)spanEventIntrinsicAttributes["traceId"]);
+            ClassicAssert.AreEqual(_childGenericSegment.SpanId, (string)spanEventIntrinsicAttributes["guid"]);
+            ClassicAssert.AreEqual(_baseGenericSegment.SpanId, (string)spanEventIntrinsicAttributes["parentId"]);
+            ClassicAssert.AreEqual(_transactionGuid, (string)spanEventIntrinsicAttributes["transactionId"]);
+            ClassicAssert.AreEqual(true, (bool)spanEventIntrinsicAttributes["sampled"]);
+            ClassicAssert.AreEqual(Priority, (double)spanEventIntrinsicAttributes["priority"]);
+            ClassicAssert.AreEqual(1531897200001, (long)spanEventIntrinsicAttributes["timestamp"]);
+            ClassicAssert.AreEqual(0.005, (double)spanEventIntrinsicAttributes["duration"]);
+            ClassicAssert.AreEqual(SegmentName, (string)spanEventIntrinsicAttributes["name"]);
+            ClassicAssert.AreEqual(GenericCategory, (string)spanEventIntrinsicAttributes["category"]);
+            ClassicAssert.False(spanEventIntrinsicAttributes.ContainsKey("nr.entryPoint"));
         }
 
         [Test]
@@ -263,7 +258,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var rootSpanEvent = spanEvents[0];
 
             // ASSERT
-            Assert.AreEqual((string)rootSpanEvent.IntrinsicAttributes()["guid"], (string)spanEvent.IntrinsicAttributes()["parentId"]);
+            ClassicAssert.AreEqual((string)rootSpanEvent.IntrinsicAttributes()["guid"], (string)spanEvent.IntrinsicAttributes()["parentId"]);
         }
 
         [Test]
@@ -290,9 +285,9 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var rootSpanEvent = spanEvents.ToList()[0];
 
             // ASSERT
-            Assert.AreEqual(W3cParentId, (string)rootSpanEvent.IntrinsicAttributes()["parentId"]);
-            Assert.AreEqual(DistributedTraceGuid, (string)rootSpanEvent.IntrinsicAttributes()["trustedParentId"]);
-            Assert.AreEqual($"{Vendor1},{Vendor2}", (string)rootSpanEvent.IntrinsicAttributes()["tracingVendors"]);
+            ClassicAssert.AreEqual(W3cParentId, (string)rootSpanEvent.IntrinsicAttributes()["parentId"]);
+            ClassicAssert.AreEqual(DistributedTraceGuid, (string)rootSpanEvent.IntrinsicAttributes()["trustedParentId"]);
+            ClassicAssert.AreEqual($"{Vendor1},{Vendor2}", (string)rootSpanEvent.IntrinsicAttributes()["tracingVendors"]);
         }
 
         [Test]
@@ -314,8 +309,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvent = spanEvents.ToList()[0];
 
             // ASSERT
-            Assert.True((bool)spanEvent.IntrinsicAttributes()["nr.entryPoint"]);
-            Assert.AreEqual(TransactionName, (string)spanEvent.IntrinsicAttributes()["name"]);
+            Assert.That((bool)spanEvent.IntrinsicAttributes()["nr.entryPoint"]);
+            ClassicAssert.AreEqual(TransactionName, (string)spanEvent.IntrinsicAttributes()["name"]);
         }
 
         [Test]
@@ -341,9 +336,9 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(segments[0].SpanId, errorEventAttributes.GetAttributeValuesDic(AttributeClassification.Intrinsics)["spanId"]),
-                () => Assert.AreEqual(testError.ErrorTypeName, (string)spanEvent.AgentAttributes()["error.class"]),
-                () => Assert.AreEqual(testError.ErrorTypeName, (string)rootSpanEvent.AgentAttributes()["error.class"])
+                () => ClassicAssert.AreEqual(segments[0].SpanId, errorEventAttributes.GetAttributeValuesDic(AttributeClassification.Intrinsics)["spanId"]),
+                () => ClassicAssert.AreEqual(testError.ErrorTypeName, (string)spanEvent.AgentAttributes()["error.class"]),
+                () => ClassicAssert.AreEqual(testError.ErrorTypeName, (string)rootSpanEvent.AgentAttributes()["error.class"])
             );
         }
 
@@ -403,9 +398,9 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             if (hasExpectedError)
             {
                 CollectionAssert.Contains(rootSpanEvent.AgentAttributes().Keys, "error.expected");
-                Assert.AreEqual(true, rootSpanEvent.AgentAttributes()["error.expected"]);
+                ClassicAssert.AreEqual(true, rootSpanEvent.AgentAttributes()["error.expected"]);
                 CollectionAssert.Contains(spanEvent.AgentAttributes().Keys, "error.expected");
-                Assert.AreEqual(true, spanEvent.AgentAttributes()["error.expected"]);
+                ClassicAssert.AreEqual(true, spanEvent.AgentAttributes()["error.expected"]);
             }
             else
             {
@@ -442,20 +437,20 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]),
-                () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
-                () => Assert.AreEqual(DatastoreVendor.MSSQL.ToKnownName(), (string)spanEventAgentAttributes["db.system"]),
-                () => Assert.AreEqual(_parsedSqlStatement.Operation, (string)spanEventAgentAttributes["db.operation"]),
-                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["server.address"]),
-                () => Assert.AreEqual(_connectionInfo.Port.Value, spanEventAgentAttributes["server.port"]),
+                () => ClassicAssert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]),
+                () => ClassicAssert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
+                () => ClassicAssert.AreEqual(DatastoreVendor.MSSQL.ToKnownName(), (string)spanEventAgentAttributes["db.system"]),
+                () => ClassicAssert.AreEqual(_parsedSqlStatement.Operation, (string)spanEventAgentAttributes["db.operation"]),
+                () => ClassicAssert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["server.address"]),
+                () => ClassicAssert.AreEqual(_connectionInfo.Port.Value, spanEventAgentAttributes["server.port"]),
 
                 //This also tests the lazy instantiation on span event attrib values
-                () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
+                () => ClassicAssert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
 
-                () => Assert.AreEqual(_connectionInfo.DatabaseName, (string)spanEventAgentAttributes["db.instance"]),
-                () => Assert.AreEqual($"{_connectionInfo.Host}:{_connectionInfo.PortPathOrId}", (string)spanEventAgentAttributes["peer.address"]),
-                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["peer.hostname"]),
-                () => Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"])
+                () => ClassicAssert.AreEqual(_connectionInfo.DatabaseName, (string)spanEventAgentAttributes["db.instance"]),
+                () => ClassicAssert.AreEqual($"{_connectionInfo.Host}:{_connectionInfo.PortPathOrId}", (string)spanEventAgentAttributes["peer.address"]),
+                () => ClassicAssert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["peer.hostname"]),
+                () => ClassicAssert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"])
             );
         }
 
@@ -490,10 +485,10 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.True(!spanEventAgentAttributes.ContainsKey("db.collection")),
-                () => Assert.AreEqual("default", (string)spanEventAgentAttributes["db.instance"]),
-                () => Assert.AreEqual("localhost:1234", (string)spanEventAgentAttributes["peer.address"]),
-                () => Assert.AreEqual("localhost", (string)spanEventAgentAttributes["peer.hostname"])
+                () => Assert.That(!spanEventAgentAttributes.ContainsKey("db.collection")),
+                () => ClassicAssert.AreEqual("default", (string)spanEventAgentAttributes["db.instance"]),
+                () => ClassicAssert.AreEqual("localhost:1234", (string)spanEventAgentAttributes["peer.address"]),
+                () => ClassicAssert.AreEqual("localhost", (string)spanEventAgentAttributes["peer.hostname"])
             );
         }
 
@@ -536,9 +531,9 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 var attribStatement = (string)spanEvent.AgentAttributes()["db.statement"];
                 var attribStmtLenBytes = Encoding.UTF8.GetByteCount(attribStatement);
 
-                Assert.AreEqual(expectedStmtTrunc[i], attribStatement);
-                Assert.True(attribStmtLenBytes <= 1999);
-                Assert.True(attribStmtLenBytes >= 1996);
+                ClassicAssert.AreEqual(expectedStmtTrunc[i], attribStatement);
+                Assert.That(attribStmtLenBytes <= 1999);
+                Assert.That(attribStmtLenBytes >= 1996);
             }
         }
 
@@ -576,11 +571,11 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.IsFalse(trxUserAttribDic.ContainsKey("filterOnTrx")),
-                () => Assert.IsTrue(trxUserAttribDic.ContainsKey("filterOnSpan")),
+                () => ClassicAssert.IsFalse(trxUserAttribDic.ContainsKey("filterOnTrx")),
+                () => ClassicAssert.IsTrue(trxUserAttribDic.ContainsKey("filterOnSpan")),
 
-                () => Assert.IsTrue(rootSpanUserAttribDic.ContainsKey("filterOnTrx")),
-                () => Assert.IsFalse(rootSpanUserAttribDic.ContainsKey("filterOnSpan"))
+                () => ClassicAssert.IsTrue(rootSpanUserAttribDic.ContainsKey("filterOnTrx")),
+                () => ClassicAssert.IsFalse(rootSpanUserAttribDic.ContainsKey("filterOnSpan"))
             );
 
 
@@ -610,8 +605,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             NrAssert.Multiple
             (
-                ()=> Assert.IsTrue(rootSpanIntrinsicsDic.ContainsKey("transaction.name")),
-                ()=> Assert.AreEqual(transactionMetricName.PrefixedName, rootSpanIntrinsicsDic["transaction.name"])
+                ()=> ClassicAssert.IsTrue(rootSpanIntrinsicsDic.ContainsKey("transaction.name")),
+                ()=> ClassicAssert.AreEqual(transactionMetricName.PrefixedName, rootSpanIntrinsicsDic["transaction.name"])
             );
         }
          
@@ -657,16 +652,16 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                     if (trxAttrib.AttributeDefinition.IsAvailableForAny(AttributeDestinations.SpanEvent))
                     {
                         hasExistCheck = true;
-                        assertions.Add(() => Assert.IsTrue(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
-                        assertions.Add(() => Assert.AreEqual(trxAttrib.Value, rootSpanAttribsDic[attribName], $"{classificationLocal} attribute '{attribName}'"));
+                        assertions.Add(() => ClassicAssert.IsTrue(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
+                        assertions.Add(() => ClassicAssert.AreEqual(trxAttrib.Value, rootSpanAttribsDic[attribName], $"{classificationLocal} attribute '{attribName}'"));
                     }
                     else
                     {
-                        assertions.Add(() => Assert.IsFalse(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
+                        assertions.Add(() => ClassicAssert.IsFalse(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
                     }
                 }
 
-                assertions.Add(() => Assert.IsTrue(hasExistCheck, $"Didn't validate existence of any {classificationLocal} attrib on root span"));
+                assertions.Add(() => ClassicAssert.IsTrue(hasExistCheck, $"Didn't validate existence of any {classificationLocal} attrib on root span"));
             }
 
             NrAssert.Multiple(assertions.ToArray());
@@ -695,7 +690,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvent = spanEvents.ToList()[1];
 
             // ASSERT
-            Assert.AreEqual(HttpCategory, (string)spanEvent.IntrinsicAttributes()["category"]);
+            ClassicAssert.AreEqual(HttpCategory, (string)spanEvent.IntrinsicAttributes()["category"]);
         }
 
         [Test]
@@ -718,10 +713,10 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEventAgentAttributes = spanEvent.AgentAttributes();
 
             // ASSERT
-            Assert.AreEqual(HttpUri, (string)spanEventAgentAttributes["http.url"]);
-            Assert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.request.method"]);
-            Assert.AreEqual("type", (string)spanEventIntrinsicAttributes["component"]);
-            Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"]);
+            ClassicAssert.AreEqual(HttpUri, (string)spanEventAgentAttributes["http.url"]);
+            ClassicAssert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.request.method"]);
+            ClassicAssert.AreEqual("type", (string)spanEventIntrinsicAttributes["component"]);
+            ClassicAssert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"]);
         }
 
         [Test]
@@ -766,7 +761,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvent = spanEvents.ToList()[1];
 
             // ASSERT
-            Assert.AreEqual(200, spanEvent.AgentAttributes()["http.statusCode"]);
+            ClassicAssert.AreEqual(200, spanEvent.AgentAttributes()["http.statusCode"]);
         }
 
         #endregion
@@ -786,7 +781,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
-            Assert.AreEqual(777, spanEvent.IntrinsicAttributes()["thread.id"]);
+            ClassicAssert.AreEqual(777, spanEvent.IntrinsicAttributes()["thread.id"]);
         }
 
         [Test]
@@ -804,7 +799,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
-            Assert.IsFalse(spanEvent.IntrinsicAttributes().ContainsKey("thread.id"));
+            ClassicAssert.IsFalse(spanEvent.IntrinsicAttributes().ContainsKey("thread.id"));
         }
 
         private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)

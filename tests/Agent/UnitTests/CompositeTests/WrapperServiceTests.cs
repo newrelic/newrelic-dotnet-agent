@@ -4,7 +4,6 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
-using NUnit.Framework;
 
 namespace CompositeTests
 {
@@ -45,8 +44,8 @@ namespace CompositeTests
                 var wrapperService = _compositeTestAgent.GetWrapperService();
                 var afterWrappedMethod = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, 0, 0);
 
-                Assert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
-                Assert.True(logging.HasMessageThatContains("Transaction has already ended, skipping method"), "Expected log message was not found.");
+                ClassicAssert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
+                Assert.That(logging.HasMessageThatContains("Transaction has already ended, skipping method"), "Expected log message was not found.");
             }
         }
     }

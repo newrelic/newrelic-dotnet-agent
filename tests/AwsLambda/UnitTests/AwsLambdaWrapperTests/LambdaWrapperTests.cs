@@ -1,21 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using Amazon.SQS.Model;
 using Amazon.SQS;
-using NUnit.Framework;
 using OpenTracing.Mock;
 using OpenTracing.Util;
-using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using NewRelic.OpenTracing.AmazonLambda;
 using NewRelic.OpenTracing.AmazonLambda.State;
 using NewRelic.OpenTracing.AmazonLambda.Util;
 using NewRelic.OpenTracing.AmazonLambda.DiagnosticObserver;
@@ -315,7 +308,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowException(ILambdaContext context)"));
+                ClassicAssert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowException(ILambdaContext context)"));
                 return;
             }
             Assert.Fail("Did not catch exception as expected.");
@@ -345,7 +338,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowExceptionAsync(ILambdaContext context)"));
+                ClassicAssert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowExceptionAsync(ILambdaContext context)"));
                 return;
             }
             Assert.Fail("Did not catch exception as expected.");
@@ -414,7 +407,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSMessageWithException(SendMessageRequest sendMessageRequest, CancellationToken cancellationToken)"));
+                ClassicAssert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSMessageWithException(SendMessageRequest sendMessageRequest, CancellationToken cancellationToken)"));
 
                 Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
                 return;
@@ -490,7 +483,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSBatchMessageWithException(SendMessageBatchRequest sendMessageBatchRequest, CancellationToken cancellationToken)"));
+                ClassicAssert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSBatchMessageWithException(SendMessageBatchRequest sendMessageBatchRequest, CancellationToken cancellationToken)"));
 
                 Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
                 return;
@@ -564,7 +557,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSimpleNotificationServiceException)));
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSNSMessageWithException(PublishRequest publishRequest, CancellationToken cancellationToken)"));
+                ClassicAssert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSNSMessageWithException(PublishRequest publishRequest, CancellationToken cancellationToken)"));
 
                 Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
                 return;

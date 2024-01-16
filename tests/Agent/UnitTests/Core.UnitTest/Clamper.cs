@@ -1,10 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilities;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core
 {
@@ -14,13 +11,13 @@ namespace NewRelic.Agent.Core
         [Test]
         public void when_ClampString_then_string_is_trimmed()
         {
-            Assert.AreEqual("fo", Clamper.ClampLength("foo", 2));
+            ClassicAssert.AreEqual("fo", Clamper.ClampLength("foo", 2));
         }
 
         [Test]
         public void when_ClampString_with_maxlength_larger_than_string_then_string_is_not_trimmed()
         {
-            Assert.AreEqual("foo", Clamper.ClampLength("foo", 200));
+            ClassicAssert.AreEqual("foo", Clamper.ClampLength("foo", 200));
         }
 
         [Test]
@@ -28,8 +25,8 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 6);
-            Assert.AreEqual(1, ndict.Count);
-            Assert.AreEqual("bar", ndict["foo"]);
+            ClassicAssert.AreEqual(1, ndict.Count);
+            ClassicAssert.AreEqual("bar", ndict["foo"]);
         }
 
         [Test]
@@ -37,8 +34,8 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 7);
-            Assert.AreEqual(1, ndict.Count);
-            Assert.AreEqual("bar", ndict["foo"]);
+            ClassicAssert.AreEqual(1, ndict.Count);
+            ClassicAssert.AreEqual("bar", ndict["foo"]);
         }
 
         [Test]
@@ -46,14 +43,14 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 5);
-            Assert.AreEqual(0, ndict.Count);
+            ClassicAssert.AreEqual(0, ndict.Count);
         }
 
         [Test]
         public void when_input_dictionary_is_null_output_dictionary_is_null()
         {
             var actualResult = Clamper.ClampLength(null as IDictionary<string, string>, 0);
-            Assert.AreEqual(null, actualResult);
+            ClassicAssert.AreEqual(null, actualResult);
         }
 
         [Test]
@@ -61,7 +58,7 @@ namespace NewRelic.Agent.Core
         {
             var inner = new Exception("Inner");
             var outer = new Exception("Outer", inner);
-            Assert.AreEqual(outer, Clamper.ClampLength(outer, 100));
+            ClassicAssert.AreEqual(outer, Clamper.ClampLength(outer, 100));
         }
 
     }

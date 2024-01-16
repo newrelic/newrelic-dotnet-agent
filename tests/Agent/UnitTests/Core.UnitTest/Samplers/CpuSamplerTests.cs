@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Samplers
@@ -48,7 +46,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(cpuSample);
+            ClassicAssert.NotNull(cpuSample);
         }
 
         [Test]
@@ -73,7 +71,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.IsTrue(cpuSampleBefore.CurrentUserProcessorTime < cpuSampleAfter.CurrentUserProcessorTime, "UserProcessorTime did not increase as expected");
+            ClassicAssert.IsTrue(cpuSampleBefore.CurrentUserProcessorTime < cpuSampleAfter.CurrentUserProcessorTime, "UserProcessorTime did not increase as expected");
         }
 
         private void IncreaseUserProcessorTime(int iterations)

@@ -1,10 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -27,19 +24,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, loggingEvents);
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(entityGuid, objectUnderTest.EntityGuid);
-            Assert.AreEqual(entityName, objectUnderTest.EntityName);
-            Assert.AreEqual(hostname, objectUnderTest.Hostname);
-            Assert.AreEqual(1, objectUnderTest.LoggingEvents.Count);
+            ClassicAssert.NotNull(objectUnderTest);
+            ClassicAssert.AreEqual(entityGuid, objectUnderTest.EntityGuid);
+            ClassicAssert.AreEqual(entityName, objectUnderTest.EntityName);
+            ClassicAssert.AreEqual(hostname, objectUnderTest.Hostname);
+            ClassicAssert.AreEqual(1, objectUnderTest.LoggingEvents.Count);
 
             var loggingEvent = objectUnderTest.LoggingEvents[0];
-            Assert.AreEqual(1, loggingEvent.TimeStamp);
-            Assert.AreEqual("TestMessage", loggingEvent.Message);
-            Assert.AreEqual("TestLevel", loggingEvent.Level);
-            Assert.AreEqual("TestSpanId", loggingEvent.SpanId);
-            Assert.AreEqual("TestTraceId", loggingEvent.TraceId);
-            Assert.AreEqual(testContextData, loggingEvent.ContextData);
+            ClassicAssert.AreEqual(1, loggingEvent.TimeStamp);
+            ClassicAssert.AreEqual("TestMessage", loggingEvent.Message);
+            ClassicAssert.AreEqual("TestLevel", loggingEvent.Level);
+            ClassicAssert.AreEqual("TestSpanId", loggingEvent.SpanId);
+            ClassicAssert.AreEqual("TestTraceId", loggingEvent.TraceId);
+            ClassicAssert.AreEqual(testContextData, loggingEvent.ContextData);
         }
     }
 }

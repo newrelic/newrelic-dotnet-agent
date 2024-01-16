@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.OpenTracing.AmazonLambda.Util;
-using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {

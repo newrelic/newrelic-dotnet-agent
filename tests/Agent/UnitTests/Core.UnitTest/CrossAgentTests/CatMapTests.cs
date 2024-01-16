@@ -23,12 +23,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
@@ -159,13 +154,13 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             // Run assertions
             testCase.ExpectedIntrinsicFields.ForEach(kvp =>
             {
-                Assert.True(intrinsics.ContainsKey(kvp.Key), $"Expected intrinsic attribute '{kvp.Key}' was not found");
-                Assert.AreEqual(kvp.Value, intrinsics[kvp.Key], $"Attribute '{kvp.Key}': expected value '{kvp.Value}' but found '{intrinsics[kvp.Key]}'");
+                Assert.That(intrinsics.ContainsKey(kvp.Key), $"Expected intrinsic attribute '{kvp.Key}' was not found");
+                ClassicAssert.AreEqual(kvp.Value, intrinsics[kvp.Key], $"Attribute '{kvp.Key}': expected value '{kvp.Value}' but found '{intrinsics[kvp.Key]}'");
             });
 
             testCase.NonExpectedIntrinsicFields.ForEach(field =>
             {
-                Assert.False(intrinsics.ContainsKey(field), $"Found unexpected intrinsic attribute '{field}'");
+                ClassicAssert.False(intrinsics.ContainsKey(field), $"Found unexpected intrinsic attribute '{field}'");
             });
 
             if (testCase.OutboundRequests != null)
@@ -174,11 +169,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 {
                     var expected = kvp.Key;
                     var actual = kvp.Value;
-                    Assert.NotNull(actual, "Outbound request did not have any CAT headers");
-                    Assert.AreEqual(expected.TransactionGuid, actual.TransactionGuid, $"Expected outbound.TransactionGuid to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.PathHash, actual.PathHash, $"Expected outbound.PathHash to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.TripId, actual.TripId, $"Expected outbound.TripId to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.Unused, actual.Unused, $"Expected outbound.Unused to be '{expected.Unused}' but found '{actual.Unused}'");
+                    ClassicAssert.NotNull(actual, "Outbound request did not have any CAT headers");
+                    ClassicAssert.AreEqual(expected.TransactionGuid, actual.TransactionGuid, $"Expected outbound.TransactionGuid to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                    ClassicAssert.AreEqual(expected.PathHash, actual.PathHash, $"Expected outbound.PathHash to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                    ClassicAssert.AreEqual(expected.TripId, actual.TripId, $"Expected outbound.TripId to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                    ClassicAssert.AreEqual(expected.Unused, actual.Unused, $"Expected outbound.Unused to be '{expected.Unused}' but found '{actual.Unused}'");
                 });
             }
         }
@@ -291,7 +286,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                ClassicAssert.NotNull(testCases);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

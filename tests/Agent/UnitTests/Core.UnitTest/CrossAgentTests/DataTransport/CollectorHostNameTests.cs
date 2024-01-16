@@ -1,10 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
 using NewRelic.Agent.Core.Config;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -102,7 +99,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
             }
 
             var connectionInfo = new ConnectionInfo(_defaultConfig);
-            Assert.AreEqual(hostname, connectionInfo.Host);
+            ClassicAssert.AreEqual(hostname, connectionInfo.Host);
         }
 
         private static List<TestCaseData> GetCollectorHostnameTestData()

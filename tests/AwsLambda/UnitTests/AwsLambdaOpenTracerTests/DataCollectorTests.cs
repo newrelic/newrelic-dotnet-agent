@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Newtonsoft.Json;
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
@@ -26,9 +24,9 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(logger.LastLogMessage);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(logger.LastLogMessage.Contains("NR_LAMBDA_MONITORING"));
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("span_event_data"));
+            ClassicAssert.IsTrue(logger.LastLogMessage.Contains("NR_LAMBDA_MONITORING"));
+            ClassicAssert.IsTrue(data.Contains("analytic_event_data"));
+            ClassicAssert.IsTrue(data.Contains("span_event_data"));
         }
 
         [Test]
@@ -47,9 +45,9 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(fileSystemManager.FileContents);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(fileSystemManager.FileContents.Contains("NR_LAMBDA_MONITORING"));
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("span_event_data"));
+            ClassicAssert.IsTrue(fileSystemManager.FileContents.Contains("NR_LAMBDA_MONITORING"));
+            ClassicAssert.IsTrue(data.Contains("analytic_event_data"));
+            ClassicAssert.IsTrue(data.Contains("span_event_data"));
         }
     }
 }

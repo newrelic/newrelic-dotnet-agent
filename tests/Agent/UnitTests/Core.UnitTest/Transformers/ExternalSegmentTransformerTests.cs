@@ -1,12 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
@@ -62,34 +60,34 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(4, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(4, unscoped.Count);
 
             const string segmentMetric = "External/www.foo.com/Stream/GET";
-            Assert.IsTrue(unscoped.ContainsKey("External/all"));
-            Assert.IsTrue(unscoped.ContainsKey("External/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
-            Assert.IsTrue(unscoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/allWeb"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(segmentMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(segmentMetric));
 
             var data = scoped[segmentMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allWeb", "External/www.foo.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
 
             var unscopedMetricsUsingExclusive = new string[] { segmentMetric };
@@ -97,11 +95,11 @@ namespace NewRelic.Agent.Core.Transformers
             foreach (var current in unscopedMetricsUsingExclusive)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
         }
 
@@ -122,34 +120,34 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(4, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(4, unscoped.Count);
 
             const string segmentMetric = "External/www.foo.com/Stream/GET";
-            Assert.IsTrue(unscoped.ContainsKey("External/all"));
-            Assert.IsTrue(unscoped.ContainsKey("External/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
-            Assert.IsTrue(unscoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(segmentMetric));
 
-            Assert.IsTrue(scoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(segmentMetric));
 
             var data = scoped[segmentMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allOther", "External/www.foo.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
 
             var unscopedMetricsUsingExclusive = new string[] { segmentMetric };
@@ -157,11 +155,11 @@ namespace NewRelic.Agent.Core.Transformers
             foreach (var current in unscopedMetricsUsingExclusive)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
         }
 
@@ -185,39 +183,39 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(6, unscoped.Count);
 
             const string segmentMetric = "External/www.bar.com/Stream/GET";
             const string txMetric = "ExternalTransaction/www.bar.com/cpId/name";
 
-            Assert.IsTrue(unscoped.ContainsKey("External/all"));
-            Assert.IsTrue(unscoped.ContainsKey("External/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("External/www.bar.com/all"));
-            Assert.IsTrue(unscoped.ContainsKey(segmentMetric));
-            Assert.IsTrue(unscoped.ContainsKey(txMetric));
-            Assert.IsTrue(unscoped.ContainsKey("ExternalApp/www.bar.com/cpId/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/allOther"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/www.bar.com/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(txMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("ExternalApp/www.bar.com/cpId/all"));
 
-            Assert.IsFalse(scoped.ContainsKey(segmentMetric));
-            Assert.IsTrue(scoped.ContainsKey(txMetric));
+            ClassicAssert.IsFalse(scoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(txMetric));
 
             var data = scoped[txMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
 
             var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allOther", "External/www.bar.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
 
             var unscopedMetricsUsingExclusive = new string[] { segmentMetric, txMetric };
@@ -225,19 +223,19 @@ namespace NewRelic.Agent.Core.Transformers
             foreach (var current in unscopedMetricsUsingExclusive)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                ClassicAssert.AreEqual(1, data.Value0);
+                ClassicAssert.AreEqual(5, data.Value1);
+                ClassicAssert.AreEqual(5, data.Value2);
+                ClassicAssert.AreEqual(5, data.Value3);
+                ClassicAssert.AreEqual(5, data.Value4);
             }
 
             data = unscoped["ExternalApp/www.bar.com/cpId/all"];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            ClassicAssert.AreEqual(1, data.Value0);
+            ClassicAssert.AreEqual(5, data.Value1);
+            ClassicAssert.AreEqual(5, data.Value2);
+            ClassicAssert.AreEqual(5, data.Value3);
+            ClassicAssert.AreEqual(5, data.Value4);
         }
 
         [Test]
@@ -260,27 +258,27 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            ClassicAssert.AreEqual(1, scoped.Count);
+            ClassicAssert.AreEqual(6, unscoped.Count);
 
             const string segmentMetric = "External/www.bar.com/Stream/GET";
             const string txMetric = "ExternalTransaction/www.bar.com/cpId/otherTxName";
 
-            Assert.IsTrue(unscoped.ContainsKey("External/all"));
-            Assert.IsTrue(unscoped.ContainsKey("External/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("External/www.bar.com/all"));
-            Assert.IsTrue(unscoped.ContainsKey(segmentMetric));
-            Assert.IsTrue(unscoped.ContainsKey(txMetric));
-            Assert.IsTrue(unscoped.ContainsKey("ExternalApp/www.bar.com/cpId/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/allWeb"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("External/www.bar.com/all"));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey(txMetric));
+            ClassicAssert.IsTrue(unscoped.ContainsKey("ExternalApp/www.bar.com/cpId/all"));
 
-            Assert.IsFalse(scoped.ContainsKey(segmentMetric));
-            Assert.IsTrue(scoped.ContainsKey(txMetric));
+            ClassicAssert.IsFalse(scoped.ContainsKey(segmentMetric));
+            ClassicAssert.IsTrue(scoped.ContainsKey(txMetric));
 
             var nameScoped = scoped[txMetric];
             var nameUnscoped = unscoped[txMetric];
 
-            Assert.AreEqual(1, nameScoped.Value0);
-            Assert.AreEqual(1, nameUnscoped.Value0);
+            ClassicAssert.AreEqual(1, nameScoped.Value0);
+            ClassicAssert.AreEqual(1, nameUnscoped.Value0);
         }
 
         #endregion Transform
@@ -298,7 +296,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             var transactionTraceName = segment.GetTransactionTraceName();
 
-            Assert.AreEqual("External/www.foo.com/Stream/GET", transactionTraceName);
+            ClassicAssert.AreEqual("External/www.foo.com/Stream/GET", transactionTraceName);
         }
 
         [Test]
@@ -312,7 +310,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             var transactionTraceName = segment.GetTransactionTraceName();
 
-            Assert.AreEqual("ExternalTransaction/www.foo.com/cpId/trxName", transactionTraceName);
+            ClassicAssert.AreEqual("ExternalTransaction/www.foo.com/cpId/trxName", transactionTraceName);
         }
 
         #endregion GetTransactionTraceName

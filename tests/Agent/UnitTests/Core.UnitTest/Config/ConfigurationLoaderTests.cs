@@ -3,16 +3,12 @@
 
 #if NETFRAMEWORK
 
-using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using NewRelic.Agent.Core.Configuration;
-using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -24,7 +20,7 @@ namespace NewRelic.Agent.Core.Config
         {
             var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
             StringAssert.Contains("default", valueWithProvenance.Provenance);
-            Assert.IsNull(valueWithProvenance.Value);
+            ClassicAssert.IsNull(valueWithProvenance.Value);
         }
 
         [Test]
@@ -41,7 +37,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
                 StringAssert.DoesNotContain("default", valueWithProvenance.Provenance);
-                Assert.AreEqual("bar", valueWithProvenance.Value);
+                ClassicAssert.AreEqual("bar", valueWithProvenance.Value);
             }
         }
         [Test]
@@ -57,7 +53,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
                 StringAssert.Contains("default", valueWithProvenance.Provenance);
-                Assert.IsNull(valueWithProvenance.Value);
+                ClassicAssert.IsNull(valueWithProvenance.Value);
             }
         }
 
@@ -72,7 +68,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
                 StringAssert.Contains("default", valueWithProvenance.Provenance);
-                Assert.IsNull(valueWithProvenance.Value);
+                ClassicAssert.IsNull(valueWithProvenance.Value);
             }
         }
 
@@ -81,7 +77,7 @@ namespace NewRelic.Agent.Core.Config
         {
             var valueWithProvenance = ConfigurationLoader.GetConfigSetting("foo");
             StringAssert.Contains("ConfigurationManager", valueWithProvenance.Provenance);
-            Assert.IsNull(valueWithProvenance.Value);
+            ClassicAssert.IsNull(valueWithProvenance.Value);
         }
 
         [Test]
@@ -98,7 +94,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var valueWithProvenance = ConfigurationLoader.GetConfigSetting("foo");
                 StringAssert.DoesNotContain("default", valueWithProvenance.Provenance);
-                Assert.AreEqual("bar", valueWithProvenance.Value);
+                ClassicAssert.AreEqual("bar", valueWithProvenance.Value);
             }
         }
 
@@ -129,7 +125,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual(expectedFileName, agentConfigFileName);
+                ClassicAssert.AreEqual(expectedFileName, agentConfigFileName);
             }
         }
         [Test]
@@ -222,7 +218,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("testPath\\newrelic.config", agentConfigFileName);
+                ClassicAssert.AreEqual("testPath\\newrelic.config", agentConfigFileName);
             }
         }
 
@@ -275,7 +271,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("executionPath\\newrelic.config", agentConfigFileName);
+                ClassicAssert.AreEqual("executionPath\\newrelic.config", agentConfigFileName);
             }
         }
 
@@ -315,7 +311,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("newRelicHome\\newrelic.config", agentConfigFileName);
+                ClassicAssert.AreEqual("newRelicHome\\newrelic.config", agentConfigFileName);
             }
         }
 
@@ -352,7 +348,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("newrelic.config", agentConfigFileName);
+                ClassicAssert.AreEqual("newrelic.config", agentConfigFileName);
             }
         }
 
@@ -365,7 +361,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var fileName = ConfigurationLoader.GetConfigurationFilePath("homeDirectory");
 
-                Assert.AreEqual("homeDirectory\\newrelic.config", fileName);
+                ClassicAssert.AreEqual("homeDirectory\\newrelic.config", fileName);
             }
         }
 
@@ -474,7 +470,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var parsedConfig = ConfigurationLoader.Initialize();
 
-                Assert.AreEqual(configFile.FileName, parsedConfig.ConfigurationFileName);
+                ClassicAssert.AreEqual(configFile.FileName, parsedConfig.ConfigurationFileName);
             }
         }
 
