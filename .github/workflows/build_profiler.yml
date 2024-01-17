@@ -156,7 +156,7 @@ jobs:
             files: ${{ env.test_results_path }}\profiler.xml
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
           name: profiler-windows
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
@@ -208,7 +208,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -282,7 +282,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
