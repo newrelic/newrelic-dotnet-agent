@@ -132,5 +132,5 @@ jobs:
         with:
           name: deploy-artifacts
           path: |
-            ${{ github.workspace }}\build\BuildArtifacts
+            ${{ github.workspace }}
           if-no-files-found: error
