@@ -173,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}/build/BuildArtifacts
+          path: ${{ github.workspace }}
           if-no-files-found: error
 
   deploy-downloadsite:
@@ -440,7 +440,7 @@ jobs:
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
-      run_id: ${{ github.event.inputs.run_id }}
+      run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
     secrets: inherit
 
   post-deploy:
