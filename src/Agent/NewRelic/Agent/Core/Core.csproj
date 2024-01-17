@@ -44,6 +44,7 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="ILRepack" Version="2.0.27">
       <PrivateAssets>all</PrivateAssets>
@@ -108,13 +109,14 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.Debug'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.EventLog'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.File'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(Filename)' == 'System.Diagnostics.DiagnosticSource'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.ValueTuple'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.InteropServices.RuntimeInformation'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Buffers'" />
     </ItemGroup>
@@ -127,8 +129,8 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">19</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">16</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">20</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">19</ILRepackIncludeCount>
     </PropertyGroup>
 
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
