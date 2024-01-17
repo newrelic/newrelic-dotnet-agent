@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.20.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.1...v10.20.2) (2024-01-16)
+
+
+### Fixes
+
+* Eliminate intermittent deadlock on agent startup. ([#2183](https://github.com/newrelic/newrelic-dotnet-agent/issues/2183)) ([#2184](https://github.com/newrelic/newrelic-dotnet-agent/issues/2184)) ([11c0241](https://github.com/newrelic/newrelic-dotnet-agent/commit/11c02417ebb3cf845083ffa0c22e7338d7f99691))
+* Path to agentinfo.json was built incorrectly, leading to file not found errors when running on Linux. ([#2156](https://github.com/newrelic/newrelic-dotnet-agent/issues/2156)) ([#2157](https://github.com/newrelic/newrelic-dotnet-agent/issues/2157)) ([bd7e0c3](https://github.com/newrelic/newrelic-dotnet-agent/commit/bd7e0c3b95010c7f5be3a207959801c8f620870a))
+* Prevent multiple SessionCache instances from being created. ([#2180](https://github.com/newrelic/newrelic-dotnet-agent/issues/2180) ) ([#2186](https://github.com/newrelic/newrelic-dotnet-agent/issues/2186)) ([08a3015](https://github.com/newrelic/newrelic-dotnet-agent/commit/08a301513ede5792320ff87891f033cc4ef23e4a))
+* Prevent null reference exceptions while serializing LoadedModuleWireModelCollection. ([#2185](https://github.com/newrelic/newrelic-dotnet-agent/issues/2185)) ([#2187](https://github.com/newrelic/newrelic-dotnet-agent/issues/2187)) ([afb6352](https://github.com/newrelic/newrelic-dotnet-agent/commit/afb635290173badc48c48846bc9cafdcf63dedd9))
+
 ## [10.20.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.0...v10.20.1) (2023-12-12)
 
 
