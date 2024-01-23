@@ -22,6 +22,10 @@
       <match assemblyName="NewRelic.LogEnrichers.Log4Net" className="NewRelic.LogEnrichers.Log4Net.NewRelicLayout">
         <exactMethodMatcher methodName=".ctor" />
       </match>
+      <!-- Start the agent init process during the init stage of the lambda for better performance and reduced cost. -->
+      <match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.LambdaBootstrap">
+        <exactMethodMatcher methodName="RunAsync" />
+      </match>
     </tracerFactory>
   </instrumentation>
 </extension>
