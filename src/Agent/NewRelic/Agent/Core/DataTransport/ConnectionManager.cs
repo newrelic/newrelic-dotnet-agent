@@ -74,10 +74,17 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_started)
                     return;
 
-                if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
-                    Connect();
+                if (string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")))
+                {
+                    if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
+                        Connect();
+                    else
+                        _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                }
                 else
-                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                {
+                    Log.Info("Lambda function detected");
+                }
 
                 _started = true;
             }
