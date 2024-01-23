@@ -31,6 +31,7 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
                     .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort);
 
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 configModifier.SetLogLevel("Finest");
                 configModifier.LogToConsole();
             },
@@ -41,7 +42,7 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
 
                 _fixture.ExerciseApplication();
 
-                _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
+                _fixture.Delay(12); // wait long enough to ensure a metric harvest occurs after we exercise the app
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // Now wait to see that the 8T spans were sent successfully
