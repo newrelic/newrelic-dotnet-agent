@@ -4,6 +4,8 @@
 
 using NewRelic.Api.Agent;
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 
@@ -20,8 +22,14 @@ namespace ConsoleInstrumentationLoader
 
                 ReflectionUtil.ScanAssembliesAndTypes();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (ex is ReflectionTypeLoadException rex)
+                {
+                    var list = rex.LoaderExceptions.Select(x => x.Message).ToList();
+
+                    Console.WriteLine($"ReflectionTypeLoadException.LoaderExceptions: {string.Join(Environment.NewLine, list)}");
+                }
                 Environment.ExitCode = -2;
                 throw;
             }

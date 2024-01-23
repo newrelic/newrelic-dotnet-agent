@@ -4,3 +4,19 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      
+  # multiple entries are required in order to apply nuget scanning to only a subset of projects.
+  # We do not scan anything in the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
+  # intentionally reference old versions of the Nuget packages they instrument.
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Core
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic.Api.Agent
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /src/NewRelic.Core
+    schedule:
+      interval: weekly
