@@ -212,7 +212,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// </summary>
         public static void StartServices(IContainer container)
         {
-            container.Resolve<AssemblyResolutionService>();
+            //container.Resolve<AssemblyResolutionService>();
             container.Resolve<ITransactionFinalizer>();
             container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
@@ -224,14 +224,14 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			samplerStartThread.IsBackground = true;
 			samplerStartThread.Start();
 #else
-            container.Resolve<GCSamplerNetCore>().Start();
+            //container.Resolve<GCSamplerNetCore>().Start();
 #endif
-            container.Resolve<CpuSampler>().Start();
-            container.Resolve<MemorySampler>().Start();
-            container.Resolve<ThreadStatsSampler>().Start();
-            container.Resolve<ConfigurationTracker>();
-            container.Resolve<LiveInstrumentationServerConfigurationListener>();
-            container.Resolve<UpdatedLoadedModulesService>();
+            //container.Resolve<CpuSampler>().Start();
+            //container.Resolve<MemorySampler>().Start();
+            //container.Resolve<ThreadStatsSampler>().Start();
+            //container.Resolve<ConfigurationTracker>();
+            //container.Resolve<LiveInstrumentationServerConfigurationListener>();
+            //container.Resolve<UpdatedLoadedModulesService>();
         }
     }
 }
