@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -11,6 +13,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
 public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T : ContainerTestFixtureBase
 {
+    const int ExpectedSentCount = 4;
     private readonly T _fixture;
 
     protected LinuxContainerTest(T fixture, ITestOutputHelper output) : base(fixture)
@@ -21,15 +24,28 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+
+                // enable 8T to verify protobuf is working correctly across linux distros
+                configModifier.ForceTransactionTraces()
+                    .EnableDistributedTrace()
+                    .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort);
+
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.SetLogLevel("Finest");
                 configModifier.LogToConsole();
             },
             exerciseApplication: () =>
             {
+                // Wait for 8T to connect
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
+
                 _fixture.ExerciseApplication();
 
                 _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
+
+                // Now wait to see that the 8T spans were sent successfully
+                _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
 
                 // shut down the container and wait for the agent log to see it
                 _fixture.ShutdownRemoteApplication();
@@ -42,9 +58,20 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
     [Fact]
     public void Test()
     {
-        var actualMetrics = _fixture.AgentLog.GetMetrics();
+        var actualMetrics = _fixture.AgentLog.GetMetrics().ToList();
 
         Assert.Contains(actualMetrics, m => m.MetricSpec.Name.Equals("WebTransaction/MVC/WeatherForecast/Get"));
+
+        // verify 8T metrics
+        var expectedSeenCount = 4;
+
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = ExpectedSentCount },
+        };
+
+        Assertions.MetricsExist(expectedMetrics, actualMetrics);
     }
 }
 
