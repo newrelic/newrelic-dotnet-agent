@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using System.Collections.Generic;
 using NewRelic.Agent.TestUtilities;
+using NUnit.Framework.Legacy;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -81,7 +82,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void TransactionFinalizedEvent_IsPublished_IfNotEndedCleanly()
         {
-            Assert.That(_transaction, Is.Not.Null);
+
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction = null;
 
@@ -89,13 +93,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.That(_publishedEvent, Is.Not.Null);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_publishedEvent);
+#pragma warning restore NUnit2018
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsNotPublished_IfEndedCleanly()
         {
-            Assert.That(_transaction, Is.Not.Null);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction.Finish();
             _transaction = null;
@@ -104,7 +112,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.That(_publishedEvent, Is.Null);
+#pragma warning disable NUnit2016 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.Null(_publishedEvent);
+#pragma warning restore NUnit2016
         }
 
         [Test]
@@ -141,7 +151,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void TransactionFinalizedEvent_IsNotPublishedASecondTime_IfBuilderGoesOutOfScopeAgain()
         {
-            Assert.That(_transaction, Is.Not.Null);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction = null;
 
@@ -149,7 +161,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.That(_publishedEvent, Is.Not.Null);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_publishedEvent);
+#pragma warning restore NUnit2018
 
             // The builder is now pinned to the event, but we can unpin it by unpinning the event
             _publishedEvent = null;

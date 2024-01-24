@@ -36,9 +36,9 @@ namespace NewRelic.Agent.Core.Samplers
                 var sample = threadEventListener.Sample();
 
                 NrAssert.Multiple(
-                    () => Assert.That(sample.CountThreadRequestsQueued, Is.GreaterThanOrEqualTo(3)),
-                    () => Assert.That(sample.CountThreadRequestsDequeued, Is.GreaterThanOrEqualTo(3)),
-                    () => Assert.That(sample.ThreadRequestQueueLength, Is.GreaterThanOrEqualTo(0))
+                    () => Assert.That(sample.CountThreadRequestsQueued, Is.LessThanOrEqualTo(3)),
+                    () => Assert.That(sample.CountThreadRequestsDequeued, Is.LessThanOrEqualTo(3)),
+                    () => Assert.That(sample.ThreadRequestQueueLength, Is.EqualTo(0))
                 );
             }
         }

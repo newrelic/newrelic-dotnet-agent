@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public void Teardown()
         {
             _configAutoResponder?.Dispose();
-            _attribDefSvc.Dispose();
+            _attribDefSvc?.Dispose();
         }
 
         [Test]
