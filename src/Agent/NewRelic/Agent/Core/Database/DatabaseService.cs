@@ -8,7 +8,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database
 {
-    public interface IDatabaseService
+    public interface IDatabaseService : IDisposable
     {
         long GetSqlId(string sql, DatastoreVendor vendor);
         string GetObfuscatedSql(string sql, DatastoreVendor vendor);
