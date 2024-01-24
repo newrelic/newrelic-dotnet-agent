@@ -2076,11 +2076,12 @@ namespace CompositeTests
             var transactionEvent = _compositeTestAgent.TransactionEvents.First();
             var transactionAttributes = transactionEvent.IntrinsicAttributes();
 
-            NrAssert.Multiple(
-                () => Assert.AreEqual(transactionAttributes["traceId"], traceId),
-                () => Assert.AreEqual(segment.SpanId, spanId),
-                () => Assert.AreEqual(transactionAttributes["sampled"], isSampled)
-            );
+            Assert.Multiple(() =>
+            {
+                Assert.That(transactionAttributes["traceId"], Is.EqualTo(traceId));
+                Assert.That(segment.SpanId, Is.EqualTo(spanId));
+                Assert.That(transactionAttributes["sampled"], Is.EqualTo(isSampled));
+            });
         }
 
         [Test]
@@ -2098,11 +2099,12 @@ namespace CompositeTests
             var spanId = traceMetadata.SpanId;
             var isSampled = traceMetadata.IsSampled;
 
-            NrAssert.Multiple(
-                () => Assert.AreEqual(string.Empty, traceId),
-                () => Assert.AreEqual(string.Empty, spanId),
-                () => Assert.AreEqual(false, isSampled)
-            );
+            Assert.Multiple(() =>
+            {
+                Assert.That(string.Empty, Is.EqualTo(traceId));
+                Assert.That(string.Empty, Is.EqualTo(spanId));
+                Assert.That(false, Is.EqualTo(isSampled));
+            });
         }
 
         #endregion TraceMetadata

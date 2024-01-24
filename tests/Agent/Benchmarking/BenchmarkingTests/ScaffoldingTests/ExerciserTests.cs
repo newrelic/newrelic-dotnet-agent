@@ -71,7 +71,7 @@ namespace BenchmarkingTests.ScaffoldingTests
             ExerciserUnitOfWorkException exerciserUnitOfWorkException = caughtException.EncounteredExceptions.First() as ExerciserUnitOfWorkException;
             Assert.Multiple(() =>
             {
-                Assert.That(exerciserUnitOfWorkException!.UnitOfWorkIdGlobal, Is.LessThan(50));
+                Assert.That(exerciserUnitOfWorkException!.UnitOfWorkIdGlobal, Is.GreaterThan(50));
                 Assert.That(exerciserUnitOfWorkException.ThreadId, Is.EqualTo(3));
             });
         }
