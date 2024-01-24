@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Commands
         {
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
-            Assert.IsNotNull(response);
+            Assert.That(response, Is.Not.Null);
         }
 
         [Test]
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsNotNull(respDict);
+            Assert.That(respDict, Is.Not.Null);
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.AreEqual(1, respDict.Count);
+            Assert.That(respDict, Has.Count.EqualTo(1));
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.True);
         }
 
         #region Profile Id Tests
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.False);
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.False);
         }
 
         [Test]
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.True);
         }
         #endregion
 
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(service.ReportData);
+            Assert.That(service.ReportData, Is.True);
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(service.ReportData);
+            Assert.That(service.ReportData, Is.True);
         }
 
         [Test]
@@ -126,7 +126,7 @@ namespace NewRelic.Agent.Core.Commands
             StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(service.ReportData);
+            Assert.That(service.ReportData, Is.False);
         }
 
         #endregion

@@ -31,8 +31,8 @@ namespace NewRelic.Agent.Core.Transactions
 
             NrAssert.Multiple
                 (
-                () => Assert.AreEqual("initialCategory", builtName.Category),
-                () => Assert.AreEqual("initialName", builtName.Name)
+                () => Assert.That(builtName.Category, Is.EqualTo("initialCategory")),
+                () => Assert.That(builtName.Name, Is.EqualTo("initialName"))
                 );
         }
 
@@ -46,38 +46,41 @@ namespace NewRelic.Agent.Core.Transactions
             NrAssert.Multiple
                 (
 
-                () => Assert.AreEqual("newCategory", builtName.Category),
-                () => Assert.AreEqual("newName", builtName.Name)
+                () => Assert.That(builtName.Category, Is.EqualTo("newCategory")),
+                () => Assert.That(builtName.Name, Is.EqualTo("newName"))
                 );
         }
 
         [Test]
         public void Build_IgnoresSamePriorityNames()
         {
-            Assert.IsFalse(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory", "newName"), 0));
+            Assert.That(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory", "newName"), 0), Is.False);
 
             var builtName = _candidateTransactionName.CurrentTransactionName;
 
             NrAssert.Multiple
                 (
-                () => Assert.AreEqual("initialCategory", builtName.Category),
-                () => Assert.AreEqual("initialName", builtName.Name)
+                () => Assert.That(builtName.Category, Is.EqualTo("initialCategory")),
+                () => Assert.That(builtName.Name, Is.EqualTo("initialName"))
                 );
         }
 
         [Test]
         public void Build_IgnoresLowerPriorityNames()
         {
-            Assert.IsTrue(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory3", "newName3"), TransactionNamePriority.Handler));
-            Assert.IsFalse(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory2", "newName2"), TransactionNamePriority.StatusCode));
+            Assert.Multiple(() =>
+            {
+                Assert.That(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory3", "newName3"), TransactionNamePriority.Handler), Is.True);
+                Assert.That(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory2", "newName2"), TransactionNamePriority.StatusCode), Is.False);
+            });
 
             var builtName = _candidateTransactionName.CurrentTransactionName;
 
             NrAssert.Multiple
                 (
 
-                () => Assert.AreEqual("newCategory3", builtName.Category),
-                () => Assert.AreEqual("newName3", builtName.Name)
+                () => Assert.That(builtName.Category, Is.EqualTo("newCategory3")),
+                () => Assert.That(builtName.Name, Is.EqualTo("newName3"))
                 );
         }
 
@@ -85,14 +88,14 @@ namespace NewRelic.Agent.Core.Transactions
         public void Build_IgnoresNamesAddedAfterFreezing()
         {
             _candidateTransactionName.Freeze(TransactionNameFreezeReason.CrossApplicationTracing);
-            Assert.IsFalse(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory", "newName"), TransactionNamePriority.FrameworkHigh));
+            Assert.That(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory", "newName"), TransactionNamePriority.FrameworkHigh), Is.False);
 
             var builtName = _candidateTransactionName.CurrentTransactionName;
 
             NrAssert.Multiple
                 (
-                () => Assert.AreEqual("initialCategory", builtName.Category),
-                () => Assert.AreEqual("initialName", builtName.Name)
+                () => Assert.That(builtName.Category, Is.EqualTo("initialCategory")),
+                () => Assert.That(builtName.Name, Is.EqualTo("initialName"))
                 );
         }
     }

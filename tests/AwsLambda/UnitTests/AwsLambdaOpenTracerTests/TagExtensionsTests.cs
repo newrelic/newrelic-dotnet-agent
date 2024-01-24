@@ -18,7 +18,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tag.GetAttributes();
 
             var expectedAttributes = new[] { new KeyValuePair<string, object>("response.status", "200"), new KeyValuePair<string, object>("http.statusCode", 200) };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
 
         [Test]
@@ -29,7 +29,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tag.GetAttributes();
 
             var expectedAttributes = new[] { new KeyValuePair<string, object>("response.status", "foo") };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 
             var attributes = tag.GetAttributes();
 
-            CollectionAssert.IsEmpty(attributes);
+            Assert.That(attributes, Is.Empty);
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tag.GetAttributes();
 
             var expectedAttributes = new[] { new KeyValuePair<string, object>("response.status", "200"), new KeyValuePair<string, object>("http.statusCode", 200) };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 
             var attributes = tag.GetAttributes();
 
-            CollectionAssert.IsEmpty(attributes);
+            Assert.That(attributes, Is.Empty);
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tag.GetAttributes();
 
             var expectedAttributes = new[] { new KeyValuePair<string, object>("foo", "bar") };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
 
         [TestCase("aws.something", ExpectedResult = true)]
@@ -109,7 +109,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tags.BuildUserAttributes();
 
             var expectedAttributes = new Dictionary<string, object> { { "foo", "value" } };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
 
         [Test]
@@ -120,7 +120,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var attributes = tags.BuildAgentAttributes();
 
             var expectedAttributes = new Dictionary<string, object> { { "aws.something", "value" } };
-            CollectionAssert.AreEquivalent(expectedAttributes, attributes);
+            Assert.That(attributes, Is.EquivalentTo(expectedAttributes));
         }
     }
 }

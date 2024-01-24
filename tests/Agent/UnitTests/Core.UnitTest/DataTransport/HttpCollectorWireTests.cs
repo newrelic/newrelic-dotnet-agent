@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
-            Assert.AreEqual(expected, response);
+            Assert.That(response, Is.EqualTo(expected));
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
@@ -166,7 +166,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var result = collectorWire.SendData("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
 
             // Assert
-            Assert.AreEqual("{}", result);
+            Assert.That(result, Is.EqualTo("{}"));
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit("test_method"), Occurs.Once());
         }
 

@@ -191,28 +191,28 @@ namespace NewRelic.Agent.Core.DataTransport
                 connectionManager.AttemptAutoStart();
 
                 Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
-                Assert.AreEqual(15, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(15));
 
                 scheduledAction();
-                Assert.AreEqual(15, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(15));
 
                 scheduledAction();
-                Assert.AreEqual(30, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(30));
 
                 scheduledAction();
-                Assert.AreEqual(60, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(60));
 
                 scheduledAction();
-                Assert.AreEqual(120, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(120));
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(300));
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(300));
 
                 scheduledAction();
-                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                Assert.That(scheduledTime.TotalSeconds, Is.EqualTo(300));
             }
         }
     }

@@ -22,7 +22,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onSuccess: () => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.True(called);
+            Assert.That(called, Is.True);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: value => passedValue = value);
             myDelegate(result: expectedValue, exception: null);
 
-            Assert.AreEqual(expectedValue, passedValue);
+            Assert.That(passedValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: _ => called = true);
             myDelegate(result: 42, exception: null);
 
-            Assert.False(called);
+            Assert.That(called, Is.False);
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onSuccess: () => called = true);
             myDelegate(result: null, exception: new Exception());
 
-            Assert.False(called);
+            Assert.That(called, Is.False);
         }
 
         #endregion OnSuccess
@@ -80,7 +80,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onFailure: ex => passedException = ex);
             myDelegate(result: null, exception: expectedException);
 
-            Assert.AreEqual(expectedException, passedException);
+            Assert.That(passedException, Is.EqualTo(expectedException));
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onFailure: _ => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.False(called);
+            Assert.That(called, Is.False);
         }
 
         #endregion OnFailure
@@ -110,7 +110,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onComplete: () => called = true);
             myDelegate(result: null, exception: null);
 
-            Assert.True(called);
+            Assert.That(called, Is.True);
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace Agent.Extensions.Tests
             var myDelegate = Delegates.GetDelegateFor(onComplete: () => called = true);
             myDelegate(result: null, exception: new Exception());
 
-            Assert.True(called);
+            Assert.That(called, Is.True);
         }
 
         #endregion OnComplete
@@ -144,7 +144,7 @@ namespace Agent.Extensions.Tests
                 );
             myDelegate(result: null, exception: null);
 
-            Assert.AreEqual(expectedThingsCalled, thingsCalled);
+            Assert.That(thingsCalled, Is.EqualTo(expectedThingsCalled));
         }
 
         [Test]
@@ -161,7 +161,7 @@ namespace Agent.Extensions.Tests
                 );
             myDelegate(result: null, exception: new Exception());
 
-            Assert.AreEqual(expectedThingsCalled, thingsCalled);
+            Assert.That(thingsCalled, Is.EqualTo(expectedThingsCalled));
         }
 
         #endregion Order of calls

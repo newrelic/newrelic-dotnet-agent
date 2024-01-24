@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.AgentHealth
     [TestFixture]
     internal class AgentHealthHeartbeatTests
     {
-        public static IMetricBuilder GetSimpleMetricBuilder()
+        private static IMetricBuilder GetSimpleMetricBuilder()
         {
             var metricNameService = Mock.Create<IMetricNameService>();
             Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
@@ -63,13 +63,13 @@ namespace NewRelic.Agent.Core.AgentHealth
                 scheduler.ForceExecute();
 
                 NrAssert.Multiple(
-                    () => Assert.IsTrue(logger.HasMessageThatContains("1 Transaction")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("2 Custom")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("3 Error")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("4 Span")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("5 InfiniteTracingSpan")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("6 Log")),
-                    () => Assert.IsFalse(logger.HasMessageThatContains("No events"))
+                    () => Assert.That(logger.HasMessageThatContains("1 Transaction"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("2 Custom"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("3 Error"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("4 Span"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("5 InfiniteTracingSpan"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("6 Log"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("No events"), Is.False)
                     );
 
                 // Make sure they all update their cumulative counts
@@ -85,19 +85,19 @@ namespace NewRelic.Agent.Core.AgentHealth
 
                 scheduler.ForceExecute();
                 NrAssert.Multiple(
-                    () => Assert.IsTrue(logger.HasMessageThatContains("2 Transaction")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("4 Custom")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("6 Error")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("8 Span")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("10 InfiniteTracingSpan")),
-                    () => Assert.IsTrue(logger.HasMessageThatContains("12 Log")),
-                    () => Assert.IsFalse(logger.HasMessageThatContains("No events"))
+                    () => Assert.That(logger.HasMessageThatContains("2 Transaction"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("4 Custom"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("6 Error"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("8 Span"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("10 InfiniteTracingSpan"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("12 Log"), Is.True),
+                    () => Assert.That(logger.HasMessageThatContains("No events"), Is.False)
                     );
 
                 // Make sure they get cleared out between triggers
                 scheduler.ForceExecute();
 
-                Assert.IsTrue(logger.HasMessageThatContains("No events"));
+                Assert.That(logger.HasMessageThatContains("No events"), Is.True);
             }
         }
     }

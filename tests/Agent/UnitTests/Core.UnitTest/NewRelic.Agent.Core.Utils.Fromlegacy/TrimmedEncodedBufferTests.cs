@@ -35,26 +35,29 @@ namespace NewRelic.Agent.Core.Utils
 			/* й */	0xD0, 0xB9
         };
 
-        [TestCaseSource("TrimmedEncodedBufferTestData")]
+        [TestCaseSource(nameof(TrimmedEncodedBufferTestData))]
         public void TestBufferTrimming(Encoding encoding, int offset, int count, byte[] expectedLeadingBytes, byte[] expectedTrailingBytes, string description)
         {
             var trimmedBuffer = new TrimmedEncodedBuffer(encoding, buffer, offset, count);
 
-            Assert.AreEqual(expectedLeadingBytes.Length, trimmedBuffer.LeadingExtraBytesCount);
-            Assert.AreEqual(expectedTrailingBytes.Length, trimmedBuffer.TrailingExtraBytesCount);
-            Assert.AreEqual(trimmedBuffer.LeadingExtraBytesOffset + trimmedBuffer.LeadingExtraBytesCount, trimmedBuffer.Offset);
-            Assert.AreEqual(count, trimmedBuffer.LeadingExtraBytesCount + trimmedBuffer.Length + trimmedBuffer.TrailingExtraBytesCount);
+            Assert.Multiple(() =>
+            {
+                Assert.That(trimmedBuffer.LeadingExtraBytesCount, Is.EqualTo(expectedLeadingBytes.Length));
+                Assert.That(trimmedBuffer.TrailingExtraBytesCount, Is.EqualTo(expectedTrailingBytes.Length));
+                Assert.That(trimmedBuffer.Offset, Is.EqualTo(trimmedBuffer.LeadingExtraBytesOffset + trimmedBuffer.LeadingExtraBytesCount));
+            });
+            Assert.That(trimmedBuffer.LeadingExtraBytesCount + trimmedBuffer.Length + trimmedBuffer.TrailingExtraBytesCount, Is.EqualTo(count));
 
             for (var i = 0; i < expectedLeadingBytes.Length; ++i)
             {
                 var bufferIndex = i + trimmedBuffer.LeadingExtraBytesOffset;
-                Assert.AreEqual(expectedLeadingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in leading extra bytes at index {bufferIndex}");
+                Assert.That(trimmedBuffer.Buffer[bufferIndex], Is.EqualTo(expectedLeadingBytes[i]), $"Discrepancy in leading extra bytes at index {bufferIndex}");
             }
 
             for (var i = 0; i < expectedTrailingBytes.Length; ++i)
             {
                 var bufferIndex = i + trimmedBuffer.TrailingExtraBytesOffset;
-                Assert.AreEqual(expectedTrailingBytes[i], trimmedBuffer.Buffer[bufferIndex], $"Discrepancy in trailing extra bytes at index {bufferIndex}");
+                Assert.That(trimmedBuffer.Buffer[bufferIndex], Is.EqualTo(expectedTrailingBytes[i]), $"Discrepancy in trailing extra bytes at index {bufferIndex}");
             }
         }
 
@@ -67,11 +70,11 @@ namespace NewRelic.Agent.Core.Utils
             yield return new object[] { Encoding.UTF8, 1, TOTAL_BYTES_LENGTH - 2, new byte[] { 0x92 }, new byte[] { 0xD0 }, "Buffer with partial multi-byte character at the beginning and end" };
         }
 
-        [TestCaseSource("LeadingBytesCountTestData")]
+        [TestCaseSource(nameof(LeadingBytesCountTestData))]
         public void Test_GetLeadingBytesCount(Encoding encoding, int offset, int count, int expectedLeadingByteCount, byte[] bytes, string description)
         {
             var trimmedBuffer = new TrimmedEncodedBuffer(encoding, bytes, offset, count);
-            Assert.AreEqual(expectedLeadingByteCount, trimmedBuffer.LeadingExtraBytesCount);
+            Assert.That(trimmedBuffer.LeadingExtraBytesCount, Is.EqualTo(expectedLeadingByteCount));
         }
 
         private static IEnumerable<object[]> LeadingBytesCountTestData()

@@ -34,6 +34,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         public void TearDown()
         {
             _configAutoResponder.Dispose();
+            _attribDefSvc.Dispose();
         }
 
         private IConfiguration GetConfiguration()
@@ -147,7 +148,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var deserialized = JsonConvert.DeserializeObject<List<Dictionary<string, object>[]>>(serialized);
             Assert.That(deserialized, Is.Not.Null);
 
-            Assert.AreEqual(expectedSerialization.Count, deserialized.Count);
+            Assert.That(deserialized, Has.Count.EqualTo(expectedSerialization.Count));
             AttributeComparer.CompareDictionaries(expectedSerialization[0], deserialized[0]);
             AttributeComparer.CompareDictionaries(expectedSerialization[1], deserialized[1]);
         }

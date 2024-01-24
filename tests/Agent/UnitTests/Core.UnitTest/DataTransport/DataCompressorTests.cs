@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var compressed = DataCompressor.Compress(input);
             var decompressed = DataCompressor.Decompress(compressed);
 
-            Assert.AreEqual(input, decompressed);
+            Assert.That(decompressed, Is.EqualTo(input));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var compressed = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.GzipCompression);
             var decompressed = DecompressGzip(compressed);
-            Assert.AreEqual(input, decompressed);
+            Assert.That(decompressed, Is.EqualTo(input));
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.DataTransport
             const string input = "input";
             var defaultCompression = DataCompressor.Compress(input);
             var explicitCompression = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.DeflateCompression);
-            Assert.AreEqual(defaultCompression, explicitCompression);
+            Assert.That(explicitCompression, Is.EqualTo(defaultCompression));
         }
 
         [Test]

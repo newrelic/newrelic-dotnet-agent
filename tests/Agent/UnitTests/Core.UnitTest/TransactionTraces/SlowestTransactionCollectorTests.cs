@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
@@ -31,19 +31,25 @@ namespace NewRelic.Agent.Core.TransactionTraces
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            ObjectUnderTest.Dispose();
+        }
+
         [Test]
         public void DoesNotThrowWhenNullTransactionTraceIsCollected()
         {
             ObjectUnderTest.Collect(null);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
         public void GettingCollectedSamplesWorksWhenEmpty()
         {
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
@@ -54,8 +60,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(input, samples[0]);
+            Assert.That(samples, Has.Length.EqualTo(1));
+            Assert.That(samples[0], Is.SameAs(input));
         }
 
         [Test]
@@ -66,8 +72,11 @@ namespace NewRelic.Agent.Core.TransactionTraces
             var firstHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
             var secondHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, firstHarvest.Length);
-            Assert.IsEmpty(secondHarvest);
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstHarvest, Has.Length.EqualTo(1));
+                Assert.That(secondHarvest, Is.Empty);
+            });
         }
 
         [Test]
@@ -78,7 +87,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
@@ -92,8 +101,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(slowestTransactionTrace, samples[0]);
+            Assert.That(samples, Has.Length.EqualTo(1));
+            Assert.That(samples[0], Is.SameAs(slowestTransactionTrace));
 
             // Now do it in reverse order
             ObjectUnderTest.Collect(slowestTransactionTrace);
@@ -101,8 +110,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(slowestTransactionTrace, samples[0]);
+            Assert.That(samples, Has.Length.EqualTo(1));
+            Assert.That(samples[0], Is.SameAs(slowestTransactionTrace));
         }
 
         [Test]
@@ -116,8 +125,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(firstTransactionTrace, samples[0]);
+            Assert.That(samples, Has.Length.EqualTo(1));
+            Assert.That(samples[0], Is.SameAs(firstTransactionTrace));
         }
 
         [Test]
@@ -142,8 +151,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
                 var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-                Assert.AreEqual(1, samples.Length);
-                Assert.AreEqual(transactionTraces.Last().Duration, samples[0].Duration);
+                Assert.That(samples, Has.Length.EqualTo(1));
+                Assert.That(samples[0].Duration, Is.EqualTo(transactionTraces.Last().Duration));
             }
         }
     }

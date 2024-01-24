@@ -31,6 +31,12 @@ namespace NewRelic.Agent.Core.Transformers
             _databaseService = new DatabaseService();
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _databaseService.Dispose();
+        }
+
         #region Transform
 
         [Test]
@@ -67,37 +73,49 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(6));
+            });
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/allWeb"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/allWeb"), Is.True);
+                Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+                Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+                Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+            });
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(5));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(5));
+                    Assert.That(data.Value2, Is.EqualTo(5));
+                    Assert.That(data.Value3, Is.EqualTo(5));
+                    Assert.That(data.Value4, Is.EqualTo(5));
+                });
             }
         }
 
@@ -119,37 +137,49 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(6, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(6));
+            });
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/allOther"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/allOther"), Is.True);
+                Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+                Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+                Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+            });
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(5));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(5));
+                    Assert.That(data.Value2, Is.EqualTo(5));
+                    Assert.That(data.Value3, Is.EqualTo(5));
+                    Assert.That(data.Value4, Is.EqualTo(5));
+                });
             }
         }
 
@@ -171,38 +201,50 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(5, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(5));
+            });
 
             //no statement metric for null model
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allWeb"));
-            Assert.IsFalse(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/allWeb"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/allWeb"), Is.True);
+                Assert.That(unscoped.ContainsKey(statementMetric), Is.False);
+                Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
 
-            Assert.IsTrue(scoped.ContainsKey(operationMetric));
+                Assert.That(scoped.ContainsKey(operationMetric), Is.True);
+            });
 
             var data = scoped[operationMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(5));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             var unscopedMetricsWithExclusiveTime = new string[] { operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(5));
+                    Assert.That(data.Value2, Is.EqualTo(5));
+                    Assert.That(data.Value3, Is.EqualTo(5));
+                    Assert.That(data.Value4, Is.EqualTo(5));
+                });
             }
         }
 
@@ -227,47 +269,62 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(7, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(7));
+            });
 
             const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
             const string operationMetric = "Datastore/operation/MSSQL/INSERT";
             const string instanceMetric = "Datastore/instance/MSSQL/HOST/8080";
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
-            Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/allOther"));
-            Assert.IsTrue(unscoped.ContainsKey(statementMetric));
-            Assert.IsTrue(unscoped.ContainsKey(operationMetric));
-            Assert.IsTrue(unscoped.ContainsKey(instanceMetric));
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/allOther"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/all"), Is.True);
+                Assert.That(unscoped.ContainsKey("Datastore/MSSQL/allOther"), Is.True);
+                Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+                Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
+                Assert.That(unscoped.ContainsKey(instanceMetric), Is.True);
 
-            Assert.IsTrue(scoped.ContainsKey(statementMetric));
+                Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+            });
 
             var data = scoped[statementMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(5));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
             foreach (var current in unscopedMetricsWithExclusiveTime)
             {
                 data = unscoped[current];
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(5, data.Value1);
-                Assert.AreEqual(5, data.Value2);
-                Assert.AreEqual(5, data.Value3);
-                Assert.AreEqual(5, data.Value4);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(5));
+                    Assert.That(data.Value2, Is.EqualTo(5));
+                    Assert.That(data.Value3, Is.EqualTo(5));
+                    Assert.That(data.Value4, Is.EqualTo(5));
+                });
             }
 
             data = unscoped[instanceMetric];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(5, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(5));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
         }
         #endregion Transform
 

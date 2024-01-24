@@ -23,7 +23,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
         {
             private static readonly IDictionary<string, object> EmptyDictionary = new Dictionary<string, object>();
 
-            private DisposableCollection _disposables;
             private TestUtilities.Logging _logging;
 
             public const string AgentAttributesKey = "agentAttributes";
@@ -87,10 +86,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             {
                 _dataTransportService = Mock.Create<IDataTransportService>();
                 _logging = new TestUtilities.Logging();
-                _disposables = new DisposableCollection
-                {
-                    _logging
-                };
 
                 EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(CreateMockConfiguration(),
                     ConfigurationUpdateSource.Unknown));
@@ -109,7 +104,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [TearDown]
             public void TearDown()
             {
-                _disposables.Dispose();
+                _attribDefSvc.Dispose();
+                _logging.Dispose();
             }
 
             [Test]
@@ -135,7 +131,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"123\"]";
 
                 var actualResult = JsonConvert.SerializeObject(errorTraceData);
-                Assert.AreEqual(expectedResult, actualResult);
+                Assert.That(actualResult, Is.EqualTo(expectedResult));
             }
 
             [Test]
@@ -154,7 +150,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"" + IntrinsicsKey + "\":{}}";
 
                 var actualResult = JsonConvert.SerializeObject(attributes);
-                Assert.AreEqual(expectedResult, actualResult);
+                Assert.That(actualResult, Is.EqualTo(expectedResult));
             }
 
             [Test]
@@ -173,7 +169,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                     + "\"" + IntrinsicsKey + "\":{}}";
 
                 var actualResult = JsonConvert.SerializeObject(attributes);
-                Assert.AreEqual(expectedResult, actualResult);
+                Assert.That(actualResult, Is.EqualTo(expectedResult));
             }
 
             [Test]
@@ -184,7 +180,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_timestamp, errorTraceData.TimeStamp);
+                Assert.That(errorTraceData.TimeStamp, Is.EqualTo(_timestamp));
             }
 
             [Test]
@@ -195,7 +191,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_path, errorTraceData.Path);
+                Assert.That(errorTraceData.Path, Is.EqualTo(_path));
             }
 
             [Test]
@@ -206,7 +202,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_message, errorTraceData.Message);
+                Assert.That(errorTraceData.Message, Is.EqualTo(_message));
             }
 
             [Test]
@@ -217,7 +213,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_exceptionClassName, errorTraceData.ExceptionClassName);
+                Assert.That(errorTraceData.ExceptionClassName, Is.EqualTo(_exceptionClassName));
             }
 
             [Test]
@@ -228,7 +224,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(attributes, errorTraceData.Attributes);
+                Assert.That(errorTraceData.Attributes, Is.EqualTo(attributes));
             }
 
             [Test]
@@ -239,7 +235,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues,_stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
-                Assert.AreEqual(_guid, errorTraceData.Guid);
+                Assert.That(errorTraceData.Guid, Is.EqualTo(_guid));
             }
 
             [Test]
@@ -255,7 +251,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
 
                 // ASSERT
-                StringAssert.Contains(@"""agentAttributes"":{""original_url"":""www.test.com""}", errorTraceDataJson);
+                Assert.That(errorTraceDataJson, Does.Contain(@"""agentAttributes"":{""original_url"":""www.test.com""}"));
             }
 
             [Test]
@@ -271,7 +267,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
 
                 // ASSERT
-                StringAssert.Contains(@"""intrinsics"":{""guid"":""GuidTestValue""}", errorTraceDataJson);
+                Assert.That(errorTraceDataJson, Does.Contain(@"""intrinsics"":{""guid"":""GuidTestValue""}"));
             }
 
             [Test]
@@ -287,7 +283,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
 
                 // ASSERT
-                StringAssert.Contains(@"""userAttributes"":{""Foo"":""Bar""}", errorTraceDataJson);
+                Assert.That(errorTraceDataJson, Does.Contain(@"""userAttributes"":{""Foo"":""Bar""}"));
             }
 
             [Test]
@@ -301,9 +297,9 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
 
                 // ASSERT
-                StringAssert.Contains(@"""agentAttributes"":{}", errorTraceDataJson);
-                StringAssert.Contains(@"""intrinsics"":{}", errorTraceDataJson);
-                StringAssert.Contains(@"""userAttributes"":{}", errorTraceDataJson);
+                Assert.That(errorTraceDataJson, Does.Contain(@"""agentAttributes"":{}"));
+                Assert.That(errorTraceDataJson, Does.Contain(@"""intrinsics"":{}"));
+                Assert.That(errorTraceDataJson, Does.Contain(@"""userAttributes"":{}"));
             }
 
             [Test]

@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Utilities
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
             var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            Assert.That(serialized, Is.EqualTo(expected));
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.Utilities
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
             var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            Assert.That(serialized, Is.EqualTo(expected));
         }
     }
 }

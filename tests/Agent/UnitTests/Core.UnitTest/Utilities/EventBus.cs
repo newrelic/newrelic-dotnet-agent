@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Publish(new object());
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.IsTrue(wasCalled);
+            Assert.That(wasCalled, Is.True);
         }
 
         [Test]
@@ -40,8 +40,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(firstCallback);
             EventBus<object>.Unsubscribe(secondCallback);
 
-            Assert.IsTrue(firstWasCalled);
-            Assert.IsTrue(secondWasCalled);
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstWasCalled, Is.True);
+                Assert.That(secondWasCalled, Is.True);
+            });
         }
 
         [Test]
@@ -53,7 +56,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            Assert.That(wasCalled, Is.False);
         }
 
         [Test]
@@ -66,7 +69,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.AreEqual(1, callCount);
+            Assert.That(callCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -78,7 +81,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<string>.Publish(string.Empty);
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.IsFalse(wasCalled);
+            Assert.That(wasCalled, Is.False);
         }
 
         [Test]
@@ -91,7 +94,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Publish(new object());
             EventBus<object>.Unsubscribe(callback);
 
-            Assert.AreEqual(1, callCount);
+            Assert.That(callCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -104,7 +107,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Unsubscribe(callback);
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            Assert.That(wasCalled, Is.False);
         }
 
         [Test]
@@ -134,8 +137,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.IsTrue(firstCalled);
-            Assert.IsTrue(secondCalled);
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstCalled, Is.True);
+                Assert.That(secondCalled, Is.True);
+            });
         }
 
         [Test]
@@ -146,7 +152,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             {
                 EventBus<object>.Publish(new object());
 
-                Assert.AreEqual(1, logger.ErrorCount);
+                Assert.That(logger.ErrorCount, Is.EqualTo(1));
             }
         }
     }

@@ -44,9 +44,9 @@ namespace CompositeTests
             var expectedIntrisicDictionary = new Dictionary<string, object> { { "name", "name" } };
             NrAssert.Multiple
             (
-                () => CollectionAssert.AreEquivalent(expectedIntrisicDictionary, _attribValues.ToDictionary(AttributeClassification.Intrinsics)),
-                () => CollectionAssert.IsEmpty(_attribValues.ToDictionary(AttributeClassification.AgentAttributes), "Agent attributes were not empty."),
-                () => CollectionAssert.IsEmpty(_attribValues.ToDictionary(AttributeClassification.UserAttributes), "Custom attributes were not empty.")
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.Intrinsics), Is.EquivalentTo(expectedIntrisicDictionary)),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.AgentAttributes), Is.Empty, "Agent attributes were not empty."),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.UserAttributes), Is.Empty, "Custom attributes were not empty.")
             );
         }
 
@@ -65,9 +65,9 @@ namespace CompositeTests
 
             NrAssert.Multiple
             (
-                () => CollectionAssert.AreEquivalent(expectedIntrisicDictionary, _attribValues.ToDictionary(AttributeClassification.Intrinsics)),
-                () => CollectionAssert.IsEmpty(_attribValues.ToDictionary(AttributeClassification.AgentAttributes), "Agent attributes were not empty."),
-                () => CollectionAssert.IsEmpty(_attribValues.ToDictionary(AttributeClassification.UserAttributes), "Custom attributes were not empty.")
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.Intrinsics), Is.EquivalentTo(expectedIntrisicDictionary)),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.AgentAttributes), Is.Empty, "Agent attributes were not empty."),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.UserAttributes), Is.Empty, "Custom attributes were not empty.")
             );
         }
 
@@ -83,9 +83,9 @@ namespace CompositeTests
             var expectedUserDictionary = new Dictionary<string, object> { { "custom1Name", "custom1Value" } };
             NrAssert.Multiple
             (
-                () => CollectionAssert.AreEquivalent(expectedIntrisicDictionary, _attribValues.ToDictionary(AttributeClassification.Intrinsics)),
-                () => CollectionAssert.AreEquivalent(expectedAgentDictionary, _attribValues.ToDictionary(AttributeClassification.AgentAttributes)),
-                () => CollectionAssert.AreEquivalent(expectedUserDictionary, _attribValues.ToDictionary(AttributeClassification.UserAttributes))
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.Intrinsics), Is.EquivalentTo(expectedIntrisicDictionary)),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.AgentAttributes), Is.EquivalentTo(expectedAgentDictionary)),
+                () => Assert.That(_attribValues.ToDictionary(AttributeClassification.UserAttributes), Is.EquivalentTo(expectedUserDictionary))
             );
         }
 
@@ -96,7 +96,7 @@ namespace CompositeTests
             _attribDefs.HostDisplayName.TrySetValue(_attribValues, null as string);
             _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, null);
 
-            Assert.AreEqual(0, _attribValues.ToDictionary().Count);
+            Assert.That(_attribValues.ToDictionary(), Is.Empty);
         }
     }
 }

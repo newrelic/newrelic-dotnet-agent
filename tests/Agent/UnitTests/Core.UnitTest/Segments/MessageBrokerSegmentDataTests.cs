@@ -18,7 +18,9 @@ namespace NewRelic.Agent.Core.Segments.Tests
     {
         #region IsCombinableWith
 
+#pragma warning disable NUnit1028 // The non-test method is public
         public static Segment createMessageBrokerSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string vendor, string queue, MetricNames.MessageBrokerDestinationType type, MetricNames.MessageBrokerAction action, bool combinable)
+#pragma warning restore NUnit1028 // The non-test method is public
         {
             var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
             segment.SetSegmentData(new MessageBrokerSegmentData(vendor, queue, type, action));
@@ -33,7 +35,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsTrue(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.True);
         }
 
 
@@ -43,7 +45,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -52,7 +54,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, false);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -61,7 +63,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -70,7 +72,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -79,7 +81,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -88,7 +90,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor2", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -97,7 +99,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueB", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -106,7 +108,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Topic, MetricNames.MessageBrokerAction.Consume, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
 
@@ -116,7 +118,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
             var segment2 = createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Produce, true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         #endregion IsCombinableWith
@@ -137,22 +139,22 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var newSegment = oldSegment.CreateSimilar(newStartTime, newDuration, newParameters);
 
             var segmentData = newSegment.Data as MessageBrokerSegmentData;
-            Assert.NotNull(segmentData);
+            Assert.That(segmentData, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(newStartTime, newSegment.RelativeStartTime),
-                () => Assert.AreEqual(newDuration, newSegment.Duration),
-                () => Assert.AreEqual("type", newSegment.MethodCallData.TypeName),
-                () => Assert.AreEqual("method", newSegment.MethodCallData.MethodName),
-                () => Assert.AreEqual(1, newSegment.MethodCallData.InvocationTargetHashCode),
-                () => Assert.AreEqual(MetricNames.MessageBrokerDestinationType.Queue, segmentData.DestinationType),
-                () => Assert.AreEqual(MetricNames.MessageBrokerAction.Consume, segmentData.Action),
-                () => Assert.AreEqual("vendor1", segmentData.Vendor),
-                () => Assert.AreEqual("queueA", segmentData.Destination),
-                () => Assert.AreEqual(2, newSegment.Parameters.Count()),
-                () => Assert.AreEqual("bar", newSegment.Parameters.ToDictionary()["foo"]),
-                () => Assert.AreEqual("zap", newSegment.Parameters.ToDictionary()["zip"]),
-                () => Assert.AreEqual(true, newSegment.Combinable)
+                () => Assert.That(newSegment.RelativeStartTime, Is.EqualTo(newStartTime)),
+                () => Assert.That(newSegment.Duration, Is.EqualTo(newDuration)),
+                () => Assert.That(newSegment.MethodCallData.TypeName, Is.EqualTo("type")),
+                () => Assert.That(newSegment.MethodCallData.MethodName, Is.EqualTo("method")),
+                () => Assert.That(newSegment.MethodCallData.InvocationTargetHashCode, Is.EqualTo(1)),
+                () => Assert.That(segmentData.DestinationType, Is.EqualTo(MetricNames.MessageBrokerDestinationType.Queue)),
+                () => Assert.That(segmentData.Action, Is.EqualTo(MetricNames.MessageBrokerAction.Consume)),
+                () => Assert.That(segmentData.Vendor, Is.EqualTo("vendor1")),
+                () => Assert.That(segmentData.Destination, Is.EqualTo("queueA")),
+                () => Assert.That(newSegment.Parameters.Count(), Is.EqualTo(2)),
+                () => Assert.That(newSegment.Parameters.ToDictionary()["foo"], Is.EqualTo("bar")),
+                () => Assert.That(newSegment.Parameters.ToDictionary()["zip"], Is.EqualTo("zap")),
+                () => Assert.That(newSegment.Combinable, Is.EqualTo(true))
                 );
         }
 

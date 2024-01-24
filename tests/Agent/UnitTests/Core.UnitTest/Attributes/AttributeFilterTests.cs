@@ -377,7 +377,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             }
         }
 
-        [TestCaseSource(typeof(AttributeFilterTests), "TestCases")]
+        [TestCaseSource(typeof(AttributeFilterTests), nameof(TestCases))]
         public void when(TestCase testCase)
         {
             // Arrange
@@ -414,7 +414,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 var expectedCount = expectedDestinations.Contains(testDestination) ? 1 : 0;
 
-                Assert.AreEqual(expectedCount, countMatchAttribValues, $"{testDestination}");
+                Assert.That(countMatchAttribValues, Is.EqualTo(expectedCount), $"{testDestination}");
 
             }
         }

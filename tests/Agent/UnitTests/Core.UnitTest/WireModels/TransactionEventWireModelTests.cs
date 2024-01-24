@@ -50,6 +50,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             [TearDown]
             public void TearDown()
             {
+                _attribDefSvc.Dispose();
                 _configAutoResponder.Dispose();
             }
 
@@ -145,19 +146,19 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
                 var emptyDictionary = new Dictionary<string, object>();
                 var object1 = new TransactionEventWireModel(attribValues, false, priority);
 
-                Assert.That(priority == object1.Priority);
+                Assert.That(priority, Is.EqualTo(object1.Priority));
 
                 priority = 0.0f;
                 object1.Priority = priority;
-                Assert.That(priority == object1.Priority);
+                Assert.That(priority, Is.EqualTo(object1.Priority));
 
                 priority = 1.0f;
                 object1.Priority = priority;
-                Assert.That(priority == object1.Priority);
+                Assert.That(priority, Is.EqualTo(object1.Priority));
 
                 priority = 1.1f;
                 object1.Priority = priority;
-                Assert.That(priority == object1.Priority);
+                Assert.That(priority, Is.EqualTo(object1.Priority));
 
                 priority = -0.00001f;
                 Assert.Throws<ArgumentException>(() => object1.Priority = priority);

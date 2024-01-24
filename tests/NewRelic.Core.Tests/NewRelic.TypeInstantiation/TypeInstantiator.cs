@@ -70,26 +70,35 @@ namespace NewRelic.TypeInstantiation.UnitTests
 		{
 			var assemblies = new Assembly[] {};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_null_assembly()
 		{
 			var assemblies = new Assembly[] {null};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_null_assemblies()
 		{
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(null);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_empty_assembly()
@@ -97,9 +106,12 @@ namespace NewRelic.TypeInstantiation.UnitTests
 			var assembly = GenerateAssembly(@"");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_is_abstract()
@@ -107,9 +119,12 @@ namespace NewRelic.TypeInstantiation.UnitTests
 			var assembly = GenerateAssembly(@"public abstract class Foo : IInterface {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_is_interface()
@@ -117,9 +132,12 @@ namespace NewRelic.TypeInstantiation.UnitTests
 			var assembly = GenerateAssembly(@"public interface Foo : IInterface {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_is_derived()
@@ -129,26 +147,35 @@ namespace NewRelic.TypeInstantiation.UnitTests
 public class Bar : Foo {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_null_type()
 		{
 			var types = new Type[] {null};
 			var result = TypeInstantiator.InstancesFromTypes<IInterface>(types);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_null_types()
 		{
 			var result = TypeInstantiator.InstancesFromTypes<IInterface>(null);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_distantly_extending_interface()
@@ -156,9 +183,12 @@ public class Bar : Foo {}");
 			var assembly = GenerateAssembly(@"public class Foo : IInterface3 {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(1, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(1));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_multiple_classes_in_assembly()
@@ -168,9 +198,12 @@ public class Bar : Foo {}");
 public class Bar : IInterface {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(1, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(1));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_multiple_classes_implementing_interface_in_assembly()
@@ -180,9 +213,12 @@ public class Bar : IInterface {}");
 public class Bar : IInterface {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_mixed_assembly()
@@ -194,9 +230,12 @@ public class Bar : IInterface3 {}
 public class Baz {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_multiple_interfaces()
@@ -204,9 +243,12 @@ public class Baz {}");
 			var assembly = GenerateAssembly(@"public class Foo : IInterface, IInterface2 {}");
 			var assemblies = new[] {assembly};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(1, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(1));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_multiple_assemblies()
@@ -215,9 +257,12 @@ public class Baz {}");
 			var assembly2 = GenerateAssembly(@"public class Foo : IInterface {}");
 			var assemblies = new[] {assembly1, assembly2};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 
 		[Test]
@@ -244,9 +289,12 @@ public class Baz {}");
 				var files = Directory.GetFiles(directoryPath);
 
 				var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>(files);
-				Assert.AreEqual(0, result.Instances.Count());
-				Assert.AreEqual(1, result.Exceptions.Count());
-			};
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                    Assert.That(result.Exceptions.Count(), Is.EqualTo(1));
+                });
+            };
 
 			AppDomainExtensions.IsolateMethodInAppDomain(testMethod2, directory.FullName);
 			directory.Delete(true);
@@ -267,9 +315,12 @@ public class Bar : IInterface {}"),
 				GenerateAssembly(@"public class Foo : IInterface3 {}"),
 			};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(4, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(4));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_finds_files_on_disk()
@@ -282,9 +333,12 @@ public class Bar : IInterface {}"),
 				GenerateAssembly(@"public class Foo : IInterface {}", filePath1);
 				GenerateAssembly(@"public class Bar : IInterface {}", filePath2);
 				var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>(filePath1, filePath2);
-				Assert.AreEqual(2, result.Instances.Count());
-				Assert.AreEqual(0, result.Exceptions.Count());
-			};
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                    Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+                });
+            };
 			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, directory.FullName);
 			directory.Delete(true);
 		}
@@ -293,25 +347,34 @@ public class Bar : IInterface {}"),
 		public void when_non_existant_directory_on_disk()
 		{
 			var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>("C:\\Foo\\Bar.dll");
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_invalid_path()
 		{
 			var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>("!@#$%");
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_null_directory()
 		{
 			var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>((string)null);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void when_invalid_file_on_disk()
@@ -322,9 +385,12 @@ public class Bar : IInterface {}"),
 				var filePath1 = Path.Combine(directoryPath, "foo.dll");
 				File.CreateText(filePath1);
 				var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<IInterface>(filePath1);
-				Assert.AreEqual(0, result.Instances.Count());
-				Assert.AreEqual(0, result.Exceptions.Count());
-			};
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                    Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+                });
+            };
 			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, directory.FullName);
 			directory.Delete(true);
 		}
@@ -336,9 +402,12 @@ public class Bar : IInterface {}"),
 			var assemblies = new[] {assembly};
 
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(0, result.Instances.Count());
-			Assert.AreEqual(1, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(0));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(1));
+            });
+        }
 
 		[Test]
 		public void when_constructor_throws_an_exception_then_other_instances_are_still_created()
@@ -350,9 +419,12 @@ public class Bar : IInterface {}"),
 				GenerateAssembly(@"public class Foo : IInterface {}"),
 			};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(1, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(1));
+            });
+        }
 
 		[Test]
 		public void when_nested_class()
@@ -364,9 +436,12 @@ public class Bar : IInterface {}"),
 			};
 
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(2, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(2));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 
 		[Test]
 		public void ShouldNotLoadPrivateNestedClass()
@@ -377,9 +452,12 @@ public class Bar : IInterface {}"),
 				GenerateAssembly(@"public class Foo { private class Bar : IInterface {} }"),
 			};
 			var result = TypeInstantiator.ExportedInstancesFromAssemblies<IInterface>(assemblies);
-			Assert.AreEqual(1, result.Instances.Count());
-			Assert.AreEqual(0, result.Exceptions.Count());
-		}
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Instances.Count(), Is.EqualTo(1));
+                Assert.That(result.Exceptions.Count(), Is.EqualTo(0));
+            });
+        }
 	}
 }
 #endif

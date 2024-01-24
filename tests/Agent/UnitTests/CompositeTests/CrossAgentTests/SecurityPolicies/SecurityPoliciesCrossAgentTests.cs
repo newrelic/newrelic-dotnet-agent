@@ -58,9 +58,10 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
             _compositeTestAgent.Dispose();
+            _connectionHandler.Dispose();
         }
 
         [TestCaseSource(nameof(SecurityPoliciesTestDatas))]
@@ -169,7 +170,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
 
         private void ValidateShutdownSignal(SecurityPoliciesTestData testData)
         {
-            Assert.AreEqual(testData.ShouldShutdown, _receivedSecurityPoliciesException);
+            Assert.That(_receivedSecurityPoliciesException, Is.EqualTo(testData.ShouldShutdown));
         }
 
         private void ValidatePoliciesSentToConnect(SecurityPoliciesTestData testData)
@@ -180,7 +181,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             }
 
             var securityPoliciesSentToConnectApi = JArray.Parse(_connectRawData)[0]["security_policies"];
-            Assert.NotNull(securityPoliciesSentToConnectApi);
+            Assert.That(securityPoliciesSentToConnectApi, Is.Not.Null);
 
             ValidatePoliciesNotInConnect(testData.PoliciesToValidateNotSentToConnect, securityPoliciesSentToConnectApi);
 
@@ -193,7 +194,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             foreach (var unexpectedPolicy in excludedConnectPolicies)
             {
                 var foundPolicyThatShouldBeExcluded = sentPolicyNames.Contains(unexpectedPolicy);
-                Assert.IsFalse(foundPolicyThatShouldBeExcluded, $"Found a policy that should be excluded in the list sent to connect: {unexpectedPolicy}");
+                Assert.That(foundPolicyThatShouldBeExcluded, Is.False, $"Found a policy that should be excluded in the list sent to connect: {unexpectedPolicy}");
             }
         }
 
@@ -201,32 +202,32 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             if (expectedConnectPolicies.AllowRawExceptionMessages != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.AllowRawExceptionMessages.Enabled, securityPoliciesSentToConnectApi["allow_raw_exception_messages"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["allow_raw_exception_messages"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.AllowRawExceptionMessages.Enabled));
             }
 
             if (expectedConnectPolicies.AttributesInclude != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.AttributesInclude.Enabled, securityPoliciesSentToConnectApi["attributes_include"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["attributes_include"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.AttributesInclude.Enabled));
             }
 
             if (expectedConnectPolicies.CustomEvents != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.CustomEvents.Enabled, securityPoliciesSentToConnectApi["custom_events"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["custom_events"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.CustomEvents.Enabled));
             }
 
             if (expectedConnectPolicies.CustomInstrumentationEditor != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.CustomInstrumentationEditor.Enabled, securityPoliciesSentToConnectApi["custom_instrumentation_editor"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["custom_instrumentation_editor"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.CustomInstrumentationEditor.Enabled));
             }
 
             if (expectedConnectPolicies.CustomParameters != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.CustomParameters.Enabled, securityPoliciesSentToConnectApi["custom_parameters"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["custom_parameters"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.CustomParameters.Enabled));
             }
 
             if (expectedConnectPolicies.RecordSql != null)
             {
-                Assert.AreEqual(expectedConnectPolicies.RecordSql.Enabled, securityPoliciesSentToConnectApi["record_sql"]["enabled"].Value<bool>());
+                Assert.That(securityPoliciesSentToConnectApi["record_sql"]["enabled"].Value<bool>(), Is.EqualTo(expectedConnectPolicies.RecordSql.Enabled));
             }
         }
 
@@ -249,18 +250,18 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             {
                 if (testData.EndingPolicySettings.AttributesInclude.Enabled)
                 {
-                    Assert.IsNotEmpty(config.CaptureAttributesIncludes);
+                    Assert.That(config.CaptureAttributesIncludes, Is.Not.Empty);
                 }
                 else
                 {
-                    Assert.IsEmpty(config.CaptureAttributesIncludes);
+                    Assert.That(config.CaptureAttributesIncludes, Is.Empty);
                 }
             }
 
             if (testData.EndingPolicySettings.RecordSql != null)
             {
                 var expectedRecordSqlSetting = testData.EndingPolicySettings.RecordSql.Enabled ? DefaultConfiguration.ObfuscatedStringValue : DefaultConfiguration.OffStringValue;
-                Assert.AreEqual(expectedRecordSqlSetting, config.TransactionTracerRecordSql);
+                Assert.That(config.TransactionTracerRecordSql, Is.EqualTo(expectedRecordSqlSetting));
             }
         }
 
@@ -268,7 +269,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             if (expectedPolicyState != null)
             {
-                Assert.AreEqual(expectedPolicyState.Enabled, receivedEnabledState);
+                Assert.That(receivedEnabledState, Is.EqualTo(expectedPolicyState.Enabled));
             }
         }
 

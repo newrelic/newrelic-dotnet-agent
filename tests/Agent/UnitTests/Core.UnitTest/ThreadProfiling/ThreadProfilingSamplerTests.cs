@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var result = _threadProfiler.Start(frequencyInMsec, durationInMsec, _sampleSink, _nativeMethods);
 
             // Assert
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             var result = _threadProfiler.Start(frequencyInMsec, durationInMsec, _sampleSink, _nativeMethods);
 
             // Assert
-            Assert.IsFalse(result); // Assert that a second worker wasn't started
+            Assert.That(result, Is.False); // Assert that a second worker wasn't started
         }
 
         [Test]

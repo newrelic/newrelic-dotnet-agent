@@ -58,7 +58,7 @@ namespace NewRelic.Reflection.UnitTests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void DoSomething(object thing)
+        private static void DoSomething(object thing)
         {
 
         }

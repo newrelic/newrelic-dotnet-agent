@@ -23,20 +23,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "33");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
-            Assert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636025);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracestate.Version, Is.EqualTo(0));
+                Assert.That((int)tracestate.ParentType, Is.EqualTo(0));
+                Assert.That(tracestate.AccountId, Is.EqualTo("33"));
+                Assert.That(tracestate.AppId, Is.EqualTo("5043"));
+                Assert.That(tracestate.SpanId, Is.EqualTo("27ddd2d8890283b4"));
+                Assert.That(tracestate.TransactionId, Is.EqualTo("5569065a5b1313bd"));
+                Assert.That(tracestate.Sampled, Is.EqualTo(1));
+                Assert.That(tracestate.Priority, Is.EqualTo(1.23456f));
+                Assert.That(tracestate.Timestamp, Is.EqualTo(1518469636025));
 
-            Assert.That(tracestate.VendorstateEntries.Count == 2, Is.True);
-            Assert.That(tracestate.VendorstateEntries.Contains("dd=YzRiMTIxODk1NmVmZTE4ZQ"), Is.True);
-            Assert.That(tracestate.VendorstateEntries.Contains("44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020"), Is.True);
-            Assert.That(tracestate.VendorstateEntries.Contains($"{trustedAccountKey}@nr"), Is.False);
+                Assert.That(tracestate.VendorstateEntries, Has.Count.EqualTo(2));
+                Assert.That(tracestate.VendorstateEntries, Does.Contain("dd=YzRiMTIxODk1NmVmZTE4ZQ"));
+            });
+            Assert.That(tracestate.VendorstateEntries, Does.Contain("44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020"));
+            Assert.That(tracestate.VendorstateEntries, Does.Not.Contain($"{trustedAccountKey}@nr"));
         }
 
         [Test]
@@ -52,18 +55,21 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "33");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "27ddd2d8890283b4");
-            Assert.AreEqual(tracestate.TransactionId, "5569065a5b1313bd");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636025);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracestate.Version, Is.EqualTo(0));
+                Assert.That((int)tracestate.ParentType, Is.EqualTo(0));
+                Assert.That(tracestate.AccountId, Is.EqualTo("33"));
+                Assert.That(tracestate.AppId, Is.EqualTo("5043"));
+                Assert.That(tracestate.SpanId, Is.EqualTo("27ddd2d8890283b4"));
+                Assert.That(tracestate.TransactionId, Is.EqualTo("5569065a5b1313bd"));
+                Assert.That(tracestate.Sampled, Is.EqualTo(1));
+                Assert.That(tracestate.Priority, Is.EqualTo(1.23456f));
+                Assert.That(tracestate.Timestamp, Is.EqualTo(1518469636025));
 
-            Assert.That(tracestate.VendorstateEntries.Count == 1, Is.True);
-            Assert.That(tracestate.VendorstateEntries.Contains("othervendorkey1=othervendorvalue1"), Is.True);
+                Assert.That(tracestate.VendorstateEntries, Has.Count.EqualTo(1));
+                Assert.That(tracestate.VendorstateEntries, Does.Contain("othervendorkey1=othervendorvalue1"));
+            });
         }
 
         [Test]
@@ -79,17 +85,20 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(testHeaders, trustedAccountKey);
 
-            Assert.AreEqual(tracestate.Version, 0);
-            Assert.AreEqual((int)tracestate.ParentType, 0);
-            Assert.AreEqual(tracestate.AccountId, "55");
-            Assert.AreEqual(tracestate.AppId, "5043");
-            Assert.AreEqual(tracestate.SpanId, "1238890283aasdfs");
-            Assert.AreEqual(tracestate.TransactionId, "4569065a5b131bbg");
-            Assert.AreEqual(tracestate.Sampled, 1);
-            Assert.AreEqual(tracestate.Priority, 1.23456f);
-            Assert.AreEqual(tracestate.Timestamp, 1518469636020);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracestate.Version, Is.EqualTo(0));
+                Assert.That((int)tracestate.ParentType, Is.EqualTo(0));
+                Assert.That(tracestate.AccountId, Is.EqualTo("55"));
+                Assert.That(tracestate.AppId, Is.EqualTo("5043"));
+                Assert.That(tracestate.SpanId, Is.EqualTo("1238890283aasdfs"));
+                Assert.That(tracestate.TransactionId, Is.EqualTo("4569065a5b131bbg"));
+                Assert.That(tracestate.Sampled, Is.EqualTo(1));
+                Assert.That(tracestate.Priority, Is.EqualTo(1.23456f));
+                Assert.That(tracestate.Timestamp, Is.EqualTo(1518469636020));
 
-            Assert.That(tracestate.VendorstateEntries.Count == 0, Is.True);
+                Assert.That(tracestate.VendorstateEntries, Is.Empty);
+            });
         }
 
         //Valid tracestate - only has New Relic entry
@@ -158,13 +167,19 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
             else if (expectedOtherVendors != null)
             {
-                Assert.That(tracestate.VendorstateEntries.Count > 0);
-                Assert.AreEqual(expectedOtherVendors, string.Join(",", tracestate.VendorstateEntries));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(tracestate.VendorstateEntries, Is.Not.Empty);
+                    Assert.That(string.Join(",", tracestate.VendorstateEntries), Is.EqualTo(expectedOtherVendors));
+                });
             }
 
-            Assert.That(tracestate.Priority == expectedPriority, $@"Expects Priority {expectedPriority} but gets Priority {tracestate.Priority } instead.");
-            Assert.That(tracestate.Sampled == expectedSampled, $@"Expects Sampled {expectedSampled} but gets Sampled {tracestate.Sampled } instead.");
-            Assert.That(expectedIngestError == tracestate.Error, $@"Expects Error {expectedIngestError} but gets Error {tracestate.Error } instead.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracestate.Priority, Is.EqualTo(expectedPriority), $@"Expects Priority {expectedPriority} but gets Priority {tracestate.Priority} instead.");
+                Assert.That(tracestate.Sampled, Is.EqualTo(expectedSampled), $@"Expects Sampled {expectedSampled} but gets Sampled {tracestate.Sampled} instead.");
+                Assert.That(expectedIngestError, Is.EqualTo(tracestate.Error), $@"Expects Error {expectedIngestError} but gets Error {tracestate.Error} instead.");
+            });
         }
     }
 }

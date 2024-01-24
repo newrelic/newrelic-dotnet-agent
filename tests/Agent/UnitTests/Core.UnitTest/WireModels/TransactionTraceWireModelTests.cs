@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = JsonConvert.SerializeObject(transactionSample);
 
             // Assert
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
     }
 }

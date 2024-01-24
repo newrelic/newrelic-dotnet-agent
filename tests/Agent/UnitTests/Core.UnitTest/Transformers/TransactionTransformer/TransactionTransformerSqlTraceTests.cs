@@ -128,6 +128,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, logEventAggregator);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+            _metricNameService.Dispose();
+            _sqlTraceAggregator.Dispose();
+        }
+
         [Test]
         public void SqlTraceIsSentToAggregator()
         {
@@ -149,7 +157,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var privateSqlTraceStatsInAggregator = new PrivateAccessor(_sqlTraceAggregator).GetField("_sqlTraceStats");
             var privateSqlTraceStatsCollection = (SqlTraceStatsCollection)privateSqlTraceStatsInAggregator;
             var tracesCount = ((IDictionary<long, SqlTraceWireModel>)privateSqlTraceStatsCollection.Collection).Count;
-            Assert.AreEqual(tracesCount, 1);
+            Assert.That(tracesCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -193,8 +201,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             privateTransactionTransformer.CallMethod("Transform", args);
 
             string sqlTracesCollectedMetricName = "Supportability/SqlTraces/TotalSqlTracesCollected";
-            Assert.IsTrue(generatedMetrics.TryGetValue(sqlTracesCollectedMetricName, out MetricDataWireModel data));
-            Assert.AreEqual(3, data.Value0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(generatedMetrics.TryGetValue(sqlTracesCollectedMetricName, out MetricDataWireModel data), Is.True);
+                Assert.That(data.Value0, Is.EqualTo(3));
+            });
         }
 
         #region Helpers

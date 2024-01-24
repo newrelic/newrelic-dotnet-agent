@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -44,6 +44,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _client.SetHttpClientWrapper(_mockHttpClientWrapper); // Inject the mock HttpClient wrapper
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _client.Dispose();
+            _mockHttpClientWrapper.Dispose();
+        }
         [Test]
         public async Task SendAsync_ReturnsResponse_WhenSendAsyncSucceeds()
         {
@@ -61,7 +67,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var response = await _client.SendAsync(request);
 
             // Assert
-            Assert.IsNotNull(response);
+            Assert.That(response, Is.Not.Null);
         }
 
         [Test]

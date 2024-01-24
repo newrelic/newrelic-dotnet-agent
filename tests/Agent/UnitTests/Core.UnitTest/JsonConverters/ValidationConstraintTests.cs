@@ -53,9 +53,12 @@ namespace NewRelic.Agent.Core.JsonConverters
 
             testInstance.Version = new[] { 42, 42 };
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual(1, testInstance.Version[0]);
-            Assert.AreEqual(0, testInstance.Version[1]);
+            Assert.That(testInstance.Version, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testInstance.Version[0], Is.EqualTo(1));
+                Assert.That(testInstance.Version[1], Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -67,9 +70,12 @@ namespace NewRelic.Agent.Core.JsonConverters
             testInstance.Version = new[] { 42, 42 };
 
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual(1, testInstance.Version[0]);
-            Assert.AreEqual(0, testInstance.Version[1]);
+            Assert.That(testInstance.Version, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testInstance.Version[0], Is.EqualTo(1));
+                Assert.That(testInstance.Version[1], Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -80,8 +86,11 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.StringField = s.ToObject<string>());
             testInstance.StringField = null;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.Version);
-            Assert.AreEqual("string value", testInstance.StringField);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testInstance.Version, Is.Not.Null);
+                Assert.That(testInstance.StringField, Is.EqualTo("string value"));
+            });
         }
 
         [Test]
@@ -92,8 +101,8 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.StringField = s.ToObject<string>());
             testInstance.StringField = null;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.IsNotNull(testInstance.StringField);
-            Assert.AreEqual("string value", testInstance.StringField);
+            Assert.That(testInstance.StringField, Is.Not.Null);
+            Assert.That(testInstance.StringField, Is.EqualTo("string value"));
         }
 
         [Test]
@@ -104,7 +113,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.BoolField = s.ToObject<bool>());
             testInstance.BoolField = true;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(false, testInstance.BoolField);
+            Assert.That(testInstance.BoolField, Is.EqualTo(false));
         }
 
         [Test]
@@ -115,7 +124,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.BoolField = s.ToObject<bool>());
             testInstance.BoolField = true;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(false, testInstance.BoolField);
+            Assert.That(testInstance.BoolField, Is.EqualTo(false));
         }
 
         [Test]
@@ -126,7 +135,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.FloatField = s.ToObject<float>());
             testInstance.FloatField = 42.42f;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(0.666f, testInstance.FloatField);
+            Assert.That(testInstance.FloatField, Is.EqualTo(0.666f));
         }
 
         [Test]
@@ -137,7 +146,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                 (s, p) => p.FloatField = s.ToObject<float>());
             testInstance.FloatField = 42.42f;
             constraint.ParseAndThrowOnFailure(JsonObject, testInstance);
-            Assert.AreEqual(0.666f, testInstance.FloatField);
+            Assert.That(testInstance.FloatField, Is.EqualTo(0.666f));
         }
 
         [Test]

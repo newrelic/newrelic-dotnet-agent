@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
 
             //Use AreSame to ensure that we are getting a reference match.
-            Assert.AreSame(statement, statement2);
+            Assert.That(statement2, Is.SameAs(statement));
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var statement = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
             var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from people");
 
-            Assert.AreNotSame(statement, statement2);
+            Assert.That(statement2, Is.Not.SameAs(statement));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var statement = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
             var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.Oracle, CommandType.Text, "select * from users");
 
-            Assert.AreNotSame(statement, statement2);
+            Assert.That(statement2, Is.Not.SameAs(statement));
         }
 
 
@@ -71,8 +71,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var statement3 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.TableDirect, "users");
             var statement4 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.TableDirect, "users");
 
-            Assert.AreNotSame(statement1, statement2);
-            Assert.AreNotSame(statement3, statement4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(statement2, Is.Not.SameAs(statement1));
+                Assert.That(statement4, Is.Not.SameAs(statement3));
+            });
         }
 
         [Test]
@@ -104,7 +107,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             //stmtA and stmtB are the same SQL, but stmtA was ejected from the cache because of the cache periodically cleanup, so they cannot be the same object reference
             //This tests our original capacity is being honored.
-            Assert.AreNotSame(stmtA, stmtB);
+            Assert.That(stmtB, Is.Not.SameAs(stmtA));
 
             //Resize the cache
             SetCacheCapacity(3);
@@ -116,7 +119,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             //stmtB and stmtC are the same SQL, but this time nothing was ejected because of the cache size is withing its capacity, so they are the same object reference
             var stmtC = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql3);
-            Assert.AreSame(stmtB, stmtC);
+            Assert.That(stmtC, Is.SameAs(stmtB));
 
             configurationService.Dispose();
         }
