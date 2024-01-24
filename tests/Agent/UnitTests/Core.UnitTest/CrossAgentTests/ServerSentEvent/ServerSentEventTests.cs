@@ -138,6 +138,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         {
             _attribDefSvc.Dispose();
             _metricNameService.Dispose();
+            _sqlTraceAggregator.Dispose();
         }
 
         [Test]

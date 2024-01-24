@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.GetRequestStream()).Returns(new MemoryStream());
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).TaskResult((WebResponse)fakeResponse);
+                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).ReturnsAsync((WebResponse)fakeResponse);
                 return mockWebRequest;
             });
 

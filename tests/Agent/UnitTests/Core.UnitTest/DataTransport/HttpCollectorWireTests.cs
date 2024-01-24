@@ -59,10 +59,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
@@ -121,10 +121,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.InternalServerError);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(false);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -153,10 +153,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -187,10 +187,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).ReturnsAsync(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).ReturnsAsync(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 

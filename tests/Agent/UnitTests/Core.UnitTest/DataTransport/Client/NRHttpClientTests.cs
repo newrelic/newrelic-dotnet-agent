@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Mock.Arrange(() => mockHttpResponseMessage.IsSuccessStatusCode).Returns(true);
 
             Mock.Arrange(() => _mockHttpClientWrapper.SendAsync(Arg.IsAny<HttpRequestMessage>()))
-                .TaskResult(mockHttpResponseMessage);
+                .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
             var response = await _client.SendAsync(request);
