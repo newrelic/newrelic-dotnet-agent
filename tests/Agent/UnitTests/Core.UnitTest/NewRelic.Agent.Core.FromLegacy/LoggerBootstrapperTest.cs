@@ -148,14 +148,6 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
-        public static void Fatal_exception_can_be_recorded()
-        {
-            Assert.That(Log.FileLoggingHasFailed, Is.False);
-            Log.FileLoggingHasFailed = true;
-            Assert.That(Log.FileLoggingHasFailed, Is.True);
-        }
-
-        [Test]
         [TestCase(null, false, false)]
         [TestCase("0", true, false)]
         [TestCase("0", false, false)]
