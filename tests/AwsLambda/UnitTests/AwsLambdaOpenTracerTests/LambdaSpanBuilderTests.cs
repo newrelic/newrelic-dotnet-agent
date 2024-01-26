@@ -61,12 +61,18 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             Thread.Sleep(500);
             span.Finish();
 
-            Assert.NotNull(span, "span must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span.Guid().Length, $"span guid length must be {ExpectedGuidLength}");
-            Assert.AreSame(activeSpan, span, "The span we created should be the active span");
-            Assert.AreEqual(name, span.GetOperationName(), $"span operation name should be {name} but got {span.GetOperationName()} instead");
-            Assert.IsTrue(span.GetDurationInSeconds() > 0.0, $"span duration must be greater than 0 but got {span.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span.Guid()), "span guid must not be null or empty");
+            Assert.That(span, Is.Not.Null, "span must not be null");
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Guid(), Has.Length.EqualTo(ExpectedGuidLength), $"span guid length must be {ExpectedGuidLength}");
+                Assert.That(span, Is.SameAs(activeSpan), "The span we created should be the active span");
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.GetOperationName(), Is.EqualTo(name), $"span operation name should be {name} but got {span.GetOperationName()} instead");
+                Assert.That(span.GetDurationInSeconds(), Is.GreaterThan(0.0), $"span duration must be greater than 0 but got {span.GetDurationInSeconds()} instead");
+                Assert.That(string.IsNullOrEmpty(span.Guid()), Is.False, "span guid must not be null or empty");
+            });
         }
 
         [Test]
@@ -78,25 +84,31 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             LambdaRootSpan span1 = (LambdaRootSpan)spanBuilder.Start();
             LambdaRootSpan span2 = (LambdaRootSpan)spanBuilder.Start();
 
-            Assert.IsNull(tracer.ActiveSpan);
+            Assert.That(tracer.ActiveSpan, Is.Null);
             Thread.Sleep(500);
 
             span1.Finish();
             span2.Finish();
 
-            Assert.NotNull(span1, "span1 must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span1.Guid().Length, $"span1 guid length must be {ExpectedGuidLength}");
-            Assert.AreEqual(name, span1.GetOperationName(), $"span1 operation name should be {name} but got {span1.GetOperationName()} instead");
-            Assert.IsTrue(span1.GetDurationInSeconds() > 0.0, $"span1 duration must be greater than 0 but got {span1.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span1.Guid()), "span1 guid must not be null or empty");
+            Assert.That(span1, Is.Not.Null, "span1 must not be null");
+            Assert.Multiple(() =>
+            {
+                Assert.That(span1.Guid(), Has.Length.EqualTo(ExpectedGuidLength), $"span1 guid length must be {ExpectedGuidLength}");
+                Assert.That(span1.GetOperationName(), Is.EqualTo(name), $"span1 operation name should be {name} but got {span1.GetOperationName()} instead");
+                Assert.That(span1.GetDurationInSeconds(), Is.GreaterThan(0.0), $"span1 duration must be greater than 0 but got {span1.GetDurationInSeconds()} instead");
+                Assert.That(string.IsNullOrEmpty(span1.Guid()), Is.False, "span1 guid must not be null or empty");
 
-            Assert.NotNull(span2, "span2 must not be null");
-            Assert.AreEqual(ExpectedGuidLength, span2.Guid().Length, $"span2 guid length must be {ExpectedGuidLength}");
-            Assert.AreEqual(name, span2.GetOperationName(), $"span2 operation name should be {name} but got {span2.GetOperationName()} instead");
-            Assert.IsTrue(span2.GetDurationInSeconds() > 0.0, $"span2 duration must be greater than 0 but got {span2.GetDurationInSeconds()} instead");
-            Assert.IsFalse(string.IsNullOrEmpty(span2.Guid()), "span2 guid must not be null or empty");
+                Assert.That(span2, Is.Not.Null, "span2 must not be null");
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(span2.Guid(), Has.Length.EqualTo(ExpectedGuidLength), $"span2 guid length must be {ExpectedGuidLength}");
+                Assert.That(span2.GetOperationName(), Is.EqualTo(name), $"span2 operation name should be {name} but got {span2.GetOperationName()} instead");
+                Assert.That(span2.GetDurationInSeconds(), Is.GreaterThan(0.0), $"span2 duration must be greater than 0 but got {span2.GetDurationInSeconds()} instead");
+                Assert.That(string.IsNullOrEmpty(span2.Guid()), Is.False, "span2 guid must not be null or empty");
 
-            Assert.AreNotEqual(span1.Guid(), span2.Guid(), "span1 and span2 must have different guids");
+                Assert.That(span2.Guid(), Is.Not.EqualTo(span1.Guid()), "span1 and span2 must have different guids");
+            });
         }
 
         [Test]
@@ -111,7 +123,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var childSpanBuilder = tracer.BuildSpan(childName).AsChildOf(rootSpan);
             LambdaSpan childSpan = (LambdaSpan)childSpanBuilder.Start();
 
-            Assert.AreEqual(rootSpan.Guid(), childSpan.RootSpan.Guid(), "The guid of the child span's RootSpan should match the guid of the root span");
+            Assert.That(childSpan.RootSpan.Guid(), Is.EqualTo(rootSpan.Guid()), "The guid of the child span's RootSpan should match the guid of the root span");
         }
 
         [Test]
@@ -124,9 +136,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = (LambdaRootSpan)spanBuilder.Start();
             span.Finish();
 
-            Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
-            Assert.That(span.Intrinsics["traceId"].IsEqualTo(_dtPayload.TraceId));
-            Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(span.TransactionState.TransactionId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
+                Assert.That(span.Intrinsics["traceId"].IsEqualTo(_dtPayload.TraceId));
+                Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(span.TransactionState.TransactionId));
+            });
         }
 
         [Test]
@@ -138,9 +153,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = (LambdaRootSpan)spanBuilder.Start();
             span.Finish();
 
-            Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
-            Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(_dtPayload.TraceId));
-            Assert.That(span.Intrinsics["traceId"].IsEqualTo(span.TransactionState.TransactionId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
+                Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(_dtPayload.TraceId));
+                Assert.That(span.Intrinsics["traceId"].IsEqualTo(span.TransactionState.TransactionId));
+            });
         }
 
         [Test]
@@ -153,8 +171,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = (LambdaSpan)spanBuilder.Start();
             span.Finish();
 
-            Assert.That(span.Intrinsics.ContainsKey("priority"), Is.True);
-            Assert.That(span.Intrinsics["priority"], Is.EqualTo(_dtPayload.Priority));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Intrinsics.ContainsKey("priority"), Is.True);
+                Assert.That(span.Intrinsics["priority"], Is.EqualTo(_dtPayload.Priority));
+            });
         }
 
         [Test]
@@ -167,8 +188,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = (LambdaSpan)spanBuilder.Start();
             span.Finish();
 
-            Assert.That(span.Intrinsics.ContainsKey("priority"), Is.True);
-            Assert.That(span.Intrinsics["priority"], Is.GreaterThanOrEqualTo(0));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Intrinsics.ContainsKey("priority"), Is.True);
+                Assert.That(span.Intrinsics["priority"], Is.GreaterThanOrEqualTo(0));
+            });
             Assert.That(span.Intrinsics["priority"], Is.LessThanOrEqualTo(1));
         }
 
@@ -182,8 +206,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = (LambdaSpan)spanBuilder.Start();
             span.Finish();
 
-            Assert.That(span.Intrinsics.ContainsKey("sampled"), Is.True);
-            Assert.That(span.Intrinsics["sampled"], Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Intrinsics.ContainsKey("sampled"), Is.True);
+                Assert.That(span.Intrinsics["sampled"], Is.True);
+            });
         }
     }
 }

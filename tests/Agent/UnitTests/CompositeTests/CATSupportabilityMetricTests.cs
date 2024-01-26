@@ -730,15 +730,18 @@ namespace CompositeTests
 
             NrAssert.Multiple(
 
-                () => Assert.IsEmpty(missingConditions, $"The following expected conditions were not captured: {string.Join(", ", missingConditions)}"),
-                () => Assert.IsEmpty(unexpectedConditions, $"The following unexpected conditions were detected: {string.Join(", ", unexpectedConditions)}")
+                () => Assert.That(missingConditions, Is.Empty, $"The following expected conditions were not captured: {string.Join(", ", missingConditions)}"),
+                () => Assert.That(unexpectedConditions, Is.Empty, $"The following unexpected conditions were detected: {string.Join(", ", unexpectedConditions)}")
             );
         }
 
         private void TestConditionValue(Dictionary<CATSupportabilityCondition, int> dic, CATSupportabilityCondition condition, int expectedValue)
         {
-            Assert.IsTrue(dic.ContainsKey(condition), $"Unable To find {condition} in result");
-            Assert.AreEqual(expectedValue, dic[condition], $"Count Mismatch - {condition} - Expected {expectedValue}, Actual {dic[condition]}");
+            Assert.Multiple(() =>
+            {
+                Assert.That(dic.ContainsKey(condition), Is.True, $"Unable To find {condition} in result");
+                Assert.That(dic[condition], Is.EqualTo(expectedValue), $"Count Mismatch - {condition} - Expected {expectedValue}, Actual {dic[condition]}");
+            });
         }
     }
 }

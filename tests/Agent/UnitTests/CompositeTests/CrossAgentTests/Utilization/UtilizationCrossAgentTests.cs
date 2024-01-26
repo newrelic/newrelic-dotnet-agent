@@ -83,16 +83,19 @@ namespace CompositeTests.CrossAgentTests.Utilization
 
         private void ValidateRootValues(ExpectedOutputJson actualSettings, ExpectedOutputJson expectedOutput)
         {
-            Assert.That(actualSettings.MetadataVersion, Is.EqualTo(expectedOutput.MetadataVersion));
-            Assert.That(actualSettings.TotalRamMib, Is.EqualTo(expectedOutput.TotalRamMib));
-            Assert.That(actualSettings.LogicalProcessors, Is.EqualTo(expectedOutput.LogicalProcessors));
-            Assert.That(actualSettings.Hostname, Is.EqualTo(expectedOutput.Hostname));
-            Assert.That(actualSettings.FullHostName, Is.EqualTo(expectedOutput.FullHostName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualSettings.MetadataVersion, Is.EqualTo(expectedOutput.MetadataVersion));
+                Assert.That(actualSettings.TotalRamMib, Is.EqualTo(expectedOutput.TotalRamMib));
+                Assert.That(actualSettings.LogicalProcessors, Is.EqualTo(expectedOutput.LogicalProcessors));
+                Assert.That(actualSettings.Hostname, Is.EqualTo(expectedOutput.Hostname));
+                Assert.That(actualSettings.FullHostName, Is.EqualTo(expectedOutput.FullHostName));
 
-            Assert.That(actualSettings.IpAddress.Count, Is.EqualTo(expectedOutput.IpAddress.Count));
+                Assert.That(actualSettings.IpAddress, Has.Count.EqualTo(expectedOutput.IpAddress.Count));
+            });
             foreach (var ipAddress in expectedOutput.IpAddress)
             {
-                Assert.That(actualSettings.IpAddress.Contains(ipAddress), Is.True);
+                Assert.That(actualSettings.IpAddress, Does.Contain(ipAddress));
             }
         }
 
@@ -103,9 +106,12 @@ namespace CompositeTests.CrossAgentTests.Utilization
                 // AWS
                 if (expectedOutput.Vendors.Aws != null)
                 {
-                    Assert.That(actualSettings.Vendors.Aws.InstanceId, Is.EqualTo(expectedOutput.Vendors.Aws.InstanceId));
-                    Assert.That(actualSettings.Vendors.Aws.InstanceType, Is.EqualTo(expectedOutput.Vendors.Aws.InstanceType));
-                    Assert.That(actualSettings.Vendors.Aws.AvailabilityZone, Is.EqualTo(expectedOutput.Vendors.Aws.AvailabilityZone));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(actualSettings.Vendors.Aws.InstanceId, Is.EqualTo(expectedOutput.Vendors.Aws.InstanceId));
+                        Assert.That(actualSettings.Vendors.Aws.InstanceType, Is.EqualTo(expectedOutput.Vendors.Aws.InstanceType));
+                        Assert.That(actualSettings.Vendors.Aws.AvailabilityZone, Is.EqualTo(expectedOutput.Vendors.Aws.AvailabilityZone));
+                    });
                 }
                 else
                 {
@@ -115,9 +121,12 @@ namespace CompositeTests.CrossAgentTests.Utilization
                 // Azure
                 if (expectedOutput.Vendors.Azure != null)
                 {
-                    Assert.That(actualSettings.Vendors.Azure.Location, Is.EqualTo(expectedOutput.Vendors.Azure.Location));
-                    Assert.That(actualSettings.Vendors.Azure.VmId, Is.EqualTo(expectedOutput.Vendors.Azure.VmId));
-                    Assert.That(actualSettings.Vendors.Azure.VmSize, Is.EqualTo(expectedOutput.Vendors.Azure.VmSize));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(actualSettings.Vendors.Azure.Location, Is.EqualTo(expectedOutput.Vendors.Azure.Location));
+                        Assert.That(actualSettings.Vendors.Azure.VmId, Is.EqualTo(expectedOutput.Vendors.Azure.VmId));
+                        Assert.That(actualSettings.Vendors.Azure.VmSize, Is.EqualTo(expectedOutput.Vendors.Azure.VmSize));
+                    });
                 }
                 else
                 {
@@ -127,9 +136,12 @@ namespace CompositeTests.CrossAgentTests.Utilization
                 // GCP
                 if (expectedOutput.Vendors.Gcp != null)
                 {
-                    Assert.That(actualSettings.Vendors.Gcp.Id, Is.EqualTo(expectedOutput.Vendors.Gcp.Id));
-                    Assert.That(actualSettings.Vendors.Gcp.MachineType, Is.EqualTo(expectedOutput.Vendors.Gcp.MachineType));
-                    Assert.That(actualSettings.Vendors.Gcp.Zone, Is.EqualTo(expectedOutput.Vendors.Gcp.Zone));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(actualSettings.Vendors.Gcp.Id, Is.EqualTo(expectedOutput.Vendors.Gcp.Id));
+                        Assert.That(actualSettings.Vendors.Gcp.MachineType, Is.EqualTo(expectedOutput.Vendors.Gcp.MachineType));
+                        Assert.That(actualSettings.Vendors.Gcp.Zone, Is.EqualTo(expectedOutput.Vendors.Gcp.Zone));
+                    });
                 }
                 else
                 {
@@ -139,9 +151,12 @@ namespace CompositeTests.CrossAgentTests.Utilization
                 // PCF
                 if (expectedOutput.Vendors.Pcf != null)
                 {
-                    Assert.That(actualSettings.Vendors.Pcf.CfInstanceGuid, Is.EqualTo(expectedOutput.Vendors.Pcf.CfInstanceGuid));
-                    Assert.That(actualSettings.Vendors.Pcf.CfInstanceIp, Is.EqualTo(expectedOutput.Vendors.Pcf.CfInstanceIp));
-                    Assert.That(actualSettings.Vendors.Pcf.MemoryLimit, Is.EqualTo(expectedOutput.Vendors.Pcf.MemoryLimit));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(actualSettings.Vendors.Pcf.CfInstanceGuid, Is.EqualTo(expectedOutput.Vendors.Pcf.CfInstanceGuid));
+                        Assert.That(actualSettings.Vendors.Pcf.CfInstanceIp, Is.EqualTo(expectedOutput.Vendors.Pcf.CfInstanceIp));
+                        Assert.That(actualSettings.Vendors.Pcf.MemoryLimit, Is.EqualTo(expectedOutput.Vendors.Pcf.MemoryLimit));
+                    });
                 }
                 else
                 {

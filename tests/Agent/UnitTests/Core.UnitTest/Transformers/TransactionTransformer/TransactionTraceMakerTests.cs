@@ -48,6 +48,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+            _databaseService.Dispose();
+        }
+
         [Test]
         public void GetTransactionTrace_CreatesTraceWithSql()
         {
@@ -59,13 +66,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("sql"));
+            Assert.That(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("sql"), Is.True);
 
             var actualParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["sql"];
 
-            Assert.IsNotNull(actualParameter);
-            Assert.IsNotEmpty(actualParameter as string);
-            Assert.AreNotEqual(expectedParameter, actualParameter);
+            Assert.That(actualParameter, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualParameter as string, Is.Not.Empty);
+                Assert.That(actualParameter, Is.Not.EqualTo(expectedParameter));
+            });
         }
 
         [Test]
@@ -82,17 +92,23 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("database_name"));
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("host"));
-            Assert.IsTrue(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("port_path_or_id"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("database_name"), Is.True);
+                Assert.That(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("host"), Is.True);
+                Assert.That(trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters.ContainsKey("port_path_or_id"), Is.True);
+            });
 
             var actualDatabaseParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["database_name"];
             var actualHostParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["host"];
             var actualPathPortParameter = trace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters["port_path_or_id"];
 
-            Assert.AreEqual(expectedDatabaseParameter, actualDatabaseParameter);
-            Assert.AreEqual(expectedHostParameter, actualHostParameter);
-            Assert.AreEqual(expectedPortParameter, actualPathPortParameter);
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualDatabaseParameter, Is.EqualTo(expectedDatabaseParameter));
+                Assert.That(actualHostParameter, Is.EqualTo(expectedHostParameter));
+                Assert.That(actualPathPortParameter, Is.EqualTo(expectedPortParameter));
+            });
         }
 
         [Test]
@@ -106,7 +122,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedStartTime, trace.StartTime);
+            Assert.That(trace.StartTime, Is.EqualTo(expectedStartTime));
         }
 
         [Test]
@@ -120,7 +136,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedDuration, trace.Duration);
+            Assert.That(trace.Duration, Is.EqualTo(expectedDuration));
         }
 
         [Test]
@@ -135,7 +151,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedResponseTime, trace.Duration);
+            Assert.That(trace.Duration, Is.EqualTo(expectedResponseTime));
         }
 
         [Test]
@@ -154,7 +170,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // Query parameters should be stripped out
             const string expectedUri = "http://www.google.com/test";
-            Assert.AreEqual(expectedUri, trace.Uri);
+            Assert.That(trace.Uri, Is.EqualTo(expectedUri));
         }
 
         [Test]
@@ -168,7 +184,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
-            Assert.AreEqual(expectedGuid, trace.Guid);
+            Assert.That(trace.Guid, Is.EqualTo(expectedGuid));
         }
 
         [Test]
@@ -198,16 +214,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple(
                 // ROOT
-                () => Assert.AreEqual(expectedStartTimeDifference, root.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, root.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual("ROOT", root.Name),
-                () => Assert.AreEqual(1, root.Children.Count),
+                () => Assert.That(root.TimeBetweenTransactionStartAndSegmentStart, Is.EqualTo(expectedStartTimeDifference)),
+                () => Assert.That(root.TimeBetweenTransactionStartAndSegmentEnd, Is.EqualTo(expectedEndTimeDifference)),
+                () => Assert.That(root.Name, Is.EqualTo("ROOT")),
+                () => Assert.That(root.Children, Has.Count.EqualTo(1)),
 
                 // Faux top-level segment
-                () => Assert.AreEqual(expectedStartTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual("Transaction", fauxTopLevelSegment.Name),
-                () => Assert.AreEqual(1, fauxTopLevelSegment.Children.Count)
+                () => Assert.That(fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentStart, Is.EqualTo(expectedStartTimeDifference)),
+                () => Assert.That(fauxTopLevelSegment.TimeBetweenTransactionStartAndSegmentEnd, Is.EqualTo(expectedEndTimeDifference)),
+                () => Assert.That(fauxTopLevelSegment.Name, Is.EqualTo("Transaction")),
+                () => Assert.That(fauxTopLevelSegment.Children, Has.Count.EqualTo(1))
                 );
         }
 
@@ -234,13 +250,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var firstSegment = realSegments.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedStartTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentStart),
-                () => Assert.AreEqual(expectedEndTimeDifference, firstSegment.TimeBetweenTransactionStartAndSegmentEnd),
-                () => Assert.AreEqual(expectedName, firstSegment.Name),
-                () => Assert.AreEqual(expectedClassName, firstSegment.ClassName),
-                () => Assert.AreEqual(expectedMethodName, firstSegment.MethodName),
-                () => Assert.AreEqual(0, firstSegment.Children.Count),
-                () => Assert.True(expectedParameters.All(kvp => expectedParameters[kvp.Key] == firstSegment.Parameters[kvp.Key]))
+                () => Assert.That(firstSegment.TimeBetweenTransactionStartAndSegmentStart, Is.EqualTo(expectedStartTimeDifference)),
+                () => Assert.That(firstSegment.TimeBetweenTransactionStartAndSegmentEnd, Is.EqualTo(expectedEndTimeDifference)),
+                () => Assert.That(firstSegment.Name, Is.EqualTo(expectedName)),
+                () => Assert.That(firstSegment.ClassName, Is.EqualTo(expectedClassName)),
+                () => Assert.That(firstSegment.MethodName, Is.EqualTo(expectedMethodName)),
+                () => Assert.That(firstSegment.Children, Is.Empty),
+                () => Assert.That(expectedParameters.All(kvp => expectedParameters[kvp.Key] == firstSegment.Parameters[kvp.Key]), Is.True)
                 );
         }
 
@@ -267,9 +283,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var segment11 = segment1.Children.ElementAt(0);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(750, segment1.Parameters["exclusive_duration_millis"]),
-                () => Assert.AreEqual(500, segment2.Parameters["exclusive_duration_millis"]),
-                () => Assert.AreEqual(250, segment11.Parameters["exclusive_duration_millis"])
+                () => Assert.That(segment1.Parameters["exclusive_duration_millis"], Is.EqualTo(750)),
+                () => Assert.That(segment2.Parameters["exclusive_duration_millis"], Is.EqualTo(500)),
+                () => Assert.That(segment11.Parameters["exclusive_duration_millis"], Is.EqualTo(250))
                 );
         }
 
@@ -301,11 +317,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var segment121 = segment12.Children.ElementAt(0);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("1", segment1.Name),
-                () => Assert.AreEqual("2", segment2.Name),
-                () => Assert.AreEqual("1.1", segment11.Name),
-                () => Assert.AreEqual("1.2", segment12.Name),
-                () => Assert.AreEqual("1.2.1", segment121.Name)
+                () => Assert.That(segment1.Name, Is.EqualTo("1")),
+                () => Assert.That(segment2.Name, Is.EqualTo("2")),
+                () => Assert.That(segment11.Name, Is.EqualTo("1.1")),
+                () => Assert.That(segment12.Name, Is.EqualTo("1.2")),
+                () => Assert.That(segment121.Name, Is.EqualTo("1.2.1"))
                 );
         }
 
@@ -314,7 +330,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             startTime = startTime ?? DateTime.Now;
             var relativeStart = startTime.Value - (transaction?.StartTime ?? startTime.Value);
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false))
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false))
                 .Build();
         }
 
@@ -350,7 +366,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false));
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false));
         }
 
         private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, TimeSpan? responseTime = null, string uri = null, string guid = null)

@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
 
-            Assert.IsTrue(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.True);
         }
 
 
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", false);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 2), "name", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type2", "method", 1), "name", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method2", 1), "name", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -100,16 +100,16 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
             var segment2 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name2", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentSegmentType()
         {
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
-            var segment2 = MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "type", "method", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "type", "method", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         #endregion IsCombinableWith

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-    public interface ISqlTraceAggregator
+    public interface ISqlTraceAggregator : IDisposable
     {
         void Collect(SqlTraceStatsCollection sqlTrStats);
     }

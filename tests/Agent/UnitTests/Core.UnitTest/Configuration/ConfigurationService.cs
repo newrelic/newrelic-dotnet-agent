@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
         }
 
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
         }
 
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
 
         }
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
 
             [Test]
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsFalse(wasCalled);
+                Assert.That(wasCalled, Is.False);
             }
         }
 
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
+                Assert.That(configuration, Is.Not.Null);
             }
 
             [Test]
@@ -177,8 +177,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
-                Assert.AreEqual(TimeSpan.FromSeconds(42), configuration.TransactionTraceApdexT);
+                Assert.That(configuration, Is.Not.Null);
+                Assert.That(configuration.TransactionTraceApdexT, Is.EqualTo(TimeSpan.FromSeconds(42)));
             }
         }
     }

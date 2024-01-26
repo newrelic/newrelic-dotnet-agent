@@ -95,9 +95,9 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, sentTraces.Count()),
-                () => Assert.IsTrue(sentTraces.Contains(trace1)),
-                () => Assert.IsTrue(sentTraces.Contains(trace2))
+                () => Assert.That(sentTraces.Count(), Is.EqualTo(2)),
+                () => Assert.That(sentTraces, Does.Contain(trace1)),
+                () => Assert.That(sentTraces, Does.Contain(trace2))
                 );
         }
 
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core.Aggregators
             sentTraces = Enumerable.Empty<TransactionTraceWireModel>(); //reset
             _harvestAction();
 
-            Assert.AreEqual(1, sentTraces.Count());
+            Assert.That(sentTraces.Count(), Is.EqualTo(1));
         }
 
         [Test]

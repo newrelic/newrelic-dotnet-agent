@@ -17,7 +17,7 @@ using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Attributes
 {
-    public interface IAttributeDefinitionService
+    public interface IAttributeDefinitionService : IDisposable
     {
         IAttributeDefinitions AttributeDefs { get; }
     }

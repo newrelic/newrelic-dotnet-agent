@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Transformers
             segment.AddMetricStats(null, _configurationService);
         }
 
-        public void TransformSegment_AddParameter()
+        private void TransformSegment_AddParameter()
         {
             const string name = "myname";
             var segment = GetSegment(name);
@@ -60,26 +60,38 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(1, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(1));
+            });
 
             const string metricName = "DotNet/name";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped.ContainsKey(metricName), Is.True);
+                Assert.That(unscoped.ContainsKey(metricName), Is.True);
+            });
 
             var data = scoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(3));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             data = unscoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(3));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
         }
 
         [Test]
@@ -96,18 +108,27 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(1, scoped.Count);
-            Assert.AreEqual(1, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(1));
+                Assert.That(unscoped, Has.Count.EqualTo(1));
+            });
 
             const string metricName = "DotNet/name";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped.ContainsKey(metricName), Is.True);
+                Assert.That(unscoped.ContainsKey(metricName), Is.True);
+            });
 
             var nameScoped = scoped[metricName];
             var nameUnscoped = unscoped[metricName];
 
-            Assert.AreEqual(2, nameScoped.Value0);
-            Assert.AreEqual(2, nameUnscoped.Value0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nameScoped.Value0, Is.EqualTo(2));
+                Assert.That(nameUnscoped.Value0, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -127,28 +148,43 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            Assert.AreEqual(2, scoped.Count);
-            Assert.AreEqual(2, unscoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped, Has.Count.EqualTo(2));
+                Assert.That(unscoped, Has.Count.EqualTo(2));
+            });
 
             const string metricName = "DotNet/name";
-            Assert.IsTrue(scoped.ContainsKey(metricName));
-            Assert.IsTrue(unscoped.ContainsKey(metricName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped.ContainsKey(metricName), Is.True);
+                Assert.That(unscoped.ContainsKey(metricName), Is.True);
+            });
 
             var nameScoped = scoped[metricName];
             var nameUnscoped = unscoped[metricName];
 
-            Assert.AreEqual(1, nameScoped.Value0);
-            Assert.AreEqual(1, nameUnscoped.Value0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nameScoped.Value0, Is.EqualTo(1));
+                Assert.That(nameUnscoped.Value0, Is.EqualTo(1));
+            });
 
             const string metricName1 = "DotNet/otherName";
-            Assert.IsTrue(scoped.ContainsKey(metricName1));
-            Assert.IsTrue(unscoped.ContainsKey(metricName1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(scoped.ContainsKey(metricName1), Is.True);
+                Assert.That(unscoped.ContainsKey(metricName1), Is.True);
+            });
 
             nameScoped = scoped[metricName1];
             nameUnscoped = unscoped[metricName1];
 
-            Assert.AreEqual(1, nameScoped.Value0);
-            Assert.AreEqual(1, nameUnscoped.Value0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nameScoped.Value0, Is.EqualTo(1));
+                Assert.That(nameUnscoped.Value0, Is.EqualTo(1));
+            });
         }
 
         #endregion Transform
@@ -163,7 +199,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             var transactionTraceName = segment.GetTransactionTraceName();
 
-            Assert.AreEqual("name", transactionTraceName);
+            Assert.That(transactionTraceName, Is.EqualTo("name"));
         }
 
         #endregion GetTransactionTraceName
@@ -176,7 +212,7 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        public static Segment GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
+        private static Segment GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
         {
             return new Segment(start, TimeSpan.FromSeconds(duration), GetSegment(name), null);
         }

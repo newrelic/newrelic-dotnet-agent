@@ -178,11 +178,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseAPIGatewayProxyRequest);
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
 
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+            });
         }
 
         [Test]
@@ -191,24 +194,27 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseAPIGatewayProxyRequest.Headers = _singleValueHeaders;
             var tags = IOParser.ParseRequest(_baseAPIGatewayProxyRequest);
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
 
         }
 
@@ -218,24 +224,27 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseAPIGatewayProxyRequest.MultiValueHeaders = _multiValueHeaders;
             var tags = IOParser.ParseRequest(_baseAPIGatewayProxyRequest);
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         [Test]
@@ -243,9 +252,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseResponse(_baseAPIGatewayProxyResponse);
 
-            Assert.That(tags.Keys.Contains("status"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -254,22 +266,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseAPIGatewayProxyResponse.Headers = _singleValueHeaders;
             var tags = IOParser.ParseResponse(_baseAPIGatewayProxyResponse);
 
-            Assert.That(tags.Keys.Contains("status"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         [Test]
@@ -278,22 +293,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseAPIGatewayProxyResponse.MultiValueHeaders = _multiValueHeaders;
             var tags = IOParser.ParseResponse(_baseAPIGatewayProxyResponse);
 
-            Assert.That(tags.Keys.Contains("status"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         #endregion
@@ -305,29 +323,41 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             _baseApplicationLoadBalancerRequest.RequestContext = null;
             var tags = IOParser.ParseRequest(_baseApplicationLoadBalancerRequest);
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+            });
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.False);
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.False);
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+            });
         }
 
         [Test]
         public void ParseRequest_ApplicationLoadBalancerRequest_WithoutHeaders()
         {
             var tags = IOParser.ParseRequest(_baseApplicationLoadBalancerRequest);
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+            });
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -335,26 +365,29 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             _baseApplicationLoadBalancerRequest.Headers = _singleValueHeaders;
             var tags = IOParser.ParseRequest(_baseApplicationLoadBalancerRequest);
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         [Test]
@@ -363,35 +396,41 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseApplicationLoadBalancerRequest.MultiValueHeaders = _multiValueHeaders;
             var tags = IOParser.ParseRequest(_baseApplicationLoadBalancerRequest);
 
-            Assert.That(tags.Keys.Contains("method"), Is.True);
-            Assert.That(tags.Keys.Contains("uri"), Is.True);
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("method"), Is.True);
+                Assert.That(tags.Keys.Contains("uri"), Is.True);
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["method"], Is.EqualTo("POST"));
-            Assert.That(tags["uri"], Is.EqualTo("/test/path"));
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["method"], Is.EqualTo("POST"));
+                Assert.That(tags["uri"], Is.EqualTo("/test/path"));
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         [Test]
         public void ParseResponse_ApplicationLoadBalancerResponse_WithoutHeaders()
         {
             var tags = IOParser.ParseResponse(_baseApplicationLoadBalancerResponse);
-            Assert.That(tags.Keys.Contains("status"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -400,22 +439,26 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseApplicationLoadBalancerResponse.Headers = _singleValueHeaders;
             var tags = IOParser.ParseResponse(_baseApplicationLoadBalancerResponse);
 
-            Assert.That(tags.Keys.Contains("status"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False); ;
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
+            ;
         }
 
         [Test]
@@ -424,22 +467,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             _baseApplicationLoadBalancerResponse.MultiValueHeaders = _multiValueHeaders;
             var tags = IOParser.ParseResponse(_baseApplicationLoadBalancerResponse);
 
-            Assert.That(tags.Keys.Contains("status"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
-            Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
-            Assert.That(tags.Keys.Contains("newrelic"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-proto"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.x-forwarded-port"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-type"), Is.True);
+                Assert.That(tags.Keys.Contains("headers.content-length"), Is.True);
+                Assert.That(tags.Keys.Contains("newrelic"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
-            Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
-            Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
-            Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
-            Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
-            Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["headers.x-forwarded-proto"], Is.EqualTo("proto"));
+                Assert.That(tags["headers.x-forwarded-port"], Is.EqualTo("1234,4321"));
+                Assert.That(tags["headers.content-type"], Is.EqualTo("application/json"));
+                Assert.That(tags["headers.content-length"], Is.EqualTo("1000"));
+                Assert.That(tags["newrelic"], Is.EqualTo("dt-payload"));
 
-            Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
-            Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.access-control-allow-origin"), Is.False);
+                Assert.That(tags.Keys.Contains("headers.custom-header"), Is.False);
+            });
         }
 
         #endregion
@@ -451,8 +497,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseSQSEvent);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -473,8 +522,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseSNSEvent);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -495,8 +547,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseKinesisEvent);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -517,8 +572,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseS3Event);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -539,8 +597,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseDynamoDBEvent);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -561,8 +622,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         {
             var tags = IOParser.ParseRequest(_baseKinesisFirehoseEvent);
 
-            Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
-            Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("aws.lambda.eventSource.arn"), Is.True);
+                Assert.That(tags["aws.lambda.eventSource.arn"], Is.EqualTo("test-arn"));
+            });
         }
 
         [Test]
@@ -597,9 +661,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 { "statusCode", "200" }
             };
             var tags = IOParser.ParseResponse(response);
-            Assert.That(tags.Keys.Contains("status"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -610,9 +677,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 { "statusCode", 200 }
             };
             var tags = IOParser.ParseResponse(response);
-            Assert.That(tags.Keys.Contains("status"), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tags.Keys.Contains("status"), Is.True);
 
-            Assert.That(tags["status"], Is.EqualTo("200"));
+                Assert.That(tags["status"], Is.EqualTo("200"));
+            });
         }
 
         #endregion

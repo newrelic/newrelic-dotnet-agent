@@ -60,32 +60,42 @@ namespace NewRelic.Collections.UnitTests
             var nongenericEnumerator = ((IEnumerable)ConcurrentPriorityQueue).GetEnumerator();
             while (index < eventsToAdd.Length && nongenericEnumerator.MoveNext())
             {
-                Assert.AreEqual(eventsToAdd[index++], nongenericEnumerator.Current);
+                Assert.That(nongenericEnumerator.Current, Is.EqualTo(eventsToAdd[index++]));
             }
-            Assert.AreEqual(eventsToAdd.Length, index);
 
-            // Count
-            Assert.AreEqual(ConcurrentPriorityQueue.Count, eventsToAdd.Length);
+            Assert.Multiple(() =>
+            {
+                Assert.That(index, Is.EqualTo(eventsToAdd.Length));
+
+                // Count
+                Assert.That(eventsToAdd, Has.Length.EqualTo(ConcurrentPriorityQueue.Count));
+            });
 
             // CopyTo
             var actualEvents = ConcurrentPriorityQueue.Select(node => node.Data).ToArray();
             var expectedEvents = eventsToAdd.Select(node => node.Data).ToArray();
-            Assert.That(actualEvents, Is.EquivalentTo(expectedEvents));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualEvents, Is.EquivalentTo(expectedEvents));
 
-            // Contains
-            Assert.True(eventsToAdd.All(ConcurrentPriorityQueue.Contains));
+                // Contains
+                Assert.That(eventsToAdd.All(ConcurrentPriorityQueue.Contains), Is.True);
+            });
 
             // Clear
             ConcurrentPriorityQueue.Clear();
-            Assert.AreEqual(0, ConcurrentPriorityQueue.Count);
-            Assert.False(eventsToAdd.Any(ConcurrentPriorityQueue.Contains));
+            Assert.Multiple(() =>
+            {
+                Assert.That(ConcurrentPriorityQueue, Is.Empty);
+                Assert.That(eventsToAdd.Any(ConcurrentPriorityQueue.Contains), Is.False);
+            });
         }
 
-        [TestCaseSource("ConstructPriorityQueueSizes")]
+        [TestCaseSource(nameof(ConstructPriorityQueueSizes))]
         public void ConstructPriorityQueueOfDifferentSizes(int sizeLimit)
         {
             var concurrentPriorityQueue = new ConcurrentPriorityQueue<PrioritizedNode<TestModel>>(sizeLimit);
-            Assert.AreEqual(concurrentPriorityQueue.Size, sizeLimit);
+            Assert.That(sizeLimit, Is.EqualTo(concurrentPriorityQueue.Size));
         }
 
         [Test]
@@ -95,21 +105,21 @@ namespace NewRelic.Collections.UnitTests
             ConcurrentPriorityQueue.Add(Create(0.1f));
             ConcurrentPriorityQueue.Add(Create(0.2f));
             ConcurrentPriorityQueue.Add(Create(0.3f));
-            Assert.AreEqual(3, ConcurrentPriorityQueue.Count);
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(3));
             ConcurrentPriorityQueue.Resize(2);
-            Assert.AreEqual(2, ConcurrentPriorityQueue.Count);
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(2));
             ConcurrentPriorityQueue.Add(Create(0.4f));
-            Assert.AreEqual(2, ConcurrentPriorityQueue.Count);
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(2));
         }
 
         [Test]
         public void GetAddAttemptsCount()
         {
-            Assert.AreEqual((ulong)0, ConcurrentPriorityQueue.GetAddAttemptsCount());
+            Assert.That(ConcurrentPriorityQueue.GetAddAttemptsCount(), Is.EqualTo((ulong)0));
             ConcurrentPriorityQueue.Add(Create(0.1f));
             ConcurrentPriorityQueue.Add(Create(0.2f));
             ConcurrentPriorityQueue.Add(Create(0.3f));
-            Assert.AreEqual((ulong)3, ConcurrentPriorityQueue.GetAddAttemptsCount());
+            Assert.That(ConcurrentPriorityQueue.GetAddAttemptsCount(), Is.EqualTo((ulong)3));
         }
 
         [Test]
@@ -130,11 +140,11 @@ namespace NewRelic.Collections.UnitTests
             //fill the CPQ with values 100-199
             foreach (var itemToAdd in itemsToAddInitially)
             {
-                Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add initial value");
+                Assert.That(ConcurrentPriorityQueue.Add(itemToAdd), Is.True, "failed to add initial value");
             }
 
             //make sure they are all accounted for
-            Assert.AreEqual(ConcurrentPriorityQueue.Count, numberOfItemsToAddInitially);
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(numberOfItemsToAddInitially));
 
             //now add more items that will cause the items from above to get removed. these will be valued 0-99 (precisely 100 less than those above)
             for (var i = 0; i < numberOfItemsToAddAfterReservoirLimitReached; ++i)
@@ -142,11 +152,17 @@ namespace NewRelic.Collections.UnitTests
                 var itemToAdd = Create((i + 100) * 0.001f);
                 var itemThatWillGetRemoved = itemsToAddInitially[i];
 
-                //each one we add will cause the corresponding smaller item to get removed.
-                Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add subsequent value");
-                Assert.IsTrue(ConcurrentPriorityQueue.Contains(itemToAdd), "added value not found");
-                Assert.IsFalse(ConcurrentPriorityQueue.Contains(itemThatWillGetRemoved), "initial value did not get removed on addition of subsequent value");
-                Assert.AreEqual(ConcurrentPriorityQueue.Count, numberOfItemsToAddInitially);
+                Assert.Multiple(() =>
+                {
+                    //each one we add will cause the corresponding smaller item to get removed.
+                    Assert.That(ConcurrentPriorityQueue.Add(itemToAdd), Is.True, "failed to add subsequent value");
+                    Assert.That(ConcurrentPriorityQueue, Does.Contain(itemToAdd), "added value not found");
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(ConcurrentPriorityQueue, Does.Not.Contain(itemThatWillGetRemoved), "initial value did not get removed on addition of subsequent value");
+                    Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(numberOfItemsToAddInitially));
+                });
             }
         }
 
@@ -172,12 +188,12 @@ namespace NewRelic.Collections.UnitTests
             ConcurrentPriorityQueue.Add(itemsToAddInitially);
 
             //make sure they are all accounted for
-            Assert.That(ConcurrentPriorityQueue.Count, Is.EqualTo(reservoirSize));
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(reservoirSize));
 
             ConcurrentPriorityQueue.Add(higherPriorityItemsToAdd);
 
             //make sure the size is not over 
-            Assert.That(ConcurrentPriorityQueue.Count, Is.EqualTo(reservoirSize));
+            Assert.That(ConcurrentPriorityQueue, Has.Count.EqualTo(reservoirSize));
 
             foreach (var item in ConcurrentPriorityQueue)
             {
@@ -227,13 +243,13 @@ namespace NewRelic.Collections.UnitTests
 
             ConcurrentPriorityQueue.Add(new PrioritizedNode<TestModel>(new TestModel()));
             var updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
-            Assert.AreEqual(1, updatedDroppedCount);
+            Assert.That(updatedDroppedCount, Is.EqualTo(1));
 
             var items = new[] { Create(1.0f), Create(1.0f), Create(1.0f), Create(1.0f), };
             ConcurrentPriorityQueue.Add(items);
             updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
 
-            Assert.AreEqual(items.Length, updatedDroppedCount);
+            Assert.That(updatedDroppedCount, Is.EqualTo(items.Length));
         }
 
         [Test]
@@ -247,13 +263,13 @@ namespace NewRelic.Collections.UnitTests
 
             // make sure items weren't dropped on add
             var afterAddDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
-            Assert.AreEqual(0, afterAddDroppedCount);
+            Assert.That(afterAddDroppedCount, Is.EqualTo(0));
 
             // resize to 0 and make sure dropped count gets updated
             ConcurrentPriorityQueue.Resize(0);
             var updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
 
-            Assert.AreEqual(items.Length, updatedDroppedCount);
+            Assert.That(updatedDroppedCount, Is.EqualTo(items.Length));
         }
 
         private static void ExerciseFullApi(IResizableCappedCollection<PrioritizedNode<TestModel>> concurrentPriorityQueue, PrioritizedNode<TestModel>[] eventsToAdd, int countOfThreads)

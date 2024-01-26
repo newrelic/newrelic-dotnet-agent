@@ -20,11 +20,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var traceparentValue = $"{version}-{traceId}-{parentId}-{traceFlags}";
             var traceparent = W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue);
 
-            Assert.That(traceparent.ToString(), Is.EqualTo(traceparentValue));
-            Assert.That(traceparent.Version.ToString("x2"), Is.EqualTo(version));
-            Assert.That(traceparent.TraceId, Is.EqualTo(traceId));
-            Assert.That(traceparent.ParentId, Is.EqualTo(parentId));
-            Assert.That(traceparent.TraceFlags, Is.EqualTo(traceFlags));
+            Assert.Multiple(() =>
+            {
+                Assert.That(traceparent.ToString(), Is.EqualTo(traceparentValue));
+                Assert.That(traceparent.Version.ToString("x2"), Is.EqualTo(version));
+                Assert.That(traceparent.TraceId, Is.EqualTo(traceId));
+                Assert.That(traceparent.ParentId, Is.EqualTo(parentId));
+                Assert.That(traceparent.TraceFlags, Is.EqualTo(traceFlags));
+            });
         }
 
         [TestCase(null)]

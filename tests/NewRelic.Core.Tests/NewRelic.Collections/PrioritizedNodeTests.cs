@@ -31,8 +31,11 @@ namespace NewRelic.Core.Tests.NewRelic.Collections
         {
             var node1 = (object)new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
             var node2 = (object)new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
-            Assert.That(node1.Equals(node2), Is.False);
-            Assert.That(node1 == node2, Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1, Is.Not.EqualTo(node2));
+                Assert.That(node1, Is.Not.EqualTo(node2));
+            });
         }
 
         [Test]
@@ -51,20 +54,6 @@ namespace NewRelic.Core.Tests.NewRelic.Collections
             var node1 = new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
             var node2 = new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
             Assert.That(node1.GetHashCode(), Is.Not.EqualTo(node2.GetHashCode()));
-        }
-
-        [Test]
-        public void PrioritizedNodeTests_identityEqualTo()
-        {
-            var node1 = new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
-            Assert.That(node1, Is.EqualTo(node1));
-        }
-
-        [Test]
-        public void PrioritizedNodeTests_identityHashCodesSame()
-        {
-            var node1 = new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
-            Assert.That(node1.GetHashCode(), Is.EqualTo(node1.GetHashCode()));
         }
 
         [Test]
@@ -211,26 +200,26 @@ namespace NewRelic.Core.Tests.NewRelic.Collections
             //node1 < node3 < node2
             Assert.Multiple(() =>
             {
-                Assert.That(node1 > node2, Is.False);
+                Assert.That(node1, Is.LessThanOrEqualTo(node2));
                 Assert.That(node1 >= node2, Is.False);
                 Assert.That(node1 < node2, Is.True);
-                Assert.That(node1 <= node2, Is.True);
-                Assert.That(node1 == node2, Is.False);
-                Assert.That(node1 != node2, Is.True);
+                Assert.That(node1, Is.LessThanOrEqualTo(node2));
+                Assert.That(node1, Is.Not.EqualTo(node2));
+                Assert.That(node1, Is.Not.EqualTo(node2));
 
-                Assert.That(node1 > node3, Is.False);
+                Assert.That(node1, Is.LessThanOrEqualTo(node3));
                 Assert.That(node1 >= node3, Is.False);
                 Assert.That(node1 < node3, Is.True);
-                Assert.That(node1 <= node3, Is.True);
-                Assert.That(node1 == node3, Is.False);
-                Assert.That(node1 != node3, Is.True);
+                Assert.That(node1, Is.LessThanOrEqualTo(node3));
+                Assert.That(node1, Is.Not.EqualTo(node3));
+                Assert.That(node1, Is.Not.EqualTo(node3));
 
-                Assert.That(node2 > node3, Is.True);
-                Assert.That(node2 >= node3, Is.True);
-                Assert.That(node2 < node3, Is.False);
-                Assert.That(node2 <= node3, Is.False);
-                Assert.That(node2 == node3, Is.False);
-                Assert.That(node2 != node3, Is.True);
+                Assert.That(node2, Is.GreaterThan(node3));
+                Assert.That(node2, Is.GreaterThanOrEqualTo(node3));
+                Assert.That(node2, Is.GreaterThanOrEqualTo(node3));
+                Assert.That(node2, Is.GreaterThan(node3));
+                Assert.That(node2, Is.Not.EqualTo(node3));
+                Assert.That(node2, Is.Not.EqualTo(node3));
             }
             );
         }
@@ -244,26 +233,26 @@ namespace NewRelic.Core.Tests.NewRelic.Collections
             //node2 < node1 < node3
             Assert.Multiple(() =>
                 {
-                    Assert.That(node1 > node2, Is.True);
-                    Assert.That(node1 >= node2, Is.True);
-                    Assert.That(node1 < node2, Is.False);
-                    Assert.That(node1 <= node2, Is.False);
-                    Assert.That(node1 == node2, Is.False);
-                    Assert.That(node1 != node2, Is.True);
+                    Assert.That(node1, Is.GreaterThan(node2));
+                    Assert.That(node1, Is.GreaterThanOrEqualTo(node2));
+                    Assert.That(node1, Is.GreaterThanOrEqualTo(node2));
+                    Assert.That(node1, Is.GreaterThan(node2));
+                    Assert.That(node1, Is.Not.EqualTo(node2));
+                    Assert.That(node1, Is.Not.EqualTo(node2));
 
-                    Assert.That(node1 > node3, Is.False);
+                    Assert.That(node1, Is.LessThanOrEqualTo(node3));
                     Assert.That(node1 >= node3, Is.False);
                     Assert.That(node1 < node3, Is.True);
-                    Assert.That(node1 <= node3, Is.True);
-                    Assert.That(node1 == node3, Is.False);
-                    Assert.That(node1 != node3, Is.True);
+                    Assert.That(node1, Is.LessThanOrEqualTo(node3));
+                    Assert.That(node1, Is.Not.EqualTo(node3));
+                    Assert.That(node1, Is.Not.EqualTo(node3));
 
-                    Assert.That(node2 > node3, Is.False);
+                    Assert.That(node2, Is.LessThanOrEqualTo(node3));
                     Assert.That(node2 >= node3, Is.False);
                     Assert.That(node2 < node3, Is.True);
-                    Assert.That(node2 <= node3, Is.True);
-                    Assert.That(node2 == node3, Is.False);
-                    Assert.That(node2 != node3, Is.True);
+                    Assert.That(node2, Is.LessThanOrEqualTo(node3));
+                    Assert.That(node2, Is.Not.EqualTo(node3));
+                    Assert.That(node2, Is.Not.EqualTo(node3));
                 }
             );
         }

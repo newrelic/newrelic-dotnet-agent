@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             var expected = exception.ToString();
             var actual = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage: false);
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             var hasExceptionMessage = actual.Contains(OuterExceptionMessage);
 
-            Assert.False(hasExceptionMessage);
+            Assert.That(hasExceptionMessage, Is.False);
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             var hasExceptionMessage = actual.Contains(InnerExceptionMessage);
 
-            Assert.False(hasExceptionMessage);
+            Assert.That(hasExceptionMessage, Is.False);
         }
 
         private static Exception GetRealNestedException()

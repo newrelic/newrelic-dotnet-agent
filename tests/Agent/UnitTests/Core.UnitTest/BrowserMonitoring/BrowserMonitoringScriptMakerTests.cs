@@ -74,6 +74,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         public void TearDown()
         {
             _configurationAutoResponder?.Dispose();
+            _attribDefSvc.Dispose();
         }
 
         [Test]
@@ -88,7 +89,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
-            Assert.AreEqual(expectedScript, script);
+            Assert.That(script, Is.EqualTo(expectedScript));
         }
 
         [Test]
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var script = _browserMonitoringScriptMaker.GetScript(transaction, "TmV3IFJlbGlj");
 
             const string expectedScript = @"<script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">the agent</script>";
-            Assert.AreEqual(expectedScript, script);
+            Assert.That(script, Is.EqualTo(expectedScript));
         }
 
         [Test]
@@ -118,7 +119,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
-            Assert.AreEqual(expectedScript, script);
+            Assert.That(script, Is.EqualTo(expectedScript));
         }
 
         [Test]
@@ -143,7 +144,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var expectedObfuscatedFormattedAttributes = Strings.ObfuscateStringWithKey(expectedFormattedAttributes, "license key");
             var actualObfuscatedFormattedAttributes = Regex.Match(script, @"""atts"":""([^""]+)""").Groups[1].Value;
-            Assert.AreEqual(expectedObfuscatedFormattedAttributes, actualObfuscatedFormattedAttributes);
+            Assert.That(actualObfuscatedFormattedAttributes, Is.EqualTo(expectedObfuscatedFormattedAttributes));
         }
 
         [Test]
@@ -155,7 +156,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var expectedObfuscatedTransactionMetricName = Strings.ObfuscateStringWithKey("prefix/suffix", "license key");
             var actualObfuscatedTransactionMetricName = Regex.Match(script, @"""transactionName"":""([^""]+)""").Groups[1].Value;
-            Assert.AreEqual(expectedObfuscatedTransactionMetricName, actualObfuscatedTransactionMetricName);
+            Assert.That(actualObfuscatedTransactionMetricName, Is.EqualTo(expectedObfuscatedTransactionMetricName));
         }
 
         [Test]
@@ -166,7 +167,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
-            Assert.Null(script);
+            Assert.That(script, Is.Null);
         }
 
         [Test]
@@ -177,7 +178,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
-            Assert.Null(script);
+            Assert.That(script, Is.Null);
         }
 
         [Test]

@@ -22,6 +22,12 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void AttributeClassificationIsCorrect()
         {
@@ -37,11 +43,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allAttribs.Count),
-                () => Assert.AreEqual(1, agentAttribsDic.Count()),
-                () => Assert.AreEqual("banana", agentAttribsDic["original_url"]),
-                () => Assert.AreEqual(1, userAttribsDic.Count()),
-                () => Assert.AreEqual("cake", userAttribsDic["pie"])
+                () => Assert.That(allAttribs, Has.Count.EqualTo(2)),
+                () => Assert.That(agentAttribsDic.Count(), Is.EqualTo(1)),
+                () => Assert.That(agentAttribsDic["original_url"], Is.EqualTo("banana")),
+                () => Assert.That(userAttribsDic.Count(), Is.EqualTo(1)),
+                () => Assert.That(userAttribsDic["pie"], Is.EqualTo("cake"))
             );
         }
 
@@ -75,8 +81,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             attrToUpdate.TrySetValue(_attribValues, 9001);
             var attributeUnderTest = _attribValues.GetAttributeValues(attributeType).FirstOrDefault(x => x.AttributeDefinition.Guid == attrToUpdate.Guid);
 
-            Assert.NotNull(attributeUnderTest);
-            Assert.AreEqual(9001, attributeUnderTest.Value);
+            Assert.That(attributeUnderTest, Is.Not.Null);
+            Assert.That(attributeUnderTest.Value, Is.EqualTo(9001));
         }
 
         [TestCase(AttributeClassification.Intrinsics)]
@@ -120,8 +126,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             attrToUpdate.TrySetValue(_attribValues, 9001);
             var attributeUnderTest = _attribValues.GetAttributeValues(attributeType).FirstOrDefault(x => x.AttributeDefinition.Guid == attrToUpdate.Guid);
 
-            Assert.NotNull(attributeUnderTest);
-            Assert.AreEqual(9001, attributeUnderTest.Value);
+            Assert.That(attributeUnderTest, Is.Not.Null);
+            Assert.That(attributeUnderTest.Value, Is.EqualTo(9001));
         }
         
         [TestCase(AttributeClassification.Intrinsics, 255)]
@@ -147,9 +153,9 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedLimit, attributeValues.Length),
-                () => Assert.Contains(1, attributeValues),
-                () => Assert.Contains(expectedLimit, attributeValues),
+                () => Assert.That(attributeValues, Has.Length.EqualTo(expectedLimit)),
+                () => Assert.That(attributeValues, Does.Contain(1)),
+                () => Assert.That(attributeValues, Does.Contain(expectedLimit)),
                 () => Assert.That(attributeValues, Does.Not.Contain(expectedLimit + 1), "A wrong attribute was captured :(")
             );
 
@@ -164,7 +170,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             if (attributeType == AttributeClassification.UserAttributes)
             {
                 // The user attribute limit is lower than the agent attribute limit, so we expect to see the new attribute in this case
-                Assert.Contains(_attribDefs.OriginalUrl.Name, agentAttributeKeys);
+                Assert.That(agentAttributeKeys, Does.Contain(_attribDefs.OriginalUrl.Name));
             }
             else
             {
@@ -177,7 +183,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             if (attributeType == AttributeClassification.UserAttributes)
             {
                 // The user attribute limit is lower than the intrinsic attribute limit, so we expect to see the new attribute in this case
-                Assert.Contains(_attribDefs.TimestampForError.Name, intrinsicAttributeKeys);
+                Assert.That(intrinsicAttributeKeys, Does.Contain(_attribDefs.TimestampForError.Name));
             }
             else
             {
@@ -202,11 +208,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allAttribs.Count),
-                () => Assert.AreEqual(1, agentAttribsDic.Count()),
-                () => Assert.AreEqual("banana2", agentAttribsDic[_attribDefs.OriginalUrl.Name]),
-                () => Assert.AreEqual(1, userAttribsDic.Count()),
-                () => Assert.AreEqual("cake2", userAttribsDic[_attribDefs.GetCustomAttributeForTransaction("pie").Name])
+                () => Assert.That(allAttribs, Has.Count.EqualTo(2)),
+                () => Assert.That(agentAttribsDic.Count(), Is.EqualTo(1)),
+                () => Assert.That(agentAttribsDic[_attribDefs.OriginalUrl.Name], Is.EqualTo("banana2")),
+                () => Assert.That(userAttribsDic.Count(), Is.EqualTo(1)),
+                () => Assert.That(userAttribsDic[_attribDefs.GetCustomAttributeForTransaction("pie").Name], Is.EqualTo("cake2"))
             );
         }
 
@@ -228,7 +234,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 .Union(_attribValues.GetAttributeValues(AttributeClassification.AgentAttributes))
                 .Union(_attribValues.GetAttributeValues(AttributeClassification.UserAttributes));
 
-            CollectionAssert.IsEmpty(allAttribs);
+            Assert.That(allAttribs, Is.Empty);
         }
 
 
@@ -251,7 +257,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             var allValues = _attribValues.GetAllAttributeValuesDic();
 
-            Assert.AreEqual(expectedResult, allValues[userKey].ToString());
+            Assert.That(allValues[userKey].ToString(), Is.EqualTo(expectedResult));
         }
     }
 }

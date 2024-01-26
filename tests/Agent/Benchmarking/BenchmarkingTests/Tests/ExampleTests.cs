@@ -40,7 +40,7 @@ namespace BenchmarkingTests.Tests
             var iterativeExerciserResults = iterativeExerciser.ExecAll();
 
             //10 threads each running 1K units of work can produce 10K results
-            Assert.AreEqual(10000, iterativeExerciserResults.CountUnitsOfWorkPerformed);
+            Assert.That(iterativeExerciserResults.CountUnitsOfWorkPerformed, Is.EqualTo(10000));
         }
 
         [Test]
@@ -49,8 +49,11 @@ namespace BenchmarkingTests.Tests
             //Benchmarker wrapping exerciser
             var benchmarkResult = NewRelicGuidGeneratorBenchmark.Execute();
 
-            Assert.AreEqual(NewRelicGuidGeneratorBenchmark.CountUowTotal, benchmarkResult.CountUnitsOfWorkExecuted_Mean);
-            Assert.LessOrEqual(1000, benchmarkResult.Duration_Mean_Nanoseconds);
+            Assert.Multiple(() =>
+            {
+                Assert.That(benchmarkResult.CountUnitsOfWorkExecuted_Mean, Is.EqualTo(NewRelicGuidGeneratorBenchmark.CountUowTotal));
+                Assert.That(benchmarkResult.Duration_Mean_Nanoseconds, Is.LessThanOrEqualTo(1000));
+            });
         }
 
 
@@ -88,7 +91,7 @@ namespace BenchmarkingTests.Tests
 
             // the time it takes to generate 1000 guids on 10 threads should never run longer than 4x
             // the time it takes to generate 1000 strings on 10-threads should never run mmor
-            Assert.Less(comparer.Duration_Mean_Nanoseconds_Ratio, 4);
+            Assert.That(comparer.Duration_Mean_Nanoseconds_Ratio, Is.LessThan(4));
         }
 
 
@@ -148,7 +151,7 @@ namespace BenchmarkingTests.Tests
                 .ExecAll();
 
             //Caching makes things better
-            Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed);
+            Assert.That(cachedThroughput.CountUnitsOfWorkPerformed, Is.GreaterThan(notCachedThroughput.CountUnitsOfWorkPerformed));
 
             //Chaching makes things 50% better
             //Assert.Greater(cachedThroughput.CountUnitsOfWorkPerformed, notCachedThroughput.CountUnitsOfWorkPerformed * 1.5);

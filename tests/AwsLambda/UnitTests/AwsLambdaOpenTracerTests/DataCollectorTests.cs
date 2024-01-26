@@ -26,9 +26,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(logger.LastLogMessage);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(logger.LastLogMessage.Contains("NR_LAMBDA_MONITORING"));
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("span_event_data"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(logger.LastLogMessage, Does.Contain("NR_LAMBDA_MONITORING"));
+                Assert.That(data, Does.Contain("analytic_event_data"));
+                Assert.That(data, Does.Contain("span_event_data"));
+            });
         }
 
         [Test]
@@ -47,9 +50,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(fileSystemManager.FileContents);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(fileSystemManager.FileContents.Contains("NR_LAMBDA_MONITORING"));
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("span_event_data"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(fileSystemManager.FileContents, Does.Contain("NR_LAMBDA_MONITORING"));
+                Assert.That(data, Does.Contain("analytic_event_data"));
+                Assert.That(data, Does.Contain("span_event_data"));
+            });
         }
     }
 }

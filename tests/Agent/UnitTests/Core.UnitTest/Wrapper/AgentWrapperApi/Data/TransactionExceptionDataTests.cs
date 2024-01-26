@@ -32,10 +32,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
             var errorData = errorService.FromException(ex);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("Oh no!", errorData.ErrorMessage),
-                () => Assert.AreEqual("System.Exception", errorData.ErrorTypeName),
-                () => Assert.IsFalse(string.IsNullOrEmpty(errorData.StackTrace)),
-                () => Assert.IsTrue(errorData.NoticedAt > now.AddMinutes(-1) && errorData.NoticedAt < now.AddMinutes(1))
+                () => Assert.That(errorData.ErrorMessage, Is.EqualTo("Oh no!")),
+                () => Assert.That(errorData.ErrorTypeName, Is.EqualTo("System.Exception")),
+                () => Assert.That(string.IsNullOrEmpty(errorData.StackTrace), Is.False),
+                () => Assert.That(errorData.NoticedAt > now.AddMinutes(-1) && errorData.NoticedAt < now.AddMinutes(1), Is.True)
             );
         }
     }

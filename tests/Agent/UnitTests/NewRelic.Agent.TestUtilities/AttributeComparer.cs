@@ -14,7 +14,7 @@ namespace NewRelic.Agent.TestUtilities
     {
         public static void CompareDictionaries(IDictionary<string, object>[] expectedSerialization, IDictionary<string, object>[] actualserialization)
         {
-            Assert.That(actualserialization.Length, Is.EqualTo(expectedSerialization.Length));
+            Assert.That(actualserialization, Has.Length.EqualTo(expectedSerialization.Length));
 
             for (var i = 0; i < expectedSerialization.Length; i++)
             {
@@ -34,8 +34,11 @@ namespace NewRelic.Agent.TestUtilities
 
         public static void CompareDictionary(IDictionary<string, object> expectedDic, IDictionary<string, object> actualDic)
         {
-            Assert.That((expectedDic != null && actualDic != null) || (expectedDic == null && actualDic == null));
-            Assert.That(expectedDic.Count, Is.EqualTo(actualDic.Count));
+            Assert.Multiple(() =>
+            {
+                Assert.That((expectedDic != null && actualDic != null) || (expectedDic == null && actualDic == null));
+                Assert.That(expectedDic, Has.Count.EqualTo(actualDic.Count));
+            });
 
             if (expectedDic == null || actualDic == null)
             {
@@ -44,8 +47,11 @@ namespace NewRelic.Agent.TestUtilities
 
             foreach (var expectedKVP in expectedDic)
             {
-                Assert.IsTrue(actualDic.ContainsKey(expectedKVP.Key));
-                Assert.IsTrue(IsEqualTo(expectedKVP.Value, actualDic[expectedKVP.Key]), $"expected {expectedKVP.Key}-{expectedKVP.Value}, actual {actualDic[expectedKVP.Key]}");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(actualDic.ContainsKey(expectedKVP.Key), Is.True);
+                    Assert.That(IsEqualTo(expectedKVP.Value, actualDic[expectedKVP.Key]), Is.True, $"expected {expectedKVP.Key}-{expectedKVP.Value}, actual {actualDic[expectedKVP.Key]}");
+                });
             }
         }
 
@@ -54,7 +60,7 @@ namespace NewRelic.Agent.TestUtilities
             var actualKeys = actualDic.Keys.ToList();
             var overlap = actualKeys.Intersect(shouldNotHaveKeys).ToArray();
 
-            Assert.IsEmpty(overlap, $"The following keys should not exist in the dictionary: {string.Join(", ", overlap)}");
+            Assert.That(overlap, Is.Empty, $"The following keys should not exist in the dictionary: {string.Join(", ", overlap)}");
         }
 
         public static bool IsEqualTo(this object val1, object val2)

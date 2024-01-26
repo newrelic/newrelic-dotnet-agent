@@ -66,6 +66,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public void Teardown()
         {
             _configAutoResponder?.Dispose();
+            _attribDefSvc?.Dispose();
         }
 
         [Test]
@@ -148,15 +149,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Agent, actualConfigurationData.Agent),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationId, actualConfigurationData.ApplicationId),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds, actualConfigurationData.ApplicationTimeMilliseconds),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Beacon, actualConfigurationData.Beacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.BrowserLicenseKey, actualConfigurationData.BrowserLicenseKey),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ErrorBeacon, actualConfigurationData.ErrorBeacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedTransactionName, actualConfigurationData.ObfuscatedTransactionName),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes, actualConfigurationData.ObfuscatedUserAttributes),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.QueueTimeMilliseconds, actualConfigurationData.QueueTimeMilliseconds)
+                () => Assert.That(actualConfigurationData.Agent, Is.EqualTo(testCase.ExpectedConfigurationData.Agent)),
+                () => Assert.That(actualConfigurationData.ApplicationId, Is.EqualTo(testCase.ExpectedConfigurationData.ApplicationId)),
+                () => Assert.That(actualConfigurationData.ApplicationTimeMilliseconds, Is.EqualTo(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds)),
+                () => Assert.That(actualConfigurationData.Beacon, Is.EqualTo(testCase.ExpectedConfigurationData.Beacon)),
+                () => Assert.That(actualConfigurationData.BrowserLicenseKey, Is.EqualTo(testCase.ExpectedConfigurationData.BrowserLicenseKey)),
+                () => Assert.That(actualConfigurationData.ErrorBeacon, Is.EqualTo(testCase.ExpectedConfigurationData.ErrorBeacon)),
+                () => Assert.That(actualConfigurationData.ObfuscatedTransactionName, Is.EqualTo(testCase.ExpectedConfigurationData.ObfuscatedTransactionName)),
+                () => Assert.That(actualConfigurationData.ObfuscatedUserAttributes, Is.EqualTo(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes)),
+                () => Assert.That(actualConfigurationData.QueueTimeMilliseconds, Is.EqualTo(testCase.ExpectedConfigurationData.QueueTimeMilliseconds))
             );
 
             Teardown();
@@ -247,7 +248,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

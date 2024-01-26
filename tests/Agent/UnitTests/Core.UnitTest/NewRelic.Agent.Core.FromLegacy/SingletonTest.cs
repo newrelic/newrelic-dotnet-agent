@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public static void TestReentrant()
         {
-            Assert.IsTrue(MockAgent.Instance.Enabled);
+            Assert.That(MockAgent.Instance.Enabled, Is.True);
         }
     }
 
@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core
                 if (count == 0)
                 {
                     IAgentMock instance = MockAgent.Instance;
-                    Assert.IsFalse(instance.Enabled);
+                    Assert.That(instance.Enabled, Is.False);
                 }
 
                 count++;

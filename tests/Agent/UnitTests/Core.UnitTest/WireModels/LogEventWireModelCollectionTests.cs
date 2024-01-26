@@ -27,19 +27,25 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, loggingEvents);
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(entityGuid, objectUnderTest.EntityGuid);
-            Assert.AreEqual(entityName, objectUnderTest.EntityName);
-            Assert.AreEqual(hostname, objectUnderTest.Hostname);
-            Assert.AreEqual(1, objectUnderTest.LoggingEvents.Count);
+            Assert.That(objectUnderTest, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(objectUnderTest.EntityGuid, Is.EqualTo(entityGuid));
+                Assert.That(objectUnderTest.EntityName, Is.EqualTo(entityName));
+                Assert.That(objectUnderTest.Hostname, Is.EqualTo(hostname));
+                Assert.That(objectUnderTest.LoggingEvents, Has.Count.EqualTo(1));
+            });
 
             var loggingEvent = objectUnderTest.LoggingEvents[0];
-            Assert.AreEqual(1, loggingEvent.TimeStamp);
-            Assert.AreEqual("TestMessage", loggingEvent.Message);
-            Assert.AreEqual("TestLevel", loggingEvent.Level);
-            Assert.AreEqual("TestSpanId", loggingEvent.SpanId);
-            Assert.AreEqual("TestTraceId", loggingEvent.TraceId);
-            Assert.AreEqual(testContextData, loggingEvent.ContextData);
+            Assert.Multiple(() =>
+            {
+                Assert.That(loggingEvent.TimeStamp, Is.EqualTo(1));
+                Assert.That(loggingEvent.Message, Is.EqualTo("TestMessage"));
+                Assert.That(loggingEvent.Level, Is.EqualTo("TestLevel"));
+                Assert.That(loggingEvent.SpanId, Is.EqualTo("TestSpanId"));
+                Assert.That(loggingEvent.TraceId, Is.EqualTo("TestTraceId"));
+                Assert.That(loggingEvent.ContextData, Is.EqualTo(testContextData));
+            });
         }
     }
 }

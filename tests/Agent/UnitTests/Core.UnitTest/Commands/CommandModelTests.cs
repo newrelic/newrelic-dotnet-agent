@@ -17,14 +17,14 @@ namespace NewRelic.Agent.Core.Commands
 
             var commandModel = JsonConvert.DeserializeObject<CommandModel>(json);
 
-            Assert.NotNull(commandModel);
-            Assert.NotNull(commandModel.Details);
+            Assert.That(commandModel, Is.Not.Null);
+            Assert.That(commandModel.Details, Is.Not.Null);
             NrAssert.Multiple
                 (
-                () => Assert.AreEqual(1, commandModel.CommandId),
-                () => Assert.AreEqual("some name", commandModel.Details.Name),
-                () => Assert.AreEqual(1, commandModel.Details.Arguments.Count),
-                () => Assert.AreEqual("value", commandModel.Details.Arguments["arg"])
+                () => Assert.That(commandModel.CommandId, Is.EqualTo(1)),
+                () => Assert.That(commandModel.Details.Name, Is.EqualTo("some name")),
+                () => Assert.That(commandModel.Details.Arguments, Has.Count.EqualTo(1)),
+                () => Assert.That(commandModel.Details.Arguments["arg"], Is.EqualTo("value"))
                 );
         }
     }

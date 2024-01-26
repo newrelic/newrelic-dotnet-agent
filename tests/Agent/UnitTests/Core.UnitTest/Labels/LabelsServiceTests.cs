@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Labels.Tests
             var labelsService = new LabelsService(configurationService);
 
             // assert
-            CollectionAssert.IsEmpty(labelsService.Labels);
+            Assert.That(labelsService.Labels, Is.Empty);
         }
 
         public class TestCase
@@ -257,7 +257,7 @@ namespace NewRelic.Agent.Core.Labels.Tests
                 #endregion
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .ToArray();
@@ -281,11 +281,11 @@ namespace NewRelic.Agent.Core.Labels.Tests
                 var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
 
                 // assert
-                Assert.AreEqual(expectedResults, actualResults);
+                Assert.That(actualResults, Is.EqualTo(expectedResults));
                 if (testCase.Warning)
-                    Assert.AreNotEqual(0, logger.WarnCount);
+                    Assert.That(logger.WarnCount, Is.Not.EqualTo(0));
                 else
-                    Assert.AreEqual(0, logger.MessageCount);
+                    Assert.That(logger.MessageCount, Is.EqualTo(0));
             }
         }
     }

@@ -61,13 +61,19 @@ namespace BenchmarkingTests.ScaffoldingTests
                 caughtException = ex;
             }
 
-            NrAssert.Multiple(
-                () => Assert.IsNotNull(caughtException, "Expected an exception to be thrown and it was not"),
-                () => Assert.AreEqual(1, caughtException.EncounteredExceptions.Count()),
-                () => Assert.IsInstanceOf<ExerciserUnitOfWorkException>(caughtException.EncounteredExceptions.First(), "Exception is not of correct type"),
-                () => Assert.Less(50, (caughtException.EncounteredExceptions.First() as ExerciserUnitOfWorkException).UnitOfWorkIdGlobal),
-                () => Assert.AreEqual(3, (caughtException.EncounteredExceptions.First() as ExerciserUnitOfWorkException).ThreadId)
-            );
+            Assert.That(caughtException, Is.Not.Null, "Expected an exception to be thrown and it was not");
+            Assert.Multiple(() =>
+            {
+                Assert.That(caughtException.EncounteredExceptions.Count(), Is.EqualTo(1));
+                Assert.That(caughtException.EncounteredExceptions.First(), Is.InstanceOf<ExerciserUnitOfWorkException>(), "Exception is not of correct type");
+            });
+
+            ExerciserUnitOfWorkException exerciserUnitOfWorkException = caughtException.EncounteredExceptions.First() as ExerciserUnitOfWorkException;
+            Assert.Multiple(() =>
+            {
+                Assert.That(exerciserUnitOfWorkException!.UnitOfWorkIdGlobal, Is.GreaterThan(50));
+                Assert.That(exerciserUnitOfWorkException.ThreadId, Is.EqualTo(3));
+            });
         }
 
         [Test]
@@ -98,11 +104,11 @@ namespace BenchmarkingTests.ScaffoldingTests
                 .ExecAll();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedUnitsOfWork * countThreads, iterativeExerciserResult.CountUnitsOfWorkPerformed),
-                () => Assert.AreEqual(expectedUnitsOfWork * countThreads, iterativeExerciserUnitsOfWorkExecuted),
-                () => Assert.AreEqual(expectedUnitsOfWork, workQueueExerciserResult.CountUnitsOfWorkPerformed),
-                () => Assert.AreEqual(expectedUnitsOfWork, workQueueExerciserUnitsOfWorkExecuted),
-                () => Assert.AreEqual(throughputExerciserUnitsOfWorkExercised, throughputExerciserResult.CountUnitsOfWorkPerformed)
+                () => Assert.That(iterativeExerciserResult.CountUnitsOfWorkPerformed, Is.EqualTo(expectedUnitsOfWork * countThreads)),
+                () => Assert.That(iterativeExerciserUnitsOfWorkExecuted, Is.EqualTo(expectedUnitsOfWork * countThreads)),
+                () => Assert.That(workQueueExerciserResult.CountUnitsOfWorkPerformed, Is.EqualTo(expectedUnitsOfWork)),
+                () => Assert.That(workQueueExerciserUnitsOfWorkExecuted, Is.EqualTo(expectedUnitsOfWork)),
+                () => Assert.That(throughputExerciserResult.CountUnitsOfWorkPerformed, Is.EqualTo(throughputExerciserUnitsOfWorkExercised))
             );
         }
 
@@ -157,11 +163,11 @@ namespace BenchmarkingTests.ScaffoldingTests
                 var exerciserResult = exerciser.ExecAll();
 
                 NrAssert.Multiple(
-                () => Assert.AreEqual(1, setupTimes.Count),
-                () => Assert.AreEqual(exerciserResult.CountUnitsOfWorkPerformed, beforeUOWTimes.Count, $"{exerciser.GetType().FullName}, beforeUOW"),
-                () => Assert.AreEqual(exerciserResult.CountUnitsOfWorkPerformed, uowTimes.Count, $"{exerciser.GetType().FullName}, the Actual UOW"),
-                () => Assert.AreEqual(exerciserResult.CountUnitsOfWorkPerformed, afterUowTimes.Count, $"{exerciser.GetType().FullName}, After UOW"),
-                () => Assert.AreEqual(1, teardownTimes.Count));
+                () => Assert.That(setupTimes, Has.Count.EqualTo(1)),
+                () => Assert.That(beforeUOWTimes, Has.Count.EqualTo(exerciserResult.CountUnitsOfWorkPerformed), $"{exerciser.GetType().FullName}, beforeUOW"),
+                () => Assert.That(uowTimes, Has.Count.EqualTo(exerciserResult.CountUnitsOfWorkPerformed), $"{exerciser.GetType().FullName}, the Actual UOW"),
+                () => Assert.That(afterUowTimes, Has.Count.EqualTo(exerciserResult.CountUnitsOfWorkPerformed), $"{exerciser.GetType().FullName}, After UOW"),
+                () => Assert.That(teardownTimes, Has.Count.EqualTo(1)));
             }
         }
 
@@ -262,10 +268,10 @@ namespace BenchmarkingTests.ScaffoldingTests
                 var exerciserResult = exerciser.ExecAll();
 
                 NrAssert.Multiple(
-                () => Assert.Greater(beforeUOWTimes.Min(), setupTimes.Max(), $"{exerciser.GetType().FullName} BeforeUOW detected before end of Setup"),
-                () => Assert.Greater(uowTimes.Min(), beforeUOWTimes.Min(), $"{exerciser.GetType().FullName} UOW detected before end of BeforeUOW"),
-                () => Assert.Greater(afterUowTimes.Max(), uowTimes.Max(), $"{exerciser.GetType().FullName} AfterUOW detected before end of UOW"),
-                () => Assert.Greater(teardownTimes.Min(), afterUowTimes.Max(), $"{exerciser.GetType().FullName} Terdown detected before end of AfterUOW"));
+                () => Assert.That(beforeUOWTimes.Min(), Is.GreaterThan(setupTimes.Max()), $"{exerciser.GetType().FullName} BeforeUOW detected before end of Setup"),
+                () => Assert.That(uowTimes.Min(), Is.GreaterThan(beforeUOWTimes.Min()), $"{exerciser.GetType().FullName} UOW detected before end of BeforeUOW"),
+                () => Assert.That(afterUowTimes.Max(), Is.GreaterThan(uowTimes.Max()), $"{exerciser.GetType().FullName} AfterUOW detected before end of UOW"),
+                () => Assert.That(teardownTimes.Min(), Is.GreaterThan(afterUowTimes.Max()), $"{exerciser.GetType().FullName} Terdown detected before end of AfterUOW"));
             }
         }
 
@@ -351,18 +357,18 @@ namespace BenchmarkingTests.ScaffoldingTests
                     foreach (var uow in thread.Value)
                     {
                         NrAssert.Multiple(
-                        () => Assert.AreEqual(1, uow.Value[0], $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, BeforeUOW"),
-                        () => Assert.AreEqual(1, uow.Value[1], $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, TheUOW"),
-                        () => Assert.AreEqual(1, uow.Value[2], $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, AfterUOW"));
+                        () => Assert.That(uow.Value[0], Is.EqualTo(1), $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, BeforeUOW"),
+                        () => Assert.That(uow.Value[1], Is.EqualTo(1), $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, TheUOW"),
+                        () => Assert.That(uow.Value[2], Is.EqualTo(1), $"{exerciser.GetType().FullName}, threadID: {thread.Key}, uowIdLocal: {uow.Key}, AfterUOW"));
                     }
                 }
 
                 foreach (var uow in globalResultCounters)
                 {
                     NrAssert.Multiple(
-                        () => Assert.AreEqual(1, uow.Value[0], $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, BeforeUOW"),
-                        () => Assert.AreEqual(1, uow.Value[1], $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, TheUOW"),
-                        () => Assert.AreEqual(1, uow.Value[2], $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, AfterUOW"));
+                        () => Assert.That(uow.Value[0], Is.EqualTo(1), $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, BeforeUOW"),
+                        () => Assert.That(uow.Value[1], Is.EqualTo(1), $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, TheUOW"),
+                        () => Assert.That(uow.Value[2], Is.EqualTo(1), $"{exerciser.GetType().FullName}, uowIdGlobal {uow.Key}, AfterUOW"));
                 }
 
             }

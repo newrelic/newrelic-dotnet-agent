@@ -46,6 +46,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             _threadStatsSampler.Dispose();
             _compositeTestAgent.Dispose();
+            _threadEventsListener.Dispose();
         }
 
         [Test]
@@ -71,7 +72,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(threadpoolUsageStatsSample);
+            Assert.That(threadpoolUsageStatsSample, Is.Not.Null);
         }
 
         [Test]
@@ -86,7 +87,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(threadpoolThroughputStatsSample);
+            Assert.That(threadpoolThroughputStatsSample, Is.Not.Null);
         }
 
         private ISampledEventListener<ThreadpoolThroughputEventsSample> GetThreadEventsListener()

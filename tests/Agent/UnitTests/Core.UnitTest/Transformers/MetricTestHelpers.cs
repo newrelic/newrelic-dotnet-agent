@@ -13,12 +13,12 @@ namespace NewRelic.Agent.Core.Transformers
         public static void CompareMetric(Dictionary<string, MetricDataWireModel> generatedMetrics, string metricName, float expectedValue)
         {
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, generatedMetrics[metricName].Value0),
-                () => Assert.AreEqual(expectedValue, generatedMetrics[metricName].Value1),
-                () => Assert.AreEqual(expectedValue, generatedMetrics[metricName].Value2),
-                () => Assert.AreEqual(expectedValue, generatedMetrics[metricName].Value3),
-                () => Assert.AreEqual(expectedValue, generatedMetrics[metricName].Value4),
-                () => Assert.AreEqual(expectedValue * expectedValue, generatedMetrics[metricName].Value5)
+                () => Assert.That(generatedMetrics[metricName].Value0, Is.EqualTo(1)),
+                () => Assert.That(generatedMetrics[metricName].Value1, Is.EqualTo(expectedValue)),
+                () => Assert.That(generatedMetrics[metricName].Value2, Is.EqualTo(expectedValue)),
+                () => Assert.That(generatedMetrics[metricName].Value3, Is.EqualTo(expectedValue)),
+                () => Assert.That(generatedMetrics[metricName].Value4, Is.EqualTo(expectedValue)),
+                () => Assert.That(generatedMetrics[metricName].Value5, Is.EqualTo(expectedValue * expectedValue))
             );
         }
     }

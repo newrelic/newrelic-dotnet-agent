@@ -22,11 +22,14 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
+            Assert.That(dictionary, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+            });
         }
 
         [Test]
@@ -41,11 +44,14 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
+            Assert.That(dictionary, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+            });
         }
 
         [Test]
@@ -59,15 +65,18 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary();
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.True(dictionary.ContainsKey("FRUIT"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.AreEqual("apple", dictionary["FRUIT"]);
-            Assert.True(dictionary.ContainsKey("dessert"));
-            Assert.True(dictionary.ContainsKey("DESSERT"));
-            Assert.AreEqual("pie", dictionary["dessert"]);
-            Assert.AreEqual("pie", dictionary["DESSERT"]);
+            Assert.That(dictionary, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+                Assert.That(dictionary.ContainsKey("FRUIT"), Is.True);
+                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+                Assert.That(dictionary["FRUIT"], Is.EqualTo("apple"));
+                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+                Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
+                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+                Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
+            });
         }
 
         [Test]
@@ -81,14 +90,20 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections
 
             var dictionary = collection.ToDictionary(StringComparer.CurrentCulture);
 
-            Assert.AreEqual(2, dictionary.Count);
-            Assert.True(dictionary.ContainsKey("fruit"));
-            Assert.AreEqual("apple", dictionary["fruit"]);
-            Assert.True(dictionary.ContainsKey("DESSERT"));
-            Assert.AreEqual("pie", dictionary["DESSERT"]);
+            Assert.That(dictionary, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+                Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
+                Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
+            });
 
-            Assert.False(dictionary.ContainsKey("FRUIT"));
-            Assert.False(dictionary.ContainsKey("dessert"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(dictionary.ContainsKey("FRUIT"), Is.False);
+                Assert.That(dictionary.ContainsKey("dessert"), Is.False);
+            });
         }
     }
 }

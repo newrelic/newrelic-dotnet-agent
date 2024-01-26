@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 
         }
 
-        [TestCaseSource("CollectorHostnameTestData")]
+        [TestCaseSource(nameof(CollectorHostnameTestData))]
         public void RunCrossAgentCollectorHostnameTests(string configFileKey, string envKey, string configOverrideHost, string envOverrideHost, string hostname)
         {
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns<string>(null);
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
             }
 
             var connectionInfo = new ConnectionInfo(_defaultConfig);
-            Assert.AreEqual(hostname, connectionInfo.Host);
+            Assert.That(connectionInfo.Host, Is.EqualTo(hostname));
         }
 
         private static List<TestCaseData> GetCollectorHostnameTestData()

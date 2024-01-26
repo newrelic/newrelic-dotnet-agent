@@ -70,6 +70,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             _metricAggregator.Dispose();
             _configurationAutoResponder.Dispose();
+            _metricNameService.Dispose();
         }
 
         [Test]
@@ -101,18 +102,18 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _harvestAction();
 
-            Assert.NotNull(sentMetrics);
-            Assert.AreEqual(1, sentMetrics.Count());
+            Assert.That(sentMetrics, Is.Not.Null);
+            Assert.That(sentMetrics.Count(), Is.EqualTo(1));
             var sentMetric = sentMetrics.ElementAt(0);
             NrAssert.Multiple(
-                () => Assert.AreEqual(MetricNames.SupportabilityMetricHarvestTransmit, sentMetric.MetricNameModel.Name),
-                () => Assert.AreEqual(null, sentMetric.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric.DataModel.Value0),
-                () => Assert.AreEqual(0, sentMetric.DataModel.Value1),
-                () => Assert.AreEqual(0, sentMetric.DataModel.Value2),
-                () => Assert.AreEqual(0, sentMetric.DataModel.Value3),
-                () => Assert.AreEqual(0, sentMetric.DataModel.Value4),
-                () => Assert.AreEqual(0, sentMetric.DataModel.Value5)
+                () => Assert.That(sentMetric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityMetricHarvestTransmit)),
+                () => Assert.That(sentMetric.MetricNameModel.Scope, Is.EqualTo(null)),
+                () => Assert.That(sentMetric.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric.DataModel.Value1, Is.EqualTo(0)),
+                () => Assert.That(sentMetric.DataModel.Value2, Is.EqualTo(0)),
+                () => Assert.That(sentMetric.DataModel.Value3, Is.EqualTo(0)),
+                () => Assert.That(sentMetric.DataModel.Value4, Is.EqualTo(0)),
+                () => Assert.That(sentMetric.DataModel.Value5, Is.EqualTo(0))
                 );
         }
 
@@ -179,12 +180,12 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             //Check the number of metrics being sent up.
-            Assert.IsTrue(sentMetrics.Count() == 3, "Count was " + sentMetrics.Count());
+            Assert.That(sentMetrics.Count(), Is.EqualTo(3), "Count was " + sentMetrics.Count());
             // there should be one supportability and two DotNet (one scoped and one unscoped)
             string[] names = new string[] { "Supportability/MetricHarvest/transmit", "DotNet/test_metric" };
             foreach (MetricWireModel current in sentMetrics)
             {
-                Assert.IsTrue(names.Contains(current.MetricNameModel.Name), "Name is not present: " + current.MetricNameModel.Name);
+                Assert.That(names, Does.Contain(current.MetricNameModel.Name), "Name is not present: " + current.MetricNameModel.Name);
             }
         }
 
@@ -200,8 +201,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _harvestAction();
 
-            Assert.NotNull(sentMetrics);
-            Assert.AreEqual(3, sentMetrics.Count());
+            Assert.That(sentMetrics, Is.Not.Null);
+            Assert.That(sentMetrics.Count(), Is.EqualTo(3));
             MetricWireModel sentMetric1 = null;
             MetricWireModel sentMetric2 = null;
             MetricWireModel sentMetric3 = null;
@@ -227,32 +228,32 @@ namespace NewRelic.Agent.Core.Aggregators
             }
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/metric1", sentMetric1.MetricNameModel.Name),
-                () => Assert.AreEqual(null, sentMetric1.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric1.DataModel.Value0),
-                () => Assert.AreEqual(3, sentMetric1.DataModel.Value1),
-                () => Assert.AreEqual(1, sentMetric1.DataModel.Value2),
-                () => Assert.AreEqual(3, sentMetric1.DataModel.Value3),
-                () => Assert.AreEqual(3, sentMetric1.DataModel.Value4),
-                () => Assert.AreEqual(9, sentMetric1.DataModel.Value5),
+                () => Assert.That(sentMetric1.MetricNameModel.Name, Is.EqualTo("DotNet/metric1")),
+                () => Assert.That(sentMetric1.MetricNameModel.Scope, Is.EqualTo(null)),
+                () => Assert.That(sentMetric1.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric1.DataModel.Value1, Is.EqualTo(3)),
+                () => Assert.That(sentMetric1.DataModel.Value2, Is.EqualTo(1)),
+                () => Assert.That(sentMetric1.DataModel.Value3, Is.EqualTo(3)),
+                () => Assert.That(sentMetric1.DataModel.Value4, Is.EqualTo(3)),
+                () => Assert.That(sentMetric1.DataModel.Value5, Is.EqualTo(9)),
 
-                () => Assert.AreEqual("DotNet/metric2", sentMetric2.MetricNameModel.Name),
-                () => Assert.AreEqual("scope2", sentMetric2.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric2.DataModel.Value0),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value1),
-                () => Assert.AreEqual(5, sentMetric2.DataModel.Value2),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value3),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value4),
-                () => Assert.AreEqual(49, sentMetric2.DataModel.Value5),
+                () => Assert.That(sentMetric2.MetricNameModel.Name, Is.EqualTo("DotNet/metric2")),
+                () => Assert.That(sentMetric2.MetricNameModel.Scope, Is.EqualTo("scope2")),
+                () => Assert.That(sentMetric2.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric2.DataModel.Value1, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value2, Is.EqualTo(5)),
+                () => Assert.That(sentMetric2.DataModel.Value3, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value4, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value5, Is.EqualTo(49)),
 
-                () => Assert.AreEqual(MetricNames.SupportabilityMetricHarvestTransmit, sentMetric3.MetricNameModel.Name),
-                () => Assert.AreEqual(null, sentMetric3.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric3.DataModel.Value0),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value1),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value2),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value3),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value4),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value5)
+                () => Assert.That(sentMetric3.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityMetricHarvestTransmit)),
+                () => Assert.That(sentMetric3.MetricNameModel.Scope, Is.EqualTo(null)),
+                () => Assert.That(sentMetric3.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric3.DataModel.Value1, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value2, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value3, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value4, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value5, Is.EqualTo(0))
             );
         }
 
@@ -269,8 +270,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _harvestAction();
 
-            Assert.NotNull(sentMetrics);
-            Assert.AreEqual(3, sentMetrics.Count());
+            Assert.That(sentMetrics, Is.Not.Null);
+            Assert.That(sentMetrics.Count(), Is.EqualTo(3));
             MetricWireModel sentMetric1 = null;
             MetricWireModel sentMetric2 = null;
             MetricWireModel sentMetric3 = null;
@@ -296,32 +297,32 @@ namespace NewRelic.Agent.Core.Aggregators
             }
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("DotNet/metric1", sentMetric1.MetricNameModel.Name),
-                () => Assert.AreEqual(null, sentMetric1.MetricNameModel.Scope),
-                () => Assert.AreEqual(2, sentMetric1.DataModel.Value0),
-                () => Assert.AreEqual(10, sentMetric1.DataModel.Value1),
-                () => Assert.AreEqual(6, sentMetric1.DataModel.Value2),
-                () => Assert.AreEqual(3, sentMetric1.DataModel.Value3),
-                () => Assert.AreEqual(7, sentMetric1.DataModel.Value4),
-                () => Assert.AreEqual(58, sentMetric1.DataModel.Value5),
+                () => Assert.That(sentMetric1.MetricNameModel.Name, Is.EqualTo("DotNet/metric1")),
+                () => Assert.That(sentMetric1.MetricNameModel.Scope, Is.EqualTo(null)),
+                () => Assert.That(sentMetric1.DataModel.Value0, Is.EqualTo(2)),
+                () => Assert.That(sentMetric1.DataModel.Value1, Is.EqualTo(10)),
+                () => Assert.That(sentMetric1.DataModel.Value2, Is.EqualTo(6)),
+                () => Assert.That(sentMetric1.DataModel.Value3, Is.EqualTo(3)),
+                () => Assert.That(sentMetric1.DataModel.Value4, Is.EqualTo(7)),
+                () => Assert.That(sentMetric1.DataModel.Value5, Is.EqualTo(58)),
 
-                () => Assert.AreEqual("DotNet/metric2", sentMetric2.MetricNameModel.Name),
-                () => Assert.AreEqual("scope2", sentMetric2.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric2.DataModel.Value0),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value1),
-                () => Assert.AreEqual(5, sentMetric2.DataModel.Value2),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value3),
-                () => Assert.AreEqual(7, sentMetric2.DataModel.Value4),
-                () => Assert.AreEqual(49, sentMetric2.DataModel.Value5),
+                () => Assert.That(sentMetric2.MetricNameModel.Name, Is.EqualTo("DotNet/metric2")),
+                () => Assert.That(sentMetric2.MetricNameModel.Scope, Is.EqualTo("scope2")),
+                () => Assert.That(sentMetric2.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric2.DataModel.Value1, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value2, Is.EqualTo(5)),
+                () => Assert.That(sentMetric2.DataModel.Value3, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value4, Is.EqualTo(7)),
+                () => Assert.That(sentMetric2.DataModel.Value5, Is.EqualTo(49)),
 
-                () => Assert.AreEqual(MetricNames.SupportabilityMetricHarvestTransmit, sentMetric3.MetricNameModel.Name),
-                () => Assert.AreEqual(null, sentMetric3.MetricNameModel.Scope),
-                () => Assert.AreEqual(1, sentMetric3.DataModel.Value0),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value1),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value2),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value3),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value4),
-                () => Assert.AreEqual(0, sentMetric3.DataModel.Value5)
+                () => Assert.That(sentMetric3.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityMetricHarvestTransmit)),
+                () => Assert.That(sentMetric3.MetricNameModel.Scope, Is.EqualTo(null)),
+                () => Assert.That(sentMetric3.DataModel.Value0, Is.EqualTo(1)),
+                () => Assert.That(sentMetric3.DataModel.Value1, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value2, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value3, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value4, Is.EqualTo(0)),
+                () => Assert.That(sentMetric3.DataModel.Value5, Is.EqualTo(0))
             );
         }
 
@@ -350,11 +351,14 @@ namespace NewRelic.Agent.Core.Aggregators
             _metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric2", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, unsentMetrics.Count()); // include "DotNet/metric1", "DotNet/metric2" and "Supportability/MetricHarvest/transmit" metrics
-            Assert.IsTrue(unsentMetrics.Any(_ => _.MetricNameModel.Name == "DotNet/metric1" && _.DataModel.Value0 == 1));
-            Assert.IsTrue(unsentMetrics.Any(_ => _.MetricNameModel.Name == "DotNet/metric2" && _.DataModel.Value0 == 1));
-            Assert.IsTrue(unsentMetrics.Any(_ => _.MetricNameModel.Name == "Supportability/MetricHarvest/transmit" && _.DataModel.Value0 == 2));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(unsentMetrics.Count(), Is.EqualTo(3)); // include "DotNet/metric1", "DotNet/metric2" and "Supportability/MetricHarvest/transmit" metrics
+                Assert.That(unsentMetrics.Any(_ => _.MetricNameModel.Name == "DotNet/metric1" && _.DataModel.Value0 == 1), Is.True);
+                Assert.That(unsentMetrics.Any(_ => _.MetricNameModel.Name == "DotNet/metric2" && _.DataModel.Value0 == 1), Is.True);
+                Assert.That(unsentMetrics.Any(_ => _.MetricNameModel.Name == "Supportability/MetricHarvest/transmit" && _.DataModel.Value0 == 2), Is.True);
+            });
         }
     }
 }

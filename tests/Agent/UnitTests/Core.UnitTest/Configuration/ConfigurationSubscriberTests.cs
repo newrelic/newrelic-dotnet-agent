@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(2, subscriber.Configuration.ConfigurationVersion);
+            Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(2));
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(3);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(3, subscriber.Configuration.ConfigurationVersion);
+            Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(3));
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(1);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(2, subscriber.Configuration.ConfigurationVersion);
+            Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(2));
         }
     }
 }
