@@ -13,6 +13,7 @@
 #include "../SignatureParser/SignatureParser.h"
 #include "../RapidXML/rapidxml.hpp"
 #include "../Common/AssemblyVersion.h"
+#include "IgnoreInstrumentation.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
@@ -23,8 +24,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     class InstrumentationConfiguration
     {
     public:
-        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
+        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList = nullptr) :
             _instrumentationPointsSet(new InstrumentationPointSet())
+            , _ignoreList(ignoreList)
         {
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
@@ -52,8 +54,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
         }
 
-        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
+        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints, IgnoreInstrumentationListPtr ignoreList = nullptr) :
             _instrumentationPointsSet(instrumentationPoints)
+            , _ignoreList(ignoreList)
         {
             _instrumentationPointsSet = instrumentationPoints;
 
@@ -73,11 +76,21 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return _instrumentationPointsSet;
         }
 
+        IgnoreInstrumentationListPtr GetIgnoreList() const
+        {
+            return _ignoreList;
+        }
+
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
             const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
             const auto params = methodSignature->ToString(function->GetTokenResolver());
             const auto instPoints = TryGetInstrumentationPoints(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
+
+            if (IgnoreInstrumentation::Matches(_ignoreList, function->GetAssemblyName(), function->GetTypeName()))
+            {
+                return nullptr;
+            }
 
             // We may have multiple matching instrumentation points that target different assembly versions. See if we can find one that meets
             // the version requirements
@@ -432,6 +445,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         InstrumentationPointMapPtr _instrumentationPointsMap = InstrumentationPointMapPtr(new InstrumentationPointMap());
         InstrumentationPointSetPtr _instrumentationPointsSet;
         uint16_t _invalidFileCount = 0;
+        IgnoreInstrumentationListPtr _ignoreList;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
 }}}

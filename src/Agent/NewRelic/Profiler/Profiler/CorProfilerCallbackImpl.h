@@ -248,7 +248,7 @@ namespace NewRelic { namespace Profiler {
                     return corePathInitResult;
                 }
 
-                auto instrumentationConfiguration = InitializeInstrumentationConfig();
+                auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
                 auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
                 this->SetMethodRewriter(methodRewriter);
 
@@ -623,13 +623,14 @@ namespace NewRelic { namespace Profiler {
                 (*instrumentationXmls)[xmlPair.first] = xmlPair.second;
             }
 
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls);
+            auto oldMethodRewriter = GetMethodRewriter();
+
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, oldMethodRewriter->GetInstrumentationConfiguration()->GetIgnoreList());
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogError(L"Unable to parse one or more instrumentation files.  Instrumentation will not be refreshed.");
                 return S_FALSE;
             }
 
-            auto oldMethodRewriter = GetMethodRewriter();
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
             SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
@@ -1131,10 +1132,10 @@ namespace NewRelic { namespace Profiler {
             return configuration;
         }
 
-        std::shared_ptr<Configuration::InstrumentationConfiguration> InitializeInstrumentationConfig()
+        std::shared_ptr<Configuration::InstrumentationConfiguration> InitializeInstrumentationConfig(NewRelic::Profiler::Configuration::IgnoreInstrumentationListPtr ignoreList)
         {
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls);
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, ignoreList);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogWarn(L"Unable to parse one or more instrumentation files.  Live instrumentation reloading will not work until the unparsable file(s) are corrected or removed.");
             }

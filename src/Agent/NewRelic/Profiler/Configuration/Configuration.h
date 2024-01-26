@@ -5,6 +5,7 @@
 #pragma once
 #include "../Logging/Logger.h"
 #include "../RapidXML/rapidxml.hpp"
+#include "IgnoreInstrumentation.h"
 #include "Exceptions.h"
 #include "Strings.h"
 #include <memory>
@@ -18,8 +19,10 @@
 #else
 #include "../Profiler/SystemCalls.h"
 #endif
+#include <list>
 
 namespace NewRelic { namespace Profiler { namespace Configuration {
+
     typedef std::set<xstring_t> Processes;
     typedef std::shared_ptr<Processes> ProcessesPtr;
     typedef std::set<xstring_t> ApplicationPools;
@@ -41,6 +44,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             , _agentEnabledSetInApplicationConfiguration(false)
             , _agentEnabledViaApplicationConfiguration(false)
             , _systemCalls(systemCalls)
+            , _ignoreList(std::make_shared<IgnoreInstrumentationList>())
         {
             try {
                 rapidxml::xml_document<xchar_t> globalNewRelicConfigurationDocument;
@@ -200,6 +204,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         {
             return _loggingEnabled;
         }
+        IgnoreInstrumentationListPtr GetIgnoreInstrumentationList()
+        {
+            return _ignoreList;
+        }
 
     private:
         bool _agentEnabled;
@@ -214,6 +222,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         bool _agentEnabledSetInApplicationConfiguration;
         bool _agentEnabledViaApplicationConfiguration;
         std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
+        IgnoreInstrumentationListPtr _ignoreList;
 
         rapidxml::xml_node<xchar_t>* GetConfigurationNode(const rapidxml::xml_document<xchar_t>& document)
         {
@@ -315,6 +324,22 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             auto instrumentationNode = configurationNode->first_node(_X("instrumentation"), 0, false);
             if (instrumentationNode == nullptr)
                 return;
+
+            for (auto ignoreNode = instrumentationNode->first_node(_X("ignore"), 0, false); ignoreNode; ignoreNode = ignoreNode->next_sibling(_X("ignore"), 0, false)) {
+                auto assemblyName = ignoreNode->first_attribute(_X("assemblyname"), 0, false);
+                // Is this right? Or can they set a class but no assembly?
+                if (assemblyName == nullptr)
+                    continue;
+                auto className = ignoreNode->first_attribute(_X("classname"), 0, false);
+                if (className == nullptr)
+                {
+                    _ignoreList->push_back(std::make_shared<IgnoreInstrumentation>(assemblyName->value()));
+                }
+                else
+                {
+                    _ignoreList->push_back(std::make_shared<IgnoreInstrumentation>(assemblyName->value(), className->value()));
+                }
+            }
 
             auto applicationsNode = instrumentationNode->first_node(_X("applications"), 0, false);
             if (applicationsNode == nullptr)
