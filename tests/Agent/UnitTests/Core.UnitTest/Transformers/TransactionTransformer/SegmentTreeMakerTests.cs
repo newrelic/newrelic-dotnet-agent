@@ -481,7 +481,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             duration = duration ?? TimeSpan.Zero;
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            return SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<string, object>(), name, combinable);
+            return SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<string, object>(), name, combinable);
         }
     }
 }

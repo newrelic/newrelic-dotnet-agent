@@ -17,22 +17,11 @@ namespace NewRelic.Agent.Core.Segments.Tests
     {
         #region IsCombinableWith
 
-#pragma warning disable NUnit1028 // The non-test method is public
-        public static Segment createMethodSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string type, string method, bool combinable)
-#pragma warning restore NUnit1028 // The non-test method is public
-        {
-            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
-            segment.SetSegmentData(new MethodSegmentData(type, method));
-            segment.Combinable = combinable;
-
-            return new Segment(start, duration, segment, null);
-        }
-
         [Test]
         public void IsCombinableWith_ReturnsTrue_ForIdenticalSegments()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.True);
         }
@@ -40,8 +29,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentCombinable()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -49,8 +38,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfBothNotCombinable()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", false);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -58,8 +47,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentHashCode()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -67,8 +56,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentTypeName()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -76,8 +65,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentMethodName()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -85,8 +74,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentDeclaredType()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType2", "declaredMethod", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType2", "declaredMethod", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -94,8 +83,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentDeclaredMethod()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod2", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod2", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -103,8 +92,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentSegmentType()
         {
-            var segment1 = createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
-            var segment2 = SimpleSegmentDataTests.createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment1 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "declaredType", "declaredMethod", true);
+            var segment2 = SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -119,7 +108,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var oldStartTime = DateTime.Now;
             var oldDuration = TimeSpan.FromSeconds(2);
             var oldParameters = new Dictionary<string, object> { { "flim", "flam" } };
-            var oldSegment = createMethodSegmentBuilder(new TimeSpan(), oldDuration, 2, 1, new MethodCallData("type", "method", 1), oldParameters, "declaredType", "declaredMethod", true);
+            var oldSegment = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), oldDuration, 2, 1, new MethodCallData("type", "method", 1), oldParameters, "declaredType", "declaredMethod", true);
 
             var newStartTime = TimeSpan.FromSeconds(5);
             var newDuration = TimeSpan.FromSeconds(5);
@@ -145,5 +134,17 @@ namespace NewRelic.Agent.Core.Segments.Tests
         }
 
         #endregion CreateSimilar
+    }
+
+    public static class MethodSegmentDataTestHelpers
+    {
+        public static Segment CreateMethodSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string type, string method, bool combinable)
+        {
+            var segment = new Segment(SimpleSegmentDataTestHelpers.CreateTransactionSegmentState(uniqueId, parentId), methodCallData);
+            segment.SetSegmentData(new MethodSegmentData(type, method));
+            segment.Combinable = combinable;
+
+            return new Segment(start, duration, segment, null);
+        }
     }
 }

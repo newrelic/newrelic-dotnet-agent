@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
             else if (addSegment)
             {
-                internalTransaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
+                internalTransaction.Add(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
             }
 
             var adaptiveSampler = Mock.Create<IAdaptiveSampler>();

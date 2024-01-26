@@ -330,7 +330,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             startTime = startTime ?? DateTime.Now;
             var relativeStart = startTime.Value - (transaction?.StartTime ?? startTime.Value);
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false))
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false))
                 .Build();
         }
 
@@ -366,7 +366,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false));
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false));
         }
 
         private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, TimeSpan? responseTime = null, string uri = null, string guid = null)

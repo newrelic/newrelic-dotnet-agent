@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public void IsCombinableWith_ReturnsFalse_IfDifferentSegmentType()
         {
             var segment1 = CreateCustomSegmentBuilder(new MethodCallData("type", "method", 1), "name", true);
-            var segment2 = MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "type", "method", true);
+            var segment2 = MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "type", "method", true);
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }

@@ -27,7 +27,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
     public class SecurityPoliciesCrossAgentTests
     {
         private ICollectorWire _collectorWire;
-        private static CompositeTestAgent _compositeTestAgent;
+        private CompositeTestAgent _compositeTestAgent;
         private string _connectRawData;
         private ConnectionHandler _connectionHandler;
         private bool _receivedSecurityPoliciesException;
@@ -100,7 +100,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             return testCaseDatas;
         }
 
-        private static void InitializeStartingPolicySettings(SecurityPoliciesTestData testData)
+        private void InitializeStartingPolicySettings(SecurityPoliciesTestData testData)
         {
             if (testData.StartingPolicySettings.AllowRawExceptionMessages != null)
             {
@@ -231,7 +231,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             }
         }
 
-        private static void ValidateEndingPolicies(SecurityPoliciesTestData testData)
+        private void ValidateEndingPolicies(SecurityPoliciesTestData testData)
         {
             if (testData.ShouldShutdown)
             {

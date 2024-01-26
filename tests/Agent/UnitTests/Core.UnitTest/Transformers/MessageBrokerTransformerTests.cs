@@ -249,7 +249,7 @@ namespace NewRelic.Agent.Core.Transformers
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var parameters = (new Dictionary<string, object>());
-            return MessageBrokerSegmentDataTests.createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, vendor, destination, destinationType, action, false);
+            return MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, vendor, destination, destinationType, action, false);
         }
     }
 }

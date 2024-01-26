@@ -29,30 +29,6 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
             });
         }
 
-
-        // You can uncomment this to measure timing of sql parsing
-        //[Test]
-        private void Timing()
-        {
-            var stopwatch = Stopwatch.StartNew();
-
-            var cases = GetSqlParsingTestCases();
-
-            for (int i = 0; i < 1000000; i++)
-            {
-                foreach (var c in cases)
-                {
-                    var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, c.Arguments[0] as string);
-                }
-            }
-
-            stopwatch.Stop();
-
-            Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
-
-            Assert.Fail();
-        }
-
         private static IEnumerable<TestCaseData> GetSqlParsingTestCases()
         {
             var testCases = JsonConvert.DeserializeObject<List<SqlParsingTestCase>>(SqlParsingCrossAgentTestJson.TestCases);

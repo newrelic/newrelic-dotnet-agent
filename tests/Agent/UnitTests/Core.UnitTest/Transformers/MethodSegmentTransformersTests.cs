@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Transformers
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var parameters = (new Dictionary<string, object>());
-            return MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, type, method, false);
+            return MethodSegmentDataTestHelpers.CreateMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, type, method, false);
         }
     }
 }

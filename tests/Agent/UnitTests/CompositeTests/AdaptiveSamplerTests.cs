@@ -39,6 +39,7 @@ namespace CompositeTests
         {
             _compositeTestAgent.Dispose();
             _adaptiveSampler.Dispose();
+            _adaptiveSampler = null;
         }
 
         [Test]

@@ -1005,18 +1005,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-#pragma warning disable NUnit1005 // The type of the value specified via ExpectedResult must match the return type of the method
         [TestCase("401", new[] { "405" }, ExpectedResult = new[] { "405" })]
         [TestCase("401", new string[0], ExpectedResult = new string[0])]
         [TestCase("401", null, ExpectedResult = new[] { "401" })]
-        public IEnumerable<object> ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
+        public string[] ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes = (local);
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
+            return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
         [TestCase("401-404", new string[] { "401.5", "402.3" }, new bool[] { false, false })] //does not support full status codes
