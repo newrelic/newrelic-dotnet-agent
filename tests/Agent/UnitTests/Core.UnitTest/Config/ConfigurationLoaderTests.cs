@@ -23,8 +23,11 @@ namespace NewRelic.Agent.Core.Config
         public void GetWebConfigAppSetting_NonWebApp_ReturnsDefaultSettings()
         {
             var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
-            StringAssert.Contains("default", valueWithProvenance.Provenance);
-            Assert.IsNull(valueWithProvenance.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(valueWithProvenance.Provenance, Does.Contain("default"));
+                Assert.That(valueWithProvenance.Value, Is.Null);
+            });
         }
 
         [Test]
@@ -40,8 +43,11 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseOpenWebConfigurationFunc(_ => testWebConfiguration);
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
-                StringAssert.DoesNotContain("default", valueWithProvenance.Provenance);
-                Assert.AreEqual("bar", valueWithProvenance.Value);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(valueWithProvenance.Provenance, Does.Not.Contain("default"));
+                    Assert.That(valueWithProvenance.Value, Is.EqualTo("bar"));
+                });
             }
         }
         [Test]
@@ -56,8 +62,11 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseOpenWebConfigurationFunc(_ => testWebConfiguration);
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
-                StringAssert.Contains("default", valueWithProvenance.Provenance);
-                Assert.IsNull(valueWithProvenance.Value);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(valueWithProvenance.Provenance, Does.Contain("default"));
+                    Assert.That(valueWithProvenance.Value, Is.Null);
+                });
             }
         }
 
@@ -71,8 +80,11 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseOpenWebConfigurationFunc(_ => throw new Exception("Could not load test configuration."));
 
                 var valueWithProvenance = ConfigurationLoader.GetWebConfigAppSetting("foo");
-                StringAssert.Contains("default", valueWithProvenance.Provenance);
-                Assert.IsNull(valueWithProvenance.Value);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(valueWithProvenance.Provenance, Does.Contain("default"));
+                    Assert.That(valueWithProvenance.Value, Is.Null);
+                });
             }
         }
 
@@ -80,8 +92,11 @@ namespace NewRelic.Agent.Core.Config
         public void GetConfigSetting_NonWebApp_ReturnsConfigurationManagerSetting()
         {
             var valueWithProvenance = ConfigurationLoader.GetConfigSetting("foo");
-            StringAssert.Contains("ConfigurationManager", valueWithProvenance.Provenance);
-            Assert.IsNull(valueWithProvenance.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(valueWithProvenance.Provenance, Does.Contain("ConfigurationManager"));
+                Assert.That(valueWithProvenance.Value, Is.Null);
+            });
         }
 
         [Test]
@@ -97,8 +112,11 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseOpenWebConfigurationFunc(_ => testWebConfiguration);
 
                 var valueWithProvenance = ConfigurationLoader.GetConfigSetting("foo");
-                StringAssert.DoesNotContain("default", valueWithProvenance.Provenance);
-                Assert.AreEqual("bar", valueWithProvenance.Value);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(valueWithProvenance.Provenance, Does.Not.Contain("default"));
+                    Assert.That(valueWithProvenance.Value, Is.EqualTo("bar"));
+                });
             }
         }
 
@@ -109,7 +127,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -129,7 +147,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual(expectedFileName, agentConfigFileName);
+                Assert.That(agentConfigFileName, Is.EqualTo(expectedFileName));
             }
         }
         [Test]
@@ -147,7 +165,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -166,7 +184,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => throw new Exception("Exception from FileExists call"));
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -178,7 +196,7 @@ namespace NewRelic.Agent.Core.Config
                 ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -192,7 +210,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -206,7 +224,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => throw new Exception("Exception from FileExists call"));
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -222,7 +240,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("testPath\\newrelic.config", agentConfigFileName);
+                Assert.That(agentConfigFileName, Is.EqualTo("testPath\\newrelic.config"));
             }
         }
 
@@ -235,7 +253,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UsePathGetDirectoryNameFunc(_ => null);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -248,7 +266,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -261,7 +279,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(f => f.Contains("executionPath") ? throw new Exception("Exception from FileExists") : false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -275,7 +293,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("executionPath\\newrelic.config", agentConfigFileName);
+                Assert.That(agentConfigFileName, Is.EqualTo("executionPath\\newrelic.config"));
             }
         }
 
@@ -288,7 +306,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -301,7 +319,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(f => f.Contains("newRelicHome") ? throw new Exception("Exception from FileExists") : false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -315,7 +333,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("newRelicHome\\newrelic.config", agentConfigFileName);
+                Assert.That(agentConfigFileName, Is.EqualTo("newRelicHome\\newrelic.config"));
             }
         }
 
@@ -327,7 +345,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(f => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -339,7 +357,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(f => f == "newrelic.config" ? throw new Exception("Exception from FileExists") : false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+                Assert.That(actualException.Message, Does.Contain("Could not find newrelic.config"));
             }
         }
 
@@ -352,7 +370,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var agentConfigFileName = ConfigurationLoader.GetAgentConfigFileName();
 
-                Assert.AreEqual("newrelic.config", agentConfigFileName);
+                Assert.That(agentConfigFileName, Is.EqualTo("newrelic.config"));
             }
         }
 
@@ -365,7 +383,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var fileName = ConfigurationLoader.GetConfigurationFilePath("homeDirectory");
 
-                Assert.AreEqual("homeDirectory\\newrelic.config", fileName);
+                Assert.That(fileName, Is.EqualTo("homeDirectory\\newrelic.config"));
             }
         }
 
@@ -377,7 +395,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetConfigurationFilePath("homeDirectory"), "Expected an exception to be thrown");
-                StringAssert.StartsWith("Could not find the config file in the new relic home directory", actualException.Message);
+                Assert.That(actualException.Message, Does.StartWith("Could not find the config file in the new relic home directory"));
             }
         }
 
@@ -391,7 +409,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(FailAfterFirstAttemptForFile);
 
                 var actualException = Assert.Catch<ConfigurationLoaderException>(() => ConfigurationLoader.Initialize(), "Expected an exception to be thrown");
-                StringAssert.StartsWith("An error occurred reading the New Relic Agent configuration file", actualException.Message);
+                Assert.That(actualException.Message, Does.StartWith("An error occurred reading the New Relic Agent configuration file"));
             }
 
             bool FailAfterFirstAttemptForFile(string fileName)
@@ -416,7 +434,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(FailAfterFirstAttemptForFile);
 
                 var actualException = Assert.Catch<ConfigurationLoaderException>(() => ConfigurationLoader.Initialize(), "Expected an exception to be thrown");
-                StringAssert.StartsWith("Unable to access the New Relic Agent configuration file", actualException.Message);
+                Assert.That(actualException.Message, Does.StartWith("Unable to access the New Relic Agent configuration file"));
             }
 
             bool FailAfterFirstAttemptForFile(string fileName)
@@ -445,7 +463,7 @@ namespace NewRelic.Agent.Core.Config
                 staticMocks.UseFileExistsFunc(FailAfterFirstAttemptForFile);
 
                 var actualException = Assert.Catch<ConfigurationLoaderException>(() => ConfigurationLoader.Initialize(), "Expected an exception to be thrown");
-                StringAssert.StartsWith("Unable to find the New Relic Agent configuration file", actualException.Message);
+                Assert.That(actualException.Message, Does.StartWith("Unable to find the New Relic Agent configuration file"));
             }
 
             bool FailAfterFirstAttemptForFile(string fileName)
@@ -474,7 +492,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var parsedConfig = ConfigurationLoader.Initialize();
 
-                Assert.AreEqual(configFile.FileName, parsedConfig.ConfigurationFileName);
+                Assert.That(parsedConfig.ConfigurationFileName, Is.EqualTo(configFile.FileName));
             }
         }
 

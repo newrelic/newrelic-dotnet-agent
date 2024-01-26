@@ -49,7 +49,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
 
         public static void MetricsDoNotExist(IEnumerable<ExpectedMetric> unexpectedMetrics, IEnumerable<MetricWireModel> actualMetrics)
@@ -68,7 +68,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
 
         private static MetricWireModel TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<MetricWireModel> actualMetrics)
@@ -97,7 +97,7 @@ namespace CompositeTests
             var actualAttributes = transactionEvent.GetAttributes(attributeClassification);
             var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
+            Assert.That(allAttributesMatch, Is.True, errorMessageBuilder.ToString());
         }
 
         public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, TransactionEventWireModel transactionEvent)
@@ -106,7 +106,7 @@ namespace CompositeTests
             var actualAttributes = transactionEvent.GetAttributes(attributeClassification);
             var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
+            Assert.That(allAttributesNotFound, Is.True, errorMessageBuilder.ToString());
         }
     }
 
@@ -138,7 +138,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
 
         public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, CustomEventWireModel customEvent)
@@ -156,7 +156,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
     }
 
@@ -169,7 +169,7 @@ namespace CompositeTests
             var actualAttributes = span.GetAttributeValues(attributeClassification);
             var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
+            Assert.That(allAttributesMatch, Is.True, errorMessageBuilder.ToString());
         }
 
         public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, ISpanEventWireModel span)
@@ -178,7 +178,7 @@ namespace CompositeTests
             var actualAttributes = span.GetAttributeValues(attributeClassification);
             var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
+            Assert.That(allAttributesNotFound, Is.True, errorMessageBuilder.ToString());
         }
 
     }
@@ -191,7 +191,7 @@ namespace CompositeTests
             var actualAttributes = trace.GetAttributes(attributeClassification);
             var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
+            Assert.That(allAttributesMatch, Is.True, errorMessageBuilder.ToString());
         }
 
         public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, TransactionTraceWireModel trace)
@@ -200,7 +200,7 @@ namespace CompositeTests
             var actualAttributes = trace.GetAttributes(attributeClassification);
             var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
+            Assert.That(allAttributesNotFound, Is.True, errorMessageBuilder.ToString());
         }
 
         public static void SegmentsExist(IEnumerable<string> expectedTraceSegmentNames, TransactionTraceWireModel trace, bool areRegexNames = false)
@@ -222,7 +222,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
 
         public static void SegmentsDoNotExist(IEnumerable<string> unexpectedTraceSegmentNames, TransactionTraceWireModel trace, bool areRegexNames = false)
@@ -244,7 +244,7 @@ namespace CompositeTests
                 }
             }
 
-            Assert.True(succeeded, builder.ToString());
+            Assert.That(succeeded, Is.True, builder.ToString());
         }
     }
 
@@ -256,7 +256,7 @@ namespace CompositeTests
             var actualAttributes = errorTrace.GetAttributes(attributeClassification);
             var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
+            Assert.That(allAttributesMatch, Is.True, errorMessageBuilder.ToString());
         }
 
         public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, ErrorTraceWireModel errorTrace)
@@ -265,7 +265,7 @@ namespace CompositeTests
             var actualAttributes = errorTrace.GetAttributes(attributeClassification);
             var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
 
-            Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
+            Assert.That(allAttributesNotFound, Is.True, errorMessageBuilder.ToString());
         }
     }
 

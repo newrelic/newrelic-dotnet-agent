@@ -14,7 +14,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = 5;
             Memoizer.Memoize(ref backingVariable, () => 7);
-            Assert.AreEqual(5, backingVariable);
+            Assert.That(backingVariable, Is.EqualTo(5));
         }
 
         [Test]
@@ -22,7 +22,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = null;
             var result = Memoizer.Memoize(ref backingVariable, () => 5);
-            Assert.AreEqual(5, result);
+            Assert.That(result, Is.EqualTo(5));
         }
 
         [Test]
@@ -30,7 +30,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             int? backingVariable = null;
             Memoizer.Memoize(ref backingVariable, () => 5);
-            Assert.AreEqual(5, backingVariable);
+            Assert.That(backingVariable, Is.EqualTo(5));
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = "foo";
             Memoizer.Memoize(ref backingVariable, () => "bar");
-            Assert.AreEqual("foo", backingVariable);
+            Assert.That(backingVariable, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = null;
             var result = Memoizer.Memoize(ref backingVariable, () => "foo");
-            Assert.AreEqual("foo", result);
+            Assert.That(result, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace NewRelic.Memoization.UnitTests
         {
             string backingVariable = null;
             Memoizer.Memoize(ref backingVariable, () => "foo");
-            Assert.AreEqual("foo", backingVariable);
+            Assert.That(backingVariable, Is.EqualTo("foo"));
         }
 
         [Test]

@@ -19,8 +19,11 @@ namespace NewRelic.Agent.Core.Utilization
                 var requestor = new VendorHttpApiRequestor();
                 var response = requestor.CallVendorApi(BogusUri, "GET", "bogus");
 
-                Assert.That(response, Is.Null);
-                Assert.True(logging.HasMessageThatContains("CallVendorApi"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(response, Is.Null);
+                    Assert.That(logging.HasMessageThatContains("CallVendorApi"), Is.True);
+                });
             }
         }
     }

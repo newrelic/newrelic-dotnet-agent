@@ -18,14 +18,17 @@ namespace NewRelic.Agent.Core.Utils
         [Test]
         public static void TestToString()
         {
-            Assert.AreEqual("one", Strings.ToString(new object[] { "one" }));
-            Assert.AreEqual("one,two,3", Strings.ToString(new object[] { "one", "two", 3 }));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Strings.ToString(new object[] { "one" }), Is.EqualTo("one"));
+                Assert.That(Strings.ToString(new object[] { "one", "two", 3 }), Is.EqualTo("one,two,3"));
+            });
         }
 
         [Test]
         public static void TestHexParse()
         {
-            Assert.AreEqual(1, Convert.ToInt32("0x1", 16));
+            Assert.That(Convert.ToInt32("0x1", 16), Is.EqualTo(1));
         }
 
         [Test]
@@ -33,7 +36,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             var result = Strings.Base64Encode(DATA, ENCODE_KEY);
             var expected = "PxQGQldBFBFnAQM2RVBZFQVSQloNCEwwYC97DVRUUVFHCktOcwRSAQtYZAQUFVFQVTcEEEFdUhJLVlNHIwUADUUMTCtWXltAXgRNCF4PEU5UGAdNVk0JAQNIVVNq";
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -41,14 +44,14 @@ namespace NewRelic.Agent.Core.Utils
         {
             var result = Strings.Base64Encode("269975#19205", ENCODE_KEY);
             var expected = "VgAOWFFWGwIJVlFX";
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
         public static void validate_string_decode_with_key()
         {
             var result = Strings.Base64Decode("PxQGQldBFBFnAQM2RVBZFQVSQloNCEwwYC97DVRUUVFHCktOcwRSAQtYZAQUFVFQVTcEEEFdUhJLVlNHIwUADUUMTCtWXltAXgRNCF4PEU5UGAdNVk0JAQNIVVNq", ENCODE_KEY);
-            Assert.AreEqual(DATA, result);
+            Assert.That(result, Is.EqualTo(DATA));
         }
 
         [Test]
@@ -56,14 +59,14 @@ namespace NewRelic.Agent.Core.Utils
         {
             var result = Strings.Base64Encode(DATA);
             var expected = "WyIxIzEiLCJXZWJUcmFuc2FjdGlvbi9SUE1Db2xsZWN0b3IvQmVhY29uU2VydmljZVNlcnZsZXQvZ2V0QWNjb3VudEluZm9ybWF0aW9uIiwwLjAsMC4xMjMsNDFd";
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
         public static void validate_string_decode_without_key()
         {
             var result = Strings.Base64Decode("WyIxIzEiLCJXZWJUcmFuc2FjdGlvbi9SUE1Db2xsZWN0b3IvQmVhY29uU2VydmljZVNlcnZsZXQvZ2V0QWNjb3VudEluZm9ybWF0aW9uIiwwLjAsMC4xMjMsNDFd");
-            Assert.AreEqual(DATA, result);
+            Assert.That(result, Is.EqualTo(DATA));
         }
 
 
@@ -73,7 +76,7 @@ namespace NewRelic.Agent.Core.Utils
             Assert.Throws<FormatException>(() => Strings.Base64Decode("1234#134634643"));
         }
 
-        [TestCaseSource("ConvertBytesToStringTestData")]
+        [TestCaseSource(nameof(ConvertBytesToStringTestData))]
         public void when_byte_array_is_decoded_into_string_one_byte_at_a_time_then_result_string_is_correct(Encoding encoding, string content)
         {
             var bytes = encoding.GetBytes(content);
@@ -83,7 +86,7 @@ namespace NewRelic.Agent.Core.Utils
             {
                 result += Strings.GetStringBufferFromBytes(decoder, new byte[] { @byte }, 0, 1);
             }
-            Assert.AreEqual(content, result);
+            Assert.That(result, Is.EqualTo(content));
         }
 
         [TestCase("commonName", ExpectedResult = "commonName")]

@@ -46,13 +46,19 @@ namespace NewRelic.Agent.Core.WireModels
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void when_default_fixture_values_are_used_then_serializes_correctly()
         {
             const string expectedResult = "[\"WebTransaction/ASP/post.aspx\",\"http://localhost:8080/post.aspx\",1530282818,\"Select * from meh\",\"Database/be_datastoresettings/delete\",1,1000.0,1000.0,1000.0,{}]";
 
             var actualResult = JsonConvert.SerializeObject(_sqlTraceWireModel);
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -94,68 +100,68 @@ namespace NewRelic.Agent.Core.WireModels
             foreach (SqlTraceWireModel traceData in traceDatas)
             {
                 var numberOfDigits = Math.Floor(Math.Log10(traceData.SqlId) + 1);
-                Assert.IsTrue(numberOfDigits != 9);
+                Assert.That(numberOfDigits, Is.Not.EqualTo(9));
             }
         }
 
         [Test]
         public void when_construtor_used_TransactionName_property_is_set()
         {
-            Assert.AreEqual(TrxDisplayName, _sqlTraceWireModel.TransactionName);
+            Assert.That(_sqlTraceWireModel.TransactionName, Is.EqualTo(TrxDisplayName));
         }
 
         [Test]
         public void when_construtor_used_uri_property_is_set()
         {
-            Assert.AreEqual(Uri, _sqlTraceWireModel.Uri);
+            Assert.That(_sqlTraceWireModel.Uri, Is.EqualTo(Uri));
         }
 
         [Test]
         public void when_construtor_used_sqlId_property_is_set()
         {
-            Assert.AreEqual(SqlId, _sqlTraceWireModel.SqlId);
+            Assert.That(_sqlTraceWireModel.SqlId, Is.EqualTo(SqlId));
         }
 
         [Test]
         public void when_construtor_used_sql_property_is_set()
         {
-            Assert.AreEqual(Sql, _sqlTraceWireModel.Sql);
+            Assert.That(_sqlTraceWireModel.Sql, Is.EqualTo(Sql));
         }
 
         [Test]
         public void when_construtor_used_databaseMetricName_property_is_set()
         {
-            Assert.AreEqual(DatabaseMetricName, _sqlTraceWireModel.DatastoreMetricName);
+            Assert.That(_sqlTraceWireModel.DatastoreMetricName, Is.EqualTo(DatabaseMetricName));
         }
 
         [Test]
         public void when_construtor_used_callcount_property_is_set()
         {
-            Assert.AreEqual(CallCount, _sqlTraceWireModel.CallCount);
+            Assert.That(_sqlTraceWireModel.CallCount, Is.EqualTo(CallCount));
         }
 
         [Test]
         public void when_construtor_used_totalcalltime_property_is_set()
         {
-            Assert.AreEqual(TotalCallTime, _sqlTraceWireModel.TotalCallTime);
+            Assert.That(_sqlTraceWireModel.TotalCallTime, Is.EqualTo(TotalCallTime));
         }
 
         [Test]
         public void when_construtor_used_mincalltime_property_is_set()
         {
-            Assert.AreEqual(MinCallTime, _sqlTraceWireModel.MinCallTime);
+            Assert.That(_sqlTraceWireModel.MinCallTime, Is.EqualTo(MinCallTime));
         }
 
         [Test]
         public void when_construtor_used_maxcalltime_property_is_set()
         {
-            Assert.AreEqual(MaxCallTime, _sqlTraceWireModel.MaxCallTime);
+            Assert.That(_sqlTraceWireModel.MaxCallTime, Is.EqualTo(MaxCallTime));
         }
 
         [Test]
         public void when_construtor_used_parameterdate_property_is_set()
         {
-            Assert.AreEqual(_parameterData, _sqlTraceWireModel.ParameterData);
+            Assert.That(_sqlTraceWireModel.ParameterData, Is.EqualTo(_parameterData));
         }
     }
 }

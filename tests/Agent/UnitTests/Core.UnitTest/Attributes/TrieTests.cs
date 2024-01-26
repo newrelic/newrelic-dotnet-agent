@@ -70,8 +70,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
         private void AssertTree(TestNode expected, TrieNode<string> actual)
         {
-            Assert.AreEqual(expected.Key, actual.Data);
-            Assert.AreEqual(expected.Children.Count(), actual.Children.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual.Data, Is.EqualTo(expected.Key));
+                Assert.That(actual.Children, Has.Count.EqualTo(expected.Children.Count()));
+            });
 
             foreach (var expectedChild in expected.Children)
             {
@@ -79,7 +82,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                     .Where(potentialChild => expectedChild.Key == potentialChild.Data)
                     .FirstOrDefault();
 
-                Assert.NotNull(actualChild);
+                Assert.That(actualChild, Is.Not.Null);
                 AssertTree(expectedChild, actualChild);
             }
         }

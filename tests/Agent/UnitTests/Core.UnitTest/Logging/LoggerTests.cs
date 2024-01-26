@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
 
             var result = _logger.IsEnabledFor(level);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             var result = _logger.IsEnabledFor((Level)9999);
 
-            Assert.IsFalse(result);
+            Assert.That(result, Is.False);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
 
             var result = _logger.IsErrorEnabled;
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
         }
 
         [Test]

@@ -43,6 +43,12 @@ namespace NewRelic.Agent.Core.Transformers
             _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void Transform_CreatesCustomEvents_IfInputIsValid()
         {
@@ -56,19 +62,19 @@ namespace NewRelic.Agent.Core.Transformers
             var priority = 0.5f;
             _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            Assert.NotNull(_lastPublishedCustomEvent);
+            Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
 
             var intrinsicAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.Intrinsics);
             var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, intrinsicAttributes.Count),
-                () => Assert.AreEqual(expectedEventType, intrinsicAttributes["type"]),
-                () => Assert.IsTrue(intrinsicAttributes.ContainsKey("type")),
+                () => Assert.That(intrinsicAttributes, Has.Count.EqualTo(2)),
+                () => Assert.That(intrinsicAttributes["type"], Is.EqualTo(expectedEventType)),
+                () => Assert.That(intrinsicAttributes.ContainsKey("type"), Is.True),
 
-                () => Assert.AreEqual(2, userAttributes.Count),
-                () => Assert.AreEqual("value1", userAttributes["key1"]),
-                () => Assert.AreEqual("key2", userAttributes["key2"])
+                () => Assert.That(userAttributes, Has.Count.EqualTo(2)),
+                () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
+                () => Assert.That(userAttributes["key2"], Is.EqualTo("key2"))
                 );
         }
 
@@ -88,18 +94,18 @@ namespace NewRelic.Agent.Core.Transformers
             var priority = 0.5f;
             _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            Assert.NotNull(_lastPublishedCustomEvent);
+            Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
 
             var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(5, userAttributes.Count),
-                () => Assert.AreEqual("value1", userAttributes["key1"]),
-                () => Assert.AreEqual(2.0d, userAttributes["key2"]),
-                () => Assert.AreEqual(2.0d, userAttributes["key3"]),
-                () => Assert.AreEqual(2L, userAttributes["key4"]),
-                () => Assert.AreEqual(2L, userAttributes["key5"])
+                () => Assert.That(userAttributes, Has.Count.EqualTo(5)),
+                () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
+                () => Assert.That(userAttributes["key2"], Is.EqualTo(2.0d)),
+                () => Assert.That(userAttributes["key3"], Is.EqualTo(2.0d)),
+                () => Assert.That(userAttributes["key4"], Is.EqualTo(2L)),
+                () => Assert.That(userAttributes["key5"], Is.EqualTo(2L))
             );
         }
 
@@ -119,7 +125,7 @@ namespace NewRelic.Agent.Core.Transformers
             var priority = 0.5f;
             _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            Assert.IsNull(_lastPublishedCustomEvent);
+            Assert.That(_lastPublishedCustomEvent, Is.Null);
         }
 
         [Test]
@@ -143,7 +149,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            Assert.AreEqual(0, countCollectedEvents);
+            Assert.That(countCollectedEvents, Is.EqualTo(0));
         }
 
         [Test]
@@ -167,7 +173,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            Assert.AreEqual(0, countCollectedEvents);
+            Assert.That(countCollectedEvents, Is.EqualTo(0));
         }
     }
 }

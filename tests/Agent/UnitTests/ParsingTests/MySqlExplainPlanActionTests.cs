@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(invalidCommand);
 
-            Assert.IsNull(explainPlan);
+            Assert.That(explainPlan, Is.Null);
         }
 
         [Test]
@@ -68,7 +68,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(command);
 
-            Assert.IsNull(explainPlan);
+            Assert.That(explainPlan, Is.Null);
         }
 
         [Test]
@@ -110,13 +110,13 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(command);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(explainPlan, "An explain plan should be returned."),
-                () => Assert.IsNull(command.Transaction, "The transaction should be null."),
-                () => StringAssert.StartsWith("EXPLAIN ", command.CommandText),
-                () => CollectionAssert.IsEmpty(explainPlan.ObfuscatedHeaders, "Expected there to be no obfuscated headers."),
-                () => CollectionAssert.AreEquivalent(new[] {"header0", "header1", "header2"}, explainPlan.ExplainPlanHeaders, "Expected the headers collections to match."),
-                () => Assert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
-                () => CollectionAssert.AreEquivalent(new[] {"value0", "value1", "value2"}, explainPlan.ExplainPlanDatas[0], "Expected the explain plan results to match.")
+                () => Assert.That(explainPlan, Is.Not.Null, "An explain plan should be returned."),
+                () => Assert.That(command.Transaction, Is.Null, "The transaction should be null."),
+                () => Assert.That(command.CommandText, Does.StartWith("EXPLAIN ")),
+                () => Assert.That(explainPlan.ObfuscatedHeaders, Is.Empty, "Expected there to be no obfuscated headers."),
+                () => Assert.That(explainPlan.ExplainPlanHeaders, Is.EquivalentTo(new[] {"header0", "header1", "header2"}), "Expected the headers collections to match."),
+                () => Assert.That(explainPlan.ExplainPlanDatas, Has.Count.EqualTo(1), "Expected only 1 row of data for the explain plain."),
+                () => Assert.That(explainPlan.ExplainPlanDatas[0], Is.EquivalentTo(new[] {"value0", "value1", "value2"}), "Expected the explain plan results to match.")
             );
         }
 
@@ -127,7 +127,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
 
             var resources = MySqlExplainPlanActions.AllocateResources(mockDbCommand);
 
-            Assert.IsNull(resources);
+            Assert.That(resources, Is.Null);
         }
 
         [Test]
@@ -143,10 +143,10 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var resources = MySqlExplainPlanActions.AllocateResources(mockDbCommand);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(resources, "Expected the new resource to be not null."),
-                () => Assert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
-                () => Assert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
-                () => Assert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
+                () => Assert.That(resources, Is.Not.Null, "Expected the new resource to be not null."),
+                () => Assert.That(resources, Is.Not.SameAs(mockDbCommand), "The command is expected to be cloned."),
+                () => Assert.That(((IDbCommand)resources).Connection, Is.Not.SameAs(mockDbCommand.Connection), "The connection is expected to be cloned."),
+                () => Assert.That(((IDbCommand)resources).Transaction, Is.Null, "The transaction is expected to be null.")
             );
         }
 
@@ -155,7 +155,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
         {
             var indexes = MySqlExplainPlanActions.GetObfuscatedIndexes(new List<string>());
 
-            CollectionAssert.IsEmpty(indexes);
+            Assert.That(indexes, Is.Empty);
         }
 
         [Test]
@@ -163,7 +163,7 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
         {
             var indexes = MySqlExplainPlanActions.GetObfuscatedIndexes(new List<string> { "header1", "header2", "header3" });
 
-            CollectionAssert.IsEmpty(indexes);
+            Assert.That(indexes, Is.Empty);
         }
 
         private static void ShouldGenerateExplainPlanShouldHaveExpectedResult(string rawSql, ParsedSqlStatement parsedSql, bool expectedIsValid, string expectedMessage)
@@ -171,8 +171,8 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
             var result = MySqlExplainPlanActions.ShouldGenerateExplainPlan(rawSql, parsedSql);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedIsValid, result.IsValid, "Expected the validation result IsValid property to match the expected value."),
-                () => Assert.AreEqual(expectedMessage, result.ValidationMessage, "Expected the validation result ValidationMessage property to match the expected value.")
+                () => Assert.That(result.IsValid, Is.EqualTo(expectedIsValid), "Expected the validation result IsValid property to match the expected value."),
+                () => Assert.That(result.ValidationMessage, Is.EqualTo(expectedMessage), "Expected the validation result ValidationMessage property to match the expected value.")
             );
         }
     }

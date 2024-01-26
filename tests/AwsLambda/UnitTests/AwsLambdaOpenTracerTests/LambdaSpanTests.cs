@@ -22,8 +22,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var endTime = DateTimeOffset.UtcNow;
             var maxDuration = (endTime - startTime).TotalSeconds;
             var spanDuration = rootSpan.GetDurationInSeconds();
-            Assert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
-            Assert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            Assert.Multiple(() =>
+            {
+                Assert.That(spanDuration, Is.GreaterThan(0), $"Span duration ({spanDuration}) must be greater than 0");
+                Assert.That(spanDuration, Is.LessThanOrEqualTo(maxDuration), $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            });
         }
 
         [Test]
@@ -37,8 +40,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var endTime = DateTimeOffset.UtcNow;
             var maxDuration = (endTime - startTime).TotalSeconds;
             var spanDuration = childSpan.GetDurationInSeconds();
-            Assert.IsTrue(spanDuration > 0, $"Span duration ({spanDuration}) must be greater than 0");
-            Assert.IsTrue(spanDuration <= maxDuration, $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            Assert.Multiple(() =>
+            {
+                Assert.That(spanDuration, Is.GreaterThan(0), $"Span duration ({spanDuration}) must be greater than 0");
+                Assert.That(spanDuration, Is.LessThanOrEqualTo(maxDuration), $"Span duration ({spanDuration}) must be <= maxDuration ({maxDuration}) ");
+            });
         }
 
         [Test]
@@ -55,14 +61,17 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             rootSpan.SetTag(new global::OpenTracing.Tag.IntTag("IntTagKey"), 1);
             rootSpan.SetTag(new global::OpenTracing.Tag.StringTag("StringTagKey"), "stringValue");
 
-            Assert.AreEqual(rootSpan.GetTag("key1"), "stringValue");
-            Assert.AreEqual(rootSpan.GetTag("key2"), true);
-            Assert.AreEqual(rootSpan.GetTag("key3"), 1.0);
-            Assert.AreEqual(rootSpan.GetTag("key4"), 1);
-            Assert.AreEqual(rootSpan.GetTag("BooleanTagKey"), true);
-            Assert.AreEqual(rootSpan.GetTag("IntOrStringTagKey"), "stringValue");
-            Assert.AreEqual(rootSpan.GetTag("IntTagKey"), 1);
-            Assert.AreEqual(rootSpan.GetTag("StringTagKey"), "stringValue");
+            Assert.Multiple(() =>
+            {
+                Assert.That(rootSpan.GetTag("key1"), Is.EqualTo("stringValue"));
+                Assert.That(rootSpan.GetTag("key2"), Is.EqualTo(true));
+                Assert.That(rootSpan.GetTag("key3"), Is.EqualTo(1.0));
+                Assert.That(rootSpan.GetTag("key4"), Is.EqualTo(1));
+                Assert.That(rootSpan.GetTag("BooleanTagKey"), Is.EqualTo(true));
+                Assert.That(rootSpan.GetTag("IntOrStringTagKey"), Is.EqualTo("stringValue"));
+                Assert.That(rootSpan.GetTag("IntTagKey"), Is.EqualTo(1));
+                Assert.That(rootSpan.GetTag("StringTagKey"), Is.EqualTo("stringValue"));
+            });
         }
         [Test]
         public void ChildSpan_Set_Get_Tags()
@@ -79,14 +88,17 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             childSpan.SetTag(new global::OpenTracing.Tag.IntTag("IntTagKey"), 1);
             childSpan.SetTag(new global::OpenTracing.Tag.StringTag("StringTagKey"), "stringValue");
 
-            Assert.AreEqual(childSpan.GetTag("key1"), "stringValue");
-            Assert.AreEqual(childSpan.GetTag("key2"), true);
-            Assert.AreEqual(childSpan.GetTag("key3"), 1.0);
-            Assert.AreEqual(childSpan.GetTag("key4"), 1);
-            Assert.AreEqual(childSpan.GetTag("BooleanTagKey"), true);
-            Assert.AreEqual(childSpan.GetTag("IntOrStringTagKey"), "stringValue");
-            Assert.AreEqual(childSpan.GetTag("IntTagKey"), 1);
-            Assert.AreEqual(childSpan.GetTag("StringTagKey"), "stringValue");
+            Assert.Multiple(() =>
+            {
+                Assert.That(childSpan.GetTag("key1"), Is.EqualTo("stringValue"));
+                Assert.That(childSpan.GetTag("key2"), Is.EqualTo(true));
+                Assert.That(childSpan.GetTag("key3"), Is.EqualTo(1.0));
+                Assert.That(childSpan.GetTag("key4"), Is.EqualTo(1));
+                Assert.That(childSpan.GetTag("BooleanTagKey"), Is.EqualTo(true));
+                Assert.That(childSpan.GetTag("IntOrStringTagKey"), Is.EqualTo("stringValue"));
+                Assert.That(childSpan.GetTag("IntTagKey"), Is.EqualTo(1));
+                Assert.That(childSpan.GetTag("StringTagKey"), Is.EqualTo("stringValue"));
+            });
         }
 
         [Test]
@@ -102,8 +114,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             rootSpan.SetTag("span.kind", "client");
             rootSpan.Finish();
 
-            Assert.AreEqual("http", childSpan.Intrinsics["category"]);
-            Assert.AreEqual("http", rootSpan.Intrinsics["category"]);
+            Assert.Multiple(() =>
+            {
+                Assert.That(childSpan.Intrinsics["category"], Is.EqualTo("http"));
+                Assert.That(rootSpan.Intrinsics["category"], Is.EqualTo("http"));
+            });
         }
 
         [Test]
@@ -114,9 +129,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var childSpan = TestUtil.CreateSpan("childOperation", startTime, new Dictionary<string, object>(), rootSpan, "childguid");
             var grandChildSpan = TestUtil.CreateSpan("grandChildOperation", startTime, new Dictionary<string, object>(), childSpan, "grandchildguid");
 
-            Assert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
-            Assert.AreEqual("rootguid", childSpan.Intrinsics["parentId"]);
-            Assert.AreEqual("childguid", grandChildSpan.Intrinsics["parentId"]);
+            Assert.Multiple(() =>
+            {
+                Assert.That(rootSpan.Intrinsics.ContainsKey("parentId"), Is.False);
+                Assert.That(childSpan.Intrinsics["parentId"], Is.EqualTo("rootguid"));
+                Assert.That(grandChildSpan.Intrinsics["parentId"], Is.EqualTo("childguid"));
+            });
         }
 
         [Test]
@@ -132,35 +150,38 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             childSpan.Finish();
             rootSpan.Finish();
 
-            Assert.AreEqual(rootSpan.Intrinsics["type"], "Span");
-            Assert.AreEqual(rootSpan.Intrinsics["name"], "rootOperation");
-            Assert.NotNull(rootSpan.Intrinsics["duration"]);
-            Assert.NotNull(rootSpan.Intrinsics["timestamp"]);
-            Assert.AreEqual(rootSpan.Intrinsics["category"], "http");
-            Assert.AreEqual(rootSpan.Intrinsics["nr.entryPoint"], true);
-            Assert.IsFalse(rootSpan.Intrinsics.ContainsKey("parentId"));
-            Assert.AreEqual(rootSpan.Intrinsics["transactionId"], rootSpan.TransactionState.TransactionId);
+            Assert.Multiple(() =>
+            {
+                Assert.That(rootSpan.Intrinsics["type"], Is.EqualTo("Span"));
+                Assert.That(rootSpan.Intrinsics["name"], Is.EqualTo("rootOperation"));
+                Assert.That(rootSpan.Intrinsics["duration"], Is.Not.Null);
+                Assert.That(rootSpan.Intrinsics["timestamp"], Is.Not.Null);
+                Assert.That(rootSpan.Intrinsics["category"], Is.EqualTo("http"));
+                Assert.That(rootSpan.Intrinsics["nr.entryPoint"], Is.EqualTo(true));
+                Assert.That(rootSpan.Intrinsics.ContainsKey("parentId"), Is.False);
+                Assert.That(rootSpan.TransactionState.TransactionId, Is.EqualTo(rootSpan.Intrinsics["transactionId"]));
 
-            Assert.AreEqual(rootSpan.Intrinsics["span.kind"], "client");
-            Assert.IsFalse(rootSpan.UserAttributes.ContainsKey("http.status_code"));
+                Assert.That(rootSpan.Intrinsics["span.kind"], Is.EqualTo("client"));
+                Assert.That(rootSpan.UserAttributes.ContainsKey("http.status_code"), Is.False);
 
-            Assert.AreEqual(rootSpan.AgentAttributes["response.status"], "200");
-            Assert.AreEqual(rootSpan.AgentAttributes["http.statusCode"], 200);
+                Assert.That(rootSpan.AgentAttributes["response.status"], Is.EqualTo("200"));
+                Assert.That(rootSpan.AgentAttributes["http.statusCode"], Is.EqualTo(200));
 
-            Assert.AreEqual(childSpan.Intrinsics["type"], "Span");
-            Assert.AreEqual(childSpan.Intrinsics["name"], "childOperation");
-            Assert.NotNull(childSpan.Intrinsics["duration"]);
-            Assert.NotNull(childSpan.Intrinsics["timestamp"]);
-            Assert.AreEqual(childSpan.Intrinsics["category"], "http");
-            Assert.IsFalse(childSpan.Intrinsics.ContainsKey("nr.entryPoint"));
-            Assert.AreEqual(childSpan.Intrinsics["parentId"], "rootguid");
-            Assert.AreEqual(childSpan.Intrinsics["transactionId"], childSpan.RootSpan.TransactionState.TransactionId);
+                Assert.That(childSpan.Intrinsics["type"], Is.EqualTo("Span"));
+                Assert.That(childSpan.Intrinsics["name"], Is.EqualTo("childOperation"));
+                Assert.That(childSpan.Intrinsics["duration"], Is.Not.Null);
+                Assert.That(childSpan.Intrinsics["timestamp"], Is.Not.Null);
+                Assert.That(childSpan.Intrinsics["category"], Is.EqualTo("http"));
+                Assert.That(childSpan.Intrinsics.ContainsKey("nr.entryPoint"), Is.False);
+                Assert.That(childSpan.Intrinsics["parentId"], Is.EqualTo("rootguid"));
+                Assert.That(childSpan.RootSpan.TransactionState.TransactionId, Is.EqualTo(childSpan.Intrinsics["transactionId"]));
 
-            Assert.AreEqual(childSpan.Intrinsics["span.kind"], "client");
-            Assert.IsFalse(childSpan.UserAttributes.ContainsKey("http.status_code"));
+                Assert.That(childSpan.Intrinsics["span.kind"], Is.EqualTo("client"));
+                Assert.That(childSpan.UserAttributes.ContainsKey("http.status_code"), Is.False);
 
-            Assert.AreEqual(childSpan.AgentAttributes["response.status"], "500");
-            Assert.AreEqual(childSpan.AgentAttributes["http.statusCode"], 500);
+                Assert.That(childSpan.AgentAttributes["response.status"], Is.EqualTo("500"));
+                Assert.That(childSpan.AgentAttributes["http.statusCode"], Is.EqualTo(500));
+            });
         }
     }
 }

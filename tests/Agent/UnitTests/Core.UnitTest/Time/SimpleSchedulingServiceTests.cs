@@ -36,18 +36,21 @@ namespace NewRelic.Agent.Core.Time
             var sssFieldType = typeof(SimpleSchedulingService).GetField("_executingActions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var value = sssFieldType.GetValue(_simpleSchedulingService) as List<Action>;
 
-            Assert.That(value.Count, Is.EqualTo(2));
+            Assert.That(value, Has.Count.EqualTo(2));
 
             var action = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.NotNull(action);
+            Assert.That(action, Is.Not.Null);
 
             _simpleSchedulingService.StopExecuting(DoWork);
 
             var noAction = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.Null(noAction);
-            Assert.That(value.Count, Is.EqualTo(1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(noAction, Is.Null);
+                Assert.That(value, Has.Count.EqualTo(1));
+            });
         }
 
         [Test]
@@ -59,13 +62,13 @@ namespace NewRelic.Agent.Core.Time
             var value = sssFieldType.GetValue(_simpleSchedulingService) as List<Action>;
             var action = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.NotNull(action);
+            Assert.That(action, Is.Not.Null);
 
             _simpleSchedulingService.Dispose();
 
             var noAction = value.FirstOrDefault(a => a.Method.Name == "DoWork");
 
-            Assert.Null(noAction);
+            Assert.That(noAction, Is.Null);
         }
 
         private void DoWork()

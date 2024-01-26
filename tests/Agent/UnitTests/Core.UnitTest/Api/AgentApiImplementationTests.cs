@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetRequestMetadata();
 
             //Assert
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetRequestMetadata();
 
             //Assert
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
         }
 
         [Test]
@@ -123,8 +123,8 @@ namespace NewRelic.Agent.Core.Api
             _agentApi.SetErrorGroupCallback(myCallback);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, _errorGroupCallbackUpdateEvents.Count, "Expected only one update event to be triggered."),
-                () => Assert.AreSame(myCallback, _errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, "Expected the callback in the event to match the callback passed to the API.")
+                () => Assert.That(_errorGroupCallbackUpdateEvents, Has.Count.EqualTo(1), "Expected only one update event to be triggered."),
+                () => Assert.That(_errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, Is.SameAs(myCallback), "Expected the callback in the event to match the callback passed to the API.")
                 );
         }
 

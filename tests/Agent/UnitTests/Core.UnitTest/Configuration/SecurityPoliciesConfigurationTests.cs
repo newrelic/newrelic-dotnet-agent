@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Configuration
             };
 
             var missingExpectedPolicies = SecurityPoliciesConfiguration.GetMissingExpectedSeverPolicyNames(serverPoliciesWithExtras);
-            Assert.IsEmpty(missingExpectedPolicies);
+            Assert.That(missingExpectedPolicies, Is.Empty);
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedMissing = new List<string> { "custom_parameters", "custom_instrumentation_editor" };
 
             var missingExpectedPolicies = SecurityPoliciesConfiguration.GetMissingExpectedSeverPolicyNames(serverPoliciesWithMissing);
-            Assert.AreEqual(expectedMissing, missingExpectedPolicies);
+            Assert.That(missingExpectedPolicies, Is.EqualTo(expectedMissing));
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Configuration
             };
 
             var missingRequiredPolicies = SecurityPoliciesConfiguration.GetMissingRequiredPolicies(serverPoliciesAllRequiredKnown);
-            Assert.IsEmpty(missingRequiredPolicies);
+            Assert.That(missingRequiredPolicies, Is.Empty);
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedMissing = new List<string> { "dotnet_unknown_setting" };
 
             var missingRequiredPolicies = SecurityPoliciesConfiguration.GetMissingRequiredPolicies(serverPoliciesAllRequiredKnown);
-            Assert.AreEqual(expectedMissing, missingRequiredPolicies);
+            Assert.That(missingRequiredPolicies, Is.EqualTo(expectedMissing));
         }
     }
 }

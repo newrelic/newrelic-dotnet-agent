@@ -50,6 +50,7 @@ namespace CompositeTests
         public void TearDown()
         {
             _compositeTestAgent.Dispose();
+            _connectionHandler.Dispose();
         }
 
         [Test]

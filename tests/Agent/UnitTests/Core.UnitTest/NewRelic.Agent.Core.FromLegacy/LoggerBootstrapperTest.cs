@@ -57,11 +57,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
             NrAssert.Multiple(
-                () => Assert.IsFalse(Log.IsFinestEnabled),
-                () => Assert.IsFalse(Log.IsDebugEnabled),
-                () => Assert.IsFalse(Log.IsInfoEnabled),
-                () => Assert.IsFalse(Log.IsWarnEnabled),
-                () => Assert.IsFalse(Log.IsErrorEnabled)
+                () => Assert.That(Log.IsFinestEnabled, Is.False),
+                () => Assert.That(Log.IsDebugEnabled, Is.False),
+                () => Assert.That(Log.IsInfoEnabled, Is.False),
+                () => Assert.That(Log.IsWarnEnabled, Is.False),
+                () => Assert.That(Log.IsErrorEnabled, Is.False)
             );
         }
 
@@ -73,11 +73,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.ConfigureLogger(config);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(Log.IsFinestEnabled),
-                () => Assert.IsTrue(Log.IsDebugEnabled),
-                () => Assert.IsTrue(Log.IsInfoEnabled),
-                () => Assert.IsTrue(Log.IsWarnEnabled),
-                () => Assert.IsTrue(Log.IsErrorEnabled)
+                () => Assert.That(Log.IsFinestEnabled, Is.True),
+                () => Assert.That(Log.IsDebugEnabled, Is.True),
+                () => Assert.That(Log.IsInfoEnabled, Is.True),
+                () => Assert.That(Log.IsWarnEnabled, Is.True),
+                () => Assert.That(Log.IsErrorEnabled, Is.True)
             );
         }
 
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("info");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsDebugEnabled);
+            Assert.That(Log.IsDebugEnabled, Is.False);
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("debug");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsFinestEnabled);
+            Assert.That(Log.IsFinestEnabled, Is.False);
 
         }
 
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core
         public static void Config_IsAuditEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.IsAuditLogEnabled);
+            Assert.That(config.IsAuditLogEnabled, Is.False);
         }
 
         [Test]
@@ -144,15 +144,7 @@ namespace NewRelic.Agent.Core
         public static void Config_IsConsoleEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.Console);
-        }
-
-        [Test]
-        public static void Fatal_exception_can_be_recorded()
-        {
-            Assert.IsFalse(Log.FileLoggingHasFailed);
-            Log.FileLoggingHasFailed = true;
-            Assert.IsTrue(Log.FileLoggingHasFailed);
+            Assert.That(config.Console, Is.False);
         }
 
         [Test]
@@ -176,7 +168,7 @@ namespace NewRelic.Agent.Core
                 SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", envVarValue);
             }
             config = LogConfigFixtureWithLogEnabled(logsEnabledInConfig);
-            Assert.AreEqual(config.Enabled, expectedLogConfig);
+            Assert.That(expectedLogConfig, Is.EqualTo(config.Enabled));
         }
 
         [Test]
@@ -196,14 +188,14 @@ namespace NewRelic.Agent.Core
             ILogConfig config;
 
             config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
+            Assert.That(config.Console, Is.True);
 
             if (envVarValue != null)
             {
                 SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", envVarValue);
             }
             config = LogConfigFixtureWithConsoleEnabled(consoleLogEnabledInConfig);
-            Assert.AreEqual(config.Console, expectedConsoleLogConfig);
+            Assert.That(expectedConsoleLogConfig, Is.EqualTo(config.Console));
         }
 
 

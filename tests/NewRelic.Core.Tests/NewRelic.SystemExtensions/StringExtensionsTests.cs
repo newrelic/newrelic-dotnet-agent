@@ -36,7 +36,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var actualResult = inputString.TruncateUnicodeStringByLength(maxLength);
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("abcde♥", (uint)10, "abcde♥")] //"abcde♥" has 8 bytes
@@ -51,7 +51,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         public void TruncationByBytes(string inputString, uint maxBytes, string expectedResult)
         {
             var actualResult = inputString.TruncateUnicodeStringByBytes(maxBytes);
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase(null, false, new string[] { })]
@@ -68,7 +68,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var result = source.ContainsAny(searchTargets, StringComparison.InvariantCultureIgnoreCase);
 
-            Assert.AreEqual(expectedResult, result);
+            Assert.That(result, Is.EqualTo(expectedResult));
         }
 
         [TestCase(null, false, new string[] { })]
@@ -83,21 +83,21 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         [TestCase("foobar", true, new[] { "foo", "baz" })]
         public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileRespectingCase(string source, bool expectedResult, params string[] searchTargets)
         {
-            Assert.AreEqual(expectedResult, source.ContainsAny(searchTargets, StringComparison.InvariantCulture));
+            Assert.That(source.ContainsAny(searchTargets, StringComparison.InvariantCulture), Is.EqualTo(expectedResult));
         }
 
         [Test]
         public void ContainsAny_ReturnsFalse_IfSourceStringIsNull()
         {
             string source = null;
-            Assert.False(source.ContainsAny(new [] { "foo"}));
+            Assert.That(source.ContainsAny(new [] { "foo"}), Is.False);
         }
 
         [Test]
         public void ContainsAny_ReturnsFalse_IfSearchTargetsIsNull()
         {
             string source = "foo";
-            Assert.False(source.ContainsAny(null));
+            Assert.That(source.ContainsAny(null), Is.False);
         }
 
         [TestCase("foo bar zip zap", 'z', "foo bar ")]
@@ -110,7 +110,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         [TestCase("Some Random String", 'z', "Some Random String")]
         public void TrimAfterAChar(string source, char token, string expectedResult)
         {
-            Assert.AreEqual(expectedResult, source.TrimAfterAChar(token));
+            Assert.That(source.TrimAfterAChar(token), Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -135,7 +135,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
 
             var actualResult = source.TrimEnd(trimChar, maxCharactersToTrim);
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("foo", "bar", "barfoo")]
@@ -146,7 +146,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var actualResult = source.EnsureLeading(leading);
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("foo", "bar", "foobar")]
@@ -157,7 +157,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var actualResult = source.EnsureTrailing(trailing);
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("foo", "Foo")]
@@ -171,7 +171,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var actualResult = word.CapitalizeWord();
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("the quick brown fox", ' ', false, "The Quick Brown Fox")]
@@ -189,7 +189,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var actualResult = sentence.CapitalizeEachWord(separator, removeSeparator);
 
-            Assert.AreEqual(expectedResult, actualResult);
+            Assert.That(actualResult, Is.EqualTo(expectedResult));
         }
 
         [TestCase("foo bar baz")]
@@ -198,7 +198,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
         {
             var expectedSizeBytes = testString == null ? 0 : Encoding.UTF8.GetByteCount(testString);
 
-            Assert.AreEqual(expectedSizeBytes, testString.SizeBytes());
+            Assert.That(testString.SizeBytes(), Is.EqualTo(expectedSizeBytes));
         }
     }
 }

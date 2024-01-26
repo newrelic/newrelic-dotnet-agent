@@ -23,10 +23,13 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
 
-            Assert.AreEqual(baseStream.CanRead, injector.CanRead);
-            Assert.AreEqual(baseStream.CanSeek, injector.CanSeek);
-            Assert.AreEqual(baseStream.CanWrite, injector.CanWrite);
-            Assert.AreEqual(baseStream.Length, injector.Length);
+            Assert.Multiple(() =>
+            {
+                Assert.That(injector.CanRead, Is.EqualTo(baseStream.CanRead));
+                Assert.That(injector.CanSeek, Is.EqualTo(baseStream.CanSeek));
+                Assert.That(injector.CanWrite, Is.EqualTo(baseStream.CanWrite));
+                Assert.That(injector.Length, Is.EqualTo(baseStream.Length));
+            });
         }
 
         [Test]
@@ -42,9 +45,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
 
-            Assert.AreEqual(123, injector.Position);
+            Assert.That(injector.Position, Is.EqualTo(123));
             injector.Position = 456;
-            Assert.AreEqual(456, baseStream.Position);
+            Assert.That(baseStream.Position, Is.EqualTo(456));
         }
 
         [Test]
@@ -86,7 +89,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
             var result = injector.Seek(123, SeekOrigin.Begin);
 
-            Assert.AreEqual(456, result);
+            Assert.That(result, Is.EqualTo(456));
             Mock.Assert(() => baseStream.Seek(123, SeekOrigin.Begin), Occurs.Once());
         }
 
@@ -115,7 +118,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var injector = new BrowserMonitoringStreamInjector(getJavascriptAgentScript, baseStream, contentEncoding);
             var result = injector.Read(buffer, 10, 50);
 
-            Assert.AreEqual(30, result);
+            Assert.That(result, Is.EqualTo(30));
             Mock.Assert(() => baseStream.Read(buffer, 10, 50), Occurs.Once());
         }
 
@@ -151,8 +154,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.IsTrue(content.Contains(SampleJavaScript), "JavaScript was not injected.");
-                Assert.IsTrue(content.Contains(body), "body was not written without modification.");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(content, Does.Contain(SampleJavaScript), "JavaScript was not injected.");
+                    Assert.That(content, Does.Contain(body), "body was not written without modification.");
+                });
             }
         }
 
@@ -176,7 +182,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.AreEqual(Encoding.UTF8.GetString(buffer), content, "Content should be written without modification.");
+                Assert.That(content, Is.EqualTo(Encoding.UTF8.GetString(buffer)), "Content should be written without modification.");
             }
         }
 
@@ -196,7 +202,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             using (StreamReader reader = new StreamReader(baseStream, contentEncoding))
             {
                 string content = reader.ReadToEnd();
-                Assert.IsEmpty(content, "Content should be empty.");
+                Assert.That(content, Is.Empty, "Content should be empty.");
             }
         }
     }

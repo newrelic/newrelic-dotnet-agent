@@ -18,10 +18,10 @@ namespace NewRelic.Agent.Core.Segments.Tests
     {
         #region IsCombinableWith
 
-        public static Segment createExternalSegmentBuilder(TimeSpan relativeStart, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData, bool combinable)
+        private static Segment createExternalSegmentBuilder(TimeSpan relativeStart, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData, bool combinable)
         {
             var data = new ExternalSegmentData(uri, method, crossApplicationResponseData);
-            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
+            var segment = new Segment(SimpleSegmentDataTestHelpers.CreateTransactionSegmentState(uniqueId, parentId), methodCallData);
             segment.SetSegmentData(data);
             segment.Combinable = combinable;
 
@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsTrue(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.True);
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), false);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), false);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.newrelic.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
@@ -97,16 +97,16 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
             var segment2 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod2", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentSegmentType()
         {
             var segment1 = createExternalSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), new Uri("http://www.google.com"), "declaredMethod", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3), true);
-            var segment2 = SimpleSegmentDataTests.createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
-            Assert.IsFalse(segment1.IsCombinableWith(segment2));
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
         #endregion IsCombinableWith
@@ -127,20 +127,20 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var newSegment = oldSegment.CreateSimilar(newStartTime, newDuration, newParameters);
 
             var segmentData = newSegment.Data as ExternalSegmentData;
-            Assert.NotNull(segmentData);
+            Assert.That(segmentData, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(newStartTime, newSegment.RelativeStartTime),
-                () => Assert.AreEqual(newDuration, newSegment.Duration),
-                () => Assert.AreEqual("type", newSegment.MethodCallData.TypeName),
-                () => Assert.AreEqual("method", newSegment.MethodCallData.MethodName),
-                () => Assert.AreEqual(1, newSegment.MethodCallData.InvocationTargetHashCode),
-                () => Assert.AreEqual(new Uri("http://www.google.com"), segmentData.Uri),
-                () => Assert.AreEqual("declaredMethod", segmentData.Method),
-                () => Assert.AreEqual(2, newSegment.Parameters.Count()),
-                () => Assert.AreEqual("bar", newSegment.Parameters.ToDictionary()["foo"]),
-                () => Assert.AreEqual("zap", newSegment.Parameters.ToDictionary()["zip"]),
-                () => Assert.AreEqual(true, newSegment.Combinable)
+                () => Assert.That(newSegment.RelativeStartTime, Is.EqualTo(newStartTime)),
+                () => Assert.That(newSegment.Duration, Is.EqualTo(newDuration)),
+                () => Assert.That(newSegment.MethodCallData.TypeName, Is.EqualTo("type")),
+                () => Assert.That(newSegment.MethodCallData.MethodName, Is.EqualTo("method")),
+                () => Assert.That(newSegment.MethodCallData.InvocationTargetHashCode, Is.EqualTo(1)),
+                () => Assert.That(segmentData.Uri, Is.EqualTo(new Uri("http://www.google.com"))),
+                () => Assert.That(segmentData.Method, Is.EqualTo("declaredMethod")),
+                () => Assert.That(newSegment.Parameters.Count(), Is.EqualTo(2)),
+                () => Assert.That(newSegment.Parameters.ToDictionary()["foo"], Is.EqualTo("bar")),
+                () => Assert.That(newSegment.Parameters.ToDictionary()["zip"], Is.EqualTo("zap")),
+                () => Assert.That(newSegment.Combinable, Is.EqualTo(true))
                 );
         }
 

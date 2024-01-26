@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Time
 
             var actualTime = DateTimeMath.Min(time1, time2);
 
-            Assert.AreEqual(expectedTime, actualTime);
+            Assert.That(actualTime, Is.EqualTo(expectedTime));
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Time
 
             var actualTime = DateTimeMath.Max(time1, time2);
 
-            Assert.AreEqual(expectedTime, actualTime);
+            Assert.That(actualTime, Is.EqualTo(expectedTime));
         }
     }
 }

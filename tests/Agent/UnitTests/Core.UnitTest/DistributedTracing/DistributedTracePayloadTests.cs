@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void BuildOutgoingPayload_ReturnsNull_WhenRequiredFieldsNotPresent(string type, string accountId, string appId, string traceId)
         {
             var payload = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, Guid, traceId, TrustKey, Priority, Sampled, Timestamp, TransactionId);
-            Assert.Null(payload);
+            Assert.That(payload, Is.Null);
         }
 
         [TestCase(null, null)]
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         {
             var payload = DistributedTracePayload.TryBuildOutgoingPayload(TransportType, AccountId, AppId, guid, TraceId,
                 TrustKey, Priority, Sampled, Timestamp, transactionId);
-            Assert.Null(payload);
+            Assert.That(payload, Is.Null);
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var encodedJsonString = Strings.Base64Encode(jsonString);
             var serializedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 
-            Assert.AreEqual(encodedJsonString, serializedPayload);
+            Assert.That(serializedPayload, Is.EqualTo(encodedJsonString));
         }
 
         [Test]

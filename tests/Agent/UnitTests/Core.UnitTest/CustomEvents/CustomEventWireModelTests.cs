@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Attributes;
@@ -25,6 +25,11 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
 
         [Test]
         public void CustomEvents_MultipleEvents_Serialization()
@@ -78,7 +83,7 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
 
             Assert.That(deserialized, Is.Not.Null);
 
-            Assert.AreEqual(customEvents.Length, deserialized.Count);
+            Assert.That(deserialized, Has.Count.EqualTo(customEvents.Length));
             AttributeComparer.CompareDictionaries(expectedSerializations[0], deserialized[0]);
             AttributeComparer.CompareDictionaries(expectedSerializations[1], deserialized[1]);
         }

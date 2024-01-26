@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Metrics
         public void AllMetricCountsAreZero_WhenNoMethodsRecorded()
         {
             _apiSupportabilityMetricCounters.CollectMetrics();
-            CollectionAssert.IsEmpty(_publishedMetrics);
+            Assert.That(_publishedMetrics, Is.Empty);
         }
 
         [TestCaseSource(nameof(ApiMethods))]
@@ -45,8 +45,11 @@ namespace NewRelic.Agent.Core.Metrics
             _apiSupportabilityMetricCounters.Record(apiMethod);
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(SupportabilityPrefix + apiMethod, metric.MetricNameModel.Name);
-            Assert.AreEqual(1, metric.DataModel.Value0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(metric.MetricNameModel.Name, Is.EqualTo(SupportabilityPrefix + apiMethod));
+                Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+            });
         }
 
         [Test]
@@ -61,7 +64,7 @@ namespace NewRelic.Agent.Core.Metrics
             var actualMetricNames = _publishedMetrics.Select(metric => metric.MetricNameModel.Name).ToList();
             var expectedMetricNames = ApiMethods.Select(x => SupportabilityPrefix + x.ToString()).ToList();
 
-            CollectionAssert.AreEquivalent(expectedMetricNames, actualMetricNames);
+            Assert.That(actualMetricNames, Is.EquivalentTo(expectedMetricNames));
         }
 
         [TestCase(ApiMethod.InsertDistributedTraceHeaders, 5)]
@@ -74,7 +77,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
             _apiSupportabilityMetricCounters.CollectMetrics();
             var metric = _publishedMetrics.Single();
-            Assert.AreEqual(recordCount, metric.DataModel.Value0);
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(recordCount));
         }
     }
 }

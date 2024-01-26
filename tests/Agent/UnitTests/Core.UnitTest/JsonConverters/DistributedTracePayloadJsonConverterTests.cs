@@ -31,18 +31,21 @@ namespace NewRelic.Agent.Core.JsonConverters
             var deserialized = DistributedTracePayload.TryBuildIncomingPayloadFromJson(serialized);
             Assert.That(deserialized.Version, Is.Not.Null);
             Assert.That(deserialized.Version, Has.Exactly(2).Items);
-            Assert.That(deserialized.Version[0], Is.EqualTo(0));
-            Assert.That(deserialized.Version[1], Is.EqualTo(1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(deserialized.Version[0], Is.EqualTo(0));
+                Assert.That(deserialized.Version[1], Is.EqualTo(1));
 
-            Assert.That(deserialized.Type, Is.EqualTo(input.Type));
-            Assert.That(deserialized.AccountId, Is.EqualTo(input.AccountId));
-            Assert.That(deserialized.AppId, Is.EqualTo(input.AppId));
-            Assert.That(deserialized.Guid, Is.EqualTo(input.Guid));
-            Assert.That(deserialized.TraceId, Is.EqualTo(input.TraceId));
-            Assert.That(deserialized.TrustKey, Is.EqualTo(input.TrustKey));
-            Assert.That(deserialized.Sampled, Is.EqualTo(input.Sampled));
-            Assert.That(deserialized.Timestamp, Is.EqualTo(input.Timestamp));
-            Assert.That(deserialized.TransactionId, Is.EqualTo(input.TransactionId));
+                Assert.That(deserialized.Type, Is.EqualTo(input.Type));
+                Assert.That(deserialized.AccountId, Is.EqualTo(input.AccountId));
+                Assert.That(deserialized.AppId, Is.EqualTo(input.AppId));
+                Assert.That(deserialized.Guid, Is.EqualTo(input.Guid));
+                Assert.That(deserialized.TraceId, Is.EqualTo(input.TraceId));
+                Assert.That(deserialized.TrustKey, Is.EqualTo(input.TrustKey));
+                Assert.That(deserialized.Sampled, Is.EqualTo(input.Sampled));
+                Assert.That(deserialized.Timestamp, Is.EqualTo(input.Timestamp));
+                Assert.That(deserialized.TransactionId, Is.EqualTo(input.TransactionId));
+            });
         }
 
 

@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Utilities
             Thread.Sleep(20);
             action.Signal();
             Thread.Sleep(20);
-            Assert.AreEqual(2, called);
+            Assert.That(called, Is.EqualTo(2));
         }
     }
 }

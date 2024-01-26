@@ -244,8 +244,8 @@ namespace CompositeTests
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
-            Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]);
+            Assert.That(headers, Is.Not.Null);
+            Assert.That(headers[SyntheticsHeaderKey], Is.EqualTo("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw=="));
         }
 
         [Test]
@@ -282,7 +282,7 @@ namespace CompositeTests
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
+            Assert.That(headers, Is.Not.Null);
 
             var configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => configurationService.Configuration).Returns(() => _compositeTestAgent.CurrentConfiguration);
@@ -291,12 +291,12 @@ namespace CompositeTests
             SyntheticsHeader decodedSyntheticsHeader = syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers[SyntheticsHeaderKey]),
-                () => Assert.AreEqual(decodedSyntheticsHeader.Version, version),
-                () => Assert.AreEqual(decodedSyntheticsHeader.JobId, jobId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.AccountId, clientAccountId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.MonitorId, monitorId),
-                () => Assert.AreEqual(decodedSyntheticsHeader.ResourceId, resourceId)
+                () => Assert.That(headers[SyntheticsHeaderKey], Is.EqualTo("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==")),
+                () => Assert.That(version, Is.EqualTo(decodedSyntheticsHeader.Version)),
+                () => Assert.That(jobId, Is.EqualTo(decodedSyntheticsHeader.JobId)),
+                () => Assert.That(clientAccountId, Is.EqualTo(decodedSyntheticsHeader.AccountId)),
+                () => Assert.That(monitorId, Is.EqualTo(decodedSyntheticsHeader.MonitorId)),
+                () => Assert.That(resourceId, Is.EqualTo(decodedSyntheticsHeader.ResourceId))
             );
 
             List<string> GetHeaderValue(Dictionary<string, string> carrier, string key)

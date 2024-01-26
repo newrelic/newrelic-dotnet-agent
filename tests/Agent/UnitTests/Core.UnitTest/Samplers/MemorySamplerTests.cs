@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(memorySample);
+            Assert.That(memorySample, Is.Not.Null);
         }
 
         [Test]
@@ -83,9 +83,12 @@ namespace NewRelic.Agent.Core.Samplers
                 }
             }
 
-            // Assert
-            Assert.Less(memorySampleBefore.MemoryPrivate, memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
-            Assert.Less(memorySampleBefore.MemoryWorkingSet, memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(memorySampleBefore.MemoryPrivate, Is.LessThan(memorySampleAfter.MemoryPrivate), "PrivateMemorySize64 did not increase as expected");
+                Assert.That(memorySampleBefore.MemoryWorkingSet, Is.LessThan(memorySampleAfter.MemoryWorkingSet), "WorkingSet64 did not increase as expected");
+            });
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

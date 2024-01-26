@@ -31,8 +31,11 @@ namespace NewRelic.Agent.Core.Utilities
 
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(1, testService.ConfigUpdateCount);
-            Assert.AreEqual(2, testService.Configuration.ConfigurationVersion);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testService.ConfigUpdateCount, Is.EqualTo(1));
+                Assert.That(testService.Configuration.ConfigurationVersion, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -47,8 +50,11 @@ namespace NewRelic.Agent.Core.Utilities
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(3);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(2, testService.ConfigUpdateCount);
-            Assert.AreEqual(3, testService.Configuration.ConfigurationVersion);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testService.ConfigUpdateCount, Is.EqualTo(2));
+                Assert.That(testService.Configuration.ConfigurationVersion, Is.EqualTo(3));
+            });
         }
 
         [Test]
@@ -63,8 +69,11 @@ namespace NewRelic.Agent.Core.Utilities
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(1);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
-            Assert.AreEqual(1, testService.ConfigUpdateCount);
-            Assert.AreEqual(2, testService.Configuration.ConfigurationVersion);
+            Assert.Multiple(() =>
+            {
+                Assert.That(testService.ConfigUpdateCount, Is.EqualTo(1));
+                Assert.That(testService.Configuration.ConfigurationVersion, Is.EqualTo(2));
+            });
         }
     }
 }

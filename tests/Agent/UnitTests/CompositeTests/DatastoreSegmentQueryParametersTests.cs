@@ -48,10 +48,10 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myKey1", "myValue1" }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            Assert.AreEqual(segmentData.QueryParameters, null);
+            Assert.That(segmentData.QueryParameters, Is.Null);
         }
 
         [Test]
@@ -89,10 +89,10 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myKey1", "myValue1" }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -112,10 +112,10 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             var truncatedName = new string('a', Agent.QueryParameterMaxStringLength);
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { truncatedName, "myValue1" }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -132,10 +132,10 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myKey1", true }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -162,7 +162,7 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myint16", short.MaxValue },
                 { "myint", int.MaxValue },
@@ -175,7 +175,7 @@ namespace CompositeTests
                 { "mySingle", float.MaxValue },
                 { "myDouble", double.MaxValue },
                 { "myDecimal", decimal.MaxValue }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -192,10 +192,10 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myChar1", 'c' }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -214,9 +214,9 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, segmentData.QueryParameters.Count),
-                () => Assert.IsInstanceOf(typeof(string), segmentData.QueryParameters["myDateTime"]),
-                () => Assert.AreEqual(now.ToString(CultureInfo.InvariantCulture), segmentData.QueryParameters["myDateTime"])
+                () => Assert.That(segmentData.QueryParameters, Has.Count.EqualTo(1)),
+                () => Assert.That(segmentData.QueryParameters["myDateTime"], Is.InstanceOf(typeof(string))),
+                () => Assert.That(segmentData.QueryParameters["myDateTime"], Is.EqualTo(now.ToString(CultureInfo.InvariantCulture)))
             );
         }
 
@@ -237,10 +237,10 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             var truncatedName = new string('a', Agent.QueryParameterMaxStringLength);
-            CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
+            Assert.That(new Dictionary<string, IConvertible>
             {
                 { "myKey", truncatedName }
-            });
+            }, Is.EquivalentTo(segmentData.QueryParameters));
         }
 
         [Test]
@@ -260,9 +260,9 @@ namespace CompositeTests
             var segmentData = (DatastoreSegmentData)segment.Data;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, segmentData.QueryParameters.Count),
-                () => Assert.IsInstanceOf(typeof(string), segmentData.QueryParameters["longConvertible"]),
-                () => Assert.AreEqual(new string('l', Agent.QueryParameterMaxStringLength), segmentData.QueryParameters["longConvertible"])
+                () => Assert.That(segmentData.QueryParameters, Has.Count.EqualTo(1)),
+                () => Assert.That(segmentData.QueryParameters["longConvertible"], Is.InstanceOf(typeof(string))),
+                () => Assert.That(segmentData.QueryParameters["longConvertible"], Is.EqualTo(new string('l', Agent.QueryParameterMaxStringLength)))
             );
         }
 
@@ -275,7 +275,7 @@ namespace CompositeTests
 
             var segmentData = (DatastoreSegmentData)segment.Data;
 
-            Assert.IsNull(segmentData.QueryParameters);
+            Assert.That(segmentData.QueryParameters, Is.Null);
         }
 
         private void SetupConfiguration(bool enableQueryParameters)

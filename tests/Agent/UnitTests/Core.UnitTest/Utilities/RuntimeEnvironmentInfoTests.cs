@@ -12,13 +12,13 @@ namespace NewRelic.Agent.Core.Utils
         [Platform("Win")] // only run this test on a windows platform
         public void RuntimeEnvironmentInfo_OperatingSystem_ReportsWindows_OnWindows()
         {
-            Assert.AreEqual("Windows", RuntimeEnvironmentInfo.OperatingSystem);
+            Assert.That(RuntimeEnvironmentInfo.OperatingSystem, Is.EqualTo("Windows"));
         }
 
         [Test]
         public void RuntimeEnvironmentInfo_OperatingSystemVersion_ReportsNotNull()
         {
-            Assert.NotNull(RuntimeEnvironmentInfo.OperatingSystemVersion);
+            Assert.That(RuntimeEnvironmentInfo.OperatingSystemVersion, Is.Not.Null);
         }
     }
 }

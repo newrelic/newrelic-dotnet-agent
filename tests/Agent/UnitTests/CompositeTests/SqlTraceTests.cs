@@ -58,9 +58,9 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(sqlTrace),
-                () => Assert.AreEqual("Datastore/statement/MSSQL/Table1/SELECT", sqlTrace.DatastoreMetricName),
-                () => Assert.AreEqual("SELECT * FROM Table1", sqlTrace.Sql)
+                () => Assert.That(sqlTrace, Is.Not.Null),
+                () => Assert.That(sqlTrace.DatastoreMetricName, Is.EqualTo("Datastore/statement/MSSQL/Table1/SELECT")),
+                () => Assert.That(sqlTrace.Sql, Is.EqualTo("SELECT * FROM Table1"))
             );
         }
 
@@ -91,13 +91,12 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(sqlTrace),
-                () => CollectionAssert.AreEquivalent((Dictionary<string, IConvertible>)sqlTrace.ParameterData["query_parameters"],
-                    new Dictionary<string, IConvertible>
+                () => Assert.That(sqlTrace, Is.Not.Null),
+                () => Assert.That(new Dictionary<string, IConvertible>
                     {
                         {"myKey1", "myValue1"},
                         {"myKey2", "myValue2"}
-                    })
+                    }, Is.EquivalentTo((Dictionary<string, IConvertible>)sqlTrace.ParameterData["query_parameters"]))
             );
         }
 
@@ -127,8 +126,8 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(sqlTrace),
-                () => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("query_parameters"))
+                () => Assert.That(sqlTrace, Is.Not.Null),
+                () => Assert.That(sqlTrace.ParameterData.ContainsKey("query_parameters"), Is.False)
             );
         }
 
@@ -153,8 +152,8 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(sqlTrace),
-                () => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("query_parameters"))
+                () => Assert.That(sqlTrace, Is.Not.Null),
+                () => Assert.That(sqlTrace.ParameterData.ContainsKey("query_parameters"), Is.False)
             );
         }
 
@@ -178,7 +177,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
-            Assert.AreEqual("<unknown>", sqlTrace.Uri);
+            Assert.That(sqlTrace.Uri, Is.EqualTo("<unknown>"));
         }
 
         [Test]
@@ -204,7 +203,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var sqlTrace = _compositeTestAgent.SqlTraces.First();
-            Assert.AreEqual("myuri", sqlTrace.Uri);
+            Assert.That(sqlTrace.Uri, Is.EqualTo("myuri"));
         }
 
         [Test]
@@ -224,7 +223,7 @@ namespace CompositeTests
             var sqlTrace = _compositeTestAgent.SqlTraces.FirstOrDefault();
 
             NrAssert.Multiple(
-                () => Assert.IsNull(sqlTrace)
+                () => Assert.That(sqlTrace, Is.Null)
             );
         }
 
@@ -258,13 +257,13 @@ namespace CompositeTests
             var transactionExplainPlan = (ExplainPlanWireModel)transactionSegments.First().Children.First().Parameters["explain_plan"];
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(explainPlan),
-                () => Assert.AreEqual(commandText, explainPlanData[0].ToString()),
-                () => Assert.AreEqual("SELECT", explainPlanData[1].ToString()),
-                () => Assert.IsTrue(sqlTrace.ParameterData.ContainsKey("explain_plan")),
-                () => Assert.AreEqual(sqlTrace.ParameterData.Values.First(), explainPlan),
-                () => Assert.AreEqual(transactionExplainPlan.ExplainPlanDatas, explainPlan.ExplainPlanDatas),
-                () => Assert.AreEqual(transactionExplainPlan.ExplainPlanHeaders, explainPlan.ExplainPlanHeaders)
+                () => Assert.That(explainPlan, Is.Not.Null),
+                () => Assert.That(explainPlanData[0].ToString(), Is.EqualTo(commandText)),
+                () => Assert.That(explainPlanData[1].ToString(), Is.EqualTo("SELECT")),
+                () => Assert.That(sqlTrace.ParameterData.ContainsKey("explain_plan"), Is.True),
+                () => Assert.That(explainPlan, Is.EqualTo(sqlTrace.ParameterData.Values.First())),
+                () => Assert.That(explainPlan.ExplainPlanDatas, Is.EqualTo(transactionExplainPlan.ExplainPlanDatas)),
+                () => Assert.That(explainPlan.ExplainPlanHeaders, Is.EqualTo(transactionExplainPlan.ExplainPlanHeaders))
             );
         }
 
@@ -296,8 +295,8 @@ namespace CompositeTests
             var transactionTraceSegmentParameters = transactionSegments.First().Children.First().Parameters;
 
             NrAssert.Multiple(
-                () => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("explain_plan")),
-                () => Assert.IsFalse(transactionTraceSegmentParameters.ContainsKey("explain_plan"))
+                () => Assert.That(sqlTrace.ParameterData.ContainsKey("explain_plan"), Is.False),
+                () => Assert.That(transactionTraceSegmentParameters.ContainsKey("explain_plan"), Is.False)
             );
         }
 
