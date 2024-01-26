@@ -189,7 +189,7 @@ namespace NewRelic { namespace Profiler {
                 HRESULT corProfilerInfoInitResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&_corProfilerInfo4);
                 if (FAILED(corProfilerInfoInitResult)) {
                     // Since MinimumDotnetVersionCheck already queried for minimum required interface, this check is just for safety
-                    LogError(_X("Error initializing CLR profiler info: "), corProfilerInfoInitResult);
+                    LogError(L"Error initializing CLR profiler info: ", corProfilerInfoInitResult);
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
@@ -199,12 +199,12 @@ namespace NewRelic { namespace Profiler {
                     &runtimeInfo->runtimeType, &runtimeInfo->majorVersion, &runtimeInfo->minorVersion, nullptr, nullptr, 0, nullptr, nullptr);
 
                 if (FAILED(runtimeInfoResult)) {
-                    LogError(_X("Error retrieving runtime information: "), runtimeInfoResult);
+                    LogError(L"Error retrieving runtime information: ", runtimeInfoResult);
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
                 if (!SetClrType(runtimeInfo)) {
-                    LogError(_X("Unknown Runtime Type found: "), runtimeInfo->runtimeType);
+                    LogError(L"Unknown Runtime Type found: ", runtimeInfo->runtimeType);
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
@@ -411,7 +411,7 @@ namespace NewRelic { namespace Profiler {
                 CComPtr<ICorProfilerInfo8> temp;
                 HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo11), (void**)&temp);
                 if (FAILED(result)) {
-                    LogError(_X(".NET Core 3.1 or greater required. Profiler not attaching."));
+                    LogError(L".NET Core 3.1 or greater required. Profiler not attaching.");
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
                 return S_OK;
@@ -421,7 +421,7 @@ namespace NewRelic { namespace Profiler {
                 CComPtr<ICorProfilerInfo4> temp;
                 HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo7), (void**)&temp);
                 if (FAILED(interfaceCheckResult)) {
-                    LogError(_X(".NET Framework 4.6.1 is required.  Detaching New Relic profiler."));
+                    LogError(L".NET Framework 4.6.1 is required.  Detaching New Relic profiler.");
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
