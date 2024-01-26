@@ -22,6 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             driverService.Port = RandomPortGenerator.NextPort();
 
             var options = new EdgeOptions();
+            options.AddArgument("headless");
 
             _driver = new EdgeDriver(driverService, options, TimeSpan.FromMinutes(2));
         }
