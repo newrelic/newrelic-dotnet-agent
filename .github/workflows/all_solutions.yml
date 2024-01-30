@@ -401,7 +401,7 @@ jobs:
           path: src/Agent
 
       - name: Run test commands
-        uses: uraimo/run-on-arch-action@4803fad82c266c7860218e93d3024b5810c7866a # v2.6.0
+        uses: uraimo/run-on-arch-action@517085f0367c8256bcfa753e3e13e1550af09954 # v2.7.1
         with:
           arch: aarch64
           distro: ubuntu18.04
