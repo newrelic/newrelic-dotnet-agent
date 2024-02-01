@@ -13,26 +13,6 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace NewRelic { namespace Profiler { namespace Configuration { namespace Test
 {
-    class MockTokenResolver : public SignatureParser::ITokenResolver
-    {
-    public:
-        MockTokenResolver(const std::wstring& typeString = L"MyNamespace.MyClass") : _typeString(typeString) {}
-
-        virtual std::wstring GetTypeStringsFromTypeDefOrRefOrSpecToken(uint32_t /*typeDefOrRefOrSPecToken*/) override
-        {
-            return _typeString;
-        }
-
-        uint32_t _typeGenericArgumentCount;
-        virtual uint32_t GetTypeGenericArgumentCount(uint32_t /*typeDefOrMethodDefToken*/)
-        {
-            return _typeGenericArgumentCount;
-        }
-
-    private:
-        std::wstring _typeString;
-    };
-
     TEST_CLASS(IgnoreInstrumentationTest)
     {
     public:

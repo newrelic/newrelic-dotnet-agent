@@ -89,7 +89,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
             if (IgnoreInstrumentation::Matches(_ignoreList, function->GetAssemblyName(), function->GetTypeName()))
             {
-                LogDebug(function->GetFunctionName(), L" in ", function->GetAssemblyName(), L" will not be instrumented. It is marked Ignore by the config file.");
+                LogDebug(function->GetFunctionName(), L" in ", function->GetAssemblyName(), L" will not be instrumented. It is in the ignore list in the config file.");
                 return nullptr;
             }
 
