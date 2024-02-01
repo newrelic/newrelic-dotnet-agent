@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
 		<tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.UserCodeLoaderInvoke">
-			<match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.UserCodeLoader">
+			<match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.Bootstrap.UserCodeLoader">
 				<exactMethodMatcher methodName="Invoke" />
 			</match>
 		</tracerFactory>
