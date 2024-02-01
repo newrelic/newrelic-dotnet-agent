@@ -87,6 +87,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             const auto params = methodSignature->ToString(function->GetTokenResolver());
             const auto instPoints = TryGetInstrumentationPoints(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
 
+            if (instPoints.empty())
+            {
+                // No instrumentation points were found so there is nothing else to check
+                return nullptr;
+            }
+
             if (IgnoreInstrumentation::Matches(_ignoreList, function->GetAssemblyName(), function->GetTypeName()))
             {
                 LogDebug(function->GetFunctionName(), L" in ", function->GetAssemblyName(), L" will not be instrumented. It is in the ignore list in the config file.");
