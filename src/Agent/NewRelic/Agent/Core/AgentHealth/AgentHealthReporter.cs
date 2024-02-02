@@ -682,6 +682,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfAppDomainCachingDisabled();
             ReportInfiniteTracingOneTimeMetrics();
             ReportIfLoggingDisabled();
+            ReportIfInstrumentationIsDisabled();
         }
 
         public void CollectMetrics()
@@ -826,6 +827,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             if (Log.FileLoggingHasFailed)
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingFatalError);
+            }
+        }
+
+        private void ReportIfInstrumentationIsDisabled()
+        {
+            if (_configuration.IgnoredInstrumentation.Any())
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityIgnoredInstrumentation);
             }
         }
     }
