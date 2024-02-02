@@ -431,6 +431,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
 
+        public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => new[] {
+            new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore1" } },
+            new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
+        };
+
         public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
 
         public TimeSpan TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);

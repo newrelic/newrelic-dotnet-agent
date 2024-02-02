@@ -3630,6 +3630,73 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        #region Ignored Instrumentation Tests
+
+        [Test]
+        public void NoIgnoredInstrumentationByDefault()
+        {
+            Assert.That(_defaultConfig.IgnoredInstrumentation, Is.Empty);
+        }
+
+        [Test]
+        public void IgnoredInstrumentationDoesNotRequireClassName()
+        {
+            var expectedList = new List<IDictionary<string, string>>
+            {
+                new Dictionary<string, string>
+                {
+                    { "assemblyName", "Assembly1" },
+                    { "className", null }
+                }
+            };
+
+            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyname = "Assembly1" });
+
+            Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
+        }
+
+        [Test]
+        public void IgnoredInstrumentationCanIncludeClassName()
+        {
+            var expectedList = new List<IDictionary<string, string>>
+            {
+                new Dictionary<string, string>
+                {
+                    { "assemblyName", "Assembly1" },
+                    { "className", "Class1" }
+                }
+            };
+
+            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyname = "Assembly1", classname = "Class1" });
+
+            Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
+        }
+
+        [Test]
+        public void IgnoredInstrumentationCanHaveMultipleItems()
+        {
+            var expectedList = new List<IDictionary<string, string>>
+            {
+                new Dictionary<string, string>
+                {
+                    { "assemblyName", "Assembly1" },
+                    { "className", null }
+                },
+                new Dictionary<string, string>
+                {
+                    { "assemblyName", "Assembly2" },
+                    { "className", "Class2" }
+                }
+            };
+
+            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyname = "Assembly1" });
+            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyname = "Assembly2", classname = "Class2" });
+
+            Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
+        }
+
+        #endregion
+
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);

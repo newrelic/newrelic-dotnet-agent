@@ -2025,6 +2025,28 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        private IEnumerable<IDictionary<string, string>> _ignoredInstrumentation;
+        public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation
+        {
+            get
+            {
+                if (_ignoredInstrumentation == null)
+                {
+                    _ignoredInstrumentation =_localConfiguration.instrumentation.ignore
+                        .Select(i => new ReadOnlyDictionary<string, string>(
+                                new Dictionary<string, string>
+                                {
+                                    { "assemblyName", i.assemblyname },
+                                    { "className", i.classname }
+                                }
+                            ))
+                        .ToList();
+                }
+
+                return _ignoredInstrumentation;
+            }
+        }
+
         public virtual bool AppDomainCachingDisabled
         {
             get
