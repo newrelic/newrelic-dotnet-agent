@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var vendors = vendorInfo.GetVendors();
-            Assert.IsFalse(vendors.Any());
+            Assert.That(vendors.Any(), Is.False);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var vendors = vendorInfo.GetVendors();
-            Assert.IsFalse(vendors.Any());
+            Assert.That(vendors.Any(), Is.False);
         }
 
         [TestCase("?", "location", "azure", null)]
@@ -71,11 +71,11 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (expectedResponse == null)
             {
-                Assert.Null(result);
+                Assert.That(result, Is.Null);
             }
             else
             {
-                Assert.True(result.Equals(expectedResponse));
+                Assert.That(result, Is.EqualTo(expectedResponse));
             }
         }
 
@@ -91,10 +91,13 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.InstanceId == "i-1234567890abcdef0");
-            Assert.True(model.InstanceType == "t1.micro");
-            Assert.True(model.AvailabilityZone == "us - east - 1d");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.InstanceId, Is.EqualTo("i-1234567890abcdef0"));
+                Assert.That(model.InstanceType, Is.EqualTo("t1.micro"));
+                Assert.That(model.AvailabilityZone, Is.EqualTo("us - east - 1d"));
+            });
         }
 
         [Test]
@@ -108,7 +111,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.IsNull(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -123,7 +126,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -139,11 +142,14 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.Location == "CentralUS");
-            Assert.True(model.Name == "IMDSCanary");
-            Assert.True(model.VmId == "5c08b38e-4d57-4c23-ac45-aca61037f084");
-            Assert.True(model.VmSize == "Standard_DS2");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.Location, Is.EqualTo("CentralUS"));
+                Assert.That(model.Name, Is.EqualTo("IMDSCanary"));
+                Assert.That(model.VmId, Is.EqualTo("5c08b38e-4d57-4c23-ac45-aca61037f084"));
+                Assert.That(model.VmSize, Is.EqualTo("Standard_DS2"));
+            });
         }
 
         [Test]
@@ -158,7 +164,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -175,7 +181,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -191,11 +197,14 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.Id == "3161347020215157000");
-            Assert.True(model.MachineType == "custom - 1 - 1024");
-            Assert.True(model.Name == "aef-default-20170501t160547-7gh8");
-            Assert.True(model.Zone == "us-central1-c");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.Id, Is.EqualTo("3161347020215157000"));
+                Assert.That(model.MachineType, Is.EqualTo("custom - 1 - 1024"));
+                Assert.That(model.Name, Is.EqualTo("aef-default-20170501t160547-7gh8"));
+                Assert.That(model.Zone, Is.EqualTo("us-central1-c"));
+            });
         }
 
         [Test]
@@ -210,7 +219,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -226,7 +235,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -239,10 +248,13 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
-            Assert.NotNull(model);
-            Assert.True(model.CfInstanceGuid == "b977d090-83db-4bdb-793a-bb77");
-            Assert.True(model.CfInstanceIp == "10.10.147.130");
-            Assert.True(model.MemoryLimit == "1024m");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.CfInstanceGuid, Is.EqualTo("b977d090-83db-4bdb-793a-bb77"));
+                Assert.That(model.CfInstanceIp, Is.EqualTo("10.10.147.130"));
+                Assert.That(model.MemoryLimit, Is.EqualTo("1024m"));
+            });
         }
 
         [Test]
@@ -255,7 +267,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -267,8 +279,8 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-            Assert.NotNull(model);
-            Assert.True(model.KubernetesServiceHost == serviceHost);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.KubernetesServiceHost, Is.EqualTo(serviceHost));
         }
 
         [Test]
@@ -279,7 +291,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
 #if NET
@@ -327,8 +339,8 @@ namespace NewRelic.Agent.Core.Utilization
 ");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb"));
         }
 
         [Test]
@@ -356,8 +368,8 @@ namespace NewRelic.Agent.Core.Utilization
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
         }
 
 
@@ -386,8 +398,8 @@ namespace NewRelic.Agent.Core.Utilization
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
         }
 
         [Test]
@@ -399,7 +411,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 #endif
         private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)

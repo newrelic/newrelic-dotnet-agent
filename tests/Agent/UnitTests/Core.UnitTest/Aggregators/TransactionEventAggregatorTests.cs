@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         #endregion
@@ -109,9 +109,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, sentEvents.Count());
-            Assert.AreEqual(sentEvents, eventsToSend);
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentEvents.Count(), Is.EqualTo(3));
+                Assert.That(eventsToSend, Is.EqualTo(sentEvents));
+            });
         }
 
         [Test]
@@ -142,9 +145,12 @@ namespace NewRelic.Agent.Core.Aggregators
             eventsToSend.ForEach(_transactionEventAggregator.Collect);
             _harvestAction();
 
-            // Assert
-            Assert.That(actualReservoirSize, Is.EqualTo(expectedReservoirSize));
-            Assert.That(actualEventsSeen, Is.EqualTo(expectedEventsSeen));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(actualReservoirSize, Is.EqualTo(expectedReservoirSize));
+                Assert.That(actualEventsSeen, Is.EqualTo(expectedEventsSeen));
+            });
         }
 
         [Test]
@@ -206,7 +212,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            Assert.That(sendCalled, Is.False);
         }
 
         [Test]
@@ -229,7 +235,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         [Test]
@@ -252,7 +258,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         [Test]
@@ -275,7 +281,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(2, sentEventCount);
+            Assert.That(sentEventCount, Is.EqualTo(2));
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
         }
 
@@ -299,7 +305,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentEventCount);
+            Assert.That(sentEventCount, Is.EqualTo(1));
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
         }
 
@@ -323,7 +329,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(1));
         }
 
@@ -383,7 +389,7 @@ namespace NewRelic.Agent.Core.Aggregators
         [Test]
         public void Harvest_cycle_should_match_configured_cycle()
         {
-            Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+            Assert.That(_harvestCycle, Is.EqualTo(ConfiguredHarvestCycle));
         }
 
         #region Helpers

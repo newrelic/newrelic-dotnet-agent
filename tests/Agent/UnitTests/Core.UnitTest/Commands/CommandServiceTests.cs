@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Commands
 
             var results = commandService.ProcessCommands(commands);
 
-            Assert.AreEqual(2, results.Count);
+            Assert.That(results, Has.Count.EqualTo(2));
         }
 
         [Test]
@@ -45,8 +45,11 @@ namespace NewRelic.Agent.Core.Commands
 
             var processingResults = commandService.ProcessCommands(serverCommand);
 
-            Assert.IsTrue(processingResults.ContainsKey("666"));
-            Assert.IsNull(processingResults["666"]);
+            Assert.Multiple(() =>
+            {
+                Assert.That(processingResults.ContainsKey("666"), Is.True);
+                Assert.That(processingResults["666"], Is.Null);
+            });
         }
 
         [Test]
@@ -57,9 +60,9 @@ namespace NewRelic.Agent.Core.Commands
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
-            Assert.AreEqual(0, command.Attempts);
+            Assert.That(command.Attempts, Is.EqualTo(0));
             commandService.ProcessCommands(commands);
-            Assert.AreEqual(1, command.Attempts);
+            Assert.That(command.Attempts, Is.EqualTo(1));
         }
 
         [Test]
@@ -83,9 +86,9 @@ namespace NewRelic.Agent.Core.Commands
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"stop_profiler\",arguments:{}}]]");
 
-            Assert.AreEqual(0, command.Attempts);
+            Assert.That(command.Attempts, Is.EqualTo(0));
             commandService.ProcessCommands(commands);
-            Assert.AreEqual(1, command.Attempts);
+            Assert.That(command.Attempts, Is.EqualTo(1));
         }
     }
 

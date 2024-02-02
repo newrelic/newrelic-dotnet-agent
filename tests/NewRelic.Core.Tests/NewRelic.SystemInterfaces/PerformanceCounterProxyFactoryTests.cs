@@ -41,6 +41,12 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			_factory = new PerformanceCounterProxyFactory(_processStatic, CreatePerformanceCounterCategory, CreatePerformanceCounter);
 		}
 
+        [TearDown]
+        public void TearDown()
+        {
+            _expectedPerformanceCounter.Dispose();
+        }
+
 		[Test]
 		public void ShouldCreatePerformanceCounter()
 		{
@@ -65,10 +71,10 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			//Act
             var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
 			var performanceCounter = _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName);
-			
-			//Assert
-			Assert.NotNull(performanceCounter);
-			Assert.AreEqual(_expectedPerformanceCounter, performanceCounter);
+
+            //Assert
+            Assert.That(performanceCounter, Is.Not.Null);
+            Assert.That(performanceCounter, Is.EqualTo(_expectedPerformanceCounter));
 		}
 
 		[Test]
@@ -96,7 +102,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter2", processInstanceName1);
 			_factory.CreatePerformanceCounterProxy(newCatName2, "mycounter", processInstanceName2);
 
-			Assert.AreEqual(2, _instanceNameLookupCount);
+            Assert.That(_instanceNameLookupCount, Is.EqualTo(2));
 		}
 
 		[Test]
@@ -138,7 +144,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
+            Assert.That(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null), Is.Null);
 		}
 
         [Test]
@@ -202,7 +208,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
+            Assert.That(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null), Is.Null);
 		}
 
 		private void GivenCurrentProcessHasThisNameAndId(string processName, int processId)

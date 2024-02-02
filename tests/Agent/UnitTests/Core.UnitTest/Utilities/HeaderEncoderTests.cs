@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), null);
 
-            Assert.AreEqual("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==", encoded);
+            Assert.That(encoded, Is.EqualTo("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ=="));
         }
 
         [Test]
@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), "encodingKey");
 
-            Assert.AreEqual("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==", encoded);
+            Assert.That(encoded, Is.EqualTo("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA=="));
         }
 
         [Test]
@@ -38,13 +38,13 @@ namespace NewRelic.Agent.Core.Utilities
             const string encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
 
             var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, null);
-            Assert.NotNull(deserialized);
+            Assert.That(deserialized, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(false, deserialized.Unused),
-                () => Assert.AreEqual("tripId", deserialized.TripId),
-                () => Assert.AreEqual("pathHash", deserialized.PathHash)
+                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+                () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
+                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
             );
         }
 
@@ -54,13 +54,13 @@ namespace NewRelic.Agent.Core.Utilities
             const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
             var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
-            Assert.NotNull(deserialized);
+            Assert.That(deserialized, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(false, deserialized.Unused),
-                () => Assert.AreEqual("tripId", deserialized.TripId),
-                () => Assert.AreEqual("pathHash", deserialized.PathHash)
+                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+                () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
+                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
             );
         }
 
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "wrong!");
 
-            Assert.Null(deserialized);
+            Assert.That(deserialized, Is.Null);
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
 
-            Assert.Null(deserialized);
+            Assert.That(deserialized, Is.Null);
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Utilities
             const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
             var deserialized = HeaderEncoder.TryDecodeAndDeserialize<MetricWireModel>(encoded, "encodingKey");
-            Assert.Null(deserialized);
+            Assert.That(deserialized, Is.Null);
         }
     }
 }

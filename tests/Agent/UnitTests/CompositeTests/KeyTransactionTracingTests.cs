@@ -56,7 +56,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            Assert.IsEmpty(_compositeTestAgent.TransactionTraces);
+            Assert.That(_compositeTestAgent.TransactionTraces, Is.Empty);
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            Assert.IsEmpty(_compositeTestAgent.TransactionTraces);
+            Assert.That(_compositeTestAgent.TransactionTraces, Is.Empty);
         }
 
         [Test]
@@ -118,7 +118,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 
-            Assert.AreEqual("WebTransaction/Action/name", transactionTrace.TransactionMetricName);
+            Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("WebTransaction/Action/name"));
         }
 
         [Test]
@@ -161,7 +161,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 
-            Assert.AreEqual("WebTransaction/Action/name2", transactionTrace.TransactionMetricName);
+            Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("WebTransaction/Action/name2"));
         }
     }
 }

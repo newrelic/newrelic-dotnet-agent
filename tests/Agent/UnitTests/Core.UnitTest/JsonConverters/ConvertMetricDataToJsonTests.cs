@@ -42,6 +42,13 @@ namespace NewRelic.Agent.Core.JsonConverters
             _wellformedMetricData = new MetricWireModelCollection("440491846668652", 1450462672.0, 1450462710.0, validMetricWireModels);
         }
 
+        [TearDown]
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _metricNameService.Dispose();
+            _connectionHandler.Dispose();
+        }
         [Test]
         public void Serialize_NoErrors()
         {
@@ -54,7 +61,7 @@ namespace NewRelic.Agent.Core.JsonConverters
             var model = new MetricWireModelCollection[] { _wellformedMetricData };
 
             var serializedMetrics = Newtonsoft.Json.JsonConvert.SerializeObject(model);
-            Assert.AreEqual(_wellformedJson, serializedMetrics);
+            Assert.That(serializedMetrics, Is.EqualTo(_wellformedJson));
         }
     }
 }

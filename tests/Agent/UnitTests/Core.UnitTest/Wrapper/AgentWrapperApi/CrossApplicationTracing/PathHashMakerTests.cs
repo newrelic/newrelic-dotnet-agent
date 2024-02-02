@@ -33,24 +33,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         public void CalculatePathHash_ReturnsCorrectPathHash_IfReferringPathHashIsNull()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", null);
-            Assert.AreEqual("9d743449", pathHash);
+            Assert.That(pathHash, Is.EqualTo("9d743449"));
         }
 
         [Test]
         public void CalculatePathHash_ReturnsCorrectPathHash_IfReferringPathHashIsNotNull()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", ReferringPathHash);
-            Assert.AreEqual("b91c98b9", pathHash);
+            Assert.That(pathHash, Is.EqualTo("b91c98b9"));
         }
 
         [Test]
         public void CalculatePathHash_ReturnsReversiblePathHash()
         {
             var pathHash = _pathHashMaker.CalculatePathHash("transactionName", ReferringPathHash);
-            Assert.NotNull(pathHash);
+            Assert.That(pathHash, Is.Not.Null);
 
             var reversedPathHash = ReversePathHash("transactionName", AppName, pathHash);
-            Assert.AreEqual(ReferringPathHash, reversedPathHash);
+            Assert.That(reversedPathHash, Is.EqualTo(ReferringPathHash));
         }
 
         private static string ReversePathHash(string transactionName, string appName, string pathHash)

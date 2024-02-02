@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var clientA = _httpClientFactory.CreateClient(null, _mockConfiguration);
             var clientB = _httpClientFactory.CreateClient(null, _mockConfiguration);
 
-            Assert.That(clientA == clientB);
+            Assert.That(clientA, Is.EqualTo(clientB));
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var clientA = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
             var clientB = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
 
-            Assert.That(clientA == clientB);
+            Assert.That(clientA, Is.EqualTo(clientB));
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var clientA = _httpClientFactory.CreateClient(null, _mockConfiguration);
             var clientB = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
 
-            Assert.That(clientA != clientB);
+            Assert.That(clientA, Is.Not.EqualTo(clientB));
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var clientA = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
             var clientB = _httpClientFactory.CreateClient(null, _mockConfiguration);
 
-            Assert.That(clientA != clientB);
+            Assert.That(clientA, Is.Not.EqualTo(clientB));
         }
     }
 }

@@ -54,7 +54,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.MSSQL, datastoreName);
+            Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.MSSQL));
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.Oracle, datastoreName);
+            Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.Oracle));
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace SqlTests
 
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-            Assert.AreEqual(DatastoreVendor.Other, datastoreName);
+            Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.Other));
         }
 
         public class UnknownDbCommand : IDbCommand

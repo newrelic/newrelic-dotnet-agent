@@ -120,14 +120,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 
             var sampleSequence = _expectedSampleSequences[testCaseName];
 
-            Assert.That(sampleSequence.Length, Is.EqualTo(secondHarvestTransactionCount), $"testCaseName {testCaseName} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
+            Assert.That(sampleSequence, Has.Length.EqualTo(secondHarvestTransactionCount), $"testCaseName {testCaseName} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
             // Act
             for (var callCounter = 0; callCounter < secondHarvestTransactionCount; ++callCounter)
             {
                 var expectedSamplingResult = sampleSequence[callCounter];
                 var actualSamplingResult = _adaptiveSampler.ComputeSampled();
                 var message = $"callCounter: {callCounter}";
-                Assert.AreEqual(expectedSamplingResult, actualSamplingResult, message);
+                Assert.That(actualSamplingResult, Is.EqualTo(expectedSamplingResult), message);
             }
         }
 

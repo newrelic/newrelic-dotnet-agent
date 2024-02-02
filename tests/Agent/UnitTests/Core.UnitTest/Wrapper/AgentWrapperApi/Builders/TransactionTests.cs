@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using System.Collections.Generic;
 using NewRelic.Agent.TestUtilities;
+using NUnit.Framework.Legacy;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -32,7 +33,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private TransactionFinalizedEvent _publishedEvent;
         private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
-        private AttributeDefinitionService _attribDefSvc;
+        private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
         private const float Priority = 0.5f;
@@ -62,6 +63,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             _eventSubscription?.Dispose();
             _eventSubscription = null;
+            _attribDefSvc.Dispose();
+            _databaseService.Dispose();
 
             GC.Collect();
             GC.WaitForFullGCComplete();
@@ -73,13 +76,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         {
             // If our Transaction class is IDisposable, 3rd party libraries can potentially dispose of it thereby leading to unexpected behavior.
             // See: https://source.datanerd.us/dotNetAgent/dotnet_agent/pull/2323
-            Assert.IsNotInstanceOf<IDisposable>(_transaction);
+            Assert.That(_transaction, Is.Not.InstanceOf<IDisposable>());
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsPublished_IfNotEndedCleanly()
         {
-            Assert.NotNull(_transaction);
+
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction = null;
 
@@ -87,13 +93,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(_publishedEvent);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_publishedEvent);
+#pragma warning restore NUnit2018
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsNotPublished_IfEndedCleanly()
         {
-            Assert.NotNull(_transaction);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction.Finish();
             _transaction = null;
@@ -102,20 +112,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.Null(_publishedEvent);
+#pragma warning disable NUnit2016 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.Null(_publishedEvent);
+#pragma warning restore NUnit2016
         }
 
         [Test]
         public void TransactionShouldOnlyFinishOnce()
         {
-            Assert.NotNull(_transaction);
-            Assert.False(_transaction.IsFinished, "The transaction should not be finished yet.");
+            Assert.That(_transaction, Is.Not.Null);
+            Assert.That(_transaction.IsFinished, Is.False, "The transaction should not be finished yet.");
 
             var finishedTransaction = _transaction.Finish();
 
-            Assert.True(finishedTransaction, "Transaction was not finished when it should have been finished.");
-            Assert.True(_transaction.IsFinished, "transaction.IsFinished should be true.");
-            Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered after the first call to finish.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(finishedTransaction, Is.True, "Transaction was not finished when it should have been finished.");
+                Assert.That(_transaction.IsFinished, Is.True, "transaction.IsFinished should be true.");
+            });
+            Assert.That(_publishedEvent, Is.Null, "The TransactionFinalizedEvent should not be triggered after the first call to finish.");
 
             finishedTransaction = _transaction.Finish();
             var isFinished = _transaction.IsFinished;
@@ -125,15 +140,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.False(finishedTransaction, "Transaction was finished again when it should only be finished once.");
-            Assert.True(isFinished, "transaction.IsFinished should still be true.");
-            Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered when the transaction is already finished.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(finishedTransaction, Is.False, "Transaction was finished again when it should only be finished once.");
+                Assert.That(isFinished, Is.True, "transaction.IsFinished should still be true.");
+            });
+            Assert.That(_publishedEvent, Is.Null, "The TransactionFinalizedEvent should not be triggered when the transaction is already finished.");
         }
 
         [Test]
         public void TransactionFinalizedEvent_IsNotPublishedASecondTime_IfBuilderGoesOutOfScopeAgain()
         {
-            Assert.NotNull(_transaction);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_transaction);
+#pragma warning restore NUnit2018
 
             _transaction = null;
 
@@ -141,7 +161,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(_publishedEvent);
+#pragma warning disable NUnit2018 // can't use constraint model here, no idea why but test fails if you do
+            ClassicAssert.NotNull(_publishedEvent);
+#pragma warning restore NUnit2018
 
             // The builder is now pinned to the event, but we can unpin it by unpinning the event
             _publishedEvent = null;
@@ -150,7 +172,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            Assert.Null(_publishedEvent);
+            Assert.That(_publishedEvent, Is.Null);
         }
 
         [Test]
@@ -201,7 +223,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             );
 
             // Assert
-            Assert.AreEqual(32, tx.TraceId.Length);
+            Assert.That(tx.TraceId, Has.Length.EqualTo(32));
         }
 
         /// <summary>
@@ -228,26 +250,32 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void TransactionShouldOnlyCaptureResponseTimeOnce()
         {
-            //Verify initial state
-            Assert.Null(_transaction.ResponseTime, "ResponseTime should initially be null.");
+            Assert.Multiple(() =>
+            {
+                //Verify initial state
+                Assert.That(_transaction.ResponseTime, Is.Null, "ResponseTime should initially be null.");
 
-            //First attempt to capture the response time
-            Assert.True(_transaction.TryCaptureResponseTime(), "ResponseTime should have been captured but was not captured.");
+                //First attempt to capture the response time
+                Assert.That(_transaction.TryCaptureResponseTime(), Is.True, "ResponseTime should have been captured but was not captured.");
+            });
 
             //Verify that the response time was captured
             var capturedResponseTime = _transaction.ResponseTime;
-            Assert.NotNull(capturedResponseTime, "ResponseTime should have a value.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(capturedResponseTime, Is.Not.Null, "ResponseTime should have a value.");
 
-            //Second attempt to capture the response time
-            Assert.False(_transaction.TryCaptureResponseTime(), "ResponseTime should not be captured again, but it was.");
-            Assert.AreEqual(capturedResponseTime, _transaction.ResponseTime, "ResponseTime should still have the same value as the originally captured ResponseTime.");
+                //Second attempt to capture the response time
+                Assert.That(_transaction.TryCaptureResponseTime(), Is.False, "ResponseTime should not be captured again, but it was.");
+                Assert.That(_transaction.ResponseTime, Is.EqualTo(capturedResponseTime), "ResponseTime should still have the same value as the originally captured ResponseTime.");
+            });
         }
 
         [Test]
         public void TransactionGetWrapperTokenEqualsPassedInToken()
         {
             _transaction.SetWrapperToken(_wrapperToken);
-            Assert.AreEqual(_wrapperToken, _transaction.GetWrapperToken());
+            Assert.That(_transaction.GetWrapperToken(), Is.EqualTo(_wrapperToken));
         }
 
         [Test]
@@ -271,7 +299,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var result = requestParameters[outputKey];
 
-            Assert.AreEqual(result, valueB);
+            Assert.That(valueB, Is.EqualTo(result));
         }
 
         [Test]
@@ -294,7 +322,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var result = userAttributes[outputKey];
 
-            Assert.AreEqual(result, valueB);
+            Assert.That(valueB, Is.EqualTo(result));
         }
 
         #region User Tracking Tests
@@ -305,7 +333,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.False(hasUserIdAttribute);
+            Assert.That(hasUserIdAttribute, Is.False);
         }
 
         [Test]
@@ -322,10 +350,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
 
-            Assert.AreEqual(endUserAttributeShouldExist, hasUserIdAttribute);
+            Assert.That(hasUserIdAttribute, Is.EqualTo(endUserAttributeShouldExist));
             if (endUserAttributeShouldExist)
             {
-                Assert.AreEqual(expectedUserId, userIdValue);
+                Assert.That(userIdValue, Is.EqualTo(expectedUserId));
             }
         }
 
@@ -340,8 +368,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.True(hasUserIdAttribute);
-            Assert.AreEqual(expectedUserId2, userIdValue);
+            Assert.Multiple(() =>
+            {
+                Assert.That(hasUserIdAttribute, Is.True);
+                Assert.That(userIdValue, Is.EqualTo(expectedUserId2));
+            });
         }
         #endregion
 

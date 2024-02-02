@@ -133,6 +133,14 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+            _metricNameService.Dispose();
+            _sqlTraceAggregator.Dispose();
+        }
+
         [Test]
         [TestCaseSource(typeof(ServerSentEventTests), nameof(TestCases))]
         public void Test(TestCase testCase)
@@ -210,7 +218,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 var jsonString = File.ReadAllText(jsonPath);
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(jsonString);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .IsWebTransaction("category", "name")
                 .Build();
 
-            Assert.True(transaction.IsWebTransaction());
+            Assert.That(transaction.IsWebTransaction(), Is.True);
         }
 
         [Test]
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .IsOtherTransaction("category", "name")
                 .Build();
 
-            Assert.False(transaction.IsWebTransaction());
+            Assert.That(transaction.IsWebTransaction(), Is.False);
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithResponseTime(TimeSpan.FromSeconds(1))
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(1), transaction.ResponseTimeOrDuration);
+            Assert.That(transaction.ResponseTimeOrDuration, Is.EqualTo(TimeSpan.FromSeconds(1)));
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithNoResponseTime()
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
+            Assert.That(transaction.ResponseTimeOrDuration, Is.EqualTo(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .WithResponseTime(TimeSpan.FromSeconds(1))
                 .Build();
 
-            Assert.AreEqual(TimeSpan.FromSeconds(5), transaction.ResponseTimeOrDuration);
+            Assert.That(transaction.ResponseTimeOrDuration, Is.EqualTo(TimeSpan.FromSeconds(5)));
         }
     }
 }

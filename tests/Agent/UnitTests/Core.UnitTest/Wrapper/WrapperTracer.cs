@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
             wrapperTracer.Finish(null, null);
 
-            Assert.True(called);
+            Assert.That(called, Is.True);
         }
     }
 }

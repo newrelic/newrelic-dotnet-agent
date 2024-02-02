@@ -50,7 +50,7 @@ namespace CompositeTests.CrossAgentTests.SqlObfuscation
 
                     var exists = testData.ObfuscatedSql.Contains(obfuscatedSql);
                     Console.WriteLine(obfuscatedSql);
-                    Assert.IsTrue(exists, "Failed for " + dialect.ToUpper());
+                    Assert.That(exists, Is.True, "Failed for " + dialect.ToUpper());
                 }
             }
         }

@@ -19,9 +19,12 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.End(new Exception("Unhandled exception"));
 
-            Assert.IsNotNull(segment.ErrorData);
-            Assert.AreEqual("System.Exception", segment.ErrorData.ErrorTypeName);
-            Assert.AreEqual("Unhandled exception", segment.ErrorData.ErrorMessage);
+            Assert.That(segment.ErrorData, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(segment.ErrorData.ErrorTypeName, Is.EqualTo("System.Exception"));
+                Assert.That(segment.ErrorData.ErrorMessage, Is.EqualTo("Unhandled exception"));
+            });
         }
 
         [Test]
@@ -33,7 +36,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.SetMessageBrokerDestination("destination");
 
-            Assert.AreEqual("destination", ((MessageBrokerSegmentData)segment.SegmentData).Destination );
+            Assert.That(((MessageBrokerSegmentData)segment.SegmentData).Destination, Is.EqualTo("destination"));
         }
     }
 }

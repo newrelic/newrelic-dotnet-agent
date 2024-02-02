@@ -92,9 +92,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(APIGatewayProxyFunctionHandlerWithoutInput, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -116,10 +119,13 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(APIGatewayProxyFunctionHandlerWithInput, request, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
-            Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+                Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            });
         }
 
         [Test]
@@ -141,10 +147,13 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = await new TracingRequestHandler().LambdaWrapper(APIGatewayProxyFunctionHandlerWithInputAsync, request, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
-            Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+                Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            });
         }
 
         #endregion
@@ -163,9 +172,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(ApplicationLoadBalancerFunctionHandlerWithoutInput, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -180,9 +192,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = await new TracingRequestHandler().LambdaWrapper(ApplicationLoadBalancerFunctionHandlerWithoutInputAsync, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -210,10 +225,13 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(ApplicationLoadBalancerFunctionHandlerWithInput, request, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
-            Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+                Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+            });
         }
 
         #endregion
@@ -232,9 +250,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(IDictionaryFunctionHandlerWithoutInput, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            });
         }
 
         [Test]
@@ -249,9 +270,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             new TracingRequestHandler().LambdaWrapper(VoidFunctionHandlerWithoutInput, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            });
         }
 
         [Test]
@@ -266,9 +290,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             await new TracingRequestHandler().LambdaWrapper(VoidFunctionHandlerWithoutInputAsync, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            });
         }
 
         [Test]
@@ -284,9 +311,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             new TracingRequestHandler().LambdaWrapper(VoidFunctionHandlerWithInput, inputString, context);
             var span = _tracer.FinishedSpans()[0];
 
-            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
-            Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+            });
         }
 
         #endregion
@@ -307,15 +337,21 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             catch
             {
                 var span = _tracer.FinishedSpans()[0];
-                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.Multiple(() =>
+                {
+                    Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                    Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
 
-                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
-                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
-                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
-                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
-                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowException(ILambdaContext context)"));
+                    Assert.That(span.LogEntries, Has.Count.EqualTo(1));
+                    Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
+                    Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
+                    Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                    Assert.That(((string)span.LogEntries[0].Fields["stack"]), Does.Contain("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowException(ILambdaContext context)"));
+                });
                 return;
             }
             Assert.Fail("Did not catch exception as expected.");
@@ -337,15 +373,21 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             catch
             {
                 var span = _tracer.FinishedSpans()[0];
-                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
-                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+                Assert.Multiple(() =>
+                {
+                    Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                    Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
 
-                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
-                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
-                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
-                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
-                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowExceptionAsync(ILambdaContext context)"));
+                    Assert.That(span.LogEntries, Has.Count.EqualTo(1));
+                    Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
+                    Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
+                    Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                    Assert.That(((string)span.LogEntries[0].Fields["stack"]), Does.Contain("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowExceptionAsync(ILambdaContext context)"));
+                });
                 return;
             }
             Assert.Fail("Did not catch exception as expected.");
@@ -364,11 +406,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SQSWrapper.WrapRequest(SendSQSMessage, sendMessageRequest);
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -381,11 +426,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SQSWrapper.WrapRequest(SendSQSMessageWithBadResult, QueueUrl, "myMessage");
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -404,19 +452,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             catch (Exception)
             {
                 var span = _tracer.FinishedSpans()[0];
-                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-                Assert.That(span.Tags["error"], Is.EqualTo(true));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                    Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                    Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                    Assert.That(span.Tags["error"], Is.EqualTo(true));
 
-                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
-                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
-                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
-                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
-                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSMessageWithException(SendMessageRequest sendMessageRequest, CancellationToken cancellationToken)"));
+                    Assert.That(span.LogEntries, Has.Count.EqualTo(1));
+                    Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
+                    Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
+                    Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                    Assert.That(((string)span.LogEntries[0].Fields["stack"]), Does.Contain("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSMessageWithException(SendMessageRequest sendMessageRequest, CancellationToken cancellationToken)"));
 
-                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                    Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                });
                 return;
             }
 
@@ -436,11 +490,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SQSWrapper.WrapRequest(SendSQSBatchMessage, sendMessageBatchRequest);
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -455,11 +512,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SQSWrapper.WrapRequest(SendSQSBatchMessageWithBadResult, QueueUrl, batchEntries);
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -480,19 +540,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             catch (Exception)
             {
                 var span = _tracer.FinishedSpans()[0];
-                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-                Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
-                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-                Assert.That(span.Tags["error"], Is.EqualTo(true));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                    Assert.That(span.Tags["component"], Is.EqualTo("SQS"));
+                    Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                    Assert.That(span.Tags["error"], Is.EqualTo(true));
 
-                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
-                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
-                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
-                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
-                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSBatchMessageWithException(SendMessageBatchRequest sendMessageBatchRequest, CancellationToken cancellationToken)"));
+                    Assert.That(span.LogEntries, Has.Count.EqualTo(1));
+                    Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSQSException)));
+                    Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
+                    Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                    Assert.That(((string)span.LogEntries[0].Fields["stack"]), Does.Contain("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSQSBatchMessageWithException(SendMessageBatchRequest sendMessageBatchRequest, CancellationToken cancellationToken)"));
 
-                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                    Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                });
                 return;
             }
 
@@ -514,11 +580,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SNSWrapper.WrapRequest(SendSNSMessage, publishRequest);
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -531,11 +600,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SNSWrapper.WrapRequest(SendSNSMessageWithBadResult, TopicArn, "myMessage");
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.BadRequest));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         [Test]
@@ -554,19 +626,25 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             catch (Exception)
             {
                 var span = _tracer.FinishedSpans()[0];
-                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-                Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
-                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-                Assert.That(span.Tags["error"], Is.EqualTo(true));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                    Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
+                    Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                    Assert.That(span.Tags["error"], Is.EqualTo(true));
 
-                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
-                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
-                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSimpleNotificationServiceException)));
-                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
-                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
-                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSNSMessageWithException(PublishRequest publishRequest, CancellationToken cancellationToken)"));
+                    Assert.That(span.LogEntries, Has.Count.EqualTo(1));
+                    Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                });
+                Assert.Multiple(() =>
+                {
+                    Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(AmazonSimpleNotificationServiceException)));
+                    Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo(ExpectedExceptionMessage));
+                    Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                    Assert.That(((string)span.LogEntries[0].Fields["stack"]), Does.Contain("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.SendSNSMessageWithException(PublishRequest publishRequest, CancellationToken cancellationToken)"));
 
-                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                    Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+                });
                 return;
             }
 
@@ -587,11 +665,14 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             var result = await SNSWrapper.WrapRequest(SendSNSMessage, publishRequest);
 
             var span = _tracer.FinishedSpans()[0];
-            Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
-            Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
-            Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
-            Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
-            Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(span.Tags["span.kind"], Is.EqualTo("client"));
+                Assert.That(span.Tags["component"], Is.EqualTo("SNS"));
+                Assert.That(span.Tags["aws.operation"], Is.EqualTo("Produce"));
+                Assert.That(span.Tags["http.status_code"], Is.EqualTo((int)HttpStatusCode.OK));
+                Assert.That(span.OperationName, Is.EqualTo(ExpectedOperationName));
+            });
         }
 
         #endregion
@@ -607,8 +688,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 TracingRequestHandler.DetectColdStart(scope, ref isColdStart);
                 var mockSpan = (MockSpan)scope.Span;
 
-                Assert.That(isColdStart, Is.EqualTo(0));
-                Assert.That((bool)mockSpan.Tags["aws.lambda.coldStart"], Is.EqualTo(true));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(isColdStart, Is.EqualTo(0));
+                    Assert.That((bool)mockSpan.Tags["aws.lambda.coldStart"], Is.EqualTo(true));
+                });
             }
         }
 
@@ -621,8 +705,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 TracingRequestHandler.DetectColdStart(scope, ref isColdStart);
                 var mockSpan = (MockSpan)scope.Span;
 
-                Assert.That(isColdStart, Is.EqualTo(0));
-                Assert.That(mockSpan.Tags.ContainsKey("aws.lambda.coldStart"), Is.EqualTo(false));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(isColdStart, Is.EqualTo(0));
+                    Assert.That(mockSpan.Tags.ContainsKey("aws.lambda.coldStart"), Is.EqualTo(false));
+                });
             }
         }
 
@@ -634,35 +721,35 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         public void AddTagsToActiveSpan_NullSpan()
         {
             TracingRequestHandler.AddTagsToActiveSpan(null, "prefix", _tags);
-            Assert.That(_span.Tags.Count, Is.EqualTo(0));
+            Assert.That(_span.Tags, Is.Empty);
         }
 
         [Test]
         public void AddTagsToActiveSpan_NullPrefix()
         {
             TracingRequestHandler.AddTagsToActiveSpan(_span, null, _tags);
-            Assert.That(_span.Tags.Count, Is.EqualTo(0));
+            Assert.That(_span.Tags, Is.Empty);
         }
 
         [Test]
         public void AddTagsToActiveSpan_EmptyPrefix()
         {
             TracingRequestHandler.AddTagsToActiveSpan(_span, string.Empty, _tags);
-            Assert.That(_span.Tags.Count, Is.EqualTo(0));
+            Assert.That(_span.Tags, Is.Empty);
         }
 
         [Test]
         public void AddTagsToActiveSpan_EmptyDictionary()
         {
             TracingRequestHandler.AddTagsToActiveSpan(_span, "prefix", new Dictionary<string, string>());
-            Assert.That(_span.Tags.Count, Is.EqualTo(0));
+            Assert.That(_span.Tags, Is.Empty);
         }
 
         [Test]
         public void AddTagsToActiveSpan_NullDictionary()
         {
             TracingRequestHandler.AddTagsToActiveSpan(_span, "prefix", null);
-            Assert.That(_span.Tags.Count, Is.EqualTo(0));
+            Assert.That(_span.Tags, Is.Empty);
         }
 
         [Test]

@@ -18,36 +18,15 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
     [TestFixture]
     public class SqlParsingCrossAgentTest
     {
-        [TestCaseSource("GetSqlParsingTestCases")]
+        [TestCaseSource(nameof(GetSqlParsingTestCases))]
         public void SqlParsingTest(string inputSql, string expectedOperation, string expectedTable)
         {
             var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, inputSql);
-            Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
-            Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
-        }
-
-
-        // You can uncomment this to measure timing of sql parsing
-        //[Test]
-        public void Timing()
-        {
-            var stopwatch = Stopwatch.StartNew();
-
-            var cases = GetSqlParsingTestCases();
-
-            for (int i = 0; i < 1000000; i++)
+            Assert.Multiple(() =>
             {
-                foreach (var c in cases)
-                {
-                    var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, c.Arguments[0] as string);
-                }
-            }
-
-            stopwatch.Stop();
-
-            Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
-
-            Assert.Fail();
+                Assert.That(parsed.Operation, Is.EqualTo(expectedOperation.ToLower()), string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
+                Assert.That(parsed.Model, Is.EqualTo(expectedTable?.ToLower()), string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
+            });
         }
 
         private static IEnumerable<TestCaseData> GetSqlParsingTestCases()

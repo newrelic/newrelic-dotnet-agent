@@ -42,18 +42,24 @@ namespace NewRelic.Agent.Core.Api
             _traceMetadataFactory = new TraceMetadataFactory(_adaptiveSampler);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void TraceMetadata_ComputesSampledIfNotSet()
         {
             var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
-            Assert.IsNull(transaction.Sampled);
+            Assert.That(transaction.Sampled, Is.Null);
 
             Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).Returns(true);
 
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
-            Assert.AreEqual(true, sampled, "TraceMetadata did not set IsSampled.");
+            Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not set IsSampled.");
             Mock.Assert(() => _adaptiveSampler.ComputeSampled(ref Arg.Ref(Arg.AnyFloat).Value), Occurs.Once());
         }
 
@@ -68,7 +74,7 @@ namespace NewRelic.Agent.Core.Api
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
-            Assert.AreEqual(true, sampled, "TraceMetadata did not use existing Sampled setting.");
+            Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not use existing Sampled setting.");
             Mock.Assert(() => _adaptiveSampler.ComputeSampled(ref Arg.Ref(Arg.AnyFloat).Value), Occurs.Never());
         }
     }

@@ -36,9 +36,12 @@ namespace NewRelic.Agent.Core.Database.UnitTest
                 var obfuscatedSql = _databaseService.GetObfuscatedSql(unobfuscatedSql, DatastoreVendor.MSSQL);
 
                 // ASSERT
-                Assert.IsNotNull(obfuscatedSql);
-                Assert.IsNotEmpty(unobfuscatedSql);
-                Assert.AreNotEqual(unobfuscatedSql, obfuscatedSql);
+                Assert.That(obfuscatedSql, Is.Not.Null);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(unobfuscatedSql, Is.Not.Empty);
+                    Assert.That(obfuscatedSql, Is.Not.EqualTo(unobfuscatedSql));
+                });
             }
         }
     }

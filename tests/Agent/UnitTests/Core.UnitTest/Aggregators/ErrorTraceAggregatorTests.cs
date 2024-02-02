@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         #endregion
@@ -115,9 +115,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, sentErrors.Count());
-            Assert.AreEqual(sentErrors, errorsToSend);
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentErrors.Count(), Is.EqualTo(3));
+                Assert.That(errorsToSend, Is.EqualTo(sentErrors));
+            });
         }
 
         [Test]
@@ -136,7 +139,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            Assert.That(sendCalled, Is.False);
         }
 
         #endregion
@@ -163,7 +166,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         [Test]
@@ -186,7 +189,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         [Test]
@@ -208,7 +211,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentErrorsCount);
+            Assert.That(sentErrorsCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -230,7 +233,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         #endregion

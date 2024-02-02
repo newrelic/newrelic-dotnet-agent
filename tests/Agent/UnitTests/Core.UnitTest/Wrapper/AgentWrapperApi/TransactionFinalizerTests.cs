@@ -50,6 +50,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [TearDown]
         public void TearDown()
         {
+            _attribDefSvc.Dispose();
             _transactionFinalizer.Dispose();
         }
 

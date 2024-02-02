@@ -48,8 +48,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(actualAttribVal),
-                () => Assert.AreEqual(expectedResult, actualAttribVal.Value)
+                () => Assert.That(actualAttribVal, Is.Not.Null),
+                () => Assert.That(actualAttribVal.Value, Is.EqualTo(expectedResult))
             );
         }
 
@@ -95,8 +95,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsFalse(trySetResult),
-                () => Assert.IsNull(actualAttribVal)
+                () => Assert.That(trySetResult, Is.False),
+                () => Assert.That(actualAttribVal, Is.Null)
             );
         }
 
@@ -117,8 +117,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                .FirstOrDefault(x => x.AttributeDefinition == attribDef);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(trySetResult),
-                () => Assert.AreEqual(string.Empty, actualAttribVal.Value)
+                () => Assert.That(trySetResult, Is.True),
+                () => Assert.That(actualAttribVal.Value, Is.EqualTo(string.Empty))
             );
         }
 
@@ -140,8 +140,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(trySetResult),
-                () => Assert.AreEqual(" ", actualAttribVal.Value)
+                () => Assert.That(trySetResult, Is.True),
+                () => Assert.That(actualAttribVal.Value, Is.EqualTo(" "))
             );
         }
 
@@ -175,12 +175,12 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             }
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(testResults[0]),
-                () => Assert.IsFalse(testResults[1]),
-                () => Assert.IsFalse(testResults[2]),
-                () => Assert.IsFalse(testResults[3]),
-                () => Assert.IsFalse(testResults[4]),
-                () => Assert.AreEqual(1, attribVals.GetAttributeValues(AttributeClassification.UserAttributes).Count())
+                () => Assert.That(testResults[0], Is.True),
+                () => Assert.That(testResults[1], Is.False),
+                () => Assert.That(testResults[2], Is.False),
+                () => Assert.That(testResults[3], Is.False),
+                () => Assert.That(testResults[4], Is.False),
+                () => Assert.That(attribVals.GetAttributeValues(AttributeClassification.UserAttributes).Count(), Is.EqualTo(1))
             );
         }
 
@@ -213,13 +213,13 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(attribDefTestResults[0]),
-                () => Assert.IsTrue(attribDefTestResults[1]),
-                () => Assert.IsTrue(attribDefTestResults[2]),
-                () => Assert.AreEqual(3, values.Count()),
-                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
-                () => Assert.AreEqual(1023, values.ElementAt(1).Value.ToString().Length),
-                () => Assert.AreEqual(1023, values.ElementAt(2).Value.ToString().Length)
+                () => Assert.That(attribDefTestResults[0], Is.True),
+                () => Assert.That(attribDefTestResults[1], Is.True),
+                () => Assert.That(attribDefTestResults[2], Is.True),
+                () => Assert.That(values.Count(), Is.EqualTo(3)),
+                () => Assert.That(values.ElementAt(0).Value.ToString(), Has.Length.EqualTo(255)),
+                () => Assert.That(values.ElementAt(1).Value.ToString(), Has.Length.EqualTo(1023)),
+                () => Assert.That(values.ElementAt(2).Value.ToString(), Has.Length.EqualTo(1023))
             );
         }
 
@@ -252,13 +252,13 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(attribDefTestResults[0]),
-                () => Assert.IsTrue(attribDefTestResults[1]),
-                () => Assert.IsTrue(attribDefTestResults[2]),
-                () => Assert.AreEqual(3, values.Count()),
-                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
-                () => Assert.AreEqual(255, values.ElementAt(1).Value.ToString().Length),
-                () => Assert.AreEqual(255, values.ElementAt(2).Value.ToString().Length)
+                () => Assert.That(attribDefTestResults[0], Is.True),
+                () => Assert.That(attribDefTestResults[1], Is.True),
+                () => Assert.That(attribDefTestResults[2], Is.True),
+                () => Assert.That(values.Count(), Is.EqualTo(3)),
+                () => Assert.That(values.ElementAt(0).Value.ToString(), Has.Length.EqualTo(255)),
+                () => Assert.That(values.ElementAt(1).Value.ToString(), Has.Length.EqualTo(255)),
+                () => Assert.That(values.ElementAt(2).Value.ToString(), Has.Length.EqualTo(255))
             );
         }
     }

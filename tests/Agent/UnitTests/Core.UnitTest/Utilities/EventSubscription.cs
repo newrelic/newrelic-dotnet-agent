@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            Assert.That(wasCalled, Is.False);
         }
 
         [Test]
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.IsTrue(wasCalled);
+            Assert.That(wasCalled, Is.True);
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.AreEqual(1, callCount);
+            Assert.That(callCount, Is.EqualTo(1));
         }
     }
 }

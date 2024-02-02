@@ -9,7 +9,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     [TestFixture]
     public class ThreadProfilingServiceTest
     {
-        static public UIntPtr[] GenerateStackSnapshot(uint numFunctions, uint start, uint increment, bool randomize = false)
+        static private UIntPtr[] GenerateStackSnapshot(uint numFunctions, uint start, uint increment, bool randomize = false)
         {
             var functionIds = new UIntPtr[numFunctions];
 
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 null, null);
             ProfileNode node = new ProfileNode(new UIntPtr(10), 1, 2);
             service.AddNodeToPruningList(node);
-            Assert.AreEqual(1, service.PruningList.Count);
+            Assert.That(service.PruningList, Has.Count.EqualTo(1));
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 ProfileNode node = new ProfileNode(new UIntPtr(i), 1, 2);
                 service.AddNodeToPruningList(node);
             }
-            Assert.AreEqual(expectedCount, service.PruningList.Count);
+            Assert.That(service.PruningList, Has.Count.EqualTo(expectedCount));
         }
         #endregion
 
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             bucket.UpdateTree(fids);
 
             service.ResetCache();
-            Assert.AreEqual(0, service.GetTotalBucketNodeCount());
+            Assert.That(service.GetTotalBucketNodeCount(), Is.EqualTo(0));
 
         }
 
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
 
             service.ResetCache();
-            Assert.AreEqual(0, service.PruningList.Count);
+            Assert.That(service.PruningList, Is.Empty);
         }
 
         #region Pruning Tests
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node2);
 
             service.SortPruningTree();
-            Assert.IsTrue(((ProfileNode)service.PruningList[0]).RunnableCount > ((ProfileNode)service.PruningList[1]).RunnableCount);
+            Assert.That(((ProfileNode)service.PruningList[0]).RunnableCount, Is.GreaterThan(((ProfileNode)service.PruningList[1]).RunnableCount));
         }
 
         [Test]
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node2);
 
             service.SortPruningTree();
-            Assert.IsTrue(((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth);
+            Assert.That(((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth, Is.True);
         }
 
         [Test]
@@ -136,9 +136,9 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node3);
 
             service.SortPruningTree();
-            Assert.IsTrue(
+            Assert.That(
                 (((ProfileNode)service.PruningList[0]).RunnableCount > ((ProfileNode)service.PruningList[1]).RunnableCount) &&
-                (((ProfileNode)service.PruningList[1]).RunnableCount > ((ProfileNode)service.PruningList[2]).RunnableCount));
+                (((ProfileNode)service.PruningList[1]).RunnableCount > ((ProfileNode)service.PruningList[2]).RunnableCount), Is.True);
         }
 
 
@@ -157,9 +157,9 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             service.AddNodeToPruningList(node3);
 
             service.SortPruningTree();
-            Assert.IsTrue(
+            Assert.That(
                 (((ProfileNode)service.PruningList[0]).Depth < ((ProfileNode)service.PruningList[1]).Depth) &&
-                (((ProfileNode)service.PruningList[1]).Depth < ((ProfileNode)service.PruningList[2]).Depth));
+                (((ProfileNode)service.PruningList[1]).Depth < ((ProfileNode)service.PruningList[2]).Depth), Is.True);
         }
 
         [Test]
@@ -180,10 +180,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             service.SortPruningTree();
 
-            Assert.IsFalse(((ProfileNode)service.PruningList[0]).IgnoreForReporting);
-            Assert.IsFalse(((ProfileNode)service.PruningList[1]).IgnoreForReporting);
-            Assert.IsFalse(((ProfileNode)service.PruningList[2]).IgnoreForReporting);
-            Assert.IsTrue(((ProfileNode)service.PruningList[3]).IgnoreForReporting);
+            Assert.Multiple(() =>
+            {
+                Assert.That(((ProfileNode)service.PruningList[0]).IgnoreForReporting, Is.False);
+                Assert.That(((ProfileNode)service.PruningList[1]).IgnoreForReporting, Is.False);
+                Assert.That(((ProfileNode)service.PruningList[2]).IgnoreForReporting, Is.False);
+                Assert.That(((ProfileNode)service.PruningList[3]).IgnoreForReporting, Is.True);
+            });
         }
 
         #endregion

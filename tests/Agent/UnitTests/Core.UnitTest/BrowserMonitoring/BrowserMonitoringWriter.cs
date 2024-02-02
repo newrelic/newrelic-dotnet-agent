@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(string.Empty, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(string.Empty));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToHead + contentRemaining);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(content);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToXUATag + contentRemaining);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -166,7 +166,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToXUATag + contentRemaining);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToXUATag + contentRemaining);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -212,7 +212,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToHead + contentPartTwo + contentPartThree);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -232,7 +232,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             string modifiedContent = writer.WriteScriptHeaders(contentUpToHead + contentPartTwo + contentPartThree);
 
             // ASSERT
-            Assert.AreEqual(expected, modifiedContent);
+            Assert.That(modifiedContent, Is.EqualTo(expected));
         }
 
         [Test]
@@ -242,7 +242,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var expected = "<html><head />EXPECTED_RUM_LOADER_LOCATION<body>im some body text</body></html>";
             var writer = new BrowserMonitoringWriter(() => "EXPECTED_RUM_LOADER_LOCATION");
             var result = writer.WriteScriptHeaders(data);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -270,7 +270,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var expected = $"<html><head />{angelicText}<body>im some body text</body></html>";
             var writer = new BrowserMonitoringWriter(() => angelicText);
             var result = writer.WriteScriptHeaders(data);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
     }
 }

@@ -26,9 +26,9 @@ namespace NewRelic.Agent.Core.Transactions
             transaction.AddLogEvent(logEvent);
             var harvestedLogs = transaction.HarvestLogEvents();
 
-            Assert.NotNull(harvestedLogs);
-            Assert.AreEqual(1, harvestedLogs.Count);
-            Assert.AreSame(logEvent, harvestedLogs.First());
+            Assert.That(harvestedLogs, Is.Not.Null);
+            Assert.That(harvestedLogs, Has.Count.EqualTo(1));
+            Assert.That(harvestedLogs.First(), Is.SameAs(logEvent));
 
         }
 
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             var result = transaction.AddLogEvent(logEvent);
 
-            Assert.False(result);
+            Assert.That(result, Is.False);
         }
     }
 }

@@ -27,14 +27,17 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLevel, expectedSpanId, expectedTraceId, _testContextData);
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
-            Assert.AreEqual(expectedMessage, objectUnderTest.Message);
-            Assert.AreEqual(expectedLevel, objectUnderTest.Level);
-            Assert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
-            Assert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
-            Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
-            Assert.AreEqual(_testContextData, objectUnderTest.ContextData);
+            Assert.That(objectUnderTest, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(objectUnderTest.TimeStamp, Is.EqualTo(expectedTimestamp));
+                Assert.That(objectUnderTest.Message, Is.EqualTo(expectedMessage));
+                Assert.That(objectUnderTest.Level, Is.EqualTo(expectedLevel));
+                Assert.That(objectUnderTest.SpanId, Is.EqualTo(expectedSpanId));
+                Assert.That(objectUnderTest.TraceId, Is.EqualTo(expectedTraceId));
+                Assert.That(objectUnderTest.Priority, Is.EqualTo(expectedPriority));
+                Assert.That(objectUnderTest.ContextData, Is.EqualTo(_testContextData));
+            });
         }
 
         [Test]
@@ -46,8 +49,8 @@ namespace NewRelic.Agent.Core.WireModels
 
             var objectUnderTest = baseObject as IHasPriority;
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
+            Assert.That(objectUnderTest, Is.Not.Null);
+            Assert.That(objectUnderTest.Priority, Is.EqualTo(expectedPriority));
         }
 
         [Test]
@@ -64,7 +67,7 @@ namespace NewRelic.Agent.Core.WireModels
             };
 
             Assert.Throws<ArgumentException>(() => { objectUnderTest.Priority = priority; });
-            Assert.AreEqual(startingPriority, objectUnderTest.Priority);
+            Assert.That(objectUnderTest.Priority, Is.EqualTo(startingPriority));
         }
 
         [Test]
@@ -78,7 +81,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var messageStringFromLogEvent = logEvent.Message;
 
-            Assert.AreEqual(Encoding.UTF8.GetByteCount(messageStringFromLogEvent), maxLogMessageLengthInBytes);
+            Assert.That(maxLogMessageLengthInBytes, Is.EqualTo(Encoding.UTF8.GetByteCount(messageStringFromLogEvent)));
         }
     }
 }

@@ -42,6 +42,12 @@ namespace NewRelic.Agent.Core.WireModels
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void All_attribute_value_types_in_an_event_do_serialize_correctly()
         {
@@ -111,7 +117,7 @@ namespace NewRelic.Agent.Core.WireModels
             var errorEventWireModel = new ErrorEventWireModel(attribValues, isSyntheticsEvent, priority);
 
             // Assert
-            Assert.IsTrue(errorEventWireModel.IsSynthetics);
+            Assert.That(errorEventWireModel.IsSynthetics, Is.True);
         }
 
         [Test]
@@ -124,19 +130,19 @@ namespace NewRelic.Agent.Core.WireModels
 
             var wireModel = new ErrorEventWireModel(attribValues, false, priority);
 
-            Assert.That(priority == wireModel.Priority);
+            Assert.That(priority, Is.EqualTo(wireModel.Priority));
 
             priority = 0.0f;
             wireModel.Priority = priority;
-            Assert.That(priority == wireModel.Priority);
+            Assert.That(priority, Is.EqualTo(wireModel.Priority));
 
             priority = 1.0f;
             wireModel.Priority = priority;
-            Assert.That(priority == wireModel.Priority);
+            Assert.That(priority, Is.EqualTo(wireModel.Priority));
 
             priority = 1.1f;
             wireModel.Priority = priority;
-            Assert.That(priority == wireModel.Priority);
+            Assert.That(priority, Is.EqualTo(wireModel.Priority));
 
             priority = -0.00001f;
             Assert.Throws<ArgumentException>(() => wireModel.Priority = priority);

@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public void Encoding_InitializesAndReturnsCorrectEncoding_WhenNotInitialized()
         {
             _nrHttpContent.SerializedData = "Test";
-            Assert.AreEqual("identity", _nrHttpContent.Encoding); // assuming uncompressed by default
+            Assert.That(_nrHttpContent.Encoding, Is.EqualTo("identity")); // assuming uncompressed by default
         }
 
         [Test]
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             _nrHttpContent.SerializedData = "Test";
             var expectedBytes = new UTF8Encoding().GetBytes("Test");
-            CollectionAssert.AreEqual(expectedBytes, _nrHttpContent.PayloadBytes);
+            Assert.That(_nrHttpContent.PayloadBytes, Is.EqualTo(expectedBytes).AsCollection);
         }
 
         [Test]
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             _nrHttpContent.SerializedData = "Test";
             var expectedCount = new UTF8Encoding().GetBytes("Test").Length;
-            Assert.AreEqual(expectedCount, _nrHttpContent.UncompressedByteCount);
+            Assert.That(_nrHttpContent.UncompressedByteCount, Is.EqualTo(expectedCount));
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             // Assuming a condition where the data would be compressed based on the length
             _nrHttpContent.SerializedData = new string('a', Constants.CompressMinimumByteLength);
-            Assert.IsTrue(_nrHttpContent.IsCompressed);
+            Assert.That(_nrHttpContent.IsCompressed, Is.True);
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             // Assuming a condition where the data would be compressed
             _mockConfiguration.Arrange(config => config.CompressedContentEncoding).Returns("gzip");
             _nrHttpContent.SerializedData = new string('a', Constants.CompressMinimumByteLength);
-            Assert.AreEqual("gzip", _nrHttpContent.CompressionType);
+            Assert.That(_nrHttpContent.CompressionType, Is.EqualTo("gzip"));
         }
 
         [Test]

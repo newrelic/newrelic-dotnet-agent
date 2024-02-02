@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
@@ -26,19 +26,25 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest = new SyntheticsTransactionCollector();
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            ObjectUnderTest.Dispose();
+        }
+
         [Test]
         public void DoesNotThrowWhenNullTransactionTraceIsCollected()
         {
             ObjectUnderTest.Collect(null);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
         public void GettingCollectedSamplesWorksWhenEmpty()
         {
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
@@ -49,8 +55,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(input, samples[0]);
+            Assert.That(samples, Has.Length.EqualTo(1));
+            Assert.That(samples[0], Is.SameAs(input));
         }
 
         [Test]
@@ -61,8 +67,11 @@ namespace NewRelic.Agent.Core.TransactionTraces
             var firstHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
             var secondHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(1, firstHarvest.Length);
-            Assert.IsEmpty(secondHarvest);
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstHarvest, Has.Length.EqualTo(1));
+                Assert.That(secondHarvest, Is.Empty);
+            });
         }
 
         [Test]
@@ -73,7 +82,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.IsEmpty(samples);
+            Assert.That(samples, Is.Empty);
         }
 
         [Test]
@@ -87,9 +96,9 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(2, samples.Length);
-            Assert.Contains(firstSyntheticTrace, samples);
-            Assert.Contains(secondSyntheticTrace, samples);
+            Assert.That(samples, Has.Length.EqualTo(2));
+            Assert.That(samples, Does.Contain(firstSyntheticTrace));
+            Assert.That(samples, Does.Contain(secondSyntheticTrace));
         }
 
         [Test]
@@ -103,7 +112,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-            Assert.AreEqual(SyntheticsHeader.MaxTraceCount, samples.Length);
+            Assert.That(samples, Has.Length.EqualTo(SyntheticsHeader.MaxTraceCount));
         }
 
         [Test]
@@ -128,7 +137,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
                 var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
-                Assert.AreEqual(SyntheticsHeader.MaxTraceCount, samples.Length);
+                Assert.That(samples, Has.Length.EqualTo(SyntheticsHeader.MaxTraceCount));
             }
         }
     }

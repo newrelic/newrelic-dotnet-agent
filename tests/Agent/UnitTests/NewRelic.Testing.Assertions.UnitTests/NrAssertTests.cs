@@ -18,8 +18,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
         {
             var exception = NrAssert.Throws<NullReferenceException>(() => { throw new NullReferenceException("Test message"); });
 
-            Assert.NotNull(exception);
-            Assert.AreEqual("Test message", exception.Message);
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception.Message, Is.EqualTo("Test message"));
         }
 
         [Test]
@@ -27,8 +27,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
         {
             var exception = NrAssert.Throws<Exception>(() => { throw new NullReferenceException(); });
 
-            Assert.NotNull(exception);
-            Assert.AreEqual(typeof(NullReferenceException), exception.GetType());
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception.GetType(), Is.EqualTo(typeof(NullReferenceException)));
         }
 
         [Test]
@@ -44,8 +44,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
                 testException = ex;
             }
 
-            Assert.NotNull(testException);
-            Assert.AreEqual("Expected exception of type 'System.NullReferenceException' was not thrown.", testException.Message);
+            Assert.That(testException, Is.Not.Null);
+            Assert.That(testException.Message, Is.EqualTo("Expected exception of type 'System.NullReferenceException' was not thrown."));
         }
 
         [Test]
@@ -61,10 +61,10 @@ namespace NewRelic.Testing.Assertions.UnitTests
                 testFailureException = ex;
             }
 
-            Assert.NotNull(testFailureException);
-            Assert.IsTrue(testFailureException.Message.StartsWith(
+            Assert.That(testFailureException, Is.Not.Null);
+            Assert.That(testFailureException.Message.StartsWith(
                 "Expected exception of type 'System.NullReferenceException', but exception of type 'System.InvalidOperationException' was thrown instead",
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.InvariantCultureIgnoreCase), Is.True);
         }
 
         #endregion Throws

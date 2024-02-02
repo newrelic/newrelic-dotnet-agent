@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -176,7 +176,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -207,7 +207,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 
         }
 
@@ -231,7 +231,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"ip_address", new[] { "1.2.3.4","5.6.7.8" }}
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -254,7 +254,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -285,7 +285,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -314,7 +314,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         //Same method used in main code, except this one take the config vs having it be global.

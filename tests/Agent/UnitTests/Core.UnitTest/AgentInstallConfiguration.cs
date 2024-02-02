@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public void AgentVersionTimeStampIsGreaterThanZero()
         {
-            Assert.Greater(AgentInstallConfiguration.AgentVersionTimestamp, 0);
+            Assert.That(AgentInstallConfiguration.AgentVersionTimestamp, Is.GreaterThan(0));
         }
     }
 }
