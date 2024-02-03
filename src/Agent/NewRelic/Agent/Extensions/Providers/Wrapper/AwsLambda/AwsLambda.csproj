@@ -12,6 +12,7 @@
 	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
   </ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />

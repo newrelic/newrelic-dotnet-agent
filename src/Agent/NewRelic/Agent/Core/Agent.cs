@@ -433,6 +433,11 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportByteMetric(metricName, totalBytes, exclusiveBytes);
         }
 
+        public void LogFromWrapper(string message)
+        {
+            NewRelic.Core.Logging.Log.Info(message);
+        }
+
         public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);

@@ -5,10 +5,20 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
-		<tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.UserCodeLoaderInvoke">
-			<match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.Bootstrap.UserCodeLoader">
-				<exactMethodMatcher methodName="Invoke" />
-			</match>
-		</tracerFactory>
-	</instrumentation>
+
+    <!--Attempt to auto-instrument the lambda runtime itself.  Not working due to issues getting customer handler method input data from a Stream-->
+    <!--<tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.UserCodeLoaderInvoke">
+      <match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.Bootstrap.UserCodeLoader">
+        <exactMethodMatcher methodName="Invoke" />
+      </match>
+    </tracerFactory>-->
+
+    <!-- Custom instrumentation approach.  Hardcoded for POC, would be added to the profiler via an environment variable in the real world-->
+    <tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod">
+      <match assemblyName="AlexFirstLambda" className="AlexFirstLambda.Function">
+        <exactMethodMatcher methodName="FunctionHandler" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
 </extension>
