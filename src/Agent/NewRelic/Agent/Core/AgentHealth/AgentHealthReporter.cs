@@ -832,9 +832,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void ReportIfInstrumentationIsDisabled()
         {
-            if (_configuration.IgnoredInstrumentation.Any())
+            var ignoredCount = _configuration.IgnoredInstrumentation.Count();
+            if (ignoredCount > 0)
             {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityIgnoredInstrumentation);
+                ReportSupportabilityGaugeMetric(MetricNames.SupportabilityIgnoredInstrumentation, ignoredCount);
             }
         }
     }

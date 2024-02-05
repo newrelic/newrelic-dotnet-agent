@@ -504,16 +504,15 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void IgnoredInstrumentationSupportabiltyMetricPresent()
         {
-            var expectedMetricNameAndValue = new Dictionary<string, long>
-            {
-                { "Supportability/Dotnet/IgnoredInstrumentation", 1 }
-            };
+            var expectedMetricName = new MetricNameWireModel("Supportability/Dotnet/IgnoredInstrumentation", null);
+            var expectedMetricData = MetricDataWireModel.BuildGaugeValue(1);
             _ignoredInstrumentation.Add(new Dictionary<string, string> { { "assemblyName", "Assembly" } });
 
             _agentHealthReporter.CollectMetrics();
 
-            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
-            Assert.That(expectedMetricNameAndValue, Is.SubsetOf(actualMetricNamesAndValues));
+            var actualMetric = _publishedMetrics.Single(m => m.MetricNameModel.Equals(expectedMetricName));
+            Assert.That(actualMetric.DataModel, Is.EqualTo(expectedMetricData),
+                $"Got count {actualMetric.DataModel.Value0} and value {actualMetric.DataModel.Value1} instead of count {expectedMetricData.Value0} and value {expectedMetricData.Value1}.");
         }
 
         [Test]
