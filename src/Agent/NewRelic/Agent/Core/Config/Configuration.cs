@@ -1407,6 +1407,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationInstrumentation
     {
         
+        private List<configurationInstrumentationIgnore> ignoreField;
+        
         private List<configurationInstrumentationApplication> applicationsField;
         
         private bool logField;
@@ -1417,7 +1419,21 @@ namespace NewRelic.Agent.Core.Config
         public configurationInstrumentation()
         {
             this.applicationsField = new List<configurationInstrumentationApplication>();
+            this.ignoreField = new List<configurationInstrumentationIgnore>();
             this.logField = false;
+        }
+        
+        [System.Xml.Serialization.XmlElementAttribute("ignore")]
+        public List<configurationInstrumentationIgnore> ignore
+        {
+            get
+            {
+                return this.ignoreField;
+            }
+            set
+            {
+                this.ignoreField = value;
+            }
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("application", IsNullable=false)]
@@ -1454,6 +1470,54 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationInstrumentation Clone()
         {
             return ((configurationInstrumentation)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationInstrumentationIgnore
+    {
+        
+        private string assemblynameField;
+        
+        private string classnameField;
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string assemblyname
+        {
+            get
+            {
+                return this.assemblynameField;
+            }
+            set
+            {
+                this.assemblynameField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string classname
+        {
+            get
+            {
+                return this.classnameField;
+            }
+            set
+            {
+                this.classnameField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationInstrumentationIgnore object
+        /// </summary>
+        public virtual configurationInstrumentationIgnore Clone()
+        {
+            return ((configurationInstrumentationIgnore)(this.MemberwiseClone()));
         }
         #endregion
     }

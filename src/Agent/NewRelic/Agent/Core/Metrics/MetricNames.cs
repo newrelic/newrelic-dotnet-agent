@@ -836,6 +836,8 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingDisabled = "Supportability/DotNET/AgentLogging/Disabled";
         public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
 
+        public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
+
         #endregion Supportability
 
         #region Distributed Trace Metrics

@@ -28,11 +28,13 @@ namespace NewRelic.Agent.Core.AgentHealth
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
         private bool _enableLogging;
+        private List<IDictionary<string, string>> _ignoredInstrumentation;
 
         [SetUp]
         public void SetUp()
         {
             _enableLogging = true;
+            _ignoredInstrumentation = new List<IDictionary<string, string>>();
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
@@ -57,6 +59,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
             Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
+            Mock.Arrange(() => configuration.IgnoredInstrumentation).Returns(() => _ignoredInstrumentation);
             return configuration;
         }
 
@@ -496,6 +499,28 @@ namespace NewRelic.Agent.Core.AgentHealth
                 Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNET/AgentLogging/Disabled"), Is.False);
                 Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNET/AgentLogging/DisabledDueToError"), Is.False);
             });
+        }
+
+        [Test]
+        public void IgnoredInstrumentationSupportabiltyMetricPresent()
+        {
+            var expectedMetricName = new MetricNameWireModel("Supportability/Dotnet/IgnoredInstrumentation", null);
+            var expectedMetricData = MetricDataWireModel.BuildGaugeValue(1);
+            _ignoredInstrumentation.Add(new Dictionary<string, string> { { "assemblyName", "Assembly" } });
+
+            _agentHealthReporter.CollectMetrics();
+
+            var actualMetric = _publishedMetrics.Single(m => m.MetricNameModel.Equals(expectedMetricName));
+            Assert.That(actualMetric.DataModel, Is.EqualTo(expectedMetricData),
+                $"Got count {actualMetric.DataModel.Value0} and value {actualMetric.DataModel.Value1} instead of count {expectedMetricData.Value0} and value {expectedMetricData.Value1}.");
+        }
+
+        [Test]
+        public void IgnoredInstrumentationSupportabiltyMetricMissing()
+        {
+            _agentHealthReporter.CollectMetrics();
+
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/IgnoredInstrumentation"), Is.False);
         }
     }
 }
