@@ -77,7 +77,7 @@ jobs:
         languages: c-cpp
 
     - name: Add msbuild to PATH for Profiler build
-      uses: microsoft/setup-msbuild@031090342aeefe171e49f3820f3b52110c66e402 # v1.3.2
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
 
     - name: Build Profiler
       run: |
