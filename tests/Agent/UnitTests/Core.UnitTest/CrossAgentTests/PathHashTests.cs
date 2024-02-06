@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
             var newPathHash = _pathHashMaker.CalculatePathHash(testCase.TransactionName, testCase.ReferringPathHash);
 
-            Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
+            Assert.That(newPathHash, Is.EqualTo(testCase.ExpectedPathHash));
         }
 
         private static ITransactionName GetTransactionNameFromString(string transactionName)
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

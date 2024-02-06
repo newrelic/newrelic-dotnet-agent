@@ -69,8 +69,11 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.NotNull(loadedModulesCollection);
-            Assert.IsTrue(loadedModules.Count > 0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModulesCollection, Is.Not.Null);
+                Assert.That(loadedModules, Is.Not.Empty);
+            });
         }
 
         [Test]
@@ -94,7 +97,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
         }
 
         [Test]
@@ -113,9 +116,12 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.Greater(initialModules.Count, 0);
-            Assert.Greater(loadedModules.Count, 0);
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(initialModules.Count, Is.GreaterThan(0));
+                Assert.That(loadedModules.Count, Is.GreaterThan(0));
+            });
+            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
         }
     }
 }

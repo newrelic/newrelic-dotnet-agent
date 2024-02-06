@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -16,7 +16,7 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-    public interface ILogEventAggregator
+    public interface ILogEventAggregator : IDisposable
     {
         void Collect(LogEventWireModel loggingEventWireModel);
 

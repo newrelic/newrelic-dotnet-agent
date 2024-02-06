@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Utils
                        "  at System.ServiceModel.Dispatcher.SyncMethodInvoker.Invoke(Object instance, Object[] inputs, Object[]& outputs)",
                        "  at System.ServiceModel.Dispatcher.DispatchOperationRuntime.InvokeBegin(MessageRpc& rpc)",
                        "  at System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage5(MessageRpc& rpc)"}));
-            Assert.AreEqual(5, stack.Count);
+            Assert.That(stack, Has.Count.EqualTo(5));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             IList<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 300);
-            Assert.AreNotEqual(stackTraces.Length, frames.Count);
+            Assert.That(frames, Has.Count.Not.EqualTo(stackTraces.Length));
         }
 
         [Test]
@@ -46,14 +46,14 @@ namespace NewRelic.Agent.Core.Utils
                        "  at System.ServiceModel.Dispatcher.SyncMethodInvoker.Invoke(Object instance, Object[] inputs, Object[]& outputs)",
                        "  at System.ServiceModel.Dispatcher.DispatchOperationRuntime.InvokeBegin(MessageRpc& rpc)",
                        "  at System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage5(MessageRpc& rpc)"}), 10);
-            Assert.AreEqual(5, stack.Count);
+            Assert.That(stack, Has.Count.EqualTo(5));
         }
 
         [Test]
         public static void TestScrubNullString()
         {
             ICollection<string> frames = StackTraces.ScrubAndTruncate((string)null, 300);
-            Assert.AreEqual(0, frames.Count);
+            Assert.That(frames, Is.Empty);
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             ICollection<string> frames = StackTraces.ScrubAndTruncate(
                  string.Join(System.Environment.NewLine, new string[] { "", "", null, "" }), 300);
-            Assert.AreEqual(4, frames.Count);
+            Assert.That(frames, Has.Count.EqualTo(4));
         }
 
         [Test]
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utils
                 {
                     Console.WriteLine(frame);
                 }
-                Assert.AreEqual(10, frames.Count, ex.StackTrace);
+                Assert.That(frames, Has.Count.EqualTo(10), ex.StackTrace);
             }
 
         }
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.Utils
             MethodInfo method = typeof(StackTrace).GetMethod("GetFrames");
             string str = StackTraces.MethodToString(method);
 
-            Assert.AreEqual("System.Diagnostics.StackTrace.GetFrames()", str);
+            Assert.That(str, Is.EqualTo("System.Diagnostics.StackTrace.GetFrames()"));
         }
 
         [Test]
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.Utils
             MethodInfo method = typeof(StackTrace).GetMethod("GetFrame");
             string str = StackTraces.MethodToString(method);
 
-            Assert.AreEqual("System.Diagnostics.StackTrace.GetFrame(System.Int32 index)", str);
+            Assert.That(str, Is.EqualTo("System.Diagnostics.StackTrace.GetFrame(System.Int32 index)"));
         }
 
         [Test]
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Utils
             MethodBase method = typeof(StackTrace).GetConstructor(new Type[] { typeof(Exception), typeof(int) });
             string str = StackTraces.MethodToString(method);
 
-            Assert.AreEqual("System.Diagnostics.StackTrace..ctor(System.Exception e,System.Int32 skipFrames)", str);
+            Assert.That(str, Is.EqualTo("System.Diagnostics.StackTrace..ctor(System.Exception e,System.Int32 skipFrames)"));
         }
 
         [Test]
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 3);
-            Assert.AreEqual(3, frames.Count);
+            Assert.That(frames, Has.Count.EqualTo(3));
         }
 
         [Test]
@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 0);
-            Assert.AreEqual(0, frames.Count);
+            Assert.That(frames, Is.Empty);
         }
 
         // The purpose of this test is to verify that we do something reasonable and don't throw an exception
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, stackTraces.Length + 666);
-            Assert.LessOrEqual(frames.Count, stackTraces.Length);
+            Assert.That(frames.Count, Is.LessThanOrEqualTo(stackTraces.Length));
         }
 
         [Test]
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame frame = new StackFrame("dude", 6, 6);
             string str = StackTraces.ToString(frame);
-            Assert.AreEqual("NewRelic.Agent.Core.Utils.StackTracesTest.TestToString(dude:6)", str);
+            Assert.That(str, Is.EqualTo("NewRelic.Agent.Core.Utils.StackTracesTest.TestToString(dude:6)"));
         }
 
         [Test]
@@ -151,10 +151,13 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame frame = new StackFrame("dude", 6, 6);
             ICollection<string> strings = StackTraces.ToStringList(new StackFrame[] { frame });
-            Assert.AreEqual(1, strings.Count);
+            Assert.That(strings, Has.Count.EqualTo(1));
             IEnumerator<string> en = strings.GetEnumerator();
-            Assert.That(en.MoveNext());
-            Assert.AreEqual(StackTraces.ToString(frame), en.Current);
+            Assert.Multiple(() =>
+            {
+                Assert.That(en.MoveNext());
+                Assert.That(en.Current, Is.EqualTo(StackTraces.ToString(frame)));
+            });
         }
 
         private static StackTrace GetStackTrace()

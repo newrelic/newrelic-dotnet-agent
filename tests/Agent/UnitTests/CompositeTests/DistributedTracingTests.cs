@@ -58,14 +58,20 @@ namespace CompositeTests
             foreach (var span in _compositeTestAgent.SpanEvents)
             {
                 var intrinsicAttributes = span.IntrinsicAttributes();
-                Assert.IsTrue(IsLowerCase(intrinsicAttributes["traceId"].ToString()));
-                Assert.IsTrue(IsLowerCase(intrinsicAttributes["transactionId"].ToString()));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(IsLowerCase(intrinsicAttributes["traceId"].ToString()), Is.True);
+                    Assert.That(IsLowerCase(intrinsicAttributes["transactionId"].ToString()), Is.True);
+                });
             }
 
             foreach (TransactionEventWireModel tx in _compositeTestAgent.TransactionEvents)
             {
-                Assert.IsTrue(IsLowerCase(tx.IntrinsicAttributes()["guid"].ToString()));
-                Assert.IsTrue(IsLowerCase(tx.IntrinsicAttributes()["traceId"].ToString()));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(IsLowerCase(tx.IntrinsicAttributes()["guid"].ToString()), Is.True);
+                    Assert.That(IsLowerCase(tx.IntrinsicAttributes()["traceId"].ToString()), Is.True);
+                });
             }
         }
 
@@ -95,7 +101,7 @@ namespace CompositeTests
 
             var spanEvents = _compositeTestAgent.SpanEvents;
 
-            Assert.AreEqual(2, spanEvents.Count);
+            Assert.That(spanEvents, Has.Count.EqualTo(2));
 
             // The faux span we create to contain the actual spans.
             var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
@@ -108,11 +114,14 @@ namespace CompositeTests
 
             var agentAttributes = actualSpan.AgentAttributes();
 
-            //The specific test
-            Assert.IsFalse(agentAttributes.ContainsKey("db.statement"));
-            Assert.AreEqual(testDBName, agentAttributes["db.instance"]);
-            Assert.AreEqual(testHostName, agentAttributes["peer.hostname"]);
-            Assert.AreEqual($"{testHostName}:{testPort}", agentAttributes["peer.address"]);
+            Assert.Multiple(() =>
+            {
+                //The specific test
+                Assert.That(agentAttributes.ContainsKey("db.statement"), Is.False);
+                Assert.That(agentAttributes["db.instance"], Is.EqualTo(testDBName));
+                Assert.That(agentAttributes["peer.hostname"], Is.EqualTo(testHostName));
+                Assert.That(agentAttributes["peer.address"], Is.EqualTo($"{testHostName}:{testPort}"));
+            });
         }
 
         [Test]
@@ -142,7 +151,7 @@ namespace CompositeTests
 
             var spanEvents = _compositeTestAgent.SpanEvents;
 
-            Assert.AreEqual(2, spanEvents.Count);
+            Assert.That(spanEvents, Has.Count.EqualTo(2));
 
             // The faux span we create to contain the actual spans.
             var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
@@ -155,11 +164,14 @@ namespace CompositeTests
 
             var agentAttributes = actualSpan.AgentAttributes();
 
-            //The specific test
-            Assert.AreEqual(testCommand, agentAttributes["db.statement"]);
-            Assert.AreEqual(testDBName, agentAttributes["db.instance"]);
-            Assert.AreEqual(testHostName, agentAttributes["peer.hostname"]);
-            Assert.AreEqual($"{testHostName}:{testPort}", agentAttributes["peer.address"]);
+            Assert.Multiple(() =>
+            {
+                //The specific test
+                Assert.That(agentAttributes["db.statement"], Is.EqualTo(testCommand));
+                Assert.That(agentAttributes["db.instance"], Is.EqualTo(testDBName));
+                Assert.That(agentAttributes["peer.hostname"], Is.EqualTo(testHostName));
+                Assert.That(agentAttributes["peer.address"], Is.EqualTo($"{testHostName}:{testPort}"));
+            });
         }
 
         [Test]
@@ -187,35 +199,41 @@ namespace CompositeTests
 
             var spanEvents = _compositeTestAgent.SpanEvents;
 
-            Assert.AreEqual(2, spanEvents.Count);
+            Assert.That(spanEvents, Has.Count.EqualTo(2));
 
             // The faux span we create to contain the actual spans.
             var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
 
-            Assert.NotNull(rootSpan);
+            Assert.That(rootSpan, Is.Not.Null);
 
             var rootSpanIntrinsicAttributes = rootSpan.IntrinsicAttributes();
 
-            Assert.AreEqual(Payload.TraceId, (string)rootSpanIntrinsicAttributes["traceId"]);
-            Assert.AreEqual(Payload.Priority, (double)rootSpanIntrinsicAttributes["priority"]);
-            Assert.AreEqual(Payload.Sampled, (bool)rootSpanIntrinsicAttributes["sampled"]);
-            Assert.AreEqual(Payload.Guid, (string)rootSpanIntrinsicAttributes["parentId"]);
-            Assert.AreEqual("generic", (string)rootSpanIntrinsicAttributes["category"]);
-            Assert.True((bool)rootSpanIntrinsicAttributes["nr.entryPoint"]);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)rootSpanIntrinsicAttributes["traceId"], Is.EqualTo(Payload.TraceId));
+                Assert.That((double)rootSpanIntrinsicAttributes["priority"], Is.EqualTo(Payload.Priority));
+                Assert.That((bool)rootSpanIntrinsicAttributes["sampled"], Is.EqualTo(Payload.Sampled));
+                Assert.That((string)rootSpanIntrinsicAttributes["parentId"], Is.EqualTo(Payload.Guid));
+                Assert.That((string)rootSpanIntrinsicAttributes["category"], Is.EqualTo("generic"));
+                Assert.That((bool)rootSpanIntrinsicAttributes["nr.entryPoint"], Is.True);
+            });
 
             // The span created from the segment at the top of the test.
             var actualSpan = spanEvents.FirstOrDefault(span => !span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
 
-            Assert.NotNull(actualSpan);
+            Assert.That(actualSpan, Is.Not.Null);
 
             var actualSpanIntrinsicAttributes = actualSpan.IntrinsicAttributes();
 
-            Assert.AreEqual(Payload.TraceId, (string)actualSpanIntrinsicAttributes["traceId"]);
-            Assert.AreEqual(Payload.Priority, (double)actualSpanIntrinsicAttributes["priority"]);
-            Assert.AreEqual(Payload.Sampled, (bool)actualSpanIntrinsicAttributes["sampled"]);
-            Assert.AreEqual((string)rootSpanIntrinsicAttributes["guid"], (string)actualSpanIntrinsicAttributes["parentId"]);
-            Assert.AreEqual((string)rootSpanIntrinsicAttributes["transactionId"], (string)actualSpanIntrinsicAttributes["transactionId"]);
-            Assert.AreEqual("generic", (string)actualSpanIntrinsicAttributes["category"]);
+            Assert.Multiple(() =>
+            {
+                Assert.That((string)actualSpanIntrinsicAttributes["traceId"], Is.EqualTo(Payload.TraceId));
+                Assert.That((double)actualSpanIntrinsicAttributes["priority"], Is.EqualTo(Payload.Priority));
+                Assert.That((bool)actualSpanIntrinsicAttributes["sampled"], Is.EqualTo(Payload.Sampled));
+                Assert.That((string)actualSpanIntrinsicAttributes["parentId"], Is.EqualTo((string)rootSpanIntrinsicAttributes["guid"]));
+                Assert.That((string)actualSpanIntrinsicAttributes["transactionId"], Is.EqualTo((string)rootSpanIntrinsicAttributes["transactionId"]));
+                Assert.That((string)actualSpanIntrinsicAttributes["category"], Is.EqualTo("generic"));
+            });
         }
 
         [Test]
@@ -243,7 +261,7 @@ namespace CompositeTests
 
             var spanEvents = _compositeTestAgent.SpanEvents;
 
-            Assert.AreEqual(2, spanEvents.Count);
+            Assert.That(spanEvents, Has.Count.EqualTo(2));
 
             // The faux span we create to contain the actual spans.
             var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
@@ -257,11 +275,14 @@ namespace CompositeTests
             var agentAttributes = actualSpan.AgentAttributes();
             var intrinsicAttributes = actualSpan.IntrinsicAttributes();
 
-            //The specific test
-            Assert.AreEqual(url, agentAttributes["http.url"]);
-            Assert.AreEqual(method, agentAttributes["http.request.method"]);
-            Assert.AreEqual("127.0.0.2", intrinsicAttributes["server.address"]);
-            Assert.AreEqual(123, intrinsicAttributes["server.port"]);
+            Assert.Multiple(() =>
+            {
+                //The specific test
+                Assert.That(agentAttributes["http.url"], Is.EqualTo(url));
+                Assert.That(agentAttributes["http.request.method"], Is.EqualTo(method));
+                Assert.That(intrinsicAttributes["server.address"], Is.EqualTo("127.0.0.2"));
+                Assert.That(intrinsicAttributes["server.port"], Is.EqualTo(123));
+            });
         }
 
         private static Dictionary<string, string> NewRelicHeaders
@@ -293,27 +314,33 @@ namespace CompositeTests
 
         private static void TestPayloadInfoMatchesSpanInfo(DistributedTracePayload payload, ISpanEventWireModel rootSpan, ISpanEventWireModel actualSpan, string actualCategory)
         {
-            Assert.NotNull(rootSpan);
+            Assert.That(rootSpan, Is.Not.Null);
 
             var rootSpanIntrinsicAttributes = rootSpan.IntrinsicAttributes();
 
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.TraceId, rootSpanIntrinsicAttributes["traceId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Priority, rootSpanIntrinsicAttributes["priority"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Sampled, rootSpanIntrinsicAttributes["sampled"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Guid, rootSpanIntrinsicAttributes["parentId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo("generic", rootSpanIntrinsicAttributes["category"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(true, rootSpanIntrinsicAttributes["nr.entryPoint"]));
+            Assert.Multiple(() =>
+            {
+                Assert.That(AttributeComparer.IsEqualTo(payload.TraceId, rootSpanIntrinsicAttributes["traceId"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(payload.Priority, rootSpanIntrinsicAttributes["priority"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(payload.Sampled, rootSpanIntrinsicAttributes["sampled"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(payload.Guid, rootSpanIntrinsicAttributes["parentId"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo("generic", rootSpanIntrinsicAttributes["category"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(true, rootSpanIntrinsicAttributes["nr.entryPoint"]), Is.True);
 
-            Assert.NotNull(actualSpan);
+                Assert.That(actualSpan, Is.Not.Null);
+            });
 
             var actualSpanIntrinsicAttributes = actualSpan.IntrinsicAttributes();
 
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.TraceId, actualSpanIntrinsicAttributes["traceId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Priority, actualSpanIntrinsicAttributes["priority"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Sampled, actualSpanIntrinsicAttributes["sampled"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["guid"], actualSpanIntrinsicAttributes["parentId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["transactionId"], actualSpanIntrinsicAttributes["transactionId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo(actualCategory, actualSpanIntrinsicAttributes["category"]));
+            Assert.Multiple(() =>
+            {
+                Assert.That(AttributeComparer.IsEqualTo(payload.TraceId, actualSpanIntrinsicAttributes["traceId"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(payload.Priority, actualSpanIntrinsicAttributes["priority"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(payload.Sampled, actualSpanIntrinsicAttributes["sampled"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["guid"], actualSpanIntrinsicAttributes["parentId"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["transactionId"], actualSpanIntrinsicAttributes["transactionId"]), Is.True);
+                Assert.That(AttributeComparer.IsEqualTo(actualCategory, actualSpanIntrinsicAttributes["category"]), Is.True);
+            });
         }
 
         private bool IsLowerCase(string id)

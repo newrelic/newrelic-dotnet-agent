@@ -20,9 +20,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test", connectionInfo.ProxyHost);
-            Assert.AreEqual("path/htap.aspx", connectionInfo.ProxyUriPath);
-            Assert.AreEqual(12345, connectionInfo.ProxyPort);
+            Assert.Multiple(() =>
+            {
+                Assert.That(connectionInfo.ProxyHost, Is.EqualTo("https://hostname.test"));
+                Assert.That(connectionInfo.ProxyUriPath, Is.EqualTo("path/htap.aspx"));
+                Assert.That(connectionInfo.ProxyPort, Is.EqualTo(12345));
+            });
         }
 
         [Test]
@@ -35,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
+            Assert.That(connectionInfo.Proxy.Address.ToString(), Is.EqualTo("https://hostname.test:12345/path/htap.aspx"));
         }
 
         [Test]
@@ -47,7 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/", connectionInfo.Proxy.Address.ToString());
+            Assert.That(connectionInfo.Proxy.Address.ToString(), Is.EqualTo("https://hostname.test:12345/"));
         }
 
         [Test]
@@ -60,7 +63,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(configuration);
 
-            Assert.AreEqual("https://hostname.test:12345/path/htap.aspx", connectionInfo.Proxy.Address.ToString());
+            Assert.That(connectionInfo.Proxy.Address.ToString(), Is.EqualTo("https://hostname.test:12345/path/htap.aspx"));
         }
     }
 }

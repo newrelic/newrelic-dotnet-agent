@@ -56,7 +56,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<string>(1);
 
-            Assert.AreEqual("banana", result);
+            Assert.That(result, Is.EqualTo("banana"));
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<Foo>(0);
 
-            Assert.AreEqual(fooBar, result);
+            Assert.That(result, Is.EqualTo(fooBar));
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractAs<string>(0);
 
-            Assert.Null(result);
+            Assert.That(result, Is.Null);
         }
 
         #endregion ExtractAs
@@ -121,7 +121,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractNotNullAs<string>(1);
 
-            Assert.AreEqual("banana", result);
+            Assert.That(result, Is.EqualTo("banana"));
         }
 
         [Test]
@@ -132,7 +132,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var result = objects.ExtractNotNullAs<Foo>(0);
 
-            Assert.AreEqual(fooBar, result);
+            Assert.That(result, Is.EqualTo(fooBar));
         }
 
         [Test]

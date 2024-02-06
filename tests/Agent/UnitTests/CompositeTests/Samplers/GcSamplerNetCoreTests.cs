@@ -66,6 +66,7 @@ namespace NewRelic.Agent.Core.Samplers
         public void TearDown()
         {
             _compositeTestAgent.Dispose();
+            _mockEventListener.Dispose();
         }
 
         [Test]
@@ -115,9 +116,12 @@ namespace NewRelic.Agent.Core.Samplers
             //Cause error which will shut down the sampler
             sampler.Sample();
 
-            //Assert
-            Assert.IsTrue(samplerWasStopped);
-            Assert.IsTrue(listenerWasDisposed);
+            Assert.Multiple(() =>
+            {
+                //Assert
+                Assert.That(samplerWasStopped, Is.True);
+                Assert.That(listenerWasDisposed, Is.True);
+            });
         }
 
         [Test]
@@ -142,7 +146,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Dispose();
 
             //Assert
-            Assert.IsTrue(listenerWasDisposed);
+            Assert.That(listenerWasDisposed, Is.True);
         }
 
         [Test]
@@ -162,7 +166,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
 
             //Assert
-            Assert.IsTrue(wasStarted);
+            Assert.That(wasStarted, Is.True);
         }
 
         [Test]
@@ -218,8 +222,11 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.IsTrue(sampleAttempted);
-            Assert.IsTrue(samplerWasStopped);
+            Assert.Multiple(() =>
+            {
+                Assert.That(sampleAttempted, Is.True);
+                Assert.That(samplerWasStopped, Is.True);
+            });
         }
 
         [Test]
@@ -239,7 +246,7 @@ namespace NewRelic.Agent.Core.Samplers
             var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(false));
             sampler.Start();
 
-            Assert.IsFalse(listenerWasStarted);
+            Assert.That(listenerWasStarted, Is.False);
         }
 
         [Test]
@@ -259,7 +266,7 @@ namespace NewRelic.Agent.Core.Samplers
             var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
             sampler.Start();
 
-            Assert.IsTrue(listenerWasStarted);
+            Assert.That(listenerWasStarted, Is.True);
         }
 
         [Test]
@@ -286,7 +293,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.AreEqual(1, collectedSamples.Count, $"Transform should have only been called once, it was called {collectedSamples.Count} time(s).");
+            Assert.That(collectedSamples, Has.Count.EqualTo(1), $"Transform should have only been called once, it was called {collectedSamples.Count} time(s).");
         }
 
         [Test]
@@ -313,7 +320,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
             sampler.Sample();
 
-            Assert.AreEqual(1, collectedSamples.Count, "Only one sample should have been taken");
+            Assert.That(collectedSamples, Has.Count.EqualTo(1), "Only one sample should have been taken");
             Assert.That(collectedSamples[0].Keys.ToArray(), Is.EquivalentTo(ExpectedSampleTypes), $"Mismatch between the GSampleTypes returned from Sample to the expectedList");
         }
     }

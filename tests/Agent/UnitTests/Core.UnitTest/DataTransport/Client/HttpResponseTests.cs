@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -32,6 +32,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
             _httpResponse = new HttpResponse(_testGuid, _mockHttpResponseMessage);
         }
+        [TearDown]
+        public void TearDown()
+        {
+            _httpResponse.Dispose();
+            _mockHttpResponseMessage.Dispose();
+        }
 
         [Test]
         public async Task GetContentAsync_ReturnsEmptyResponseBody_WhenContentIsNull()
@@ -40,7 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             var result = await _httpResponse.GetContentAsync();
 
-            Assert.AreEqual(Constants.EmptyResponseBody, result);
+            Assert.That(result, Is.EqualTo(Constants.EmptyResponseBody));
         }
 
         [Test]
@@ -49,11 +55,11 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var mockContent = Mock.Create<IHttpContentWrapper>();
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(TestResponseBody));
             _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
-            mockContent.Arrange(content => content.ReadAsStreamAsync()).TaskResult((Stream)stream);
+            mockContent.Arrange(content => content.ReadAsStreamAsync()).ReturnsAsync((Stream)stream);
 
             var result = await _httpResponse.GetContentAsync();
 
-            Assert.AreEqual(TestResponseBody, result);
+            Assert.That(result, Is.EqualTo(TestResponseBody));
         }
 
         [Test]
@@ -73,11 +79,11 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var mockHeaders = Mock.Create<IHttpContentHeadersWrapper>();
             mockContent.Arrange(content => content.Headers).Returns(mockHeaders);
             mockHeaders.Arrange(headers => headers.ContentEncoding).Returns(new List<string> { "gzip" });
-            mockContent.Arrange(content => content.ReadAsStreamAsync()).TaskResult((Stream)compressedStream);
+            mockContent.Arrange(content => content.ReadAsStreamAsync()).ReturnsAsync((Stream)compressedStream);
 
             var result = await _httpResponse.GetContentAsync();
 
-            Assert.AreEqual(TestResponseBody, result);
+            Assert.That(result, Is.EqualTo(TestResponseBody));
         }
 
         [Test]
@@ -87,7 +93,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             var result = _httpResponse.IsSuccessStatusCode;
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -97,7 +103,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             var result = _httpResponse.StatusCode;
 
-            Assert.AreEqual(HttpStatusCode.OK, result);
+            Assert.That(result, Is.EqualTo(HttpStatusCode.OK));
         }
     }
 }

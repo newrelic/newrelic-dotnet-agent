@@ -32,10 +32,10 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
         public void Pop_RemovesTopElement()
         {
             _tracker.Push(666);
-            Assert.IsTrue(_tracker.TryPeek().HasValue);
+            Assert.That(_tracker.TryPeek().HasValue, Is.True);
             _tracker.TryPop(666, null);
 
-            Assert.IsFalse(_tracker.TryPeek().HasValue);
+            Assert.That(_tracker.TryPeek().HasValue, Is.False);
         }
 
         [Test]
@@ -43,17 +43,17 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
         {
             var tracker = new SyncToAsyncCallStackManager(new CallContextStorage<int?>("mykey"));
             tracker.Push(666);
-            Assert.IsTrue(tracker.TryPeek().HasValue);
+            Assert.That(tracker.TryPeek().HasValue, Is.True);
 
             tracker.AttachToAsync();
 
-            Assert.AreEqual(666, tracker.TryPeek());
+            Assert.That(tracker.TryPeek(), Is.EqualTo(666));
         }
 
         [Test]
         public void Peek_ReturnsEmpty_IfStackIsEmpty()
         {
-            Assert.IsNull(_tracker.TryPeek());
+            Assert.That(_tracker.TryPeek(), Is.Null);
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             var id = 666;
             _tracker.Push(id);
 
-            Assert.AreEqual(id, _tracker.TryPeek());
+            Assert.That(_tracker.TryPeek(), Is.EqualTo(id));
         }
 
         [Test]
@@ -73,9 +73,9 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             _tracker.Push(id1);
             _tracker.Push(id2);
 
-            Assert.AreEqual(id2, _tracker.TryPeek());
+            Assert.That(_tracker.TryPeek(), Is.EqualTo(id2));
             _tracker.TryPop(id2, id1);
-            Assert.AreEqual(id1, _tracker.TryPeek());
+            Assert.That(_tracker.TryPeek(), Is.EqualTo(id1));
         }
 
         [Test]
@@ -84,8 +84,8 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             var id = 1;
             _tracker.Push(id);
 
-            Assert.AreEqual(id, _tracker.TryPeek());
-            Assert.AreEqual(id, _tracker.TryPeek());
+            Assert.That(_tracker.TryPeek(), Is.EqualTo(id));
+            Assert.That(_tracker.TryPeek(), Is.EqualTo(id));
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             _tracker.Push(3);
             _tracker.Clear();
 
-            Assert.IsFalse(_tracker.TryPeek().HasValue);
+            Assert.That(_tracker.TryPeek().HasValue, Is.False);
         }
 
         [Test]
@@ -114,9 +114,9 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             var thread2Top = thread2Task.Result;
 
             NrAssert.Multiple(
-                () => Assert.NotNull(thread1Top),
-                () => Assert.NotNull(thread2Top),
-                () => Assert.AreNotEqual(thread1Top, thread2Top)
+                () => Assert.That(thread1Top, Is.Not.Null),
+                () => Assert.That(thread2Top, Is.Not.Null),
+                () => Assert.That(thread2Top, Is.Not.EqualTo(thread1Top))
                 );
         }
 

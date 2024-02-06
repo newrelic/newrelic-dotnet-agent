@@ -17,7 +17,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var sactual = oneSecond.Multiply(2);
 
-            Assert.AreEqual(expected, sactual);
+            Assert.That(sactual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -28,7 +28,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = twoSeconds.Multiply(1.5);
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 
-            Assert.AreEqual(null, actual);
+            Assert.That(actual, Is.EqualTo(null));
         }
     }
 }

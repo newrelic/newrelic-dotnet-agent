@@ -50,6 +50,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         #region inbound CAT request - outbound CAT response
 
         private List<string> GetHeaderValue(Dictionary<string, string> headers, string key)
@@ -76,7 +82,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
         }
 
         [Test]
@@ -89,7 +95,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
 
         }
 
@@ -103,7 +109,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
 
         }
 
@@ -118,7 +124,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
 
         }
 
@@ -133,13 +139,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var requestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
-            Assert.NotNull(requestData);
+            Assert.That(requestData, Is.Not.Null);
             NrAssert.Multiple
             (
-                () => Assert.AreEqual("pathHash", requestData.PathHash),
-                () => Assert.AreEqual("guid", requestData.TransactionGuid),
-                () => Assert.AreEqual("tripId", requestData.TripId),
-                () => Assert.AreEqual(false, requestData.Unused)
+                () => Assert.That(requestData.PathHash, Is.EqualTo("pathHash")),
+                () => Assert.That(requestData.TransactionGuid, Is.EqualTo("guid")),
+                () => Assert.That(requestData.TripId, Is.EqualTo("tripId")),
+                () => Assert.That(requestData.Unused, Is.EqualTo(false))
             );
         }
 
@@ -150,7 +156,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var transaction = BuildTestTransaction(pathHash: "pathHash");
             var headers = _catHeaderHandler.TryGetOutboundResponseHeaders(transaction, new TransactionMetricName("WebTransaction", "/foo"));
 
-            Assert.False(headers.Any());
+            Assert.That(headers.Any(), Is.False);
         }
 
         [Test]
@@ -165,7 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var expectedAppDataHttpHeader = $"[\"crossProcessId\",\"WebTransaction/foo\",0.0,{ExpectedResponseTimeInSeconds},-1,\"{guid}\",false]";
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedAppDataHttpHeader, resultAppDataHttpHeader)
+                () => Assert.That(resultAppDataHttpHeader, Is.EqualTo(expectedAppDataHttpHeader))
             );
         }
 
@@ -178,13 +184,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var refereeTransaction = BuildTestTransaction();
             var refereeTransactionMetricName = new TransactionMetricName("WebTransaction", "foo");
             var headers = _catHeaderHandler.TryGetOutboundResponseHeaders(refereeTransaction, refereeTransactionMetricName).ToDictionary();
-            Assert.AreEqual(1, headers.Count);
+            Assert.That(headers, Has.Count.EqualTo(1));
             var resultAppDataHttpHeader = Strings.TryBase64Decode(headers[AppDataHttpHeader], encodingKey);
             var guid = refereeTransaction.Guid;
             var expectedAppDataHttpHeader = $"[\"crossProcessId\",\"WebTransaction/foo\",0.0,{ExpectedResponseTimeInSeconds},-1,\"{guid}\",false]";
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedAppDataHttpHeader, resultAppDataHttpHeader)
+                () => Assert.That(resultAppDataHttpHeader, Is.EqualTo(expectedAppDataHttpHeader))
             );
         }
 
@@ -199,7 +205,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var transaction = BuildTestTransaction(pathHash: "pathHash");
             var headers = _catHeaderHandler.TryGetOutboundRequestHeaders(transaction);
 
-            Assert.False(headers.Any());
+            Assert.That(headers.Any(), Is.False);
         }
 
         [Test]
@@ -214,8 +220,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var resultTransactionDataJson = Strings.TryBase64Decode(headers[TransactionDataHttpHeader]);
             var expectedTransactionDataJson = "[\"" + guid + "\",false,\"referrerTripId\",\"pathHash\"]";
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", resultCrossProcessId),
-                () => Assert.AreEqual(expectedTransactionDataJson, resultTransactionDataJson)
+                () => Assert.That(resultCrossProcessId, Is.EqualTo("crossProcessId")),
+                () => Assert.That(resultTransactionDataJson, Is.EqualTo(expectedTransactionDataJson))
                 );
         }
 
@@ -232,8 +238,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var resultTransactionDataJson = Strings.TryBase64Decode(headers[TransactionDataHttpHeader]);
             var expectedTransactionDataJson = "[\"" + guid + "\",false,\"" + guid + "\",\"pathHash\"]";
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", resultCrossProcessId),
-                () => Assert.AreEqual(expectedTransactionDataJson, resultTransactionDataJson)
+                () => Assert.That(resultCrossProcessId, Is.EqualTo("crossProcessId")),
+                () => Assert.That(resultTransactionDataJson, Is.EqualTo(expectedTransactionDataJson))
                 );
         }
 
@@ -247,14 +253,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var guid = transaction.Guid;
             var headers = _catHeaderHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary();
 
-            Assert.AreEqual(2, headers.Count);
+            Assert.That(headers, Has.Count.EqualTo(2));
 
             var resultCrossProcessId = Strings.TryBase64Decode(headers[NewRelicIdHttpHeader], encodingKey);
             var resultTransactionDataJson = Strings.TryBase64Decode(headers[TransactionDataHttpHeader], encodingKey);
             var expectedTransactionDataJson = "[\"" + guid + "\",false,\"referrerTripId\",\"pathHash\"]";
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", resultCrossProcessId),
-                () => Assert.AreEqual(expectedTransactionDataJson, resultTransactionDataJson)
+                () => Assert.That(resultCrossProcessId, Is.EqualTo("crossProcessId")),
+                () => Assert.That(resultTransactionDataJson, Is.EqualTo(expectedTransactionDataJson))
                 );
         }
 
@@ -269,7 +275,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
         }
 
         [Test]
@@ -282,7 +288,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
         }
 
         [Test]
@@ -295,7 +301,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
         }
 
         [Test]
@@ -308,7 +314,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.IsNull(responseData);
+            Assert.That(responseData, Is.Null);
         }
 
         [Test]
@@ -321,15 +327,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.NotNull(responseData);
+            Assert.That(responseData, Is.Not.Null);
             NrAssert.Multiple(
-                () => Assert.AreEqual("crossProcessId", responseData.CrossProcessId),
-                () => Assert.AreEqual("transactionName", responseData.TransactionName),
-                () => Assert.AreEqual(1.1f, responseData.QueueTimeInSeconds),
-                () => Assert.AreEqual(2.2f, responseData.ResponseTimeInSeconds),
-                () => Assert.AreEqual(3, responseData.ContentLength),
-                () => Assert.AreEqual("guid", responseData.TransactionGuid),
-                () => Assert.AreEqual(false, responseData.Unused)
+                () => Assert.That(responseData.CrossProcessId, Is.EqualTo("crossProcessId")),
+                () => Assert.That(responseData.TransactionName, Is.EqualTo("transactionName")),
+                () => Assert.That(responseData.QueueTimeInSeconds, Is.EqualTo(1.1f)),
+                () => Assert.That(responseData.ResponseTimeInSeconds, Is.EqualTo(2.2f)),
+                () => Assert.That(responseData.ContentLength, Is.EqualTo(3)),
+                () => Assert.That(responseData.TransactionGuid, Is.EqualTo("guid")),
+                () => Assert.That(responseData.Unused, Is.EqualTo(false))
                 );
         }
 
@@ -347,9 +353,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var responseData = _catHeaderHandler.TryDecodeInboundResponseHeaders(headers);
 
-            Assert.NotNull(responseData);
-            Assert.AreEqual("crossProcessId1", responseData.CrossProcessId);
-            Assert.AreEqual("transactionName1", responseData.TransactionName);
+            Assert.That(responseData, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseData.CrossProcessId, Is.EqualTo("crossProcessId1"));
+                Assert.That(responseData.TransactionName, Is.EqualTo("transactionName1"));
+            });
         }
 
         #endregion oubound CAT request - inbound CAT response

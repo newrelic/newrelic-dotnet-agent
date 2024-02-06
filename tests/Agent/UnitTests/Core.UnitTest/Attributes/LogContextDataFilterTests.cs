@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual(expectedAttributeNames, string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo(expectedAttributeNames));
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual("key1,key2", string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo("key1,key2"));
 
             // Update config
 
@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             UpdateConfig();
 
             filteredData = filter.FilterLogContextData(_unfilteredContextData);
-            Assert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo(""));
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 var filteredData = filter.FilterLogContextData(unfilteredContextData);
 
-                Assert.IsTrue(logging.HasMessageThatContains("LogContextDataFilter: max #"));
+                Assert.That(logging.HasMessageThatContains("LogContextDataFilter: max #"), Is.True);
             }
 
         }
@@ -145,10 +145,13 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void LogContextDataFilterRule(string inputRuleText, bool isInclude, string expectedRuleText, bool isWildcard, int specificity)
         {
             var rule = new LogContextDataFilterRule(inputRuleText, isInclude);
-            Assert.AreEqual(isInclude, rule.Include);
-            Assert.AreEqual(expectedRuleText, rule.Text);
-            Assert.AreEqual(isWildcard, rule.IsWildCard);
-            Assert.AreEqual(specificity, rule.Specificity);
+            Assert.Multiple(() =>
+            {
+                Assert.That(rule.Include, Is.EqualTo(isInclude));
+                Assert.That(rule.Text, Is.EqualTo(expectedRuleText));
+                Assert.That(rule.IsWildCard, Is.EqualTo(isWildcard));
+                Assert.That(rule.Specificity, Is.EqualTo(specificity));
+            });
 
         }
         private void UpdateConfig()

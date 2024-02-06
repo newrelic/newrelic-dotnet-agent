@@ -53,14 +53,14 @@ namespace BenchmarkingTests.ScaffoldingTests
             var benchmarkResult = SimpleThroughputBenchmark.Execute();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, benchmarkResult.CountExceptions),
-                () => Assert.Greater(benchmarkResult.CountUnitsOfWorkExecuted_Min, 0),
-                () => Assert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Mean, benchmarkResult.CountUnitsOfWorkExecuted_Min),
-                () => Assert.GreaterOrEqual(benchmarkResult.CountUnitsOfWorkExecuted_Max, benchmarkResult.CountUnitsOfWorkExecuted_Mean),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Min_Nanoseconds, SimpleThroughputBenchmark.DurationMilliseconds),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Mean_Nanoseconds, benchmarkResult.Duration_Min_Nanoseconds),
-                () => Assert.GreaterOrEqual(benchmarkResult.Duration_Max_Nanoseconds, benchmarkResult.Duration_Mean_Nanoseconds),
-                () => Assert.Greater(benchmarkResult.EndTime, benchmarkResult.StartTime)
+                () => Assert.That(benchmarkResult.CountExceptions, Is.EqualTo(0)),
+                () => Assert.That(benchmarkResult.CountUnitsOfWorkExecuted_Min, Is.GreaterThan(0)),
+                () => Assert.That(benchmarkResult.CountUnitsOfWorkExecuted_Mean, Is.GreaterThanOrEqualTo(benchmarkResult.CountUnitsOfWorkExecuted_Min)),
+                () => Assert.That(benchmarkResult.CountUnitsOfWorkExecuted_Max, Is.GreaterThanOrEqualTo(benchmarkResult.CountUnitsOfWorkExecuted_Mean)),
+                () => Assert.That(benchmarkResult.Duration_Min_Nanoseconds, Is.GreaterThanOrEqualTo(SimpleThroughputBenchmark.DurationMilliseconds)),
+                () => Assert.That(benchmarkResult.Duration_Mean_Nanoseconds, Is.GreaterThanOrEqualTo(benchmarkResult.Duration_Min_Nanoseconds)),
+                () => Assert.That(benchmarkResult.Duration_Max_Nanoseconds, Is.GreaterThanOrEqualTo(benchmarkResult.Duration_Mean_Nanoseconds)),
+                () => Assert.That(benchmarkResult.EndTime, Is.GreaterThan(benchmarkResult.StartTime))
             );
         }
 
@@ -68,7 +68,7 @@ namespace BenchmarkingTests.ScaffoldingTests
         public void ExerciserFailureBubblesUp_ReportsError()
         {
             var benchmarkResult = SimpleFailingBenchmark.Execute(false);
-            Assert.Greater(benchmarkResult.CountExceptions, 0);
+            Assert.That(benchmarkResult.CountExceptions, Is.GreaterThan(0));
         }
 
         [Test]

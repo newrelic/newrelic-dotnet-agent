@@ -71,16 +71,19 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(_logger.LastLogMessage);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("\"error\":true"));
-            Assert.IsTrue(data.Contains("\"error_event_data\":["));
-            Assert.IsTrue(data.Contains("\"error_data\":[null,[["));
+            Assert.Multiple(() =>
+            {
+                Assert.That(data, Does.Contain("analytic_event_data"));
+                Assert.That(data, Does.Contain("\"error\":true"));
+                Assert.That(data, Does.Contain("\"error_event_data\":["));
+                Assert.That(data, Does.Contain("\"error_data\":[null,[["));
 
-            Assert.AreEqual(4, TestUtil.CountStringOccurrences(data, "\"parent.type\":\"App\""));
-            Assert.AreEqual(4, TestUtil.CountStringOccurrences(data, "\"parent.account\":\"test-accountid\""));
-            Assert.AreEqual(4, TestUtil.CountStringOccurrences(data, "\"parent.app\":\"test-appid\""));
-            Assert.AreEqual(4, TestUtil.CountStringOccurrences(data, "\"parent.transportType\":\"Unknown\""));
-            Assert.AreEqual(4, TestUtil.CountStringOccurrences(data, "\"parent.transportDuration\":1000.0"));
+                Assert.That(TestUtil.CountStringOccurrences(data, "\"parent.type\":\"App\""), Is.EqualTo(4));
+                Assert.That(TestUtil.CountStringOccurrences(data, "\"parent.account\":\"test-accountid\""), Is.EqualTo(4));
+                Assert.That(TestUtil.CountStringOccurrences(data, "\"parent.app\":\"test-appid\""), Is.EqualTo(4));
+                Assert.That(TestUtil.CountStringOccurrences(data, "\"parent.transportType\":\"Unknown\""), Is.EqualTo(4));
+                Assert.That(TestUtil.CountStringOccurrences(data, "\"parent.transportDuration\":1000.0"), Is.EqualTo(4));
+            });
         }
 
         [Test]
@@ -106,21 +109,23 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var guidInErrorData = deserializedData["error_data"][1][0][4]["intrinsics"]["guid"].ToString();
             var guidInErrorEventData = deserializedData["error_event_data"][2][0][0]["guid"].ToString();
 
+            Assert.Multiple(() =>
+            {
+                Assert.That(guidInErrorData, Is.EqualTo(spanTraceId), "guid in error data should match the traceId of the span");
+                Assert.That(guidInErrorEventData, Is.EqualTo(spanTraceId), "guid in error event data should match the traceId of the span");
 
-            Assert.AreEqual(spanTraceId, guidInErrorData, "guid in error data should match the traceId of the span");
-            Assert.AreEqual(spanTraceId, guidInErrorEventData, "guid in error event data should match the traceId of the span");
+                Assert.That(data, Does.Contain("analytic_event_data"));
+                Assert.That(data, Does.Contain("\"error\":true"));
 
-            Assert.IsTrue(data.Contains("analytic_event_data"));
-            Assert.IsTrue(data.Contains("\"error\":true"));
+                Assert.That(data, Does.Contain("\"error_event_data\":["));
+                Assert.That(data, Does.Contain("\"type\":\"TransactionError\""));
+                Assert.That(data, Does.Contain("\"error.class\":\"CustomException\""));
+                Assert.That(data, Does.Contain("\"error.message\":\"my exception.\""));
+                Assert.That(data, Does.Contain("{\"error.kind\":\"Exception\"}"));
 
-            Assert.IsTrue(data.Contains("\"error_event_data\":["));
-            Assert.IsTrue(data.Contains("\"type\":\"TransactionError\""));
-            Assert.IsTrue(data.Contains("\"error.class\":\"CustomException\""));
-            Assert.IsTrue(data.Contains("\"error.message\":\"my exception.\""));
-            Assert.IsTrue(data.Contains("{\"error.kind\":\"Exception\"}"));
-
-            Assert.IsTrue(data.Contains("\"error_data\":[null,[["));
-            Assert.IsTrue(data.Contains("{\"stack_trace\":[\"this is a stack trace.\"],"));
+                Assert.That(data, Does.Contain("\"error_data\":[null,[["));
+                Assert.That(data, Does.Contain("{\"stack_trace\":[\"this is a stack trace.\"],"));
+            });
 
         }
 
@@ -140,14 +145,17 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(_logger.LastLogMessage);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsTrue(data.Contains("error_event_data"));
-            Assert.IsTrue(data.Contains("\"type\":\"TransactionError\""));
-            Assert.IsTrue(data.Contains("\"error.class\":\"CustomException\""));
-            Assert.IsTrue(data.Contains("\"error.message\":\"my exception.\""));
-            Assert.IsTrue(data.Contains("{\"error.kind\":\"Exception\"}"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(data, Does.Contain("error_event_data"));
+                Assert.That(data, Does.Contain("\"type\":\"TransactionError\""));
+                Assert.That(data, Does.Contain("\"error.class\":\"CustomException\""));
+                Assert.That(data, Does.Contain("\"error.message\":\"my exception.\""));
+                Assert.That(data, Does.Contain("{\"error.kind\":\"Exception\"}"));
 
-            Assert.IsTrue(data.Contains("\"error_data\":[null,[["));
-            Assert.IsTrue(data.Contains("{\"stack_trace\":[\"this is a stack trace.\"],"));
+                Assert.That(data, Does.Contain("\"error_data\":[null,[["));
+                Assert.That(data, Does.Contain("{\"stack_trace\":[\"this is a stack trace.\"],"));
+            });
         }
 
         [Test]
@@ -165,14 +173,17 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var deserializedPayload = JsonConvert.DeserializeObject<object[]>(_logger.LastLogMessage);
             var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
 
-            Assert.IsFalse(data.Contains("\"error_event_data\":["));
-            Assert.IsFalse(data.Contains("\"type\":\"TransactionError\""));
-            Assert.IsFalse(data.Contains("\"error.class\":\"CustomException\""));
-            Assert.IsFalse(data.Contains("\"error.message\":\"my exception.\""));
-            Assert.IsFalse(data.Contains("{\"error.kind\":\"Exception\"}"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Contains("\"error_event_data\":["), Is.False);
+                Assert.That(data.Contains("\"type\":\"TransactionError\""), Is.False);
+                Assert.That(data.Contains("\"error.class\":\"CustomException\""), Is.False);
+                Assert.That(data.Contains("\"error.message\":\"my exception.\""), Is.False);
+                Assert.That(data.Contains("{\"error.kind\":\"Exception\"}"), Is.False);
 
-            Assert.IsFalse(data.Contains("\"error_data\":[null,[["));
-            Assert.IsFalse(data.Contains("{\"stack_trace\":[\"this is a stack trace.\"],"));
+                Assert.That(data.Contains("\"error_data\":[null,[["), Is.False);
+                Assert.That(data.Contains("{\"stack_trace\":[\"this is a stack trace.\"],"), Is.False);
+            });
         }
 
         private IDictionary<string, object> CreateSpanErrorAttributes(object exception, string message, string stackTrace)

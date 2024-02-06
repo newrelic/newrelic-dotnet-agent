@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Commands
         {
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
-            Assert.IsNotNull(response);
+            Assert.That(response, Is.Not.Null);
         }
 
         [Test]
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsNotNull(respDict);
+            Assert.That(respDict, Is.Not.Null);
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.AreEqual(1, respDict.Count);
+            Assert.That(respDict, Has.Count.EqualTo(1));
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(null);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.True);
         }
 
         #region Profile Id Tests
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsFalse(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.False);
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.IsTrue(respDict.ContainsKey("error"));
+            Assert.That(respDict.ContainsKey("error"), Is.True);
         }
 
         [Test]
@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.Commands
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(new MockThreadProfilingService());
             object response = command.Process(arguments);
             Dictionary<string, object> respDict = response as Dictionary<string, object>;
-            Assert.AreEqual("A valid profile_id must be supplied to start a thread profiling session.", respDict["error"].ToString());
+            Assert.That(respDict["error"].ToString(), Is.EqualTo("A valid profile_id must be supplied to start a thread profiling session."));
         }
         #endregion
 
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MinimumSamplingFrequencySeconds * 1000, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(ThreadProfilerCommandArgs.MinimumSamplingFrequencySeconds * 1000));
         }
 
         [Test]
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(100, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(100));
         }
 
         [Test]
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(910, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(910));
         }
 
         [Test]
@@ -163,7 +163,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(1000, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(1000));
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MaximumSamplingFrequencySeconds * 1000, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(ThreadProfilerCommandArgs.MaximumSamplingFrequencySeconds * 1000));
         }
 
         [Test]
@@ -197,7 +197,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MaximumSamplingFrequencySeconds * 1000, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(ThreadProfilerCommandArgs.MaximumSamplingFrequencySeconds * 1000));
         }
 
         [Test]
@@ -213,7 +213,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.DefaultSamplingFrequencySeconds * 1000, service.Frequency);
+            Assert.That(service.Frequency, Is.EqualTo(ThreadProfilerCommandArgs.DefaultSamplingFrequencySeconds * 1000));
         }
         #endregion
 
@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MinimumSamplingDurationSeconds * 1000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(ThreadProfilerCommandArgs.MinimumSamplingDurationSeconds * 1000));
         }
 
         [Test]
@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(120000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(120000));
         }
 
 
@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(600000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(600000));
         }
 
         [Test]
@@ -285,7 +285,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MaximumSamplingDurationSeconds * 1000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(ThreadProfilerCommandArgs.MaximumSamplingDurationSeconds * 1000));
         }
 
         [Test]
@@ -302,7 +302,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.MaximumSamplingDurationSeconds * 1000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(ThreadProfilerCommandArgs.MaximumSamplingDurationSeconds * 1000));
         }
 
         [Test]
@@ -318,7 +318,7 @@ namespace NewRelic.Agent.Core.Commands
             MockThreadProfilingService service = new MockThreadProfilingService();
             StartThreadProfilerCommand command = new StartThreadProfilerCommand(service);
             object response = command.Process(arguments);
-            Assert.AreEqual(ThreadProfilerCommandArgs.DefaultSamplingDurationSeconds * 1000, service.Duration);
+            Assert.That(service.Duration, Is.EqualTo(ThreadProfilerCommandArgs.DefaultSamplingDurationSeconds * 1000));
         }
 
         #endregion

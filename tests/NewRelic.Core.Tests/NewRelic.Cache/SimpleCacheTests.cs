@@ -24,10 +24,13 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key2", () => val2);
             cache.GetOrAdd("key3", () => val3);
 
-            //Use AreSame to ensure that we are getting a reference match.
-            Assert.AreSame(val1, cache.Peek("key1"));
-            Assert.AreSame(val2, cache.Peek("key2"));
-            Assert.AreSame(val3, cache.Peek("key3"));
+            Assert.Multiple(() =>
+            {
+                //Use AreSame to ensure that we are getting a reference match.
+                Assert.That(cache.Peek("key1"), Is.SameAs(val1));
+                Assert.That(cache.Peek("key2"), Is.SameAs(val2));
+                Assert.That(cache.Peek("key3"), Is.SameAs(val3));
+            });
 
             var expectedHits = 0;
             var expectedMisses = 3;
@@ -53,12 +56,15 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             //This should not modify the value of key2 
             var shouldbeVal2 = cache.GetOrAdd("key2", () => "xyz");
 
-            //Use AreSame to ensure that we are getting a reference match.
-            Assert.AreSame(val1, cache.Peek("key1"));
-            Assert.AreSame(val2, cache.Peek("key2"));
-            Assert.AreSame(val3, cache.Peek("key3"));
+            Assert.Multiple(() =>
+            {
+                //Use AreSame to ensure that we are getting a reference match.
+                Assert.That(cache.Peek("key1"), Is.SameAs(val1));
+                Assert.That(cache.Peek("key2"), Is.SameAs(val2));
+                Assert.That(cache.Peek("key3"), Is.SameAs(val3));
 
-            Assert.AreSame(shouldbeVal2, val2);
+                Assert.That(val2, Is.SameAs(shouldbeVal2));
+            });
 
             var expectedHits = 1;
             var expectedMisses = 3;
@@ -90,7 +96,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             Thread.Sleep(1000); //allow the cache to check it's size.
 
             //This checks that the clearing didn't happen.
-            Assert.AreEqual(capacity, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(capacity));
 
             //Overflow the cache
             cache.GetOrAdd("key6", () => val6);
@@ -98,7 +104,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             Thread.Sleep(1000); //allow the cache to check it's size.
 
             //Checks the clearing happened.
-            Assert.AreEqual(0, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(0));
 
             var expectedHits = 0;
             var expectedMisses = 6;
@@ -127,12 +133,12 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             int capacity = 5;
             var cache = new SimpleCache<string, string>(capacity);
 
-            Assert.AreEqual(capacity, cache.Capacity);
+            Assert.That(cache.Capacity, Is.EqualTo(capacity));
 
             int newCapacity = 10;
             cache.Capacity = newCapacity;
 
-            Assert.AreEqual(10, cache.Capacity);
+            Assert.That(cache.Capacity, Is.EqualTo(10));
         }
 
         [Test]
@@ -159,7 +165,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             Thread.Sleep(1000); //allow the cache to check it's size.
 
             //This checks that the clearing didn't happen.
-            Assert.AreEqual(capacity, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(capacity));
 
             int newCapacity = 7;
             cache.Capacity = newCapacity;
@@ -168,13 +174,13 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key7", () => val7);
 
             Thread.Sleep(1000); //allow the cache to check it's size.
-            Assert.AreEqual(newCapacity, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(newCapacity));
 
             //This should overflowt the cache
             cache.GetOrAdd("key8", () => val8);
 
             Thread.Sleep(1000); //allow the cache to check it's size.
-            Assert.AreEqual(0, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(0));
 
 
             var expectedHits = 0;
@@ -206,7 +212,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             Thread.Sleep(1000); //allow the cache to check it's size.
 
             //This checks that the clearing didn't happen.
-            Assert.AreEqual(capacity, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(capacity));
 
             int newCapacity = 3;
             cache.Capacity = newCapacity;
@@ -214,7 +220,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             Thread.Sleep(1000); //allow the cache to check it's size.
 
             //This checks that the clearing happened and setting new capacity works.
-            Assert.AreEqual(0, cache.Size);
+            Assert.That(cache.Size, Is.EqualTo(0));
 
             var expectedHits = 0;
             var expectedMisses = 5;
@@ -258,10 +264,13 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
         private void EvaluateCacheMetrics<T, V>(SimpleCache<T, V> cache, int expectedHits, int expectedMisses,
             int expectedEjections, int expectedSize) where V : class
         {
-            Assert.AreEqual(expectedHits, cache.CountHits);
-            Assert.AreEqual(expectedMisses, cache.CountMisses);
-            Assert.AreEqual(expectedEjections, cache.CountEjections);
-            Assert.AreEqual(expectedSize, cache.Size);
+            Assert.Multiple(() =>
+            {
+                Assert.That(cache.CountHits, Is.EqualTo(expectedHits));
+                Assert.That(cache.CountMisses, Is.EqualTo(expectedMisses));
+                Assert.That(cache.CountEjections, Is.EqualTo(expectedEjections));
+                Assert.That(cache.Size, Is.EqualTo(expectedSize));
+            });
         }
 
     }

@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(0, treeRoots.Count());
+            Assert.That(treeRoots.Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -45,11 +45,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(0, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.That(node1.Children.Count(), Is.EqualTo(0));
         }
 
         [Test]
@@ -64,14 +64,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(2));
 
             var node1 = treeRoots.ElementAt(0);
             var node2 = treeRoots.ElementAt(1);
-            Assert.NotNull(node1);
-            Assert.NotNull(node2);
-            Assert.AreEqual(0, node1.Children.Count());
-            Assert.AreEqual(0, node2.Children.Count());
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1, Is.Not.Null);
+                Assert.That(node2, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Children.Count(), Is.EqualTo(0));
+                Assert.That(node2.Children.Count(), Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -88,17 +94,23 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(id1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(1));
+            });
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
+            Assert.That(node2, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node2.Segment.UniqueId, Is.EqualTo(id2));
+                Assert.That(node2.Children.Count(), Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -130,42 +142,63 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(2));
 
             var node1 = treeRoots.First(node => node.Segment.UniqueId.Equals(1));
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(id1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(1));
+            });
 
             var node2 = node1.Children.First(node => node.Segment.UniqueId.Equals(2));
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(2, node2.Children.Count());
+            Assert.That(node2, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node2.Segment.UniqueId, Is.EqualTo(id2));
+                Assert.That(node2.Children.Count(), Is.EqualTo(2));
+            });
 
             var node3 = node2.Children.First(node => node.Segment.UniqueId.Equals(3));
-            Assert.NotNull(node3);
-            Assert.AreEqual(id3, node3.Segment.UniqueId);
-            Assert.AreEqual(1, node3.Children.Count());
+            Assert.That(node3, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node3.Segment.UniqueId, Is.EqualTo(id3));
+                Assert.That(node3.Children.Count(), Is.EqualTo(1));
+            });
 
             var node4 = node3.Children.First(node => node.Segment.UniqueId.Equals(4));
-            Assert.NotNull(node4);
-            Assert.AreEqual(id4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
+            Assert.That(node4, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node4.Segment.UniqueId, Is.EqualTo(id4));
+                Assert.That(node4.Children.Count(), Is.EqualTo(0));
+            });
 
             var node5 = node2.Children.First(node => node.Segment.UniqueId.Equals(5));
-            Assert.NotNull(node5);
-            Assert.AreEqual(id5, node5.Segment.UniqueId);
-            Assert.AreEqual(0, node5.Children.Count());
+            Assert.That(node5, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node5.Segment.UniqueId, Is.EqualTo(id5));
+                Assert.That(node5.Children.Count(), Is.EqualTo(0));
+            });
 
             var node6 = treeRoots.First(node => node.Segment.UniqueId.Equals(6));
-            Assert.NotNull(node6);
-            Assert.AreEqual(id6, node6.Segment.UniqueId);
-            Assert.AreEqual(1, node6.Children.Count());
+            Assert.That(node6, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node6.Segment.UniqueId, Is.EqualTo(id6));
+                Assert.That(node6.Children.Count(), Is.EqualTo(1));
+            });
 
             var node7 = node6.Children.First(node => node.Segment.UniqueId.Equals(7));
-            Assert.NotNull(node7);
-            Assert.AreEqual(id7, node7.Segment.UniqueId);
-            Assert.AreEqual(0, node7.Children.Count());
+            Assert.That(node7, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node7.Segment.UniqueId, Is.EqualTo(id7));
+                Assert.That(node7.Children.Count(), Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -201,42 +234,63 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(2, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(2));
 
             var node1 = treeRoots.First();
-            Assert.NotNull(node1);
-            Assert.AreEqual(id1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(id1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(1));
+            });
 
             var node2 = node1.Children.First();
-            Assert.NotNull(node2);
-            Assert.AreEqual(id2, node2.Segment.UniqueId);
-            Assert.AreEqual(2, node2.Children.Count());
+            Assert.That(node2, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node2.Segment.UniqueId, Is.EqualTo(id2));
+                Assert.That(node2.Children.Count(), Is.EqualTo(2));
+            });
 
             var node3 = node2.Children.First();
-            Assert.NotNull(node3);
-            Assert.AreEqual(id3, node3.Segment.UniqueId);
-            Assert.AreEqual(1, node3.Children.Count());
+            Assert.That(node3, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node3.Segment.UniqueId, Is.EqualTo(id3));
+                Assert.That(node3.Children.Count(), Is.EqualTo(1));
+            });
 
             var node4 = node3.Children.First();
-            Assert.NotNull(node4);
-            Assert.AreEqual(id4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
+            Assert.That(node4, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node4.Segment.UniqueId, Is.EqualTo(id4));
+                Assert.That(node4.Children.Count(), Is.EqualTo(0));
+            });
 
             var node5 = node2.Children.ElementAt(1);
-            Assert.NotNull(node5);
-            Assert.AreEqual(id5, node5.Segment.UniqueId);
-            Assert.AreEqual(0, node5.Children.Count());
+            Assert.That(node5, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node5.Segment.UniqueId, Is.EqualTo(id5));
+                Assert.That(node5.Children.Count(), Is.EqualTo(0));
+            });
 
             var node6 = treeRoots.ElementAt(1);
-            Assert.NotNull(node6);
-            Assert.AreEqual(id6, node6.Segment.UniqueId);
-            Assert.AreEqual(1, node6.Children.Count());
+            Assert.That(node6, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node6.Segment.UniqueId, Is.EqualTo(id6));
+                Assert.That(node6.Children.Count(), Is.EqualTo(1));
+            });
 
             var node7 = node6.Children.First();
-            Assert.NotNull(node7);
-            Assert.AreEqual(id7, node7.Segment.UniqueId);
-            Assert.AreEqual(0, node7.Children.Count());
+            Assert.That(node7, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node7.Segment.UniqueId, Is.EqualTo(id7));
+                Assert.That(node7.Children.Count(), Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -249,27 +303,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(1));
+            });
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
+            Assert.That(node2, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, node2.Children.Count()),
+                () => Assert.That(node2.Children.Count(), Is.EqualTo(0)),
 
                 // The combined segment's start time should be the earliest start time of the original segments
-                () => Assert.AreEqual(1, node2.Segment.RelativeStartTime.TotalSeconds),
+                () => Assert.That(node2.Segment.RelativeStartTime.TotalSeconds, Is.EqualTo(1)),
 
                 // The combined segment's duration should be the sum of the original segments' durations
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
+                () => Assert.That(node2.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(3))),
 
                 // call_count parameter should be added and should equal the number of nodes that were combined
-                () => Assert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
+                () => Assert.That(node2.Segment.Parameters.ToDictionary()["call_count"], Is.EqualTo(2))
                 );
         }
 
@@ -283,27 +340,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(1, node1.Children.Count());
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(1));
+            });
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
+            Assert.That(node2, Is.Not.Null);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(0, node2.Children.Count()),
+                () => Assert.That(node2.Children.Count(), Is.EqualTo(0)),
 
                 // The combined segment's start time should be the earliest start time of the original segments
-                () => Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime),
+                () => Assert.That(node2.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(1))),
 
                 // The combined segment's duration should be the sum of the original segments' durations
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), node2.Segment.Duration),
+                () => Assert.That(node2.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(3))),
 
                 // call_count parameter should be added and should equal the number of nodes that were combined
-                () => Assert.AreEqual(2, node2.Segment.Parameters.ToDictionary()["call_count"])
+                () => Assert.That(node2.Segment.Parameters.ToDictionary()["call_count"], Is.EqualTo(2))
                 );
         }
 
@@ -320,37 +380,49 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(3, node1.Children.Count());
-            Assert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(3));
+            });
+            Assert.That(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
-            Assert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node2, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node2.Segment.UniqueId, Is.EqualTo(2));
+                Assert.That(node2.Children.Count(), Is.EqualTo(0));
+                Assert.That(node2.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(1)));
+                Assert.That(node2.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
+            });
+            Assert.That(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
 
             var node3 = node1.Children.ElementAt(1);
-            Assert.NotNull(node3);
-            Assert.AreEqual(3, node3.Segment.UniqueId);
-            Assert.AreEqual(0, node3.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node3.Segment.Duration);
-            Assert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node3, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node3.Segment.UniqueId, Is.EqualTo(3));
+                Assert.That(node3.Children.Count(), Is.EqualTo(0));
+                Assert.That(node3.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(2)));
+                Assert.That(node3.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
+            });
+            Assert.That(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
 
             var node4 = node1.Children.ElementAt(2);
-            Assert.NotNull(node4);
-            Assert.AreEqual(4, node4.Segment.UniqueId);
-            Assert.AreEqual(0, node4.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(5), node4.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node4.Segment.Duration);
-            Assert.False(node4.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node4, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node4.Segment.UniqueId, Is.EqualTo(4));
+                Assert.That(node4.Children.Count(), Is.EqualTo(0));
+                Assert.That(node4.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(5)));
+                Assert.That(node4.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(2)));
+            });
+            Assert.That(node4.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
         }
 
         [Test]
@@ -365,29 +437,38 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var treeRoots = _segmentTreeMaker.BuildSegmentTrees(segments).ToList();
 
-            Assert.AreEqual(1, treeRoots.Count);
+            Assert.That(treeRoots, Has.Count.EqualTo(1));
 
             var node1 = treeRoots.ElementAt(0);
-            Assert.NotNull(node1);
-            Assert.AreEqual(1, node1.Segment.UniqueId);
-            Assert.AreEqual(2, node1.Children.Count());
-            Assert.False(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node1, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.UniqueId, Is.EqualTo(1));
+                Assert.That(node1.Children.Count(), Is.EqualTo(2));
+            });
+            Assert.That(node1.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
 
             var node2 = node1.Children.ElementAt(0);
-            Assert.NotNull(node2);
-            Assert.AreEqual(2, node2.Segment.UniqueId);
-            Assert.AreEqual(0, node2.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(1), node2.Segment.Duration);
-            Assert.False(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node2, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node2.Segment.UniqueId, Is.EqualTo(2));
+                Assert.That(node2.Children.Count(), Is.EqualTo(0));
+                Assert.That(node2.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(1)));
+                Assert.That(node2.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
+            });
+            Assert.That(node2.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
 
             var node3 = node1.Children.ElementAt(1);
-            Assert.NotNull(node3);
-            Assert.AreEqual(3, node3.Segment.UniqueId);
-            Assert.AreEqual(0, node3.Children.Count());
-            Assert.AreEqual(TimeSpan.FromSeconds(5), node3.Segment.RelativeStartTime);
-            Assert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.Duration);
-            Assert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
+            Assert.That(node3, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node3.Segment.UniqueId, Is.EqualTo(3));
+                Assert.That(node3.Children.Count(), Is.EqualTo(0));
+                Assert.That(node3.Segment.RelativeStartTime, Is.EqualTo(TimeSpan.FromSeconds(5)));
+                Assert.That(node3.Segment.Duration, Is.EqualTo(TimeSpan.FromSeconds(2)));
+            });
+            Assert.That(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"), Is.False);
         }
 
         private static IEnumerable<Segment> CreateSegmentListFromUniqueIds(IEnumerable<KeyValuePair<int, int?>> uniqueIds)
@@ -400,7 +481,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             duration = duration ?? TimeSpan.Zero;
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            return SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<string, object>(), name, combinable);
+            return SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<string, object>(), name, combinable);
         }
     }
 }

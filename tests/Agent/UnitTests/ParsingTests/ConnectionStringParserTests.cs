@@ -54,10 +54,13 @@ namespace ParsingTests
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
             var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString, "hostname_of_localhost");
-            Assert.True(connectionInfo.Host == expectedHost);
-            Assert.True(connectionInfo.PortPathOrId == expectedPathPortOrId);
-            Assert.True(connectionInfo.DatabaseName == expectedDatabaseName);
-            Assert.True(connectionInfo.InstanceName == expectedInstanceName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(connectionInfo.Host, Is.EqualTo(expectedHost));
+                Assert.That(connectionInfo.PortPathOrId, Is.EqualTo(expectedPathPortOrId));
+                Assert.That(connectionInfo.DatabaseName, Is.EqualTo(expectedDatabaseName));
+                Assert.That(connectionInfo.InstanceName, Is.EqualTo(expectedInstanceName));
+            });
         }
 
         [Test]
@@ -69,7 +72,7 @@ namespace ParsingTests
             var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
-            Assert.AreSame(connectionInfo1, connectionInfo2);
+            Assert.That(connectionInfo2, Is.SameAs(connectionInfo1));
         }
 
         [Test]
@@ -81,7 +84,7 @@ namespace ParsingTests
             var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
-            Assert.AreNotSame(connectionInfo1, connectionInfo2);
+            Assert.That(connectionInfo2, Is.Not.SameAs(connectionInfo1));
         }
     }
 }

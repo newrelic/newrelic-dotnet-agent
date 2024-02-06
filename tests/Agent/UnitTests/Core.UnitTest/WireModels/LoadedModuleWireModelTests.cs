@@ -20,11 +20,14 @@ namespace NewRelic.Agent.Core.WireModels
             var version = "1.0.0";
             var objectUnderTest = new LoadedModuleWireModel(assemblyName, version);
 
-            Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(assemblyName, objectUnderTest.AssemblyName);
-            Assert.AreEqual(version, objectUnderTest.Version);
-            Assert.NotNull(objectUnderTest.Data);
-            Assert.AreEqual(0, objectUnderTest.Data.Count);
+            Assert.That(objectUnderTest, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(objectUnderTest.AssemblyName, Is.EqualTo(assemblyName));
+                Assert.That(objectUnderTest.Version, Is.EqualTo(version));
+                Assert.That(objectUnderTest.Data, Is.Not.Null);
+            });
+            Assert.That(objectUnderTest.Data, Is.Empty);
         }
     }
 }

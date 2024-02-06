@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
             });
 
             var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
-            Assert.AreEqual(expected, serialized);
+            Assert.That(serialized, Is.EqualTo(expected));
         }
     }
 }

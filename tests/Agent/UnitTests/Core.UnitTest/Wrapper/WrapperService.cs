@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            Assert.That(result, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            Assert.That(result, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
             action(null, null);
 
-            Assert.AreEqual("foo", result);
+            Assert.That(result, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -272,8 +272,11 @@ namespace NewRelic.Agent.Core.Wrapper
             {
                 var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
-                Assert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
-                Assert.False(logging.HasMessage("skipping method"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(afterWrappedMethod, Is.EqualTo(Delegates.NoOp), "AfterWrappedMethod was not the NoOp delegate.");
+                    Assert.That(logging.HasMessage("skipping method"), Is.False);
+                });
             }
         }
     }

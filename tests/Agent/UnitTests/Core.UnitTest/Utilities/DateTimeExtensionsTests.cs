@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var dateTime = (-23890247268d).ToDateTime();
 
-            Assert.AreEqual(new DateTime(1212, 12, 12, 12, 12, 12), dateTime);
+            Assert.That(dateTime, Is.EqualTo(new DateTime(1212, 12, 12, 12, 12, 12)));
         }
 
         [Test]
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTime = new DateTime(1212, 12, 12, 12, 12, 12).ToUnixTimeSeconds();
 
-            Assert.AreEqual(-23890247268d, unixTime);
+            Assert.That(unixTime, Is.EqualTo(-23890247268d));
         }
 
 
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTimeMilliseconds = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).ToUnixTimeMilliseconds();
 
-            Assert.AreEqual(0, unixTimeMilliseconds);
+            Assert.That(unixTimeMilliseconds, Is.EqualTo(0));
         }
 
         [Test]
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var unixTimeMilliseconds = new DateTime(1970, 1, 1, 0, 0, 1, DateTimeKind.Utc).ToUnixTimeMilliseconds();
 
-            Assert.AreEqual(1000, unixTimeMilliseconds);
+            Assert.That(unixTimeMilliseconds, Is.EqualTo(1000));
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Utilities
             var expected = new DateTime(2018, 7, 4, 12, 0, 0, DateTimeKind.Local);
             var unixTimeMilliseconds = expected.ToUnixTimeMilliseconds();
             var actual = unixTimeMilliseconds.FromUnixTimeMilliseconds().ToLocalTime();
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var expected = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var actual = 0L.FromUnixTimeMilliseconds();
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
     }
 }

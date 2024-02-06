@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _configAutoResponder.Dispose();
             _healthReporter = null;
             _configVersion = 0;
+            _timerSvc.Dispose();
 
         }
 
@@ -73,7 +74,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             var expectedIsTimed = isEnabled && frequency > 0;
 
-            Assert.AreEqual(expectedIsTimed, timer != null, $"IsEnabled={isEnabled}; Frequency={frequency}; should be {expectedIsTimed}.");
+            Assert.That(timer != null, Is.EqualTo(expectedIsTimed), $"IsEnabled={isEnabled}; Frequency={frequency}; should be {expectedIsTimed}.");
         }
 
         [TestCase(true, 1, 5, 5)]
@@ -111,8 +112,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers A"),
-                () => Assert.AreEqual(expectedCount, actualCountRealTimersA, "Count Timers B")
+                () => Assert.That(actualCountRealTimersA, Is.EqualTo(expectedCount), "Count Timers A"),
+                () => Assert.That(actualCountRealTimersA, Is.EqualTo(expectedCount), "Count Timers B")
             );
         }
 

@@ -73,7 +73,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var activeInterface = _realNetworkData.GetActiveNetworkInterface(correctIPAddress, map);
             var actualAddresses = dnsStatic.GetIpAddresses();
 
-            Assert.That(actualAddresses.Count, Is.EqualTo(1));
+            Assert.That(actualAddresses, Has.Count.EqualTo(1));
             Assert.That(actualAddresses[0], Is.EqualTo(correctIPAddress.ToString()));
         }
 
@@ -99,9 +99,12 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var activeInterface = _realNetworkData.GetActiveNetworkInterface(correctIPAddress, map);
             var actualAddresses = dnsStatic.GetIpAddresses();
 
-            Assert.That(actualAddresses.Count, Is.EqualTo(2));
-            Assert.That(actualAddresses[0], Is.EqualTo(correctIPAddress.ToString()));
-            Assert.That(actualAddresses[1], Is.EqualTo(otherCorrectIPAddress.ToString()));
+            Assert.That(actualAddresses, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualAddresses[0], Is.EqualTo(correctIPAddress.ToString()));
+                Assert.That(actualAddresses[1], Is.EqualTo(otherCorrectIPAddress.ToString()));
+            });
         }
 
         [Test]
@@ -115,7 +118,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var activeInterface = _realNetworkData.GetActiveNetworkInterface(ipAddress, map);
             var actualAddresses = dnsStatic.GetIpAddresses();
 
-            Assert.That(actualAddresses.Count, Is.EqualTo(0));
+            Assert.That(actualAddresses, Is.Empty);
         }
 
         [Test]
@@ -140,7 +143,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var activeInterface = _realNetworkData.GetActiveNetworkInterface(correctIPAddress, map);
             var actualAddresses = dnsStatic.GetIpAddresses();
 
-            Assert.That(actualAddresses.Count, Is.EqualTo(1));
+            Assert.That(actualAddresses, Has.Count.EqualTo(1));
             Assert.That(actualAddresses[0], Is.EqualTo(expectedIPAddress));
         }
     }

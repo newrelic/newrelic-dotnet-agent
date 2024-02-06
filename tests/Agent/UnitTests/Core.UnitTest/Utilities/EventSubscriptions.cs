@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled);
+            Assert.That(wasCalled, Is.False);
         }
 
         [Test]
@@ -36,8 +36,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             EventBus<object>.Publish(new object());
 
-            Assert.IsFalse(wasCalled1);
-            Assert.IsFalse(wasCalled2);
+            Assert.Multiple(() =>
+            {
+                Assert.That(wasCalled1, Is.False);
+                Assert.That(wasCalled2, Is.False);
+            });
         }
 
         [Test]
@@ -53,8 +56,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 EventBus<object>.Publish(new object());
             }
 
-            Assert.IsTrue(wasCalled1);
-            Assert.IsTrue(wasCalled2);
+            Assert.Multiple(() =>
+            {
+                Assert.That(wasCalled1, Is.True);
+                Assert.That(wasCalled2, Is.True);
+            });
         }
 
         [Test]

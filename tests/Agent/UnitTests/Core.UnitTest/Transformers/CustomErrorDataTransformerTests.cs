@@ -56,6 +56,12 @@ namespace NewRelic.Agent.Core.Transformers
             _customErrorDataTransformer = new CustomErrorDataTransformer(configurationService, _attribDefSvc, _errorTraceMaker, _errorTraceAggregator, _errorEventMaker, _errorEventAggregator);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         [Test]
         public void Transform_SendsErrorTraceToAggregator()
         {
@@ -105,13 +111,13 @@ namespace NewRelic.Agent.Core.Transformers
             //ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(errorType, errorTrace.ExceptionClassName),
-                () => Assert.AreEqual(errorMsg, errorTrace.Message),
-                () => Assert.AreEqual(errorNoticedAt, errorTrace.TimeStamp),
+                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo(errorType)),
+                () => Assert.That(errorTrace.Message, Is.EqualTo(errorMsg)),
+                () => Assert.That(errorTrace.TimeStamp, Is.EqualTo(errorNoticedAt)),
 
-                () => Assert.AreEqual(2, userAttribs.Count),
-                () => Assert.AreEqual("TrxEventValue", userAttribs["TrxEventAttrib"]),
-                () => Assert.AreEqual("ErrorEventValue", userAttribs["ErrorEventAttrib"])
+                () => Assert.That(userAttribs, Has.Count.EqualTo(2)),
+                () => Assert.That(userAttribs["TrxEventAttrib"], Is.EqualTo("TrxEventValue")),
+                () => Assert.That(userAttribs["ErrorEventAttrib"], Is.EqualTo("ErrorEventValue"))
             );
 
         }

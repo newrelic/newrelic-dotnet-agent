@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
 
-                Assert.IsTrue(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.True);
             }
 
             [Test]
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 _immutableTransaction = BuildTestTransaction();
                 Mock.Arrange(() => _configuration.BrowserMonitoringAutoInstrument).Returns(false);
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 _immutableTransaction = BuildTestTransaction();
                 Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentLoaderType).Returns("none");
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction(ignoreAutoBrowserMonitoring: true);
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction(ignoreAllBrowserMonitoring: true);
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 const string contentType = "text/css";
                 _immutableTransaction = BuildTestTransaction();
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 const string contentType = "";
                 _immutableTransaction = BuildTestTransaction();
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
                 Mock.Arrange(() => _configuration.RequestPathExclusionList).Returns(exclusions);
 
-                Assert.IsTrue(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.True);
             }
 
             [Test]
@@ -144,7 +144,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
                 Mock.Arrange(() => _configuration.RequestPathExclusionList).Returns(exclusions);
 
-                Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.False);
             }
 
             [Test]
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
                 Mock.Arrange(() => _configuration.RequestPathExclusionList).Returns(exclusions);
 
-                Assert.IsTrue(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
+                Assert.That(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType), Is.True);
             }
         }
 
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 _immutableTransaction = BuildTestTransaction();
 
                 var result = _checker.ShouldManuallyInject(_internalTransaction);
-                Assert.IsTrue(result);
+                Assert.That(result, Is.True);
             }
 
             [Test]
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 Mock.Arrange(() => _configuration.BrowserMonitoringAutoInstrument).Returns(false);
 
                 var result = _checker.ShouldManuallyInject(_internalTransaction);
-                Assert.IsTrue(result);
+                Assert.That(result, Is.True);
             }
 
             [Test]
@@ -193,7 +193,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentLoaderType).Returns("none");
 
                 var result = _checker.ShouldManuallyInject(_internalTransaction);
-                Assert.IsFalse(result);
+                Assert.That(result, Is.False);
             }
 
             [Test]
@@ -202,7 +202,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 _immutableTransaction = BuildTestTransaction(ignoreAutoBrowserMonitoring: true);
 
                 var result = _checker.ShouldManuallyInject(_internalTransaction);
-                Assert.IsTrue(result);
+                Assert.That(result, Is.True);
             }
 
             [Test]
@@ -212,7 +212,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
                 var result = _checker.ShouldManuallyInject(_internalTransaction);
 
-                Assert.IsFalse(result);
+                Assert.That(result, Is.False);
             }
 
         }

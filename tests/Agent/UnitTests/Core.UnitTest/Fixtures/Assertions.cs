@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Fixtures
             while (!predicate() && DateTime.Now < giveUpTime)
                 Thread.Sleep(1);
 
-            Assert.True(predicate());
+            Assert.That(predicate(), Is.True);
         }
     }
 }

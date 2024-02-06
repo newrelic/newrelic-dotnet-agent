@@ -24,6 +24,12 @@ namespace NewRelic.Agent.Core.Aggregators
             _metricBuilder = new MetricWireModel.MetricBuilder(_metricNameService);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _metricNameService.Dispose();
+        }
+
         #region MergeUnscopedStats (PreCreated)
 
         [Test]
@@ -40,20 +46,23 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("IAmRenamed"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         #endregion MergeUnscopedStats (PreCreated)
 
         #region MergeUnscopedStats (NotCreated)
 
-        public void MergeUnscopedNotCreated_OneStat()
+        private void MergeUnscopedNotCreated_OneStat()
         {
             var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             var collection = new MetricStatsCollection();
@@ -64,13 +73,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -89,13 +101,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("IAmRenamed", current.MetricNameModel.Name);
-                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("IAmRenamed"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myscope"));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -110,13 +125,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -132,13 +150,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(2));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(6));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
 
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
             collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
@@ -150,13 +171,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
-                Assert.AreEqual(4, current.DataModel.Value0);
-                Assert.AreEqual(16, current.DataModel.Value1);
-                Assert.AreEqual(12, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(4));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(16));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(12));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -176,24 +200,30 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(5, current.DataModel.Value1);
-                    Assert.AreEqual(4, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(5));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                    });
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                    });
                 }
                 else
                 {
                     Assert.Fail("Unexpected Metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(null, current.MetricNameModel.Scope);
+                Assert.That(current.MetricNameModel.Scope, Is.EqualTo(null));
 
             }
-            Assert.AreEqual(2, count);
+            Assert.That(count, Is.EqualTo(2));
         }
 
         #endregion MergeUnscopedStats (NotCreated)
@@ -212,13 +242,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("DotNet/name", current.MetricNameModel.Name);
-                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("DotNet/name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myScope"));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -235,13 +268,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual(metric1.MetricNameModel.Name, current.MetricNameModel.Name);
-                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo(metric1.MetricNameModel.Name));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo(metric1.MetricNameModel.Scope));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(2));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(6));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -262,24 +298,30 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(7, current.DataModel.Value1);
-                    Assert.AreEqual(5, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(7));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(5));
+                    });
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                    });
                 }
                 else
                 {
                     Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual(metric1.MetricNameModel.Scope, current.MetricNameModel.Scope);
+                Assert.That(current.MetricNameModel.Scope, Is.EqualTo(metric1.MetricNameModel.Scope));
 
             }
-            Assert.AreEqual(2, count);
+            Assert.That(count, Is.EqualTo(2));
         }
 
         #endregion MergeScopedStats (String Scope Data)
@@ -300,13 +342,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("myScope", current.MetricNameModel.Scope);
-                Assert.AreEqual(1, current.DataModel.Value0);
-                Assert.AreEqual(3, current.DataModel.Value1);
-                Assert.AreEqual(2, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myScope"));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -325,13 +370,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("myscope", current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myscope"));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(2));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(6));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -352,13 +400,16 @@ namespace NewRelic.Agent.Core.Aggregators
             foreach (MetricWireModel current in stats)
             {
                 count++;
-                Assert.AreEqual("name", current.MetricNameModel.Name);
-                Assert.AreEqual("scope", current.MetricNameModel.Scope);
-                Assert.AreEqual(2, current.DataModel.Value0);
-                Assert.AreEqual(6, current.DataModel.Value1);
-                Assert.AreEqual(4, current.DataModel.Value2);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(current.MetricNameModel.Name, Is.EqualTo("name"));
+                    Assert.That(current.MetricNameModel.Scope, Is.EqualTo("scope"));
+                    Assert.That(current.DataModel.Value0, Is.EqualTo(2));
+                    Assert.That(current.DataModel.Value1, Is.EqualTo(6));
+                    Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                });
             }
-            Assert.AreEqual(1, count);
+            Assert.That(count, Is.EqualTo(1));
         }
 
         [Test]
@@ -383,23 +434,29 @@ namespace NewRelic.Agent.Core.Aggregators
                 count++;
                 if (current.MetricNameModel.Name.Equals("DotNet/name"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(2, current.DataModel.Value1);
-                    Assert.AreEqual(1, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(2));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(1));
+                    });
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
-                    Assert.AreEqual(1, current.DataModel.Value0);
-                    Assert.AreEqual(3, current.DataModel.Value1);
-                    Assert.AreEqual(2, current.DataModel.Value2);
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                        Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                        Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                    });
                 }
                 else
                 {
                     Assert.Fail("Unexpected metric: " + current.MetricNameModel.Name);
                 }
-                Assert.AreEqual("scope", current.MetricNameModel.Scope);
+                Assert.That(current.MetricNameModel.Scope, Is.EqualTo("scope"));
             }
-            Assert.AreEqual(2, count);
+            Assert.That(count, Is.EqualTo(2));
         }
 
         [Test]
@@ -436,32 +493,44 @@ namespace NewRelic.Agent.Core.Aggregators
                 {
                     if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(2, current.DataModel.Value1);
-                        Assert.AreEqual(1, current.DataModel.Value2);
+                        Assert.Multiple(() =>
+                        {
+                            Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                            Assert.That(current.DataModel.Value1, Is.EqualTo(2));
+                            Assert.That(current.DataModel.Value2, Is.EqualTo(1));
+                        });
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(5, current.DataModel.Value1);
-                        Assert.AreEqual(4, current.DataModel.Value2);
+                        Assert.Multiple(() =>
+                        {
+                            Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myotherscope"));
+                            Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                            Assert.That(current.DataModel.Value1, Is.EqualTo(5));
+                            Assert.That(current.DataModel.Value2, Is.EqualTo(4));
+                        });
                     }
                 }
                 else if (current.MetricNameModel.Name.Equals("DotNet/another"))
                 {
                     if (current.MetricNameModel.Scope.Equals("scope"))
                     {
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(3, current.DataModel.Value1);
-                        Assert.AreEqual(2, current.DataModel.Value2);
+                        Assert.Multiple(() =>
+                        {
+                            Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                            Assert.That(current.DataModel.Value1, Is.EqualTo(3));
+                            Assert.That(current.DataModel.Value2, Is.EqualTo(2));
+                        });
                     }
                     else
                     {
-                        Assert.AreEqual("myotherscope", current.MetricNameModel.Scope);
-                        Assert.AreEqual(1, current.DataModel.Value0);
-                        Assert.AreEqual(7, current.DataModel.Value1);
-                        Assert.AreEqual(6, current.DataModel.Value2);
+                        Assert.Multiple(() =>
+                        {
+                            Assert.That(current.MetricNameModel.Scope, Is.EqualTo("myotherscope"));
+                            Assert.That(current.DataModel.Value0, Is.EqualTo(1));
+                            Assert.That(current.DataModel.Value1, Is.EqualTo(7));
+                            Assert.That(current.DataModel.Value2, Is.EqualTo(6));
+                        });
                     }
                 }
                 else
@@ -470,7 +539,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 }
 
             }
-            Assert.AreEqual(4, count);
+            Assert.That(count, Is.EqualTo(4));
         }
 
         #endregion MergeScopedStats (SimpleStatsEngine)
@@ -507,7 +576,7 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 count++;
             }
-            Assert.AreEqual(6, count);
+            Assert.That(count, Is.EqualTo(6));
 
         }
 
