@@ -8,12 +8,14 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Collections.Generic;
 //using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {
     public class HandlerMethodWrapper : IWrapper
     {
+        public List<string> WebInputEventTypes = ["APIGatewayProxyRequest", "ALBTargetGroupRequest"];
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -34,10 +36,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             xapi.LogFromWrapper($"input object type info = {eventTypeName}");
 
             transaction = agent.CreateTransaction(
-                isWeb: true, // will need to parse this from the input stream data per the spec...only inputs of type APIGatewayProxyRequest and ALBTargetGroupRequest should create web transactions
+                isWeb: WebInputEventTypes.Any(s => s == eventTypeName),
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
                 transactionDisplayName: lambdaContext.FunctionName,
-                doNotTrackAsUnitOfWork: true);
+                doNotTrackAsUnitOfWork: true); 
 
             // eventually make this a big switch statement
             if (eventTypeName == "SQSEvent")
@@ -48,7 +50,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 xapi.LogFromWrapper($"event source arn={sqsEvent.Records[0].EventSourceArn}");
                 transaction.AddCustomAttribute("aws.lambda.eventSource.length", sqsEvent.Records.Count.ToString());
                 xapi.LogFromWrapper($"event source length={sqsEvent.Records.Count}");
+            } else if (eventTypeName == "ApiGatewayProxyRequest")
+            {
+                // get other attributes
+
             }
+
 
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaContext.FunctionName);
