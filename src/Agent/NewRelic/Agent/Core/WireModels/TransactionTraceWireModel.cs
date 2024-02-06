@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.WireModels
     /// </summary>
     /// <remarks>https://pdx-hudson.datanerd.us/job/collector-master/javadoc/com/nr/collector/datatypes/TransactionSample.html</remarks>
     [JsonConverter(typeof(JsonArrayConverter))]
-    public class TransactionTraceWireModel
+    public class TransactionTraceWireModel :IWireModel
     {
         // See spec for details on these fields: https://source.datanerd.us/agents/agent-specs/blob/master/Transaction-Trace-LEGACY.md
         [JsonArrayIndex(Index = 0)]

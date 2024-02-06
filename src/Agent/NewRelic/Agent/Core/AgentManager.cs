@@ -91,6 +91,7 @@ namespace NewRelic.Agent.Core
         /// </remarks>
         private AgentManager()
         {
+            // TODO: Check for Lambda mode *before* registering services so we can control which IDataTransport implementation gets registered
             _container = AgentServices.GetContainer();
             AgentServices.RegisterServices(_container);
 

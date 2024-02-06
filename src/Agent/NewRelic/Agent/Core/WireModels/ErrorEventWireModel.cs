@@ -2,19 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Collections;
-using Newtonsoft.Json;
 using System;
 
 namespace NewRelic.Agent.Core.WireModels
 {
-    [JsonConverter(typeof(EventWireModelSerializer))]
-    public interface IEventWireModel
-    {
-        IAttributeValueCollection AttributeValues { get; }
-    }
-
     public abstract class EventWireModel : IHasPriority, IEventWireModel
     {
         public IAttributeValueCollection AttributeValues { get; private set; }

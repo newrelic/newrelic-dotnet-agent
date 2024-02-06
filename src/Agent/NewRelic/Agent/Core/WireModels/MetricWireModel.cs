@@ -19,7 +19,7 @@ using System.Net;
 namespace NewRelic.Agent.Core.WireModels
 {
     [JsonConverter(typeof(MetricWireModelJsonConverter))]
-    public class MetricWireModel : IAllMetricStatsCollection
+    public class MetricWireModel : IAllMetricStatsCollection, IWireModel
     {
         public readonly MetricNameWireModel MetricNameModel;
         public readonly MetricDataWireModel DataModel;

@@ -108,7 +108,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<Environment, Environment>();
             container.Register<IConnectionHandler, ConnectionHandler>();
             container.Register<IConnectionManager, ConnectionManager>();
-            container.Register<IDataTransportService, DataTransportService>();
+
+// TODO: Determine whether we're in Lambda mode and register one IDataTransportService or the other
+            //container.Register<IDataTransportService, DataTransportService>();
+            container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();
             container.Register<ISimpleTimerFactory, SimpleTimerFactory>();

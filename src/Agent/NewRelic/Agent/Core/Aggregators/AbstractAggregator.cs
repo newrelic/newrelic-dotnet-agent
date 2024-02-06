@@ -13,18 +13,30 @@ namespace NewRelic.Agent.Core.Aggregators
     public abstract class AbstractAggregator<T> : ConfigurationBasedService
     {
         protected readonly IDataTransportService DataTransportService;
+        protected readonly IServerlessModeDataTransportService ServerlessModeDataTransportService;
         private readonly IScheduler _scheduler;
         private readonly IProcessStatic _processStatic;
 
         protected AbstractAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic)
         {
             DataTransportService = dataTransportService;
+
+            if (dataTransportService is IServerlessModeDataTransportService)
+                ServerlessModeDataTransportService = (IServerlessModeDataTransportService)dataTransportService;
+
             _scheduler = scheduler;
             _processStatic = processStatic;
 
             _subscriptions.Add<StopHarvestEvent>(OnStopHarvestEvent);
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
+
+            _subscriptions.Add<ManualHarvestEvent>(OnManualHarvest);
+        }
+
+        private void OnManualHarvest(ManualHarvestEvent manualHarvestEvent)
+        {
+            Harvest();
         }
 
         private void OnStopHarvestEvent(StopHarvestEvent obj)

@@ -74,6 +74,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_started)
                     return;
 
+                // TODO: implement / use _configuration.LambdaModeActive (or something similar) instead of checking env vars here
                 if (string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")))
                 {
                     if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
