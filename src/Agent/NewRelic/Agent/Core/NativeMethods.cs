@@ -15,6 +15,9 @@ namespace NewRelic.Agent.Core
         [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ExternInstrumentationRefresh();
 
+        [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ExternReloadConfiguration();
+
         [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
 
@@ -30,6 +33,19 @@ namespace NewRelic.Agent.Core
             catch (Exception ex)
             {
                 Log.Error(ex, "LinuxNativeMethods.InstrumentationRefresh() exception");
+                return -1;
+            }
+        }
+
+        public int ReloadConfiguration()
+        {
+            try
+            {
+                return ExternReloadConfiguration();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "LinuxNativeMethods.ReloadConfiguration() exception");
                 return -1;
             }
         }
@@ -84,6 +100,9 @@ namespace NewRelic.Agent.Core
         [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ExternInstrumentationRefresh();
 
+        [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ExternReloadConfiguration();
+
         [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
         private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
 
@@ -99,6 +118,19 @@ namespace NewRelic.Agent.Core
             catch (Exception ex)
             {
                 Log.Error(ex, "WindowsNativeMethods.InstrumentationRefresh() exception");
+                return -1;
+            }
+        }
+
+        public int ReloadConfiguration()
+        {
+            try
+            {
+                return ExternReloadConfiguration();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "WindowsNativeMethods.ReloadConfiguration() exception");
                 return -1;
             }
         }
