@@ -3,6 +3,7 @@
 
 using Amazon.Lambda.SQSEvents;
 using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.Core;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -10,6 +11,8 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using System;
+using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {
@@ -27,6 +30,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             { "SimpleEmailEvent", "ses" },
             { "SQSEvent", "sqs" },
         };
+
+        private static Func<object, object> _getRequestResponseFromGeneric;
 
         public bool IsTransactionRequired => false;
 
@@ -48,6 +53,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            var isAsync = instrumentedMethodCall.IsAsync;
 
             var inputObject = instrumentedMethodCall.MethodCall.MethodArguments[0];
             var lambdaContext = (ILambdaContext) instrumentedMethodCall.MethodCall.MethodArguments[1];
@@ -112,9 +118,58 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaContext.FunctionName);
 
+            if (isAsync)
+            {
+                return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
-            return Delegates.GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.None);
+                void InvokeTryProcessResponse(Task responseTask)
+                {
+                    if (!ValidTaskResponse(responseTask) || (segment == null))
+                    {
+                        return;
+                    }
+                    var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
+                    var response = responseGetter(responseTask);
+                    CaptureResponseData(transaction, response);
+                }
+            }
+            else
+            {
+                return Delegates.GetDelegateFor<object>(
+                        onSuccess: response =>
+                        {
+                            CaptureResponseData(transaction, response);
+
+                            segment.End();
+                        },
+                        onFailure: exception =>
+                        {
+                            segment.End(exception);
+                        });
+            }
         }
+
+        private void CaptureResponseData(ITransaction transaction, object response)
+        {
+            if (response.GetType().FullName.EndsWith("APIGatewayProxyResponse"))
+            {
+                var apiResponse = (APIGatewayProxyResponse)response;
+                transaction.SetHttpResponseStatusCode(apiResponse.StatusCode);
+                // TODO: set response headers (Content-Type, Content-Length)
+            }
+            if (response.GetType().FullName.EndsWith("ApplicationLoadBalancerResponse"))
+            {
+                var apiResponse = (ApplicationLoadBalancerResponse)response;
+                transaction.SetHttpResponseStatusCode(apiResponse.StatusCode);
+                // TODO: set response headers (Content-Type, Content-Length)
+            }
+        }
+
+        private static bool ValidTaskResponse(Task response)
+        {
+            return response?.Status == TaskStatus.RanToCompletion;
+        }
+
     }
 
     public static class LambdaAttributeExtensions
@@ -128,7 +183,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         {
             foreach (var attribute in attributes)
             {
-                xapi.LogFromWrapper($"Lambda Attribute: {attribute.Key}={attribute.Value}");
+                xapi.LogFromWrapper($"Lambda Attribute: {attribute.Key}={attribute.Value}"); // TODO: remove before release
                 transaction.AddCustomAttribute(attribute.Key, attribute.Value); // TODO: figure out if custom attributes are correct
             }
         }
