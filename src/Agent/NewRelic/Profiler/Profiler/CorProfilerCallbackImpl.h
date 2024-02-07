@@ -648,6 +648,15 @@ namespace NewRelic { namespace Profiler {
             return S_OK;
         }
 
+        HRESULT ReloadConfiguration()
+        {
+            LogTrace(L"Enter: ", __func__);
+
+            auto newConfiguration = InitializeConfigAndSetLogLevel();
+
+            return S_OK;
+        }
+
         std::shared_ptr<std::set<mdMethodDef>> GetMethodDefsForAssembly(
             ModuleID moduleId,
             xstring_t assemblyName,
@@ -1314,7 +1323,8 @@ namespace NewRelic { namespace Profiler {
         }
     };
 
-    // called by managed code to get function information from function IDs
+    // Called by managed code to get the profiler to update the which methods
+    // are instrumented at runtime.
     extern "C" __declspec(dllexport) HRESULT __cdecl InstrumentationRefresh()
     {
         LogInfo("Refreshing instrumentation");
@@ -1324,6 +1334,19 @@ namespace NewRelic { namespace Profiler {
             return E_FAIL;
         }
         return profiler->InstrumentationRefresh();
+    }
+
+    // Called by managed code to get the profiler to reload configuration settings
+    // from the newrelic.config files.
+    extern "C" __declspec(dllexport) HRESULT __cdecl ReloadConfiguration()
+    {
+        LogInfo(L"Reloading newrelic.config files.");
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"Unable to reload newrelic.config files because the profiler reference is invalid.");
+            return E_FAIL;
+        }
+        return profiler->ReloadConfiguration();
     }
 
     extern "C" __declspec(dllexport) HRESULT __cdecl AddCustomInstrumentation(const char* fileName, const char* xml)
