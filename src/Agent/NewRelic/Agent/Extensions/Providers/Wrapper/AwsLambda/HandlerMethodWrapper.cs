@@ -28,6 +28,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         };
 
         private static Func<object, object> _getRequestResponseFromGeneric;
+        private static Func<object, string> _getFunctionNameFromLambdaContext;
+        private static Func<object, string> _getAwsRequestIdFromLambdaContext;
+        private static Func<object, string> _getInvokedFunctionArnFromLambdaContext;
+
 
         public bool IsTransactionRequired => false;
 
@@ -52,16 +56,22 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var isAsync = instrumentedMethodCall.IsAsync;
 
             var inputObject = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            dynamic lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; // TODO handle case where this doesn't exist
+            var lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; // TODO handle case where this doesn't exist
+
+            var functionNameGetter = _getFunctionNameFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
+            var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
+            var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
 
             var eventTypeName = inputObject.GetType().FullName.Split('.').Last(); // e.g. SQSEvent
 
             agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object type info = {eventTypeName}");
 
+            var lambdaFunctionName = functionNameGetter(lambdaContext);
+
             transaction = agent.CreateTransaction(
                 isWeb: WebInputEventTypes.Any(s => s == eventTypeName),
                 category: "Lambda", // TODO: is this is correct/useful?
-                transactionDisplayName: (string)lambdaContext.FunctionName,
+                transactionDisplayName: lambdaFunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             var attributes = new Dictionary<string, string>();
@@ -69,8 +79,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var eventType = eventTypes[eventTypeName];
 
             attributes.AddEventSourceAttribute("eventType", eventType);
-            attributes.Add("aws.ReqeustId", (string)lambdaContext.AwsRequestId);
-            attributes.Add("aws.lambda.arn", (string)lambdaContext.InvokedFunctionArn);
+            attributes.Add("aws.ReqeustId", requestIdGetter(lambdaContext));
+            attributes.Add("aws.lambda.arn", functionArnGetter(lambdaContext));
             attributes.Add("aws.coldStart", IsColdstart().ToString());
 
             switch (eventType)
@@ -113,11 +123,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             transaction.AddLambdaAttributes(attributes, agent);
 
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaContext.FunctionName);
+            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaFunctionName);
 
             if (isAsync)
             {
-                return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, (Action<Task>)InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
+                return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
                 void InvokeTryProcessResponse(Task responseTask)
                 {
@@ -152,7 +162,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             if (responseTypeName.EndsWith("APIGatewayProxyResponse") || responseTypeName.EndsWith("ApplicationLoadBalancerResponse"))
             {
                 dynamic apiResponse = response;
-                transaction.SetHttpResponseStatusCode((int)apiResponse.StatusCode); // StatusCode is a public property on both APIGatewayProxyResponse and ApplicationLoadBalancerResponse
+                transaction.SetHttpResponseStatusCode(apiResponse.StatusCode); // StatusCode is a public property on both APIGatewayProxyResponse and ApplicationLoadBalancerResponse
                 IDictionary<string,string> responseHeaders = apiResponse.Headers; // Headers is a public property of type IDictionary<string,string> on both types
                 foreach (var header in WebResponseHeaders)
                 {

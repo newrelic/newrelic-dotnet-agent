@@ -63,7 +63,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             transaction = agent.CreateTransaction(
                 isWeb: true, // will need to parse this from the input stream data per the spec...only inputs of type APIGatewayProxyRequest and ALBTargetGroupRequest should create web transactions
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
-                transactionDisplayName: (string)lambdaContext.FunctionName,
+                transactionDisplayName: lambdaContext.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "LambdaSegmentName");
