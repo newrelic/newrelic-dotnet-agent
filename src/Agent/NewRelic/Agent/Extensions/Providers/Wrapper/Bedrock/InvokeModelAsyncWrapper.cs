@@ -95,13 +95,13 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             Helpers.CreateResponseChatMessageEvent(agent, spanId, transaction, completionId, responsePayload, invokeModelRequest, invokeModelResponse);
         }
 
-        private int GetLibraryVersion(InstrumentedMethodCall methodCall)
+        private string GetLibraryVersion(InstrumentedMethodCall methodCall)
         {
             var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
             var versionString = "Version=";
             var start = fullName.IndexOf(versionString) + versionString.Length;
-            var length = start - fullName.IndexOf(',', start);
-            return Int32.Parse(fullName.Substring(start, length));
+            var length = fullName.IndexOf(',', start) - start;
+            return fullName.Substring(start, length);
         }
     }
 }

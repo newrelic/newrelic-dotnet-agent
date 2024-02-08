@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 { "response.usage.prompt_tokens", responsePayload.PromptTokenCount },
                 { "response.choices.finish_reason", responsePayload.StopReason },
                 { "vendor", "bedrock" },
-                { "ingest_source", ".NET" },
+                { "ingest_source", "DotNet" },
                 //{ "response.duration", "NOT_AVAILABLE" },
                 //{ "error", "NOT SURE WHERE WE COULD CAPTURE THIS" },
                 //{ "llm.<user_defined_metadata>", "SEE FOREACH BELOW" },
@@ -118,7 +118,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 //{ "api_key_last_four_digits", "NOT_AVAILABLE" },
                 { "response.model", invokeRequestModel.ModelId },
                 { "vendor", "bedrock" },
-                { "ingest_source", ".NET" },
+                { "ingest_source", "DotNet" },
                 { "content", message },
                 //{ "role", "NOT_AVAILABLE" },
                 { "sequence", 1 },
@@ -148,7 +148,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             if (invokeModelRequest.ModelId.StartsWith("cohere.command"))
             {
-
+                return JsonSerializer.Deserialize<CohereCommandRequestPayload>(invokeModelRequest.Body.ToArray());
             }
 
             if (invokeModelRequest.ModelId.StartsWith("anthropic.claude"))
@@ -178,7 +178,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             if (model.StartsWith("cohere.command"))
             {
-
+                return JsonSerializer.Deserialize<CohereCommandResponsePayload>(invokeModelResponse.Body.ToArray());
             }
 
             if (model.StartsWith("anthropic.claude"))
