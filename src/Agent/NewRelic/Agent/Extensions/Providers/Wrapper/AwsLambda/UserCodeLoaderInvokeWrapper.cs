@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Amazon.Lambda.Core;
+//using Amazon.Lambda.Core;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
@@ -24,7 +24,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         {
 
             var inputObject = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            var lambdaContext = (ILambdaContext) instrumentedMethodCall.MethodCall.MethodArguments[1];
+            dynamic lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; //ILambdaContext
 
             var typeInfo = inputObject.GetType();
 
@@ -63,7 +63,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             transaction = agent.CreateTransaction(
                 isWeb: true, // will need to parse this from the input stream data per the spec...only inputs of type APIGatewayProxyRequest and ALBTargetGroupRequest should create web transactions
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
-                transactionDisplayName: lambdaContext.FunctionName,
+                transactionDisplayName: (string)lambdaContext.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "LambdaSegmentName");
