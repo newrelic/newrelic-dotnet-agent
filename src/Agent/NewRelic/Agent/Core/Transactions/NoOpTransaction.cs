@@ -313,5 +313,17 @@ namespace NewRelic.Agent.Core.Transactions
             return;
         }
 
+        public string Guid
+        {
+            get
+            {
+                return string.Empty;
+            }
+        }
+
+        public void SetLlmTransaction(bool isLlmTransaction)
+        {
+            return;
+        }
     }
 }

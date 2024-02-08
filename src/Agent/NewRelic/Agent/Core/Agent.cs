@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -65,6 +66,8 @@ namespace NewRelic.Agent.Core
         private Extensions.Logging.ILogger _logger;
         private readonly ISimpleSchedulingService _simpleSchedulingService;
 
+        private readonly ICustomEventTransformer _customEventTransformer;
+
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
             ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler,
@@ -72,7 +75,8 @@ namespace NewRelic.Agent.Core
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
-            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService)
+            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService,
+            ICustomEventTransformer customEventTransformer)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -94,6 +98,8 @@ namespace NewRelic.Agent.Core
             _logEventAggregator = logEventAggregator;
             _logContextDataFilter = logContextDataFilter;
             _simpleSchedulingService = simpleSchedulingService;
+
+            _customEventTransformer = customEventTransformer;
 
             Instance = this;
         }
@@ -410,6 +416,12 @@ namespace NewRelic.Agent.Core
         #endregion GetLinkingMetadata
 
         #region ExperimentalApi
+
+        public void RecordLlmEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
+        {
+            // We want to store these with transaction priority maybe?
+            _customEventTransformer.Transform(eventType, attributes, 1.0f);
+        }
 
         public ISimpleSchedulingService SimpleSchedulingService
         {

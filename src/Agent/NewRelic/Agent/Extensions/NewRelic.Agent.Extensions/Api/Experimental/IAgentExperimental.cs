@@ -49,5 +49,7 @@ namespace NewRelic.Agent.Api.Experimental
         Extensions.Helpers.IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
 
         ISimpleSchedulingService SimpleSchedulingService { get; }
+
+        void RecordLlmEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes);
     }
 }

@@ -297,5 +297,9 @@ namespace NewRelic.Agent.Api
         /// </summary>
         /// <param name="userid">The User Id for this transaction.</param>
         void SetUserId(string userid);
+
+        string Guid {  get; }
+
+        void SetLlmTransaction(bool isLlmTransaction);
     }
 }
