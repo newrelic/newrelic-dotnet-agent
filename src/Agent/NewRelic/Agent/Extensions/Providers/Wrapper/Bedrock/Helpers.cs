@@ -152,10 +152,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 return JsonSerializer.Deserialize<ClaudeRequestPayload>(invokeModelRequest.Body.ToArray());
             }
 
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan"))
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-text"))
             {
                 return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
             }
+
+            //if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text"))
+            //{
+            //    throw new NotImplementedException();
+            //    //return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
+            //}
 
             if (invokeModelRequest.ModelId.StartsWith("ai21.j2"))
             {
@@ -182,10 +188,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 return JsonSerializer.Deserialize<ClaudeResponsePayload>(invokeModelResponse.Body.ToArray());
             }
 
-            if (model.StartsWith("amazon.titan"))
+            if (model.StartsWith("amazon.titan-text"))
             {
                 return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
             }
+
+            //if (model.StartsWith("amazon.titan-embed-text"))
+            //{
+            //    throw new NotImplementedException();
+            //    //return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
+            //}
 
             if (model.StartsWith("ai21.j2"))
             {

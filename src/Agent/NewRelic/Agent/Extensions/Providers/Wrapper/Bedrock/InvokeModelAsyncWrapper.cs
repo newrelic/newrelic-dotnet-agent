@@ -49,6 +49,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             // required per spec
             transaction.SetLlmTransaction(true);
 
+            // required per spec
             var version = GetLibraryVersion(instrumentedMethodCall);
             agent.RecordCountMetric("DotNet/ML/Bedrock/" + version, 1);
             
