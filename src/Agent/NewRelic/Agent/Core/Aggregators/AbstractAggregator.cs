@@ -21,8 +21,8 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             DataTransportService = dataTransportService;
 
-            if (dataTransportService is IServerlessModeDataTransportService)
-                ServerlessModeDataTransportService = (IServerlessModeDataTransportService)dataTransportService;
+            if (dataTransportService is IServerlessModeDataTransportService service)
+                ServerlessModeDataTransportService = service;
 
             _scheduler = scheduler;
             _processStatic = processStatic;
