@@ -34,16 +34,10 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            /*
-             Llm/{operation_type}/{vendor_name}/{function_name}
-                operation_type: completion or embedding
-                vendor_name: Name of LLM vendor (ex: OpenAI, Bedrock)
-                function_name: Name of instrumented function (ex: invoke_model, create)
-             */
-
+            var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
-                "Llm/completion/bedrock/" + instrumentedMethodCall.MethodCall.Method.MethodName
+                "Llm/" + operationType + "/Bedrock/" + instrumentedMethodCall.MethodCall.Method.MethodName
             );
 
             // required per spec
