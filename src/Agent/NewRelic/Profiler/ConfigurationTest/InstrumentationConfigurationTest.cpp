@@ -39,7 +39,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         {
             InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
             xmlSet->emplace(L"filename", L"<?xml version=\"1.0\" encoding=\"utf-8\"?><blah");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             Assert::AreEqual(1, int(instrumentation.GetInvalidFileCount()));
         }
         
@@ -47,7 +47,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         {
             InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
             xmlSet->emplace(L"filename", L"<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
             Assert::AreEqual(0, int(instrumentation.GetInvalidFileCount()));
@@ -68,7 +68,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
@@ -88,7 +88,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2.3.4"));
             Assert::IsFalse(instrumentationPoint == nullptr);
 
@@ -120,7 +120,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.0"));
             Assert::IsTrue(instrumentationPoint == nullptr);
 
@@ -155,7 +155,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.0"));
             Assert::IsFalse(instrumentationPoint == nullptr);
 
@@ -187,7 +187,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.2"));
             Assert::IsFalse(instrumentationPoint == nullptr);
 
@@ -222,7 +222,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2.0.0"));
             Assert::IsTrue(instrumentationPoint == nullptr);
 
@@ -254,7 +254,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.0"));
             Assert::IsTrue(instrumentationPoint == nullptr);
 
@@ -298,7 +298,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-                InstrumentationConfiguration instrumentation(xmlSet);
+                InstrumentationConfiguration instrumentation(xmlSet, nullptr);
                 auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
                 Assert::IsTrue(instrumentationPoint == nullptr);
             }
@@ -319,7 +319,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -339,7 +339,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -359,7 +359,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -391,7 +391,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             
             // see if a match for the method in the first file is found
@@ -420,7 +420,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             
             // see if a match for the first method is found
@@ -451,7 +451,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             
             // see if a match for the first method is found
@@ -484,7 +484,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             
             // see if a match for the first method is found
@@ -514,7 +514,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
@@ -534,7 +534,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -554,7 +554,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::AreEqual(std::wstring(L"Foo.Bar.Factory"), instrumentationPoint->TracerFactoryName);
         }
@@ -574,7 +574,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::AreEqual(std::wstring(L"My/Metric/Name"), instrumentationPoint->MetricName);
         }
@@ -594,7 +594,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::AreEqual(uint32_t(0x2), uint32_t(instrumentationPoint->TracerFactoryArgs >> 24) & 0x7);
         }
@@ -614,7 +614,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::AreEqual(uint32_t(0x2), uint32_t(instrumentationPoint->TracerFactoryArgs >> 16) & 0x7);
         }
@@ -634,7 +634,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue((instrumentationPoint->TracerFactoryArgs & TracerFlags::UseInvocationTargetClassName) != 0);
         }
@@ -654,7 +654,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue((instrumentationPoint->TracerFactoryArgs & (TracerFlags::GenerateScopedMetric | TracerFlags::SuppressRecursiveCalls | TracerFlags::TransactionTracerSegment)) != 0);
         }
@@ -674,7 +674,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
 
             function->_typeName = L"MyNamespace.MyClass";
@@ -709,7 +709,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
 
             function->_typeName = L"MyNamespace.MyClass[A,B]";
@@ -744,7 +744,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
@@ -764,7 +764,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -784,7 +784,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
@@ -804,7 +804,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
@@ -831,7 +831,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
@@ -858,7 +858,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
@@ -885,7 +885,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
@@ -912,7 +912,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
@@ -926,5 +926,28 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
+        TEST_METHOD(ignored_instrumentation_should_not_have_instrumentation_points)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+
+            IgnoreInstrumentationListPtr ignoreList(new IgnoreInstrumentationList());
+            ignoreList->push_back(std::make_shared<IgnoreInstrumentation>(L"MyAssembly", L"MyNamespace.MyClass"));
+
+            InstrumentationConfiguration instrumentation(xmlSet, ignoreList);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
     };
 }}}}
