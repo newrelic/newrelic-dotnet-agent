@@ -91,8 +91,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             var completionId = Helpers.CreateChatCompletionEvent(agent, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
-            Helpers.CreatePromptChatMessageEvent(agent, spanId, transaction, completionId, requestPayload, invokeModelRequest, invokeModelResponse);
-            Helpers.CreateResponseChatMessageEvent(agent, spanId, transaction, completionId, responsePayload, invokeModelRequest, invokeModelResponse);
+            Helpers.CreateChatMessageEvents(agent, spanId, transaction, completionId, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
         }
 
         private string GetLibraryVersion(InstrumentedMethodCall methodCall)

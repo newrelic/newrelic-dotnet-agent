@@ -55,15 +55,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             return completionId;
         }
 
-        public static void CreatePromptChatMessageEvent(IAgent agent,
+        public static void CreateChatMessageEvents(IAgent agent,
             string spandId,
             ITransaction transaction,
             string completionId,
             IRequestPayload requestPayload,
+            IResponsePayload responsePayload,
             InvokeModelRequest invokeRequestModel,
             InvokeModelResponse invokeResponseModel)
         {
-
+            // Prompt
             CreateChatMessageEvent(agent,
                 spandId,
                 transaction.Guid,
@@ -74,26 +75,21 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 false,
                 invokeRequestModel,
                 invokeResponseModel);
-        }
 
-        public static void CreateResponseChatMessageEvent(IAgent agent,
-            string spandId,
-            ITransaction transaction,
-            string completionId,
-            IResponsePayload responsePayload,
-            InvokeModelRequest invokeRequestModel,
-            InvokeModelResponse invokeResponseModel)
-        {
-            CreateChatMessageEvent(agent,
-                spandId,
-                transaction.Guid,
-                agent.GetLinkingMetadata()["trace.id"],
-                completionId,
-                responsePayload.Content,
-                1,
-                true,
-                invokeRequestModel,
-                invokeResponseModel);
+            // Responses
+            for (var i = 0;i < responsePayload.Responses.Length;i++)
+            {
+                CreateChatMessageEvent(agent,
+                    spandId,
+                    transaction.Guid,
+                    agent.GetLinkingMetadata()["trace.id"],
+                    completionId,
+                    responsePayload.Responses[i],
+                    i + 1, // prompt is 0
+                    true,
+                    invokeRequestModel,
+                    invokeResponseModel);
+            }
         }
 
         private static void CreateChatMessageEvent(IAgent agent,
@@ -121,7 +117,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 { "ingest_source", "DotNet" },
                 { "content", message },
                 //{ "role", "NOT_AVAILABLE" },
-                { "sequence", 1 },
+                { "sequence", sequence },
                 { "completion_id", completionId },
                 //{ "llm.<user_defined_metadata>", "SEE FOREACH BELOW" },
             };

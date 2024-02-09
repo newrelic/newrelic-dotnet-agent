@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
@@ -20,11 +21,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class JurassicResponsePayload : IResponsePayload
     {
-        public string Content
+        private string[] _responses;
+        public string[] Responses
         {
             get
             {
-                return Completions[0].Data.Text;
+                return _responses ??= Completions.Select(c => c.Data.Text).ToArray();
             }
             set { }
         }
@@ -38,11 +40,18 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             set { }
         }
 
+        // Sum of all response tokens
+        private int _completionTokenCount;
         public int CompletionTokenCount
         {
             get
             {
-                return Completions[0].Data.Tokens.Count;
+                if (_completionTokenCount == 0)
+                {
+                    _completionTokenCount = Completions.Sum(c => c.Data.Tokens.Count);
+                }
+
+                return _completionTokenCount;
             }
             set { }
         }

@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
@@ -19,8 +20,18 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class ClaudeResponsePayload : IResponsePayload
     {
+        private string[] _responses;
+        public string[] Responses
+        {
+            get
+            {
+                return _responses ??= [Completion];
+            }
+            set { }
+        }
+
         [JsonPropertyName("completion")]
-        public string Content { get; set; }
+        public string Completion { get; set; }
 
         // Anthropic Claude does not expose token counts
         public int PromptTokenCount

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
@@ -42,11 +43,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class TitanResponsePayload : IResponsePayload
     {
-        public string Content
+        private string[] _responses;
+        public string[] Responses
         {
             get
             {
-                return Results[0].OutputText;
+                return _responses ??= Results.Select(r => r.OutputText).ToArray();
             }
             set { }
         }
@@ -54,10 +56,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         [JsonPropertyName("inputTextTokenCount")]
         public int PromptTokenCount { get; set; }
 
+        // Sum of all response tokens
+        private int _completionTokenCount;
         public int CompletionTokenCount {
             get
             {
-                return Results[0].TokenCount;
+                if (_completionTokenCount == 0)
+                {
+                    _completionTokenCount = Results.Sum(r => r.TokenCount);
+                }
+                return _completionTokenCount;
             }
             set { }
         }

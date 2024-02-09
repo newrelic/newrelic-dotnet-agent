@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
@@ -20,11 +21,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class CohereCommandResponsePayload : IResponsePayload
     {
-        public string Content
+        private string[] _responses;
+        public string[] Responses
         {
             get
             {
-                return Generations[0].Text;
+                return _responses ??= Generations.Select(g => g.Text).ToArray();
             }
             set { }
         }

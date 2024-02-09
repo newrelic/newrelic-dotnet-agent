@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
+
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
     public interface IRequestPayload
@@ -14,7 +16,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public interface IResponsePayload
     {
-        string Content { get; set; }
+        string[] Responses { get; set; }
 
         int TotalTokenCount { get; }
 
