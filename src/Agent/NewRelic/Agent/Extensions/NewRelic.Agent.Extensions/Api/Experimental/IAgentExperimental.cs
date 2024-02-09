@@ -13,12 +13,6 @@ namespace NewRelic.Agent.Api.Experimental
     public interface IAgentExperimental
     {
         /// <summary>
-        /// Log a message from a wrapper, since agent logging calls don't seem to work from wrappers directly
-        /// </summary>
-        /// <param name="message"></param>
-        void LogFromWrapper(string message);
-
-        /// <summary>
         /// Records a supportability metric
         /// </summary>
         /// <param name="metricName"></param>
