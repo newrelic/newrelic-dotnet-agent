@@ -42,6 +42,10 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "TaskRunBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "TaskRunBackgroundMethod");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "TaskFactoryStartNewBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "TaskFactoryStartNewBackgroundMethod");
+
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
             _fixture.Initialize();
