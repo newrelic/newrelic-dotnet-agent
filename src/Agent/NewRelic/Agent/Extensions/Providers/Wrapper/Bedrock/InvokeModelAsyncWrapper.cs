@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 {
     public class InvokeModelAsyncWrapper : IWrapper
     {
-        public bool IsTransactionRequired => false;
+        public bool IsTransactionRequired => true; // part of spec, only create events for transactions.
 
         private const string WrapperName = "BedrockInvokeModelAsync";
 
@@ -57,6 +57,11 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             void InvokeTryProcessResponse(Task<InvokeModelResponse> responseTask)
             {
+                if (responseTask.IsFaulted)
+                {
+                    HandleError(invokeModelRequest, responseTask, transaction, agent);
+                }
+
                 var invokeModelResponse = responseTask.Result;
                 if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
                 {
@@ -87,6 +92,20 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             var completionId = Helpers.CreateChatCompletionEvent(agent, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
             Helpers.CreateChatMessageEvents(agent, spanId, transaction, completionId, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+        }
+
+        private void HandleError(InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, ITransaction transaction, IAgent agent)
+        {
+            var requestPayload = Helpers.GetRequestPayload(invokeModelRequest);
+            if (requestPayload == null)
+            {
+                return;
+            }
+
+            IResponsePayload responsePayload = null;
+            InvokeModelResponse invokeModelResponse = null;
+
+            var completionId = Helpers.CreateChatCompletionEvent(agent, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
         }
 
         private string GetLibraryVersion(InstrumentedMethodCall methodCall)
