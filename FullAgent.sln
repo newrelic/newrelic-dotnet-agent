@@ -218,6 +218,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kafka", "src\Agent\NewRelic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore6Plus", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNetCore6Plus\AspNetCore6Plus.csproj", "{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsLambda", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AwsLambda\AwsLambda.csproj", "{C26170C8-0489-42F8-9579-EE8A06D65CC4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -456,6 +458,10 @@ Global
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C26170C8-0489-42F8-9579-EE8A06D65CC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C26170C8-0489-42F8-9579-EE8A06D65CC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C26170C8-0489-42F8-9579-EE8A06D65CC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C26170C8-0489-42F8-9579-EE8A06D65CC4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -526,6 +532,7 @@ Global
 		{F921A316-A8D2-4992-B894-69A3B5CA34E3} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{270A9CC8-8031-49F4-A380-1389E7517DB7} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{C26170C8-0489-42F8-9579-EE8A06D65CC4} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
