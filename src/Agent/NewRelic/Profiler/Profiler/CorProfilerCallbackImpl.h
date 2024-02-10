@@ -617,6 +617,18 @@ namespace NewRelic { namespace Profiler {
         {
             LogTrace("Enter: ", __func__);
 
+            // Just refresh the instrumentation using the previous ignore list because the profiler was not notified that it changed
+            return InstrumentationRefreshWithNewIgnoreList(nullptr);
+        }
+
+        HRESULT InstrumentationRefreshWithNewIgnoreList(Configuration::IgnoreInstrumentationListPtr newIgnoreInstrumentationList)
+        {
+            LogTrace("Enter: ", __func__);
+
+            // We use a mutex in this function because an instrumentation refresh can be triggered for multiple reasons
+            // around the same time and we need the correct ignore list to be applied.
+            std::lock_guard<std::mutex> lock(_instrumentationRefreshMutex);
+
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
             auto customXml = _customInstrumentation.GetCustomInstrumentationXml();
             for (auto xmlPair : *customXml) {
@@ -624,8 +636,14 @@ namespace NewRelic { namespace Profiler {
             }
 
             auto oldMethodRewriter = GetMethodRewriter();
+            auto oldIgnoreList = oldMethodRewriter->GetInstrumentationConfiguration()->GetIgnoreList();
 
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, oldMethodRewriter->GetInstrumentationConfiguration()->GetIgnoreList());
+            if (newIgnoreInstrumentationList == nullptr) {
+                // If we were not given a new Ignore list, we should use the previous one because it has not changed.
+                newIgnoreInstrumentationList = oldIgnoreList;
+            }
+
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, newIgnoreInstrumentationList);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogError(L"Unable to parse one or more instrumentation files.  Instrumentation will not be refreshed.");
                 return S_FALSE;
@@ -654,7 +672,7 @@ namespace NewRelic { namespace Profiler {
 
             auto newConfiguration = InitializeConfigAndSetLogLevel();
 
-            return S_OK;
+            return InstrumentationRefreshWithNewIgnoreList(newConfiguration->GetIgnoreInstrumentationList());
         }
 
         std::shared_ptr<std::set<mdMethodDef>> GetMethodDefsForAssembly(
@@ -850,6 +868,7 @@ namespace NewRelic { namespace Profiler {
         std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
         MethodRewriter::CustomInstrumentation _customInstrumentation;
+        std::mutex _instrumentationRefreshMutex;
 
         DWORD _eventMask = OverrideEventMask(
             COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES);

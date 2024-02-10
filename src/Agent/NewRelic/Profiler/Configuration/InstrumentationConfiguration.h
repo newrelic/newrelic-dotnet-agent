@@ -24,7 +24,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     class InstrumentationConfiguration
     {
     public:
-        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList = nullptr) :
+        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList) :
             _instrumentationPointsSet(new InstrumentationPointSet())
             , _ignoreList(ignoreList)
         {
@@ -51,18 +51,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     continue;
                 }
             }
-            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
+            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points (not ignored) in .xml files");
         }
 
-        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints, IgnoreInstrumentationListPtr ignoreList = nullptr) :
-            _instrumentationPointsSet(instrumentationPoints)
+        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints, IgnoreInstrumentationListPtr ignoreList) :
+            _instrumentationPointsSet(new InstrumentationPointSet())
             , _ignoreList(ignoreList)
         {
-            _instrumentationPointsSet = instrumentationPoints;
-
             for (auto instrumentationPoint : *instrumentationPoints)
             {
-                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+                AddInstrumentationPointToCollectionsIfNotIgnored(instrumentationPoint);
             }
         }
 
@@ -90,12 +88,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             if (instPoints.empty())
             {
                 // No instrumentation points were found so there is nothing else to check
-                return nullptr;
-            }
-
-            if (IgnoreInstrumentation::Matches(_ignoreList, function->GetAssemblyName(), function->GetTypeName()))
-            {
-                LogDebug(function->GetFunctionName(), L" in ", function->GetAssemblyName(), L" will not be instrumented. It is in the ignore list in the config file.");
                 return nullptr;
             }
 
@@ -353,8 +345,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
                 // Note that there may be "duplicated" instrumentation points that target different assembly versions
-                (*_instrumentationPointsMap)[iPoint->GetMatchKey()].insert(iPoint);
-                _instrumentationPointsSet->insert(iPoint);
+                AddInstrumentationPointToCollectionsIfNotIgnored(iPoint);
+            }
+        }
+
+        void AddInstrumentationPointToCollectionsIfNotIgnored(InstrumentationPointPtr instrumentationPoint)
+        {
+            if (!IgnoreInstrumentation::Matches(_ignoreList, instrumentationPoint->AssemblyName, instrumentationPoint->ClassName))
+            {
+                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+                _instrumentationPointsSet->insert(instrumentationPoint);
+            }
+            else
+            {
+                LogDebug(L"Instrumentation for ", instrumentationPoint->GetMatchKey(), L" is in the ignore list in the newrelic.config file and will be ignored.");
             }
         }
 
