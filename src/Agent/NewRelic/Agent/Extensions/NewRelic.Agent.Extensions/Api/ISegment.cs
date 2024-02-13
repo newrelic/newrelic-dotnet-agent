@@ -74,5 +74,10 @@ namespace NewRelic.Agent.Api
         /// </summary>
         /// <param name="destination"></param>
         void SetMessageBrokerDestination(string destination);
+
+        /// <summary>
+        /// Gets the duration of the segment if the segment has finished or a TimeSpan.Zero if not.
+        /// </summary>
+        TimeSpan DurationOrZero { get; }
     }
 }

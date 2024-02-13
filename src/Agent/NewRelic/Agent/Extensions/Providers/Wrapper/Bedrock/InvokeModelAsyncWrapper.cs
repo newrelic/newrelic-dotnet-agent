@@ -45,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             // required per spec
             var version = GetLibraryVersion(instrumentedMethodCall);
-            agent.RecordCountMetric("DotNet/ML/Bedrock/" + version, 1);
+            agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
             
             return Delegates.GetAsyncDelegateFor<Task<InvokeModelResponse>>(
                 agent,
@@ -59,7 +59,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             {
                 if (responseTask.IsFaulted)
                 {
-                    HandleError(invokeModelRequest, responseTask, transaction, agent);
+                    HandleError(segment, invokeModelRequest, responseTask, transaction, agent);
                 }
 
                 var invokeModelResponse = responseTask.Result;
@@ -70,13 +70,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     return;
                 }
 
-                ProcessInvokeModel( segment.SpanId, invokeModelRequest, invokeModelResponse, transaction, agent);
-
+                // We need the duration so we end the segment before creating the events.
                 segment.End();
+
+                ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, transaction, agent);
             }
         }
 
-        private void ProcessInvokeModel(string spanId, InvokeModelRequest invokeModelRequest, InvokeModelResponse invokeModelResponse, ITransaction transaction, IAgent agent)
+        private void ProcessInvokeModel(ISegment segment, InvokeModelRequest invokeModelRequest, InvokeModelResponse invokeModelResponse, ITransaction transaction, IAgent agent)
         {
             var requestPayload = Helpers.GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
@@ -90,12 +91,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 return;
             }
 
-            var completionId = Helpers.CreateChatCompletionEvent(agent, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
-            Helpers.CreateChatMessageEvents(agent, spanId, transaction, completionId, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+            var completionId = Helpers.CreateChatCompletionEvent(agent, segment, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+            Helpers.CreateChatMessageEvents(agent, segment.SpanId, transaction, completionId, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
         }
 
-        private void HandleError(InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, ITransaction transaction, IAgent agent)
+        private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, ITransaction transaction, IAgent agent)
         {
+            // This is not fully fleshed out.  it is just a stub.
+
             var requestPayload = Helpers.GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
@@ -105,7 +108,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             IResponsePayload responsePayload = null;
             InvokeModelResponse invokeModelResponse = null;
 
-            var completionId = Helpers.CreateChatCompletionEvent(agent, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+            var completionId = Helpers.CreateChatCompletionEvent(agent, segment, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
         }
 
         private string GetLibraryVersion(InstrumentedMethodCall methodCall)

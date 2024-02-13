@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using Google.Protobuf.WellKnownTypes;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Attributes;
@@ -71,5 +72,7 @@ namespace NewRelic.Agent.Core.Segments
         {
             return string.Empty;
         }
+
+        public TimeSpan DurationOrZero => TimeSpan.Zero;
     }
 }

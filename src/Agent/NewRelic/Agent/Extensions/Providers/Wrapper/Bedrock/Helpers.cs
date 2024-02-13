@@ -12,6 +12,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
     public static class Helpers
     {
         public static string CreateChatCompletionEvent(IAgent agent,
+            ISegment segment,
             ITransaction transaction,
             IRequestPayload requestPayload,
             IResponsePayload responsePayload,
@@ -39,7 +40,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 { "response.choices.finish_reason", responsePayload.StopReason },
                 { "vendor", "bedrock" },
                 { "ingest_source", "DotNet" },
-                //{ "response.duration", "NOT_AVAILABLE" },
+                { "response.duration", (float)segment.DurationOrZero.TotalMilliseconds },
                 //{ "error", "NOT SURE WHERE WE COULD CAPTURE THIS" },
                 //{ "llm.<user_defined_metadata>", "SEE FOREACH BELOW" },
                 { "conversation_id", "NEW API" },
