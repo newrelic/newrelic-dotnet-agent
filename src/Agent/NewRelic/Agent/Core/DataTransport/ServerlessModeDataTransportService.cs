@@ -167,7 +167,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private void WritePayload(string payloadJson)
         {
             bool success = false;
-            var fileName = Path.Combine("/", "tmp", "newrelic-telemetry");
+            var fileName = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
+
             try
             {
                 var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
