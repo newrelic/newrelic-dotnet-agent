@@ -62,6 +62,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
             var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
 
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {inputObject.GetType().FullName}");
+
             var eventTypeName = inputObject.GetType().FullName.Split('.').Last(); // e.g. SQSEvent
 
             agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object type info = {eventTypeName}");
@@ -76,10 +78,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             var attributes = new Dictionary<string, string>();
 
-            var eventType = eventTypes[eventTypeName];
+            eventTypes.TryGetValue(eventTypeName, out var eventType); // handle case where the name might not be in the eventType dictionary
 
-            attributes.AddEventSourceAttribute("eventType", eventType);
-            attributes.Add("aws.ReqeustId", requestIdGetter(lambdaContext));
+            attributes.AddEventSourceAttribute("eventType", eventType ?? "Unknown"); // TODO: Is this correct?
+            attributes.Add("aws.RequestId", requestIdGetter(lambdaContext));
             attributes.Add("aws.lambda.arn", functionArnGetter(lambdaContext));
             attributes.Add("aws.coldStart", IsColdstart().ToString());
 
@@ -148,10 +150,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                             CaptureResponseData(transaction, response);
 
                             segment.End();
+                            transaction.End();
                         },
                         onFailure: exception =>
                         {
                             segment.End(exception);
+                            transaction.End();
                         });
             }
         }

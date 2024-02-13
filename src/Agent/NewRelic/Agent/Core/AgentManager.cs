@@ -168,14 +168,15 @@ namespace NewRelic.Agent.Core
 
             _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-            var commandService = _container.Resolve<CommandService>();
-            commandService.AddCommands(
-                new RestartCommand(),
-                new ShutdownCommand(),
-                new StartThreadProfilerCommand(_threadProfilingService),
-                new StopThreadProfilerCommand(_threadProfilingService),
-                new InstrumentationUpdateCommand(instrumentationService)
-            );
+            // TODO: Not needed in Lambda mode
+            //var commandService = _container.Resolve<CommandService>();
+            //commandService.AddCommands(
+            //    new RestartCommand(),
+            //    new ShutdownCommand(),
+            //    new StartThreadProfilerCommand(_threadProfilingService),
+            //    new StopThreadProfilerCommand(_threadProfilingService),
+            //    new InstrumentationUpdateCommand(instrumentationService)
+            //);
 
             StartServices();
             LogInitialized();

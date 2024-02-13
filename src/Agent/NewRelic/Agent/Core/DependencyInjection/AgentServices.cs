@@ -183,7 +183,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionService, TransactionService>();
             container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
             container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
-            container.Register<CommandService, CommandService>();
+
+            // TODO: Not needed in Lambda mode
+            //container.Register<CommandService, CommandService>();
+
             container.Register<ConfigurationTracker, ConfigurationTracker>();
             container.Register<IDatabaseService, DatabaseService>();
             container.Register<IErrorService, ErrorService>();

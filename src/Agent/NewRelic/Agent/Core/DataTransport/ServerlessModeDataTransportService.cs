@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private void WritePayload(string payloadJson)
         {
             bool success = false;
-            var fileName = Path.Combine("\\", "tmp", "newrelic-telemetry");
+            var fileName = Path.Combine("/", "tmp", "newrelic-telemetry");
             try
             {
                 var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
@@ -180,7 +180,12 @@ namespace NewRelic.Agent.Core.DataTransport
                         fs.Flush(true);
                     }
 
+                    Log.Debug("Serverless payload written to {fileName}", fileName);
                     success = true;
+                }
+                else
+                {
+                    Log.Debug("Couldn't find {fileName} for writing serverless payload", fileName);
                 }
             }
             catch (Exception e)
@@ -191,8 +196,10 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!success)
             {
                 // fall back to writing to stdout
+                Log.Debug("Writing serverless payload to stdout");
+
                 // TODO: Is this correct ?? 
-                Console.Write(payloadJson);
+                Console.WriteLine(payloadJson);
             }
         }
 

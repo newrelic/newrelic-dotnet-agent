@@ -2,17 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //using Amazon.Lambda.Core;
+
+using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using NewRelic.Reflection;
+
 //using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {
     public class UserCodeLoaderInvokeWrapper : IWrapper
     {
+        private static Func<object, string> _functionNameGetter;
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -24,22 +29,21 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         {
 
             var inputObject = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            dynamic lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; //ILambdaContext
+            object lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; //ILambdaContext
+
+            var functionNameGetter = _functionNameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("Amazon.Lambda.RuntimeSupport", "Amazon.Lambda.RuntimeSupport.LambdaContext", "FunctionName");
+            var functionName = functionNameGetter.Invoke(lambdaContext);
 
             var typeInfo = inputObject.GetType();
-
-            // This message doesn't seem to make it to the agent log file
-            Log.Info($"input object type info = {typeInfo.FullName}");
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug,$"input object type info = {typeInfo.FullName}");
 
             Stream inputStream = (Stream) inputObject;
-
-            if (inputStream.CanRead)
+            if (inputStream.CanRead && inputStream.CanSeek)
             {
-                using (StreamReader reader = new StreamReader(inputStream))
+                using (StreamReader reader = new StreamReader(inputStream, Encoding.UTF8, false, 8000, true))
                 {
                     var inputText = reader.ReadToEnd();
-                    File.WriteAllText("/tmp/inputStreamFromWrapper.txt", inputText); // just trying to see what the contents look like
-                    Log.Info($"{inputText}"); // same here, but logging from wrappers doesn't seem to be working
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Info,$"inputStream Contents: {inputText}");
                 }
                 inputStream.Seek(0, SeekOrigin.Begin); // set the stream position back to the beginning so the Lambda runtime can still use it
 
@@ -57,13 +61,13 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
             else
             {
-                Log.Info("Unable to read from input stream");
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Info,"Unable to read from input stream");
             }
 
             transaction = agent.CreateTransaction(
-                isWeb: true, // will need to parse this from the input stream data per the spec...only inputs of type APIGatewayProxyRequest and ALBTargetGroupRequest should create web transactions
+                isWeb: true, // TODO will need to parse this from the input stream data per the spec...only inputs of type APIGatewayProxyRequest and ALBTargetGroupRequest should create web transactions
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
-                transactionDisplayName: lambdaContext.FunctionName,
+                transactionDisplayName: functionName,
                 doNotTrackAsUnitOfWork: true);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "LambdaSegmentName");
