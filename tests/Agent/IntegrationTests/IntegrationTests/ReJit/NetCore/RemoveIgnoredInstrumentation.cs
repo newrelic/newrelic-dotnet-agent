@@ -14,7 +14,8 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
     /// <summary>
-    /// Tests adding two new nodes (tracerFactory and additional exactMethodMatcher) to an existing XML file with no nodes.
+    /// Tests that removing ignored built-in and custom instrumentation is restored correctly after the ignore settings
+    /// are removed.
     /// Disables: Browser Monitoring
     /// Logging: finest
     /// Files: Integration.Testing.AddNodeTest.xml
