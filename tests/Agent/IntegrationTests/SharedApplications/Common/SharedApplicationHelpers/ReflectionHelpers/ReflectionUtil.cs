@@ -84,7 +84,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
                 {
                     types = assembly.GetTypes();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine($"Exception calling .GetTypes on assembly {assembly.FullName}");
                     throw;
