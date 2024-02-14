@@ -32,9 +32,6 @@ namespace NewRelic.Agent.Core.DataTransport
         /// </summary>
         /// <returns></returns>
         bool FlushData();
-
-        // TODO: add a method for populating this service with the required metadata (probably already in wire model format?)
-        void SetMetadata(string arn, string functionVersion, string executionEnvironment);
     }
 
     /// <summary>
@@ -42,6 +39,8 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class ServerlessModeDataTransportService : ConfigurationBasedService, IServerlessModeDataTransportService
     {
+        private static string _arn;
+        private static string _functionVersion;
 
         public ServerlessModeDataTransportService()
         {
@@ -158,10 +157,10 @@ namespace NewRelic.Agent.Core.DataTransport
             return true;
         }
 
-        // TODO: this needs to be called somewhere early during execution of the lambda. Not sure what functionVersion is really for; see the spec
-        public void SetMetadata(string arn, string functionVersion, string executionEnvironment)
+        public static void SetMetadata(string functionVersion, string arn)
         {
-            throw new NotImplementedException();
+            _arn = arn;
+            _functionVersion = functionVersion;
         }
 
         private void WritePayload(string payloadJson)
@@ -208,7 +207,7 @@ namespace NewRelic.Agent.Core.DataTransport
             ConcurrentDictionary<WireModelEventType, IEnumerable<IWireModel>> eventsToFlush)
         {
 
-            var metadata = GetMetadata("foo", "bar");
+            var metadata = GetMetadata(System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
             var compressiblePayload = GetCompressiblePayload(eventsToFlush);
             var compressedAndEncodedPayload = CompressAndEncode(JsonConvert.SerializeObject(compressiblePayload));
@@ -256,12 +255,13 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         // Metadata is not compressed or encoded.
-        private static IDictionary<string, object> GetMetadata(string arn, string executionEnv)
+        private static IDictionary<string, object> GetMetadata(string executionEnv)
         {
             Dictionary<string, object> metadata = new Dictionary<string, object>
             {
+                { "arn", _arn },
                 { "protocol_version", 16 }, // TODO: Is this the correct protocol version?
-                { "arn", arn },
+                { "function_version", _functionVersion},
                 { "execution_environment", executionEnv },
                 { "agent_version", AgentInstallConfiguration.AgentVersion },
                 { "metadata_version", 2 },

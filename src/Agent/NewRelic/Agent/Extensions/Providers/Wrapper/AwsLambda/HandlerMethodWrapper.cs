@@ -29,6 +29,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         private static Func<object, object> _getRequestResponseFromGeneric;
         private static Func<object, string> _getFunctionNameFromLambdaContext;
+        private static Func<object, string> _getFunctionVersionFromLambdaContext;
         private static Func<object, string> _getAwsRequestIdFromLambdaContext;
         private static Func<object, string> _getInvokedFunctionArnFromLambdaContext;
 
@@ -36,6 +37,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         public bool IsTransactionRequired => false;
 
         private static bool _coldStart = true;
+
         private bool IsColdstart()
         {
             if (_coldStart)
@@ -59,6 +61,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; // TODO handle case where this doesn't exist
 
             var functionNameGetter = _getFunctionNameFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
+            var functionVersionGetter = _getFunctionVersionFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
             var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
             var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
 
@@ -69,6 +72,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object type info = {eventTypeName}");
 
             var lambdaFunctionName = functionNameGetter(lambdaContext);
+            var lambdaFunctionArn = functionArnGetter(lambdaContext);
+            var lambdaFunctionVersion = functionVersionGetter(lambdaContext);
 
             transaction = agent.CreateTransaction(
                 isWeb: WebInputEventTypes.Any(s => s == eventTypeName),
@@ -82,8 +87,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             attributes.AddEventSourceAttribute("eventType", eventType ?? "Unknown"); // TODO: Is this correct?
             attributes.Add("aws.RequestId", requestIdGetter(lambdaContext));
-            attributes.Add("aws.lambda.arn", functionArnGetter(lambdaContext));
+            attributes.Add("aws.lambda.arn", lambdaFunctionArn);
             attributes.Add("aws.coldStart", IsColdstart().ToString());
+
+            agent.SetServerlessParameters(lambdaFunctionVersion ?? "$LATEST", lambdaFunctionArn); // TODO: Is the default for version correct?
 
             switch (eventType)
             {
