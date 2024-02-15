@@ -1481,33 +1481,33 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationInstrumentationIgnore
     {
         
-        private string assemblynameField;
+        private string assemblyNameField;
         
-        private string classnameField;
+        private string classNameField;
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string assemblyname
+        public string assemblyName
         {
             get
             {
-                return this.assemblynameField;
+                return this.assemblyNameField;
             }
             set
             {
-                this.assemblynameField = value;
+                this.assemblyNameField = value;
             }
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string classname
+        public string className
         {
             get
             {
-                return this.classnameField;
+                return this.classNameField;
             }
             set
             {
-                this.classnameField = value;
+                this.classNameField = value;
             }
         }
         

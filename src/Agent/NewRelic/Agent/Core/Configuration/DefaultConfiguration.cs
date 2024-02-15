@@ -2036,8 +2036,8 @@ namespace NewRelic.Agent.Core.Configuration
                         .Select(i => new ReadOnlyDictionary<string, string>(
                                 new Dictionary<string, string>
                                 {
-                                    { "assemblyName", i.assemblyname },
-                                    { "className", i.classname }
+                                    { "assemblyName", i.assemblyName },
+                                    { "className", i.className }
                                 }
                             ))
                         .ToList();

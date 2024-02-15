@@ -192,6 +192,90 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
+        public static void AddIgnoredInstrumentation(string filePath, string assemblyName, string className)
+        {
+            const string nrNamespace = "urn:newrelic-config";
+
+            if (string.IsNullOrWhiteSpace(assemblyName))
+            {
+                throw new InvalidOperationException("assemblyName must be a valid assembly name");
+            }
+
+            var document = new XmlDocument();
+            document.Load(filePath);
+            var namespaceManager = new XmlNamespaceManager(document.NameTable);
+            namespaceManager.AddNamespace("nr", nrNamespace);
+
+            var configurationNode = document.DocumentElement;
+            if (configurationNode == null)
+            {
+                throw new InvalidOperationException($"Invalid configuration file. Missing <configuration> element. File: {filePath}");
+            }
+
+            var instrumentationNode = configurationNode.SelectSingleNode("nr:instrumentation", namespaceManager);
+
+            if (instrumentationNode == null)
+            {
+                instrumentationNode = document.CreateElement("instrumentation", nrNamespace);
+                configurationNode.AppendChild(instrumentationNode);
+            }
+
+            var ignoreElement = document.CreateElement("ignore", nrNamespace);
+            ignoreElement.SetAttribute("assemblyName", assemblyName);
+            if (!string.IsNullOrWhiteSpace(className))
+            {
+                ignoreElement.SetAttribute("className", className);
+            }
+
+            instrumentationNode.AppendChild(ignoreElement);
+
+            document.Save(filePath);
+        }
+
+        public static void RemoveIgnoredInstrumentation(string filePath, string assemblyName, string className)
+        {
+            const string nrNamespace = "urn:newrelic-config";
+
+            if (string.IsNullOrWhiteSpace(assemblyName))
+            {
+                throw new InvalidOperationException("assemblyName must be a valid assembly name");
+            }
+
+            var document = new XmlDocument();
+            document.Load(filePath);
+            var namespaceManager = new XmlNamespaceManager(document.NameTable);
+            namespaceManager.AddNamespace("nr", nrNamespace);
+
+            var configurationNode = document.DocumentElement;
+            if (configurationNode == null)
+            {
+                throw new InvalidOperationException($"Invalid configuration file. Missing <configuration> element. File: {filePath}");
+            }
+
+            var instrumentationNode = configurationNode.SelectSingleNode("nr:instrumentation", namespaceManager);
+
+            if (instrumentationNode == null || !instrumentationNode.HasChildNodes)
+            {
+                // There is nothing to remove
+                return;
+            }
+
+            var xpathQuery = $"nr:ignore[@assemblyName='{assemblyName}']";
+            if (!string.IsNullOrWhiteSpace(className))
+            {
+                xpathQuery = $"nr:ignore[@assemblyName='{assemblyName}' and @className='{className}']";
+            }
+
+            var childToRemove = instrumentationNode.SelectSingleNode(xpathQuery, namespaceManager);
+            if (childToRemove == null)
+            {
+                return;
+            }
+
+            instrumentationNode.RemoveChild(childToRemove);
+            document.Save(filePath);
+        }
+
         private static void MoveToOrCreateChildNode(XPathNavigator navigator, NamespaceAndName childNode)
         {
             if (navigator == null)

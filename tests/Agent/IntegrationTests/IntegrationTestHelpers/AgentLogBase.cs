@@ -52,6 +52,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string RejitInstrumentationFileChanged = InfoLogLinePrefixRegex + @"Instrumentation change detected:(.*)";
         public const string InstrumentationRefreshFileWatcherStarted = InfoLogLinePrefixRegex + @"Starting instrumentation refresh from InstrumentationWatcher";
         public const string InstrumentationRefreshFileWatcherComplete = InfoLogLinePrefixRegex + @"Completed instrumentation refresh from InstrumentationWatcher";
+        public const string ConfigFileChangeDetected = DebugLogLinePrefixRegex + @"newrelic.config file changed, reloading.";
         public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
         public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";

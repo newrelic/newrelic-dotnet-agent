@@ -432,5 +432,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "auditLog",
                 enableAuditLog.ToString().ToLower());
         }
+
+        public NewRelicConfigModifier AddIgnoredInstrumentationAssembly(string assemblyName)
+        {
+            return AddIgnoredInstrumentationAssemblyAndClass(assemblyName, null);
+        }
+
+        public NewRelicConfigModifier AddIgnoredInstrumentationAssemblyAndClass(string assemblyName, string className)
+        {
+            CommonUtils.AddIgnoredInstrumentation(_configFilePath, assemblyName, className);
+            return this;
+        }
+
+        public NewRelicConfigModifier RemoveIgnoredInstrumentationAssembly(string assemblyName)
+        {
+            return RemoveIgnoredInstrumentationAssemblyAndClass(assemblyName, null);
+        }
+
+        public NewRelicConfigModifier RemoveIgnoredInstrumentationAssemblyAndClass(string assemblyName, string className)
+        {
+            CommonUtils.RemoveIgnoredInstrumentation(_configFilePath, assemblyName, className);
+            return this;
+        }
     }
 }
