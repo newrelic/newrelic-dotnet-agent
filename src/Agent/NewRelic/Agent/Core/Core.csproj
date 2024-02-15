@@ -12,6 +12,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration'=='Debug'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
     <DefineConstants>TRACE;LEGACY_GRPC</DefineConstants>
   </PropertyGroup>
@@ -45,7 +49,10 @@
     <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="ILRepack" Version="2.0.18" />
+    <PackageReference Include="ILRepack" Version="2.0.27">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
   </ItemGroup>
@@ -65,7 +72,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <!-- .NET Core can use the modern gRPC library -->
-    <PackageReference Include="Grpc.Net.Client" Version="2.55.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.60.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[2.0.0]" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="[2.0.0]" />
