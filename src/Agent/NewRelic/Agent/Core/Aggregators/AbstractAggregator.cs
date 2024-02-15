@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private void OnManualHarvest(ManualHarvestEvent manualHarvestEvent)
         {
-            Harvest();
+            ManualHarvest(manualHarvestEvent.TransactionId);
         }
 
         private void OnStopHarvestEvent(StopHarvestEvent obj)
@@ -47,6 +47,8 @@ namespace NewRelic.Agent.Core.Aggregators
         public abstract void Collect(T wireModel);
 
         protected abstract void Harvest();
+
+        protected abstract void ManualHarvest(string transactionId);
 
         protected abstract bool IsEnabled { get; }
 

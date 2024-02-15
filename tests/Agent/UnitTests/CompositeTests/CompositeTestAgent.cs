@@ -187,21 +187,21 @@ namespace CompositeTests
             _attribDefSvc = _container.Resolve<IAttributeDefinitionService>();
 
             // Redirect the mock DataTransportService to capture harvested wire models
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(Metrics));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(CustomEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(TransactionTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(ErrorTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(SqlTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
 
             EnableAggregators();

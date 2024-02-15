@@ -3,5 +3,12 @@
 
 namespace NewRelic.Agent.Core.Events
 {
-    public class FlushServerlessDataEvent;
+    public class FlushServerlessDataEvent
+    {
+        public string TransactionId;
+        public FlushServerlessDataEvent(string transactionId)
+        {
+            TransactionId = transactionId;
+        }
+    }
 }

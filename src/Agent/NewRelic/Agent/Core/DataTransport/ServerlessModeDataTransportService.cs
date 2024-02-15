@@ -8,8 +8,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
@@ -17,11 +15,17 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
+    // These are just to make the long types more readable
+    public class WireData : ConcurrentDictionary<string, object[]>;
+    public class TransactionWireData : ConcurrentDictionary<string, WireData>;
+
     /// <summary>
     /// Extends IDataTransportService with methods specific to serverless mode
     /// </summary>
@@ -31,7 +35,7 @@ namespace NewRelic.Agent.Core.DataTransport
         /// Formats, compresses and writes the data collected from the various Send() methods 
         /// </summary>
         /// <returns></returns>
-        bool FlushData();
+        bool FlushData(string transactionId);
 
         // TODO: add a method for populating this service with the required metadata (probably already in wire model format?)
         void SetMetadata(string arn, string functionVersion, string executionEnvironment);
@@ -42,117 +46,165 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class ServerlessModeDataTransportService : ConfigurationBasedService, IServerlessModeDataTransportService
     {
+        private TransactionWireData _transactionWireData;
+        private object _writeLock = new object();
+        private readonly IDateTimeStatic _dateTimeStatic;
+        private DateTime _lastMetricSendTime;
 
-        public ServerlessModeDataTransportService()
+        private const bool COMPRESS_OUTPUT = true; // This is for testing purposes
+
+        public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic)
         {
+            _dateTimeStatic = dateTimeStatic;
+            _lastMetricSendTime = _dateTimeStatic.UtcNow;
+            _transactionWireData = new TransactionWireData();
             _subscriptions.Add<FlushServerlessDataEvent>(OnFlushServerlessDataEvent);
         }
 
         private void OnFlushServerlessDataEvent(FlushServerlessDataEvent flushServerlessDataEvent)
         {
-            FlushData();
+            FlushData(flushServerlessDataEvent.TransactionId);
         }
-
-
-        private ConcurrentDictionary<WireModelEventType, IEnumerable<IWireModel>> _events = new();
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
-            // TODO: Anything relevant needed here?
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas)
+        private void Enqueue(string transactionId, string type, params object[] data)
         {
-            _events.AddOrUpdate(WireModelEventType.TransactionTraces, _ => transactionSampleDatas, (_, models) => models.Concat(transactionSampleDatas));
+            // We may not have a transaction Id if we're shutting down
+            if (string.IsNullOrEmpty(transactionId))
+            {
+                return;
+            }
+            if (_transactionWireData.TryGetValue(transactionId, out WireData transactionData))
+            {
+                transactionData[type] = data;
+            }
+            else
+            {
+                WireData newData = new WireData();
+                newData[type] = data;
+                _transactionWireData[transactionId] = newData;
+            }
+        }
+
+        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId)
+        {
+            Enqueue(transactionId, "transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
+            return DataTransportResponseStatus.RequestSuccessful;
+        }
+
+        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId)
+        {
+            Enqueue(transactionId, "error_data", _configuration.AgentRunId, errorTraceDatas);
+            return DataTransportResponseStatus.RequestSuccessful;
+        }
+
+        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
+        {
+            if (!metrics.Any())
+            {
+                return DataTransportResponseStatus.RequestSuccessful;
+            }
+
+            var beginTime = _lastMetricSendTime;
+            var endTime = _dateTimeStatic.UtcNow;
+            if (beginTime >= endTime)
+            {
+                Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
+                _lastMetricSendTime = _dateTimeStatic.UtcNow;
+                return DataTransportResponseStatus.Discard;
+            }
+
+            var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
+
+            Enqueue(transactionId, "metric_data", model);
+            _lastMetricSendTime = endTime;
 
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
         {
-            _events.AddOrUpdate(WireModelEventType.Errors, _ => errorTraceDatas, (_, models) => models.Concat(errorTraceDatas));
-
+            Enqueue(transactionId, "analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
         {
-            _events.AddOrUpdate(WireModelEventType.Metrics, _ => metrics, (_, models) => models.Concat(metrics));
-
+            Enqueue(transactionId, "error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
         {
-            // TODO: What about eventHarvestData ??
-            _events.AddOrUpdate(WireModelEventType.TransactionEvents, _ => transactionEvents, (_, models) => models.Concat(transactionEvents));
-
+            Enqueue(transactionId, "span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents)
+        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId)
         {
-            // TODO: What about eventHarvestData ??
-            _events.AddOrUpdate(WireModelEventType.ErrorEvents, _ => errorEvents, (_, models) => models.Concat(errorEvents));
-
+            Enqueue(transactionId, "sql_trace_data", sqlTraceWireModels);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable)
+        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId)
         {
-            // TODO: What about eventHarvestData ??
-            _events.AddOrUpdate(WireModelEventType.SpanEvents, _ => enumerable, (_, models) => models.Concat(enumerable));
-
-            return DataTransportResponseStatus.RequestSuccessful;
-        }
-
-        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels)
-        {
-            _events.AddOrUpdate(WireModelEventType.SqlTraces, type => sqlTraceWireModels, (type, models) => models.Concat(sqlTraceWireModels));
-
-            return DataTransportResponseStatus.RequestSuccessful;
-        }
-
-        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents)
-        {
-            _events.TryAdd(WireModelEventType.CustomEvents, customEvents);
-
+            Enqueue(transactionId, "custom_event_data", _configuration.AgentRunId, customEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
         #region IDataTransportService NotImplemented Methods
-        public IEnumerable<CommandModel> GetAgentCommands() => throw new NotImplementedException();
-        public void SendCommandResults(IDictionary<string, object> commandResults) => throw new NotImplementedException();
+        public IEnumerable<CommandModel> GetAgentCommands() => null;
+        public void SendCommandResults(IDictionary<string, object> commandResults) { }
         public void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData) => throw new NotImplementedException();
 
         // TODO: Are log events supported for Lambda? Spec isn't clear. For now, just do nothing
-        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents)
+        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId)
         {
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
         // TODO: Is the module list supported for Lambda? Spec isn't clear.
-        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules) => throw new NotImplementedException();
+        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId) => throw new NotImplementedException();
         #endregion
 
-        public bool FlushData()
+        public bool FlushData(string transactionId)
         {
-            Log.Debug("ServerlessModeDataTransportService: FlushData starting.");
-            // swap _events for a new, empty dictionary
-            var eventsToFlush = Interlocked.Exchange(ref _events,
-                new ConcurrentDictionary<WireModelEventType, IEnumerable<IWireModel>>());
+            WireData data;
 
-            if (!eventsToFlush.Any())
+            if (string.IsNullOrEmpty(transactionId))
+            {
+                Log.Error("Transaction id missing");
+                return false;
+            }
+
+            if (!_transactionWireData.TryGetValue(transactionId, out data))
+            {
+                Log.Error("Transaction id '{0}' does not exist", transactionId);
+                return false;
+            }
+
+            Log.Debug("ServerlessModeDataTransportService: FlushData starting.");
+
+            if (!data.Any())
             {
                 Log.Debug("ServerlessModeDataTransportService: FlushData finished, no events to flush.");
                 return false;
             }
 
             // Build a payload as per the Lambda spec, compressing portions of the data as per the spec
-            var jsonPayload = BuildAndCompressPayload(eventsToFlush);
+            var jsonPayload = BuildAndCompressPayload(data);
 
             // Write the payload to the /tmp/newrelic-telemetry file if it exists or to stdout if that file does not exist, as per the spec
             WritePayload(jsonPayload);
+
+            // Done with this transaction
+            if (!_transactionWireData.TryRemove(transactionId, out _))
+            {
+                Log.Warn("Failed to remove transaction {0}", transactionId);
+            }
 
             Log.Debug("ServerlessModeDataTransportService: FlushData finished.");
             return true;
@@ -168,24 +220,33 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             bool success = false;
             var fileName = Path.Combine("\\", "tmp", "newrelic-telemetry");
-            try
-            {
-                var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
-                if (File.Exists(fileName))
+            // Make sure we aren't trying to write two payloads at the same time
+            lock (_writeLock)
+            {
+                try
                 {
-                    using (var fs = File.OpenWrite(fileName))
-                    {
-                        fs.Write(payloadBytes, 0, payloadBytes.Length);
-                        fs.Flush(true);
-                    }
+                    var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
-                    success = true;
+                    if (File.Exists(fileName))
+                    {
+                        using (var fs = File.OpenWrite(fileName))
+                        {
+                            fs.Write(payloadBytes, 0, payloadBytes.Length);
+                            fs.Flush(true);
+                        }
+
+                        success = true;
+                    }
+                    else
+                    {
+                        Log.Warn("Unable to write serverless payload. '{0}' not found", fileName);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                Log.Warn(e, "Failed to write serverless payload to {fileName}.", fileName);
+                catch (Exception e)
+                {
+                    Log.Warn(e, "Failed to write serverless payload to {fileName}.", fileName);
+                }
             }
 
             if (!success)
@@ -197,7 +258,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         private string BuildAndCompressPayload(
-            ConcurrentDictionary<WireModelEventType, IEnumerable<IWireModel>> eventsToFlush)
+            WireData eventsToFlush)
         {
 
             var metadata = GetMetadata("foo", "bar");
@@ -211,14 +272,14 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         private Dictionary<string, object> GetCompressiblePayload(
-            ConcurrentDictionary<WireModelEventType, IEnumerable<IWireModel>> eventsToFlush)
+            WireData eventsToFlush)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             foreach (var kvp in eventsToFlush)
             {
                 if (kvp.Value.Any())
                 {
-                    result[kvp.Key.ToJsonTag()] = kvp.Value;
+                    result[kvp.Key] = kvp.Value;
                 }
             }
             return result;
@@ -227,24 +288,26 @@ namespace NewRelic.Agent.Core.DataTransport
         // gzip compress and base64 encode.
         private string CompressAndEncode(string compressiblePayload)
         {
+#if false
             // TODO: no compression for testing, but note that file output will be an escaped json object
             return compressiblePayload;
-
-            // TODO: Use this block when you want to do compression
-            //try
-            //{
-            //    MemoryStream output = new MemoryStream();
-            //    GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
-            //    var data = Encoding.UTF8.GetBytes(compressiblePayload);
-            //    gzip.Write(data, 0, data.Length);
-            //    gzip.Flush();
-            //    gzip.Close();
-            //    return Convert.ToBase64String(output.ToArray());
-            //}
-            //catch (IOException)
-            //{
-            //}
-            //return string.Empty;
+#else
+            try
+            {
+                MemoryStream output = new MemoryStream();
+                GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+                var data = Encoding.UTF8.GetBytes(compressiblePayload);
+                gzip.Write(data, 0, data.Length);
+                gzip.Flush();
+                gzip.Close();
+                return Convert.ToBase64String(output.ToArray());
+            }
+            catch (IOException e)
+            {
+                Log.Error(e, "Failed to compress payload");
+            }
+            return string.Empty;
+#endif
         }
 
         // Metadata is not compressed or encoded.
