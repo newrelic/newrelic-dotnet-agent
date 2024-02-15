@@ -331,7 +331,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         void SetInstrumentationIgnoreList(rapidxml::xml_node<xchar_t>* instrumentationNode)
         {
-            for (auto ignoreNode = instrumentationNode->first_node(_X("ignore"), 0, false); ignoreNode; ignoreNode = ignoreNode->next_sibling(_X("ignore"), 0, false)) {
+            auto rulesNode = instrumentationNode->first_node(_X("rules"), 0, false);
+            if (rulesNode == nullptr)
+                return;
+
+            for (auto ignoreNode = rulesNode->first_node(_X("ignore"), 0, false); ignoreNode; ignoreNode = ignoreNode->next_sibling(_X("ignore"), 0, false)) {
                 auto assemblyName = ignoreNode->first_attribute(_X("assemblyname"), 0, false);
 
                 if (assemblyName == nullptr)
