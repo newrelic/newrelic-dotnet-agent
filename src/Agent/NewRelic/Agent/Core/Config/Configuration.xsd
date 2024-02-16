@@ -373,30 +373,45 @@
                     </xs:annotation>
 
                     <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="ignore" minOccurs="0" maxOccurs="unbounded">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Disables instrumentation for a given assembly or class.
-                                    </xs:documentation>
-                                </xs:annotation>
+                        <xs:all>
+
+                            <xs:element name="rules" minOccurs="0" maxOccurs="1">
                                 <xs:complexType>
-                                    <xs:attribute name="assemblyName" type="xs:string" use="required">
-                                        <xs:annotation>
-                                            <xs:documentation>
-                                                The assembly name to not instrument.
-                                            </xs:documentation>
-                                        </xs:annotation>
-                                    </xs:attribute>
-                                    <xs:attribute name="className" type="xs:string" use="optional">
-                                        <xs:annotation>
-                                            <xs:documentation>
-                                                The class name to not instrument. If blank, no classes in the given assembly will be instrumented.
-                                            </xs:documentation>
-                                        </xs:annotation>
-                                    </xs:attribute>
+                                    <xs:annotation>
+                                        <xs:documentation>
+                                            A list of rules that can affect the behavior of instrumentation.
+                                        </xs:documentation>
+                                    </xs:annotation>
+                                    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+
+                                        <xs:element name="ignore" minOccurs="0" maxOccurs="unbounded">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Disables instrumentation for a given assembly or class.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:attribute name="assemblyName" type="xs:string" use="required">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            The assembly name to not instrument.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="className" type="xs:string" use="optional">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            The class name to not instrument. If blank, no classes in the given assembly will be instrumented.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+
+                                    </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
+
                             <xs:element name="applications" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -420,7 +435,7 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                        </xs:sequence>
+                        </xs:all>
 
                         <xs:attribute name="log" type="xs:boolean" default="false">
                             <xs:annotation>

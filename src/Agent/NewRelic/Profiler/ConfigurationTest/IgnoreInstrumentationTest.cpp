@@ -22,7 +22,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 <?xml version=\"1.0\"?>\
                 <configuration>\
                     <instrumentation>\
-                        <ignore assemblyName='MyAssembly' className='MyNamespace.MyClass'/>\
+                        <rules>\
+                            <ignore assemblyName='MyAssembly' className='MyNamespace.MyClass'/>\
+                        </rules>\
                     </instrumentation>\
                 </configuration>\
                 ");
@@ -54,7 +56,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 <?xml version=\"1.0\"?>\
                 <configuration>\
                     <instrumentation>\
-                        <ignore assemblyName='MyAssembly' />\
+                        <rules>\
+                            <ignore assemblyName='MyAssembly' />\
+                        </rules>\
                     </instrumentation>\
                 </configuration>\
                 ");
@@ -84,7 +88,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 <?xml version=\"1.0\"?>\
                 <configuration>\
                     <instrumentation>\
-                        <ignore className='MyNamespace.MyClass' />\
+                        <rules>\
+                            <ignore className='MyNamespace.MyClass' />\
+                        </rules>\
                     </instrumentation>\
                 </configuration>\
                 ");
@@ -110,9 +116,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 <?xml version=\"1.0\"?>\
                 <configuration>\
                     <instrumentation>\
-                        <ignore assemblyName='MyAssembly' className='MyNamespace.MyClass'/>\
-                        <ignore assemblyName='alpha' />\
-                        <ignore assemblyName='foo' className='bar'/>\
+                        <rules>\
+                            <ignore assemblyName='MyAssembly' className='MyNamespace.MyClass'/>\
+                            <ignore assemblyName='alpha' />\
+                            <ignore assemblyName='foo' className='bar'/>\
+                        </rules>\
                     </instrumentation>\
                 </configuration>\
                 ");

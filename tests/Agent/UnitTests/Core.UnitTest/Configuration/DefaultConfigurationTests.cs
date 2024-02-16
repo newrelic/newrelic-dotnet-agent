@@ -3650,7 +3650,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 }
             };
 
-            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1" });
+            _localConfig.instrumentation.rules.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1" });
 
             Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
         }
@@ -3667,7 +3667,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 }
             };
 
-            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1", className = "Class1" });
+            _localConfig.instrumentation.rules.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1", className = "Class1" });
 
             Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
         }
@@ -3689,8 +3689,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 }
             };
 
-            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1" });
-            _localConfig.instrumentation.ignore.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly2", className = "Class2" });
+            _localConfig.instrumentation.rules.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly1" });
+            _localConfig.instrumentation.rules.Add(new configurationInstrumentationIgnore { assemblyName = "Assembly2", className = "Class2" });
 
             Assert.That(_defaultConfig.IgnoredInstrumentation, Is.EquivalentTo(expectedList));
         }
