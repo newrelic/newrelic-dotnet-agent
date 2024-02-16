@@ -21,8 +21,11 @@ namespace NewRelic.Agent.Core.Config
 
         private DateTime _lastWriteTime;
 
-        public ConfigurationTracker(IConfigurationService configurationService)
+        private readonly INativeMethods _nativeMethods;
+
+        public ConfigurationTracker(IConfigurationService configurationService, INativeMethods nativeMethods)
         {
+            _nativeMethods = nativeMethods;
             var fileName = configurationService.Configuration.NewRelicConfigFilePath;
             if (fileName == null)
                 return;
@@ -39,6 +42,7 @@ namespace NewRelic.Agent.Core.Config
                     Log.Debug("newrelic.config file changed, reloading.");
                     ConfigurationLoader.Initialize(fileName);
                     _lastWriteTime = lastWriteTime;
+                    _nativeMethods.ReloadConfiguration();
                 }
             }, TimeSpan.FromMinutes(1));
         }

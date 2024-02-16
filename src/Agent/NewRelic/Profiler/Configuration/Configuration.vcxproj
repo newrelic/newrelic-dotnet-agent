@@ -146,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="Configuration.h" />
+    <ClInclude Include="IgnoreInstrumentation.h" />
     <ClInclude Include="InstrumentationConfiguration.h" />
     <ClInclude Include="InstrumentationPoint.h" />
     <ClInclude Include="stdafx.h" />

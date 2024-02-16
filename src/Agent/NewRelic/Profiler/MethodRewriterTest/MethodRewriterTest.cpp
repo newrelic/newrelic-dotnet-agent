@@ -61,7 +61,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
         instrumentationSet->insert(overload1->GetInstrumentationPoint());
         instrumentationSet->insert(overload2->GetInstrumentationPoint());
-        auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+        auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet, nullptr);
         auto methodRewriter = std::make_shared<MethodRewriter>(instrumentation, _X(""));
 
         uint8_t overload1CallCount = 0;

@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Core
         void ShutdownNativeThreadProfiler();
 
         int InstrumentationRefresh();
+        int ReloadConfiguration();
         int AddCustomInstrumentation(string fileName, string xml);
         int ApplyCustomInstrumentation();
     }

@@ -248,7 +248,7 @@ namespace NewRelic { namespace Profiler {
                     return corePathInitResult;
                 }
 
-                auto instrumentationConfiguration = InitializeInstrumentationConfig();
+                auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
                 auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
                 this->SetMethodRewriter(methodRewriter);
 
@@ -617,19 +617,38 @@ namespace NewRelic { namespace Profiler {
         {
             LogTrace("Enter: ", __func__);
 
+            // Just refresh the instrumentation using the previous ignore list because the profiler was not notified that it changed
+            return InstrumentationRefreshWithNewIgnoreList(nullptr);
+        }
+
+        HRESULT InstrumentationRefreshWithNewIgnoreList(Configuration::IgnoreInstrumentationListPtr newIgnoreInstrumentationList)
+        {
+            LogTrace("Enter: ", __func__);
+
+            // We use a mutex in this function because an instrumentation refresh can be triggered for multiple reasons
+            // around the same time and we need the correct ignore list to be applied.
+            std::lock_guard<std::mutex> lock(_instrumentationRefreshMutex);
+
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
             auto customXml = _customInstrumentation.GetCustomInstrumentationXml();
             for (auto xmlPair : *customXml) {
                 (*instrumentationXmls)[xmlPair.first] = xmlPair.second;
             }
 
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls);
+            auto oldMethodRewriter = GetMethodRewriter();
+            auto oldIgnoreList = oldMethodRewriter->GetInstrumentationConfiguration()->GetIgnoreList();
+
+            if (newIgnoreInstrumentationList == nullptr) {
+                // If we were not given a new Ignore list, we should use the previous one because it has not changed.
+                newIgnoreInstrumentationList = oldIgnoreList;
+            }
+
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, newIgnoreInstrumentationList);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogError(L"Unable to parse one or more instrumentation files.  Instrumentation will not be refreshed.");
                 return S_FALSE;
             }
 
-            auto oldMethodRewriter = GetMethodRewriter();
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
             SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
@@ -645,6 +664,15 @@ namespace NewRelic { namespace Profiler {
             LogTrace("Leave: ", __func__);
 
             return S_OK;
+        }
+
+        HRESULT ReloadConfiguration()
+        {
+            LogTrace(L"Enter: ", __func__);
+
+            auto newConfiguration = InitializeConfigAndSetLogLevel();
+
+            return InstrumentationRefreshWithNewIgnoreList(newConfiguration->GetIgnoreInstrumentationList());
         }
 
         std::shared_ptr<std::set<mdMethodDef>> GetMethodDefsForAssembly(
@@ -840,6 +868,7 @@ namespace NewRelic { namespace Profiler {
         std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
         MethodRewriter::CustomInstrumentation _customInstrumentation;
+        std::mutex _instrumentationRefreshMutex;
 
         DWORD _eventMask = OverrideEventMask(
             COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES);
@@ -1131,10 +1160,10 @@ namespace NewRelic { namespace Profiler {
             return configuration;
         }
 
-        std::shared_ptr<Configuration::InstrumentationConfiguration> InitializeInstrumentationConfig()
+        std::shared_ptr<Configuration::InstrumentationConfiguration> InitializeInstrumentationConfig(NewRelic::Profiler::Configuration::IgnoreInstrumentationListPtr ignoreList)
         {
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls);
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, ignoreList);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogWarn(L"Unable to parse one or more instrumentation files.  Live instrumentation reloading will not work until the unparsable file(s) are corrected or removed.");
             }
@@ -1313,7 +1342,8 @@ namespace NewRelic { namespace Profiler {
         }
     };
 
-    // called by managed code to get function information from function IDs
+    // Called by managed code to get the profiler to update the which methods
+    // are instrumented at runtime.
     extern "C" __declspec(dllexport) HRESULT __cdecl InstrumentationRefresh()
     {
         LogInfo("Refreshing instrumentation");
@@ -1323,6 +1353,19 @@ namespace NewRelic { namespace Profiler {
             return E_FAIL;
         }
         return profiler->InstrumentationRefresh();
+    }
+
+    // Called by managed code to get the profiler to reload configuration settings
+    // from the newrelic.config files.
+    extern "C" __declspec(dllexport) HRESULT __cdecl ReloadConfiguration()
+    {
+        LogInfo(L"Reloading newrelic.config files.");
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"Unable to reload newrelic.config files because the profiler reference is invalid.");
+            return E_FAIL;
+        }
+        return profiler->ReloadConfiguration();
     }
 
     extern "C" __declspec(dllexport) HRESULT __cdecl AddCustomInstrumentation(const char* fileName, const char* xml)

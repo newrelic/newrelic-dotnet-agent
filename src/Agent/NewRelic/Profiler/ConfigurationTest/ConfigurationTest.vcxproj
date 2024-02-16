@@ -177,6 +177,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConfigOverrideTest.cpp" />
+    <ClCompile Include="IgnoreInstrumentationTest.cpp" />
     <ClCompile Include="ShouldInstrumentTest.cpp" />
     <ClCompile Include="ConfigurationTest.cpp" />
     <ClCompile Include="InstrumentationConfigurationTest.cpp" />
