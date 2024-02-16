@@ -95,8 +95,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private bool IsServerlessModeEnabled()
         {
             return
-                string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")) ||
-                string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("NEW_RELIC_SERVERLESS_MODE_ENABLED"));
+                !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")) ||
+                !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("NEW_RELIC_SERVERLESS_MODE_ENABLED"));
         }
 
         private void Connect()

@@ -83,7 +83,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
+        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --build --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;

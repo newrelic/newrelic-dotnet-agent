@@ -432,5 +432,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "auditLog",
                 enableAuditLog.ToString().ToLower());
         }
+
+        public void SetCompleteTransactionsOnThread(bool enable)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                "completeTransactionsOnThread", enable ? "true" : "false");
+        }
+
+        public void SetSyncStartup(bool enable)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                "syncStartup", enable ? "true" : "false");
+        }
+
+        public void SetDebugStartupDelaySeconds(int delaySeconds)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", },
+                "debugStartupDelaySeconds", delaySeconds.ToString());
+        }
     }
 }
