@@ -220,6 +220,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 configurationNode.AppendChild(instrumentationNode);
             }
 
+            var rulesNode = instrumentationNode.SelectSingleNode("nr:rules", namespaceManager);
+            if (rulesNode == null)
+            {
+                rulesNode = document.CreateElement("rules", nrNamespace);
+                instrumentationNode.AppendChild(rulesNode);
+            }
+
             var ignoreElement = document.CreateElement("ignore", nrNamespace);
             ignoreElement.SetAttribute("assemblyName", assemblyName);
             if (!string.IsNullOrWhiteSpace(className))
@@ -227,7 +234,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 ignoreElement.SetAttribute("className", className);
             }
 
-            instrumentationNode.AppendChild(ignoreElement);
+            rulesNode.AppendChild(ignoreElement);
 
             document.Save(filePath);
         }
@@ -252,9 +259,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 throw new InvalidOperationException($"Invalid configuration file. Missing <configuration> element. File: {filePath}");
             }
 
-            var instrumentationNode = configurationNode.SelectSingleNode("nr:instrumentation", namespaceManager);
+            var rulesNode = configurationNode.SelectSingleNode("nr:instrumentation/nr:rules", namespaceManager);
 
-            if (instrumentationNode == null || !instrumentationNode.HasChildNodes)
+            if (rulesNode == null || !rulesNode.HasChildNodes)
             {
                 // There is nothing to remove
                 return;
@@ -266,13 +273,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 xpathQuery = $"nr:ignore[@assemblyName='{assemblyName}' and @className='{className}']";
             }
 
-            var childToRemove = instrumentationNode.SelectSingleNode(xpathQuery, namespaceManager);
+            var childToRemove = rulesNode.SelectSingleNode(xpathQuery, namespaceManager);
             if (childToRemove == null)
             {
                 return;
             }
 
-            instrumentationNode.RemoveChild(childToRemove);
+            rulesNode.RemoveChild(childToRemove);
             document.Save(filePath);
         }
 

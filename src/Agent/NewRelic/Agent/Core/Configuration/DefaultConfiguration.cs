@@ -2032,7 +2032,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (_ignoredInstrumentation == null)
                 {
-                    _ignoredInstrumentation =_localConfiguration.instrumentation.ignore
+                    _ignoredInstrumentation =_localConfiguration.instrumentation.rules
                         .Select(i => new ReadOnlyDictionary<string, string>(
                                 new Dictionary<string, string>
                                 {

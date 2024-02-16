@@ -1407,7 +1407,7 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationInstrumentation
     {
         
-        private List<configurationInstrumentationIgnore> ignoreField;
+        private List<configurationInstrumentationIgnore> rulesField;
         
         private List<configurationInstrumentationApplication> applicationsField;
         
@@ -1419,20 +1419,20 @@ namespace NewRelic.Agent.Core.Config
         public configurationInstrumentation()
         {
             this.applicationsField = new List<configurationInstrumentationApplication>();
-            this.ignoreField = new List<configurationInstrumentationIgnore>();
+            this.rulesField = new List<configurationInstrumentationIgnore>();
             this.logField = false;
         }
         
-        [System.Xml.Serialization.XmlElementAttribute("ignore")]
-        public List<configurationInstrumentationIgnore> ignore
+        [System.Xml.Serialization.XmlArrayItemAttribute("ignore", IsNullable=false)]
+        public List<configurationInstrumentationIgnore> rules
         {
             get
             {
-                return this.ignoreField;
+                return this.rulesField;
             }
             set
             {
-                this.ignoreField = value;
+                this.rulesField = value;
             }
         }
         
