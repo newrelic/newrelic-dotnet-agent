@@ -50,6 +50,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private object _writeLock = new object();
         private readonly IDateTimeStatic _dateTimeStatic;
         private DateTime _lastMetricSendTime;
+        private static string _arn;
+        private static string _functionVersion;
 
         private const bool COMPRESS_OUTPUT = true; // This is for testing purposes
 
@@ -210,16 +212,20 @@ namespace NewRelic.Agent.Core.DataTransport
             return true;
         }
 
-        // TODO: this needs to be called somewhere early during execution of the lambda. Not sure what functionVersion is really for; see the spec
-        public void SetMetadata(string arn, string functionVersion, string executionEnvironment)
+        public static void SetMetadata(string functionVersion, string arn)
         {
-            throw new NotImplementedException();
+            _arn = arn;
+            _functionVersion = functionVersion;
         }
 
         private void WritePayload(string payloadJson)
         {
             bool success = false;
-            var fileName = Path.Combine("\\", "tmp", "newrelic-telemetry");
+            var fileName = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
+
+            try
+            {
+                var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
             // Make sure we aren't trying to write two payloads at the same time
             lock (_writeLock)
@@ -252,8 +258,10 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!success)
             {
                 // fall back to writing to stdout
+                Log.Debug("Writing serverless payload to stdout");
+
                 // TODO: Is this correct ?? 
-                Console.Write(payloadJson);
+                Console.WriteLine(payloadJson);
             }
         }
 
@@ -261,7 +269,7 @@ namespace NewRelic.Agent.Core.DataTransport
             WireData eventsToFlush)
         {
 
-            var metadata = GetMetadata("foo", "bar");
+            var metadata = GetMetadata(System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
             var compressiblePayload = GetCompressiblePayload(eventsToFlush);
             var compressedAndEncodedPayload = CompressAndEncode(JsonConvert.SerializeObject(compressiblePayload));
@@ -311,12 +319,13 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         // Metadata is not compressed or encoded.
-        private static IDictionary<string, object> GetMetadata(string arn, string executionEnv)
+        private static IDictionary<string, object> GetMetadata(string executionEnv)
         {
             Dictionary<string, object> metadata = new Dictionary<string, object>
             {
+                { "arn", _arn },
                 { "protocol_version", 16 }, // TODO: Is this the correct protocol version?
-                { "arn", arn },
+                { "function_version", _functionVersion},
                 { "execution_environment", executionEnv },
                 { "agent_version", AgentInstallConfiguration.AgentVersion },
                 { "metadata_version", 2 },

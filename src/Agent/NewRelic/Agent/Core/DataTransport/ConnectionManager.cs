@@ -74,8 +74,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_started)
                     return;
 
-                // TODO: implement / use _configuration.LambdaModeActive (or something similar) instead of checking env vars here
-                if (string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")))
+                if (!IsServerlessModeEnabled())
                 {
                     if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
                         Connect();
@@ -89,6 +88,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _started = true;
             }
+        }
+
+        // TODO: implement / use _configuration.LambdaModeActive (or something similar) instead of checking env vars here
+        // TODO: This logic needs to conform to the Agent Configuration section of the lambda spec
+        private bool IsServerlessModeEnabled()
+        {
+            return
+                !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")) ||
+                !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("NEW_RELIC_SERVERLESS_MODE_ENABLED"));
         }
 
         private void Connect()

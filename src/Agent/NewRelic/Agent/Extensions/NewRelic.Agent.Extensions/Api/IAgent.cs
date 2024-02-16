@@ -127,5 +127,12 @@ namespace NewRelic.Agent.Api
         /// </summary>
         /// <returns>Dictionary of key/value pairs.</returns>
         Dictionary<string, string> GetLinkingMetadata();
+
+        /// <summary>
+        /// Sets metadata needed by the ServerlessModeDataTransportService
+        /// </summary>
+        /// <param name="lambdaFunctionVersion"></param>
+        /// <param name="lambdaFunctionArn"></param>
+        void SetServerlessParameters(string lambdaFunctionVersion, string lambdaFunctionArn);
     }
 }
