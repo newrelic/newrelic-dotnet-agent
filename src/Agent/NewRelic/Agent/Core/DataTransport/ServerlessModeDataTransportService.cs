@@ -36,9 +36,6 @@ namespace NewRelic.Agent.Core.DataTransport
         /// </summary>
         /// <returns></returns>
         bool FlushData(string transactionId);
-
-        // TODO: add a method for populating this service with the required metadata (probably already in wire model format?)
-        void SetMetadata(string arn, string functionVersion, string executionEnvironment);
     }
 
     /// <summary>
@@ -222,10 +219,6 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             bool success = false;
             var fileName = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
-
-            try
-            {
-                var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
             // Make sure we aren't trying to write two payloads at the same time
             lock (_writeLock)
