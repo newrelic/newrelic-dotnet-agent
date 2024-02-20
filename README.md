@@ -18,7 +18,7 @@ The New Relic Lambda Tracer is an OpenTracing Tracer implementation specifically
 <!-- markdown-link-check-disable-next-line -->
 The latest released binaries for the .NET Agent can be found either [here](https://download.newrelic.com/dot_net_agent/latest_release/) or on [NuGet.org](https://www.nuget.org/profiles/newrelic).
 
-See our [agent installation documentation](https://docs.newrelic.com/docs/agents/net-agent/installation/introduction-net-agent-install) to understand which of these files are appropriate for your application type and hosting environment.
+See our [agent installation documentation](https://docs.newrelic.com/install/dotnet/) to understand which of these files are appropriate for your application type and hosting environment.
 
 ## Getting Started
 
