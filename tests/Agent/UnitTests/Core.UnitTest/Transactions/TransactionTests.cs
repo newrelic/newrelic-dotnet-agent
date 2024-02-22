@@ -464,8 +464,12 @@ public class TransactionTests
         _transaction.SetRequestHeaders(headers, keysToCapture, getter);
 
         // Assert
-        // Here you would assert that the request headers were correctly set in the transaction.
-        // This depends on the implementation details of your Transaction class.
+        var allAttributeValuesDic = _transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();
+        foreach (var header in headers)
+        {
+            var attributeValue = allAttributeValuesDic[$"request.headers.{header.Key}"];
+            Assert.That(attributeValue, Is.EqualTo(header.Value));
+        }
     }
 
     [Test]
