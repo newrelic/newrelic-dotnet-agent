@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
 #if NETSTANDARD2_0
         private const string ContainerIdV1Regex = @".*:cpu:/docker/([0-9a-f]{64}).*";
-        private const string ContainerIdV1FallbackRegex = @"([0-9a-f]{64})"; // This is the old regex that just looks for any 64-char alphanumeric string
+        private const string ContainerIdV1FallbackRegex = @"([0-9a-f]{64})"; // This is the old regex that just looks for any 64-char hexadecimal string
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
 #endif
 
