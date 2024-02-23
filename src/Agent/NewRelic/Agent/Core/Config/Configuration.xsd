@@ -320,7 +320,7 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
-                        
+
                         <xs:attribute name="directory" type="xs:string" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
@@ -351,6 +351,48 @@
                             <xs:annotation>
                                 <xs:documentation>
                                     If this is true, then any data that is sent to New Relic will be recorded in a separate log file, in addition to going to the normal log file. The audit log file will be named the same as the normal log file except that it will have "_audit" appended to the file name (for example, "MyApp_audit.log").
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
+                        <xs:attribute name="logRollingStrategy" default="size" use="optional" >
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The strategy to use for rolling over the log file. Default is size.
+                                </xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:enumeration value="size">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The log file will be rolled over when it reaches the size specified in maxLogFileSizeBytes.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                    <xs:enumeration value="day">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The log file will be rolled over once each day.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFileSizeBytes" type="xs:int" default="52428800" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum size of the log file in bytes before it is rolled over. Default is 50MB. If this is set to 0, no size limit will be enforced. Only used if logRollingStrategy is set to "size".
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFiles" type="xs:int" default="4" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum number of log files to keep. Defaults to 4. If this is set to 0, then all log files will be kept.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

@@ -141,6 +141,69 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config()
+        {
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config_and_maxLogFileSizeBytes_and_maxLogFiles_are_set()
+        {
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(100, 10);
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
+            Assert.That(config.MaxLogFileSizeBytes, Is.EqualTo(100));
+            Assert.That(config.MaxLogFiles, Is.EqualTo(10));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Day_when_logRollingStrategy_is_day_in_config()
+        {
+            ILogConfig config = LogConfigFixtureWithDayRollingStrategyEnabled();
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Day));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Day_when_logRollingStrategy_is_day_in_config_and_maxLogFiles_are_set()
+        {
+            ILogConfig config = LogConfigFixtureWithDayRollingStrategyEnabledAndLogFileCountSet(10);
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Day));
+            Assert.That(config.MaxLogFiles, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void Config_LogRollingStrategy_for_config_is_Day_when_overridden_by_environment_variable()
+        {
+            SetEnvironmentVar("NEW_RELIC_LOG_ROLLING_STRATEGY", "day");
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Day));
+        }
+
+        [Test]
+        public void Config_LogRollingStrategy_for_config_throws_exception_when_overridden_by_invalid_environment_variable()
+        {
+            SetEnvironmentVar("NEW_RELIC_LOG_ROLLING_STRATEGY", "invalid");
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(() => config.LogRollingStrategy, Throws.Exception.TypeOf<ConfigurationLoaderException>());
+        }
+
+        [Test]
+        public void Config_MaxLogFileSizeBytes_for_config_is_1000_when_overridden_by_environment_variable()
+        {
+            SetEnvironmentVar("NEW_RELIC_LOG_MAX_FILE_SIZE_BYTES", "1000");
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(config.MaxLogFileSizeBytes, Is.EqualTo(1000));
+        }
+
+        [Test]
+        public void Config_MaxLogFiles_for_config_is_10_when_overridden_by_environment_variable()
+        {
+            SetEnvironmentVar("NEW_RELIC_LOG_MAX_FILES", "10");
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(config.MaxLogFiles, Is.EqualTo(10));
+        }
+
+        [Test]
         public static void Config_IsConsoleEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
@@ -285,6 +348,79 @@ namespace NewRelic.Agent.Core
                 "   <log level=\"debug\" console=\"{0}\" />" +
                 "</configuration>",
                 enabled.ToString().ToLower());
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabled()
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"size\" />" +
+                "</configuration>");
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(int maxLogFileSizeBytes, int maxLogFiles)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"size\" maxLogFileSizeBytes=\"{0}\" maxLogFiles=\"{1}\" />" +
+                "</configuration>",
+                maxLogFileSizeBytes, maxLogFiles);
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabled()
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"day\" />" +
+                "</configuration>");
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabledAndLogFileCountSet(int maxLogFiles)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"day\" maxLogFiles=\"{0}\" />" +
+                "</configuration>",
+                maxLogFiles);
 
             var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
