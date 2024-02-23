@@ -26,7 +26,7 @@ public class TransactionTests
     private Transaction _transaction;
     private IConfiguration _configuration;
     private IAttributeDefinitionService _attribDefSvc;
-    private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+    private IAttributeDefinitions AttribDefs => _attribDefSvc.AttributeDefs;
 
     private readonly float _priority = 0.0f;
     private IDatabaseStatementParser _databaseStatementParser;
@@ -36,15 +36,16 @@ public class TransactionTests
     public void SetUp()
     {
         _configuration = Mock.Create<IConfiguration>();
-
         Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-
         // Initialize the Transaction with its dependencies
+        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         _databaseStatementParser = Mock.Create<IDatabaseStatementParser>();
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
-        _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), _priority, _databaseStatementParser, _distributedTracePayloadHandler, Mock.Create<IErrorService>(), _attribDefs);
+
+        _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(),
+            DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
+            _priority, _databaseStatementParser, _distributedTracePayloadHandler, Mock.Create<IErrorService>(), AttribDefs);
     }
 
     [TearDown]
@@ -212,11 +213,11 @@ public class TransactionTests
     public void SetRequestParameters_SetsRequestParametersInTransactionMetadata()
     {
         // Arrange
-        var parameters = new List<KeyValuePair<string, string>>()
-    {
-        new KeyValuePair<string, string>("param1", "value1"),
-        new KeyValuePair<string, string>("param2", "value2")
-    };
+        var parameters = new List<KeyValuePair<string, string>>
+        {
+            new("param1", "value1"),
+            new("param2", "value2")
+        };
 
         // Act
         _transaction.SetRequestParameters(parameters);
@@ -399,7 +400,7 @@ public class TransactionTests
         var sql = "SELECT * FROM TestTable";
 
         Mock.Arrange(() => _databaseStatementParser.ParseDatabaseStatement(datastoreVendor, commandType, sql))
-            .Returns(new ParsedSqlStatement(datastoreVendor, "TestTable", "SELECT" ));
+            .Returns(new ParsedSqlStatement(datastoreVendor, "TestTable", "SELECT"));
 
         // Act
         var result = _transaction.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
@@ -418,10 +419,10 @@ public class TransactionTests
         Func<object, string, string> getter = (obj, key) => "value";
 
         // Act
-        TestDelegate action = () => _transaction.SetRequestHeaders<object>(null, keysToCapture, getter);
+        void Action() => _transaction.SetRequestHeaders<object>(null, keysToCapture, getter);
 
         // Assert
-        Assert.That(action, Throws.ArgumentNullException);
+        Assert.That(Action, Throws.ArgumentNullException);
     }
 
     [Test]
@@ -432,10 +433,10 @@ public class TransactionTests
         Func<object, string, string> getter = (obj, key) => "value";
 
         // Act
-        TestDelegate action = () => _transaction.SetRequestHeaders(headers, null, getter);
+        void Action() => _transaction.SetRequestHeaders(headers, null, getter);
 
         // Assert
-        Assert.That(action, Throws.ArgumentNullException);
+        Assert.That(Action, Throws.ArgumentNullException);
     }
 
     [Test]
@@ -446,10 +447,10 @@ public class TransactionTests
         var keysToCapture = new List<string> { "key1", "key2" };
 
         // Act
-        TestDelegate action = () => _transaction.SetRequestHeaders(headers, keysToCapture, null);
+        void Action() => _transaction.SetRequestHeaders(headers, keysToCapture, null);
 
         // Assert
-        Assert.That(action, Throws.ArgumentNullException);
+        Assert.That(Action, Throws.ArgumentNullException);
     }
 
     [Test]
@@ -458,10 +459,10 @@ public class TransactionTests
         // Arrange
         var headers = new Dictionary<string, string> { { "key1", "value1" }, { "key2", "value2" } };
         var keysToCapture = new List<string> { "key1", "key2" };
-        Func<Dictionary<string, string>, string, string> getter = (dict, key) => dict.ContainsKey(key) ? dict[key] : null;
+        string Getter(Dictionary<string, string> dict, string key) => dict.TryGetValue(key, out var value) ? value : null;
 
         // Act
-        _transaction.SetRequestHeaders(headers, keysToCapture, getter);
+        _transaction.SetRequestHeaders(headers, keysToCapture, Getter);
 
         // Assert
         var allAttributeValuesDic = _transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();

@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         private static string FormatTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
         {
-            return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName)} (priority {(int)priority}, {priority})";
+            return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName as TransactionName)} (priority {(int)priority}, {priority})";
         }
     }
 }
