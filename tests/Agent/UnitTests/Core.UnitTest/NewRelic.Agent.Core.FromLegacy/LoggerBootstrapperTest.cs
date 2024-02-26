@@ -148,11 +148,11 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
-        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config_and_maxLogFileSizeBytes_and_maxLogFiles_are_set()
+        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config_and_maxLogFileSizeMB_and_maxLogFiles_are_set()
         {
             ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(100, 10);
             Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
-            Assert.That(config.MaxLogFileSizeBytes, Is.EqualTo(100));
+            Assert.That(config.MaxLogFileSizeMB, Is.EqualTo(100));
             Assert.That(config.MaxLogFiles, Is.EqualTo(10));
         }
 
@@ -188,11 +188,11 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
-        public void Config_MaxLogFileSizeBytes_for_config_is_1000_when_overridden_by_environment_variable()
+        public void Config_maxLogFileSizeMB_for_config_is_1000_when_overridden_by_environment_variable()
         {
-            SetEnvironmentVar("NEW_RELIC_LOG_MAX_FILE_SIZE_BYTES", "1000");
+            SetEnvironmentVar("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", "1000");
             ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
-            Assert.That(config.MaxLogFileSizeBytes, Is.EqualTo(1000));
+            Assert.That(config.MaxLogFileSizeMB, Is.EqualTo(1000));
         }
 
         [Test]
@@ -373,7 +373,7 @@ namespace NewRelic.Agent.Core
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
         }
-        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(int maxLogFileSizeBytes, int maxLogFiles)
+        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(int maxLogFileSizeMB, int maxLogFiles)
         {
             var xml = string.Format(
                 "<configuration xmlns=\"urn:newrelic-config\">" +
@@ -381,9 +381,9 @@ namespace NewRelic.Agent.Core
                 "   <application>" +
                 "       <name>Test</name>" +
                 "   </application>" +
-                "   <log level=\"debug\" logRollingStrategy=\"size\" maxLogFileSizeBytes=\"{0}\" maxLogFiles=\"{1}\" />" +
+                "   <log level=\"debug\" logRollingStrategy=\"size\" maxLogFileSizeMB=\"{0}\" maxLogFiles=\"{1}\" />" +
                 "</configuration>",
-                maxLogFileSizeBytes, maxLogFiles);
+                maxLogFileSizeMB, maxLogFiles);
 
             var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);

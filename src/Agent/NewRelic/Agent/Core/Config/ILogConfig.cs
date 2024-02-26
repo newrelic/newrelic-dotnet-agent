@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.Config
 
         bool IsAuditLogEnabled { get; }
 
-        int MaxLogFileSizeBytes { get; } // only used if LogRollingStrategy is "size"
+        int MaxLogFileSizeMB { get; } // only used if LogRollingStrategy is "size"
 
         int MaxLogFiles { get; }
 

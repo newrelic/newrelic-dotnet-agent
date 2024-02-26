@@ -271,7 +271,7 @@ namespace NewRelic.Agent.Core
                     .WriteTo
                     .File(path: fileName,
                             outputTemplate: outputFormat,
-                            fileSizeLimitBytes: config.LogRollingStrategy == LogRollingStrategy.Size ? config.MaxLogFileSizeBytes > 0 ? config.MaxLogFileSizeBytes : null : null,
+                            fileSizeLimitBytes: config.LogRollingStrategy == LogRollingStrategy.Size ? config.MaxLogFileSizeMB > 0 ? config.MaxLogFileSizeMB * 1024 * 1024 : null : null,
                             encoding: Encoding.UTF8,
                             rollOnFileSizeLimit: config.LogRollingStrategy == LogRollingStrategy.Size,
                             retainedFileCountLimit: config.MaxLogFiles > 0 ? config.MaxLogFiles : null,

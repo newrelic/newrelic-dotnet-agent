@@ -673,7 +673,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-        public int MaxLogFileSizeBytes => GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_BYTES", maxLogFileSizeBytes);
+        public int MaxLogFileSizeMB => GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", maxLogFileSizeMB);
         public int MaxLogFiles => GetOverride("NEW_RELIC_LOG_MAX_FILES", maxLogFiles);
         public LogRollingStrategy LogRollingStrategy
         {

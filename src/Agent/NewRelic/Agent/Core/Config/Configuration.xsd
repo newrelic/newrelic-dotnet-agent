@@ -366,7 +366,7 @@
                                     <xs:enumeration value="size">
                                         <xs:annotation>
                                             <xs:documentation>
-                                                The log file will be rolled over when it reaches the size specified in maxLogFileSizeBytes.
+                                                The log file will be rolled over when it reaches the size specified in maxLogFileSizeMB.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:enumeration>
@@ -381,10 +381,10 @@
                             </xs:simpleType>
                         </xs:attribute>
 
-                        <xs:attribute name="maxLogFileSizeBytes" type="xs:int" default="52428800" use="optional">
+                        <xs:attribute name="maxLogFileSizeMB" type="xs:int" default="50" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
-                                    The maximum size of the log file in bytes before it is rolled over. Default is 50MB. If this is set to 0, no size limit will be enforced. Only used if logRollingStrategy is set to "size".
+                                    The maximum size of the log file in megabytes before it is rolled over. Default is 50MB. If this is set to 0, no size limit will be enforced. Only used if logRollingStrategy is set to "size".
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

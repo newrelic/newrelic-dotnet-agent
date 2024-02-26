@@ -1296,7 +1296,7 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationLogLogRollingStrategy logRollingStrategyField;
         
-        private int maxLogFileSizeBytesField;
+        private int maxLogFileSizeMBField;
         
         private int maxLogFilesField;
         
@@ -1310,7 +1310,7 @@ namespace NewRelic.Agent.Core.Config
             this.consoleField = false;
             this.auditLogField = false;
             this.logRollingStrategyField = configurationLogLogRollingStrategy.size;
-            this.maxLogFileSizeBytesField = 52428800;
+            this.maxLogFileSizeMBField = 50;
             this.maxLogFilesField = 4;
         }
         
@@ -1411,16 +1411,16 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(52428800)]
-        public int maxLogFileSizeBytes
+        [System.ComponentModel.DefaultValueAttribute(50)]
+        public int maxLogFileSizeMB
         {
             get
             {
-                return this.maxLogFileSizeBytesField;
+                return this.maxLogFileSizeMBField;
             }
             set
             {
-                this.maxLogFileSizeBytesField = value;
+                this.maxLogFileSizeMBField = value;
             }
         }
         
