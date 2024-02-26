@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
-            ConfigurationLoader.PublishSerializedEvent(config);
+            ConfigurationLoader.PublishDeserializedEvent(config);
 
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions

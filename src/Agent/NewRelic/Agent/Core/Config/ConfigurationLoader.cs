@@ -311,7 +311,7 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        public static configuration Initialize(bool publishSerializedEvent = true)
+        public static configuration Initialize(bool publishDeserializedEvent = true)
         {
             var fileName = string.Empty;
             try
@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core.Config
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
-                return Initialize(fileName, publishSerializedEvent);
+                return Initialize(fileName, publishDeserializedEvent);
             }
             catch (FileNotFoundException ex)
             {
@@ -347,14 +347,14 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize the configuration by reading xml contained in the file named fileName.
         /// </summary>
         /// <param name="fileName"></param>
-        /// <param name="publishSerializedEvent"></param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        public static configuration Initialize(string fileName, bool publishSerializedEvent = true)
+        public static configuration Initialize(string fileName, bool publishDeserializedEvent = true)
         {
             using (StreamReader stream = new StreamReader(fileName))
             {
-                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishSerializedEvent);
+                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishDeserializedEvent);
                 config.ConfigurationFileName = fileName;
                 return config;
             }
@@ -380,9 +380,9 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="configXml"></param>
         /// <param name="configSchemaSource">A method that returns a string containing the config schema (xsd).</param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
-        /// <param name="publishSerializedEvent"></param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown", bool publishSerializedEvent = true)
+        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown", bool publishDeserializedEvent = true)
         {
             configuration config;
 
@@ -411,12 +411,12 @@ namespace NewRelic.Agent.Core.Config
                 Log.Warn(ex, "An unknown error occurred when performing XML schema validation on config file {0}", NewRelicConfigFileName);
             }
 
-            if (publishSerializedEvent)
-                PublishSerializedEvent(config);
+            if (publishDeserializedEvent)
+                PublishDeserializedEvent(config);
 
             return config;
         }
-        public static void PublishSerializedEvent(configuration config)
+        public static void PublishDeserializedEvent(configuration config)
         {
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
         }
