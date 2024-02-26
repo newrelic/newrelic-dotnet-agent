@@ -355,6 +355,48 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="logRollingStrategy" default="size" use="optional" >
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The strategy to use for rolling over the Agent log file. Default is size.
+                                </xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:enumeration value="size">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The Agent log file will be rolled over when it reaches the size specified in maxLogFileSizeMB.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                    <xs:enumeration value="day">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The Agent log file will be rolled over once each day.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFileSizeMB" type="xs:int" default="50" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum size of the Agent log file in megabytes before it is rolled over. Default is 50MB. If this is set to 0, no size limit will be enforced. Only used if logRollingStrategy is set to "size".
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFiles" type="xs:int" default="4" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum number of Agent log files to keep. Defaults to 4. If this is set to 0, then all log files will be kept.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
