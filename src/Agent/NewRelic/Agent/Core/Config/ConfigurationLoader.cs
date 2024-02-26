@@ -107,11 +107,11 @@ namespace NewRelic.Agent.Core.Config
         {
             ValueWithProvenance<string> value = GetWebConfigAppSetting(key);
 #if NETFRAMEWORK
-			if (value.Value == null)
-			{
-				value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
-					"ConfigurationManager app setting");
-			}
+            if (value.Value == null)
+            {
+                value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
+                    "ConfigurationManager app setting");
+            }
 #else
             if (value?.Value == null)
             {
@@ -311,7 +311,7 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        public static configuration Initialize()
+        public static configuration Initialize(bool publishSerializedEvent = true)
         {
             var fileName = string.Empty;
             try
@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core.Config
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
-                return Initialize(fileName);
+                return Initialize(fileName, publishSerializedEvent);
             }
             catch (FileNotFoundException ex)
             {
@@ -347,13 +347,14 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize the configuration by reading xml contained in the file named fileName.
         /// </summary>
         /// <param name="fileName"></param>
+        /// <param name="publishSerializedEvent"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        public static configuration Initialize(string fileName)
+        public static configuration Initialize(string fileName, bool publishSerializedEvent = true)
         {
             using (StreamReader stream = new StreamReader(fileName))
             {
-                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName);
+                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishSerializedEvent);
                 config.ConfigurationFileName = fileName;
                 return config;
             }
@@ -379,8 +380,9 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="configXml"></param>
         /// <param name="configSchemaSource">A method that returns a string containing the config schema (xsd).</param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
+        /// <param name="publishSerializedEvent"></param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown")
+        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown", bool publishSerializedEvent = true)
         {
             configuration config;
 
@@ -409,10 +411,16 @@ namespace NewRelic.Agent.Core.Config
                 Log.Warn(ex, "An unknown error occurred when performing XML schema validation on config file {0}", NewRelicConfigFileName);
             }
 
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+            if (publishSerializedEvent)
+                PublishSerializedEvent(config);
 
             return config;
         }
+        public static void PublishSerializedEvent(configuration config)
+        {
+            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+        }
+
 
         private static void ValidateConfigXmlWithSchema(string configXml, string schemaXml)
         {
@@ -599,38 +607,11 @@ namespace NewRelic.Agent.Core.Config
             return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
         }
 
-        private bool GetOverride(string name, bool fallback)
-        {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null)
-            {
-                val = val.ToLower();
-            }
-
-            if (bool.TryParse(val, out var parsedValue))
-            {
-                return parsedValue;
-            }
-
-            if ("0" == val)
-            {
-                return false;
-            }
-
-            if ("1" == val)
-            {
-                return true;
-            }
-
-            return fallback;
-        }
-
         public bool Console
         {
             get
             {
-                return GetOverride("NEW_RELIC_LOG_CONSOLE", console);
+                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_CONSOLE", console);
             }
         }
 
@@ -638,7 +619,7 @@ namespace NewRelic.Agent.Core.Config
         {
             get
             {
-                return GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
+                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
             }
         }
 
@@ -649,7 +630,6 @@ namespace NewRelic.Agent.Core.Config
                 return auditLog;
             }
         }
-
     }
 
     // The configuration class is partial.  Part of it is implemented here,
@@ -660,6 +640,9 @@ namespace NewRelic.Agent.Core.Config
     // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
     public partial class configuration : IBootstrapConfig
     {
+        private string _awsLambdaFunctionName;
+        private string _serverlessModeEnvVariable;
+
         public string Xml { get; set; }
 
         [XmlIgnore]
@@ -694,6 +677,37 @@ namespace NewRelic.Agent.Core.Config
 
         [XmlIgnore]
         public ILogConfig LogConfig { get { return log; } }
+
+        [XmlIgnore]
+        public bool ServerlessModeEnabled
+        {
+            get
+            {
+                // according to the spec, environment variable takes precedence over config file
+                _serverlessModeEnvVariable ??= ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE");
+
+                if (_serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
+                {
+                    return enabledViaEnvVariable;
+                }
+
+                // env variable is not set, check for function name
+                if (!string.IsNullOrEmpty(AwsLambdaFunctionName))
+                    return true;
+
+                // fall back to config file
+                return serverlessModeEnabled;
+            }
+        }
+
+        [XmlIgnore]
+        public string AwsLambdaFunctionName
+        {
+            get
+            {
+                return _awsLambdaFunctionName ??= ConfigurationLoader.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
+            }
+        }
     }
 
     /// <summary>
@@ -709,6 +723,45 @@ namespace NewRelic.Agent.Core.Config
         public ConfigurationLoaderException(string message, Exception original)
             : base(message, original)
         {
+        }
+    }
+
+    public static class ConfigLoaderHelpers
+    {
+        public static bool GetOverride(string name, bool fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            return val.TryToBoolean(out var boolVal) ? boolVal : fallback;
+        }
+
+        public static bool TryToBoolean(this string val, out bool boolVal)
+        {
+            boolVal = false;
+
+            if (string.IsNullOrEmpty(val))
+            {
+                return false;
+            }
+
+            val = val.ToLower();
+
+            if (bool.TryParse(val, out boolVal))
+            {
+                return true;
+            }
+
+            switch (val)
+            {
+                case "0":
+                    boolVal = false;
+                    return true;
+                case "1":
+                    boolVal = true;
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 

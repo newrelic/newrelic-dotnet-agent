@@ -8,5 +8,7 @@ namespace NewRelic.Agent.Core.Config
         string AgentEnabledAt { get; }
 
         ILogConfig LogConfig { get; }
+
+        bool ServerlessModeEnabled {get; }
     }
 }

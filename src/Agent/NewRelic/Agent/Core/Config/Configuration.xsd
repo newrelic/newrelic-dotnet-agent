@@ -320,7 +320,7 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
-                        
+
                         <xs:attribute name="directory" type="xs:string" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1961,6 +1961,13 @@
                 </xs:simpleType>
             </xs:attribute>
 
+            <xs:attribute name="serverlessModeEnabled" type="xs:boolean" default="false">
+                <xs:annotation>
+                    <xs:documentation>
+                        Turns on/off serverless mode.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 </xs:schema>

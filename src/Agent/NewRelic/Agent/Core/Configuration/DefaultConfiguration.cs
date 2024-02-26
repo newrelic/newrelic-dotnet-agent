@@ -208,6 +208,8 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public bool ServerlessModeEnabled => _localConfiguration.ServerlessModeEnabled;
+
         private string _agentLicenseKey;
         public virtual string AgentLicenseKey
         {

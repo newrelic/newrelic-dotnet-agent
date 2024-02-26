@@ -146,7 +146,7 @@ namespace CompositeTests
 
             // Construct services
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container);
+            AgentServices.RegisterServices(_container, false);
 
             // Replace existing registrations with mocks before resolving any services
             _container.ReplaceInstanceRegistration(mockEnvironment);
@@ -171,7 +171,7 @@ namespace CompositeTests
             InstrumentationService = _container.Resolve<IInstrumentationService>();
             InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
 
-            AgentServices.StartServices(_container);
+            AgentServices.StartServices(_container, false);
 
             DisableAgentInitializer();
             InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
