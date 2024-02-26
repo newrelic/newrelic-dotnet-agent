@@ -108,7 +108,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<Environment, Environment>();
             container.Register<IConnectionHandler, ConnectionHandler>();
             container.Register<IConnectionManager, ConnectionManager>();
-            container.Register<IDataTransportService, DataTransportService>();
+
+// TODO: Determine whether we're in Lambda mode and register one IDataTransportService or the other
+            //container.Register<IDataTransportService, DataTransportService>();
+            container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();
             container.Register<ISimpleTimerFactory, SimpleTimerFactory>();
@@ -179,7 +183,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionService, TransactionService>();
             container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
             container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
-            container.Register<CommandService, CommandService>();
+
+            // TODO: Not needed in Lambda mode
+            //container.Register<CommandService, CommandService>();
+
             container.Register<ConfigurationTracker, ConfigurationTracker>();
             container.Register<IDatabaseService, DatabaseService>();
             container.Register<IErrorService, ErrorService>();
@@ -212,7 +219,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// </summary>
         public static void StartServices(IContainer container)
         {
-            container.Resolve<AssemblyResolutionService>();
+            //container.Resolve<AssemblyResolutionService>();
             container.Resolve<ITransactionFinalizer>();
             container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
@@ -224,14 +231,14 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			samplerStartThread.IsBackground = true;
 			samplerStartThread.Start();
 #else
-            container.Resolve<GCSamplerNetCore>().Start();
+            //container.Resolve<GCSamplerNetCore>().Start();
 #endif
-            container.Resolve<CpuSampler>().Start();
-            container.Resolve<MemorySampler>().Start();
-            container.Resolve<ThreadStatsSampler>().Start();
-            container.Resolve<ConfigurationTracker>();
-            container.Resolve<LiveInstrumentationServerConfigurationListener>();
-            container.Resolve<UpdatedLoadedModulesService>();
+            //container.Resolve<CpuSampler>().Start();
+            //container.Resolve<MemorySampler>().Start();
+            //container.Resolve<ThreadStatsSampler>().Start();
+            //container.Resolve<ConfigurationTracker>();
+            //container.Resolve<LiveInstrumentationServerConfigurationListener>();
+            //container.Resolve<UpdatedLoadedModulesService>();
         }
     }
 }

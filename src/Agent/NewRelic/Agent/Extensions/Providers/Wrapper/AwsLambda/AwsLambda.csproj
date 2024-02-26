@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>NewRelic.Providers.Wrapper.AwsLambda</AssemblyName>
+    <RootNamespace>NewRelic.Providers.Wrapper.AwsLambda</RootNamespace>
+    <Description>AWS Lambda Wrapper Provider for New Relic .NET Agent</Description>
+  </PropertyGroup>
+  <ItemGroup>
+		<Content Include="Instrumentation.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+		<ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+		<ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+	</ItemGroup>
+</Project>

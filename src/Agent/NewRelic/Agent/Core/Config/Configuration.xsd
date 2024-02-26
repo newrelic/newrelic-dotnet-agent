@@ -1923,6 +1923,14 @@
                 </xs:annotation>
             </xs:attribute>
 
+            <xs:attribute name="debugStartupDelaySeconds" type="xs:int" default="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Delays Agent initialization to allow a debugger to be attached.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+
             <xs:attribute name="threadProfilingEnabled" type="xs:boolean" default="true">
                 <xs:annotation>
                     <xs:documentation>

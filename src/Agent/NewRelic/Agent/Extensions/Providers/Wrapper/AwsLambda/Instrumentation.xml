@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+    <!--Attempt to auto-instrument the lambda runtime itself. -->
+    <tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.UserCodeLoaderInvoke">
+      <match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.Bootstrap.UserCodeLoader">
+        <exactMethodMatcher methodName="Invoke" />
+      </match>
+    </tracerFactory>
+
+    <!-- Cus4tom instrumentation approach.  Hardcoded for POC, would be added to the profiler via an environment variable in the real world-->
+    <!-- TODO: Figure out how to configure this from an environment variable at runtime -->
+    <tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod">
+      <match assemblyName="LambdaFunctionTestApp" className="LambdaFunctionTestApp.Function">
+        <exactMethodMatcher methodName="FunctionHandler" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

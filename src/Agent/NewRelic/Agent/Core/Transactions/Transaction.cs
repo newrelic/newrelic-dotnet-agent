@@ -161,6 +161,10 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 timer?.StopAndRecordMetric();
                 Agent._transactionTransformer.Transform(this);
+
+                // TODO: Only call if in serverless mode!
+                EventBus<ManualHarvestEvent>.Publish(new ManualHarvestEvent(Guid));
+                EventBus<FlushServerlessDataEvent>.Publish(new FlushServerlessDataEvent(Guid));
             };
 
             // The completion of transactions can be run on thread or off thread. We made this configurable.  

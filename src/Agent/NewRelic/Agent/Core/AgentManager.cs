@@ -18,7 +18,9 @@ using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace NewRelic.Agent.Core
 {
@@ -91,6 +93,7 @@ namespace NewRelic.Agent.Core
         /// </remarks>
         private AgentManager()
         {
+            // TODO: Check for Lambda mode *before* registering services so we can control which IDataTransport implementation gets registered
             _container = AgentServices.GetContainer();
             AgentServices.RegisterServices(_container);
 
@@ -114,6 +117,16 @@ namespace NewRelic.Agent.Core
                 catch { }
 
                 throw;
+            }
+
+            // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
+            if (config.debugStartupDelaySeconds > 0)
+            {
+                // writing directly to console, as Log output doesn't get flushed immediately. And, for some processes, even this doesn't write to the console. 
+                Console.WriteLine($"Delaying {config.debugStartupDelaySeconds} seconds. Attach debugger to {Process.GetCurrentProcess().MainModule?.FileName} now...");
+
+                Thread.Sleep(config.debugStartupDelaySeconds * 1000);
+                Debugger.Break(); // break the debugger, if one is attached
             }
 
             LoggerBootstrapper.ConfigureLogger(config.LogConfig);
@@ -167,14 +180,15 @@ namespace NewRelic.Agent.Core
 
             _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-            var commandService = _container.Resolve<CommandService>();
-            commandService.AddCommands(
-                new RestartCommand(),
-                new ShutdownCommand(),
-                new StartThreadProfilerCommand(_threadProfilingService),
-                new StopThreadProfilerCommand(_threadProfilingService),
-                new InstrumentationUpdateCommand(instrumentationService)
-            );
+            // TODO: Not needed in Lambda mode
+            //var commandService = _container.Resolve<CommandService>();
+            //commandService.AddCommands(
+            //    new RestartCommand(),
+            //    new ShutdownCommand(),
+            //    new StartThreadProfilerCommand(_threadProfilingService),
+            //    new StopThreadProfilerCommand(_threadProfilingService),
+            //    new InstrumentationUpdateCommand(instrumentationService)
+            //);
 
             StartServices();
             LogInitialized();
