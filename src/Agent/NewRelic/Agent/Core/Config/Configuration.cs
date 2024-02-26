@@ -1284,9 +1284,10 @@ namespace NewRelic.Agent.Core.Config
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationLog
     {
-        private bool enabledField;
         
         private string levelField;
+        
+        private bool enabledField;
         
         private string directoryField;
         
@@ -1296,15 +1297,24 @@ namespace NewRelic.Agent.Core.Config
         
         private bool auditLogField;
         
+        private configurationLogLogRollingStrategy logRollingStrategyField;
+        
+        private int maxLogFileSizeMBField;
+        
+        private int maxLogFilesField;
+        
         /// <summary>
         /// configurationLog class constructor
         /// </summary>
         public configurationLog()
         {
-            this.enabledField = true;
             this.levelField = "info";
+            this.enabledField = true;
             this.consoleField = false;
             this.auditLogField = false;
+            this.logRollingStrategyField = configurationLogLogRollingStrategy.size;
+            this.maxLogFileSizeMBField = 50;
+            this.maxLogFilesField = 4;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -1318,6 +1328,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.levelField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
             }
         }
         
@@ -1360,20 +1384,6 @@ namespace NewRelic.Agent.Core.Config
                 this.consoleField = value;
             }
         }
-
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
-        public bool enabled
-        {
-            get
-            {
-                return this.enabledField;
-            }
-            set
-            {
-                this.enabledField = value;
-            }
-        }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(false)]
@@ -1389,6 +1399,48 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(configurationLogLogRollingStrategy.size)]
+        public configurationLogLogRollingStrategy logRollingStrategy
+        {
+            get
+            {
+                return this.logRollingStrategyField;
+            }
+            set
+            {
+                this.logRollingStrategyField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(50)]
+        public int maxLogFileSizeMB
+        {
+            get
+            {
+                return this.maxLogFileSizeMBField;
+            }
+            set
+            {
+                this.maxLogFileSizeMBField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(4)]
+        public int maxLogFiles
+        {
+            get
+            {
+                return this.maxLogFilesField;
+            }
+            set
+            {
+                this.maxLogFilesField = value;
+            }
+        }
+        
         #region Clone method
         /// <summary>
         /// Create a clone of this configurationLog object
@@ -1398,6 +1450,19 @@ namespace NewRelic.Agent.Core.Config
             return ((configurationLog)(this.MemberwiseClone()));
         }
         #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public enum configurationLogLogRollingStrategy
+    {
+        
+        /// <remarks/>
+        size,
+        
+        /// <remarks/>
+        day,
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]

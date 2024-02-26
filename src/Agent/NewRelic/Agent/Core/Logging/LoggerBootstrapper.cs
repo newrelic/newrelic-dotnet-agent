@@ -203,7 +203,7 @@ namespace NewRelic.Agent.Core
                             {
                                 configuration
                                     .ExcludeAuditLog()
-                                    .ConfigureRollingLogSink(logFileName, FileLogLayout);
+                                    .ConfigureRollingLogSink(logFileName, FileLogLayout, config);
                             })
                         );
             }
@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core
                     configuration
                         .MinimumLevel.Fatal() // We've hijacked Fatal log level as the level to use when writing an audit log
                         .IncludeOnlyAuditLog()
-                        .ConfigureRollingLogSink(logFileName, AuditLogLayout);
+                        .ConfigureRollingLogSink(logFileName, AuditLogLayout, config);
                 });
         }
 
@@ -246,8 +246,9 @@ namespace NewRelic.Agent.Core
         /// <param name="loggerConfiguration"></param>
         /// <param name="fileName">The name of the file this appender will write to.</param>
         /// <param name="outputFormat"></param>
+        /// <param name="config"></param>
         /// <remarks>This does not call appender.ActivateOptions or add the appender to the logger.</remarks>
-        private static LoggerConfiguration ConfigureRollingLogSink(this LoggerConfiguration loggerConfiguration, string fileName, string outputFormat)
+        private static LoggerConfiguration ConfigureRollingLogSink(this LoggerConfiguration loggerConfiguration, string fileName, string outputFormat, ILogConfig config)
         {
             // check that the log file is accessible
             try
@@ -269,13 +270,14 @@ namespace NewRelic.Agent.Core
                 return loggerConfiguration
                     .WriteTo
                     .File(path: fileName,
-                            outputTemplate:outputFormat,
-                            fileSizeLimitBytes: 50 * 1024 * 1024,
+                            outputTemplate: outputFormat,
+                            fileSizeLimitBytes: config.LogRollingStrategy == LogRollingStrategy.Size ? config.MaxLogFileSizeMB > 0 ? config.MaxLogFileSizeMB * 1024 * 1024 : null : null,
                             encoding: Encoding.UTF8,
-                            rollOnFileSizeLimit: true,
-                            retainedFileCountLimit: 4, // TODO: Will make configurable
+                            rollOnFileSizeLimit: config.LogRollingStrategy == LogRollingStrategy.Size,
+                            retainedFileCountLimit: config.MaxLogFiles > 0 ? config.MaxLogFiles : null,
                             shared: true,
-                            buffered: false
+                            buffered: false,
+                            rollingInterval: config.LogRollingStrategy == LogRollingStrategy.Day ? RollingInterval.Day : RollingInterval.Infinite
                             );
             }
             catch (Exception exception)

@@ -147,21 +147,21 @@ namespace NewRelic.Agent.Core.Config
 
 #if NETSTANDARD2_0
 
-			try
-			{
-				var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
-				if (!File.Exists(fileName))
-				{
-					return null;
-				}
+            try
+            {
+                var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
+                if (!File.Exists(fileName))
+                {
+                    return null;
+                }
 
-				Log.Info("Configuration file found in path pointed to by {0} appSetting: {1}", Constants.AppSettingsConfigFile, fileName);
-				return fileName;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                Log.Info("Configuration file found in path pointed to by {0} appSetting: {1}", Constants.AppSettingsConfigFile, fileName);
+                return fileName;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 
 #else
             try
@@ -185,36 +185,36 @@ namespace NewRelic.Agent.Core.Config
         private static string TryGetAgentConfigFileFromAppRoot()
         {
 #if NETSTANDARD2_0
-			try
-			{
-				var filename = string.Empty;
+            try
+            {
+                var filename = string.Empty;
 
-				var entryAssembly = Assembly.GetEntryAssembly();
-				if (entryAssembly != null)
-				{
-					var directory = Path.GetDirectoryName(entryAssembly.Location);
-					filename = Path.Combine(directory, NewRelicConfigFileName);
-					if (File.Exists(filename))
-					{
-						Log.Info("Configuration file found in app/web root directory: {0}", filename);
-						return filename;
-					}
-				}
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
+                {
+                    var directory = Path.GetDirectoryName(entryAssembly.Location);
+                    filename = Path.Combine(directory, NewRelicConfigFileName);
+                    if (File.Exists(filename))
+                    {
+                        Log.Info("Configuration file found in app/web root directory: {0}", filename);
+                        return filename;
+                    }
+                }
 
-				var currentDirectory = Directory.GetCurrentDirectory();
-				filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
-				if (File.Exists(filename))
-				{
-					Log.Info("Configuration file found in app/web root directory: {0}", filename);
-					return filename;
-				}
+                var currentDirectory = Directory.GetCurrentDirectory();
+                filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
+                if (File.Exists(filename))
+                {
+                    Log.Info("Configuration file found in app/web root directory: {0}", filename);
+                    return filename;
+                }
 
-				return null;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 #else
             try
             {
@@ -577,14 +577,14 @@ namespace NewRelic.Agent.Core.Config
             }
 
 #if NETSTANDARD2_0
-			try
-			{
-				name = AppDomain.CurrentDomain.FriendlyName;
-			}
-			catch (Exception)
-			{
-				name = _processStatic.GetCurrentProcess().ProcessName;
-			}
+            try
+            {
+                name = AppDomain.CurrentDomain.FriendlyName;
+            }
+            catch (Exception)
+            {
+                name = _processStatic.GetCurrentProcess().ProcessName;
+            }
 #else
             if (HttpRuntime.AppDomainAppId != null)
             {
@@ -626,6 +626,29 @@ namespace NewRelic.Agent.Core.Config
             return fallback;
         }
 
+        private string GetOverride(string name, string fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            if (val != null)
+            {
+                return val;
+            }
+
+            return fallback;
+        }
+        private int GetOverride(string name, int fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            if (val != null && int.TryParse(val, out var parsedValue))
+            {
+                return parsedValue;
+            }
+
+            return fallback;
+        }
+
         public bool Console
         {
             get
@@ -650,6 +673,21 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
+        public int MaxLogFileSizeMB => GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", maxLogFileSizeMB);
+        public int MaxLogFiles => GetOverride("NEW_RELIC_LOG_MAX_FILES", maxLogFiles);
+        public LogRollingStrategy LogRollingStrategy
+        {
+            get
+            {
+                var strategy = GetOverride("NEW_RELIC_LOG_ROLLING_STRATEGY", logRollingStrategy.ToString());
+                if (Enum.TryParse(strategy, true, out LogRollingStrategy result))
+                {
+                    return result;
+                }
+
+                throw new ConfigurationLoaderException($"Invalid value for logRollingStrategy or NEW_RELIC_LOG_ROLLING_STRATEGY: {strategy}");
+            }
+        }
     }
 
     // The configuration class is partial.  Part of it is implemented here,
@@ -697,7 +735,7 @@ namespace NewRelic.Agent.Core.Config
     }
 
     /// <summary>
-    /// Thrown when there is soime problem loading the configuration.
+    /// Thrown when there is some problem loading the configuration.
     /// </summary>
     public class ConfigurationLoaderException : Exception
     {
