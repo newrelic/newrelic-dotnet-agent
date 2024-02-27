@@ -6,25 +6,25 @@
 using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using OpenQA.Selenium.Edge;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class BasicAspWebServiceFixture : RemoteApplicationFixture
     {
-        private EdgeDriver _driver;
+        private IWebDriver _driver;
         public BasicAspWebServiceFixture() : base(new RemoteWebApplication("BasicAspWebService", ApplicationType.Bounded))
         {
-            var driverService = EdgeDriverService.CreateDefaultService();
-            driverService.HideCommandPromptWindow = true;
-            driverService.SuppressInitialDiagnosticInformation = true;
-            driverService.InitializationTimeout = TimeSpan.FromMinutes(2);
-            driverService.Port = RandomPortGenerator.NextPort();
+            var chromeDriverService = ChromeDriverService.CreateDefaultService();
+            chromeDriverService.HideCommandPromptWindow = true;
+            chromeDriverService.SuppressInitialDiagnosticInformation = true;
+            chromeDriverService.Port = RandomPortGenerator.NextPort();
 
-            var options = new EdgeOptions();
-            options.AddArgument("headless");
+            var chromeOptions = new ChromeOptions();
+            chromeOptions.AddArgument("headless");
 
-            _driver = new EdgeDriver(driverService, options, TimeSpan.FromMinutes(2));
+            _driver = new ChromeDriver(chromeDriverService, chromeOptions, TimeSpan.FromMinutes(2));
         }
 
         public void InvokeAsyncCall()
