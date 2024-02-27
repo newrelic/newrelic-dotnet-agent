@@ -545,7 +545,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreAspNetCore6PlusWrapperComponent" Guid="{3B7C5E60-BA9D-4B1C-8B16-B16025B075C0}">
         <File Id="CoreAspNetCore6PlusWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.dll"/>
       </Component>
-
+      <Component Id="CoreAwsLambdaWrapperComponent" Guid="{778F507F-97D7-48B2-BE51-46D6DAB2D234}">
+        <File Id="CoreAwsLambdaWrapperFile" Name="NewRelic.Providers.Wrapper.AwsLambda.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll"/>
+      </Component>
       <!-- Reference libraries -->
       <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
         <File Id="CoreNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Core.dll"/>
@@ -718,6 +720,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAspNetCore6PlusInstrumentationComponent" Guid="{1CC1E672-5AA5-4F6F-A736-748EA556653A}">
         <File Id="CoreAspNetCore6PlusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAwsLambdaInstrumentationComponent" Guid="{FD3BEB1B-B093-4FF6-A1FA-76E621CF26D6}">
+        <File Id="CoreAwsLambdaInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
