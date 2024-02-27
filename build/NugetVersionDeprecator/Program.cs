@@ -1,4 +1,4 @@
-﻿// Copyright 2023 New Relic, Inc. All rights reserved.
+// Copyright 2023 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Text;
@@ -54,7 +54,15 @@ internal class Program
                     Console.WriteLine(message);
 
                     if (!options.TestMode)
-                        await CreateGhIssueAsync(message, options.GithubToken);
+                    {
+                        var success = await CreateGhIssueAsync(message, options.GithubToken);
+                        if (!success)
+                        {
+                            Console.WriteLine("Error creating GitHub issue.");
+                            return -1;
+                        }
+                    }
+
                 }
             }
             else
@@ -155,7 +163,7 @@ internal class Program
             new PackageDeprecationInfo() { PackageName = p.PackageId, PackageVersion = p.Version.ToString() });
     }
 
-    static async Task CreateGhIssueAsync(string message, string githubToken)
+    static async Task<bool> CreateGhIssueAsync(string message, string githubToken)
     {
         var ghClient = new GitHubClient(new Octokit.ProductHeaderValue("NugetVersionDeprecator"));
         var tokenAuth = new Credentials(githubToken);
@@ -170,9 +178,18 @@ internal class Program
         newIssue.Labels.Add("Deprecation");
         newIssue.Labels.Add("Nuget");
 
-        var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+        try
+        {
+            var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+            Console.WriteLine($"Created new GitHub Issue #{issue.Number} with title {issue.Title}.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Caught exception attepting to create GitHub issue: {ex.Message}.");
+            return false;
+        }
 
-        Console.WriteLine($"Created new GitHub Issue #{issue.Number} with title {issue.Title}.");
     }
 
     static Configuration LoadConfiguration(string path)
