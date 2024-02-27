@@ -20,3 +20,7 @@ updates:
     directory: /src/NewRelic.Core
     schedule:
       interval: weekly
+  - package-ecosystem: nuget
+    directory: /build
+    schedule:
+      interval: weekly
