@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.21.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.2...v10.21.0) (2024-02-26)
+
+
+### Notice
+
+* [Browser monitoring instrumentation](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent) for **ASP.NET CORE v6+ web applications** is disabled by default but can be [manually enabled by following these instructions](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent/#enable_netcore6plus). ([da8dd44](https://github.com/newrelic/newrelic-dotnet-agent/commit/da8dd446acf2f1a491c213838220294d67e7c1c5))
+
+
+### New features
+
+* Add new configuration options for logging to control log file size, log retention and log rollover strategy. Refer to our [log configuration documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#log) for details. ([#1880](https://github.com/newrelic/newrelic-dotnet-agent/issues/1880)) ([#2264](https://github.com/newrelic/newrelic-dotnet-agent/issues/2264)) ([d33714f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d33714f066f9cb521e2154cbae0570b84a07dd8d))
+* Allows instrumentation to be disabled from a newrelic.config file. ([#2250](https://github.com/newrelic/newrelic-dotnet-agent/issues/2250)) ([1632adb](https://github.com/newrelic/newrelic-dotnet-agent/commit/1632adb94827c159e66fc000cb216caac5d80865))
+
+
+### Fixes
+
+* Certain Profiler log messages did not print correctly when running under Linux. ([#2200](https://github.com/newrelic/newrelic-dotnet-agent/issues/2200)) ([#2209](https://github.com/newrelic/newrelic-dotnet-agent/issues/2209)) ([1b75bf9](https://github.com/newrelic/newrelic-dotnet-agent/commit/1b75bf95c7b219c7bf310b1a8cd2fa1a95b11768))
+* Use original regex to get container id from cgroup v1 in fallback case ([#2263](https://github.com/newrelic/newrelic-dotnet-agent/issues/2263)) ([9ecb88d](https://github.com/newrelic/newrelic-dotnet-agent/commit/9ecb88d5ceb582597937c7ac89a9ab0de6c98cb5))
+
 ## [10.20.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.1...v10.20.2) (2024-01-16)
 
 
