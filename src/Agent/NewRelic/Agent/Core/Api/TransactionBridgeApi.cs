@@ -203,32 +203,5 @@ namespace NewRelic.Agent.Core.Api
                 }
             }
         }
-
-        public string TransactionId
-        {
-            get
-            {
-                try
-                {
-                    using (new IgnoreWork())
-                    {
-                        _apiSupportabilityMetricCounters.Record(ApiMethod.TransactionId);
-                        return _transaction.Guid;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        Log.Error(ex, "Failed to get Transaction ID (Guid)");
-                    }
-                    catch (Exception)
-                    {
-                        //Swallow the error
-                    }
-                    return null;
-                }
-            }
-        }
     }
 }

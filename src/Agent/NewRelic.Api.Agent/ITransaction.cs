@@ -80,10 +80,5 @@ namespace NewRelic.Api.Agent
         /// </summary>
         /// <param name="userid">The User Id for this transaction.</param>
         void SetUserId(string userid);
-
-        /// <summary>
-        /// Gets the Transaction ID (GUID).
-        /// </summary>
-        string TransactionId { get; }
     }
 }

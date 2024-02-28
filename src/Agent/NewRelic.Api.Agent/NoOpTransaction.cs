@@ -28,13 +28,5 @@ namespace NewRelic.Api.Agent
         public void SetUserId(string userid)
         {
         }
-
-        public string TransactionId
-        {
-            get
-            {
-                return string.Empty;
-            }
-        }
     }
 }

@@ -118,30 +118,5 @@ namespace NewRelic.Api.Agent
                 _isSetUserIdAvailable = false;
             }
         }
-
-        private static bool _isTransactionIdAvailable = true;
-        public string TransactionId
-        {
-            get
-            {
-                if (!_isTransactionIdAvailable) return _noOpTransaction.TransactionId;
-
-                try
-                {
-                    var wrappedGuid = _wrappedTransaction.Guid;
-                    if (wrappedGuid != null)
-                    {
-                        return (string)wrappedGuid;
-                    }
-                }
-                catch (RuntimeBinderException)
-                {
-                    _isTransactionIdAvailable = false;
-                }
-
-                return _noOpTransaction.TransactionId;
-            }
-        }
-
     }
 }
