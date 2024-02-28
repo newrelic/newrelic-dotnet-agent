@@ -374,7 +374,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         // See https://new-relic.atlassian.net/browse/NR-221128 and https://new-relic.atlassian.net/browse/NR-230908
         [Test]
-        public void GetVendors_GetDockerVendorInfo_ParsesV1WithFallback_IfCpuMissing()
+        public void GetVendors_GetDockerVendorInfo_ParsesV1_IfCpuMissing()
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
