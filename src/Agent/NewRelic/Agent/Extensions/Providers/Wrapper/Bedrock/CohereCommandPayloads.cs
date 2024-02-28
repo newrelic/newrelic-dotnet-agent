@@ -21,42 +21,22 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class CohereCommandResponsePayload : IResponsePayload
     {
-        private string[] _responses;
-        public string[] Responses
+        private ResponseData[] _responses;
+        public ResponseData[] Responses
         {
             get
             {
-                return _responses ??= Generations.Select(g => g.Text).ToArray();
+                return _responses ??= Generations.Select(g => new ResponseData { Content = g.Text, TokenCount = null }).ToArray();
             }
             set { }
         }
 
         // Cohere Command does not expose token counts
-        public int PromptTokenCount
+        public int? PromptTokenCount
         {
             get
             {
-                return 0;
-            }
-            set { }
-        }
-
-        // Cohere Command does not expose token counts
-        public int CompletionTokenCount
-        {
-            get
-            {
-                return 0;
-            }
-            set { }
-        }
-
-        // Cohere Command does not expose token counts
-        public int TotalTokenCount
-        {
-            get
-            {
-                return 0;
+                return null;
             }
             set { }
         }

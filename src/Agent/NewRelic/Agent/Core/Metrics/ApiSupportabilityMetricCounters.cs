@@ -37,7 +37,8 @@ namespace NewRelic.Agent.Core.Metrics
         SpanSetName = 23,
         SetErrorGroupCallback = 24,
         SetUserId = 25,
-        TransactionId = 26
+        TransactionId = 26,
+        SetLlmTokenCountingCallback = 27
     }
 
     public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource

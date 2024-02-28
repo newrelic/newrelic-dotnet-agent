@@ -21,47 +21,23 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class JurassicResponsePayload : IResponsePayload
     {
-        private string[] _responses;
-        public string[] Responses
+        private ResponseData[] _responses;
+        public ResponseData[] Responses
         {
             get
             {
-                return _responses ??= Completions.Select(c => c.Data.Text).ToArray();
+                return _responses ??= Completions.Select(c => new ResponseData { Content = c.Data.Text, TokenCount = c.Data.Tokens.Count }).ToArray();
             }
             set { }
         }
 
-        public int PromptTokenCount
+        public int? PromptTokenCount
         {
             get
             {
                 return Prompt.Tokens.Count;
             }
             set { }
-        }
-
-        // Sum of all response tokens
-        private int _completionTokenCount;
-        public int CompletionTokenCount
-        {
-            get
-            {
-                if (_completionTokenCount == 0)
-                {
-                    _completionTokenCount = Completions.Sum(c => c.Data.Tokens.Count);
-                }
-
-                return _completionTokenCount;
-            }
-            set { }
-        }
-
-        public int TotalTokenCount
-        {
-            get
-            {
-                return PromptTokenCount + CompletionTokenCount;
-            }
         }
 
         public string StopReason

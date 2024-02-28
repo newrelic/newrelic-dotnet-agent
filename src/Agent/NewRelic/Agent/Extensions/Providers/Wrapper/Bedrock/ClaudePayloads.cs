@@ -20,12 +20,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class ClaudeResponsePayload : IResponsePayload
     {
-        private string[] _responses;
-        public string[] Responses
+        private ResponseData[] _responses;
+        public ResponseData[] Responses
         {
             get
             {
-                return _responses ??= [Completion];
+                return _responses ??= [new ResponseData { Content = Completion, TokenCount = null }];
             }
             set { }
         }
@@ -34,31 +34,11 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         public string Completion { get; set; }
 
         // Anthropic Claude does not expose token counts
-        public int PromptTokenCount
+        public int? PromptTokenCount
         {
             get
             {
-                return 0;
-            }
-            set { }
-        }
-
-        // Anthropic Claude does not expose token counts
-        public int CompletionTokenCount
-        {
-            get
-            {
-                return 0;
-            }
-            set { }
-        }
-
-        // Anthropic Claude does not expose token counts
-        public int TotalTokenCount
-        {
-            get
-            {
-                return 0;
+                return null;
             }
             set { }
         }

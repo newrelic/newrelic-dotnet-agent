@@ -417,10 +417,46 @@ namespace NewRelic.Agent.Core
 
         #region ExperimentalApi
 
-        public void RecordLlmEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
+        public void RecordLlmEvent(string eventType, IDictionary<string, object> attributes)
         {
-            // We want to store these with transaction priority maybe?
-            _customEventTransformer.Transform(eventType, attributes, 1.0f);
+            if (!_configurationService.Configuration.AiMonitoringEnabled)
+            {
+                return;
+            }
+
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            transaction.SetLlmTransaction(true);
+
+            // Any custom attributes that are prefixed with "llm." must be added to the event
+            var transactionAttributes = transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();
+            foreach (var attribute in transactionAttributes)
+            {
+                if (attribute.Key.StartsWith("llm.", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    attributes.Add(attribute.Key, attribute.Value);
+                }
+            }
+
+            // check the event type first since completions don't have token_count
+            if ((eventType == "LlmChatCompletionMessage" || eventType == "LlmEmbedding")
+                && attributes["token_count"] == null 
+                && _configurationService.Configuration.LlmTokenCountingCallback != null)
+            {
+                // message and embedding events have different attribute names for the content of the message
+                var content = eventType == "LlmChatCompletionMessage" ? (string)attributes["content"] : (string)attributes["input"];
+
+                // messages only have response models, embeddings have both
+                var model = attributes.TryGetValue("request.model", out var requestModel) ? (string)requestModel : (string)attributes["response.model"];
+
+                // Use a nullable so that the CustomEvent code will automatically remove the attribute if the callback returns null
+                var tokenCount = _configurationService.Configuration.LlmTokenCountingCallback?.Invoke(model, content);
+                if (tokenCount.HasValue && tokenCount.Value > 0)
+                {
+                    attributes["token_count"] = tokenCount;
+                }
+            }
+            
+            _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
         }
 
         public ISimpleSchedulingService SimpleSchedulingService

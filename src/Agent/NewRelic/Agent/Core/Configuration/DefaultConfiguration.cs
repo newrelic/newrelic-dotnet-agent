@@ -2025,6 +2025,29 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        #region AI Monitoring
+
+        public bool AiMonitoringEnabled
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED");
+            }
+        }
+        
+        public bool AiMonitoringStreamingEnabled
+        {
+            get
+            {
+                return AiMonitoringEnabled &&
+                    EnvironmentOverrides(_localConfiguration.aiMonitoring.streaming.enabled, "NEW_RELIC_AI_MONITORING_STREAMING_ENABLED");
+            }
+        }
+
+        public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
+
+        #endregion
+
         public virtual bool AppDomainCachingDisabled
         {
             get

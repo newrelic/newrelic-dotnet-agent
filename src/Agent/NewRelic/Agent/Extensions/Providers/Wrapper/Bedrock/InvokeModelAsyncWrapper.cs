@@ -1,11 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.BedrockRuntime.Model;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
+using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
@@ -23,17 +24,13 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            if (instrumentedMethodCall.MethodCall.MethodArguments[0] is not InvokeModelRequest invokeModelRequest)
-            {
-                return Delegates.NoOp;
-            }
-
             if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
+            var invokeModelRequest = (InvokeModelRequest)instrumentedMethodCall.MethodCall.MethodArguments[0];
             var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
@@ -41,10 +38,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             );
 
             // required per spec
-            transaction.SetLlmTransaction(true);
-
-            // required per spec
-            var version = GetLibraryVersion(instrumentedMethodCall);
+            var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
             
             return Delegates.GetAsyncDelegateFor<Task<InvokeModelResponse>>(
@@ -59,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             {
                 if (responseTask.IsFaulted)
                 {
-                    HandleError(segment, invokeModelRequest, responseTask, transaction, agent);
+                    HandleError(segment, invokeModelRequest, responseTask, agent);
                 }
 
                 var invokeModelResponse = responseTask.Result;
@@ -73,33 +67,97 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 // We need the duration so we end the segment before creating the events.
                 segment.End();
 
-                ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, transaction, agent);
+                ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, agent);
             }
         }
 
-        private void ProcessInvokeModel(ISegment segment, InvokeModelRequest invokeModelRequest, InvokeModelResponse invokeModelResponse, ITransaction transaction, IAgent agent)
+        private void ProcessInvokeModel(ISegment segment, InvokeModelRequest invokeModelRequest, InvokeModelResponse invokeModelResponse, IAgent agent)
         {
-            var requestPayload = Helpers.GetRequestPayload(invokeModelRequest);
+            var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
                 return;
             }
 
-            var responsePayload = Helpers.GetResponsePayload(invokeModelRequest.ModelId, invokeModelResponse);
+            var responsePayload = GetResponsePayload(invokeModelRequest.ModelId, invokeModelResponse);
             if (responsePayload == null)
             {
                 return;
             }
 
-            var completionId = Helpers.CreateChatCompletionEvent(agent, segment, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
-            Helpers.CreateChatMessageEvents(agent, segment.SpanId, transaction, completionId, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+            // Embedding - does not create the other events
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
+            {
+                EventHelper.CreateEmbeddingEvent(
+                    agent,
+                    segment,
+                    invokeModelResponse.ResponseMetadata.RequestId,
+                    requestPayload.Prompt,
+                    invokeModelRequest.ModelId,
+                    invokeModelRequest.ModelId,
+                    "bedrock",
+                    responsePayload.Responses[0].TokenCount,
+                    false,
+                    null // not available in AWS
+                );
+
+                return;
+            }
+
+            var completionId = EventHelper.CreateChatCompletionEvent(
+                agent,
+                segment,
+                invokeModelResponse.ResponseMetadata.RequestId,
+                requestPayload.Temperature,
+                requestPayload.MaxTokens,
+                invokeModelRequest.ModelId,
+                invokeModelRequest.ModelId,
+                1 + responsePayload.Responses.Length,
+                responsePayload.StopReason,
+                "bedrock",
+                false,
+                null // not available in AWS
+            );
+
+            // Prompt
+            EventHelper.CreateChatMessageEvent(
+                    agent,
+                    segment,
+                    invokeModelResponse.ResponseMetadata.RequestId,
+                    invokeModelRequest.ModelId,
+                    requestPayload.Prompt,
+                    string.Empty,
+                    0,
+                    completionId,
+                    responsePayload.PromptTokenCount,
+                    true
+                );
+
+            // Responses
+            for (var i = 0; i < responsePayload.Responses.Length; i++)
+            {
+                EventHelper.CreateChatMessageEvent(
+                    agent,
+                    segment,
+                    invokeModelResponse.ResponseMetadata.RequestId,
+                    invokeModelRequest.ModelId,
+                    responsePayload.Responses[i].Content,
+                    string.Empty,
+                    i + 1,
+                    completionId,
+                    responsePayload.Responses[i].TokenCount,
+                    true
+                );
+            }
         }
 
-        private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, ITransaction transaction, IAgent agent)
+        private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, IAgent agent)
         {
-            // This is not fully fleshed out.  it is just a stub.
+            //This is not fully fleshed out.  it is just a stub.
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
 
-            var requestPayload = Helpers.GetRequestPayload(invokeModelRequest);
+
+            var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
                 return;
@@ -108,16 +166,90 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             IResponsePayload responsePayload = null;
             InvokeModelResponse invokeModelResponse = null;
 
-            var completionId = Helpers.CreateChatCompletionEvent(agent, segment, transaction, requestPayload, responsePayload, invokeModelRequest, invokeModelResponse);
+            _= EventHelper.CreateChatCompletionEvent(
+                agent,
+                segment,
+                invokeModelResponse.ResponseMetadata.RequestId,
+                requestPayload.Temperature,
+                requestPayload.MaxTokens,
+                invokeModelRequest.ModelId,
+                invokeModelRequest.ModelId,
+                1 + responsePayload.Responses.Length,
+                responsePayload.StopReason,
+                "bedrock",
+                false,
+                null
+            );
         }
 
-        private string GetLibraryVersion(InstrumentedMethodCall methodCall)
+        private static IRequestPayload GetRequestPayload(InvokeModelRequest invokeModelRequest)
         {
-            var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
-            var versionString = "Version=";
-            var start = fullName.IndexOf(versionString) + versionString.Length;
-            var length = fullName.IndexOf(',', start) - start;
-            return fullName.Substring(start, length);
+            if (invokeModelRequest.ModelId.StartsWith("meta.llama2"))
+            {
+                return JsonSerializer.Deserialize<Llama2RequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            if (invokeModelRequest.ModelId.StartsWith("cohere.command"))
+            {
+                return JsonSerializer.Deserialize<CohereCommandRequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            if (invokeModelRequest.ModelId.StartsWith("anthropic.claude"))
+            {
+                return JsonSerializer.Deserialize<ClaudeRequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-text"))
+            {
+                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text"))
+            {
+                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            if (invokeModelRequest.ModelId.StartsWith("ai21.j2"))
+            {
+                return JsonSerializer.Deserialize<JurassicRequestPayload>(invokeModelRequest.Body.ToArray());
+            }
+
+            return null;
+        }
+
+        private static IResponsePayload GetResponsePayload(string model, InvokeModelResponse invokeModelResponse)
+        {
+            if (model.StartsWith("meta.llama2"))
+            {
+                return JsonSerializer.Deserialize<Llama2ResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            if (model.StartsWith("cohere.command"))
+            {
+                return JsonSerializer.Deserialize<CohereCommandResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            if (model.StartsWith("anthropic.claude"))
+            {
+                return JsonSerializer.Deserialize<ClaudeResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            if (model.StartsWith("amazon.titan-text"))
+            {
+                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            if (model.StartsWith("amazon.titan-embed-text"))
+            {
+                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            if (model.StartsWith("ai21.j2"))
+            {
+                return JsonSerializer.Deserialize<JurassicResponsePayload>(invokeModelResponse.Body.ToArray());
+            }
+
+            return null;
         }
     }
 }

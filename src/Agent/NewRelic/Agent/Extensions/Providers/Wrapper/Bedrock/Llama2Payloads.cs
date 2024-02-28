@@ -20,12 +20,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public class Llama2ResponsePayload : IResponsePayload
     {
-        private string[] _responses;
-        public string[] Responses
+        private ResponseData[] _responses;
+        public ResponseData[] Responses
         {
             get
             {
-                return _responses ??= [Generation];
+                return _responses ??= [new ResponseData { Content = Generation, TokenCount = CompletionTokenCount }];
             }
             set { }
         }
@@ -34,18 +34,10 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         public string Generation { get; set; }
 
         [JsonPropertyName("prompt_token_count")]
-        public int PromptTokenCount { get; set; }
+        public int? PromptTokenCount { get; set; }
 
         [JsonPropertyName("generation_token_count")]
         public int CompletionTokenCount { get; set; }
-
-        public int TotalTokenCount
-        {
-            get
-            {
-                return PromptTokenCount + CompletionTokenCount;
-            }
-        }
 
         [JsonPropertyName("stop_reason")]
         public string StopReason { get; set; }

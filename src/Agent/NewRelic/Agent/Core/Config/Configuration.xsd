@@ -1587,6 +1587,46 @@
                     </xs:complexType>
                 </xs:element>
 
+
+                <xs:element name="aiMonitoring" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Allows configuration of AI monitoring instrumentation.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="streaming" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        When enabled, AI monitoring of streams occurs.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether or not AI monitoring of streams is enabled.
+                                                Defaults to true.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Controls whether or not AI monitoring features are enabled.
+                                    When set to 'false', all AI monitoring sub-features are disabled.
+                                    Defaults to false.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+                
                 <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>

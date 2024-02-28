@@ -206,5 +206,9 @@ namespace NewRelic.Agent.Configuration
         TimeSpan UpdateLoadedModulesCycle { get; }
         TimeSpan StackExchangeRedisCleanupCycle { get; }
         bool LoggingEnabled { get; }
+
+        bool AiMonitoringEnabled { get; }
+        bool AiMonitoringStreamingEnabled { get; }
+        public Func<string, string, int> LlmTokenCountingCallback { get; }
     }
 }

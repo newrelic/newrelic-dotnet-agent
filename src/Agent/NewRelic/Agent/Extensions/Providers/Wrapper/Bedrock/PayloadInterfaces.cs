@@ -16,14 +16,17 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
     public interface IResponsePayload
     {
-        string[] Responses { get; set; }
+        ResponseData[] Responses { get; set; }
 
-        int TotalTokenCount { get; }
-
-        int PromptTokenCount { get; set; }
-
-        int CompletionTokenCount { get; set; }
+        int? PromptTokenCount { get; set; }
 
         string StopReason { get; set; }
+    }
+
+    public class ResponseData
+    {
+        public string Content { get; set; }
+
+        public int? TokenCount { get; set; }
     }
 }
