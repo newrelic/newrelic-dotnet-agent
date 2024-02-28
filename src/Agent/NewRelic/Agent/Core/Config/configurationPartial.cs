@@ -15,7 +15,7 @@
     //
     // Property names such as "agentEnabled" come to us from Configuration.xsd via Configuration.cs.
     // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
-    public partial class configuration : IBootstrapConfig
+    public partial class configuration
     {
         private string _awsLambdaFunctionName;
         private string _serverlessModeEnvVariable;
