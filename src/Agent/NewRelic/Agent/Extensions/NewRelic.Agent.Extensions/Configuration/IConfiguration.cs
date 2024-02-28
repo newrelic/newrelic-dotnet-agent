@@ -12,6 +12,9 @@ namespace NewRelic.Agent.Configuration
         IReadOnlyDictionary<string, string> GetAppSettings();
         object AgentRunId { get; }
         bool AgentEnabled { get; }
+
+        bool ServerlessModeEnabled { get; }
+
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
         string ApplicationNamesSource { get; }
@@ -196,7 +199,7 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<string> ContextDataExclude { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
-        bool CodeLevelMetricsEnabled {  get; }
+        bool CodeLevelMetricsEnabled { get; }
         TimeSpan MetricsHarvestCycle { get; }
         TimeSpan TransactionTracesHarvestCycle { get; }
         TimeSpan ErrorTracesHarvestCycle { get; }

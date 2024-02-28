@@ -107,11 +107,11 @@ namespace NewRelic.Agent.Core.Config
         {
             ValueWithProvenance<string> value = GetWebConfigAppSetting(key);
 #if NETFRAMEWORK
-			if (value.Value == null)
-			{
-				value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
-					"ConfigurationManager app setting");
-			}
+            if (value.Value == null)
+            {
+                value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
+                    "ConfigurationManager app setting");
+            }
 #else
             if (value?.Value == null)
             {
@@ -311,7 +311,7 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        public static configuration Initialize()
+        public static configuration Initialize(bool publishDeserializedEvent = true)
         {
             var fileName = string.Empty;
             try
@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core.Config
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
-                return Initialize(fileName);
+                return Initialize(fileName, publishDeserializedEvent);
             }
             catch (FileNotFoundException ex)
             {
@@ -347,13 +347,14 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize the configuration by reading xml contained in the file named fileName.
         /// </summary>
         /// <param name="fileName"></param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        public static configuration Initialize(string fileName)
+        public static configuration Initialize(string fileName, bool publishDeserializedEvent = true)
         {
             using (StreamReader stream = new StreamReader(fileName))
             {
-                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName);
+                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishDeserializedEvent);
                 config.ConfigurationFileName = fileName;
                 return config;
             }
@@ -379,8 +380,9 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="configXml"></param>
         /// <param name="configSchemaSource">A method that returns a string containing the config schema (xsd).</param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown")
+        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown", bool publishDeserializedEvent = true)
         {
             configuration config;
 
@@ -409,10 +411,16 @@ namespace NewRelic.Agent.Core.Config
                 Log.Warn(ex, "An unknown error occurred when performing XML schema validation on config file {0}", NewRelicConfigFileName);
             }
 
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+            if (publishDeserializedEvent)
+                PublishDeserializedEvent(config);
 
             return config;
         }
+        public static void PublishDeserializedEvent(configuration config)
+        {
+            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+        }
+
 
         private static void ValidateConfigXmlWithSchema(string configXml, string schemaXml)
         {
@@ -599,61 +607,11 @@ namespace NewRelic.Agent.Core.Config
             return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
         }
 
-        private bool GetOverride(string name, bool fallback)
-        {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null)
-            {
-                val = val.ToLower();
-            }
-
-            if (bool.TryParse(val, out var parsedValue))
-            {
-                return parsedValue;
-            }
-
-            if ("0" == val)
-            {
-                return false;
-            }
-
-            if ("1" == val)
-            {
-                return true;
-            }
-
-            return fallback;
-        }
-
-        private string GetOverride(string name, string fallback)
-        {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null)
-            {
-                return val;
-            }
-
-            return fallback;
-        }
-        private int GetOverride(string name, int fallback)
-        {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null && int.TryParse(val, out var parsedValue))
-            {
-                return parsedValue;
-            }
-
-            return fallback;
-        }
-
         public bool Console
         {
             get
             {
-                return GetOverride("NEW_RELIC_LOG_CONSOLE", console);
+                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_CONSOLE", console);
             }
         }
 
@@ -661,7 +619,7 @@ namespace NewRelic.Agent.Core.Config
         {
             get
             {
-                return GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
+                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
             }
         }
 
@@ -673,13 +631,13 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-        public int MaxLogFileSizeMB => GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", maxLogFileSizeMB);
-        public int MaxLogFiles => GetOverride("NEW_RELIC_LOG_MAX_FILES", maxLogFiles);
+        public int MaxLogFileSizeMB => ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", maxLogFileSizeMB);
+        public int MaxLogFiles => ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILES", maxLogFiles);
         public LogRollingStrategy LogRollingStrategy
         {
             get
             {
-                var strategy = GetOverride("NEW_RELIC_LOG_ROLLING_STRATEGY", logRollingStrategy.ToString());
+                var strategy = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ROLLING_STRATEGY", logRollingStrategy.ToString());
                 if (Enum.TryParse(strategy, true, out LogRollingStrategy result))
                 {
                     return result;
@@ -688,50 +646,6 @@ namespace NewRelic.Agent.Core.Config
                 throw new ConfigurationLoaderException($"Invalid value for logRollingStrategy or NEW_RELIC_LOG_ROLLING_STRATEGY: {strategy}");
             }
         }
-    }
-
-    // The configuration class is partial.  Part of it is implemented here,
-    // and another part is autogenerated from Configuration.xsd into Configuration.cs.
-    // Beware the tarpit surrounding the case of property names, as different cases reflect
-    // different origins of the property names.
-    // Property names such as "agentEnabled" come to us from Configuration.xsd via Configuration.cs.
-    // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
-    public partial class configuration : IBootstrapConfig
-    {
-        public string Xml { get; set; }
-
-        [XmlIgnore]
-        public string ConfigurationFileName { get; set; }
-
-        public configuration Initialize(string xml, string provenance)
-        {
-            Xml = xml;
-
-            if (log == null)
-                log = new configurationLog();
-
-            try
-            {
-                var enabledProvenance = ConfigurationLoader.GetConfigSetting(Constants.AppSettingsAgentEnabled);
-                if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
-                {
-                    agentEnabled = false;
-                    AgentEnabledAt = enabledProvenance.Provenance;
-                }
-            }
-            catch
-            {
-                Log.Error($"Failed to read {Constants.AppSettingsAgentEnabled} from local config.");
-            }
-
-            return this;
-        }
-
-        [XmlIgnore]
-        public string AgentEnabledAt { get; private set; }
-
-        [XmlIgnore]
-        public ILogConfig LogConfig { get { return log; } }
     }
 
     /// <summary>
@@ -747,6 +661,68 @@ namespace NewRelic.Agent.Core.Config
         public ConfigurationLoaderException(string message, Exception original)
             : base(message, original)
         {
+        }
+    }
+
+    public static class ConfigLoaderHelpers
+    {
+        public static string GetOverride(string name, string fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            if (val != null)
+            {
+                return val;
+            }
+
+            return fallback;
+        }
+        public static int GetOverride(string name, int fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            if (val != null && int.TryParse(val, out var parsedValue))
+            {
+                return parsedValue;
+            }
+
+            return fallback;
+        }
+
+        public static bool GetOverride(string name, bool fallback)
+        {
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
+
+            return val.TryToBoolean(out var boolVal) ? boolVal : fallback;
+        }
+
+        public static bool TryToBoolean(this string val, out bool boolVal)
+        {
+            boolVal = false;
+
+            if (string.IsNullOrEmpty(val))
+            {
+                return false;
+            }
+
+            val = val.ToLower();
+
+            if (bool.TryParse(val, out boolVal))
+            {
+                return true;
+            }
+
+            switch (val)
+            {
+                case "0":
+                    boolVal = false;
+                    return true;
+                case "1":
+                    boolVal = true;
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 

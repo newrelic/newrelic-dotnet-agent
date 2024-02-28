@@ -32,7 +32,10 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.enabled")]
         public bool AgentEnabled => _configuration.AgentEnabled;
 
-        [JsonIgnore()]
+        [JsonIgnore]
+        public bool ServerlessModeEnabled => _configuration.ServerlessModeEnabled;
+
+        [JsonIgnore]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
         [JsonProperty("agent.license_key.configured")]

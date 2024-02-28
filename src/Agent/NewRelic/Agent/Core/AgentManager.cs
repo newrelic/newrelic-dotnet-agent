@@ -24,12 +24,12 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core
 {
-    sealed public class AgentManager : IAgentManager, IDisposable
+    public sealed class AgentManager : IAgentManager, IDisposable
     {
         private readonly IContainer _container;
         private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
-        private readonly static IAgentManager DisabledAgentManager = new DisabledAgentManager();
-        private readonly static AgentSingleton Singleton = new AgentSingleton();
+        private static readonly IAgentManager DisabledAgentManager = new DisabledAgentManager();
+        private static readonly AgentSingleton Singleton = new AgentSingleton();
 
         private sealed class AgentSingleton : Singleton<IAgentManager>
         {
@@ -93,23 +93,15 @@ namespace NewRelic.Agent.Core
         /// </remarks>
         private AgentManager()
         {
-            // TODO: Check for Lambda mode *before* registering services so we can control which IDataTransport implementation gets registered
-            _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container);
-
-            // Resolve IConfigurationService (so that it starts listening to config changes) before loading newrelic.config
-            _container.Resolve<IConfigurationService>();
-
+            // load the configuration
             configuration config = null;
-
             try
             {
-                config = ConfigurationLoader.Initialize();
+                config = ConfigurationLoader.Initialize(false);
             }
             catch
             {
                 // If the ConfigurationLoader fails, try to at least default configure the Logger to record the exception before we bail...
-
                 try
                 {
                     LoggerBootstrapper.ConfigureLogger(new configurationLog());
@@ -118,6 +110,14 @@ namespace NewRelic.Agent.Core
 
                 throw;
             }
+
+            _container = AgentServices.GetContainer();
+            AgentServices.RegisterServices(_container, config.ServerlessModeEnabled);
+
+            // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
+            _container.Resolve<IConfigurationService>();
+            ConfigurationLoader.PublishDeserializedEvent(config);
+
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
             if (config.debugStartupDelaySeconds > 0)
@@ -152,13 +152,13 @@ namespace NewRelic.Agent.Core
             //We need to attempt to auto start the agent once all services have resolved
             _container.Resolve<IConnectionManager>().AttemptAutoStart();
 
-            AgentServices.StartServices(_container);
+            AgentServices.StartServices(_container, config.ServerlessModeEnabled);
 
             // Setup the internal API first so that AgentApi can use it.
             InternalApi.SetAgentApiImplementation(agentApi);
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
-            Initialize();
+            Initialize(config.ServerlessModeEnabled);
             _isInitialized = true;
         }
 
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core
                 throw new Exception("Please set your license key.");
         }
 
-        private void Initialize()
+        private void Initialize(bool serverlessModeEnabled)
         {
             AgentInitializer.OnExit += ProcessExit;
 
@@ -180,15 +180,17 @@ namespace NewRelic.Agent.Core
 
             _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-            // TODO: Not needed in Lambda mode
-            //var commandService = _container.Resolve<CommandService>();
-            //commandService.AddCommands(
-            //    new RestartCommand(),
-            //    new ShutdownCommand(),
-            //    new StartThreadProfilerCommand(_threadProfilingService),
-            //    new StopThreadProfilerCommand(_threadProfilingService),
-            //    new InstrumentationUpdateCommand(instrumentationService)
-            //);
+            if (!serverlessModeEnabled)
+            {
+                var commandService = _container.Resolve<CommandService>();
+                commandService.AddCommands(
+                    new RestartCommand(),
+                    new ShutdownCommand(),
+                    new StartThreadProfilerCommand(_threadProfilingService),
+                    new StopThreadProfilerCommand(_threadProfilingService),
+                    new InstrumentationUpdateCommand(instrumentationService)
+                );
+            }
 
             StartServices();
             LogInitialized();
@@ -365,7 +367,7 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
-            
+
             Shutdown(true);
         }
 

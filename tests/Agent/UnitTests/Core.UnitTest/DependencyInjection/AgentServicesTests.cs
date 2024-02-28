@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container);
+                AgentServices.RegisterServices(container, false);
                 Assert.DoesNotThrow(() => container.Resolve<IConfigurationService>());
             }
         }
@@ -40,16 +40,16 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container);
+                AgentServices.RegisterServices(container, false);
+
                 container.ReplaceInstanceRegistration(configurationService);
 #if NET
                 container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
 #endif
 
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container));
+                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false));
             }
         }
-
     }
 }
