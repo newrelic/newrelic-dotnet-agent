@@ -14,6 +14,7 @@
 #include "../RapidXML/rapidxml.hpp"
 #include "../Common/AssemblyVersion.h"
 #include "IgnoreInstrumentation.h"
+#include "../Configuration/Strings.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
@@ -113,8 +114,33 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return nullptr;
         }
 
-    private:
+        void AddInstrumentationPointToCollectionFromEnvironment(xstring_t text)
+        {
+            auto segments = Strings::Split(text, _X("::"));
+            if (segments.size() != 3)
+            {
+                LogWarn(text, L" is not a valid method descriptor. It must be in the format 'assembly::class::method'");
+                return;
+            }
+            LogInfo(L"Serverless mode detected. Assembly: ", segments[0], L" Class: ", segments[1], L" Method: ", segments[2]);
 
+            InstrumentationPointPtr instrumentationPoint(new InstrumentationPoint());
+            // Note that this must exactly match the wrapper name in the managed Agent
+            instrumentationPoint->TracerFactoryName = _X("NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod");
+            instrumentationPoint->MetricName = _X("");
+            instrumentationPoint->MetricType = _X("");
+            instrumentationPoint->AssemblyName = segments[0];
+            instrumentationPoint->MinVersion = nullptr;
+            instrumentationPoint->MaxVersion = nullptr;
+            instrumentationPoint->ClassName = segments[1];
+            instrumentationPoint->MethodName = segments[2];
+            instrumentationPoint->Parameters = nullptr;
+
+            (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+            _instrumentationPointsSet->insert(instrumentationPoint);
+        }
+
+    private:
         static bool InstrumentationXmlIsDeprecated(xstring_t instrumentationXmlFilePath)
         {
             bool returnValue = false;

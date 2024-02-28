@@ -1168,6 +1168,11 @@ namespace NewRelic { namespace Profiler {
                 LogWarn(L"Unable to parse one or more instrumentation files.  Live instrumentation reloading will not work until the unparsable file(s) are corrected or removed.");
             }
             LogTrace(L"Read ", instrumentationXmls->size(), " instrumentation files");
+            auto lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("AWS_LAMBDA_FUNCTION_NAME"));
+            if (lambdaInstPoint != nullptr)
+            {
+                instrumentationConfiguration->AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
+            }
             return instrumentationConfiguration;
         }
 
