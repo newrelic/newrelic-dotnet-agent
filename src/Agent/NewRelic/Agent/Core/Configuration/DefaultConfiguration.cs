@@ -2044,6 +2044,15 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public bool AiMonitoringRecordContentEnabled
+        {
+            get
+            {
+                return AiMonitoringEnabled &&
+                    EnvironmentOverrides(_localConfiguration.aiMonitoring.recordContent.enabled, "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED");
+            }
+        }
+
         public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
 
         #endregion

@@ -455,7 +455,15 @@ namespace NewRelic.Agent.Core
                     attributes["token_count"] = tokenCount;
                 }
             }
-            
+
+            // If HSM is enabled or if record content is disabled, we need to remove the content and input attributes
+            // We will still want the token counts so removal occurs after the attempt to get the token count
+            if (!_configurationService.Configuration.AiMonitoringRecordContentEnabled || _configurationService.Configuration.HighSecurityModeEnabled)
+            {
+                attributes.Remove("content"); // ChatMessages
+                attributes.Remove("input"); // Embeddings
+            }
+
             _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
         }
 

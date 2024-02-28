@@ -1613,6 +1613,24 @@
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
+                            
+                            <xs:element name="recordContent" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        When enabled, AI monitoring events will include the content of the chat and embedding messages.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether or not AI monitoring will include the content of the chat and embedding messages.
+                                                Defaults to true.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:sequence>
                         
                         <xs:attribute name="enabled" type="xs:boolean" default="false">

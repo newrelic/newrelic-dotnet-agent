@@ -656,6 +656,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("ai_monitoring.streaming.enabled")]
         public bool AiMonitoringStreamingEnabled => _configuration.AiMonitoringStreamingEnabled;
 
+        [JsonProperty("ai_monitoring.record_content.enabled")]
+        public bool AiMonitoringRecordContentEnabled => _configuration.AiMonitoringRecordContentEnabled;
+
         // Serializing this Func doesn't provide us with more information than the supportability metrics
         [JsonIgnore()]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
