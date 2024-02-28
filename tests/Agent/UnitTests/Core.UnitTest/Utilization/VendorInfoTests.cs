@@ -373,8 +373,9 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         // See https://new-relic.atlassian.net/browse/NR-221128 and https://new-relic.atlassian.net/browse/NR-230908
+        // The sample files below are from a customer issue where the cgroup file was not being parsed correctly
         [Test]
-        public void GetVendors_GetDockerVendorInfo_ParsesV1_IfCpuMissing()
+        public void GetVendors_GetDockerVendorInfo_ParsesV1_ForCustomerIssue()
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
