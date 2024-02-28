@@ -149,8 +149,13 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
-            //We need to attempt to auto start the agent once all services have resolved
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            // Attempt to auto start the agent once all services have resolved, except in serverless mode
+            if (!config.ServerlessModeEnabled)
+                _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            else
+            {
+                Log.Info("The New Relic agent is operating in serverless mode.");
+            }
 
             AgentServices.StartServices(_container, config.ServerlessModeEnabled);
 
