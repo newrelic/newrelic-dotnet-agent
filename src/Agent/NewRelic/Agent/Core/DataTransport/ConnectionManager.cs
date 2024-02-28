@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-            
+
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 
@@ -74,17 +74,10 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_started)
                     return;
 
-                if (!_configuration.ServerlessModeEnabled)
-                {
-                    if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
-                        Connect();
-                    else
-                        _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
-                }
+                if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
+                    Connect();
                 else
-                {
-                    Log.Info("The Agent is operating in Serverless mode.");
-                }
+                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
 
                 _started = true;
             }

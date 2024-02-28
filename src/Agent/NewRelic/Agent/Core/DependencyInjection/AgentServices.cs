@@ -107,13 +107,15 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ISerializer, JsonSerializer>();
             container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
             container.Register<Environment, Environment>();
-            container.Register<IConnectionHandler, ConnectionHandler>();
-            container.Register<IConnectionManager, ConnectionManager>();
 
             if (!serverlessModeEnabled)
                 container.Register<IDataTransportService, DataTransportService>();
             else
+            {
+                container.Register<IConnectionHandler, ConnectionHandler>();
+                container.Register<IConnectionManager, ConnectionManager>();
                 container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+            }
 
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();
