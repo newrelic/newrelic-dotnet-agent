@@ -868,6 +868,26 @@ namespace NewRelic.Api.Agent
             }
         }
 
+        /// <summary>
+        /// Creates an event with the customer feedback on the LLM interaction.
+        /// </summary>
+        /// <param name="traceId">Required. ID of the trace where the chat completion(s) related to the feedback occurred</param>
+        /// <param name="rating">Required. Rating provided by an end user. Must be string or int</param>
+        /// <param name="category">Optional. Category of the feedback as provided by the end user</param>
+        /// <param name="message">Optional. Freeform text feedback from an end user</param>
+        /// <param name="metadata">Optional. Set of key-value pairs to store any other desired data to submit with the feedback event</param>
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        {
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.RecordLlmFeedbackEvent()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
+        }
+
         #endregion
     }
 

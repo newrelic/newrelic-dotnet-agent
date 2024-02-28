@@ -209,7 +209,6 @@ namespace NewRelic.Agent.Configuration
 
         bool AiMonitoringEnabled { get; }
         bool AiMonitoringStreamingEnabled { get; }
-
         bool AiMonitoringRecordContentEnabled { get; }
         public Func<string, string, int> LlmTokenCountingCallback { get; }
     }

@@ -658,6 +658,46 @@ namespace NewRelic.Agent.Core
             }
             TryInvoke(work, apiName, ApiMethod.SetLlmTokenCountingCallback);
         }
+
+        /// <summary>
+        /// Creates an event with the customer feedback on the LLM interaction.
+        /// </summary>
+        /// <param name="traceId">Required. ID of the trace where the chat completion(s) related to the feedback occurred</param>
+        /// <param name="rating">Required. Rating provided by an end user. Must be string or int</param>
+        /// <param name="category">Optional. Category of the feedback as provided by the end user</param>
+        /// <param name="message">Optional. Freeform text feedback from an end user</param>
+        /// <param name="metadata">Optional. Set of key-value pairs to store any other desired data to submit with the feedback event</param>
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        {
+            const string apiName = nameof(RecordLlmFeedbackEvent);
+            void work()
+            {
+                var attributes = new Dictionary<string, object>
+                {
+                    { "trace_id", traceId },
+                    { "rating", rating },
+                    { "ingest_source",  "DotNet" }
+                };
+
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    attributes.Add("category", category);
+                }
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    attributes.Add("message", message);
+                }
+
+                foreach (var pair in metadata ?? new Dictionary<string, object>())
+                {
+                    attributes[pair.Key] = pair.Value;
+                }
+
+                InternalApi.RecordCustomEvent("LlmFeedbackMessage", attributes);
+            }
+            TryInvoke(work, apiName, ApiMethod.RecordLlmFeedbackEvent);
+        }
     }
 }
 
