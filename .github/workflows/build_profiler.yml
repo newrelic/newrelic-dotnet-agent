@@ -150,7 +150,7 @@ jobs:
             OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:TestResults\profiler.xml -- "vstest.console.exe" "CommonTest\bin\x86\Release\CommonTest.dll" "ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "LoggingTest\bin\x86\Release\LoggingTest.dll" "MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
         
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
+        uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # v4.1.0
         with:
             flags: Profiler
             files: ${{ env.test_results_path }}\profiler.xml
