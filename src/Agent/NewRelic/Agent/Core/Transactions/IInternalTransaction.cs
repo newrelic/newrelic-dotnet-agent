@@ -66,6 +66,7 @@ namespace NewRelic.Agent.Core.Transactions
         // This guid is created during the transaction initizialiaztion
         string Guid { get; }
 
+
         // Used for RUM and CAT to get the duration until this point in time
         TimeSpan GetDurationUntilNow();
 
