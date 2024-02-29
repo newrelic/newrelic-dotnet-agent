@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Extensions.Llm
             int numMessages,
             string finishReason,
             string vendor,
-            bool error,
+            bool isError,
             IDictionary<string, string> headers)
         {
             var completionId = Guid.NewGuid().ToString();
@@ -34,18 +34,19 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "request.max_tokens", maxTokens },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
-                //{ "response.organization", "NOT_AVAILABLE" },
+                //{ "response.organization", "not available" },
                 { "response.number_of_messages", numMessages },
                 { "response.choices.finish_reason", finishReason },
                 { "vendor", vendor },
                 { "ingest_source", "DotNet" },
                 { "duration", (float)segment.DurationOrZero.TotalMilliseconds },
-                //{ "llm.<user_defined_metadata>", "PULLED FROM TRASACTION METADATA" },
+                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
+                //{ "response.headers.<vendor_specific_headers>", "See LLM headers below" },
             };
 
-            if (error)
+            if (isError)
             {
-                attributes.Add("error", error);
+                attributes.Add("error", isError);
             }
 
             // LLM Metadata
@@ -84,7 +85,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "sequence", sequence },
                 { "completion_id", completionId },
                 { "token_count", tokenCount },
-                //{ "llm.<user_defined_metadata>", "PULLED FROM TRASACTION METADATA" },
+                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
             };
 
             if (isResponse)
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.Extensions.Llm
             string responseModel,
             string vendor,
             int? tokenCount,
-            bool error,
+            bool isError,
             IDictionary<string, string> headers)
         {
             var completionId = Guid.NewGuid().ToString();
@@ -117,20 +118,21 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "input", input },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
-                //{ "response.organization", "NOT_AVAILABLE" },
+                //{ "response.organization", "not available" },
                 { "token_count", tokenCount },
                 { "vendor", vendor },
                 { "ingest_source", "DotNet" },
                 { "duration", (float)segment.DurationOrZero.TotalMilliseconds },
-                //{ "llm.<user_defined_metadata>", "PULLED FROM TRASACTION METADATA" },
+                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
+                //{ "response.headers.<vendor_specific_headers>", "See LLM headers below" },
             };
 
-            if (error)
+            if (isError)
             {
-                attributes.Add("error", error);
+                attributes.Add("error", isError);
             }
 
-            // LLM Metadata
+            // LLM headers
             if (headers != null)
             {
                 AddHeaderAttributes(headers, attributes);
