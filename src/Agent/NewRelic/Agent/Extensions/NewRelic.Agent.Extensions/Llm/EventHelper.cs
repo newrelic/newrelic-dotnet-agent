@@ -19,8 +19,8 @@ namespace NewRelic.Agent.Extensions.Llm
             int numMessages,
             string finishReason,
             string vendor,
-            bool isError,
-            IDictionary<string, string> headers)
+            IDictionary<string, string> headers,
+            Exception exception)
         {
             var completionId = Guid.NewGuid().ToString();
 
@@ -44,18 +44,13 @@ namespace NewRelic.Agent.Extensions.Llm
                 //{ "response.headers.<vendor_specific_headers>", "See LLM headers below" },
             };
 
-            if (isError)
-            {
-                attributes.Add("error", isError);
-            }
-
             // LLM Metadata
             if (headers != null)
             {
                 AddHeaderAttributes(headers, attributes);
             }
 
-            agent.RecordLlmEvent("LlmChatCompletionSummary", attributes);
+            agent.RecordLlmEvent("LlmChatCompletionSummary", attributes, exception);
 
             return completionId;
         }
@@ -93,10 +88,10 @@ namespace NewRelic.Agent.Extensions.Llm
                 attributes.Add("is_response", true);
             }
 
-            agent.RecordLlmEvent("LlmChatCompletionMessage", attributes);
+            agent.RecordLlmEvent("LlmChatCompletionMessage", attributes, null);
         }
 
-        public static void CreateEmbeddingEvent(IAgent agent,
+        public static string CreateEmbeddingEvent(IAgent agent,
             ISegment segment,
             string requestId,
             string input,
@@ -104,8 +99,8 @@ namespace NewRelic.Agent.Extensions.Llm
             string responseModel,
             string vendor,
             int? tokenCount,
-            bool isError,
-            IDictionary<string, string> headers)
+            IDictionary<string, string> headers,
+            Exception exception)
         {
             var completionId = Guid.NewGuid().ToString();
 
@@ -127,18 +122,15 @@ namespace NewRelic.Agent.Extensions.Llm
                 //{ "response.headers.<vendor_specific_headers>", "See LLM headers below" },
             };
 
-            if (isError)
-            {
-                attributes.Add("error", isError);
-            }
-
             // LLM headers
             if (headers != null)
             {
                 AddHeaderAttributes(headers, attributes);
             }
 
-            agent.RecordLlmEvent("LlmEmbedding", attributes);
+            agent.RecordLlmEvent("LlmEmbedding", attributes, exception);
+
+            return completionId;
         }
 
         private static void AddHeaderAttributes(IDictionary<string, string> headers, IDictionary<string, object> attributes)

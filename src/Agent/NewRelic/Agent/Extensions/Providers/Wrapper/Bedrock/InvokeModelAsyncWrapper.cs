@@ -53,16 +53,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             {
                 if (responseTask.IsFaulted)
                 {
-                    HandleError(segment, invokeModelRequest, responseTask, agent);
+                    segment.End();
+                    HandleError(agent, transaction, segment, invokeModelRequest, responseTask);
+                    return;
                 }
 
                 var invokeModelResponse = responseTask.Result;
-                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
-                {
-                    // do something drasatic?
-                    segment.End();
-                    return;
-                }
 
                 // We need the duration so we end the segment before creating the events.
                 segment.End();
@@ -97,8 +93,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelRequest.ModelId,
                     "bedrock",
                     responsePayload.Responses[0].TokenCount,
-                    false,
-                    null // not available in AWS
+                    null, // not available in AWS
+                    null
                 );
 
                 return;
@@ -115,8 +111,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
                 "bedrock",
-                false,
-                null // not available in AWS
+                null, // not available in AWS
+                null
             );
 
             // Prompt
@@ -151,35 +147,41 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
         }
 
-        private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, IAgent agent)
+        private void HandleError(IAgent agent, ITransaction transaction, ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask)
         {
-            //This is not fully fleshed out.  it is just a stub.
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
-
-
             var requestPayload = GetRequestPayload(invokeModelRequest);
-            if (requestPayload == null)
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
             {
+                _ = EventHelper.CreateEmbeddingEvent(
+                    agent,
+                    segment,
+                    null,
+                    requestPayload.Prompt,
+                    invokeModelRequest.ModelId,
+                    invokeModelRequest.ModelId,
+                    "bedrock",
+                    null,
+                    null, // not available in AWS
+                    responseTask.Exception
+                );
+
                 return;
             }
 
-            IResponsePayload responsePayload = null;
-            InvokeModelResponse invokeModelResponse = null;
-
-            _= EventHelper.CreateChatCompletionEvent(
-                agent,
-                segment,
-                invokeModelResponse.ResponseMetadata.RequestId,
-                requestPayload.Temperature,
-                requestPayload.MaxTokens,
-                invokeModelRequest.ModelId,
-                invokeModelRequest.ModelId,
-                1 + responsePayload.Responses.Length,
-                responsePayload.StopReason,
-                "bedrock",
-                false,
-                null
-            );
+            _ = EventHelper.CreateChatCompletionEvent(
+                    agent,
+                    segment,
+                    null,
+                    requestPayload.Temperature,
+                    requestPayload.MaxTokens,
+                    invokeModelRequest.ModelId,
+                    invokeModelRequest.ModelId,
+                    1,
+                    null,
+                    "bedrock",
+                    null,
+                    responseTask.Exception
+                );
         }
 
         private static IRequestPayload GetRequestPayload(InvokeModelRequest invokeModelRequest)

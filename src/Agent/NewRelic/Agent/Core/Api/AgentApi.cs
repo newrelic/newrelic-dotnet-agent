@@ -672,6 +672,11 @@ namespace NewRelic.Agent.Core
             const string apiName = nameof(RecordLlmFeedbackEvent);
             void work()
             {
+                if (string.IsNullOrWhiteSpace(traceId) || rating == null)
+                {
+                    return;
+                }
+
                 var attributes = new Dictionary<string, object>
                 {
                     { "trace_id", traceId },

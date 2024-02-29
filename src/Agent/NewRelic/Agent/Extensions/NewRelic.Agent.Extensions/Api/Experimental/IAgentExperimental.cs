@@ -50,6 +50,6 @@ namespace NewRelic.Agent.Api.Experimental
 
         ISimpleSchedulingService SimpleSchedulingService { get; }
 
-        void RecordLlmEvent(string eventType, IDictionary<string, object> attributes);
+        void RecordLlmEvent(string eventType, IDictionary<string, object> attributes, Exception exception);
     }
 }

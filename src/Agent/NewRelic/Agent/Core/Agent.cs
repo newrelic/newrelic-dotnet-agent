@@ -417,7 +417,7 @@ namespace NewRelic.Agent.Core
 
         #region ExperimentalApi
 
-        public void RecordLlmEvent(string eventType, IDictionary<string, object> attributes)
+        public void RecordLlmEvent(string eventType, IDictionary<string, object> attributes, Exception exception)
         {
             if (!_configurationService.Configuration.AiMonitoringEnabled)
             {
@@ -468,6 +468,30 @@ namespace NewRelic.Agent.Core
             {
                 attributes.Remove("content"); // ChatMessages
                 attributes.Remove("input"); // Embeddings
+            }
+
+            // Only not null for CompletionSummary and Embeddings and only if an exception occurred
+            // It is likely that this exception will not be the one sent up with the transaction
+            // since there will be at least and HTTP error as well from the API call.
+            if (exception != null)
+            {
+                attributes.Add("error", true);
+
+                var errorAttributes = new Dictionary<string, object>
+                {
+                    { eventType == "LlmChatCompletionMessage" ? "completion_id" : "embedding_id", attributes["id"] },
+                };
+
+                var errorData = new Errors.ErrorData(
+                    exception.Message,
+                    exception.GetType().Name,
+                    exception.StackTrace,
+                    DateTime.Now,
+                    new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(errorAttributes),
+                    false,
+                    exception);
+
+                transaction.NoticeError(errorData);
             }
 
             _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
