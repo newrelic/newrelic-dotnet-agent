@@ -15,6 +15,7 @@
 #include "../Common/AssemblyVersion.h"
 #include "IgnoreInstrumentation.h"
 #include "../Configuration/Strings.h"
+#include "../Logging/DefaultFileLogLocation.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
@@ -25,9 +26,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     class InstrumentationConfiguration
     {
     public:
-        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList) :
+        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList, std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr) :
             _instrumentationPointsSet(new InstrumentationPointSet())
             , _ignoreList(ignoreList)
+            , _systemCalls(systemCalls)
+            , _foundServerlessInstrumentationPoint(false)
         {
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
@@ -58,6 +61,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints, IgnoreInstrumentationListPtr ignoreList) :
             _instrumentationPointsSet(new InstrumentationPointSet())
             , _ignoreList(ignoreList)
+            , _systemCalls(nullptr)
+            , _foundServerlessInstrumentationPoint(false)
         {
             for (auto instrumentationPoint : *instrumentationPoints)
             {
@@ -114,6 +119,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return nullptr;
         }
 
+        void CheckForEnvironmentInstrumentationPoint(void)
+        {
+            if (_foundServerlessInstrumentationPoint || (_systemCalls == nullptr))
+            {
+                return;
+            }
+            auto lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("AWS_LAMBDA_FUNCTION_NAME"));
+            if (lambdaInstPoint != nullptr)
+            {
+                AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
+                _foundServerlessInstrumentationPoint = true;
+            }
+        }
+
         void AddInstrumentationPointToCollectionFromEnvironment(xstring_t text)
         {
             auto segments = Strings::Split(text, _X("::"));
@@ -166,6 +185,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             const xstring_t& methodName,
             const xstring_t& parameters) const
         {
+
             auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
             auto matchInstrumentation = TryGetInstrumentationPoints(matchKey);
 
@@ -483,6 +503,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         InstrumentationPointSetPtr _instrumentationPointsSet;
         uint16_t _invalidFileCount = 0;
         IgnoreInstrumentationListPtr _ignoreList;
+        std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
+        bool _foundServerlessInstrumentationPoint;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
 }}}
