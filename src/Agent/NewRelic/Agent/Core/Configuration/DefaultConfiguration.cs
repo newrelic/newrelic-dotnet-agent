@@ -817,6 +817,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool IsCatEnabled()
         {
+            // CAT must be disabled in serverless mode
+            if (ServerlessModeEnabled)
+                return false;
+
             var localenabled = _localConfiguration.crossApplicationTracingEnabled;
             //If config.crossApplicationTracingEnabled is true or default then we want to check the
             //config.crossApplicationTracer, if that object is not null then use it's default or value
@@ -1691,7 +1695,16 @@ namespace NewRelic.Agent.Core.Configuration
         #region Transaction Tracer
 
         public virtual TimeSpan TransactionTraceApdexF { get { return TransactionTraceApdexT.Multiply(4); } }
-        public virtual TimeSpan TransactionTraceApdexT { get { return TimeSpan.FromSeconds(ServerOverrides(_serverConfiguration.ApdexT, 0.5)); } }
+        public virtual TimeSpan TransactionTraceApdexT
+        {
+            get
+            {
+                if (ServerlessModeEnabled) // get apdex_t from environment variable if running in serverless mode
+                    return TimeSpan.FromSeconds(EnvironmentOverrides(0.5, "NEW_RELIC_APDEX_T").GetValueOrDefault());
+                else
+                    return TimeSpan.FromSeconds(ServerOverrides(_serverConfiguration.ApdexT, 0.5));
+            }
+        }
 
         public virtual TimeSpan TransactionTraceThreshold
         {
@@ -2034,7 +2047,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (_ignoredInstrumentation == null)
                 {
-                    _ignoredInstrumentation =_localConfiguration.instrumentation.rules
+                    _ignoredInstrumentation = _localConfiguration.instrumentation.rules
                         .Select(i => new ReadOnlyDictionary<string, string>(
                                 new Dictionary<string, string>
                                 {
@@ -2391,6 +2404,14 @@ namespace NewRelic.Agent.Core.Configuration
                 .FirstOrDefault(value => value != null);
 
             return int.TryParse(env, out int parsedValue) ? parsedValue : local;
+        }
+        private double? EnvironmentOverrides(double? local, params string[] environmentVariableNames)
+        {
+            var env = environmentVariableNames
+                .Select(_environment.GetEnvironmentVariable)
+                .FirstOrDefault(value => value != null);
+
+            return double.TryParse(env, out double parsedValue) ? parsedValue : local;
         }
 
         private bool EnvironmentOverrides(bool local, params string[] environmentVariableNames)

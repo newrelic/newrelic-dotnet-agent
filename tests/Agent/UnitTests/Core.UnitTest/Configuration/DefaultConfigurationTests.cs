@@ -850,6 +850,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void ApdexT_SetFromEnvironmentVariable_WhenInServerlessMode()
+        {
+            // set NEW_RELIC_APDEX_T environment variable
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APDEX_T")).Returns("1.234");
+
+            // Refactor this to set an environment variable instead of changing the local config when we refactor DefaultConfiguration
+            _localConfig.ServerlessModeEnabled = true;
+
+            Assert.That(_defaultConfig.TransactionTraceApdexT, Is.EqualTo(TimeSpan.FromSeconds(1.234)));
+        }
+
+        [Test]
         public void CaptureCustomParametersSetFromLocalDefaultsToTrue()
         {
             Assert.That(_defaultConfig.CaptureCustomParameters, Is.True);
@@ -2146,6 +2158,22 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.crossApplicationTracingEnabled = true;
             _localConfig.crossApplicationTracer.enabled = true;
             _serverConfig = ServerConfiguration.GetDefault();
+            _serverConfig.CatId = "123#456";
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.False);
+        }
+
+        [Test]
+        public void CrossApplicationTracingEnabledIs_False_InServerlessMode()
+        {
+            // Arrange
+            // Refactor this to set an environment variable instead of changing the local config when we refactor DefaultConfiguration
+            _localConfig.ServerlessModeEnabled = true;
+
+            _localConfig.crossApplicationTracingEnabled = true;
+            _localConfig.crossApplicationTracer.enabled = true;
+            _serverConfig = new ServerConfiguration();
             _serverConfig.CatId = "123#456";
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 

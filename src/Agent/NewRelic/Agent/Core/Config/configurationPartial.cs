@@ -18,7 +18,6 @@
     public partial class configuration
     {
         private string _awsLambdaFunctionName;
-        private string _serverlessModeEnvVariable;
 
         public string Xml { get; set; }
 
@@ -55,26 +54,35 @@
         [XmlIgnore]
         public ILogConfig LogConfig { get { return log; } }
 
+        private bool? _serverlessModeEnabled;
         [XmlIgnore]
         public bool ServerlessModeEnabled
         {
             get
             {
-                // according to the spec, environment variable takes precedence over config file
-                _serverlessModeEnvVariable ??= ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
-
-                if (_serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
-                {
-                    return enabledViaEnvVariable;
-                }
-
-                // env variable is not set, check for function name
-                if (!string.IsNullOrEmpty(AwsLambdaFunctionName))
-                    return true;
-
-                // fall back to config file
-                return serverlessModeEnabled;
+                return _serverlessModeEnabled ??= CheckServerlessModeEnabled();
             }
+
+            // for unit tests only, remove if we refactor to move this property into DefaultConfiguration
+            set { _serverlessModeEnabled = value; }
+        }
+
+        private bool CheckServerlessModeEnabled()
+        {
+            // according to the spec, environment variable takes precedence over config file
+            var serverlessModeEnvVariable = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
+
+            if (serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
+            {
+                return enabledViaEnvVariable;
+            }
+
+            // env variable is not set, check for function name
+            if (!string.IsNullOrEmpty(AwsLambdaFunctionName))
+                return true;
+
+            // fall back to config file
+            return serverlessModeEnabled;
         }
 
         [XmlIgnore]
