@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main # runs after a completed PR to main
+      - feature/* # runs after a completed PR to a feature branch
   pull_request: # runs on a PR to any branch
   workflow_dispatch: # allows for manual trigger
 
