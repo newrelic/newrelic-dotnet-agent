@@ -218,6 +218,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kafka", "src\Agent\NewRelic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore6Plus", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNetCore6Plus\AspNetCore6Plus.csproj", "{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bedrock", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Bedrock\Bedrock.csproj", "{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -456,6 +458,10 @@ Global
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -526,10 +532,11 @@ Global
 		{F921A316-A8D2-4992-B894-69A3B5CA34E3} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{270A9CC8-8031-49F4-A380-1389E7517DB7} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{D4F48A7F-F3D3-4303-921D-BF7FE34B7118} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{9C20BC4E-7A9F-4518-B3E7-C1FFD6C0EC8A} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

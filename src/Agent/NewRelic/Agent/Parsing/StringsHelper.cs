@@ -29,12 +29,19 @@ namespace NewRelic.Parsing
             // Can't clean up relative URIs (Uri.GetComponents will throw an exception for relative URIs)
             if (!uri.IsAbsoluteUri)
                 return CleanUri(uri.ToString());
-
-            return uri.GetComponents(
-                    UriComponents.Scheme |
-                    UriComponents.HostAndPort |
-                    UriComponents.Path,
-                    UriFormat.UriEscaped);
+            try
+            {
+                return uri.GetComponents(
+                        UriComponents.Scheme |
+                        UriComponents.HostAndPort |
+                        UriComponents.Path,
+                        UriFormat.UriEscaped);
+            }
+            catch (System.InvalidOperationException)
+            {
+                // In .NET 8, AWS Bedrock sets UriCreationOptions.DangerousDisablePathAndQueryCanonicalization which prevents using Uri.GetComponents
+                return CleanUri(uri.ToString());
+            }
         }
 
         public static string FixDatabaseObjectName(string s)
