@@ -29,6 +29,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     {
         bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) override
         {
+            instrumentationSettings->GetInstrumentationConfiguration()->CheckForEnvironmentInstrumentationPoint();
             auto instrumentationPoint = instrumentationSettings->GetInstrumentationConfiguration()->TryGetInstrumentationPoint(function);
             if (instrumentationPoint == nullptr)
             {

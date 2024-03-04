@@ -13,13 +13,5 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-    <!-- Cus4tom instrumentation approach.  Hardcoded for POC, would be added to the profiler via an environment variable in the real world-->
-    <!-- TODO: Figure out how to configure this from an environment variable at runtime -->
-    <tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod">
-      <match assemblyName="LambdaFunctionTestApp" className="LambdaFunctionTestApp.Function">
-        <exactMethodMatcher methodName="FunctionHandler" />
-      </match>
-    </tracerFactory>
-
   </instrumentation>
 </extension>
