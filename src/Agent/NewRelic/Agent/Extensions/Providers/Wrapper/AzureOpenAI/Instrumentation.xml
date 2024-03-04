@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <tracerFactory name="AzureOpenAIGetChatCompletions">
+      <match assemblyName="Azure.AI.OpenAI" className="Azure.AI.OpenAI.OpenAIClient">
+        <exactMethodMatcher methodName="GetChatCompletions" />
+        <exactMethodMatcher methodName="GetChatCompletionsAsync" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AzureOpenAIGetCompletions">
+      <match assemblyName="Azure.AI.OpenAI" className="Azure.AI.OpenAI.OpenAIClient">
+        <exactMethodMatcher methodName="GetCompletions" />
+        <exactMethodMatcher methodName="GetCompletionsAsync" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AzureOpenAIGetEmbeddings">
+      <match assemblyName="Azure.AI.OpenAI" className="Azure.AI.OpenAI.OpenAIClient">
+        <exactMethodMatcher methodName="GetEmbeddings" />
+        <exactMethodMatcher methodName="GetEmbeddingsAsync" />
+      </match>
+    </tracerFactory>
+    
+  </instrumentation>
+</extension>

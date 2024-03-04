@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <AssemblyName>NewRelic.Providers.Wrapper.AzureOpenAI</AssemblyName>
+    <RootNamespace>NewRelic.Providers.Wrapper.AzureOpenAI</RootNamespace>
+    <Description>Azure OpenAI Wrapper Provider for New Relic .NET Agent</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Instrumentation.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+</Project>
