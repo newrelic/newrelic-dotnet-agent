@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main # runs after a completed PR to main
-      - feature/* # runs after a completed PR to a feature branch
+      - feature/* # runs after a push to a feature branch
   pull_request: # runs on a PR to any branch
   workflow_dispatch: # allows for manual trigger
 
@@ -22,7 +22,6 @@ permissions:
   contents: read
 
 jobs:
-
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
     uses: ./.github/workflows/check_modified_files.yml
@@ -37,8 +36,8 @@ jobs:
     runs-on: windows-latest
 
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
-    # run this job if non-workflow files were modified, or if triggered by a manual execution
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' ||  github.event_name == 'workflow_dispatch')
+    # run this job if non-workflow files were modified, or if triggered by a manual execution or by a push (not a PR)
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' ||  github.event_name == 'workflow_dispatch' || github.event_name == 'push')
 
     env:
       test_results_path: tests\TestResults
