@@ -5,14 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace NewRelic.Providers.Wrapper.Bedrock
+namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class TitanRequestPayload : IRequestPayload
     {
         [JsonPropertyName("inputText")]
         public string Prompt { get; set; }
 
-        public float Temperature {
+        public float Temperature
+        {
             get
             {
                 return TextGenerationConfig.Temperature;
@@ -20,7 +21,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             set { }
         }
 
-        public int MaxTokens {
+        public int MaxTokens
+        {
             get
             {
                 return TextGenerationConfig.TokenCount;

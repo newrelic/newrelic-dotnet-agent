@@ -1,10 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace NewRelic.Providers.Wrapper.Bedrock
+namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class Llama2RequestPayload : IRequestPayload
     {

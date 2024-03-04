@@ -8,6 +8,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.Bedrock.Payloads;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -38,6 +39,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             );
 
             // required per spec
+            // TODO: persist the version string in a field to avoid repeated calls to GetLibraryVersion
             var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
             
@@ -57,14 +59,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 }
 
                 var invokeModelResponse = responseTask.Result;
-                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
+                if (invokeModelResponse is not { HttpStatusCode: < System.Net.HttpStatusCode.MultipleChoices })
                 {
-                    // do something drasatic?
+                    // do something drastic?
                     segment.End();
                     return;
                 }
 
-                // We need the duration so we end the segment before creating the events.
+                // We need the duration, so we end the segment before creating the events.
                 segment.End();
 
                 ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, agent);
@@ -153,7 +155,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, IAgent agent)
         {
-            //This is not fully fleshed out.  it is just a stub.
+            //TODO: This is not fully fleshed out.  it is just a stub.
             agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
 
 
