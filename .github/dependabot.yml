@@ -4,7 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
-      
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+            
   # multiple entries are required in order to apply nuget scanning to only a subset of projects.
   # We do not scan anything in the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
   # intentionally reference old versions of the Nuget packages they instrument.
@@ -12,15 +16,31 @@ updates:
     directory: /src/Agent/NewRelic/Agent/Core
     schedule:
       interval: weekly
+    groups: # groups currently doesn't work across multiple entries for the same package-ecosystem, but someday it will. See https://github.com/dependabot/dependabot-core/issues/7547
+      nuget:
+        patterns:
+          - "*"
   - package-ecosystem: nuget
     directory: /src/Agent/NewRelic.Api.Agent
     schedule:
       interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
   - package-ecosystem: nuget
     directory: /src/NewRelic.Core
     schedule:
       interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
   - package-ecosystem: nuget
     directory: /build
     schedule:
       interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
