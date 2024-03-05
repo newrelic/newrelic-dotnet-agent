@@ -474,6 +474,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="KafkaWrapperComponent" Guid="{BE97F5F5-A392-48A0-8888-B2973EA09490}">
         <File Id="KafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
       </Component>
+      <Component Id="BedrockWrapperComponent" Guid="{C913E912-97D1-4042-8E11-A35E04C6A6E5}">
+        <File Id="BedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -544,6 +547,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAspNetCore6PlusWrapperComponent" Guid="{3B7C5E60-BA9D-4B1C-8B16-B16025B075C0}">
         <File Id="CoreAspNetCore6PlusWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.dll"/>
+      </Component>
+      <Component Id="CoreBedrockWrapperComponent" Guid="{7DA522F5-38D4-4E7E-AA2B-857D01812152}">
+        <File Id="CoreBedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -659,6 +665,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="KafkaInstrumentationComponent" Guid="{9FC86A0E-CACD-4DA8-84F8-20997C904913}">
         <File Id="KafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
       </Component>
+      <Component Id="BedrockInstrumentationComponent" Guid="{D6F0A2D6-D8D5-4C61-8056-1C9AA4D07132}">
+        <File Id="BedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml"/>
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -718,6 +727,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAspNetCore6PlusInstrumentationComponent" Guid="{1CC1E672-5AA5-4F6F-A736-748EA556653A}">
         <File Id="CoreAspNetCore6PlusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreBedrockInstrumentationComponent" Guid="{CF3A17F1-3C5C-4B72-8E3B-10E53EB94913}">
+        <File Id="CoreBedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
