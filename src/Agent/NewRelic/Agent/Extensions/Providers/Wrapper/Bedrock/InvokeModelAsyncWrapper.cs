@@ -1,20 +1,24 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Concurrent;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Amazon.BedrockRuntime.Model;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Bedrock.Payloads;
+using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
     public class InvokeModelAsyncWrapper : IWrapper
     {
         public bool IsTransactionRequired => true; // part of spec, only create events for transactions.
+
+        private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
 
         private const string WrapperName = "BedrockInvokeModelAsync";
 
@@ -31,7 +35,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            var invokeModelRequest = (InvokeModelRequest)instrumentedMethodCall.MethodCall.MethodArguments[0];
+            dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
             var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
@@ -43,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
             
-            return Delegates.GetAsyncDelegateFor<Task<InvokeModelResponse>>(
+            return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
                 false,
@@ -51,15 +55,15 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 TaskContinuationOptions.RunContinuationsAsynchronously
             );
 
-            void InvokeTryProcessResponse(Task<InvokeModelResponse> responseTask)
+            void InvokeTryProcessResponse(Task responseTask)
             {
                 if (responseTask.IsFaulted)
                 {
                     HandleError(segment, invokeModelRequest, responseTask, agent);
                 }
 
-                var invokeModelResponse = responseTask.Result;
-                if (invokeModelResponse is not { HttpStatusCode: < System.Net.HttpStatusCode.MultipleChoices })
+                dynamic invokeModelResponse = GetTaskResult(responseTask);
+                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
                 {
                     // do something drastic?
                     segment.End();
@@ -73,7 +77,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
         }
 
-        private void ProcessInvokeModel(ISegment segment, InvokeModelRequest invokeModelRequest, InvokeModelResponse invokeModelResponse, IAgent agent)
+        private static object GetTaskResult(object task)
+        {
+            var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+            return getResponse(task);
+        }
+
+
+        private void ProcessInvokeModel(ISegment segment, dynamic invokeModelRequest, dynamic invokeModelResponse, IAgent agent)
         {
             var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
@@ -153,7 +164,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
         }
 
-        private void HandleError(ISegment segment, InvokeModelRequest invokeModelRequest, Task<InvokeModelResponse> responseTask, IAgent agent)
+        private void HandleError(ISegment segment, dynamic invokeModelRequest, Task responseTask, IAgent agent)
         {
             //TODO: This is not fully fleshed out.  it is just a stub.
             agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
@@ -166,8 +177,9 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             IResponsePayload responsePayload = null;
-            InvokeModelResponse invokeModelResponse = null;
+            dynamic invokeModelResponse = null;
 
+            // TODO: Figure out what the correct completion event is when there's an error. This call currently throws an exception because invokeModelResponse is null.
             _= EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
@@ -184,7 +196,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             );
         }
 
-        private static IRequestPayload GetRequestPayload(InvokeModelRequest invokeModelRequest)
+        private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
         {
             if (invokeModelRequest.ModelId.StartsWith("meta.llama2"))
             {
@@ -219,7 +231,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             return null;
         }
 
-        private static IResponsePayload GetResponsePayload(string model, InvokeModelResponse invokeModelResponse)
+        private static IResponsePayload GetResponsePayload(string model, dynamic invokeModelResponse)
         {
             if (model.StartsWith("meta.llama2"))
             {
