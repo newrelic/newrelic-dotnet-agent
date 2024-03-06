@@ -11,6 +11,7 @@ using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Bedrock.Payloads;
 using NewRelic.Reflection;
+using System.Net;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -46,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             // TODO: persist the version string in a field to avoid repeated calls to GetLibraryVersion
             var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
-            
+
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
@@ -60,18 +61,19 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 if (responseTask.IsFaulted)
                 {
                     HandleError(segment, invokeModelRequest, responseTask, agent);
-                }
-
-                dynamic invokeModelResponse = GetTaskResult(responseTask);
-                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
-                {
-                    // do something drastic?
-                    segment.End();
                     return;
                 }
 
                 // We need the duration, so we end the segment before creating the events.
                 segment.End();
+
+                dynamic invokeModelResponse = GetTaskResult(responseTask);
+                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= HttpStatusCode.MultipleChoices)
+                {
+                    //TODO: What to do with null response or non-2xx status code?
+                    return;
+                }
+
 
                 ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, agent);
             }
@@ -79,6 +81,11 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private static object GetTaskResult(object task)
         {
+            if (((Task)task).IsFaulted)
+            {
+                return null;
+            }
+
             var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
             return getResponse(task);
         }
@@ -89,12 +96,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize request payload");
                 return;
             }
 
             var responsePayload = GetResponsePayload(invokeModelRequest.ModelId, invokeModelResponse);
             if (responsePayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize response payload");
                 return;
             }
 
@@ -107,11 +116,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
-                    invokeModelRequest.ModelId,
+                    invokeModelResponse.ModelId,
                     "bedrock",
                     responsePayload.Responses[0].TokenCount,
                     false,
-                    null // not available in AWS
+                    null, // not available in AWS
+                    null
                 );
 
                 return;
@@ -124,12 +134,13 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 requestPayload.Temperature,
                 requestPayload.MaxTokens,
                 invokeModelRequest.ModelId,
-                invokeModelRequest.ModelId,
+                invokeModelResponse.ModelId,
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
                 "bedrock",
                 false,
-                null // not available in AWS
+                null,  // not available in AWS
+                null
             );
 
             // Prompt
@@ -166,34 +177,69 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private void HandleError(ISegment segment, dynamic invokeModelRequest, Task responseTask, IAgent agent)
         {
-            //TODO: This is not fully fleshed out.  it is just a stub.
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking Bedrock model {invokeModelRequest.ModelId}: {responseTask.Exception!.Message}");
 
+
+            dynamic bedrockException = responseTask.Exception!.InnerException;
+            if (bedrockException == null)
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Task faulted but there was no inner exception");
+                return;
+            }
 
             var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize request payload");
                 return;
             }
 
-            IResponsePayload responsePayload = null;
-            dynamic invokeModelResponse = null;
+            HttpStatusCode statusCode = bedrockException.StatusCode;
+            string errorCode = bedrockException.ErrorCode;
+            string errorMessage = bedrockException.Message;
+            string requestId = bedrockException.RequestId;
 
-            // TODO: Figure out what the correct completion event is when there's an error. This call currently throws an exception because invokeModelResponse is null.
-            _= EventHelper.CreateChatCompletionEvent(
-                agent,
-                segment,
-                invokeModelResponse.ResponseMetadata.RequestId,
-                requestPayload.Temperature,
-                requestPayload.MaxTokens,
-                invokeModelRequest.ModelId,
-                invokeModelRequest.ModelId,
-                1 + responsePayload.Responses.Length,
-                responsePayload.StopReason,
-                "bedrock",
-                false,
-                null
-            );
+            var errorData = new LlmErrorData
+            {
+                HttpStatusCode = ((int)statusCode).ToString(),
+                ErrorCode = errorCode,
+                ErrorParam = null, // not available in AWS
+                ErrorMessage = errorMessage
+            };
+
+            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
+            {
+                EventHelper.CreateEmbeddingEvent(
+                    agent,
+                    segment,
+                    requestId,
+                    requestPayload.Prompt,
+                    invokeModelRequest.ModelId,
+                    null,
+                    "bedrock",
+                    null,
+                    true,
+                    null,
+                    errorData);
+            }
+            else
+            {
+                EventHelper.CreateChatCompletionEvent(
+                    agent,
+                    segment,
+                    requestId,
+                    requestPayload.Temperature,
+                    requestPayload.MaxTokens,
+                    invokeModelRequest.ModelId,
+                    null,
+                    0,
+                    null,
+                    "bedrock",
+                    true,
+                    null,
+                    errorData);
+
+            }
         }
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
