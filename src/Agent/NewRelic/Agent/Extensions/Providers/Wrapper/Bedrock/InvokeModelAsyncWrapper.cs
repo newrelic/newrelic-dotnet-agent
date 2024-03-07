@@ -11,6 +11,7 @@ using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Bedrock.Payloads;
 using NewRelic.Reflection;
+using System.Net;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -46,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             // TODO: persist the version string in a field to avoid repeated calls to GetLibraryVersion
             var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
-            
+
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
@@ -60,12 +61,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 if (responseTask.IsFaulted)
                 {
                     HandleError(segment, invokeModelRequest, responseTask, agent);
-                }
-
-                dynamic invokeModelResponse = GetTaskResult(responseTask);
-                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= System.Net.HttpStatusCode.MultipleChoices)
-                {
-                    // do something drastic?
                     segment.End();
                     return;
                 }
@@ -73,12 +68,25 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 // We need the duration, so we end the segment before creating the events.
                 segment.End();
 
+                dynamic invokeModelResponse = GetTaskResult(responseTask);
+                if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= HttpStatusCode.MultipleChoices)
+                {
+                    //TODO: What to do with null response or non-2xx status code?
+                    return;
+                }
+
+
                 ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, agent);
             }
         }
 
         private static object GetTaskResult(object task)
         {
+            if (((Task)task).IsFaulted)
+            {
+                return null;
+            }
+
             var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
             return getResponse(task);
         }
@@ -89,17 +97,19 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize request payload");
                 return;
             }
 
             var responsePayload = GetResponsePayload(invokeModelRequest.ModelId, invokeModelResponse);
             if (responsePayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize response payload");
                 return;
             }
 
             // Embedding - does not create the other events
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -107,11 +117,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
-                    invokeModelRequest.ModelId,
+                    invokeModelResponse.ModelId,
                     "bedrock",
                     responsePayload.Responses[0].TokenCount,
                     false,
-                    null // not available in AWS
+                    null, // not available in AWS
+                    null
                 );
 
                 return;
@@ -124,12 +135,13 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 requestPayload.Temperature,
                 requestPayload.MaxTokens,
                 invokeModelRequest.ModelId,
-                invokeModelRequest.ModelId,
+                invokeModelResponse.ModelId,
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
                 "bedrock",
                 false,
-                null // not available in AWS
+                null,  // not available in AWS
+                null
             );
 
             // Prompt
@@ -166,104 +178,153 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private void HandleError(ISegment segment, dynamic invokeModelRequest, Task responseTask, IAgent agent)
         {
-            //TODO: This is not fully fleshed out.  it is just a stub.
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking model: {responseTask.Exception}");
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking Bedrock model {invokeModelRequest.ModelId}: {responseTask.Exception!.Message}");
 
+            dynamic bedrockException = responseTask.Exception!.InnerException;
+            if (bedrockException == null)
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Task faulted but there was no inner exception");
+                return;
+            }
 
             var requestPayload = GetRequestPayload(invokeModelRequest);
             if (requestPayload == null)
             {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize request payload");
                 return;
             }
 
-            IResponsePayload responsePayload = null;
-            dynamic invokeModelResponse = null;
+            HttpStatusCode statusCode = bedrockException.StatusCode;
+            string errorCode = bedrockException.ErrorCode;
+            string errorMessage = bedrockException.Message;
+            string requestId = bedrockException.RequestId;
 
-            // TODO: Figure out what the correct completion event is when there's an error. This call currently throws an exception because invokeModelResponse is null.
-            _= EventHelper.CreateChatCompletionEvent(
-                agent,
-                segment,
-                invokeModelResponse.ResponseMetadata.RequestId,
-                requestPayload.Temperature,
-                requestPayload.MaxTokens,
-                invokeModelRequest.ModelId,
-                invokeModelRequest.ModelId,
-                1 + responsePayload.Responses.Length,
-                responsePayload.StopReason,
-                "bedrock",
-                false,
-                null
-            );
+            var errorData = new LlmErrorData
+            {
+                HttpStatusCode = ((int)statusCode).ToString(),
+                ErrorCode = errorCode,
+                ErrorParam = null, // not available in AWS
+                ErrorMessage = errorMessage
+            };
+
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
+            {
+                EventHelper.CreateEmbeddingEvent(
+                    agent,
+                    segment,
+                    requestId,
+                    requestPayload.Prompt,
+                    invokeModelRequest.ModelId,
+                    null,
+                    "bedrock",
+                    null,
+                    true,
+                    null,
+                    errorData);
+            }
+            else
+            {
+                EventHelper.CreateChatCompletionEvent(
+                    agent,
+                    segment,
+                    requestId,
+                    requestPayload.Temperature,
+                    requestPayload.MaxTokens,
+                    invokeModelRequest.ModelId,
+                    null,
+                    0,
+                    null,
+                    "bedrock",
+                    true,
+                    null,
+                    errorData);
+
+            }
         }
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
         {
-            if (invokeModelRequest.ModelId.StartsWith("meta.llama2"))
-            {
-                return JsonSerializer.Deserialize<Llama2RequestPayload>(invokeModelRequest.Body.ToArray());
-            }
+            var model = ((string)invokeModelRequest.ModelId).FromModelId();
+            var utf8Json = invokeModelRequest.Body.ToArray();
 
-            if (invokeModelRequest.ModelId.StartsWith("cohere.command"))
+            switch (model)
             {
-                return JsonSerializer.Deserialize<CohereCommandRequestPayload>(invokeModelRequest.Body.ToArray());
+                case LlmModelType.Llama2:
+                    return JsonSerializer.Deserialize<Llama2RequestPayload>(utf8Json);
+                case LlmModelType.CohereCommand:
+                    return JsonSerializer.Deserialize<CohereCommandRequestPayload>(utf8Json);
+                case LlmModelType.Claude:
+                    return JsonSerializer.Deserialize<ClaudeRequestPayload>(utf8Json);
+                case LlmModelType.Titan:
+                    return JsonSerializer.Deserialize<TitanRequestPayload>(utf8Json);
+                case LlmModelType.Jurassic:
+                    return JsonSerializer.Deserialize<JurassicRequestPayload>(utf8Json);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
-
-            if (invokeModelRequest.ModelId.StartsWith("anthropic.claude"))
-            {
-                return JsonSerializer.Deserialize<ClaudeRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-text"))
-            {
-                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text"))
-            {
-                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("ai21.j2"))
-            {
-                return JsonSerializer.Deserialize<JurassicRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            return null;
         }
 
-        private static IResponsePayload GetResponsePayload(string model, dynamic invokeModelResponse)
+        private static IResponsePayload GetResponsePayload(string modelId, dynamic invokeModelResponse)
         {
-            if (model.StartsWith("meta.llama2"))
-            {
-                return JsonSerializer.Deserialize<Llama2ResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            var model = modelId.FromModelId();
+            var utf8Json = invokeModelResponse.Body.ToArray();
 
-            if (model.StartsWith("cohere.command"))
+            switch (model)
             {
-                return JsonSerializer.Deserialize<CohereCommandResponsePayload>(invokeModelResponse.Body.ToArray());
+                case LlmModelType.Llama2:
+                    return JsonSerializer.Deserialize<Llama2ResponsePayload>(utf8Json);
+                case LlmModelType.CohereCommand:
+                    return JsonSerializer.Deserialize<CohereCommandResponsePayload>(utf8Json);
+                case LlmModelType.Claude:
+                    return JsonSerializer.Deserialize<ClaudeResponsePayload>(utf8Json);
+                case LlmModelType.Titan:
+                    return JsonSerializer.Deserialize<TitanResponsePayload>(utf8Json);
+                case LlmModelType.Jurassic:
+                    return JsonSerializer.Deserialize<JurassicResponsePayload>(utf8Json);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
+        }
+    }
 
-            if (model.StartsWith("anthropic.claude"))
-            {
-                return JsonSerializer.Deserialize<ClaudeResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+    /// <summary>
+    /// The set of models supported by the Bedrock wrapper.
+    /// </summary>
+    public enum LlmModelType
+    {
+        Llama2,
+        CohereCommand,
+        Claude,
+        Titan,
+        Jurassic
+    }
 
-            if (model.StartsWith("amazon.titan-text"))
-            {
-                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+    public static class LlmModelTypeExtensions
+    {
+        /// <summary>
+        /// Converts a modelId to an LlmModelType. Throws an exception if the modelId is unknown.
+        /// </summary>
+        /// <param name="modelId"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static LlmModelType FromModelId(this string modelId)
+        {
+            if (modelId.StartsWith("meta.llama2"))
+                return LlmModelType.Llama2;
 
-            if (model.StartsWith("amazon.titan-embed-text"))
-            {
-                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            if (modelId.StartsWith("cohere.command"))
+                return LlmModelType.CohereCommand;
 
-            if (model.StartsWith("ai21.j2"))
-            {
-                return JsonSerializer.Deserialize<JurassicResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            if (modelId.StartsWith("anthropic.claude"))
+                return LlmModelType.Claude;
 
-            return null;
+            if (modelId.StartsWith("amazon.titan-text") || modelId.StartsWith("amazon.titan-embed-text"))
+                return LlmModelType.Titan;
+
+            if (modelId.StartsWith("ai21.j2"))
+                return LlmModelType.Jurassic;
+
+            throw new Exception($"Unknown model: {modelId}");
         }
     }
 }

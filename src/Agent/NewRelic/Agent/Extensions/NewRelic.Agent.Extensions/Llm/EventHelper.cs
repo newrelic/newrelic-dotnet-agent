@@ -20,7 +20,8 @@ namespace NewRelic.Agent.Extensions.Llm
             string finishReason,
             string vendor,
             bool isError,
-            IDictionary<string, string> headers)
+            IDictionary<string, string> headers,
+            LlmErrorData errorData)
         {
             var completionId = Guid.NewGuid().ToString();
 
@@ -56,6 +57,20 @@ namespace NewRelic.Agent.Extensions.Llm
             }
 
             agent.RecordLlmEvent("LlmChatCompletionSummary", attributes);
+
+            if (isError)
+            {
+                var errorAttributes = new Dictionary<string, object>
+                {
+                    { "error.code", errorData.ErrorCode },
+                    { "error.param", errorData.ErrorParam },
+                    { "http.statusCode", errorData.HttpStatusCode },
+                    { "completion_id", completionId }, 
+                    //{ "embedding_id", embeddingId } not available for completion summary 
+                };
+
+                InternalApi.NoticeError(errorData.ErrorMessage, errorAttributes);
+            }
 
             return completionId;
         }
@@ -105,13 +120,14 @@ namespace NewRelic.Agent.Extensions.Llm
             string vendor,
             int? tokenCount,
             bool isError,
-            IDictionary<string, string> headers)
+            IDictionary<string, string> headers,
+            LlmErrorData errorData)
         {
-            var completionId = Guid.NewGuid().ToString();
+            var embeddingId = Guid.NewGuid().ToString();
 
             var attributes = new Dictionary<string, object>
             {
-                { "id", completionId },
+                { "id", embeddingId },
                 { "request_id", requestId },
                 { "span_id", segment.SpanId },
                 { "trace_id", agent.GetLinkingMetadata()["trace.id"] },
@@ -139,6 +155,20 @@ namespace NewRelic.Agent.Extensions.Llm
             }
 
             agent.RecordLlmEvent("LlmEmbedding", attributes);
+
+            if (isError)
+            {
+                var errorAttributes = new Dictionary<string, object>
+                {
+                    { "error.code", errorData.ErrorCode },
+                    { "error.param", errorData.ErrorParam },
+                    { "http.statusCode", errorData.HttpStatusCode },
+                    //{ "completion_id", completionId }, not available for embedding
+                    { "embedding_id", embeddingId } 
+                };
+
+                InternalApi.NoticeError(errorData.ErrorMessage, errorAttributes);
+            }
         }
 
         private static void AddHeaderAttributes(IDictionary<string, string> headers, IDictionary<string, object> attributes)
