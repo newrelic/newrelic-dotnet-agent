@@ -38,8 +38,8 @@ jobs:
       - name: Echo vars
         run: |
           echo "$GITHUB_CONTEXT"
-          echo "release_run_id='${{ github.event.inputs.release_run_id }}'"
-          echo "release_agent_version='${{ github.event.inputs.release_agent_version }}'"
+          echo "release_run_id='${{ inputs.release_run_id }}'"
+          echo "release_agent_version='${{ inputs.release_agent_version }}'"
         shell: bash
 
   publish-release-notes:
