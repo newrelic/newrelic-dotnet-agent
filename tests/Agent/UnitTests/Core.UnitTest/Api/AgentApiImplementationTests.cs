@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Core.Api
         private IAgent _wrapperApi;
         private IAgentApi _agentApi;
         private List<ErrorGroupCallbackUpdateEvent> _errorGroupCallbackUpdateEvents;
+        private List<LlmTokenCountingCallbackUpdateEvent> _llmTokenCountingCallbackUpdateEvents;
 
         [SetUp]
         public void Setup()
@@ -32,6 +33,9 @@ namespace NewRelic.Agent.Core.Api
 
             _errorGroupCallbackUpdateEvents = new List<ErrorGroupCallbackUpdateEvent>();
             EventBus<ErrorGroupCallbackUpdateEvent>.Subscribe(OnRaisedErrorGroupCallbackUpdateEvent);
+
+            _llmTokenCountingCallbackUpdateEvents = new List<LlmTokenCountingCallbackUpdateEvent>();
+            EventBus<LlmTokenCountingCallbackUpdateEvent>.Subscribe(updateEvent => _llmTokenCountingCallbackUpdateEvents.Add(updateEvent));
 
             _agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null, null);
         }
@@ -126,6 +130,19 @@ namespace NewRelic.Agent.Core.Api
                 () => Assert.That(_errorGroupCallbackUpdateEvents, Has.Count.EqualTo(1), "Expected only one update event to be triggered."),
                 () => Assert.That(_errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, Is.SameAs(myCallback), "Expected the callback in the event to match the callback passed to the API.")
                 );
+        }
+
+        [Test]
+        public void SetLlmTokenCountingCallbackShouldRaiseEvent()
+        {
+            Func<string, string, int> myCallback = (_, _) => 42;
+
+            _agentApi.SetLlmTokenCountingCallback(myCallback);
+
+            NrAssert.Multiple(
+                () => Assert.That(_llmTokenCountingCallbackUpdateEvents, Has.Count.EqualTo(1), "Expected only one update event to be triggered."),
+                 () => Assert.That(_llmTokenCountingCallbackUpdateEvents[0].LlmTokenCountingCallback, Is.SameAs(myCallback), "Expected the callback in the event to match the callback passed to the API.")
+            );
         }
 
         private void OnRaisedErrorGroupCallbackUpdateEvent(ErrorGroupCallbackUpdateEvent updateEvent)

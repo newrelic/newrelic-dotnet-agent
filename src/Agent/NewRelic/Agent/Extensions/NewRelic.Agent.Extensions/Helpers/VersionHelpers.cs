@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace NewRelic.Agent.Extensions.Helpers
 {
     public static class VersionHelpers
@@ -18,7 +20,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             }
 
             var versionString = "Version=";
-            var start = assemblyFullName.IndexOf(versionString) + versionString.Length;
+            var start = assemblyFullName.IndexOf(versionString, StringComparison.Ordinal) + versionString.Length;
             var length = assemblyFullName.IndexOf(',', start) - start;
             return assemblyFullName.Substring(start, length);
         }
