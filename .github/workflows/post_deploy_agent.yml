@@ -3,13 +3,13 @@ name: Post Deploy for the .NET Agent
 on:
   workflow_dispatch:
     inputs:
-      agent_version:
+      release_agent_version:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
   workflow_call:
     inputs:
-      agent_version:
+      release_agent_version:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
@@ -58,7 +58,7 @@ jobs:
           fi
         shell: bash
         env: 
-          AGENT_VERSION: "Version: ${{ github.event.inputs.agent_version }}"
+          AGENT_VERSION: "Version: ${{ github.event.inputs.release_agent_version }}"
 
   validate-yum-repo:
     name: Validate YUM-based repo
@@ -99,7 +99,7 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.release_agent_version }}-1.x86_64"
 
   validate-download-site-s3:
     name: Validate S3-hosted Download Site
@@ -125,7 +125,7 @@ jobs:
           BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
           RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
           CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          AGENT_VERSION: ${{ github.event.inputs.release_agent_version }}
 
   validate-nuget-packages:
     name: Validate NuGet Package Deployment
@@ -150,7 +150,7 @@ jobs:
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
           RUN_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          AGENT_VERSION: ${{ github.event.inputs.release_agent_version }}
           CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
 
   # report-deprecated-nuget-packages:

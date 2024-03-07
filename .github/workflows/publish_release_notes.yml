@@ -3,21 +3,21 @@ name: Publish .NET Agent Release Notes
 on:
   workflow_dispatch:
     inputs:
-      agent_version:
-        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+      release_agent_version:
+        description: 'Agent version that was released.  Needs to match the version from the Deploy Agent workflow (deploy_agent.yml). Format: X.X.X'
         required: true
         type: string
-      run_id:
+      release_run_id:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
   workflow_call:
     inputs:
-      agent_version:
+      release_agent_version:
         description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
-      run_id:
+      release_run_id:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
@@ -37,9 +37,9 @@ jobs:
     steps:
       - name: Echo vars
         run: |
-          echo "run_id='${{ github.event.inputs.run_id }}'"
-          echo "agent_version='${{ github.event.inputs.agent_version }}'"
-        shell: bash
+          echo "release_run_id='${{ github.event.inputs.release_run_id }}'"
+          echo "release_agent_version='${{ github.event.inputs.release_agent_version }}'"
+      shell: bash
 
   publish-release-notes:
     name: Create and Publish Release Notes
@@ -59,14 +59,14 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ github.event.inputs.release_run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}/deploy-artifacts
           repository: ${{ github.repository }}
 
       - name: Set Docs PR Branch Name
         run: |
-          cleaned_branch=$(echo "${{ github.event.inputs.agent_version }}" | sed 's/\./-/g')
+          cleaned_branch=$(echo "${{ github.event.inputs.release_agent_version }}" | sed 's/\./-/g')
           echo "branch_name=dotnet-release-$cleaned_branch"
           echo "branch_name=dotnet-release-$cleaned_branch" >> $GITHUB_ENV
         shell: bash
@@ -97,7 +97,7 @@ jobs:
       #     user_name: 'dotnet-agent-team-bot'
       #     destination_branch: 'develop'
       #     destination_branch_create: ${{env.branch_name}}
-      #     commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.agent_version }}.'
+      #     commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.release_agent_version }}.'
 
       # - name: Create pull request
       #   run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
@@ -105,5 +105,5 @@ jobs:
       #     GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
       #     REPO: https://github.com/newrelic/docs-website/
       #     HEAD: ${{env.branch_name}}
-      #     TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
+      #     TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.release_agent_version }}"
       #     BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
