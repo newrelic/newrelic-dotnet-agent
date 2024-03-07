@@ -44,7 +44,7 @@ jobs:
           disable-sudo: false
           egress-policy: audit
       - name: Wait for APT to update
-        if: ${{ inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 5 minutes to wait for apt to update itself"
           sleep 300
@@ -83,7 +83,7 @@ jobs:
           fetch-depth: 0
 
       - name: Wait for YUM to update
-        if: ${{ inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 5 minutes to wait for yum to update itself"
           sleep 300
