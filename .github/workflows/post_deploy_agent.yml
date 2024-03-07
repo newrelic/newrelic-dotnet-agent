@@ -156,30 +156,30 @@ jobs:
           AGENT_VERSION: ${{ inputs.agent_version }}
           CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
 
-  # report-deprecated-nuget-packages:
-  #   name: Report Deprecated NuGet Packages
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     issues: write
+  report-deprecated-nuget-packages:
+    name: Report Deprecated NuGet Packages
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
       
-  #   steps:
-  #     - name: Harden Runner
-  #       uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-  #       with:
-  #         disable-sudo: true
-  #         egress-policy: audit
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
 
-  #     - name: Checkout
-  #       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-  #       with:
-  #         fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
 
-  #     - name: Build and Run NugetDeprecator
-  #       run: |
-  #         dotnet build --configuration Release "$BUILD_PATH"
-  #         "$RUN_PATH/NugetVersionDeprecator" -c $CONFIG_PATH --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
-  #       shell: bash
-  #       env:
-  #         BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
-  #         RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/
-  #         CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/config.yml
+      - name: Build and Run NugetDeprecator
+        run: |
+          dotnet build --configuration Release "$BUILD_PATH"
+          "$RUN_PATH/NugetVersionDeprecator" -c $CONFIG_PATH --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
+        shell: bash
+        env:
+          BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/config.yml
