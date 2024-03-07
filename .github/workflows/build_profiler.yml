@@ -124,7 +124,6 @@ jobs:
           if-no-files-found: error
 
   build-linux-x64-profiler:
-    if: ${{ inputs.deploy }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -175,7 +174,6 @@ jobs:
           if-no-files-found: error
 
   build-linux-arm64-profiler:
-    if: ${{ inputs.deploy }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
