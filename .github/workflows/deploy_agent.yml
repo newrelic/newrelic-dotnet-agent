@@ -438,7 +438,7 @@ jobs:
     needs: [get-release-info]
     # if: true
     name: Create and Publish Release Notes
-    uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@ci/release-workflow-issues
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
@@ -453,7 +453,7 @@ jobs:
     needs: [get-release-info]
     # if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
-    uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@ci/release-workflow-issues
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
     secrets: inherit
