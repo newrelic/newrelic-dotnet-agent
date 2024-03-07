@@ -30,9 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+          EVENT_NAME: ${{ toJSON(github.event_name) }}
         run: |
-          echo $EVENT_CONTEXT
+          echo $EVENT_NAME
 
   validate-apt-repo:
     name: Validate APT-based repo
