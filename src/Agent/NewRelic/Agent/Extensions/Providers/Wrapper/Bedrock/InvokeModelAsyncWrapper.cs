@@ -61,6 +61,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 if (responseTask.IsFaulted)
                 {
                     HandleError(segment, invokeModelRequest, responseTask, agent);
+                    segment.End();
                     return;
                 }
 
