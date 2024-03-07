@@ -31,6 +31,16 @@ env:
 
 jobs:
 
+  echo_input_vars:
+    name: Echo input vars (debugging)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo vars
+        run: |
+          echo "run_id='${{ github.event.inputs.run_id }}'"
+          echo "agent_version='${{ github.event.inputs.agent_version }}'"
+        shell: bash
+
   publish-release-notes:
     name: Create and Publish Release Notes
     runs-on: ubuntu-latest
@@ -75,25 +85,25 @@ jobs:
           CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
 
-      - name: Create branch
-        uses: dmnemec/copy_file_to_another_repo_action@c93037aa10fa8893de271f19978c980d0c1a9b37 # tag v1.1.1
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
-        with:
-          source_file: "${{ env.notes_file }}"
-          destination_repo: 'newrelic/docs-website'
-          destination_folder: 'src/content/docs/release-notes/agent-release-notes/net-release-notes'
-          user_email: '${{ secrets.BOT_EMAIL }}'
-          user_name: 'dotnet-agent-team-bot'
-          destination_branch: 'develop'
-          destination_branch_create: ${{env.branch_name}}
-          commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.agent_version }}.'
+      # - name: Create branch
+      #   uses: dmnemec/copy_file_to_another_repo_action@c93037aa10fa8893de271f19978c980d0c1a9b37 # tag v1.1.1
+      #   env:
+      #     API_TOKEN_GITHUB: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+      #   with:
+      #     source_file: "${{ env.notes_file }}"
+      #     destination_repo: 'newrelic/docs-website'
+      #     destination_folder: 'src/content/docs/release-notes/agent-release-notes/net-release-notes'
+      #     user_email: '${{ secrets.BOT_EMAIL }}'
+      #     user_name: 'dotnet-agent-team-bot'
+      #     destination_branch: 'develop'
+      #     destination_branch_create: ${{env.branch_name}}
+      #     commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.agent_version }}.'
 
-      - name: Create pull request
-        run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
-        env:
-          GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
-          REPO: https://github.com/newrelic/docs-website/
-          HEAD: ${{env.branch_name}}
-          TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
-          BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
+      # - name: Create pull request
+      #   run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
+      #   env:
+      #     GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+      #     REPO: https://github.com/newrelic/docs-website/
+      #     HEAD: ${{env.branch_name}}
+      #     TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
+      #     BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
