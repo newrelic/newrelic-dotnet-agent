@@ -51,7 +51,6 @@ env:
 
 jobs:
   build-windows-profiler:
-    if: ${{ github.event_name == 'push' }}
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
     runs-on: windows-latest
 
