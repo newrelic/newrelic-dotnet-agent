@@ -7,13 +7,17 @@ on:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
+      wait_for_apt_and_yum:
+        type: boolean
+        default: false
+        required: false
   workflow_call:
     inputs:
       agent_version:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
-      external_call:
+      wait_for_apt_and_yum:
         type: boolean
         default: true
         required: false
@@ -26,7 +30,6 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-
   validate-apt-repo:
     name: Validate APT-based repo
     runs-on: ubuntu-latest
@@ -37,7 +40,7 @@ jobs:
           disable-sudo: false
           egress-policy: audit
       - name: Wait for APT to update
-        if: ${{ github.event.inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ inputs.wait_for_apt_and_yum == 'true' }} # only wait if requested
         run: |
           echo "Sleeping 5 minutes to wait for apt to update itself"
           sleep 300
@@ -58,7 +61,7 @@ jobs:
           fi
         shell: bash
         env: 
-          AGENT_VERSION: "Version: ${{ github.event.inputs.agent_version }}"
+          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
 
   validate-yum-repo:
     name: Validate YUM-based repo
@@ -76,7 +79,7 @@ jobs:
           fetch-depth: 0
 
       - name: Wait for YUM to update
-        if: ${{ github.event.inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ inputs.wait_for_apt_and_yum == 'true' }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 5 minutes to wait for yum to update itself"
           sleep 300
@@ -99,7 +102,7 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ inputs.agent_version }}-1.x86_64"
 
   validate-download-site-s3:
     name: Validate S3-hosted Download Site
@@ -125,7 +128,7 @@ jobs:
           BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
           RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
           CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          AGENT_VERSION: ${{ inputs.agent_version }}
 
   validate-nuget-packages:
     name: Validate NuGet Package Deployment
@@ -150,7 +153,7 @@ jobs:
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
           RUN_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          AGENT_VERSION: ${{ inputs.agent_version }}
           CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
 
   report-deprecated-nuget-packages:
