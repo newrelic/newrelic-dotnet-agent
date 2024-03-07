@@ -146,6 +146,8 @@ jobs:
             echo "release_version=${{github.event.inputs.agent_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{github.event.inputs.run_id}}" >> "$GITHUB_OUTPUT"
           fi
+          echo "Github output file:"
+          cat "${GITHUB_OUTPUT}"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
