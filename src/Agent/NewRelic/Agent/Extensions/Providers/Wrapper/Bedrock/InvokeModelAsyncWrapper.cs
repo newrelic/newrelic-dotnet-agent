@@ -109,7 +109,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             // Embedding - does not create the other events
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -180,7 +180,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         {
             agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking Bedrock model {invokeModelRequest.ModelId}: {responseTask.Exception!.Message}");
 
-
             dynamic bedrockException = responseTask.Exception!.InnerException;
             if (bedrockException == null)
             {
@@ -208,7 +207,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 ErrorMessage = errorMessage
             };
 
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text")) // might be changed to Contains("embed")...
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -245,72 +244,87 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
         {
-            if (invokeModelRequest.ModelId.StartsWith("meta.llama2"))
-            {
-                return JsonSerializer.Deserialize<Llama2RequestPayload>(invokeModelRequest.Body.ToArray());
-            }
+            var model = ((string)invokeModelRequest.ModelId).FromModelId();
+            var utf8Json = invokeModelRequest.Body.ToArray();
 
-            if (invokeModelRequest.ModelId.StartsWith("cohere.command"))
+            switch (model)
             {
-                return JsonSerializer.Deserialize<CohereCommandRequestPayload>(invokeModelRequest.Body.ToArray());
+                case LlmModelType.Llama2:
+                    return JsonSerializer.Deserialize<Llama2RequestPayload>(utf8Json);
+                case LlmModelType.CohereCommand:
+                    return JsonSerializer.Deserialize<CohereCommandRequestPayload>(utf8Json);
+                case LlmModelType.Claude:
+                    return JsonSerializer.Deserialize<ClaudeRequestPayload>(utf8Json);
+                case LlmModelType.Titan:
+                    return JsonSerializer.Deserialize<TitanRequestPayload>(utf8Json);
+                case LlmModelType.Jurassic:
+                    return JsonSerializer.Deserialize<JurassicRequestPayload>(utf8Json);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
-
-            if (invokeModelRequest.ModelId.StartsWith("anthropic.claude"))
-            {
-                return JsonSerializer.Deserialize<ClaudeRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-text"))
-            {
-                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("amazon.titan-embed-text"))
-            {
-                return JsonSerializer.Deserialize<TitanRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            if (invokeModelRequest.ModelId.StartsWith("ai21.j2"))
-            {
-                return JsonSerializer.Deserialize<JurassicRequestPayload>(invokeModelRequest.Body.ToArray());
-            }
-
-            return null;
         }
 
-        private static IResponsePayload GetResponsePayload(string model, dynamic invokeModelResponse)
+        private static IResponsePayload GetResponsePayload(string modelId, dynamic invokeModelResponse)
         {
-            if (model.StartsWith("meta.llama2"))
-            {
-                return JsonSerializer.Deserialize<Llama2ResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            var model = modelId.FromModelId();
+            var utf8Json = invokeModelResponse.Body.ToArray();
 
-            if (model.StartsWith("cohere.command"))
+            switch (model)
             {
-                return JsonSerializer.Deserialize<CohereCommandResponsePayload>(invokeModelResponse.Body.ToArray());
+                case LlmModelType.Llama2:
+                    return JsonSerializer.Deserialize<Llama2ResponsePayload>(utf8Json);
+                case LlmModelType.CohereCommand:
+                    return JsonSerializer.Deserialize<CohereCommandResponsePayload>(utf8Json);
+                case LlmModelType.Claude:
+                    return JsonSerializer.Deserialize<ClaudeResponsePayload>(utf8Json);
+                case LlmModelType.Titan:
+                    return JsonSerializer.Deserialize<TitanResponsePayload>(utf8Json);
+                case LlmModelType.Jurassic:
+                    return JsonSerializer.Deserialize<JurassicResponsePayload>(utf8Json);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
+        }
+    }
 
-            if (model.StartsWith("anthropic.claude"))
-            {
-                return JsonSerializer.Deserialize<ClaudeResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+    /// <summary>
+    /// The set of models supported by the Bedrock wrapper.
+    /// </summary>
+    public enum LlmModelType
+    {
+        Llama2,
+        CohereCommand,
+        Claude,
+        Titan,
+        Jurassic
+    }
 
-            if (model.StartsWith("amazon.titan-text"))
-            {
-                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+    public static class LlmModelTypeExtensions
+    {
+        /// <summary>
+        /// Converts a modelId to an LlmModelType. Throws an exception if the modelId is unknown.
+        /// </summary>
+        /// <param name="modelId"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static LlmModelType FromModelId(this string modelId)
+        {
+            if (modelId.StartsWith("meta.llama2"))
+                return LlmModelType.Llama2;
 
-            if (model.StartsWith("amazon.titan-embed-text"))
-            {
-                return JsonSerializer.Deserialize<TitanResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            if (modelId.StartsWith("cohere.command"))
+                return LlmModelType.CohereCommand;
 
-            if (model.StartsWith("ai21.j2"))
-            {
-                return JsonSerializer.Deserialize<JurassicResponsePayload>(invokeModelResponse.Body.ToArray());
-            }
+            if (modelId.StartsWith("anthropic.claude"))
+                return LlmModelType.Claude;
 
-            return null;
+            if (modelId.StartsWith("amazon.titan-text") || modelId.StartsWith("amazon.titan-embed-text"))
+                return LlmModelType.Titan;
+
+            if (modelId.StartsWith("ai21.j2"))
+                return LlmModelType.Jurassic;
+
+            throw new Exception($"Unknown model: {modelId}");
         }
     }
 }
