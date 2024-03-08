@@ -50,7 +50,7 @@ jobs:
 
       - id: configure_integration_tests_matrix
         run: |
-          if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
           'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
@@ -60,21 +60,21 @@ jobs:
           'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
+            namespaces="[ ${{ inputs.integration-test-namespaces }} ]"
           fi
           echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
 
       - id: configure_unbounded_tests_matrix
         run: |
-          if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             # Oracle is disabled temporarily
             #namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
             namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
+            namespaces="[ ${{ inputs.unbounded-test-namespaces }} ]"
           fi
           echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
@@ -83,7 +83,7 @@ jobs:
 
   run-integration-tests:
     needs: [setup-matrices]
-    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
+    if: inputs.solutions == 'Both' || inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
     runs-on: windows-2022 # TODO: make this a input so we can test different OSes?
     strategy:
@@ -134,7 +134,7 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
           repository: ${{ github.repository }}
@@ -143,7 +143,7 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ inputs.run_id }}
           name: integrationtests
           path: ${{ github.workspace }}
           repository: ${{ github.repository }}
@@ -171,7 +171,7 @@ jobs:
           #   $json.parallelizeAssembly = $true
           #   $json.parallelizeTestCollections = $true
           # }
-          if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+          if ("${{ inputs.parallelize }}" -eq "true") {
             $json.parallelizeAssembly = $true
             $json.parallelizeTestCollections = $true
           }
@@ -202,7 +202,7 @@ jobs:
 
   run-unbounded-tests:
     needs: [setup-matrices]
-    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
+    if: inputs.solutions == 'Both' || inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
     runs-on: windows-2022
     strategy:
@@ -227,7 +227,7 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
           repository: ${{ github.repository }}
@@ -236,7 +236,7 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ inputs.run_id }}
           name: unboundedintegrationtests
           path: ${{ github.workspace }}
           repository: ${{ github.repository }}
@@ -294,7 +294,7 @@ jobs:
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
-          if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+          if ("${{ inputs.parallelize }}" -eq "true") {
             $json.parallelizeAssembly = $true
             $json.parallelizeTestCollections = $true
           }
