@@ -9,7 +9,7 @@ on:
         type: string
       wait_for_apt_and_yum:
         type: boolean
-        default: false
+        default: true
         required: false
   workflow_call:
     inputs:
