@@ -58,7 +58,7 @@ jobs:
       tests_base_path: ${{ github.workspace }}\src\Agent\NewRelic
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      test_results_path: src\Agent\NewRelic\TestResults
+      test_results_path:  ${{ github.workspace }}\src\Agent\NewRelic\TestResults
 
     steps:
       - name: Checkout
@@ -107,6 +107,7 @@ jobs:
             mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x86.log
             OpenCppCoverage.exe --sources Profiler --cover_children --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx64.xml -- "vstest.console.exe" /Platform:x64 "Profiler\CommonTest\bin\x64\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x64\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x64\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x64\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x64\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x64\Release\SicilyTest.dll"        
             mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
+
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # v4.1.0
         with:
