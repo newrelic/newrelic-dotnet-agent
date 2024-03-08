@@ -28,5 +28,11 @@ namespace NewRelic.Api.Agent
         public void SetUserId(string userid)
         {
         }
+
+        public SegmentWrapper? RecordDatastoreSegment(string vendor, string model, string operation,
+            string? commandText, string? host, string? portPathOrID, string? databaseName)
+        {
+            return null;
+        }
     }
 }

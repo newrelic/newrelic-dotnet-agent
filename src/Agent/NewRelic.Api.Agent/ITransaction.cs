@@ -80,5 +80,20 @@ namespace NewRelic.Api.Agent
         /// </summary>
         /// <param name="userid">The User Id for this transaction.</param>
         void SetUserId(string userid);
+
+        /// <summary>
+        /// Records a datastore segment.
+        /// This function allows an unsupported datastore to be instrumented in the same way as the .NET agent automatically instruments its supported datastores.
+        /// </summary>
+        /// <param name="vendor">Datastore vendor name, for example MySQL, MSSQL, MongoDB.</param>
+        /// <param name="model">Table name or similar in non-relational datastores.</param>
+        /// <param name="operation">Operation being performed, for example "SELECT" or "UPDATE" for SQL databases.</param>
+        /// <param name="commandText">Optional. Query or similar in non-relational datastores.</param>
+        /// <param name="host">Optional. Server hosting the datastore</param>
+        /// <param name="portPathOrID">Optional. Port, path or other ID to aid in identifying the datastore.</param>
+        /// <param name="databaseName">Optional. Datastore name.</param>
+        /// <returns>IDisposable segment wrapper that both creates and ends the segment automatically.</returns>
+        SegmentWrapper? RecordDatastoreSegment(string vendor, string model, string operation,
+            string? commandText = null, string? host = null, string? portPathOrID = null, string? databaseName = null);
     }
 }
