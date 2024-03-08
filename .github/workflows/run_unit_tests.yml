@@ -5,7 +5,19 @@ on:
     branches:
       - main # runs after a completed PR to main
       - feature/* # runs after a push to a feature branch
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "build/**"
+      - "licenses/**"
+      - "release-please/**"
   pull_request: # runs on a PR to any branch
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "build/**"
+      - "licenses/**"
+      - "release-please/**"
   workflow_dispatch: # allows for manual trigger
 
 env:

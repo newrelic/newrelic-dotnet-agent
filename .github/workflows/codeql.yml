@@ -3,8 +3,20 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "build/**"
+      - "licenses/**"
+      - "release-please/**"
   pull_request:
     branches: [ "main", "feature/*"]
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "build/**"
+      - "licenses/**"
+      - "release-please/**"
   schedule:
     - cron: '20 3 * * 1'
 

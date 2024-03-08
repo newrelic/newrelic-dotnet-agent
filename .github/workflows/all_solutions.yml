@@ -5,10 +5,15 @@ on:
     branches:
       - main
       - "feature/**"
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "build/**"
+      - "licenses/**"
+      - "release-please/**"
   release:
     types: [published]
   workflow_dispatch:
-
   schedule:
     - cron: "0 9 * * 1-5"
 
