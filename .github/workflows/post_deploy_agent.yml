@@ -181,5 +181,5 @@ jobs:
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/
-          CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/config.yml
+          RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net8.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net8.0/config.yml
