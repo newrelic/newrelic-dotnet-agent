@@ -32,7 +32,7 @@ jobs:
         uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.inputs.run_id }}
+          run-id: ${{ inputs.run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
           repository: ${{ github.repository }}
@@ -46,11 +46,11 @@ jobs:
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\AzureSiteExtension\$packageName
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true (${{ inputs.deploy }}).  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell

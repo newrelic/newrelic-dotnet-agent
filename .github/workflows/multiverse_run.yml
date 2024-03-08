@@ -127,7 +127,7 @@ jobs:
         run: |
           cd ${{ env.multiverse_reportbuilder_path }}
           sudo chmod 777 ./ReportBuilder
-          ./ReportBuilder "${{ github.event.inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
+          ./ReportBuilder "${{ inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
         shell: bash
 
       - name: Deploy 🚀
