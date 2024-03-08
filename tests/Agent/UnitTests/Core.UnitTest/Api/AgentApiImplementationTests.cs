@@ -35,15 +35,17 @@ namespace NewRelic.Agent.Core.Api
             EventBus<ErrorGroupCallbackUpdateEvent>.Subscribe(OnRaisedErrorGroupCallbackUpdateEvent);
 
             _llmTokenCountingCallbackUpdateEvents = new List<LlmTokenCountingCallbackUpdateEvent>();
-            EventBus<LlmTokenCountingCallbackUpdateEvent>.Subscribe(updateEvent => _llmTokenCountingCallbackUpdateEvents.Add(updateEvent));
+            EventBus<LlmTokenCountingCallbackUpdateEvent>.Subscribe(OnRaisedLlmTokenCountingCallbackUpdateEvent);
 
             _agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null, null);
         }
+
 
         [TearDown]
         public void TearDown()
         {
             EventBus<ErrorGroupCallbackUpdateEvent>.Unsubscribe(OnRaisedErrorGroupCallbackUpdateEvent);
+            EventBus<LlmTokenCountingCallbackUpdateEvent>.Unsubscribe(OnRaisedLlmTokenCountingCallbackUpdateEvent);
         }
 
 
@@ -148,6 +150,10 @@ namespace NewRelic.Agent.Core.Api
         private void OnRaisedErrorGroupCallbackUpdateEvent(ErrorGroupCallbackUpdateEvent updateEvent)
         {
             _errorGroupCallbackUpdateEvents.Add(updateEvent);
+        }
+        private void OnRaisedLlmTokenCountingCallbackUpdateEvent(LlmTokenCountingCallbackUpdateEvent updateEvent)
+        {
+            _llmTokenCountingCallbackUpdateEvents.Add(updateEvent);
         }
     }
 }
