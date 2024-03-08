@@ -17,8 +17,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-modified-files:
+    name: Check if source files were modified, skip remaining jobs if not
+    uses: ./.github/workflows/check_modified_files.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      pull-requests: read
+
   analyze-dotnet:
     name: Analyze .NET
+    needs: check-modified-files
+    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
     runs-on: windows-latest
     timeout-minutes: 120
     permissions:
@@ -55,6 +65,8 @@ jobs:
 
   analyze-cpp:
     name: Analyze C++
+    needs: check-modified-files
+    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
     runs-on: windows-latest
     timeout-minutes: 120
     permissions:
