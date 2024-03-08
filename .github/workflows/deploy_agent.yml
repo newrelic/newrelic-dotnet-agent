@@ -67,13 +67,13 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
+        if: ${{ inputs.get-version-automatically == 'true' }}
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
       
       - name: Get Release Version and Run ID
-        if: ${{ github.event.inputs.get-version-automatically == 'true' }}
+        if: ${{ inputs.get-version-automatically == 'true' }}
         id: step1
         run: |
           # Get the commit sha for the most recent release
@@ -131,20 +131,20 @@ jobs:
       - name: Set Output Release Version and Build Run ID
         id: step2
         run: |
-          if [ "${{ github.event.inputs.get-version-automatically}}" = "true" ]; then
+          if [ "${{ inputs.get-version-automatically}}" = "true" ]; then
             echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
             echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
           else
-            if [[ -z "${{github.event.inputs.agent_version}}" ]]; then
+            if [[ -z "${{inputs.agent_version}}" ]]; then
               echo "::error::Agent Version not specified."
               exit 1
             fi
-            if [[ -z "${{github.event.inputs.run_id}}" ]]; then
+            if [[ -z "${{inputs.run_id}}" ]]; then
               echo "::error::Run ID not specified."
               exit 1
             fi
-            echo "release_version=${{github.event.inputs.agent_version}}" >> "$GITHUB_OUTPUT"
-            echo "workflow_run_id=${{github.event.inputs.run_id}}" >> "$GITHUB_OUTPUT"
+            echo "release_version=${{inputs.agent_version}}" >> "$GITHUB_OUTPUT"
+            echo "workflow_run_id=${{inputs.run_id}}" >> "$GITHUB_OUTPUT"
           fi
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,7 +161,7 @@ jobs:
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
@@ -178,13 +178,13 @@ jobs:
 
   deploy-downloadsite:
     needs: [get-release-info, get-external-artifacts]
-    if: ${{ github.event.inputs.downloadsite == 'true' }}
+    if: ${{ inputs.downloadsite == 'true' }}
     name: Deploy MSI to Download Site
     runs-on: windows-2019
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -208,7 +208,7 @@ jobs:
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
@@ -225,7 +225,7 @@ jobs:
           New-Item -ItemType directory -Path .\previous_releases\${{ needs.get-release-info.outputs.release_version }} -Force
           Copy-Item .\working_dir\* ".\previous_releases\${{ needs.get-release-info.outputs.release_version }}\" -Force -Recurse
           cd .\previous_releases\${{ needs.get-release-info.outputs.release_version }}
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
@@ -237,7 +237,7 @@ jobs:
   index-download-site:
     needs: deploy-downloadsite
     name: Rebuild indexes on the download site
-    if: ${{ github.event.inputs.indexdownloadsite == 'true'}}
+    if: ${{ inputs.indexdownloadsite == 'true'}}
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
@@ -250,7 +250,7 @@ jobs:
 
   deploy-nuget:
     needs: get-external-artifacts
-    if: ${{ github.event.inputs.nuget == 'true' }}
+    if: ${{ inputs.nuget == 'true' }}
     name: Deploy Agent to NuGet
     runs-on: windows-2019
 
@@ -259,7 +259,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -274,7 +274,7 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
@@ -288,7 +288,7 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
@@ -302,7 +302,7 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
@@ -316,7 +316,7 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
@@ -330,7 +330,7 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
@@ -341,7 +341,7 @@ jobs:
 
   deploy-linux:
     needs: [get-release-info, get-external-artifacts]
-    if: ${{ github.event.inputs.linux == 'true' }}
+    if: ${{ inputs.linux == 'true' }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
@@ -362,7 +362,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
@@ -399,7 +399,7 @@ jobs:
           touch docker.env
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
-          if [ "${{ github.event.inputs.linux-deploy-to-production }}" == "true" ] ; then
+          if [ "${{ inputs.linux-deploy-to-production }}" == "true" ] ; then
             # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)           
             echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
             echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
@@ -419,7 +419,7 @@ jobs:
           find . -name "*.bash" |xargs chmod a+x
           find . -type f |xargs dos2unix
           docker-compose build
-          if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
+          if [ "${{ inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
           else
             echo "Input:deploy was not true.  The following deploy command was not run:"
@@ -428,14 +428,14 @@ jobs:
         shell: bash
 
       - name: Clear Fastly cache
-        if: ${{ github.event.inputs.deploy == 'true' && success() }}
+        if: ${{ inputs.deploy == 'true' && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
 
   publish-release-notes:
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ inputs.deploy == 'true' && inputs.downloadsite == 'true' && inputs.nuget == 'true' && inputs.linux == 'true' && inputs.linux-deploy-to-production == 'true' }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
@@ -449,10 +449,11 @@ jobs:
       contents: read
       packages: read
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ inputs.deploy == 'true' && inputs.downloadsite == 'true' && inputs.nuget == 'true' && inputs.linux == 'true' && inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
+      wait_for_apt_and_yum: true
     secrets: inherit
 
