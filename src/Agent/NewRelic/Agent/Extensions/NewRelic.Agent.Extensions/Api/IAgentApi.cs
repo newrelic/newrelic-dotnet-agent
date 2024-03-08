@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Api
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
         void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback);
 
-        /// <summary> Sets the method that will be invoked to define the token count of completion.
+        /// <summary> Sets the method that will be invoked to define the token count on completion.
         ///
         /// The callback takes the model name and input value, and returns an integer of the token count.
         /// A value returned from the callback that is less than or equal to 0 will be ignored.

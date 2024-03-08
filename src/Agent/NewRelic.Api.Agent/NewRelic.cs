@@ -855,7 +855,7 @@ namespace NewRelic.Api.Agent
         /// A value returned from the callback that is less than or equal to 0 will be ignored.
         /// </summary>
         /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
-        /// [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void SetLlmTokenCountingCallback(Func<string, string, int> callback)
         {
             try
