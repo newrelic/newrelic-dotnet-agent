@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -202,6 +203,52 @@ namespace NewRelic.Agent.Core.Api
                     //Swallow the error
                 }
             }
+        }
+
+        /// <summary>
+        /// Records a datastore segment.
+        /// This function allows an unsupported datastore to be instrumented in the same way as the .NET agent automatically instruments its supported datastores.
+        /// </summary>
+        /// <param name="vendor">Datastore vendor name, for example MySQL, MSSQL, MongoDB.</param>
+        /// <param name="model">Table name or similar in non-relational datastores.</param>
+        /// <param name="operation">Operation being performed, for example "SELECT" or "UPDATE" for SQL databases.</param>
+        /// <param name="commandText">Optional. Query or similar in non-relational datastores.</param>
+        /// <param name="host">Optional. Server hosting the datastore</param>
+        /// <param name="portPathOrID">Optional. Port, path or other ID to aid in identifying the datastore.</param>
+        /// <param name="databaseName">Optional. Datastore name.</param>
+        /// <returns>Segment that was created.</returns>
+        public ISegment StartDatastoreSegment(string vendor, string model, string operation,
+             string commandText = null, string host = null, string portPathOrID =  null, string databaseName = null)
+        {
+            try
+            {
+                _apiSupportabilityMetricCounters.Record(ApiMethod.StartDatastoreSegment);
+                var method = new Method(typeof(object), "StartDatastoreSegment", string.Empty);
+                var methodCall = new MethodCall(method, null, null, false);
+                var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, model, operation);
+                var connectionInfo = new ConnectionInfo(vendor.ToLower(), host, portPathOrID, databaseName);
+                return _transaction.StartDatastoreSegment(
+                    methodCall: methodCall,
+                    parsedSqlStatement: parsedSqlStatement,
+                    connectionInfo: connectionInfo,
+                    commandText: commandText,
+                    queryParameters: null,
+                    isLeaf: false
+                );
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Log.Error(ex, "Error in StartDatastoreSegment");
+                }
+                catch (Exception)
+                {
+                    //Swallow the error
+                }
+            }
+
+            return null;
         }
     }
 }
