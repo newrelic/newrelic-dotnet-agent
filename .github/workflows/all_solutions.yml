@@ -136,8 +136,9 @@ jobs:
           if-no-files-found: error
 
   run-linux-container-tests:
-    needs: build-fullagent-msi
     name: Run Linux Container Tests
+    needs: 
+      - build-fullagent-msi
     uses: ./.github/workflows/run_linux_container_tests.yml
     secrets: inherit
         
@@ -694,9 +695,14 @@ jobs:
   integration-test-status:
     name: Check Test Matrix Status
     runs-on: ubuntu-latest
-    needs: [run-integration-tests, run-unbounded-tests]
+    needs: [run-linux-container-tests, run-integration-tests, run-unbounded-tests]
     if: always()
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
       - name: Successful test run
         if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0
