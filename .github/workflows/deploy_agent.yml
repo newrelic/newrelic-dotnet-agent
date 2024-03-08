@@ -454,5 +454,6 @@ jobs:
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
+      wait_for_apt_and_yum: true
     secrets: inherit
 
