@@ -81,14 +81,13 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "ScopeLoggers");
                 var loggers = getLoggersArrayFunc(logger);
 
-                // Get the first ScopeLogger in the array (logger.ScopeLoggers[0])
-                // If there is more than one scope logger, they've all received the same data, so the first
-                // one should be fine
-                object firstLogger = loggers.GetValue(0);
+                // Get the last ScopeLogger in the array (logger.ScopeLoggers[loggers.Length-1])
+                // If there is more than one scope logger, the last logger is the one with the ExternalScopeProvider set
+                object lastLogger = loggers.GetValue(loggers.Length-1);
 
-                // Get the scope provider from that logger (logger.ScopeLoggers[0].ExternalScopeProvider)
-                var scopeProviderPI = _scopeProviderPropertyInfo ??= firstLogger.GetType().GetProperty("ExternalScopeProvider");
-                var scopeProvider = scopeProviderPI.GetValue(firstLogger) as IExternalScopeProvider;
+                // Get the scope provider from that logger (logger.ScopeLoggers[loggers.Length-1].ExternalScopeProvider)
+                var scopeProviderPI = _scopeProviderPropertyInfo ??= lastLogger.GetType().GetProperty("ExternalScopeProvider");
+                var scopeProvider = scopeProviderPI.GetValue(lastLogger) as IExternalScopeProvider;
 
                 // Get the context data
                 var harvestedKvps = new Dictionary<string, object>();
