@@ -41,6 +41,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_event_data"" with : (.*)";
         public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
         public const string UpdateLoadedModulesLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""update_loaded_modules"" with : (.*)";
+        public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
 
         // Collector responses
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
@@ -564,5 +565,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 return DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss,fff");
             }
         }
+
+        #region CustomEvents
+        public IEnumerable<CustomEventData> GetCustomEvents()
+        {
+            return TryGetLogLines(CustomEventDataLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .SelectMany(json => TryExtractFromJsonArray<CustomEventData>(json, 1))
+                .Where(transactionEvent => transactionEvent != null);
+        }
+
+        #endregion
     }
 }
