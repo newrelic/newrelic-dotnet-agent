@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -85,38 +85,22 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, Dictionary<string, object> contextData, float priority)
+            :this(unixTimestampMS, message, level, spanId, traceId, contextData)
         {
-            TimeStamp = unixTimestampMS;
-            Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
-            Level = level;
-            SpanId = spanId;
-            TraceId = traceId;
-            ContextData = contextData;
             Priority = priority;
         }
 
         public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId, Dictionary<string, object> contextData)
+            : this(unixTimestampMS, message, level, spanId, traceId, contextData)
         {
-            TimeStamp = unixTimestampMS;
-            Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
-            Level = level;
-            SpanId = spanId;
-            TraceId = traceId;
-            ContextData = contextData;
             ErrorStack = string.Join(" \n", errorStack);
             ErrorMessage = errorMessage;
             ErrorClass = errorClass;
         }
 
         public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId, Dictionary<string, object> contextData, float priority)
+            : this(unixTimestampMS, message, level, spanId, traceId, contextData, priority)
         {
-            TimeStamp = unixTimestampMS;
-            Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
-            Level = level;
-            SpanId = spanId;
-            TraceId = traceId;
-            ContextData = contextData;
-            Priority = priority;
             ErrorStack = string.Join(" \n", errorStack);
             ErrorMessage = errorMessage;
             ErrorClass = errorClass;
