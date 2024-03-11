@@ -21,10 +21,6 @@ namespace NewRelic.Agent.Core.JsonConverters
         {
             if (value == null)
                 return;
-            if (serializer == null)
-                return;
-            if (writer == null)
-                return;
 
             // Write out the type as an array of values ordered by JSON index
             var values = GetJsonMemberValuesOrderedByIndex(value);
@@ -33,12 +29,6 @@ namespace NewRelic.Agent.Core.JsonConverters
 
         public override object ReadJson(JsonReader reader, Type type, object existingValue, JsonSerializer serializer)
         {
-            if (reader == null)
-                return null;
-            if (type == null)
-                return null;
-            if (serializer == null)
-                return null;
             if (reader.TokenType == JsonToken.Null)
                 return null;
 
