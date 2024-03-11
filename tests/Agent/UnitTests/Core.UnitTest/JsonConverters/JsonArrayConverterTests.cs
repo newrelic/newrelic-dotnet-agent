@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Reflection;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.JsonConverters;
+using System.Linq;
+using System.Reflection;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using System.Linq;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.JsonConverters
 {
     [TestFixture]
-    public class Class_JsonableAsArray
+    public class JsonArrayConverterTests
     {
         [JsonConverter(typeof(JsonArrayConverter))]
         private class SimpleProperties
