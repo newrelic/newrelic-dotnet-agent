@@ -121,7 +121,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
-                    invokeModelResponse.ModelId,
+                    invokeModelRequest.ModelId,
                     "bedrock",
                     responsePayload.Responses[0].TokenCount,
                     false,
@@ -139,7 +139,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 requestPayload.Temperature,
                 requestPayload.MaxTokens,
                 invokeModelRequest.ModelId,
-                invokeModelResponse.ModelId,
+                invokeModelRequest.ModelId,
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
                 "bedrock",
@@ -159,7 +159,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     0,
                     completionId,
                     responsePayload.PromptTokenCount,
-                    true
+                    false
                 );
 
             // Responses
