@@ -20,7 +20,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         public bool IsTransactionRequired => true; // part of spec, only create events for transactions.
 
         private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
-
+        private static ConcurrentDictionary<string, string> _libraryVersions  = new();
         private const string WrapperName = "BedrockInvokeModelAsync";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -44,8 +44,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             );
 
             // required per spec
-            // TODO: persist the version string in a field to avoid repeated calls to GetLibraryVersion
-            var version = VersionHelpers.GetLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
+            var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
 
             return Delegates.GetAsyncDelegateFor<Task>(
@@ -78,6 +77,11 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
                 ProcessInvokeModel(segment, invokeModelRequest, invokeModelResponse, agent);
             }
+        }
+
+        private string GetOrAddLibraryVersion(string assemblyFullName)
+        {
+            return _libraryVersions.GetOrAdd(assemblyFullName, VersionHelpers.GetLibraryVersion(assemblyFullName));
         }
 
         private static object GetTaskResult(object task)
