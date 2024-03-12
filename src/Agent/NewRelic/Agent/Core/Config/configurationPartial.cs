@@ -14,11 +14,9 @@
     // different origins of the property names.
     //
     // Property names such as "agentEnabled" come to us from Configuration.xsd via Configuration.cs.
-    // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
+    // Property names such as "AgentEnabled" are added in here.
     public partial class configuration
     {
-        private string _awsLambdaFunctionName;
-
         public string Xml { get; set; }
 
         [XmlIgnore]
@@ -53,44 +51,4 @@
 
         [XmlIgnore]
         public ILogConfig LogConfig { get { return log; } }
-
-        private bool? _serverlessModeEnabled;
-        [XmlIgnore]
-        public bool ServerlessModeEnabled
-        {
-            get
-            {
-                return _serverlessModeEnabled ??= CheckServerlessModeEnabled();
-            }
-
-            // for unit tests only, remove if we refactor to move this property into DefaultConfiguration
-            set { _serverlessModeEnabled = value; }
-        }
-
-        private bool CheckServerlessModeEnabled()
-        {
-            // according to the spec, environment variable takes precedence over config file
-            var serverlessModeEnvVariable = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
-
-            if (serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
-            {
-                return enabledViaEnvVariable;
-            }
-
-            // env variable is not set, check for function name
-            if (!string.IsNullOrEmpty(AwsLambdaFunctionName))
-                return true;
-
-            // fall back to config file
-            return serverlessModeEnabled;
-        }
-
-        [XmlIgnore]
-        public string AwsLambdaFunctionName
-        {
-            get
-            {
-                return _awsLambdaFunctionName ??= ConfigurationLoader.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
-            }
-        }
     }

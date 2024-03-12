@@ -95,9 +95,11 @@ namespace NewRelic.Agent.Core
         {
             // load the configuration
             configuration config = null;
+            IBootstrapConfiguration bootstrapConfig = null;
             try
             {
                 config = ConfigurationLoader.Initialize(false);
+                bootstrapConfig = ConfigurationLoader.BootstrapConfig;
             }
             catch
             {
@@ -112,7 +114,7 @@ namespace NewRelic.Agent.Core
             }
 
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container, config.ServerlessModeEnabled);
+            AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled);
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
@@ -150,20 +152,20 @@ namespace NewRelic.Agent.Core
             _wrapperService = _container.Resolve<IWrapperService>();
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
-            if (!config.ServerlessModeEnabled)
+            if (!bootstrapConfig.ServerlessModeEnabled)
                 _container.Resolve<IConnectionManager>().AttemptAutoStart();
             else
             {
                 Log.Info("The New Relic agent is operating in serverless mode.");
             }
 
-            AgentServices.StartServices(_container, config.ServerlessModeEnabled);
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled);
 
             // Setup the internal API first so that AgentApi can use it.
             InternalApi.SetAgentApiImplementation(agentApi);
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
-            Initialize(config.ServerlessModeEnabled);
+            Initialize(bootstrapConfig.ServerlessModeEnabled);
             _isInitialized = true;
         }
 

@@ -63,8 +63,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -88,8 +87,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -111,8 +109,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -136,8 +133,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -160,8 +156,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -186,8 +181,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -210,8 +204,7 @@ namespace NewRelic.Agent.Core.Config
                 "</configuration>";
 
 
-            var configuration = new configuration();
-            configuration.Initialize(xml, "");
+            var configuration = CreateBootstrapConfiguration(xml);
 
             // Act
             var result = configuration.ServerlessModeEnabled;
@@ -220,5 +213,11 @@ namespace NewRelic.Agent.Core.Config
             Assert.That(result, Is.False);
         }
 
+        private BootstrapConfiguration CreateBootstrapConfiguration(string xml)
+        {
+            var configuration = new configuration();
+            configuration.Initialize(xml, "");
+            return new BootstrapConfiguration(configuration);
+        }
     }
 }

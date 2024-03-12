@@ -28,6 +28,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         private ServerConfiguration _serverConfig;
         private RunTimeConfiguration _runTimeConfiguration;
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+        private IBootstrapConfiguration _bootstrapConfiguration;
 
         private IEnvironment _environment;
         private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -55,6 +56,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             _configurationManagerStatic = new ConfigurationManagerStaticMock();
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
 
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -156,7 +158,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         }
         private void UpdateConfig()
         {
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
