@@ -9,7 +9,6 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -34,25 +33,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var searchPattern = _fileName != string.Empty ? _fileName : "newrelic_agent_*.log";
 
-            do
-            {
-                var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
-                    Directory.GetFiles(logDirectoryPath, searchPattern)
-                        .Where(file => file != null && !file.Contains("audit"))
-                        .OrderByDescending(File.GetLastWriteTimeUtc)
-                        .FirstOrDefault() : null;
-
-                if (mostRecentlyUpdatedFile != null)
-                {
-                    _filePath = mostRecentlyUpdatedFile;
-                    return;
-                }
-
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            } while (timeTaken.Elapsed < timeout && logFileExpected);
-
             if (logFileExpected)
             {
+                do
+                {
+                    var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
+                        Directory.GetFiles(logDirectoryPath, searchPattern)
+                            .Where(file => file != null && !file.Contains("audit"))
+                            .OrderByDescending(File.GetLastWriteTimeUtc)
+                            .FirstOrDefault() : null;
+
+                    if (mostRecentlyUpdatedFile != null)
+                    {
+                        _filePath = mostRecentlyUpdatedFile;
+                        return;
+                    }
+
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                } while (timeTaken.Elapsed < timeout);
+
                 throw new Exception($"Waited {timeout.TotalSeconds:N0}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
             }
         }

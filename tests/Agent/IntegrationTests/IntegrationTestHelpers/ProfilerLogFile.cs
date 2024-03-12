@@ -31,25 +31,29 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
             var timeTaken = Stopwatch.StartNew();
-            do
-            {
-                var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
-                    Directory.EnumerateFiles(logDirectoryPath, "NewRelic.Profiler.*.log")
-                        .Where(file => file != null)
-                        .OrderByDescending(File.GetLastWriteTimeUtc)
-                        .FirstOrDefault() : null;
-
-                if (mostRecentlyUpdatedFile != null)
-                {
-                    _filePath = mostRecentlyUpdatedFile;
-                    return;
-                }
-
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            } while (timeTaken.Elapsed < timeout);
 
             if (logFileExpected)
+            {
+                do
+                {
+                    var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
+                        Directory.EnumerateFiles(logDirectoryPath, "NewRelic.Profiler.*.log")
+                            .Where(file => file != null)
+                            .OrderByDescending(File.GetLastWriteTimeUtc)
+                            .FirstOrDefault() : null;
+
+                    if (mostRecentlyUpdatedFile != null)
+                    {
+                        _filePath = mostRecentlyUpdatedFile;
+                        return;
+                    }
+
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                } while (timeTaken.Elapsed < timeout);
+
                 throw new Exception("No profiler log file found.");
+            }
+
         }
 
         #region Log Lines
