@@ -261,6 +261,18 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             EvaluateCacheMetrics(cache, expectedHits, expectedMisses, expectedEjections, expectedSize);
         }
 
+        [Test]
+        public void CacheMaintenanceThreadMaintainsCache()
+        {
+            var cache = new SimpleCache<string, string>(1);
+            cache.GetOrAdd("key1", () => "value1");
+            cache.GetOrAdd("key2", () => "value2");
+
+            Thread.Sleep(1000);
+
+            EvaluateCacheMetrics(cache, 0, 2, 2, 0);
+        }
+
         private void EvaluateCacheMetrics<T, V>(SimpleCache<T, V> cache, int expectedHits, int expectedMisses,
             int expectedEjections, int expectedSize) where V : class
         {
