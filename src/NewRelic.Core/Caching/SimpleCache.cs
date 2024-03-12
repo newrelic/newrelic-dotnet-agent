@@ -144,7 +144,10 @@ namespace NewRelic.Core.Caching
             return node;
         }
 
-        private void MaintainCache()
+        /// <summary>
+        /// public only for unit tests. Don't call this method directly!
+        /// </summary>        
+        public void MaintainCache()
         {
             var count = _cacheMap.Count;
             if (count > _capacity)
