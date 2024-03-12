@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+        public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool logFileExpected = true)
             : base(testLogger)
         {
             Contract.Assert(logDirectoryPath != null);
@@ -49,10 +49,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
-            } while (timeTaken.Elapsed < timeout);
+            } while (timeTaken.Elapsed < timeout && logFileExpected);
 
-            if (throwIfNotFound)
+            if (logFileExpected)
+            {
                 throw new Exception($"Waited {timeout.TotalSeconds:N0}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
+            }
         }
 
         public override IEnumerable<string> GetFileLines()

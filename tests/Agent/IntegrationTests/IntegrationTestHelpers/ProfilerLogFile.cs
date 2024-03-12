@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public ProfilerLogFile(string logDirectoryPath, TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+        public ProfilerLogFile(string logDirectoryPath, TimeSpan? timeoutOrZero = null, bool logFileExpected = true)
         {
             Contract.Assert(logDirectoryPath != null);
 
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             } while (timeTaken.Elapsed < timeout);
 
-            if (throwIfNotFound)
+            if (logFileExpected)
                 throw new Exception("No profiler log file found.");
         }
 
