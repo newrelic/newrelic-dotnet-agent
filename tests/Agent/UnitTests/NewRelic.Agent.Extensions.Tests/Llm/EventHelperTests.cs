@@ -393,7 +393,7 @@ namespace Agent.Extensions.Tests.Llm
             
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, true, null, errorData, false);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, true, null, errorData, true);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
