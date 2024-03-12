@@ -70,6 +70,13 @@ namespace NewRelic.Agent.Core.Config
         #endregion Unit test helpers
 
         /// <summary>
+        /// Gets the bootstrap configuration for the agent. The settings in this config does not change over time, and
+        /// it is only available after the ConfigurationLoader.Initialize method has been called. If this property is
+        /// accessed before the Initialize method has been called, it will return a default bootstrap configuration.
+        /// </summary>
+        public static IBootstrapConfiguration BootstrapConfig { get; private set; } = BootstrapConfiguration.GetDefault();
+
+        /// <summary>
         /// Reads an application setting from the web configuration associated with the current virtual path,
         /// or from the web site if none is found.
         /// Typically, this will attempt to read the "web.config" or "Web.Config" file for the path.
@@ -321,7 +328,9 @@ namespace NewRelic.Agent.Core.Config
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
-                return Initialize(fileName, publishDeserializedEvent);
+                var config = Initialize(fileName, publishDeserializedEvent);
+                BootstrapConfig = new BootstrapConfiguration(config);
+                return config;
             }
             catch (FileNotFoundException ex)
             {

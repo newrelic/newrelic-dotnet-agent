@@ -57,6 +57,7 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
         private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+        private readonly IBootstrapConfiguration _bootstrapConfiguration = BootstrapConfiguration.GetDefault();
         private Dictionary<string, string> _newRelicAppSettings { get; }
 
         public bool UseResourceBasedNamingForWCFEnabled { get; }
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
             : this()
         {
             _environment = environment;
@@ -101,6 +102,10 @@ namespace NewRelic.Agent.Core.Configuration
             if (securityPoliciesConfiguration != null)
             {
                 _securityPoliciesConfiguration = securityPoliciesConfiguration;
+            }
+            if (_bootstrapConfiguration != null)
+            {
+                _bootstrapConfiguration = bootstrapConfiguration;
             }
 
             LogDisabledWarnings();
@@ -208,7 +213,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public bool ServerlessModeEnabled => _localConfiguration.ServerlessModeEnabled;
+        public bool ServerlessModeEnabled => _bootstrapConfiguration.ServerlessModeEnabled;
 
         private string _agentLicenseKey;
         public virtual string AgentLicenseKey
