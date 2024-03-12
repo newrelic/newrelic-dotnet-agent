@@ -126,7 +126,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     responsePayload.Responses[0].TokenCount,
                     false,
                     null, // not available in AWS
-                    null
+                    null,
+                    agent.Configuration.AiMonitoringRecordContentEnabled
                 );
 
                 return;
@@ -159,8 +160,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     0,
                     completionId,
                     responsePayload.PromptTokenCount,
-                    true
-                );
+                    true,
+                    agent.Configuration.AiMonitoringRecordContentEnabled);
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -175,8 +176,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     i + 1,
                     completionId,
                     responsePayload.Responses[i].TokenCount,
-                    true
-                );
+                    true,
+                    agent.Configuration.AiMonitoringRecordContentEnabled);
             }
         }
 
@@ -224,7 +225,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     null,
                     true,
                     null,
-                    errorData);
+                    errorData,
+                    agent.Configuration.AiMonitoringRecordContentEnabled);
             }
             else
             {
