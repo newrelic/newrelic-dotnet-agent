@@ -3773,6 +3773,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.aiMonitoring.enabled = false;
             Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
         }
+        [Test]
+        public void AiMonitoringRecordContentDisabledWhenHighSecurityModeEnabled()
+        {
+            _localConfig.highSecurity.enabled = true;
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
+        }
 
         [Test]
         public void LlmTokenCountingCallbackComesFromRuntimeConfig()
