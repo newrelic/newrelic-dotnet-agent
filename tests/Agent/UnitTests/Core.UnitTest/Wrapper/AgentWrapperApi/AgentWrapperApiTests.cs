@@ -2024,6 +2024,248 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #endregion
 
+        #region RecordLlmEvent
+        [Test]
+        public void RecordLlmEvent_DoesNothing_WhenAiMonitoringIsDisabled()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(false);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            Mock.Assert(() => _transactionService.GetCurrentInternalTransaction(), Occurs.Never());
+        }
+        [Test]
+        public void RecordLlmEvent_RecordsSupportabilityMetric_WhenAiMonitoringStreamingEnabledIsDisabled()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringStreamingEnabled)
+                .Returns(false);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            SetupTransaction();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCountMetric("Supportability/DotNet/ML/Streaming/Disabled", 1), Occurs.Once());
+        }
+        [Test]
+        public void RecordLlmEvent_SetsLlmTransactionMetadata()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringStreamingEnabled)
+                .Returns(true);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            SetupTransaction();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            Assert.That(transaction.TransactionMetadata.IsLlmTransaction, Is.True);
+        }
+
+        [Test]
+        public void RecordLlmEvent_IncludesCustomAttributes_WithLlmPrefix()
+        {
+            // Arrange
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+            .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+            {
+                foreach (var attribute in attributes)
+                {
+                    actualAttributes.Add(attribute.Key, attribute.Value);
+                }
+            });
+
+            var eventName = "eventName";
+
+            SetupTransaction();
+            _transaction.AddCustomAttribute("llm.key1", "value1");
+            _transaction.AddCustomAttribute("llm.key2", 1);
+            _transaction.AddCustomAttribute("key3", "value3");
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, new Dictionary<string, object>());
+
+            var expectedAttributes = new Dictionary<string, object>() { { "llm.key1", "value1" }, { "llm.key2", 1 } };
+            Assert.That(actualAttributes, Is.EqualTo(expectedAttributes));
+        }
+        [Test]
+        [TestCase("LlmChatCompletionMessage")]
+        [TestCase("LlmEmbedding")]
+        public void RecordLlmEvent_SetsTokenCount_IfLlmTokenCountingCallback_IsSetAndReturnsGreaterThanZero(string eventType)
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            string actualModel = null;
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.LlmTokenCountingCallback).Returns((model, content) =>
+            {
+                actualModel = model;
+                if (model == "model1" && content == "This is a test message")
+                {
+                    return 10;
+                }
+                return 0;
+            });
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var modelAttribute = eventType == "LlmChatCompletionMessage" ? "request.model" : "response.model";
+            var attributes = new Dictionary<string, object>
+            {
+                { eventType == "LlmChatCompletionMessage" ? "content" : "input", "This is a test message" },
+                { modelAttribute, "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventType, attributes);
+
+            // Assert
+            Assert.That(actualAttributes["token_count"], Is.EqualTo(10));
+            Assert.That(actualModel, Is.EqualTo("model1"));
+        }
+        [Test]
+        public void RecordLlmEvent_DoesNotSetTokenCount_IfLlmTokenCountingCallback_IsNotSet()
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { "content", "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent("LlmChatCompletionMessage", attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey("token_count"), Is.False);
+        }
+
+        [Test]
+        public void RecordLlmEvent_DoesNotSetTokenCount_IfLlmTokenCountingCallback_ReturnsZero()
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.LlmTokenCountingCallback).Returns((model, content) => 0);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { "content", "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent("LlmChatCompletionMessage", attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey("token_count"), Is.False);
+        }
+
+        [Test]
+        [TestCase("LlmChatCompletionMessage", "content", true, false)]
+        [TestCase("LlmChatCompletionMessage", "content", false, true)]
+        [TestCase("LlmEmbedding", "input", true, false)]
+        [TestCase("LlmEmbedding", "input", false, true)]
+        public void RecordLlmEvent_RemovesAttribute_IfHighSecurityMode_IsEnabled_OrRecordContentIsDisabled(string eventType, string attributeName, bool highSecurityMode, bool recordContentEnabled)
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((_, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            if (highSecurityMode)
+                Mock.Arrange(() => _configurationService.Configuration.HighSecurityModeEnabled)
+                    .Returns(true);
+            if (!recordContentEnabled)
+                Mock.Arrange(() => _configurationService.Configuration.AiMonitoringRecordContentEnabled)
+                    .Returns(false);
+
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                    .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { attributeName, "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventType, attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey(attributeName), Is.False);
+        }
+        #endregion
+
         private void SetupTransaction()
         {
             var transactionName = TransactionName.ForWebTransaction("foo", "bar");

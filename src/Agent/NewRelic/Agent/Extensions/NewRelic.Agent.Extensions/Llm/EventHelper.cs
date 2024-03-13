@@ -84,8 +84,7 @@ namespace NewRelic.Agent.Extensions.Llm
             int sequence,
             string completionId,
             int? tokenCount,
-            bool isResponse,
-            bool contentRecordingEnabled)
+            bool isResponse)
         {
             var attributes = new Dictionary<string, object>
             {
@@ -96,7 +95,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "response.model", responseModel },
                 { "vendor", "bedrock" },
                 { "ingest_source", "DotNet" },
-                { "content", contentRecordingEnabled ? content : null },
+                { "content", content },
                 { "role", role },
                 { "sequence", sequence },
                 { "completion_id", completionId },
@@ -122,8 +121,7 @@ namespace NewRelic.Agent.Extensions.Llm
             int? tokenCount,
             bool isError,
             IDictionary<string, string> headers,
-            LlmErrorData errorData,
-            bool contentRecordingEnabled)
+            LlmErrorData errorData)
         {
             var embeddingId = Guid.NewGuid().ToString();
 
@@ -133,7 +131,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "request_id", requestId },
                 { "span_id", segment.SpanId },
                 { "trace_id", agent.GetLinkingMetadata()["trace.id"] },
-                { "input", contentRecordingEnabled ? input : null },
+                { "input", input },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
                 //{ "response.organization", "not available" },
