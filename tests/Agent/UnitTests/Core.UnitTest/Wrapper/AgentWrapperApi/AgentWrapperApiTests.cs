@@ -2115,6 +2115,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         {
             // Arrange
             var actualAttributes = new Dictionary<string, object>();
+            string actualModel = null;
             Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
                 .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
                 {
@@ -2126,6 +2127,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             Mock.Arrange(() => _configurationService.Configuration.LlmTokenCountingCallback).Returns((model, content) =>
             {
+                actualModel = model;
                 if (model == "model1" && content == "This is a test message")
                 {
                     return 10;
@@ -2135,10 +2137,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
                 .Returns(true);
 
+            var modelAttribute = eventType == "LlmChatCompletionMessage" ? "request.model" : "response.model";
             var attributes = new Dictionary<string, object>
             {
                 { eventType == "LlmChatCompletionMessage" ? "content" : "input", "This is a test message" },
-                { "request.model", "model1" }
+                { modelAttribute, "model1" }
             };
 
             SetupTransaction();
@@ -2149,6 +2152,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             // Assert
             Assert.That(actualAttributes["token_count"], Is.EqualTo(10));
+            Assert.That(actualModel, Is.EqualTo("model1"));
         }
         [Test]
         public void RecordLlmEvent_DoesNotSetTokenCount_IfLlmTokenCountingCallback_IsNotSet()
