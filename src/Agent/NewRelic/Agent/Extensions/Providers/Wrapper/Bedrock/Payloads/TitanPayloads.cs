@@ -43,6 +43,26 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
         }
     }
 
+    /*
+     {
+        "embedding": [float, float, ...],
+        "inputTextTokenCount": int
+     }
+     */
+
+    public class TitanEmbeddedResponsePayload : IResponsePayload
+    {
+        [JsonPropertyName("embeddings")]
+        private List<float> Embeddings { get; set; }
+
+        [JsonPropertyName("inputTextTokenCount")]
+        public int? PromptTokenCount { get; set; }
+
+        public ResponseData[] Responses { get => null; set { } }
+
+        public string StopReason { get => "FINISHED"; set { } }
+    }
+
     public class TitanResponsePayload : IResponsePayload
     {
         private ResponseData[] _responses;

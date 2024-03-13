@@ -14,8 +14,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
     [Library]
     public class LLMExerciser
     {
-        private Dictionary<string, Func<string, Task<string>>> _models =
-            new Dictionary<string, Func<string, Task<string>>>
+        private Dictionary<string, Func<string, bool, Task<string>>> _models =
+            new Dictionary<string, Func<string, bool, Task<string>>>
             {
                 { "meta13", BedrockModels.InvokeLlama213Async },
                 { "meta70", BedrockModels.InvokeLlama270Async },
@@ -24,7 +24,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "amazonexpress", BedrockModels.InvokeAmazonExpressAsync },
                 { "cohere", BedrockModels.InvokeCohereAsync },
                 { "anthropic", BedrockModels.InvokeClaudeAsync },
-                { "badllama", BedrockModels.InvokeBadLlama2Async },
             };
 
         Dictionary<string, object> _attributes = new Dictionary<string, object>
@@ -42,7 +41,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             {
                 var bytes = Convert.FromBase64String(base64Prompt);
                 var prompt = Encoding.UTF8.GetString(bytes);
-                await func(prompt);
+                var response = await func(prompt, false);
+                Console.WriteLine(response);
             }
             else
             {
@@ -53,7 +53,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task InvokeModelWithFeedbackAndCallback(string model, string base64Prompt, string fakeTokenCount)
+        public async Task InvokeModelWithError(string model, string base64Prompt)
+        {
+            if (_models.TryGetValue(model, out var func))
+            {
+                var bytes = Convert.FromBase64String(base64Prompt);
+                var prompt = Encoding.UTF8.GetString(bytes);
+                var response = await func(prompt, true);
+                Console.WriteLine(response);
+            }
+            else
+            {
+                // Oopsie
+            }
+        }
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task InvokeModelWithFeedbackAndCallback(string model, string base64Prompt, string fakeTokenCount, string rating, string category, string message, string attributes)
         {
             if (_models.TryGetValue(model, out var func))
             {
@@ -61,11 +78,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 NewRelic.Api.Agent.NewRelic.SetLlmTokenCountingCallback((model, message) => int.Parse(fakeTokenCount));
                 var bytes = Convert.FromBase64String(base64Prompt);
                 var prompt = Encoding.UTF8.GetString(bytes);
-                await func(prompt);
+                var response =await func(prompt, false);
+                Console.WriteLine(response);
 
                 var traceId = NewRelic.Api.Agent.NewRelic.GetAgent().GetLinkingMetadata()["trace.id"];
 
-                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, 2.0, "mycategory", "good job", _attributes);
+                Dictionary<string, object> dict = new Dictionary<string, object>();
+                var pairs = attributes.Split(',');
+
+                foreach (var item in pairs)
+                {
+                    var pair = item.Split('=');
+                    dict[pair[0]] = pair[1];
+                }
+                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, float.Parse(rating), category, message, _attributes);
             }
             else
             {

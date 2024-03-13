@@ -21,14 +21,12 @@ where TFixture : ConsoleDynamicMethodFixture
         private string _prompt = "In one sentence, what is a large-language model?";
         private List<string> _bedrockModelsToTest = new List<string>
         {
-            //"meta13",
-            //"meta70", // TODO: I get an error that I don't have permissions for this model?
-            //"ai21",
+            "meta13",
+            "ai21",
             "amazonembed",
-            //"amazonexpress",
-            //"cohere",
-            //"anthropic",
-            //"badllama"
+            "amazonexpress",
+            "cohere",
+            "anthropic"
         };
 
         private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
@@ -77,6 +75,8 @@ where TFixture : ConsoleDynamicMethodFixture
             {
                 _fixture.AddCommand($"LLMExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
             }
+            _fixture.AddCommand($"RootCommands DelaySeconds 10");
+
             _fixture.Initialize();
         }
 
@@ -111,7 +111,7 @@ where TFixture : ConsoleDynamicMethodFixture
         }
 
         [Fact]
-        public void Test()
+        public void BedrockTest()
         {
             int expected = _bedrockModelsToTest.Count - 1; // 1 failure
             var expectedMetrics = new List<Assertions.ExpectedMetric>

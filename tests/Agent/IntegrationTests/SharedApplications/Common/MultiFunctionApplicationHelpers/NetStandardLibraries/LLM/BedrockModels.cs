@@ -21,19 +21,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient = new AmazonBedrockRuntimeClient(RegionEndpoint.USWest2);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeAmazonEmbedAsync(string prompt) => await InvokeTitanAsync(prompt, true);
+        public static async Task<string> InvokeAmazonEmbedAsync(string prompt, bool generateError) => await InvokeTitanAsync(prompt, true, generateError);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeAmazonExpressAsync(string prompt) => await InvokeTitanAsync(prompt, false);
+        public static async Task<string> InvokeAmazonExpressAsync(string prompt, bool generateErrort) => await InvokeTitanAsync(prompt, false, generateErrort);
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeLlama213Async(string prompt)
+        public static async Task<string> InvokeLlama213Async(string prompt, bool generateError)
         {
             string payload = new JsonObject()
             {
                 { "prompt", prompt },
-                { "max_gen_len", 512 },
+                { "max_gen_len", generateError ? -1 : 512 },
                 { "temperature", 0.5 },
                 { "top_p", 0.9 }
             }.ToJsonString();
@@ -65,12 +65,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeLlama270Async(string prompt)
+        public static async Task<string> InvokeLlama270Async(string prompt, bool generateError)
         {
             string payload = new JsonObject()
             {
                 { "prompt", prompt },
-                { "max_gen_len", 512 },
+                { "max_gen_len", generateError ? -1 : 512 },
                 { "temperature", 0.5 },
                 { "top_p", 0.9 }
             }.ToJsonString();
@@ -102,7 +102,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static async Task<string> InvokeTitanAsync(string prompt, bool isEmbed)
+        private static async Task<string> InvokeTitanAsync(string prompt, bool isEmbed, bool generateError)
         {
             string payload = "";
             if (isEmbed)
@@ -163,7 +163,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeJurassicAsync(string prompt)
+        public static async Task<string> InvokeJurassicAsync(string prompt, bool generateError)
         {
             string payload = new JsonObject()
             {
@@ -204,7 +204,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeClaudeAsync(string prompt)
+        public static async Task<string> InvokeClaudeAsync(string prompt, bool generateError)
         {
             string payload = new JsonObject()
             {
@@ -241,7 +241,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeCohereAsync(string prompt)
+        public static async Task<string> InvokeCohereAsync(string prompt, bool generateError)
         {
             string payload = new JsonObject()
             {
@@ -263,43 +263,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                         var body = await reader.ReadToEndAsync();
                         var node = JsonNode.Parse(body);
                         return node?["generations"]?[0]["text"].GetValue<string>() ?? "";
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("InvokeModelAsync failed with status code " + response.HttpStatusCode);
-                }
-            }
-            catch (AmazonBedrockRuntimeException e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            return generatedText;
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static async Task<string> InvokeBadLlama2Async(string prompt)
-        {
-            string payload = new JsonObject()
-            {
-                { "prompt", prompt },
-                { "max_gen_len", 512 }, // -1 for easy error
-                { "temperature", 0.5 },
-                { "top_p", 0.9 }
-            }.ToJsonString();
-
-            string generatedText = "";
-            try
-            {
-
-                var response = await InvokeModel("meta.llama2-13b-chat-v1", payload);
-                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    using (StreamReader reader = new(response.Body))
-                    {
-                        var body = await reader.ReadToEndAsync();
-                        var node = JsonNode.Parse(body);
-                        return node?["generation"]?.GetValue<string>() ?? "";
                     }
                 }
                 else

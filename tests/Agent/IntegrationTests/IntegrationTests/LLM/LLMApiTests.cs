@@ -18,7 +18,7 @@ where TFixture : ConsoleDynamicMethodFixture
         private readonly TFixture _fixture;
         private const string _model = "meta13";
         private string _prompt = "In one sentence, what is a large-language model?";
-        private const int _fakeTokenCount = 42;
+        private const long _fakeTokenCount = 42;
 
         public LlmApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
@@ -40,6 +40,7 @@ where TFixture : ConsoleDynamicMethodFixture
             );
 
             _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedbackAndCallback {_model} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount}");
+            _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             _fixture.Initialize();
         }
@@ -53,8 +54,8 @@ where TFixture : ConsoleDynamicMethodFixture
 
             Assert.NotNull(feedback);
             Assert.Equal("bar", feedback.SafeGetAttribute("foo"));
-            Assert.Equal("123", feedback.SafeGetAttribute("number").ToString());
-            Assert.Equal("2.0", feedback.SafeGetAttribute("rating").ToString());
+            Assert.Equal((long)123, feedback.SafeGetAttribute("number"));
+            Assert.Equal(3.14, feedback.SafeGetAttribute("rating"));
             Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
             Assert.Equal("good job", feedback.SafeGetAttribute("message"));
 
