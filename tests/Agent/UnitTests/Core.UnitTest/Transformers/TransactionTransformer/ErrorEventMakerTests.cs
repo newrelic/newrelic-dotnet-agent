@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             NrAssert.Multiple(
                 () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(false)),
                 () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
-                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(7)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(8)),
                 () => Assert.That(userAttributes, Is.Empty),
 
                 () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
@@ -143,6 +143,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("type"))
             );
@@ -170,7 +171,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             NrAssert.Multiple(
                 () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(false)),
                 () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
-                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(7)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(8)),
                 () => Assert.That(userAttributes, Is.Empty),
 
                 () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
@@ -186,6 +187,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("type"))
             );
@@ -222,7 +224,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(true)),
 
                 () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
-                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(16)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(17)),
                 () => Assert.That(userAttributes, Has.Length.EqualTo(1)),
 
                 () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
@@ -238,6 +240,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("type")),
                 () => Assert.That(intrinsicAttributes, Does.Contain("nr.syntheticsJobId")),
