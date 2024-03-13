@@ -10,7 +10,6 @@ namespace ConsoleMultiFunctionApplicationCore
     {
         static void Main(string[] args)
         {
-            System.Diagnostics.Debugger.Launch();
             MultiFunctionApplication.Execute(args);
         }
     }
