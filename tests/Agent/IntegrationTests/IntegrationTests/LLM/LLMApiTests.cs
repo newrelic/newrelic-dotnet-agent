@@ -20,11 +20,11 @@ where TFixture : ConsoleDynamicMethodFixture
         private const string _attributeModel = "ai21";
         private string _prompt = "In one sentence, what is a large-language model?";
         private const long _fakeTokenCount = 42;
-        private const double _rating = 3.14;
+        private const string _rating = "3.14";
         private const string _category = "mycategory";
         private const string _message = "good_job";
         private const string _feedbackAttributes = "foo=bar,number=123";
-        private const string _customAttributes = "account=11235,month=january,year=2024";
+        private const string _customAttributes = "llm.account=11235,llm.month=january,llm.year=2024,drop=this,and=that";
 
         public LlmApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
@@ -66,27 +66,28 @@ where TFixture : ConsoleDynamicMethodFixture
             Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
             Assert.Equal("good_job", feedback.SafeGetAttribute("message"));
 
-            // Check that the callback for calculating the token count worked
-            foreach (var customEvent in customEvents)
-            {
-                if (customEvent.Attributes.TryGetValue("token_count", out var count))
-                {
-                    Assert.Equal(count, _fakeTokenCount);
-                    found = true;
-                }
-            }
-            Assert.True(found, "Could not find token count");
-
-            // Check that the custom attributes were added to the transaction event
-            var apiEvents = customEvents.Where(evt => evt.Attributes["response.model"].ToString().StartsWith("ai21")).ToList();
+            // Check that the callback for calculating the token count worked and the custom attributes were added to the transaction event
+            var apiEvents = customEvents.Where(evt => (evt.Attributes.ContainsKey("response.model") && evt.Attributes["response.model"].ToString().StartsWith("ai21"))).ToList();
             foreach (var apiEvent in apiEvents)
             {
+                if (apiEvent.Attributes.TryGetValue("token_count", out var count))
+                {
+                    Assert.Equal(_fakeTokenCount, count);
+                    found = true;
+                }
                 Assert.Equal("11235", apiEvent.SafeGetAttribute("llm.account"));
                 Assert.Equal("january", apiEvent.SafeGetAttribute("llm.month"));
                 Assert.Equal("2024", apiEvent.SafeGetAttribute("llm.year"));
-            }
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithFeedbackAndCallback");
+                // Only attributes with the prefix "llm." should be added to the transaction event
+                Assert.False(apiEvent.Attributes.ContainsKey("drop"));
+                Assert.False(apiEvent.Attributes.ContainsKey("and"));
+                Assert.False(apiEvent.Attributes.ContainsKey("llm.drop"));
+                Assert.False(apiEvent.Attributes.ContainsKey("llm.and"));
+            }
+            Assert.True(found, "Could not find token count");
+
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithCallbackAndCustomAttributes");
 
             Assert.NotNull(transactionEvent);
         }

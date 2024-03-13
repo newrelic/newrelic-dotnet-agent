@@ -89,7 +89,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 Console.WriteLine(response);
 
                 var traceId = NewRelic.Api.Agent.NewRelic.GetAgent().GetLinkingMetadata()["trace.id"];
-                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, float.Parse(rating), category, message, ConvertAttributes(attributes));
+                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, rating, category, message, ConvertAttributes(attributes));
             }
             else
             {
@@ -105,21 +105,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             if (_models.TryGetValue(model, out var func))
             {
                 NewRelic.Api.Agent.NewRelic.SetLlmTokenCountingCallback((model, message) => int.Parse(fakeTokenCount));
-                var bytes = Convert.FromBase64String(base64Prompt);
-                var prompt = Encoding.UTF8.GetString(bytes);
-                var response = await func(prompt, false);
-                Console.WriteLine(response);
-
                 foreach (var attribute in ConvertAttributes(attributes))
                 {
                     NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(attribute.Key, attribute.Value);
                 }
+
+                var bytes = Convert.FromBase64String(base64Prompt);
+                var prompt = Encoding.UTF8.GetString(bytes);
+                var response = await func(prompt, false);
+                Console.WriteLine(response);
             }
             else
             {
                 throw new ArgumentException($"{model} is not a valid model");
             }
         }
-
     }
 }
