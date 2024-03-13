@@ -48,7 +48,6 @@ where TFixture : ConsoleDynamicMethodFixture
             {"role", LlmMessageTypes.LlmChatCompletionMessage},
             {"sequence", LlmMessageTypes.LlmChatCompletionMessage},
             {"completion_id", LlmMessageTypes.LlmChatCompletionMessage},
-            //{"token_count", LlmMessageTypes.LlmChatCompletionMessage | LlmMessageTypes.LlmEmbedding}, // Depends on the model
             {"input", LlmMessageTypes.LlmEmbedding},
         };
 

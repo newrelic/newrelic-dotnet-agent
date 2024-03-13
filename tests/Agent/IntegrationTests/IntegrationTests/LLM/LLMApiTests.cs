@@ -16,14 +16,20 @@ namespace NewRelic.Agent.IntegrationTests.LLM
 where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
-        private const string _model = "meta13";
+        private const string _feedbackModel = "meta13";
+        private const string _attributeModel = "ai21";
         private string _prompt = "In one sentence, what is a large-language model?";
         private const long _fakeTokenCount = 42;
+        private const double _rating = 3.14;
+        private const string _category = "mycategory";
+        private const string _message = "good_job";
+        private const string _feedbackAttributes = "foo=bar,number=123";
+        private const string _customAttributes = "account=11235,month=january,year=2024";
 
         public LlmApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(20));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -35,18 +41,19 @@ where TFixture : ConsoleDynamicMethodFixture
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(20), 1);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
                 }
             );
 
-            _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedbackAndCallback {_model} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount}");
+            _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedback {_feedbackModel} {LLMHelpers.ConvertToBase64(_prompt)} {_rating} {_category} {_message} {_feedbackAttributes}");
+            _fixture.AddCommand($"LLMExerciser InvokeModelWithCallbackAndCustomAttributes {_attributeModel} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount} {_customAttributes}");
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             _fixture.Initialize();
         }
 
         [Fact]
-        public void Test()
+        public void BedrockApiTest()
         {
             bool found = false;
             var customEvents = _fixture.AgentLog.GetCustomEvents();
@@ -54,11 +61,12 @@ where TFixture : ConsoleDynamicMethodFixture
 
             Assert.NotNull(feedback);
             Assert.Equal("bar", feedback.SafeGetAttribute("foo"));
-            Assert.Equal((long)123, feedback.SafeGetAttribute("number"));
-            Assert.Equal(3.14, feedback.SafeGetAttribute("rating"));
+            Assert.Equal("123", feedback.SafeGetAttribute("number"));
+            Assert.Equal("3.14", feedback.SafeGetAttribute("rating"));
             Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
-            Assert.Equal("good job", feedback.SafeGetAttribute("message"));
+            Assert.Equal("good_job", feedback.SafeGetAttribute("message"));
 
+            // Check that the callback for calculating the token count worked
             foreach (var customEvent in customEvents)
             {
                 if (customEvent.Attributes.TryGetValue("token_count", out var count))
@@ -68,6 +76,15 @@ where TFixture : ConsoleDynamicMethodFixture
                 }
             }
             Assert.True(found, "Could not find token count");
+
+            // Check that the custom attributes were added to the transaction event
+            var apiEvents = customEvents.Where(evt => evt.Attributes["response.model"].ToString().StartsWith("ai21")).ToList();
+            foreach (var apiEvent in apiEvents)
+            {
+                Assert.Equal("11235", apiEvent.SafeGetAttribute("llm.account"));
+                Assert.Equal("january", apiEvent.SafeGetAttribute("llm.month"));
+                Assert.Equal("2024", apiEvent.SafeGetAttribute("llm.year"));
+            }
 
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithFeedbackAndCallback");
 

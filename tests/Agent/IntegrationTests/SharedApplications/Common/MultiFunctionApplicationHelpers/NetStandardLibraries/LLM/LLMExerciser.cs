@@ -26,11 +26,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "anthropic", BedrockModels.InvokeClaudeAsync },
             };
 
-        Dictionary<string, object> _attributes = new Dictionary<string, object>
+        // Convert a flat string to a dictionary of key value pairs
+        private IDictionary<string, object> ConvertAttributes(string flatDictionary)
         {
-            { "foo", "bar" },
-            { "number", 123 }
-        };
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            var kvPairs = flatDictionary.Split(',');
+
+            foreach (var keyValue in kvPairs)
+            {
+                var elements = keyValue.Split('=');
+                dict[elements[0]] = elements[1];
+            }
+            return dict;
+        }
+
 
         [LibraryMethod]
         [Transaction]
@@ -46,7 +55,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             }
             else
             {
-                // Oopsie
+                throw new ArgumentException($"{model} is not a valid model");
             }
         }
 
@@ -64,38 +73,51 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             }
             else
             {
-                // Oopsie
+                throw new ArgumentException($"{model} is not a valid model");
             }
         }
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task InvokeModelWithFeedbackAndCallback(string model, string base64Prompt, string fakeTokenCount, string rating, string category, string message, string attributes)
+        public async Task InvokeModelWithFeedback(string model, string base64Prompt, string rating, string category, string message, string attributes)
         {
             if (_models.TryGetValue(model, out var func))
             {
-
-                NewRelic.Api.Agent.NewRelic.SetLlmTokenCountingCallback((model, message) => int.Parse(fakeTokenCount));
                 var bytes = Convert.FromBase64String(base64Prompt);
                 var prompt = Encoding.UTF8.GetString(bytes);
                 var response =await func(prompt, false);
                 Console.WriteLine(response);
 
                 var traceId = NewRelic.Api.Agent.NewRelic.GetAgent().GetLinkingMetadata()["trace.id"];
-
-                Dictionary<string, object> dict = new Dictionary<string, object>();
-                var pairs = attributes.Split(',');
-
-                foreach (var item in pairs)
-                {
-                    var pair = item.Split('=');
-                    dict[pair[0]] = pair[1];
-                }
-                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, float.Parse(rating), category, message, _attributes);
+                NewRelic.Api.Agent.NewRelic.RecordLlmFeedbackEvent(traceId, float.Parse(rating), category, message, ConvertAttributes(attributes));
             }
             else
             {
-                // Oopsie
+                throw new ArgumentException($"{model} is not a valid model");
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task InvokeModelWithCallbackAndCustomAttributes(string model, string base64Prompt, string fakeTokenCount, string attributes)
+        {
+            if (_models.TryGetValue(model, out var func))
+            {
+                NewRelic.Api.Agent.NewRelic.SetLlmTokenCountingCallback((model, message) => int.Parse(fakeTokenCount));
+                var bytes = Convert.FromBase64String(base64Prompt);
+                var prompt = Encoding.UTF8.GetString(bytes);
+                var response = await func(prompt, false);
+                Console.WriteLine(response);
+
+                foreach (var attribute in ConvertAttributes(attributes))
+                {
+                    NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(attribute.Key, attribute.Value);
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"{model} is not a valid model");
             }
         }
 
