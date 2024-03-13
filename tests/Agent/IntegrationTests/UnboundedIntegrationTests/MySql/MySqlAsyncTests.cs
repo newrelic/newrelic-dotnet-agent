@@ -35,9 +35,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(45);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(45);
-                    configModifier.ConfigureFasterSqlTracesHarvestCycle(45);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -205,9 +205,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlAsyncTestsCore : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MySqlAsyncTestsCoreLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlAsyncTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
         {
 
         }
