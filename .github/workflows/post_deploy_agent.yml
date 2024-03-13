@@ -7,17 +7,31 @@ on:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
+      wait_for_apt_and_yum:
+        type: boolean
+        default: true
+        required: true
+      test_mode:
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        type: boolean
+        default: false
+        required: false
   workflow_call:
     inputs:
       agent_version:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
-      external_call:
+      wait_for_apt_and_yum:
         type: boolean
         default: true
+        required: true
+      test_mode:
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        type: boolean
+        default: false
         required: false
-  
+    
 permissions:
   contents: read
   packages: read
@@ -26,7 +40,6 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-
   validate-apt-repo:
     name: Validate APT-based repo
     runs-on: ubuntu-latest
@@ -37,7 +50,7 @@ jobs:
           disable-sudo: false
           egress-policy: audit
       - name: Wait for APT to update
-        if: ${{ github.event.inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
         run: |
           echo "Sleeping 5 minutes to wait for apt to update itself"
           sleep 300
@@ -58,7 +71,7 @@ jobs:
           fi
         shell: bash
         env: 
-          AGENT_VERSION: "Version: ${{ github.event.inputs.agent_version }}"
+          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
 
   validate-yum-repo:
     name: Validate YUM-based repo
@@ -76,7 +89,7 @@ jobs:
           fetch-depth: 0
 
       - name: Wait for YUM to update
-        if: ${{ github.event.inputs.external_call == 'true' }} # only wait if this workflow was called by another workflow
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
         run: |
           echo "Sleeping 5 minutes to wait for yum to update itself"
           sleep 300
@@ -99,7 +112,7 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ inputs.agent_version }}-1.x86_64"
 
   validate-download-site-s3:
     name: Validate S3-hosted Download Site
@@ -125,7 +138,7 @@ jobs:
           BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
           RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
           CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          AGENT_VERSION: ${{ inputs.agent_version }}
 
   validate-nuget-packages:
     name: Validate NuGet Package Deployment
@@ -144,14 +157,13 @@ jobs:
 
       - name: Build and Run NugetValidator
         run: |
-          dotnet build --configuration Release "$BUILD_PATH"
-          "$RUN_PATH/NugetValidator" -v $AGENT_VERSION -c $CONFIG_PATH
+          dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
+          "$PUBLISH_PATH/NugetValidator" -v $AGENT_VERSION -c $PUBLISH_PATH/config.yml
         shell: bash
         env:
+          AGENT_VERSION: ${{ inputs.agent_version }}
           BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/
-          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
-          CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
+          PUBLISH_PATH: ${{ github.workspace }}/publish
 
   report-deprecated-nuget-packages:
     name: Report Deprecated NuGet Packages
@@ -173,10 +185,9 @@ jobs:
 
       - name: Build and Run NugetDeprecator
         run: |
-          dotnet build --configuration Release "$BUILD_PATH"
-          "$RUN_PATH/NugetVersionDeprecator" -c $CONFIG_PATH --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
+          dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
+          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} --test-mode ${{ inputs.test_mode }}
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/
-          CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/config.yml
+          PUBLISH_PATH: ${{ github.workspace }}/publish

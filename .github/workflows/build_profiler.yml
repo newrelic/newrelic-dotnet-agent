@@ -1,44 +1,39 @@
 name: Build and Package Profiler
 
 on:
-  # run this workflow on a push to any branch other than main or a feature branch
+  # run this workflow on a push to any branch so we can get code coverage reports
   #
   # NOTE: On a push, only the build jobs will execute; the NuGet jobs will not run. 
   #       Manually run this workflow on your branch when you want it to update the
   #       NuGet package and create a PR to update the package version reference in 
   #       Home.csproj.
   push:
-    branches-ignore:
-      - main
-      - "feature/**"
+    branches:
+       - main
+       - "feature/**"
     paths-ignore:
       - ".github/**" # skip changes to the .github branch (workflows, etc.)
-  
+
+  pull_request:
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
+      
   # this workflow can be called from another workflow
   workflow_call:
     inputs:
-      force-build:
-        description: 'Force a build, even if no files are changed'
-        required: true
-        type: boolean
       deploy:
-        description: 'Deploy'
+        description: 'Deploy NuGet Package'
         required: true
-        default: true
+        default: false
         type: boolean
   
   # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
-      force-build:
-        description: 'Force a build, even if no files are changed'
-        required: true
-        default: true
-        type: boolean
       deploy:
-        description: 'Deploy'
+        description: 'Deploy NuGet Package'
         required: true
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -55,50 +50,15 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-  check-for-changes:
-    name: Check for Updated Profiler Files
-    runs-on: ubuntu-22.04
-
-    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
-    if: ${{ github.actor != 'dependabot[bot]' }}
-
-    permissions:
-      pull-requests: read
-    outputs:
-      profiler_src: ${{ steps.filter.outputs.profiler_src }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-        with:
-          disable-sudo: true
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        with:
-          fetch-depth: 0
-
-      - name: Look for modified files
-        uses: dorny/paths-filter@ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a # v3.0.1
-        id: filter
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            profiler_src:
-              - 'src/Agent/NewRelic/Profiler/**'
-          list-files: 'csv'
-
   build-windows-profiler:
-    needs: check-for-changes
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
-    name: Build Windows Profiler
+    name: Build Windows Profiler & Run Unit Tests / Code Coverage
     runs-on: windows-latest
 
     env:
-      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+      tests_base_path: ${{ github.workspace }}\src\Agent\NewRelic
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      test_results_path: src\Agent\NewRelic\Profiler\TestResults
+      test_results_path:  ${{ github.workspace }}\src\Agent\NewRelic\TestResults
 
     steps:
       - name: Checkout
@@ -111,11 +71,7 @@ jobs:
 
       - name: Clean out _profilerBuild directory
         run: |
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -Recurse -ErrorAction SilentlyContinue
         shell: powershell
 
       - name: Build x64
@@ -146,26 +102,36 @@ jobs:
         id: generate_test_report
         shell: cmd
         run: |
-            cd ${{ env.profiler_path }}
-            OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:TestResults\profiler.xml -- "vstest.console.exe" "CommonTest\bin\x86\Release\CommonTest.dll" "ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "LoggingTest\bin\x86\Release\LoggingTest.dll" "MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
-        
+            cd ${{ env.tests_base_path }}
+            OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx86.xml -- "vstest.console.exe" /Platform:x86 "Profiler\CommonTest\bin\x86\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x86\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
+            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x86.log
+            OpenCppCoverage.exe --sources Profiler --cover_children --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx64.xml -- "vstest.console.exe" /Platform:x64 "Profiler\CommonTest\bin\x64\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x64\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x64\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x64\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x64\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x64\Release\SicilyTest.dll"        
+            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
+
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # v4.1.0
         with:
             flags: Profiler
-            files: ${{ env.test_results_path }}\profiler.xml
+            files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
             token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Archive Artifacts
+      - name: Archive Build Artifacts
         uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: profiler-windows
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
+      - name: Archive Code Coverage Artifacts
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: profiler-code-coverage
+          path: |
+            ${{ env.test_results_path }}\*.xml
+            ${{ env.tests_base_path }}\*.log
+          if-no-files-found: error
+  
   build-linux-x64-profiler:
-    needs: check-for-changes
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -216,8 +182,6 @@ jobs:
           if-no-files-found: error
 
   build-linux-arm64-profiler:
-    needs: check-for-changes
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -292,12 +256,11 @@ jobs:
   package-and-deploy:
     needs:
       [
-        check-for-changes,
         build-windows-profiler,
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') && inputs.deploy }}
+    if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
@@ -314,19 +277,19 @@ jobs:
           fetch-depth: 0
 
       - name: Download Windows Profiler Artifacts to working Directory
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: profiler-windows
           path: ${{ github.workspace }}/_workingDir
       
       - name: Download Linux amd64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/_workingDir
 
       - name: Download Linux arm64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/_workingDir

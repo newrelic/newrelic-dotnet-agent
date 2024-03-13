@@ -100,5 +100,37 @@ namespace MultiFunctionApplicationHelpers.Libraries
             }
         }
 
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void RecordDatastoreSegment(string vendor, string model, string operation,
+             string commandText = null, string host = null, string portPathOrID = null, string databaseName = null)
+        {
+            var transaction = NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction;
+            using (transaction.RecordDatastoreSegment(vendor, model, operation,
+                commandText, host, portPathOrID, databaseName))
+            {
+                DatastoreWorker();
+            }
+        }
+
+        private static void DatastoreWorker()
+        {
+            System.Threading.Thread.Sleep(1000);
+        }
+
+        [LibraryMethod]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestFullRecordDatastoreSegment()
+        {
+            RecordDatastoreSegment("MyVendor", "MyModel", "MyOperation",
+                "MyCommandText", "MyHost", "MyPath", "MyDatabase");
+        }
+
+        [LibraryMethod]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestRequiredRecordDatastoreSegment()
+        {
+            RecordDatastoreSegment("MyVendor", "MyModel", "MyOperation");
+        }
     }
 }

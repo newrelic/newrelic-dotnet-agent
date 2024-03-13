@@ -35,6 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _fixture.AgentLogExpected = false; // So the test doesn't spend three minutes waiting for an agent log to appear in the expected location
             _testCase = testCase;
             _fixture.Actions
             (

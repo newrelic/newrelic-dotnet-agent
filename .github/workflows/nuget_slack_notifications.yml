@@ -50,10 +50,10 @@ jobs:
 
       - name: Check for updates to core technology packages
         run: |
-          if [ ${{ github.event.inputs.daysToSearch }} != "" ]; then
-            export DOTTY_DAYS_TO_SEARCH=${{ github.event.inputs.daysToSearch }}
+          if [ ${{ inputs.daysToSearch }} != "" ]; then
+            export DOTTY_DAYS_TO_SEARCH=${{ inputs.daysToSearch }}
           fi
-          if [ "${{ github.event.inputs.testMode }}" == "true" ]; then
+          if [ "${{ inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
           cd ${{ env.scan-tool-path }}/bin/Debug/net6.0

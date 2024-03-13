@@ -136,8 +136,9 @@ jobs:
           if-no-files-found: error
 
   run-linux-container-tests:
-    needs: build-fullagent-msi
     name: Run Linux Container Tests
+    needs: 
+      - build-fullagent-msi
     uses: ./.github/workflows/run_linux_container_tests.yml
     secrets: inherit
         
@@ -313,13 +314,13 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -414,13 +415,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -519,13 +520,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: homefolders
           path: src/Agent
@@ -586,13 +587,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: msi-build-folder-artifacts
           path: src/_build
@@ -633,37 +634,37 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Debian _build Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: debian-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download RPM _build Artifacts
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download NewRelic.Agent.Extensions
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
       - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
@@ -694,9 +695,14 @@ jobs:
   integration-test-status:
     name: Check Test Matrix Status
     runs-on: ubuntu-latest
-    needs: [run-integration-tests, run-unbounded-tests]
+    needs: [run-linux-container-tests, run-integration-tests, run-unbounded-tests]
     if: always()
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
       - name: Successful test run
         if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0
