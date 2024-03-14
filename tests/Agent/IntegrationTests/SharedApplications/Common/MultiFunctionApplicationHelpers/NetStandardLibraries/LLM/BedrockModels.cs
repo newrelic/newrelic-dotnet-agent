@@ -13,12 +13,14 @@ using Amazon.BedrockRuntime.Model;
 using Amazon.BedrockRuntime;
 using Amazon.Util;
 using Amazon;
+using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
 {
     internal class BedrockModels
     {
-        private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient = new AmazonBedrockRuntimeClient(RegionEndpoint.USWest2);
+        private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient =
+            new AmazonBedrockRuntimeClient(AwsBedrockConfiguration.AwsAccessKeyId, AwsBedrockConfiguration.AwsSecretAccessKey, AwsBedrockConfiguration.AwsRegion.ToRegionId());
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static async Task<string> InvokeAmazonEmbedAsync(string prompt, bool generateError) => await InvokeTitanAsync(prompt, true, generateError);
@@ -287,6 +289,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 ContentType = "application/json",
                 Accept = "application/json"
             });
+        }
+    }
+
+    internal static class BedrockRegionExtensions
+    {
+        public static RegionEndpoint ToRegionId(this string region)
+        {
+            return RegionEndpoint.GetBySystemName(region);
         }
     }
 }
