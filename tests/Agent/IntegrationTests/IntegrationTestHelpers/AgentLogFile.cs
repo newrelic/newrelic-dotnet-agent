@@ -9,7 +9,6 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -21,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+        public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool logFileExpected = true)
             : base(testLogger)
         {
             Contract.Assert(logDirectoryPath != null);
@@ -34,25 +33,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var searchPattern = _fileName != string.Empty ? _fileName : "newrelic_agent_*.log";
 
-            do
+            if (logFileExpected)
             {
-                var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
-                    Directory.GetFiles(logDirectoryPath, searchPattern)
-                        .Where(file => file != null && !file.Contains("audit"))
-                        .OrderByDescending(File.GetLastWriteTimeUtc)
-                        .FirstOrDefault() : null;
-
-                if (mostRecentlyUpdatedFile != null)
+                do
                 {
-                    _filePath = mostRecentlyUpdatedFile;
-                    return;
-                }
+                    var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
+                        Directory.GetFiles(logDirectoryPath, searchPattern)
+                            .Where(file => file != null && !file.Contains("audit"))
+                            .OrderByDescending(File.GetLastWriteTimeUtc)
+                            .FirstOrDefault() : null;
 
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            } while (timeTaken.Elapsed < timeout);
+                    if (mostRecentlyUpdatedFile != null)
+                    {
+                        _filePath = mostRecentlyUpdatedFile;
+                        return;
+                    }
 
-            if (throwIfNotFound)
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                } while (timeTaken.Elapsed < timeout);
+
                 throw new Exception($"Waited {timeout.TotalSeconds:N0}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
+            }
         }
 
         public override IEnumerable<string> GetFileLines()
