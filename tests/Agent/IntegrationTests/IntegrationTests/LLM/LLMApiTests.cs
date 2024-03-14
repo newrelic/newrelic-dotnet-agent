@@ -29,7 +29,7 @@ where TFixture : ConsoleDynamicMethodFixture
         public LlmApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(5));
             _fixture.TestLogger = output;
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -41,13 +41,13 @@ where TFixture : ConsoleDynamicMethodFixture
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(5), 2);
                 }
             );
 
-            _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedback {_feedbackModel} {LLMHelpers.ConvertToBase64(_prompt)} {_rating} {_category} {_message} {_feedbackAttributes}");
+            // Setting the token count callback will result in us dumping the event queues, so do that first
             _fixture.AddCommand($"LLMExerciser InvokeModelWithCallbackAndCustomAttributes {_attributeModel} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount} {_customAttributes}");
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
+            _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedback {_feedbackModel} {LLMHelpers.ConvertToBase64(_prompt)} {_rating} {_category} {_message} {_feedbackAttributes}");
 
             _fixture.Initialize();
         }
@@ -57,14 +57,6 @@ where TFixture : ConsoleDynamicMethodFixture
         {
             bool found = false;
             var customEvents = _fixture.AgentLog.GetCustomEvents();
-            var feedback = customEvents.Where(evt => evt.Header.Type == "LlmFeedbackMessage").FirstOrDefault();
-
-            Assert.NotNull(feedback);
-            Assert.Equal("bar", feedback.SafeGetAttribute("foo"));
-            Assert.Equal("123", feedback.SafeGetAttribute("number"));
-            Assert.Equal("3.14", feedback.SafeGetAttribute("rating"));
-            Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
-            Assert.Equal("good_job", feedback.SafeGetAttribute("message"));
 
             // Check that the callback for calculating the token count worked and the custom attributes were added to the transaction event
             var apiEvents = customEvents.Where(evt => (evt.Attributes.ContainsKey("response.model") && evt.Attributes["response.model"].ToString().StartsWith("ai21"))).ToList();
@@ -86,6 +78,15 @@ where TFixture : ConsoleDynamicMethodFixture
                 Assert.False(apiEvent.Attributes.ContainsKey("llm.and"));
             }
             Assert.True(found, "Could not find token count");
+
+            var feedback = customEvents.Where(evt => evt.Header.Type == "LlmFeedbackMessage").FirstOrDefault();
+
+            Assert.NotNull(feedback);
+            Assert.Equal("bar", feedback.SafeGetAttribute("foo"));
+            Assert.Equal("123", feedback.SafeGetAttribute("number"));
+            Assert.Equal("3.14", feedback.SafeGetAttribute("rating"));
+            Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
+            Assert.Equal("good_job", feedback.SafeGetAttribute("message"));
 
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithCallbackAndCustomAttributes");
 

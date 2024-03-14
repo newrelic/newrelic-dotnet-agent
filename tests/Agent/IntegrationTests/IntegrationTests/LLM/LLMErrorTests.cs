@@ -42,7 +42,6 @@ where TFixture : ConsoleDynamicMethodFixture
 
             _fixture.AddCommand($"LLMExerciser InvokeModel {_accessDeniedModel} {LLMHelpers.ConvertToBase64(_prompt)}");
             _fixture.AddCommand($"LLMExerciser InvokeModelWithError {_badConfigModel} {LLMHelpers.ConvertToBase64(_prompt)}");
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             _fixture.Initialize();
         }
