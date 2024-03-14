@@ -74,7 +74,7 @@ where TFixture : ConsoleDynamicMethodFixture
             {
                 _fixture.AddCommand($"LLMExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
             }
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
+            _fixture.AddCommand($"RootCommands DelaySeconds 15");
 
             _fixture.Initialize();
         }
@@ -112,11 +112,12 @@ where TFixture : ConsoleDynamicMethodFixture
         [Fact]
         public void BedrockTest()
         {
-            int expected = _bedrockModelsToTest.Count - 1; // 1 failure
+            int expected = _bedrockModelsToTest.Count;
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"External/all", callCount = expected },
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", callCount = expected },
+                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", callCount = 1 }
             };
 
             var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
