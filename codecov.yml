@@ -24,6 +24,11 @@ coverage:
         if_ci_failed: error 
         informational: false  # if true, status will pass regardless regardless of other settings
         only_pulls: true # individual commits to a branch will not be considered, only pull requests
+flag_management:
+  default_rules:
+    carryforward: true
 comment:
-  layout: "reach, diff, files" # change to "reach, diff, flags, files" if we start using flags
-  behavior: default # new comment will be posted or existing comment will be edited
+  layout: "diff, flags, files" 
+  behavior: new # new comment will be posted and existing comment deleted
+  show_carryforward_flags: false
+  

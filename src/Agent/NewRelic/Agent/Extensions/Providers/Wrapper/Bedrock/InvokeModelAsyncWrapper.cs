@@ -175,8 +175,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     i + 1,
                     completionId,
                     responsePayload.Responses[i].TokenCount,
-                    true
-                );
+                    true);
             }
         }
 

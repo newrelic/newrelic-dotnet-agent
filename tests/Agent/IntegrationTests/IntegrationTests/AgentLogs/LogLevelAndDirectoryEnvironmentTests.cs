@@ -26,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _fixture.AgentLogExpected = false; // so the test doesn't wait three minutes for a log file to appear in the default location
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -46,9 +47,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         [Fact]
         public void AgentLog()
         {
-            var configLocation = new AgentLogFile(_configLogDirectory, _fixture.TestLogger, throwIfNotFound: false);
-            var generalEnvLocation = new AgentLogFile(_generalEnvLogDirectory, _fixture.TestLogger, throwIfNotFound: false);
-            var profilerEnvLocation = new AgentLogFile(_profilerEnvLogDirectory, _fixture.TestLogger, throwIfNotFound: false);
+            var configLocation = new AgentLogFile(_configLogDirectory, _fixture.TestLogger, logFileExpected: false);
+            var generalEnvLocation = new AgentLogFile(_generalEnvLogDirectory, _fixture.TestLogger, logFileExpected: true);
+            var profilerEnvLocation = new AgentLogFile(_profilerEnvLogDirectory, _fixture.TestLogger, logFileExpected: false);
 
             Assert.False(configLocation.Found);
             Assert.True(generalEnvLocation.Found);
@@ -62,9 +63,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         [Fact]
         public void ProfilerLog()
         {
-            var configLocation = new ProfilerLogFile(_configLogDirectory, throwIfNotFound: false);
-            var generalEnvLocation = new ProfilerLogFile(_generalEnvLogDirectory, throwIfNotFound: false);
-            var profilerEnvLocation = new ProfilerLogFile(_profilerEnvLogDirectory, throwIfNotFound: false);
+            var configLocation = new ProfilerLogFile(_configLogDirectory, logFileExpected: false);
+            var generalEnvLocation = new ProfilerLogFile(_generalEnvLogDirectory, logFileExpected: false);
+            var profilerEnvLocation = new ProfilerLogFile(_profilerEnvLogDirectory, logFileExpected: true);
 
             Assert.False(configLocation.Found);
             Assert.False(generalEnvLocation.Found);
@@ -77,23 +78,23 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
     }
 
     [NetFrameworkTest]
-    public class LogLevelAndDirectoryEnvironmentTests_net48 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
+    public class LogLevelAndDirectoryEnvironmentTestsFrameworkLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public LogLevelAndDirectoryEnvironmentTests_net48(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
     [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTestsOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
+    public class LogLevelAndDirectoryEnvironmentTestsCoreOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public LogLevelAndDirectoryEnvironmentTestsOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
     [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTestsLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class LogLevelAndDirectoryEnvironmentTestsCoreLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public LogLevelAndDirectoryEnvironmentTestsLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 }

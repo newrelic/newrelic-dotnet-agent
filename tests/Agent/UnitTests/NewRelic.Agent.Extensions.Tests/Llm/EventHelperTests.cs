@@ -24,7 +24,7 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        public void CreateChatCompletionEvent_ShouldRecordLlmEvent_WithExpectedAttributes()
+        public void CreateChatCompletionEvent_ShouldRecordLlmChatCompletionSummaryEvent()
         {
             // Arrange
             var requestId = "123";
@@ -202,7 +202,7 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        public void CreateChatMessageEvent_ShouldRecordLlmEvent()
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent()
         {
             // Arrange
             var requestId = "123";
@@ -256,7 +256,7 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        public void CreateEmbeddingEvent_ShouldRecordLlmEvent()
+        public void CreateEmbeddingEvent_ShouldRecordLlmEmbeddingEvent()
         {
             // Arrange
             var requestId = "123";

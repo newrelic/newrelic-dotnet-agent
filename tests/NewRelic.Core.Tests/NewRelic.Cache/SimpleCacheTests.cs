@@ -93,7 +93,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key4", () => val4);
             cache.GetOrAdd("key5", () => val5);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
 
             //This checks that the clearing didn't happen.
             Assert.That(cache.Size, Is.EqualTo(capacity));
@@ -101,7 +101,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             //Overflow the cache
             cache.GetOrAdd("key6", () => val6);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
 
             //Checks the clearing happened.
             Assert.That(cache.Size, Is.EqualTo(0));
@@ -162,7 +162,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key4", () => val4);
             cache.GetOrAdd("key5", () => val5);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
 
             //This checks that the clearing didn't happen.
             Assert.That(cache.Size, Is.EqualTo(capacity));
@@ -173,13 +173,13 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key6", () => val6);
             cache.GetOrAdd("key7", () => val7);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
             Assert.That(cache.Size, Is.EqualTo(newCapacity));
 
             //This should overflowt the cache
             cache.GetOrAdd("key8", () => val8);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
             Assert.That(cache.Size, Is.EqualTo(0));
 
 
@@ -209,7 +209,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key4", () => val4);
             cache.GetOrAdd("key5", () => val5);
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
 
             //This checks that the clearing didn't happen.
             Assert.That(cache.Size, Is.EqualTo(capacity));
@@ -217,7 +217,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             int newCapacity = 3;
             cache.Capacity = newCapacity;
 
-            Thread.Sleep(1000); //allow the cache to check it's size.
+            cache.MaintainCache(); // force cache to maintain, normally done on a timer.
 
             //This checks that the clearing happened and setting new capacity works.
             Assert.That(cache.Size, Is.EqualTo(0));
@@ -259,6 +259,18 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             expectedSize = 2;
 
             EvaluateCacheMetrics(cache, expectedHits, expectedMisses, expectedEjections, expectedSize);
+        }
+
+        [Test]
+        public void CacheMaintenanceThreadMaintainsCache()
+        {
+            var cache = new SimpleCache<string, string>(1);
+            cache.GetOrAdd("key1", () => "value1");
+            cache.GetOrAdd("key2", () => "value2");
+
+            Thread.Sleep(1000);
+
+            EvaluateCacheMetrics(cache, 0, 2, 2, 0);
         }
 
         private void EvaluateCacheMetrics<T, V>(SimpleCache<T, V> cache, int expectedHits, int expectedMisses,
