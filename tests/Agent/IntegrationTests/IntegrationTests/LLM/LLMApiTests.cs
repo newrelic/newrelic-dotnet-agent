@@ -29,7 +29,7 @@ where TFixture : ConsoleDynamicMethodFixture
         public LlmApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(5));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -41,7 +41,7 @@ where TFixture : ConsoleDynamicMethodFixture
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(5), 2);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
                 }
             );
 
