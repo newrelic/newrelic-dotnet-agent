@@ -335,6 +335,10 @@ jobs:
           name: homefolders
           path: src/Agent
 
+      - name: Dotnet restore
+        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests.sln
+        shell: powershell
+
       - name: Download Integration Test Artifacts (bin\deploy)
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
@@ -372,6 +376,7 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
+          dotnet restore 
           dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
@@ -443,6 +448,10 @@ jobs:
           name: homefolders
           path: src/Agent
 
+      - name: Dotnet restore
+        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests.sln
+        shell: powershell
+  
       - name: Download Unbounded Integration Test Artifacts (bin\deploy)
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
