@@ -19,24 +19,26 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly string _expectedTransactionName;
-        private readonly bool _paramsWithAtSigns;
         private readonly string _tableName;
-        private readonly string _procedureName;
+        private readonly string _procNameWith;
+        private readonly string _procNameWithout;
 
-        public MsSqlStoredProcedureUsingOdbcDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, bool paramsWithAtSign) : base(fixture)
+        public MsSqlStoredProcedureUsingOdbcDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
             MsSqlWarmupHelper.WarmupMsSql();
 
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOdbcDriver";
-            _paramsWithAtSigns = paramsWithAtSign;
 
             _tableName = Utilities.GenerateTableName();
-            _procedureName = Utilities.GenerateProcedureName();
+            var procedureName = Utilities.GenerateProcedureName();
+            _procNameWith = $"{procedureName}_with";
+            _procNameWithout = $"{procedureName}_without";
+
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
-            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOdbcDriver {_procedureName} {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOdbcDriver {_procNameWith} {_procNameWithout}");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
             _fixture.AddActions
@@ -71,34 +73,46 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         public void Test()
         {
             var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
-            var expectedSqlStatement = $"{{call {_procedureName.ToLower()}({parameterPlaceholder})}}";
+            var expectedSqlStatementWith = $"{{call {_procNameWith.ToLower()}({parameterPlaceholder})}}";
+            var expectedSqlStatementWithout = $"{{call {_procNameWithout.ToLower()}({parameterPlaceholder})}}";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure"
+                $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure",
+                $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure"
             };
 
-            var expectedQueryParameters = _paramsWithAtSigns
-                    ? DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue)
-                    : DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
+            var expectedQueryParametersWith = DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
+            var expectedQueryParametersWithout = DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
 
-            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
+            var expectedTransactionTraceQueryParametersWith = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", QueryParameters = expectedQueryParametersWith };
+            var expectedTransactionTraceQueryParametersWithout = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", QueryParameters = expectedQueryParametersWithout };
 
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = _expectedTransactionName,
-                    Sql = $"{{call {_procedureName}({parameterPlaceholder})}}",
-                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure",
-                    QueryParameters = expectedQueryParameters
+                    Sql = $"{{call {_procNameWith}({parameterPlaceholder})}}",
+                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWith
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedTransactionName,
+                    Sql = $"{{call {_procNameWithout}({parameterPlaceholder})}}",
+                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWithout
                 }
+
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -116,7 +130,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWith, transactionSample),
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWithout, transactionSample),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
                 () => Assertions.LogLinesNotExist(new[] { AgentLogFile.ErrorLogLinePrefixRegex }, logEntries)
             );
@@ -132,21 +147,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataExerciser",
-                  paramsWithAtSign: false)
+                  excerciserName: "SystemDataExerciser")
         {
         }
     }

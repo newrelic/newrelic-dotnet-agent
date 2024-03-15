@@ -58,7 +58,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     configModifier
                         .ConfigureFasterMetricsHarvestCycle(10)
                         .ConfigureFasterTransactionTracesHarvestCycle(10)
-                        .ConfigureFasterSqlTracesHarvestCycle(20)
+                        .ConfigureFasterSqlTracesHarvestCycle(10)
                         .ForceTransactionTraces()
                         .SetLogLevel("finest");
 
@@ -89,20 +89,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = commandList.Count },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // The datastore operation happened inside a non-web transaction so there should be no allWeb metrics
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", CallCountAllHarvests = 1 },
             };
 
             foreach (var command in commandList)
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 expectedMetrics.Add(new Assertions.ExpectedMetric
                 {
                     metricName = @"Datastore/statement/MySQL/dates/select",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = transactionName
                 });
 
@@ -126,12 +126,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
                         metricName = @"DotNet/DatabaseResult/Iterate",
-                        callCount = commandList.Count
+                        CallCountAllHarvests = commandList.Count
                     });
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
                         metricName = @"DotNet/DatabaseResult/Iterate",
-                        callCount = 3,
+                        CallCountAllHarvests = 3,
                         metricScope = transactionName
                     });
                 }
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     new Assertions.ExpectedMetric
                     {
                         metricName = @"Datastore/operation/MySQL/select",
-                        callCount = 1,
+                        CallCountAllHarvests = 1,
                         metricScope = transactionName
                     });
             }

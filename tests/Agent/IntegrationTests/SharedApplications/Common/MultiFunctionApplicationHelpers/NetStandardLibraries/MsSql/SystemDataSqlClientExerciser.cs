@@ -184,7 +184,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procNameWithout)
+        {
+            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedure(procNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
@@ -201,7 +207,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 
