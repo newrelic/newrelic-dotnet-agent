@@ -181,7 +181,6 @@ jobs:
             ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
       - name: Archive Artifacts (obj)
