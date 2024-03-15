@@ -1858,7 +1858,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion Metric naming
 
-        public string NewRelicConfigFilePath => _localConfiguration.ConfigurationFileName;
+        public string NewRelicConfigFilePath => _bootstrapConfiguration.ConfigurationFileName;
         public string AppSettingsConfigFilePath => _configurationManagerStatic.AppSettingsFilePath;
 
         #region Utilization

@@ -19,9 +19,6 @@
     {
         public string Xml { get; set; }
 
-        [XmlIgnore]
-        public string ConfigurationFileName { get; set; }
-
         public configuration Initialize(string xml, string provenance)
         {
             Xml = xml;

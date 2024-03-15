@@ -122,18 +122,18 @@ namespace NewRelic.Agent.Core
 
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
-            if (config.debugStartupDelaySeconds > 0)
+            if (bootstrapConfig.DebugStartupDelaySeconds > 0)
             {
                 // writing directly to console, as Log output doesn't get flushed immediately. And, for some processes, even this doesn't write to the console. 
-                Console.WriteLine($"Delaying {config.debugStartupDelaySeconds} seconds. Attach debugger to {Process.GetCurrentProcess().MainModule?.FileName} now...");
+                Console.WriteLine($"Delaying {bootstrapConfig.DebugStartupDelaySeconds} seconds. Attach debugger to {Process.GetCurrentProcess().MainModule?.FileName} now...");
 
-                Thread.Sleep(config.debugStartupDelaySeconds * 1000);
+                Thread.Sleep(bootstrapConfig.DebugStartupDelaySeconds * 1000);
                 Debugger.Break(); // break the debugger, if one is attached
             }
 
             LoggerBootstrapper.ConfigureLogger(config.LogConfig);
 
-            AssertAgentEnabled(config);
+            AssertAgentEnabled(bootstrapConfig);
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -169,10 +169,10 @@ namespace NewRelic.Agent.Core
             _isInitialized = true;
         }
 
-        private void AssertAgentEnabled(configuration config)
+        private void AssertAgentEnabled(IBootstrapConfiguration config)
         {
             if (!Configuration.AgentEnabled)
-                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt ?? config.ConfigurationFileName));
+                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
 
             if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
                 throw new Exception("Please set your license key.");

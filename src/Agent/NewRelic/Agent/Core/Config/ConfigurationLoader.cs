@@ -329,7 +329,7 @@ namespace NewRelic.Agent.Core.Config
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
                 var config = Initialize(fileName, publishDeserializedEvent);
-                BootstrapConfig = new BootstrapConfiguration(config);
+                BootstrapConfig = new BootstrapConfiguration(config, fileName);
                 return config;
             }
             catch (FileNotFoundException ex)
@@ -364,7 +364,6 @@ namespace NewRelic.Agent.Core.Config
             using (StreamReader stream = new StreamReader(fileName))
             {
                 configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishDeserializedEvent);
-                config.ConfigurationFileName = fileName;
                 return config;
             }
         }

@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core.Config
         {
             var configuration = new configuration();
             configuration.Initialize(xml, "");
-            return new BootstrapConfiguration(configuration);
+            return new BootstrapConfiguration(configuration, "testfilename");
         }
     }
 }
