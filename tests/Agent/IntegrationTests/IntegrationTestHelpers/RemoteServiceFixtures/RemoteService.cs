@@ -117,6 +117,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var sw = new Stopwatch();
             sw.Start();
 
+            // build workflow will specify this environment variable to skip the build step
+            var noBuild = Environment.GetEnvironmentVariable("INTEGRATION_TEST_NO_BUILD") == "true";
+
             var runtime = Utilities.CurrentRuntime;
             var process = new Process();
             var startInfo = new ProcessStartInfo();
@@ -127,7 +130,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {projectFile}";
+                $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {(noBuild ? "--no-build" : "")} {projectFile}";
             TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 

@@ -181,7 +181,7 @@ jobs:
             ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
   build-unbounded-tests:
@@ -219,7 +219,7 @@ jobs:
             ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
   run-integration-tests:
@@ -280,6 +280,7 @@ jobs:
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      INTEGRATION_TEST_NO_BUILD: true
 
     steps:
       - name: Checkout
@@ -403,6 +404,7 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
+      INTEGRATION_TEST_NO_BUILD: true
 
     steps:
       - name: My IP
