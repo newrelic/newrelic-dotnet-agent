@@ -352,7 +352,7 @@ jobs:
           # Should not need a path because the artifacts are archived with the full directory structure
 
       - name: dotnet restore IntegrationTests
-        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/IntegrationTests.csproj
+        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests.sln
         shell: powershell
 
       - name: Download Integration Test Artifacts (bin\deploy)
@@ -392,7 +392,6 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          dotnet restore 
           dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
@@ -465,7 +464,7 @@ jobs:
           path: src/Agent
 
       - name: dotnet restore
-        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/UnboundedIntegrationTests.csproj
+        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests.sln
         shell: powershell
 
       - name: Download Unbounded Integration Test Artifacts (bin\deploy)
