@@ -181,11 +181,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 
             return string.Join(",", teamMembers);
         }
-
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
 
@@ -203,7 +208,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 

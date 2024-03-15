@@ -186,7 +186,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+        }
+
+        private int ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
@@ -210,7 +216,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
 
@@ -230,14 +242,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedureUsingOleDbDriver(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedureUsingOleDbDriver(procedureNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
 
@@ -255,7 +273,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 
