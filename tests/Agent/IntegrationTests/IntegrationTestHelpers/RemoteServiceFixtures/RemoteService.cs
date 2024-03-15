@@ -130,7 +130,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {(noBuild ? "--no-build" : "")} {projectFile}";
+                $"publish --configuration Release --framework {framework} --output {deployPath} {(noBuild ? "--no-build" : "")} {projectFile}";
             TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
