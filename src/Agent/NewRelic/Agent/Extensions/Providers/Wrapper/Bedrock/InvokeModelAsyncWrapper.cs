@@ -52,7 +52,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 segment,
                 false,
                 InvokeTryProcessResponse,
-                TaskContinuationOptions.RunContinuationsAsynchronously
+                TaskContinuationOptions.ExecuteSynchronously
             );
 
             void InvokeTryProcessResponse(Task responseTask)
@@ -113,7 +113,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             // Embedding - does not create the other events
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -121,9 +121,9 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
-                    invokeModelResponse.ModelId,
+                    invokeModelRequest.ModelId,
                     "bedrock",
-                    responsePayload.Responses[0].TokenCount,
+                    responsePayload.PromptTokenCount,
                     false,
                     null, // not available in AWS
                     null
@@ -139,7 +139,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 requestPayload.Temperature,
                 requestPayload.MaxTokens,
                 invokeModelRequest.ModelId,
-                invokeModelResponse.ModelId,
+                invokeModelRequest.ModelId,
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
                 "bedrock",
@@ -159,7 +159,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     0,
                     completionId,
                     responsePayload.PromptTokenCount,
-                    true);
+                    false
+                );
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -209,7 +210,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 ErrorMessage = errorMessage
             };
 
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.Titan)
+            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -258,6 +259,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 case LlmModelType.Claude:
                     return JsonSerializer.Deserialize<ClaudeRequestPayload>(utf8Json);
                 case LlmModelType.Titan:
+                case LlmModelType.TitanEmbedded:
                     return JsonSerializer.Deserialize<TitanRequestPayload>(utf8Json);
                 case LlmModelType.Jurassic:
                     return JsonSerializer.Deserialize<JurassicRequestPayload>(utf8Json);
@@ -281,6 +283,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     return JsonSerializer.Deserialize<ClaudeResponsePayload>(utf8Json);
                 case LlmModelType.Titan:
                     return JsonSerializer.Deserialize<TitanResponsePayload>(utf8Json);
+                case LlmModelType.TitanEmbedded:
+                    return JsonSerializer.Deserialize<TitanEmbeddedResponsePayload>(utf8Json);
                 case LlmModelType.Jurassic:
                     return JsonSerializer.Deserialize<JurassicResponsePayload>(utf8Json);
                 default:
@@ -298,6 +302,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         CohereCommand,
         Claude,
         Titan,
+        TitanEmbedded,
         Jurassic
     }
 
@@ -320,8 +325,11 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             if (modelId.StartsWith("anthropic.claude"))
                 return LlmModelType.Claude;
 
-            if (modelId.StartsWith("amazon.titan-text") || modelId.StartsWith("amazon.titan-embed-text"))
+            if (modelId.StartsWith("amazon.titan-text"))
                 return LlmModelType.Titan;
+
+            if (modelId.StartsWith("amazon.titan-embed-text"))
+                return LlmModelType.TitanEmbedded;
 
             if (modelId.StartsWith("ai21.j2"))
                 return LlmModelType.Jurassic;
