@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -15,14 +15,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
     public class NServiceBusSetup
     {
         [LibraryMethod]
-        public void Setup()
+        public void Setup(string queueNameRoot)
         {
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost", true);
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.audit", true);
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.error", true);
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.retries", true);
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeouts", true);
-            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeoutsdispatcher", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}.audit", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}.error", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}.retries", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}.timeouts", true);
+            MessageQueueUtil.CreateEmptyQueue($"{queueNameRoot}.timeoutsdispatcher", true);
 
             var defaultFactory = LogManager.Use<DefaultFactory>();
             defaultFactory.Level(LogLevel.Error);

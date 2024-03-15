@@ -18,15 +18,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly string _nServiceBusQueueName;
 
         protected NServiceBus5ReceiveTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand("NServiceBusSetup Setup");
-            _fixture.AddCommand("NServiceBusReceiverHost Start");
-            _fixture.AddCommand("NServiceBusService Start");
+            _nServiceBusQueueName = Utilities.GenerateNServiceBusQueueName();
+
+            _fixture.AddCommand($"NServiceBusSetup Setup {_nServiceBusQueueName}");
+            _fixture.AddCommand($"NServiceBusReceiverHost Start {_nServiceBusQueueName}");
+            _fixture.AddCommand($"NServiceBusService Start {_nServiceBusQueueName}");
             _fixture.AddCommand("NServiceBusService SendValid");
             _fixture.AddCommand("NServiceBusService SendInvalid");
 

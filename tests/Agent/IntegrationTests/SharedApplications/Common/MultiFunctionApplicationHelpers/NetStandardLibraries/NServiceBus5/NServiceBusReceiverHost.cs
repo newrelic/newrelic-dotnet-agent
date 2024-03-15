@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -16,13 +16,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         private static string _endpointName = "NServiceBusReceiverHost";
 
         [LibraryMethod]
-        public void Start()
+        public void Start(string queueNameRoot)
         {
             ConsoleMFLogger.Info($"Starting NServiceBusReceiverHost");
             var busConfig = new BusConfiguration();
             busConfig.UsePersistence<InMemoryPersistence>();
             busConfig.UseTransport<MsmqTransport>();
-            busConfig.CustomConfigurationSource(new ConfigurationSource());
+            busConfig.CustomConfigurationSource(new ConfigurationSource(queueNameRoot));
             busConfig.LoadMessageHandlers<First<MessageHandler>>();
             busConfig.EndpointName(_endpointName);
             var startableBus = Bus.Create(busConfig);

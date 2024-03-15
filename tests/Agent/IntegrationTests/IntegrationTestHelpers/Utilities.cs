@@ -72,5 +72,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var procId = Guid.NewGuid().ToString("N").ToLower().Substring(0, 8);
             return $"pTestProc{procId}";
         }
+
+        public static string GenerateNServiceBusQueueName()
+        {
+            var queueId = Guid.NewGuid().ToString("N").ToLower().Substring(0, 8);
+            return $"nservicebusreceiverhost{queueId}";
+        }
     }
 }

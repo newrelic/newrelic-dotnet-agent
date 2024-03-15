@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -21,7 +21,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         private static Random _random;
 
         [LibraryMethod]
-        public void Start()
+        public void Start(string queueNameRoot)
         {
             ConsoleMFLogger.Info($"Starting NServiceBusService");
             var busConfig = new BusConfiguration();
@@ -32,7 +32,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
                 typeof(SampleNServiceBusMessage2)
             };
             busConfig.TypesToScan(typeToScan);
-            busConfig.CustomConfigurationSource(new ConfigurationSource());
+            busConfig.CustomConfigurationSource(new ConfigurationSource(queueNameRoot));
             _bus = NServiceBus.Bus.Create(busConfig);
             _random = new Random();
             ConsoleMFLogger.Info($"NServiceBusService Started");
