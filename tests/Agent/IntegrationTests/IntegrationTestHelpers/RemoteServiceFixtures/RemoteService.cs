@@ -173,7 +173,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     TestLogger?.WriteLine($"[RemoteService]: {failedToRestoreMessage}");
                     throw new Exception(failedToRestoreMessage);
                 }
-                Console.WriteLine($"[{DateTime.Now}] Successfully restored {projectFile} in {sw.Elapsed}");
+                TestLogger?.WriteLine($"[RemoteService]: Successfully restored {projectFile} in {sw.Elapsed}");
+                sw.Restart();
             }
 
             //var runtime = Utilities.CurrentRuntime;
@@ -236,16 +237,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
 
             sw.Stop();
-            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
+            TestLogger?.WriteLine($"[RemoteService]: Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
         }
 
         private object GetPublishLockObjectForCoreApp()
         {
             return PublishCoreAppLocks.GetOrAdd(ApplicationDirectoryName, _ => new object());
         }
-
-
-
 
         public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
