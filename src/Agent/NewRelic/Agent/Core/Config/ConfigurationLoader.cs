@@ -405,7 +405,6 @@ namespace NewRelic.Agent.Core.Config
                 config = serializer.Deserialize(reader) as configuration;
                 if (config == null)
                     throw new InvalidDataException(string.Format("Unable to deserialize the provided xml: {0}", configXml));
-                config.Initialize(configXml, provenance);
             }
 
             // Validate the config xml with the supplied schema.  Note that any validation failures do not prevent

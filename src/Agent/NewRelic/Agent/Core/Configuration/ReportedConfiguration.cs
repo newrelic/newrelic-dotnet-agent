@@ -33,6 +33,9 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AgentEnabled => _configuration.AgentEnabled;
 
         [JsonIgnore]
+        public string AgentEnabledAt => _configuration.AgentEnabledAt;
+
+        [JsonIgnore]
         public bool ServerlessModeEnabled => _configuration.ServerlessModeEnabled;
 
         [JsonIgnore]

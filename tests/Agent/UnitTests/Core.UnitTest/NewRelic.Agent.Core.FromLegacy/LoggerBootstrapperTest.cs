@@ -278,7 +278,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithAuditLogEnabled(string logLevel)
@@ -297,7 +297,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithConsoleLogEnabled(string logLevel)
@@ -316,7 +316,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
         private static ILogConfig LogConfigFixtureWithLogEnabled(bool enabled)
         {
@@ -334,7 +334,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithConsoleEnabled(bool enabled)
@@ -353,7 +353,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabled()
@@ -371,7 +371,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
         private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(int maxLogFileSizeMB, int maxLogFiles)
         {
@@ -389,7 +389,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabled()
@@ -407,7 +407,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
 
         private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabledAndLogFileCountSet(int maxLogFiles)
@@ -426,7 +426,7 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+            return configuration.log;
         }
     }
 }

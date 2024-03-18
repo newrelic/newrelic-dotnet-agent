@@ -131,9 +131,9 @@ namespace NewRelic.Agent.Core
                 Debugger.Break(); // break the debugger, if one is attached
             }
 
-            LoggerBootstrapper.ConfigureLogger(config.LogConfig);
+            LoggerBootstrapper.ConfigureLogger(config.log);
 
-            AssertAgentEnabled(bootstrapConfig);
+            AssertAgentEnabled();
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -169,10 +169,10 @@ namespace NewRelic.Agent.Core
             _isInitialized = true;
         }
 
-        private void AssertAgentEnabled(IBootstrapConfiguration config)
+        private void AssertAgentEnabled()
         {
             if (!Configuration.AgentEnabled)
-                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
+                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", Configuration.AgentEnabledAt));
 
             if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
                 throw new Exception("Please set your license key.");
