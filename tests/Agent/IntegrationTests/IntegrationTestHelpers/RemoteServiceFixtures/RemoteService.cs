@@ -120,7 +120,62 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             // build workflow will specify this environment variable to skip the build step
             var noBuild = Environment.GetEnvironmentVariable("INTEGRATION_TEST_NO_BUILD") == "true";
 
-            var runtime = Utilities.CurrentRuntime;
+            if (noBuild)
+            {
+                // dotnet restore the target project to ensure nuget packages are available
+                // all other resources will already be in place by way of the build workflow
+                var restoreProcess = new Process();
+                var restoreStartInfo = new ProcessStartInfo();
+                restoreStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                restoreStartInfo.UseShellExecute = false;
+                restoreStartInfo.FileName = "dotnet";
+                restoreStartInfo.RedirectStandardOutput = true;
+                restoreStartInfo.RedirectStandardError = true;
+                restoreStartInfo.Arguments = $"restore {projectFile}";
+                TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {restoreStartInfo.Arguments}'");
+                restoreProcess.StartInfo = restoreStartInfo;
+                restoreProcess.Start();
+                // wait for the restore process to complete
+                var processOutput = new ProcessOutput(TestLogger, restoreProcess, true);
+
+                // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
+                // 10 minutes may or may not be extreme but stabilizes these failures.
+                const int timeoutInMilliseconds = 10 * 60 * 1000;
+                if (!restoreProcess.WaitForExit(timeoutInMilliseconds))
+                {
+                    TestLogger?.WriteLine($"[RemoteService]: Dotnet restore timed out while waiting for {ApplicationDirectoryName} to publish after {timeoutInMilliseconds} milliseconds.");
+                    try
+                    {
+                        //This usually happens because another publishing job has a lock on the file(s) being copied.
+                        //We send a termination request because we no longer want dotnet publish to continue to copy files
+                        //when there's a good chance that at least some of the files are missing.
+                        //We can only use "kill" to request termination here, because there isn't a "close" option for non-GUI apps.
+                        restoreProcess.Kill();
+                    }
+                    catch (Exception e)
+                    {
+                        TestLogger?.WriteLine($"======[RemoteService]: Dotnet restore failed to kill process that publishes {ApplicationDirectoryName} with exception =====");
+                        TestLogger?.WriteLine(e.ToString());
+                        TestLogger?.WriteLine($"-----[RemoteService]: Dotnet restore failed to kill process that publishes {ApplicationDirectoryName} end of exception -----");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {restoreProcess.ExitCode}");
+                }
+
+                processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
+
+                if (!restoreProcess.HasExited || restoreProcess.ExitCode != 0)
+                {
+                    var failedToPublishMessage = "Failed to restore nuget packages for Core application";
+
+                    TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
+                    throw new Exception(failedToPublishMessage);
+                }
+            }
+
+            //var runtime = Utilities.CurrentRuntime;
             var process = new Process();
             var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
