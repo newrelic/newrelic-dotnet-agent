@@ -137,23 +137,16 @@ namespace NewRelic.Agent.Core.Config
 
         private void SetAgentEnabledValues()
         {
-            try
+            _agentEnabledWithProvenance = TryGetAgentEnabledFromWebConfig();
+            if (_agentEnabledWithProvenance != null)
             {
-                _agentEnabledWithProvenance = TryGetAgentEnabledFromWebConfig();
-                if (_agentEnabledWithProvenance != null)
-                {
-                    return;
-                }
-
-                _agentEnabledWithProvenance = TryGetAgentEnabledFromAppSettings();
-                if (_agentEnabledWithProvenance != null)
-                {
-                    return;
-                }
+                return;
             }
-            catch (Exception ex)
+
+            _agentEnabledWithProvenance = TryGetAgentEnabledFromAppSettings();
+            if (_agentEnabledWithProvenance != null)
             {
-                Log.Error($"Failed to read {Constants.AppSettingsAgentEnabled} from local config.", ex);
+                return;
             }
 
             _agentEnabledWithProvenance = new ValueWithProvenance<bool>(_agentEnabledValueFromLocalConfig, ConfigurationFileName);

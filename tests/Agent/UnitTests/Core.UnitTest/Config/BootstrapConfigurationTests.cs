@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Configuration;
+using System;
 using NewRelic.Agent.Core.Configuration;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Config
         [SetUp]
         public void SetUp()
         {
-            _locaConfiguration = new configuration();
+            _localConfiguration = new configuration();
             _webConfigValueWithProvenance = null;
             _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
         }
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Config
         [Test]
         public void TestDebugStartupDelaySecondsWithValue()
         {
-            _locaConfiguration.debugStartupDelaySeconds = 30;
+            _localConfiguration.debugStartupDelaySeconds = 30;
 
             var config = CreateBootstrapConfiguration();
 
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.Config
                 Mock.Arrange(() => _configurationManagerStatic.AppSettingsFilePath).Returns(TestAppSettingProvenance);
             }
 
-            _locaConfiguration.agentEnabled = localConfigValue;
+            _localConfiguration.agentEnabled = localConfigValue;
 
             var config = CreateBootstrapConfiguration();
 
@@ -109,11 +109,20 @@ namespace NewRelic.Agent.Core.Config
         }
 
         [Test]
+        public void CheckingAgentEnabledAtBeforeAgentEnabled()
+        {
+            _localConfiguration.agentEnabled = true;
+            var config = CreateBootstrapConfiguration();
+
+            Assert.That(config.AgentEnabledAt, Is.EqualTo(TestFileName));
+        }
+
+        [Test]
         public void AgentEnabledSettingsDoNotChangeOnceSet()
         {
             string appSettingValue = "false";
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Arg.AnyString)).Returns(_ => appSettingValue);
-            _locaConfiguration.agentEnabled = true;
+            _localConfiguration.agentEnabled = true;
 
             var config = CreateBootstrapConfiguration();
 
@@ -128,12 +137,23 @@ namespace NewRelic.Agent.Core.Config
             });
         }
 
-        private BootstrapConfiguration CreateBootstrapConfiguration()
+        [Test]
+        public void DoesNotThrowWhenExceptionOccursWhileReadingAppSettings()
         {
-            return new BootstrapConfiguration(_locaConfiguration, TestFileName, _ => _webConfigValueWithProvenance, _configurationManagerStatic);
+            _localConfiguration.agentEnabled = true;
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Arg.AnyString)).Throws(new Exception("Test exception"));
+
+            var config = CreateBootstrapConfiguration();
+
+            Assert.That(config.AgentEnabled, Is.True);
         }
 
-        private configuration _locaConfiguration;
+        private BootstrapConfiguration CreateBootstrapConfiguration()
+        {
+            return new BootstrapConfiguration(_localConfiguration, TestFileName, _ => _webConfigValueWithProvenance, _configurationManagerStatic);
+        }
+
+        private configuration _localConfiguration;
         private const string TestFileName = "testfilename";
         private ValueWithProvenance<string> _webConfigValueWithProvenance;
         private IConfigurationManagerStatic _configurationManagerStatic;
