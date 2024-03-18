@@ -164,15 +164,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {restoreProcess.ExitCode}");
                 }
 
-                processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
+                processOutput.WriteProcessOutputToLog("[RemoteService]: RestoreCoreApp");
 
                 if (!restoreProcess.HasExited || restoreProcess.ExitCode != 0)
                 {
-                    var failedToPublishMessage = "Failed to restore nuget packages for Core application";
+                    var failedToRestoreMessage = "Failed to restore nuget packages for Core application";
 
-                    TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
+                    TestLogger?.WriteLine($"[RemoteService]: {failedToRestoreMessage}");
                     throw new Exception(failedToPublishMessage);
                 }
+                Console.WriteLine($"[{DateTime.Now}] Successfully restored {projectFile} in {sw.Elapsed}");
             }
 
             //var runtime = Utilities.CurrentRuntime;

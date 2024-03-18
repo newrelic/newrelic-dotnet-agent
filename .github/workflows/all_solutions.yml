@@ -351,9 +351,9 @@ jobs:
           name: newrelic-api-agent
           # Should not need a path because the artifacts are archived with the full directory structure
 
-      - name: dotnet restore IntegrationTests
-        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests.sln
-        shell: powershell
+      # - name: dotnet restore IntegrationTests
+      #   run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests.sln
+      #   shell: powershell
 
       - name: Download Integration Test Artifacts (bin\deploy)
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
@@ -463,9 +463,16 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: dotnet restore
-        run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests.sln
-        shell: powershell
+      # - name: dotnet restore
+      #   run: dotnet restore ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests.sln
+      #   shell: powershell
+
+
+      - name: Download NewRelic.Api.Agent Build Folder
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: newrelic-api-agent
+          # Should not need a path because the artifacts are archived with the full directory structure
 
       - name: Download Unbounded Integration Test Artifacts (bin\deploy)
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
