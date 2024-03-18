@@ -171,7 +171,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     var failedToRestoreMessage = "Failed to restore nuget packages for Core application";
 
                     TestLogger?.WriteLine($"[RemoteService]: {failedToRestoreMessage}");
-                    throw new Exception(failedToPublishMessage);
+                    throw new Exception(failedToRestoreMessage);
                 }
                 Console.WriteLine($"[{DateTime.Now}] Successfully restored {projectFile} in {sw.Elapsed}");
             }
