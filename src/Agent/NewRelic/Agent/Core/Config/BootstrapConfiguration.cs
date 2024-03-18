@@ -179,7 +179,7 @@ namespace NewRelic.Agent.Core.Config
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to read {Constants.AppSettingsAgentEnabled} from local config.", ex);
+                Log.Error(ex, $"Failed to read {Constants.AppSettingsAgentEnabled} from local config.");
             }
 
             return null;
