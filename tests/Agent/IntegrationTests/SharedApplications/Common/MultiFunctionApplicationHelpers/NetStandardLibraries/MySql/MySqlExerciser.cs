@@ -1,5 +1,7 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
+#if !NET7_0 // there is no .NET 7 test for MySql
 
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +48,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             var dates = new List<string>();
 
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 10000", connection))
+            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
             {
                 await connection.OpenAsync();
                 using (var reader = await command.ExecuteReaderAsync())
@@ -64,10 +66,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void CreateAndExecuteStoredProcedure(string procedureName, bool paramsWithAtSigns)
+        public void CreateAndExecuteStoredProcedures(string procedureNameWith, string procedureNameWithout)
         {
-            CreateProcedure(procedureName);
+            CreateProcedure(procedureNameWith);
+            ExecuteProcedure(procedureNameWith, true);
+            CreateProcedure(procedureNameWithout);
+            ExecuteProcedure(procedureNameWithout, false);
+        }
 
+        private static void ExecuteProcedure(string procedureName, bool paramsWithAtSigns)
+        {
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
             using (var command = new MySqlCommand(procedureName, connection))
             {
@@ -101,3 +109,4 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         }
     }
 }
+#endif

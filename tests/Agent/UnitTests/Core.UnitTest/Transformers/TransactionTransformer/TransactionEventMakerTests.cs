@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple(
                 () => Assert.That(filteredIntrinsicsDic.Keys, Is.EquivalentTo(unfilteredIntrinsicsDic.Keys)),
-                () => Assert.That(intrinsicAttributes, Has.Count.EqualTo(19)),
+                () => Assert.That(intrinsicAttributes, Has.Count.EqualTo(20)),
                 () => Assert.That(intrinsicAttributes["type"], Is.EqualTo("Transaction")),
                 () => Assert.That(agentAttributes, Has.Count.EqualTo(4)),
                 () => Assert.That(agentAttributes["response.status"], Is.EqualTo("200")),

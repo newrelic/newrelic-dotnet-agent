@@ -440,10 +440,13 @@ jobs:
         run: |
           Write-Host "Installing HostableWebCore Feature"
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-          Write-Host "Installing Msmq Features"
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
+          
+          if ("${{ matrix.namespace }}" -eq "Msmq") {
+            Write-Host "Installing Msmq Features"
+            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
+            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
+            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
+          }
 
           if ("${{ matrix.namespace }}" -eq "MsSql") {
             Write-Host "Installing MSSQL CLI"
