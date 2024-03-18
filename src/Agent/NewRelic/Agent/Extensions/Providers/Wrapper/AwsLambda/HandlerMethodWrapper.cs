@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
     {
         public List<string> WebInputEventTypes = ["APIGatewayProxyRequest", "ALBTargetGroupRequest"];
         public List<string> WebResponseHeaders = ["Content-Type", "Content-Length"];
-        public Dictionary<string, string> eventTypes = new Dictionary<string, string>()
+        public Dictionary<string, string> EventTypes = new()
         {
             { "APIGatewayProxyRequest", "apiGateway" },
             { "ApplicationLoadBalancerRequest", "alb" },
@@ -37,16 +37,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         public bool IsTransactionRequired => false;
 
         private static bool _coldStart = true;
-
-        private bool IsColdstart()
-        {
-            if (_coldStart)
-            {
-                _coldStart = false;
-                return true;
-            }
-            return false;
-        }
+        private static bool IsColdStart => _coldStart && !(_coldStart = false);
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -83,12 +74,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             var attributes = new Dictionary<string, string>();
 
-            eventTypes.TryGetValue(eventTypeName, out var eventType); // handle case where the name might not be in the eventType dictionary
+            EventTypes.TryGetValue(eventTypeName, out var eventType); // handle case where the name might not be in the eventType dictionary
 
             attributes.AddEventSourceAttribute("eventType", eventType ?? "Unknown"); // TODO: Is this correct?
             attributes.Add("aws.RequestId", requestIdGetter(lambdaContext));
             attributes.Add("aws.lambda.arn", lambdaFunctionArn);
-            attributes.Add("aws.coldStart", IsColdstart().ToString());
+            attributes.Add("aws.coldStart", IsColdStart.ToString());
 
             agent.SetServerlessParameters(lambdaFunctionVersion ?? "$LATEST", lambdaFunctionArn); // TODO: Is the default for version correct?
 
@@ -98,7 +89,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     dynamic apiReqEvent = inputObject; // APIGatewayProxyRequest
                     //HTTP headers
                     IDictionary<string,string> headers = apiReqEvent.Headers;
-                    Func<IDictionary<string, string>, string, string> getter = (headers, key) => headers[key];
+                    Func<IDictionary<string, string>, string, string> getter = (h, k) => h[k];
                     transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? apiReqEvent.Headers.Keys : Statics.DefaultCaptureHeaders, getter);
                     //HTTP method
                     transaction.SetRequestMethod(apiReqEvent.HttpMethod);
@@ -196,7 +187,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
     {
         public static void AddEventSourceAttribute(this Dictionary<string, string> dict, string suffix, string value)
         {
-            dict.Add($"aws.labmda.eventSource.{suffix}", value);
+            dict.Add($"aws.lambda.eventSource.{suffix}", value);
         }
 
         public static void AddLambdaAttributes(this ITransaction transaction, Dictionary<string, string> attributes, IAgent agent)
