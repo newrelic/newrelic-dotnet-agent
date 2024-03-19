@@ -146,7 +146,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     });
             }
 
-            var queryWithDelay = "SELECT _date FROM dates WHERE SLEEP(?) = ? AND _date LIKE ? ORDER BY _date DESC LIMIT ?";
+            var queryWithDelay = "SELECT SLEEP(?), _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
 
             var expectedTransactionTraceSegments = new List<string> { "Datastore/statement/MySQL/dates/select" };
 

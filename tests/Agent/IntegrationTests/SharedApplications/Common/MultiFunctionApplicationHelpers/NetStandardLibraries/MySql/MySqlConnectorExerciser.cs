@@ -228,7 +228,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         }
 
         private const string Query = "SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
-        private const string QueryWithDelay = "SELECT _date FROM dates WHERE SLEEP(3) = 0 AND _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
+        private const string QueryWithDelay = "SELECT SLEEP(2), _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
 
         private string ExecuteCommand(Func<MySqlCommand, string> action, bool delay = false)
         {
