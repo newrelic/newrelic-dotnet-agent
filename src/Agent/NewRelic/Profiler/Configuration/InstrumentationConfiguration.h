@@ -125,7 +125,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             {
                 return;
             }
-            auto lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("AWS_LAMBDA_FUNCTION_NAME"));
+
+            auto lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("_HANDLER"));
+            if (lambdaInstPoint != nullptr)
+            {
+                AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
+                _foundServerlessInstrumentationPoint = true;
+                return;
+            }
+
+            lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("NEW_RELIC_LAMBDA_FUNCTION_HANDLER"));
             if (lambdaInstPoint != nullptr)
             {
                 AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
