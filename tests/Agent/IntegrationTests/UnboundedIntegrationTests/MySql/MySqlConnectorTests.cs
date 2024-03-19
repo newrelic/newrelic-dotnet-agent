@@ -56,9 +56,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier
-                        .ConfigureFasterMetricsHarvestCycle(21)
-                        .ConfigureFasterTransactionTracesHarvestCycle(13)
-                        .ConfigureFasterSqlTracesHarvestCycle(10)
+                        .ConfigureFasterMetricsHarvestCycle(30)
+                        .ConfigureFasterTransactionTracesHarvestCycle(30)
+                        .ConfigureFasterSqlTracesHarvestCycle(30)
                         .ForceTransactionTraces()
                         .SetLogLevel("finest");
 
