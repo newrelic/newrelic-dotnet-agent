@@ -932,11 +932,17 @@ namespace NewRelic.Agent.Core.Configuration
             return EnvironmentOverrides(_localConfiguration.distributedTracing.enabled, "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED");
         }
 
-        public string PrimaryApplicationId => _serverConfiguration.PrimaryApplicationId;
+        public string PrimaryApplicationId => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.primary_application_id, "NEW_RELIC_PRIMARY_APPLICATION_ID")
+            : _serverConfiguration.PrimaryApplicationId;
 
-        public string TrustedAccountKey => _serverConfiguration.TrustedAccountKey;
+        public string TrustedAccountKey => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.trusted_account_key, "NEW_RELIC_TRUSTED_ACCOUNT_KEY")
+            : _serverConfiguration.TrustedAccountKey;
 
-        public string AccountId => _serverConfiguration.AccountId;
+        public string AccountId => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.account_id, "NEW_RELIC_ACCOUNT_ID")
+            : _serverConfiguration.AccountId;
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 

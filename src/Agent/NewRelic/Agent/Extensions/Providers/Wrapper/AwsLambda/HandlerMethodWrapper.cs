@@ -77,9 +77,13 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             EventTypes.TryGetValue(eventTypeName, out var eventType); // handle case where the name might not be in the eventType dictionary
 
             attributes.AddEventSourceAttribute("eventType", eventType ?? "Unknown"); // TODO: Is this correct?
-            attributes.Add("aws.RequestId", requestIdGetter(lambdaContext));
+            attributes.AddEventSourceAttribute("arn", "????"); // TODO: how to get this value? Spec says "ARN of the invocation source" 
+
+            attributes.Add("aws.requestId", requestIdGetter(lambdaContext));
             attributes.Add("aws.lambda.arn", lambdaFunctionArn);
-            attributes.Add("aws.coldStart", IsColdStart.ToString());
+
+            if (IsColdStart) // only report this attribute if it's a cold start
+                attributes.Add("aws.coldStart", "true");
 
             agent.SetServerlessParameters(lambdaFunctionVersion ?? "$LATEST", lambdaFunctionArn); // TODO: Is the default for version correct?
 
