@@ -249,6 +249,7 @@ namespace NewRelic { namespace Profiler {
                 }
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
+                instrumentationConfiguration->CheckForEnvironmentInstrumentationPoint();
                 auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
                 this->SetMethodRewriter(methodRewriter);
 
