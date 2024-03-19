@@ -2300,6 +2300,45 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("Unknown"));
         }
+        [Test]
+        public void PrimaryApplicationId_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.primary_application_id = "PrimaryApplicationIdValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
+        }
+        [Test]
+        public void TrustedAccountKey_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.trusted_account_key = "TrustedAccountKeyValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
+        }
+        [Test]
+        public void AccountId_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.account_id = "AccountIdValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
+        }
 
         #endregion Distributed Tracing
 
