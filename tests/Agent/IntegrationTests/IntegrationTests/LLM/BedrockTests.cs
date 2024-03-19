@@ -111,7 +111,6 @@ where TFixture : ConsoleDynamicMethodFixture
         [Fact]
         public void BedrockTest()
         {
-            int expected = _bedrockModelsToTest.Count;
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = 5 },
