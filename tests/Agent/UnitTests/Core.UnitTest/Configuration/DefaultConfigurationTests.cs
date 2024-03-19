@@ -2229,6 +2229,97 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.That(expectedResult, Is.EqualTo(_defaultConfig.SamplingTargetPeriodInSeconds));
         }
 
+        [Test]
+        public void PrimaryApplicationIdValueIsSetFromEnvironmentVariable_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PRIMARY_APPLICATION_ID")).Returns("PrimaryApplicationIdValue");
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
+        }
+        [Test]
+        public void TrustedAccountKeyValueIsSetFromEnvironmentVariable_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_TRUSTED_ACCOUNT_KEY")).Returns("TrustedAccountKeyValue");
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
+        }
+        [Test]
+        public void AccountIdValueIsSetFromEnvironmentVariable_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ACCOUNT_ID")).Returns("AccountIdValue");
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
+        }
+        [Test]
+        public void PrimaryApplicationId_DefaultsToUnknown_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("Unknown"));
+        }
+        [Test]
+        public void PrimaryApplicationId_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.primary_application_id = "PrimaryApplicationIdValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
+        }
+        [Test]
+        public void TrustedAccountKey_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.trusted_account_key = "TrustedAccountKeyValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
+        }
+        [Test]
+        public void AccountId_ComesFromLocalConfig_WhenInServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            _localConfig.distributedTracing.account_id = "AccountIdValue";
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
+        }
+
         #endregion Distributed Tracing
 
         #region Span Events

@@ -3821,6 +3821,12 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enableSuccessMetricsField;
         
+        private string account_idField;
+        
+        private string trusted_account_keyField;
+        
+        private string primary_application_idField;
+        
         /// <summary>
         /// configurationDistributedTracing class constructor
         /// </summary>
@@ -3829,6 +3835,7 @@ namespace NewRelic.Agent.Core.Config
             this.enabledField = false;
             this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
+            this.primary_application_idField = "Unknown";
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -3870,6 +3877,46 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enableSuccessMetricsField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string account_id
+        {
+            get
+            {
+                return this.account_idField;
+            }
+            set
+            {
+                this.account_idField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string trusted_account_key
+        {
+            get
+            {
+                return this.trusted_account_keyField;
+            }
+            set
+            {
+                this.trusted_account_keyField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("Unknown")]
+        public string primary_application_id
+        {
+            get
+            {
+                return this.primary_application_idField;
+            }
+            set
+            {
+                this.primary_application_idField = value;
             }
         }
         
