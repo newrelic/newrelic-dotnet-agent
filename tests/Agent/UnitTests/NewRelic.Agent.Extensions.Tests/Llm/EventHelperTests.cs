@@ -202,9 +202,7 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        [TestCase(false)]
-        [TestCase(true)]
-        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool contentRecordingEnabled)
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent()
         {
             // Arrange
             var requestId = "123";
@@ -231,7 +229,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, tokenCount, isResponse, contentRecordingEnabled);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, tokenCount, isResponse);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -248,7 +246,7 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["response.model"], Is.EqualTo(responseModel));
                 Assert.That(llmAttributes["vendor"], Is.EqualTo("bedrock"));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
-                Assert.That(llmAttributes["content"], Is.EqualTo(contentRecordingEnabled ? content : null));
+                Assert.That(llmAttributes["content"], Is.EqualTo(content));
                 Assert.That(llmAttributes["role"], Is.EqualTo(role));
                 Assert.That(llmAttributes["sequence"], Is.EqualTo(sequence));
                 Assert.That(llmAttributes["completion_id"], Is.EqualTo(completionId));
@@ -258,9 +256,7 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        [TestCase(false)]
-        [TestCase(true)]
-        public void CreateEmbeddingEvent_ShouldRecordLlmEmbeddingEvent(bool contentRecordingEnabled)
+        public void CreateEmbeddingEvent_ShouldRecordLlmEmbeddingEvent()
         {
             // Arrange
             var requestId = "123";
@@ -301,7 +297,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, false, headers, null, contentRecordingEnabled);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, false, headers, null);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -314,7 +310,7 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
                 Assert.That(llmAttributes["trace_id"], Is.EqualTo(_agent.GetLinkingMetadata()["trace.id"]));
-                Assert.That(llmAttributes["input"], Is.EqualTo(contentRecordingEnabled ? input : null));
+                Assert.That(llmAttributes["input"], Is.EqualTo(input));
                 Assert.That(llmAttributes["request.model"], Is.EqualTo(requestModel));
                 Assert.That(llmAttributes["response.model"], Is.EqualTo(responseModel));
                 Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
@@ -393,7 +389,7 @@ namespace Agent.Extensions.Tests.Llm
             
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, true, null, errorData, true);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, true, null, errorData);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());

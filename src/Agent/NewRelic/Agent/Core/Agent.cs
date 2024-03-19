@@ -443,9 +443,8 @@ namespace NewRelic.Agent.Core
                 }
             }
 
-            // check the event type first since completions don't have token_count
+            // Always use callback for token count if one is provided
             if ((eventType == "LlmChatCompletionMessage" || eventType == "LlmEmbedding")
-                && attributes["token_count"] == null 
                 && _configurationService.Configuration.LlmTokenCountingCallback != null)
             {
                 // message and embedding events have different attribute names for the content of the message
