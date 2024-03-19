@@ -14,6 +14,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool AgentEnabled => true;
 
+        public string AgentEnabledAt => "Hardcoded in test";
+
         public bool ServerlessModeEnabled  => false;
 
         public string AgentLicenseKey => "AgentLicenseKey";

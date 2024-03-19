@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -63,37 +62,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             TestableDefaultConfiguration.ResetStatics();
         }
 
-        [Test]
-        public void AgentEnabledShouldPassThroughToLocalConfig()
+        [TestCase(true, "something", true, "something")]
+        [TestCase(false, "somethingelse", false, "somethingelse")]
+        public void AgentEnabledShouldUseBootstrapConfig(bool enabled, string enabledAt, bool expectedEnabledValue, string expectedEnabledAtValue)
         {
-            Assert.That(_defaultConfig.AgentEnabled, Is.True);
+            Mock.Arrange(() => _bootstrapConfiguration.AgentEnabled).Returns(enabled);
+            Mock.Arrange(() => _bootstrapConfiguration.AgentEnabledAt).Returns(enabledAt);
 
-            _localConfig.agentEnabled = false;
-            Assert.That(_defaultConfig.AgentEnabled, Is.False);
-
-            _localConfig.agentEnabled = true;
-            Assert.That(_defaultConfig.AgentEnabled, Is.True);
-        }
-
-        [Test]
-        public void AgentEnabledShouldUseCachedAppSetting()
-        {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled)).Returns("false");
-
-            Assert.That(_defaultConfig.AgentEnabled, Is.False);
-            Assert.That(_defaultConfig.AgentEnabled, Is.False);
-
-            Mock.Assert(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled), Occurs.Once());
-        }
-
-        [Test]
-        public void AgentEnabledShouldPreferAppSettingOverLocalConfig()
-        {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled)).Returns("false");
-
-            _localConfig.agentEnabled = true;
-
-            Assert.That(_defaultConfig.AgentEnabled, Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(_defaultConfig.AgentEnabled, Is.EqualTo(expectedEnabledValue));
+                Assert.That(_defaultConfig.AgentEnabledAt, Is.EqualTo(expectedEnabledAtValue));
+            });
         }
 
         [TestCase(null, true, ExpectedResult = true)]

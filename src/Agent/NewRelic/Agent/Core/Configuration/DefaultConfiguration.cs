@@ -194,24 +194,9 @@ namespace NewRelic.Agent.Core.Configuration
         private static readonly object _lockObj = new object();
 
 
-        public virtual bool AgentEnabled
-        {
-            get
-            {
-                // read from app setting one time only and cache the result
-                if (!_agentEnabledAppSettingParsed.HasValue)
-                {
-                    lock (_lockObj)
-                    {
-                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled),
-                            out _appSettingAgentEnabled);
-                    }
-                }
+        public virtual bool AgentEnabled => _bootstrapConfiguration.AgentEnabled;
 
-                // read from local config if we couldn't parse from app settings
-                return _agentEnabledAppSettingParsed.Value ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
-            }
-        }
+        public string AgentEnabledAt => _bootstrapConfiguration.AgentEnabledAt;
 
         public bool ServerlessModeEnabled => _bootstrapConfiguration.ServerlessModeEnabled;
 
@@ -1858,7 +1843,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion Metric naming
 
-        public string NewRelicConfigFilePath => _localConfiguration.ConfigurationFileName;
+        public string NewRelicConfigFilePath => _bootstrapConfiguration.ConfigurationFileName;
         public string AppSettingsConfigFilePath => _configurationManagerStatic.AppSettingsFilePath;
 
         #region Utilization

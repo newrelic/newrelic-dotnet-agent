@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Configuration
         IReadOnlyDictionary<string, string> GetAppSettings();
         object AgentRunId { get; }
         bool AgentEnabled { get; }
+        string AgentEnabledAt { get; }
 
         bool ServerlessModeEnabled { get; }
 
