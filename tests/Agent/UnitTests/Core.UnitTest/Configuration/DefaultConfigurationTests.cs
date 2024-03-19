@@ -2221,12 +2221,38 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void SamplingTarget_Is10_InServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.SamplingTarget, Is.EqualTo(10));
+        }
+
+        [Test]
         [TestCase(1234, 1234)]
         public void SamplingTargetPeriodInSecondsValue(int server, int expectedResult)
         {
             _serverConfig.SamplingTargetPeriodInSeconds = server;
 
             Assert.That(expectedResult, Is.EqualTo(_defaultConfig.SamplingTargetPeriodInSeconds));
+        }
+
+        [Test]
+        public void SamplingTargetPeriodInSeconds_Is60_InServerlessMode()
+        {
+            // Arrange
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+
+            // Act
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Assert
+            Assert.That(defaultConfig.SamplingTargetPeriodInSeconds, Is.EqualTo(60));
         }
 
         [Test]

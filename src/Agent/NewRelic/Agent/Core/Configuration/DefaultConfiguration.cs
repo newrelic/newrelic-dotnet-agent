@@ -929,13 +929,13 @@ namespace NewRelic.Agent.Core.Configuration
             EnvironmentOverrides(_localConfiguration.distributedTracing.account_id, "NEW_RELIC_ACCOUNT_ID")
             : _serverConfiguration.AccountId;
 
-        public int? SamplingTarget => _serverConfiguration.SamplingTarget;
+        public int? SamplingTarget => ServerlessModeEnabled ? 10 : _serverConfiguration.SamplingTarget;
 
         // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
         public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
            EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
 
-        public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
+        public int? SamplingTargetPeriodInSeconds => ServerlessModeEnabled ? 60 : _serverConfiguration.SamplingTargetPeriodInSeconds;
 
         public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
 
