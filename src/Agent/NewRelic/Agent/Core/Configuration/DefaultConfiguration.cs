@@ -2053,7 +2053,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED");
+                // AI Monitoring is disabled in High Security Mode
+                return !HighSecurityModeEnabled && EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED");
             }
         }
         
@@ -2070,8 +2071,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                // This is a special case where we want to ensure that record content is not enabled in high security mode.
-                return !HighSecurityModeEnabled && AiMonitoringEnabled &&
+                return AiMonitoringEnabled &&
                     EnvironmentOverrides(_localConfiguration.aiMonitoring.recordContent.enabled, "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED");
             }
         }

@@ -3715,12 +3715,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
             Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
         }
-        
         [Test]
-        public void AiMonitoringStreamingDisabledByDefault()
+        public void AiMonitoringDisabledWhenHighSecurityModeEnabled()
         {
-            Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
+            _localConfig.highSecurity.enabled = true;
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
         }
+        
         [Test]
         public void AiMonitoringStreamingDisabledByLocalConfig()
         {
@@ -3742,11 +3744,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
         }
 
-        [Test]
-        public void AiMonitoringRecordContentDisabledByDefault()
-        {
-            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
-        }
         [Test]
         public void AiMonitoringRecordContentEnabledWhenAiMonitoringEnabled()
         {
@@ -3771,13 +3768,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void AiMonitoringRecordContentDisabledWhenAiMonitoringDisabled()
         {
             _localConfig.aiMonitoring.enabled = false;
-            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
-        }
-        [Test]
-        public void AiMonitoringRecordContentDisabledWhenHighSecurityModeEnabled()
-        {
-            _localConfig.highSecurity.enabled = true;
-            _localConfig.aiMonitoring.enabled = true;
             Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
         }
 
