@@ -158,7 +158,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
+            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds:N0} seconds. Minimum count: {minimumCount}");
 
             var timeTaken = Stopwatch.StartNew();
             do
@@ -166,14 +166,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
+                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression} in {timeTaken.Elapsed.TotalSeconds:N1}s.");
                     return matches;
                 }
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
 
-            var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
+            var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds:N0} seconds.  Expected line expression: {regularExpression}";
             _testLogger?.WriteLine(message);
             throw new Exception(message);
         }

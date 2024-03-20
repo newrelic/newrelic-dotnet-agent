@@ -17,18 +17,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
-        private readonly bool _paramsWithAtSigns;
-        private string _procedureName = "testProcedure" + Guid.NewGuid().ToString("n").Substring(0, 4);
+        private readonly string _procNameWith;
+        private readonly string _procNameWithout;
 
-        protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
+        protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             MsSqlWarmupHelper.WarmupMySql();
 
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _paramsWithAtSigns = paramsWithAtSigns;
 
-            _fixture.AddCommand($"MySqlExerciser CreateAndExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");
+            string procedureName = "testProcedure" + Guid.NewGuid().ToString("n").Substring(0, 4);
+            _procNameWith = $"{procedureName}_with";
+            _procNameWithout = $"{procedureName}_without";
+            _fixture.AddCommand($"MySqlExerciser CreateAndExecuteStoredProcedures {_procNameWith} {_procNameWithout}");
 
             _fixture.AddActions
             (
@@ -36,9 +38,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(45);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(45);
-                    configModifier.ConfigureFasterSqlTracesHarvestCycle(45);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
 
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("finest");
@@ -62,37 +64,57 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         [Fact]
         public void Test()
         {
-            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/CreateAndExecuteStoredProcedure";
+            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/CreateAndExecuteStoredProcedures";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure"
+                $"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure",
+                $"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure"
+
             };
 
-            var expectedQueryParameters = _paramsWithAtSigns
-                ? DbParameterData.MySqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue)
-                : DbParameterData.MySqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
+            var expectedQueryParametersWith = DbParameterData.MySqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
+            var expectedQueryParametersWithout = DbParameterData.MySqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
 
-            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters
+            var expectedTransactionTraceQueryParametersWith = new Assertions.ExpectedSegmentQueryParameters
             {
-                segmentName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
-                QueryParameters = expectedQueryParameters
+                segmentName = $"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure",
+                QueryParameters = expectedQueryParametersWith
             };
 
-            var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
+            var expectedSqlTracesWith = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = transactionName,
-                    Sql = _procedureName,
-                    DatastoreMetricName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
-                    QueryParameters = expectedQueryParameters,
+                    Sql = _procNameWith,
+                    DatastoreMetricName = $"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWith,
+                    HasExplainPlan = false
+                }
+            };
+            var expectedTransactionTraceQueryParametersWithout = new Assertions.ExpectedSegmentQueryParameters
+            {
+                segmentName = $"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure",
+                QueryParameters = expectedQueryParametersWithout
+            };
+
+            var expectedSqlTracesWithout = new List<Assertions.ExpectedSqlTrace>
+            {
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = transactionName,
+                    Sql = _procNameWithout,
+                    DatastoreMetricName = $"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWithout,
                     HasExplainPlan = false
                 }
             };
@@ -111,115 +133,64 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
-                () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWith, transactionSample),
+                () => Assertions.SqlTraceExists(expectedSqlTracesWith, sqlTraces),
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWithout, transactionSample),
+                () => Assertions.SqlTraceExists(expectedSqlTracesWithout, sqlTraces)
             );
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSignsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MySqlStoredProcedureTestsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MySqlStoredProcedureTestsWithAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MySqlStoredProcedureTestsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public MySqlStoredProcedureTestsWithoutAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSignsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class MySqlStoredProcedureTestsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public MySqlStoredProcedureTestsWithAtSignsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class MySqlStoredProcedureTestsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MySqlStoredProcedureTestsWithoutAtSignsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output, false)
-        {
-
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public MySqlStoredProcedureTestsWithAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, true)
-        {
-
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public MySqlStoredProcedureTestsWithoutAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, false)
-        {
-
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MySqlStoredProcedureTestsWithAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
-        {
-
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MySqlStoredProcedureTestsWithoutAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithAtSignsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    public class MySqlStoredProcedureTestsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MySqlStoredProcedureTestsWithAtSignsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    public class MySqlStoredProcedureTestsCoreLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlStoredProcedureTestsWithoutAtSignsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, false)
-        {
-
-        }
-    }
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MySqlStoredProcedureTestsWithAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MySqlStoredProcedureTestsWithoutAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

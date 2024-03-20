@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -38,6 +38,28 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                 return res;
             });
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void ExecuteReaderWithDelay()
+        {
+            ExecuteCommand(command =>
+            {
+                var dates = new List<string>();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    }
+                }
+                string res = string.Join(",", dates);
+                ConsoleMFLogger.Info(res);
+                return res;
+            }, true); // add a delay to the query to make sure this is the slowest one that executes, helps test reliability
+        }
+
 
         [LibraryMethod]
         [Transaction]
@@ -206,13 +228,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         }
 
         private const string Query = "SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
+        private const string QueryWithDelay = "SELECT SLEEP(2), _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
 
-        private string ExecuteCommand(Func<MySqlCommand, string> action)
+        private string ExecuteCommand(Func<MySqlCommand, string> action, bool delay = false)
         {
             string result;
 
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand(Query, connection))
+            using (var command = new MySqlCommand(delay ? QueryWithDelay : Query, connection))
             {
                 connection.Open();
                 result = action(command);

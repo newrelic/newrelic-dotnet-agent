@@ -19,24 +19,25 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly string _expectedTransactionName;
-        private readonly bool _paramsWithAtSigns;
         private readonly string _tableName;
-        private readonly string _procedureName;
+        private readonly string _procNameWith;
+        private readonly string _procNameWithout;
 
-        public MsSqlStoredProcedureUsingOleDbDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, bool paramsWithAtSign) : base(fixture)
+        public MsSqlStoredProcedureUsingOleDbDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
             MsSqlWarmupHelper.WarmupMsSql();
 
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOleDbDriver";
-            _paramsWithAtSigns = paramsWithAtSign;
 
             _tableName = Utilities.GenerateTableName();
-            _procedureName = Utilities.GenerateProcedureName();
+            var procedureName = Utilities.GenerateProcedureName();
+            _procNameWith = $"{procedureName}_with";
+            _procNameWithout = $"{procedureName}_without";
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
-            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOleDbDriver {_procedureName} {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOleDbDriver {_procNameWith} {_procNameWithout}");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
             _fixture.AddActions
@@ -70,30 +71,41 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/Other/{_procedureName.ToLower()}/ExecuteProcedure"
+                $"Datastore/statement/Other/{_procNameWith.ToLower()}/ExecuteProcedure",
+                $"Datastore/statement/Other/{_procNameWithout.ToLower()}/ExecuteProcedure"
             };
 
-            var expectedQueryParameters = _paramsWithAtSigns
-                ? DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue)
-                : DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
+            var expectedQueryParametersWith = DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
+            var expectedQueryParametersWithout = DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
 
-            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{_procedureName.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
+            var expectedTransactionTraceQueryParametersWith = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{_procNameWith.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParametersWith };
+            var expectedTransactionTraceQueryParametersWithout = new Assertions.ExpectedSegmentQueryParameters {segmentName = $"Datastore/statement/Other/{_procNameWithout.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParametersWithout };
 
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = _expectedTransactionName,
-                    Sql = _procedureName,
-                    DatastoreMetricName = $"Datastore/statement/Other/{_procedureName.ToLower()}/ExecuteProcedure",
-                    QueryParameters = expectedQueryParameters
+                    Sql = _procNameWith,
+                    DatastoreMetricName = $"Datastore/statement/Other/{_procNameWith.ToLower()}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWith
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedTransactionName,
+                    Sql = _procNameWithout,
+                    DatastoreMetricName = $"Datastore/statement/Other/{_procNameWithout.ToLower()}/ExecuteProcedure",
+                    QueryParameters = expectedQueryParametersWithout
                 }
+
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -111,7 +123,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWith, transactionSample),
+                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParametersWithout, transactionSample),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
                 () => Assertions.LogLinesNotExist(new[] { AgentLogFile.ErrorLogLinePrefixRegex }, logEntries)
             );
@@ -127,21 +140,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOleDbDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataExerciser",
-                  paramsWithAtSign: false)
+                  excerciserName: "SystemDataExerciser")
         {
         }
     }
