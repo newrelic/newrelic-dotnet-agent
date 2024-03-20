@@ -70,7 +70,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 dynamic invokeModelResponse = GetTaskResult(responseTask);
                 if (invokeModelResponse == null || invokeModelResponse.HttpStatusCode >= HttpStatusCode.MultipleChoices)
                 {
-                    //TODO: What to do with null response or non-2xx status code?
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Response payload {(invokeModelResponse == null ? "is null" : $"has non-success HttpStatusCode: {invokeModelResponse.HttpStatusCode}")}");
                     return;
                 }
 
