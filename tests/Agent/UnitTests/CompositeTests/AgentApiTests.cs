@@ -1948,6 +1948,8 @@ namespace CompositeTests
             var customEvent = _compositeTestAgent.CustomEvents.SingleOrDefault();
             var expectedEventAttributes = new List<ExpectedAttribute>
             {
+                new() {Key = "trace_id", Value = traceId},
+                new() {Key = "ingest_source", Value = "DotNet"},
                 new() {Key = "rating", Value = "myRating"},
                 new() {Key = "category", Value = "myCategory"},
                 new() {Key = "message", Value = "myMessage"},
