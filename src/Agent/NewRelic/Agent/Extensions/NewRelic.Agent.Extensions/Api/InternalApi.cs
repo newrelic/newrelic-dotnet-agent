@@ -340,6 +340,11 @@ namespace NewRelic.Agent.Api
         {
             _agentApiImplementation?.SetLlmTokenCountingCallback(callback);
         }
+
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category, string message, IDictionary<string, object>? metadata)
+        {
+            _agentApiImplementation?.RecordLlmFeedbackEvent(traceId, rating, category, message, metadata);
+        }
     }
 }
 

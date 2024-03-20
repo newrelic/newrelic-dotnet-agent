@@ -292,7 +292,7 @@ namespace NewRelic.Agent.Api
         /// <param name="category">Optional. Category of the feedback as provided by the end user</param>
         /// <param name="message">Optional. Freeform text feedback from an end user</param>
         /// <param name="metadata">Optional. Set of key-value pairs to store any other desired data to submit with the feedback event</param>
-        //void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null);
     }
 }
 

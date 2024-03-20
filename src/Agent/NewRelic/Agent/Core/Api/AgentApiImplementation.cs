@@ -778,6 +778,36 @@ namespace NewRelic.Agent.Core.Api
                 EventBus<LlmTokenCountingCallbackUpdateEvent>.Publish(new LlmTokenCountingCallbackUpdateEvent(callback));
             }
         }
+
+        public void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        {
+            using (new IgnoreWork())
+            {
+                var attributes = new Dictionary<string, object>
+                {
+                    { "trace_id", traceId },
+                    { "rating", rating },
+                    { "ingest_source",  "DotNet" }
+                };
+
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    attributes.Add("category", category);
+                }
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    attributes.Add("message", message);
+                }
+
+                foreach (var pair in metadata ?? new Dictionary<string, object>())
+                {
+                    attributes[pair.Key] = pair.Value;
+                }
+
+                RecordCustomEvent("LlmFeedbackMessage", attributes);
+            }
+        }
     }
 }
 #nullable restore
