@@ -3,13 +3,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class TitanRequestPayload : IRequestPayload
     {
-        [JsonPropertyName("inputText")]
+        [JsonProperty("inputText")]
         public string Prompt { get; set; }
 
         public float Temperature
@@ -30,15 +30,15 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("textGenerationConfig")]
+        [JsonProperty("textGenerationConfig")]
         public TextGenerationConfigData TextGenerationConfig { get; set; }
 
         public class TextGenerationConfigData
         {
-            [JsonPropertyName("maxTokenCount")]
+            [JsonProperty("maxTokenCount")]
             public int TokenCount { get; set; }
 
-            [JsonPropertyName("temperature")]
+            [JsonProperty("temperature")]
             public float Temperature { get; set; }
         }
     }
@@ -52,10 +52,10 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 
     public class TitanEmbeddedResponsePayload : IResponsePayload
     {
-        [JsonPropertyName("embeddings")]
+        [JsonProperty("embeddings")]
         private List<float> Embeddings { get; set; }
 
-        [JsonPropertyName("inputTextTokenCount")]
+        [JsonProperty("inputTextTokenCount")]
         public int? PromptTokenCount { get; set; }
 
         public ResponseData[] Responses { get => null; set { } }
@@ -75,7 +75,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("inputTextTokenCount")]
+        [JsonProperty("inputTextTokenCount")]
         public int? PromptTokenCount { get; set; }
 
         public string StopReason
@@ -87,18 +87,18 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("results")]
+        [JsonProperty("results")]
         public List<Result> Results { get; set; }
 
         public class Result
         {
-            [JsonPropertyName("tokenCount")]
+            [JsonProperty("tokenCount")]
             public int TokenCount { get; set; }
 
-            [JsonPropertyName("outputText")]
+            [JsonProperty("outputText")]
             public string OutputText { get; set; }
 
-            [JsonPropertyName("completionReason")]
+            [JsonProperty("completionReason")]
             public string CompletionReason { get; set; }
         }
     }

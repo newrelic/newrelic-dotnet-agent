@@ -3,19 +3,19 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class JurassicRequestPayload : IRequestPayload
     {
-        [JsonPropertyName("prompt")]
+        [JsonProperty("prompt")]
         public string Prompt { get; set; }
 
-        [JsonPropertyName("temperature")]
+        [JsonProperty("temperature")]
         public float Temperature { get; set; }
 
-        [JsonPropertyName("maxTokens")]
+        [JsonProperty("maxTokens")]
         public int MaxTokens { get; set; }
     }
 
@@ -49,39 +49,39 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("prompt")]
+        [JsonProperty("prompt")]
         public PromptData Prompt { get; set; }
 
         public class PromptData
         {
-            [JsonPropertyName("tokens")]
+            [JsonProperty("tokens")]
             public List<object> Tokens { get; set; }
         }
 
-        [JsonPropertyName("completions")]
+        [JsonProperty("completions")]
         public List<Completion> Completions { get; set; }
 
         public class Completion
         {
-            [JsonPropertyName("data")]
+            [JsonProperty("data")]
             public Data Data { get; set; }
 
-            [JsonPropertyName("finishReason")]
+            [JsonProperty("finishReason")]
             public FinishReason FinishReason { get; set; }
         }
 
         public class Data
         {
-            [JsonPropertyName("text")]
+            [JsonProperty("text")]
             public string Text { get; set; }
 
-            [JsonPropertyName("tokens")]
+            [JsonProperty("tokens")]
             public List<object> Tokens { get; set; }
         }
 
         public class FinishReason
         {
-            [JsonPropertyName("reason")]
+            [JsonProperty("reason")]
             public string Reason { get; set; }
         }
     }

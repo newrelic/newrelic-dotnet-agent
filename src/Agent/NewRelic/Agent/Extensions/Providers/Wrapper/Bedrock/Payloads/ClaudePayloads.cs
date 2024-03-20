@@ -1,19 +1,19 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class ClaudeRequestPayload : IRequestPayload
     {
-        [JsonPropertyName("prompt")]
+        [JsonProperty("prompt")]
         public string Prompt { get; set; }
 
-        [JsonPropertyName("temperature")]
+        [JsonProperty("temperature")]
         public float Temperature { get; set; }
 
-        [JsonPropertyName("max_tokens_to_sample")]
+        [JsonProperty("max_tokens_to_sample")]
         public int MaxTokens { get; set; }
     }
 
@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("completion")]
+        [JsonProperty("completion")]
         public string Completion { get; set; }
 
         // Anthropic Claude does not expose token counts
@@ -42,7 +42,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("stop_reason")]
+        [JsonProperty("stop_reason")]
         public string StopReason { get; set; }
     }
 }

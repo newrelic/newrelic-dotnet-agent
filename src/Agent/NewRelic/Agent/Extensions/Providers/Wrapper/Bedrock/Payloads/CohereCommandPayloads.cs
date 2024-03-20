@@ -3,19 +3,19 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
 {
     public class CohereCommandRequestPayload : IRequestPayload
     {
-        [JsonPropertyName("prompt")]
+        [JsonProperty("prompt")]
         public string Prompt { get; set; }
 
-        [JsonPropertyName("temperature")]
+        [JsonProperty("temperature")]
         public float Temperature { get; set; }
 
-        [JsonPropertyName("max_tokens")]
+        [JsonProperty("max_tokens")]
         public int MaxTokens { get; set; }
     }
 
@@ -50,15 +50,15 @@ namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
             set { }
         }
 
-        [JsonPropertyName("generations")]
+        [JsonProperty("generations")]
         public List<Generation> Generations { get; set; }
 
         public partial class Generation
         {
-            [JsonPropertyName("finish_reason")]
+            [JsonProperty("finish_reason")]
             public string FinishReason { get; set; }
 
-            [JsonPropertyName("text")]
+            [JsonProperty("text")]
             public string Text { get; set; }
         }
     }
