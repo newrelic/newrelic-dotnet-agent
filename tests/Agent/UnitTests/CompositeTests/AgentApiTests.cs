@@ -2223,7 +2223,7 @@ namespace CompositeTests
 
             // ACT
             var transaction = agentWrapperApi.CreateTransaction(
-            isWeb: true,
+                isWeb: true,
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
                 transactionDisplayName: "name",
                 doNotTrackAsUnitOfWork: true);
