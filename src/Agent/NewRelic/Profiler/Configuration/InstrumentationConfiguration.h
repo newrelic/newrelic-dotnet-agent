@@ -163,6 +163,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->ClassName = segments[1];
             instrumentationPoint->MethodName = segments[2];
             instrumentationPoint->Parameters = nullptr;
+            instrumentationPoint->TracerFactoryArgs = 0;
 
             (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
             _instrumentationPointsSet->insert(instrumentationPoint);
