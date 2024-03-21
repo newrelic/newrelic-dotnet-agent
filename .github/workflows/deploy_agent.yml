@@ -67,13 +67,13 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        if: ${{ inputs.get-version-automatically == 'true' }}
+        if: ${{ inputs.get-version-automatically }}
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
       
       - name: Get Release Version and Run ID
-        if: ${{ inputs.get-version-automatically == 'true' }}
+        if: ${{ inputs.get-version-automatically }}
         id: step1
         run: |
           # Get the commit sha for the most recent release
@@ -178,7 +178,7 @@ jobs:
 
   deploy-downloadsite:
     needs: [get-release-info, get-external-artifacts]
-    if: ${{ inputs.downloadsite == 'true' }}
+    if: ${{ inputs.downloadsite }}
     name: Deploy MSI to Download Site
     runs-on: windows-2019
 
@@ -237,7 +237,7 @@ jobs:
   index-download-site:
     needs: deploy-downloadsite
     name: Rebuild indexes on the download site
-    if: ${{ inputs.indexdownloadsite == 'true'}}
+    if: ${{ inputs.indexdownloadsite }}
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
@@ -250,7 +250,7 @@ jobs:
 
   deploy-nuget:
     needs: get-external-artifacts
-    if: ${{ inputs.nuget == 'true' }}
+    if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
     runs-on: windows-2019
 
@@ -341,7 +341,7 @@ jobs:
 
   deploy-linux:
     needs: [get-release-info, get-external-artifacts]
-    if: ${{ inputs.linux == 'true' }}
+    if: ${{ inputs.linux }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
@@ -428,14 +428,14 @@ jobs:
         shell: bash
 
       - name: Clear Fastly cache
-        if: ${{ inputs.deploy == 'true' && success() }}
+        if: ${{ inputs.deploy && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
 
   publish-release-notes:
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ inputs.deploy == 'true' && inputs.downloadsite == 'true' && inputs.nuget == 'true' && inputs.linux == 'true' && inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ inputs.deploy && inputs.downloadsite && inputs.nuget && inputs.linux && inputs.linux-deploy-to-production }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
@@ -449,7 +449,7 @@ jobs:
       contents: read
       packages: read
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ inputs.deploy == 'true' && inputs.downloadsite == 'true' && inputs.nuget == 'true' && inputs.linux == 'true' && inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ inputs.deploy && inputs.downloadsite && inputs.nuget && inputs.linux && inputs.linux-deploy-to-production }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:

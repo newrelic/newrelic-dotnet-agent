@@ -30,7 +30,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="1.2.15.14586" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net" Version="2.0.16" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- log4net .NET core references -->
@@ -38,6 +38,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.9.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="log4net" Version="2.0.16" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28">
@@ -65,11 +66,10 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19239.1" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.5" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="3.1.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <!--<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" Condition="'$(TargetFramework)' == 'net8.0'" />-->
-    <!-- Package does not support net8.0 -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
@@ -88,13 +88,13 @@
     <PackageReference Include="MongoDB.Driver" Version="2.3.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MongoDB.Driver" Version="2.14.1" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MongoDB.Driver" Version="2.17.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.23.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.24.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MongoDB.Driver .NET/Core references -->
     <!-- Minimum version we can use with .NET core 3.0 or greater is 2.8.1, due to this bug: https://github.com/mongodb/mongo-csharp-driver/pull/372 -->
     <PackageReference Include="MongoDB.Driver" Version="2.8.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="MongoDB.Driver" Version="2.23.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.23.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.24.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- MySqlConnector framework references -->
     <PackageReference Include="MySqlConnector" Version="1.0.1" Condition="'$(TargetFramework)' == 'net462'" />
@@ -111,12 +111,12 @@
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.7.17" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.33" Condition="'$(TargetFramework)' == 'net481'" />
     
     <!-- StackExchange.Redis .NET/Core references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.2.6" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.17" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.7.17" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.33" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- Elasticsearch NEST framework references -->
     <PackageReference Include="NEST" Version="7.0.0" Condition="'$(TargetFramework)' == 'net462'" />

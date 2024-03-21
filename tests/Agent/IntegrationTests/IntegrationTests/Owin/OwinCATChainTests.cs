@@ -79,7 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 "parent.account",
                 "parent.transportType",
                 "parent.transportDuration",
-                "guid",
                 "traceId",
                 "priority",
                 "sampled"

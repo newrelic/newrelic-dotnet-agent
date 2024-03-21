@@ -23,7 +23,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         private readonly List<string> commandList = new List<string>()
         {
-            "ExecuteReader",
+            "ExecuteReaderWithDelay",
             "ExecuteScalar",
             "ExecuteNonQuery",
             "ExecuteReaderAsync",
@@ -56,9 +56,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier
-                        .ConfigureFasterMetricsHarvestCycle(10)
-                        .ConfigureFasterTransactionTracesHarvestCycle(10)
-                        .ConfigureFasterSqlTracesHarvestCycle(10)
+                        .ConfigureFasterMetricsHarvestCycle(30)
+                        .ConfigureFasterTransactionTracesHarvestCycle(30)
+                        .ConfigureFasterSqlTracesHarvestCycle(30)
                         .ForceTransactionTraces()
                         .SetLogLevel("finest");
 
@@ -74,8 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 exerciseApplication: () =>
                 {
                     // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
-                        TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
@@ -146,7 +145,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     });
             }
 
-            var query = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
+            var queryWithDelay = "SELECT SLEEP(?), _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
 
             var expectedTransactionTraceSegments = new List<string> { "Datastore/statement/MySQL/dates/select" };
 
@@ -158,7 +157,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     segmentName = "Datastore/statement/MySQL/dates/select",
                     parameterName = "sql",
-                    parameterValue = query
+                    parameterValue = queryWithDelay
                 },
                 new Assertions.ExpectedSegmentParameter
                 {
@@ -186,15 +185,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            // there should be only a single trace but we've found that the TransactionName isn't predictable enough
-            // (it's supposed to be the first query, but the assumption that the first query is always the slowest one doesn't
-            // hold universally). So we'll make sure there's just one trace and that the query, metricName and ExplainPlan properties are
-            // what we expect.
+            // there may be multiple traces, but we want the slowest one (by total call time) which is always the result of ExecuteReaderWithDelay
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-            Assert.Single(sqlTraces);
+            var sqlTrace = sqlTraces.OrderByDescending(t => t.TotalCallTime).First();
 
-            var sqlTrace = sqlTraces.First();
-            Assert.Equal( query, sqlTrace.Sql );
+            Assert.Equal( queryWithDelay, sqlTrace.Sql );
             Assert.Equal("Datastore/statement/MySQL/dates/select", sqlTrace.DatastoreMetricName);
             Assert.True(sqlTrace.ParameterData.GetValueOrDefault("explain_plan") != null);
             

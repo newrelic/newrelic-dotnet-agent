@@ -758,6 +758,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
 
                 var actualValue = actualAttributes[expectedAttribute.Key] as string;
+                if (actualValue == null && actualAttributes[expectedAttribute.Key].GetType() ==  typeof(bool))
+                {
+                    actualValue = actualAttributes[expectedAttribute.Key].ToString().ToLowerInvariant();
+                }
+
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the transaction event had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
