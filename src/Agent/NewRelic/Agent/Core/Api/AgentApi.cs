@@ -672,29 +672,7 @@ namespace NewRelic.Agent.Core
             const string apiName = nameof(RecordLlmFeedbackEvent);
             void work()
             {
-                var attributes = new Dictionary<string, object>
-                {
-                    { "trace_id", traceId },
-                    { "rating", rating },
-                    { "ingest_source",  "DotNet" }
-                };
-
-                if (!string.IsNullOrWhiteSpace(category))
-                {
-                    attributes.Add("category", category);
-                }
-
-                if (!string.IsNullOrWhiteSpace(message))
-                {
-                    attributes.Add("message", message);
-                }
-
-                foreach (var pair in metadata ?? new Dictionary<string, object>())
-                {
-                    attributes[pair.Key] = pair.Value;
-                }
-
-                InternalApi.RecordCustomEvent("LlmFeedbackMessage", attributes);
+                InternalApi.RecordLlmFeedbackEvent(traceId, rating, category, message, metadata);
             }
             TryInvoke(work, apiName, ApiMethod.RecordLlmFeedbackEvent);
         }
