@@ -12,6 +12,7 @@ using NewRelic.Providers.Wrapper.Bedrock.Payloads;
 using NewRelic.Reflection;
 using System.Net;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -248,7 +249,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
         {
             var model = ((string)invokeModelRequest.ModelId).FromModelId();
-            var utf8Json = invokeModelRequest.Body.ToArray();
+            MemoryStream bodyStream = invokeModelRequest.Body;
+            var curPos = bodyStream.Position;
+            bodyStream.Position = 0;
+            var sr = new StreamReader(bodyStream);
+            string utf8Json = sr.ReadToEnd();
+            bodyStream.Position = curPos;
 
             switch (model)
             {
@@ -271,7 +277,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         private static IResponsePayload GetResponsePayload(string modelId, dynamic invokeModelResponse)
         {
             var model = modelId.FromModelId();
-            var utf8Json = invokeModelResponse.Body.ToArray();
+            MemoryStream bodyStream = invokeModelResponse.Body;
+            var curPos = bodyStream.Position;
+            bodyStream.Position = 0;
+            var sr = new StreamReader(bodyStream);
+            string utf8Json = sr.ReadToEnd();
+            bodyStream.Position = curPos;
 
             switch (model)
             {
