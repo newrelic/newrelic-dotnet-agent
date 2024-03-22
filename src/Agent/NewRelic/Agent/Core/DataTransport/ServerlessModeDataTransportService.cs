@@ -11,6 +11,7 @@ using System.Text;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
@@ -49,8 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private DateTime _lastMetricSendTime;
         private static string _arn;
         private static string _functionVersion;
-
-        private const bool COMPRESS_OUTPUT = true; // This is for testing purposes
+        private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
 
         public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic)
         {
@@ -159,13 +159,13 @@ namespace NewRelic.Agent.Core.DataTransport
         public void SendCommandResults(IDictionary<string, object> commandResults) { }
         public void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData) => throw new NotImplementedException();
 
-        // TODO: Are log events supported for Lambda? Spec isn't clear. For now, just do nothing
         public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId)
         {
+            // Not supported in serverless mode
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        // TODO: Is the module list supported for Lambda? Spec isn't clear.
+        // Not supported in serverless mode
         public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId) => throw new NotImplementedException();
         #endregion
 
@@ -194,10 +194,10 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             // Build a payload as per the Lambda spec, compressing portions of the data as per the spec
-            var jsonPayload = BuildAndCompressPayload(data);
+            var jsonPayload = BuildPayload(data);
 
             // Write the payload to the /tmp/newrelic-telemetry file if it exists or to stdout if that file does not exist, as per the spec
-            WritePayload(jsonPayload);
+            WritePayload(jsonPayload, _outputPath);
 
             // Done with this transaction
             if (!_transactionWireData.TryRemove(transactionId, out _))
@@ -215,10 +215,9 @@ namespace NewRelic.Agent.Core.DataTransport
             _functionVersion = functionVersion;
         }
 
-        private void WritePayload(string payloadJson)
+        private void WritePayload(string payloadJson, string path)
         {
             bool success = false;
-            var fileName = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
 
             // Make sure we aren't trying to write two payloads at the same time
             lock (_writeLock)
@@ -226,10 +225,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 try
                 {
                     var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
-
-                    if (File.Exists(fileName))
+                    if (File.Exists(path))
                     {
-                        using (var fs = File.OpenWrite(fileName))
+                        using (var fs = File.OpenWrite(path))
                         {
                             fs.Write(payloadBytes, 0, payloadBytes.Length);
                             fs.Flush(true);
@@ -239,12 +237,12 @@ namespace NewRelic.Agent.Core.DataTransport
                     }
                     else
                     {
-                        Log.Warn("Unable to write serverless payload. '{0}' not found", fileName);
+                        Log.Warn("Unable to write serverless payload. '{0}' not found", path);
                     }
                 }
                 catch (Exception e)
                 {
-                    Log.Warn(e, "Failed to write serverless payload to {fileName}.", fileName);
+                    Log.Warn(e, "Failed to write serverless payload to {path}.", path);
                 }
             }
 
@@ -253,21 +251,24 @@ namespace NewRelic.Agent.Core.DataTransport
                 // fall back to writing to stdout
                 Log.Debug("Writing serverless payload to stdout");
 
-                // TODO: Is this correct ?? 
                 Console.WriteLine(payloadJson);
             }
         }
 
-        private string BuildAndCompressPayload(
-            WireData eventsToFlush)
+        private string BuildPayload(WireData eventsToFlush)
         {
-
             var metadata = GetMetadata(System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            var basePayload = GetCompressiblePayload(eventsToFlush);
 
-            var compressiblePayload = GetCompressiblePayload(eventsToFlush);
-            var compressedAndEncodedPayload = CompressAndEncode(JsonConvert.SerializeObject(compressiblePayload));
+            List<object> payload;
 
-            var payload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, compressedAndEncodedPayload };
+            if (Log.IsFinestEnabled)
+            {
+                var uncompressedPayload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, basePayload };
+                Log.Finest("Serverless payload: {0}", JsonConvert.SerializeObject(uncompressedPayload));
+            }
+            var compressedAndEncodedPayload = CompressAndEncode(JsonConvert.SerializeObject(basePayload));
+            payload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, compressedAndEncodedPayload };
 
             return JsonConvert.SerializeObject(payload);
         }
@@ -289,10 +290,6 @@ namespace NewRelic.Agent.Core.DataTransport
         // gzip compress and base64 encode.
         private string CompressAndEncode(string compressiblePayload)
         {
-#if false
-            // TODO: no compression for testing, but note that file output will be an escaped json object
-            return compressiblePayload;
-#else
             try
             {
                 MemoryStream output = new MemoryStream();
@@ -308,7 +305,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.Error(e, "Failed to compress payload");
             }
             return string.Empty;
-#endif
         }
 
         // Metadata is not compressed or encoded.
@@ -317,12 +313,12 @@ namespace NewRelic.Agent.Core.DataTransport
             Dictionary<string, object> metadata = new Dictionary<string, object>
             {
                 { "arn", _arn },
-                { "protocol_version", 16 }, // TODO: Is this the correct protocol version?
+                { "protocol_version", 17 },
                 { "function_version", _functionVersion},
                 { "execution_environment", executionEnv },
                 { "agent_version", AgentInstallConfiguration.AgentVersion },
                 { "metadata_version", 2 },
-                { "agent_language", ".net core" } // TODO: Is this correct?
+                { "agent_language", "dotnet" } // Should match "connect" string
             };
             return metadata;
         }
