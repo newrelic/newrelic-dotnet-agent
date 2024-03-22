@@ -8,14 +8,15 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
-using System.Configuration;
 using System.IO;
-using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 #if NETSTANDARD2_0
 using System.Reflection;
+#else
+using System.Configuration;
+using System.Web;
 #endif
 
 namespace NewRelic.Agent.Core.Config
@@ -55,6 +56,12 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetAppDomainAppPath = InternalGetAppDomainAppPath;
 
         public static Func<string, System.Configuration.Configuration> OpenWebConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration;
+#else
+        private static string InternalGetAppDomainName()
+        {
+            return AppDomain.CurrentDomain.FriendlyName;
+        }
+        public static Func<string> GetAppDomainName = InternalGetAppDomainName;
 #endif
 
         public static Func<string, bool> FileExists = File.Exists;

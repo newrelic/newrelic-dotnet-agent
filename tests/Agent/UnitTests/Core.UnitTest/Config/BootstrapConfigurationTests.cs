@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.IO;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -150,7 +152,7 @@ namespace NewRelic.Agent.Core.Config
 
         private BootstrapConfiguration CreateBootstrapConfiguration()
         {
-            return new BootstrapConfiguration(_localConfiguration, TestFileName, _ => _webConfigValueWithProvenance, _configurationManagerStatic);
+            return new BootstrapConfiguration(_localConfiguration, TestFileName, _ => _webConfigValueWithProvenance, _configurationManagerStatic, new ProcessStatic(), Directory.Exists, Path.GetFullPath);
         }
 
         private configuration _localConfiguration;
