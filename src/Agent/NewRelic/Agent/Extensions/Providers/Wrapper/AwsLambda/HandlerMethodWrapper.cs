@@ -13,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 {
     public class HandlerMethodWrapper : IWrapper
     {
-        public List<string> WebResponseHeaders = ["Content-Type", "Content-Length"];
+        private List<string> _webResponseHeaders = ["Content-Type", "Content-Length"];
 
         private static Func<object, object> _getRequestResponseFromGeneric;
         private static Func<object, string> _getFunctionNameFromLambdaContext;
@@ -44,9 +44,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
             var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
 
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {inputObject.GetType().FullName}");
-
-            var eventType = inputObject.GetType().FullName.ToEventType();
+            var fullName = inputObject.GetType().FullName;
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {fullName}");
+            var eventType = fullName.ToEventType();
             agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"eventType = {eventType}");
 
             var lambdaFunctionName = functionNameGetter(lambdaContext);
@@ -89,7 +89,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     }
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
-                    CaptureResponseData(transaction, response);
+                    if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                        CaptureResponseData(transaction, response);
                 }
             }
             else
@@ -97,7 +98,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            CaptureResponseData(transaction, response);
+                            if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                                CaptureResponseData(transaction, response);
 
                             segment.End();
                             transaction.End();
@@ -112,20 +114,16 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         private void CaptureResponseData(ITransaction transaction, object response)
         {
-            var responseTypeName = response.GetType().FullName;
-            if (responseTypeName.EndsWith("APIGatewayProxyResponse") || responseTypeName.EndsWith("ApplicationLoadBalancerResponse"))
-            {
-                dynamic apiResponse = response;
-                transaction.SetHttpResponseStatusCode(apiResponse.StatusCode); // StatusCode is a public property on both APIGatewayProxyResponse and ApplicationLoadBalancerResponse
-                IDictionary<string, string> responseHeaders = apiResponse.Headers; // Headers is a public property of type IDictionary<string,string> on both types
-                foreach (var header in WebResponseHeaders)
+                dynamic webResponse = response;
+                transaction.SetHttpResponseStatusCode(webResponse.StatusCode); 
+                IDictionary<string, string> responseHeaders = webResponse.Headers; 
+                foreach (var header in _webResponseHeaders)
                 {
                     if (responseHeaders.TryGetValue(header, out var value))
                     {
                         transaction.AddCustomAttribute(header, value);
                     }
                 }
-            }
         }
 
         private static bool ValidTaskResponse(Task response)
