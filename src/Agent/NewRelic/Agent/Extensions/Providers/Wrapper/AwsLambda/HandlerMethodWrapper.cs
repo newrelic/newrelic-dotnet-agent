@@ -4,28 +4,16 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.Generic;
 using System;
+using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {
     public class HandlerMethodWrapper : IWrapper
     {
-        public List<string> WebInputEventTypes = ["APIGatewayProxyRequest", "ALBTargetGroupRequest"];
-        public List<string> WebResponseHeaders = ["Content-Type", "Content-Length"];
-        public Dictionary<string, string> EventTypes = new()
-        {
-            { "APIGatewayProxyRequest", "apiGateway" },
-            { "ApplicationLoadBalancerRequest", "alb" },
-            { "CloudWatchEvent", "cloudWatch_scheduled" },
-            { "KinesisEvent", "kinesis" },
-            { "SNSEvent", "sns" },
-            { "S3Event", "s3" },
-            { "SimpleEmailEvent", "ses" },
-            { "SQSEvent", "sqs" },
-        };
+        private List<string> _webResponseHeaders = ["Content-Type", "Content-Length"];
 
         private static Func<object, object> _getRequestResponseFromGeneric;
         private static Func<object, string> _getFunctionNameFromLambdaContext;
@@ -56,26 +44,24 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
             var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
 
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {inputObject.GetType().FullName}");
-
-            var eventTypeName = inputObject.GetType().FullName.Split('.').Last(); // e.g. SQSEvent
-
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object type info = {eventTypeName}");
+            var fullName = inputObject.GetType().FullName;
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {fullName}");
+            var eventType = fullName.ToEventType();
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"eventType = {eventType}");
 
             var lambdaFunctionName = functionNameGetter(lambdaContext);
             var lambdaFunctionArn = functionArnGetter(lambdaContext);
             var lambdaFunctionVersion = functionVersionGetter(lambdaContext);
 
             transaction = agent.CreateTransaction(
-                isWeb: WebInputEventTypes.Any(s => s == eventTypeName),
+                isWeb: eventType.IsWebEvent(),
                 category: "Lambda", // TODO: is this is correct/useful?
                 transactionDisplayName: lambdaFunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             var attributes = new Dictionary<string, string>();
 
-            EventTypes.TryGetValue(eventTypeName, out var eventType); // TODO: handle case where the name might not be in the eventType dictionary
-            attributes.AddEventSourceAttribute("eventType", eventType ?? "Unknown");
+            attributes.AddEventSourceAttribute("eventType", eventType.ToEventTypeString());
 
             attributes.Add("aws.requestId", requestIdGetter(lambdaContext));
             attributes.Add("aws.lambda.arn", lambdaFunctionArn);
@@ -85,45 +71,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             agent.SetServerlessParameters(lambdaFunctionVersion ?? "$LATEST", lambdaFunctionArn);
 
-            switch (eventType)
-            {
-                case "apiGateway":
-                    dynamic apiReqEvent = inputObject; // APIGatewayProxyRequest
-                    //HTTP headers
-                    IDictionary<string,string> headers = apiReqEvent.Headers;
-                    Func<IDictionary<string, string>, string, string> getter = (h, k) => h[k];
-                    transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? apiReqEvent.Headers.Keys : Statics.DefaultCaptureHeaders, getter);
-                    //HTTP method
-                    transaction.SetRequestMethod(apiReqEvent.HttpMethod);
-                    //HTTP uri
-                    transaction.SetUri(apiReqEvent.Path); // TODO: not sure if this is correct
-                    //HTTP query parameters
-                    transaction.SetRequestParameters(apiReqEvent.QueryStringParameters);
+            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, eventType, inputObject, attributes);
 
-                    //aws.lambda.eventSource.accountId    string  event requestContext.accountId Identifier of the API account
-                    dynamic requestContext = apiReqEvent.RequestContext;
-                    attributes.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
-                    //aws.lambda.eventSource.apiId string event requestContext.apiId Identifier of the API gateway
-                    attributes.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
-                    //aws.lambda.eventSource.resourceId string event requestContext.resourceId Identifier of the API resource
-                    attributes.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
-                    //aws.lambda.eventSource.resourcePath string event requestContext.resourcePath Path of the API resource
-                    attributes.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
-                    //aws.lambda.eventSource.stage string event requestContext.stage Stage of the API resource
-                    attributes.AddEventSourceAttribute("stage", (string)requestContext.Stage);
-
-                    // TODO: insert distributed tracing headers if they're not already there
-                    break;
-                case "sqs":
-                    dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
-                    attributes.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
-                    attributes.AddEventSourceAttribute("length", (string)sqsEvent.Records.Count.ToString());
-                    break;
-                default:
-                    break;
-            }
-
-            transaction.AddLambdaAttributes(attributes, agent);
+            transaction.AddLambdaAttributes(attributes);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaFunctionName);
 
@@ -139,7 +89,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     }
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
-                    CaptureResponseData(transaction, response);
+                    if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                        CaptureResponseData(transaction, response);
                 }
             }
             else
@@ -147,7 +98,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            CaptureResponseData(transaction, response);
+                            if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                                CaptureResponseData(transaction, response);
 
                             segment.End();
                             transaction.End();
@@ -162,43 +114,21 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         private void CaptureResponseData(ITransaction transaction, object response)
         {
-            var responseTypeName = response.GetType().FullName;
-            if (responseTypeName.EndsWith("APIGatewayProxyResponse") || responseTypeName.EndsWith("ApplicationLoadBalancerResponse"))
-            {
-                dynamic apiResponse = response;
-                transaction.SetHttpResponseStatusCode(apiResponse.StatusCode); // StatusCode is a public property on both APIGatewayProxyResponse and ApplicationLoadBalancerResponse
-                IDictionary<string,string> responseHeaders = apiResponse.Headers; // Headers is a public property of type IDictionary<string,string> on both types
-                foreach (var header in WebResponseHeaders)
+                dynamic webResponse = response;
+                transaction.SetHttpResponseStatusCode(webResponse.StatusCode); 
+                IDictionary<string, string> responseHeaders = webResponse.Headers; 
+                foreach (var header in _webResponseHeaders)
                 {
                     if (responseHeaders.TryGetValue(header, out var value))
                     {
                         transaction.AddCustomAttribute(header, value);
                     }
                 }
-            }
         }
 
         private static bool ValidTaskResponse(Task response)
         {
             return response?.Status == TaskStatus.RanToCompletion;
-        }
-
-    }
-
-    public static class LambdaAttributeExtensions
-    {
-        public static void AddEventSourceAttribute(this Dictionary<string, string> dict, string suffix, string value)
-        {
-            dict.Add($"aws.lambda.eventSource.{suffix}", value);
-        }
-
-        public static void AddLambdaAttributes(this ITransaction transaction, Dictionary<string, string> attributes, IAgent agent)
-        {
-            foreach (var attribute in attributes)
-            {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Lambda Attribute: {attribute.Key}={attribute.Value}"); // TODO: remove before release
-                transaction.AddCustomAttribute(attribute.Key, attribute.Value); // TODO: figure out if custom attributes are correct
-            }
         }
 
     }
