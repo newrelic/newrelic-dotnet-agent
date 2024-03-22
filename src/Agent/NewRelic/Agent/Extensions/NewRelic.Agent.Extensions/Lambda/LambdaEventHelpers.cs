@@ -122,19 +122,23 @@ public static class LambdaEventHelpers
 
     private const string NEWRELIC_TRACE_HEADER = "newrelic";
 
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
     private static void TryParseWebRequestDistributedTraceHeaders(dynamic webRequestEvent, Dictionary<string, string> attributes)
     {
         IList<string> headerValues = null;
         string headerValue = null;
-        if (webRequestEvent.MultiValueHeaders != null && ((IDictionary<string, IList<string>>)webRequestEvent.MultiValueHeaders).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValues))
+
+        if (webRequestEvent.MultiValueHeaders != null && ((IDictionary<string, IList<string>>)webRequestEvent.MultiValueHeaders).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValues) && headerValues != null)
         {
             attributes.Add(NEWRELIC_TRACE_HEADER, string.Join(",", headerValues));
         }
-        if (webRequestEvent.Headers != null && ((IDictionary<string, string>)webRequestEvent.Headers).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValue))
+        else if (webRequestEvent.Headers != null && ((IDictionary<string, string>)webRequestEvent.Headers).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValue) && !string.IsNullOrEmpty(headerValue))
         {
             attributes.Add(NEWRELIC_TRACE_HEADER, headerValue);
         }
     }
+
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
     private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, Dictionary<string, string> attributes)
     {
         var record = sqsEvent.Records[0];
@@ -145,7 +149,7 @@ public static class LambdaEventHelpers
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
-            // This is an an SNS subscription with atttributes
+            // This is an SNS subscription with attributes
             var newrelicIndex = record.Body.IndexOf("newrelic", System.StringComparison.InvariantCultureIgnoreCase) + 9;
             var startIndex = record.Body.IndexOf("Value\":\"", newrelicIndex, System.StringComparison.InvariantCultureIgnoreCase) + 8;
             var endIndex = record.Body.IndexOf('"', startIndex);
@@ -153,6 +157,8 @@ public static class LambdaEventHelpers
             attributes.Add(NEWRELIC_TRACE_HEADER, (string)payload);
         }
     }
+
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
     private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, Dictionary<string, string> attributes)
     {
         var record = snsEvent.Records[0];
@@ -177,11 +183,8 @@ public static class LambdaEventHelpers
         else
             transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers.Keys : Statics.DefaultCaptureHeaders, headersGetter);
 
-        //HTTP method
         transaction.SetRequestMethod(webReqEvent.HttpMethod);
-        //HTTP uri
         transaction.SetUri(webReqEvent.Path); // TODO: not sure if this is correct
-        //HTTP query parameters
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
 

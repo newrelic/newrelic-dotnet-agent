@@ -27,7 +27,63 @@ public class LambdaEventHelpersTests
 
     // APIGatewayProxyRequest
     [Test]
-    public void AddEventTypeAttributes_APIGatewayProxyRequest_AddsCorrectAttributes()
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_AddsCorrectAttributes_MultiValueHeaders()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.RequestContext
+            {
+                AccountId = "testAccountId",
+                ApiId = "testApiId",
+                ResourceId = "testResourceId",
+                ResourcePath = "testResourcePath",
+                Stage = "testStage"
+            },
+            MultiValueHeaders = new Dictionary<string, IList<string>>
+            {
+                { "header1", new [] {"value1", "value1a" } },
+                { "header2", new [] {"value2" } },
+                { "newrelic", new [] { "testDistributedTraceHeader1", "testDistributedTraceHeader2"} }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path",
+            QueryStringParameters = new Dictionary<string, string>
+            {
+                { "param1", "value1" },
+                { "param2", "value2" }
+            }
+        };
+
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject, _attributes);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes["aws.lambda.eventSource.accountId"], Is.EqualTo("testAccountId"));
+            Assert.That(_attributes["aws.lambda.eventSource.apiId"], Is.EqualTo("testApiId"));
+            Assert.That(_attributes["aws.lambda.eventSource.resourceId"], Is.EqualTo("testResourceId"));
+            Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("testResourcePath"));
+            Assert.That(_attributes["aws.lambda.eventSource.stage"], Is.EqualTo("testStage"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader1,testDistributedTraceHeader2"));
+
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.MultiValueHeaders, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>()));
+            Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
+            Mock.Assert(() => _transaction.SetUri(inputObject.Path));
+            Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+        });
+    }
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_AddsCorrectAttributes_SingleValueHeaders()
     {
         // Arrange
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
@@ -44,7 +100,8 @@ public class LambdaEventHelpersTests
             Headers = new Dictionary<string, string>
             {
                 { "header1", "value1" },
-                { "header2", "value2" }
+                { "header2", "value2" },
+                { "newrelic", "testDistributedTraceHeader" }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -73,6 +130,8 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("testResourcePath"));
             Assert.That(_attributes["aws.lambda.eventSource.stage"], Is.EqualTo("testStage"));
 
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
+
             // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.Headers, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
@@ -81,9 +140,10 @@ public class LambdaEventHelpersTests
         });
     }
 
+
     // ApplicationLoadBalancerRequest
     [Test]
-    public void AddEventTypeAttributes_ApplicationLoadBalancerRequest_AddsCorrectAttributes()
+    public void AddEventTypeAttributes_ApplicationLoadBalancerRequest_AddsCorrectAttributes_SingleValueHeaders()
     {
         // Arrange
         var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
@@ -99,7 +159,8 @@ public class LambdaEventHelpersTests
             Headers = new Dictionary<string, string>
             {
                 { "header1", "value1" },
-                { "header2", "value2" }
+                { "header2", "value2" },
+                { "newrelic", "testDistributedTraceHeader" }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -123,9 +184,61 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testTargetGroupArn"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
 
             // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.Headers, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>()));
+            Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
+            Mock.Assert(() => _transaction.SetUri(inputObject.Path));
+            Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+        });
+    }
+    [Test]
+    public void AddEventTypeAttributes_ApplicationLoadBalancerRequest_AddsCorrectAttributes_MultiValueHeaders()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
+        {
+            RequestContext = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContext
+            {
+                Elb = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContextElb
+                {
+                    TargetGroupArn = "testTargetGroupArn"
+                }
+            },
+            MultiValueHeaders = new Dictionary<string, IList<string>>
+            {
+                { "header1", new [] {"value1", "value1a" } },
+                { "header2", new [] {"value2" } },
+                { "newrelic", new [] { "testDistributedTraceHeader1", "testDistributedTraceHeader2"} }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path",
+            QueryStringParameters = new Dictionary<string, string>
+            {
+                { "param1", "value1" },
+                { "param2", "value2" }
+            }
+        };
+
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testTargetGroupArn"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader1,testDistributedTraceHeader2"));
+
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.MultiValueHeaders, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
@@ -319,7 +432,8 @@ public class LambdaEventHelpersTests
                         MessageId = "testMessageId",
                         TopicArn = "testTopicArn",
                         Timestamp = "testTimestamp",
-                        Type = "testType"
+                        Type = "testType",
+                        MessageAttributes = new Dictionary<string, object> { {"newrelic", new  NewRelic.Mock.DistributedTrace.DistributedTraceHeaderModel { Value = "testDistributedTraceHeader"} } }
                     }
                 }
             ]
@@ -337,12 +451,13 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.timestamp"], Is.EqualTo("testTimestamp"));
             Assert.That(_attributes["aws.lambda.eventSource.topicArn"], Is.EqualTo("testTopicArn"));
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
         });
     }
 
     // SQSEvent
     [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes()
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromMessageAttributes()
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
@@ -351,6 +466,7 @@ public class LambdaEventHelpersTests
             Records = [
                 new() {
                     EventSourceArn = "testEventSourceArn",
+                    MessageAttributes = new Dictionary<string, object> { {"newrelic", new  NewRelic.Mock.DistributedTrace.DistributedTraceHeaderModel { StringValue = "testDistributedTraceHeader"} } }
                 }]
         };
 
@@ -361,7 +477,33 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
-                Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
+        });
+    }
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromBody()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SQSEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        {
+            Records = [
+                new() {
+                    EventSourceArn = "testEventSourceArn",
+                    Body = "\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish newrelic \"Value\":\"testDistributedTraceHeader\""
+                }]
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
         });
     }
 }

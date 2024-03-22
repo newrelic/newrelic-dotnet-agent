@@ -22,6 +22,7 @@ namespace NewRelic.Mock.Amazon.Lambda.SNSEvents
         public string Timestamp { get; set; }
         public string TopicArn { get; set; }
         public string Type { get; set; }
-        public Dictionary<string, object> MessageAttributes {get;set; }
+        public Dictionary<string, object> MessageAttributes { get; set; }
     }
 }
+
