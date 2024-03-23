@@ -210,6 +210,7 @@ namespace NewRelic.Agent.Configuration
         TimeSpan UpdateLoadedModulesCycle { get; }
         TimeSpan StackExchangeRedisCleanupCycle { get; }
         bool LoggingEnabled { get; }
+        string LoggingLevel { get; }
         IEnumerable<IDictionary<string, string>> IgnoredInstrumentation { get; }
     }
 }

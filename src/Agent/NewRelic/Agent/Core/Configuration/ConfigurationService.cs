@@ -57,14 +57,19 @@ namespace NewRelic.Agent.Core.Configuration
         private void OnConfigurationDeserialized(ConfigurationDeserializedEvent configurationDeserializedEvent)
         {
             _localConfiguration = configurationDeserializedEvent.Configuration;
-            UpdateLogLevel(_localConfiguration);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
         }
 
-        private static void UpdateLogLevel(configuration localConfiguration)
+        private void UpdateLogLevel(string previousLogLevel)
         {
-            Log.Info("The log level was updated to {0}", localConfiguration.log.LogLevel);
-            LoggerBootstrapper.SetLoggingLevel(localConfiguration.log.LogLevel);
+            var newLogLevel = Configuration.LoggingLevel;
+            if (previousLogLevel == newLogLevel)
+            {
+                return;
+            }
+
+            Log.Info("The log level was updated to {0} from ", newLogLevel, previousLogLevel);
+            LoggerBootstrapper.SetLoggingLevel(newLogLevel);
         }
 
         private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
@@ -100,7 +105,11 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
         {
+            var previousLogLevel = Configuration.LoggingLevel;
+
             Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            UpdateLogLevel(previousLogLevel);
 
             var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
             EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);

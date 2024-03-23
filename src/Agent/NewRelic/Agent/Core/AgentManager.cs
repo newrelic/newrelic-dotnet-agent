@@ -94,11 +94,11 @@ namespace NewRelic.Agent.Core
         private AgentManager()
         {
             // load the configuration
-            configuration config = null;
+            configuration localConfig = null;
             IBootstrapConfiguration bootstrapConfig = null;
             try
             {
-                config = ConfigurationLoader.Initialize(false);
+                localConfig = ConfigurationLoader.Initialize(false);
                 bootstrapConfig = ConfigurationLoader.BootstrapConfig;
             }
             catch
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core
                 // If the ConfigurationLoader fails, try to at least default configure the Logger to record the exception before we bail...
                 try
                 {
-                    LoggerBootstrapper.ConfigureLogger(new configurationLog());
+                    LoggerBootstrapper.ConfigureLogger(BootstrapConfiguration.GetDefault().LogConfig);
                 }
                 catch { }
 
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
-            ConfigurationLoader.PublishDeserializedEvent(config);
+            ConfigurationLoader.PublishDeserializedEvent(localConfig);
 
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
@@ -131,7 +131,7 @@ namespace NewRelic.Agent.Core
                 Debugger.Break(); // break the debugger, if one is attached
             }
 
-            LoggerBootstrapper.ConfigureLogger(config.log);
+            LoggerBootstrapper.ConfigureLogger(bootstrapConfig.LogConfig);
 
             AssertAgentEnabled();
 

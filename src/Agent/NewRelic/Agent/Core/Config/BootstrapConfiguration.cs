@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Config
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {
             // according to the spec, environment variable takes precedence over config file
-            var serverlessModeEnvVariable = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
+            var serverlessModeEnvVariable = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
 
             if (serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
             {
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Config
             }
 
             // env variable is not set, check for function name
-            var awsLambdaFunctionName = ConfigurationLoader.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
+            var awsLambdaFunctionName = ConfigLoaderHelpers.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
             if (!string.IsNullOrEmpty(awsLambdaFunctionName))
                 return true;
 
@@ -212,21 +212,15 @@ namespace NewRelic.Agent.Core.Config
                 _fileNameFromLocalConfig = localLogConfiguration.fileName;
                 _logRollingStrategyFromLocalConfig = localLogConfiguration.logRollingStrategy.ToString();
 
-                Enabled = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ENABLED", localLogConfiguration.enabled);
+                Enabled = ConfigLoaderHelpers.GetLoggingEnabledValue(localLogConfiguration);
                 Console = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_CONSOLE", localLogConfiguration.console);
                 IsAuditLogEnabled = localLogConfiguration.auditLog;
                 MaxLogFileSizeMB = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", localLogConfiguration.maxLogFileSizeMB);
                 MaxLogFiles = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILES", localLogConfiguration.maxLogFiles);
 
-                //TODO: LogLevel shares code with DefaultConfiguration.
-                if (Enabled)
-                {
-                    LogLevel = ConfigLoaderHelpers.GetOverride("NEWRELIC_LOG_LEVEL", localLogConfiguration.level);
-                }
-                else
-                {
-                    LogLevel = "off";
-                }
+                // The log level needs to be initialized after the Enabled property is initialized because it depends on that value
+                LogLevel = ConfigLoaderHelpers.GetLoggingLevelValue(localLogConfiguration, Enabled);
+
                 _checkDirectoryExists = checkDirectoryExists;
                 _getFullPath = getFullPath;
             }
@@ -283,7 +277,7 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetNewRelicLogDirectory()
             {
-                var newRelicLogDirectory = ConfigurationLoader.GetEnvironmentVar("NEWRELIC_LOG_DIRECTORY");
+                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEWRELIC_LOG_DIRECTORY");
                 if (newRelicLogDirectory != null && _checkDirectoryExists(newRelicLogDirectory)) return _getFullPath(newRelicLogDirectory);
 
                 return newRelicLogDirectory;
@@ -291,7 +285,7 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetLogFileName()
             {
-                string name = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_LOG");
+                string name = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_LOG");
                 if (name != null)
                 {
                     return Strings.SafeFileName(name);

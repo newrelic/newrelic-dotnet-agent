@@ -2370,8 +2370,13 @@ namespace NewRelic.Agent.Core.Configuration
 
         private string EnvironmentOverrides(string local, params string[] environmentVariableNames)
         {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static string EnvironmentOverrides(IEnvironment environment, string local,  params string[] environmentVariableNames)
+        {
             var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
-                .Select(_environment.GetEnvironmentVariable)
+                .Select(environment.GetEnvironmentVariable)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .FirstOrDefault(); // returns null if no env var found or if enumerable<string> is empty
 
@@ -2395,12 +2400,18 @@ namespace NewRelic.Agent.Core.Configuration
 
         private int? EnvironmentOverrides(int? local, params string[] environmentVariableNames)
         {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static int? EnvironmentOverrides(IEnvironment environment, int? local, params string[] environmentVariableNames)
+        {
             var env = environmentVariableNames
-                .Select(_environment.GetEnvironmentVariable)
+                .Select(environment.GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
             return int.TryParse(env, out int parsedValue) ? parsedValue : local;
         }
+
         private double? EnvironmentOverrides(double? local, params string[] environmentVariableNames)
         {
             var env = environmentVariableNames
@@ -2412,8 +2423,13 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool EnvironmentOverrides(bool local, params string[] environmentVariableNames)
         {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static bool EnvironmentOverrides(IEnvironment environment, bool local, params string[] environmentVariableNames)
+        {
             var env = environmentVariableNames
-                .Select(_environment.GetEnvironmentVariable)
+                .Select(environment.GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
             if (env != null)
@@ -2816,7 +2832,27 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        public bool LoggingEnabled => _localConfiguration.log.Enabled;
+        public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
+        {
+            return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");
+        }
+
+        private bool? _loggingEnabled;
+        public bool LoggingEnabled => _loggingEnabled ??= GetLoggingEnabledValue(_environment, _localConfiguration.log);
+
+        public static string GetLoggingLevelValue(IEnvironment environment, configurationLog localLogConfiguration, bool isLoggingEnabled)
+        {
+            var logLevel = "off";
+            if (isLoggingEnabled)
+            {
+                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEWRELIC_LOG_LEVEL");
+            }
+
+            return logLevel;
+        }
+
+        private string _loggingLevel;
+        public string LoggingLevel => _loggingLevel ??= GetLoggingLevelValue(_environment, _localConfiguration.log, LoggingEnabled);
 
         private const bool CaptureTransactionTraceAttributesDefault = true;
         private const bool CaptureErrorCollectorAttributesDefault = true;

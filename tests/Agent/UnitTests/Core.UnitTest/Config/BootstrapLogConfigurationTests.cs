@@ -1,9 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NETFRAMEWORK
 using System;
+#endif
 using System.Collections.Generic;
-using System.IO;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
@@ -17,19 +18,25 @@ namespace NewRelic.Agent.Core.Config
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            _originalGetEnvironmentVar = ConfigurationLoader.GetEnvironmentVar;
-            ConfigurationLoader.GetEnvironmentVar = MockGetEnvironmentVar;
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            ConfigurationLoader.GetEnvironmentVar = _originalGetEnvironmentVar;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
         }
 
         [SetUp]
         public void SetUp()
         {
+            // A new environment mock needs to be created for each test to work around a weird
+            // problem where the mock does not behave as expected when all of the tests are run
+            // together.
+            var environmentMock = Mock.Create<IEnvironment>();
+            Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+            ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
             ClearEnvironmentVars();
             _directoryToFullPathMapping.Clear();
             _localConfiguration = new configuration();
@@ -366,7 +373,7 @@ namespace NewRelic.Agent.Core.Config
             return _directoryToFullPathMapping[path];
         }
 
-        private Func<string, string> _originalGetEnvironmentVar;
+        private IEnvironment _originalEnvironment;
         private Dictionary<string, string> _envVars = new Dictionary<string, string>();
         private Dictionary<string, string> _directoryToFullPathMapping = new Dictionary<string, string>();
         private configuration _localConfiguration;

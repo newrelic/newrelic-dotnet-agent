@@ -28,8 +28,6 @@ namespace NewRelic.Agent.Core
         private const string RuntimeDirectoryName = "netframework";
 #endif
         private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
-        private const string NewRelicLogDirectoryEnvironmentVariable = "NEWRELIC_LOG_DIRECTORY";
-        private const string NewRelicLogLevelEnvironmentVariable = "NEWRELIC_LOG_LEVEL";
 
         public static bool IsWindows { get; }
 #if NETFRAMEWORK
@@ -43,7 +41,6 @@ namespace NewRelic.Agent.Core
         public static string NewRelicHome { get; }
         public static string NewRelicInstallPath { get; }
         public static string NewRelicLogDirectory { get; }
-        public static string NewRelicLogLevel { get; }
         public static string HomeExtensionsDirectory { get; }
         public static string RuntimeHomeExtensionsDirectory { get; }
         public static string InstallPathExtensionsDirectory { get; }
@@ -63,8 +60,6 @@ namespace NewRelic.Agent.Core
 #endif
             NewRelicHome = GetNewRelicHome();
             NewRelicInstallPath = GetNewRelicInstallPath();
-            NewRelicLogDirectory = GetNewRelicLogDirectory();
-            NewRelicLogLevel = GetNewRelicLogLevel();
             HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
             RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
             InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
@@ -183,19 +178,6 @@ namespace NewRelic.Agent.Core
 
             newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
             return newRelicInstallPath;
-        }
-
-        private static string GetNewRelicLogDirectory()
-        {
-            var newRelicLogDirectory = System.Environment.GetEnvironmentVariable(NewRelicLogDirectoryEnvironmentVariable);
-            if (newRelicLogDirectory != null && Directory.Exists(newRelicLogDirectory)) return Path.GetFullPath(newRelicLogDirectory);
-
-            return newRelicLogDirectory;
-        }
-
-        private static string GetNewRelicLogLevel()
-        {
-            return System.Environment.GetEnvironmentVariable(NewRelicLogLevelEnvironmentVariable);
         }
 
         public static AgentInfo GetAgentInfo()

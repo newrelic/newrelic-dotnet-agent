@@ -1,10 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.Config;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Config
     [TestOf(typeof(configuration))]
     public class ServerlessModeConfigurationTests
     {
-        private Func<string, string> _originalGetEnvironmentVar;
+        private IEnvironment _originalEnvironment;
         private Dictionary<string, string> _envVars = new Dictionary<string, string>();
 
         private void SetEnvironmentVar(string name, string value)
@@ -31,19 +31,25 @@ namespace NewRelic.Agent.Core.Config
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            _originalGetEnvironmentVar = ConfigurationLoader.GetEnvironmentVar;
-            ConfigurationLoader.GetEnvironmentVar = MockGetEnvironmentVar;
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            ConfigurationLoader.GetEnvironmentVar = _originalGetEnvironmentVar;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
         }
 
         [SetUp]
         public void Setup()
         {
+            // A new environment mock needs to be created for each test to work around a weird
+            // problem where the mock does not behave as expected when all of the tests are run
+            // together.
+            var environmentMock = Mock.Create<IEnvironment>();
+            Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+            ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
             ClearEnvironmentVars();
         }
 

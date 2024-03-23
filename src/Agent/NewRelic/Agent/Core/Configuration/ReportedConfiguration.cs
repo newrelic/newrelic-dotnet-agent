@@ -656,6 +656,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.logging_enabled")]
         public bool LoggingEnabled => _configuration.LoggingEnabled;
 
+        [JsonIgnore]
+        public string LoggingLevel => _configuration.LoggingLevel;
+
         [JsonProperty("agent.instrumentation.ignore")]
         public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => _configuration.IgnoredInstrumentation;
 
