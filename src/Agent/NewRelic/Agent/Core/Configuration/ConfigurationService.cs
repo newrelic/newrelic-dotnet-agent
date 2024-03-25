@@ -28,6 +28,11 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IConfigurationManagerStatic _configurationManagerStatic;
         private readonly IDnsStatic _dnsStatic;
 
+        /// <summary>
+        /// Do not use this field outside of this class. It only exists for testing purposes.
+        /// </summary>
+        public Action<string> ChangeLogLevelAction = LoggerBootstrapper.SetLoggingLevel;
+
         public IConfiguration Configuration { get; private set; }
 
         public ConfigurationService(IEnvironment environment, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
@@ -69,7 +74,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
 
             Log.Info("The log level was updated to {0} from ", newLogLevel, previousLogLevel);
-            LoggerBootstrapper.SetLoggingLevel(newLogLevel);
+            ChangeLogLevelAction(newLogLevel);
         }
 
         private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)

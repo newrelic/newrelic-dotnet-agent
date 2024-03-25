@@ -181,5 +181,70 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 Assert.That(configuration.TransactionTraceApdexT, Is.EqualTo(TimeSpan.FromSeconds(42)));
             }
         }
+
+        [TestFixture, Category("Configuration")]
+        public class ConfigurationSeviceUpdatesLogLevel
+        {
+            private ConfigurationService _configurationService;
+            private bool _logLevelChanged;
+            private string _newLogLevel;
+
+            [SetUp]
+            public void SetUp()
+            {
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
+
+                _logLevelChanged = false;
+                _newLogLevel = null;
+                _configurationService.ChangeLogLevelAction = newLevel =>
+                {
+                    _logLevelChanged = true;
+                    _newLogLevel = newLevel;
+                };
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _configurationService.Dispose();
+            }
+
+            [Test]
+            public void UpdatesLogLevel()
+            {
+                var updatedLocalConfig = new configuration();
+                updatedLocalConfig.log.level = "finest";
+
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_logLevelChanged, Is.EqualTo(true));
+                    Assert.That(_newLogLevel, Is.EqualTo("finest"));
+                });
+            }
+
+            [Test]
+            public void DoesNotUpdateLogLevelWhenTheLevelIsUnchanged()
+            {
+                // Set the current log level to finest
+                var updatedLocalConfig = new configuration();
+                updatedLocalConfig.log.level = "finest";
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                // Reset the log level tracking variables
+                _newLogLevel = null;
+                _logLevelChanged = false;
+
+                // Public a config update with the log level unchanged
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_logLevelChanged, Is.False);
+                    Assert.That(_newLogLevel, Is.Null);
+                });
+            }
+        }
     }
 }
