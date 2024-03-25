@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.IsAuditLogEnabled, Is.False);
                 Assert.That(config.MaxLogFiles, Is.EqualTo(4));
                 Assert.That(config.Console, Is.False);
-                Assert.That(config.LogLevel, Is.EqualTo("info"));
+                Assert.That(config.LogLevel, Is.EqualTo("INFO"));
                 Assert.That(config.MaxLogFileSizeMB, Is.EqualTo(50));
                 Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
                 Assert.That(config.GetFullLogFileName(), Does.Match(@".+\.log"));
@@ -146,10 +146,10 @@ namespace NewRelic.Agent.Core.Config
             Assert.That(config.LogLevel, Is.EqualTo("off"));
         }
 
-        [TestCase(null, "info", ExpectedResult = "info")]
-        [TestCase(null, "debug", ExpectedResult = "debug")]
-        [TestCase("error", "info", ExpectedResult = "error")]
-        [TestCase("warn", "debug", ExpectedResult = "warn")]
+        [TestCase(null, "info", ExpectedResult = "INFO")]
+        [TestCase(null, "debug", ExpectedResult = "DEBUG")]
+        [TestCase("error", "info", ExpectedResult = "ERROR")]
+        [TestCase("warn", "debug", ExpectedResult = "WARN")]
         public string TestLogLevelValue(string environmentValue, string localConfigValue)
         {
             SetEnvironmentVar("NEWRELIC_LOG_LEVEL", environmentValue);

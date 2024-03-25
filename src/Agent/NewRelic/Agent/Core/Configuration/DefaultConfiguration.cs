@@ -2845,7 +2845,7 @@ namespace NewRelic.Agent.Core.Configuration
             var logLevel = "off";
             if (isLoggingEnabled)
             {
-                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEWRELIC_LOG_LEVEL");
+                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEWRELIC_LOG_LEVEL").ToUpper();
             }
 
             return logLevel;

@@ -3858,10 +3858,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             });
         }
 
-        [TestCase(null, "finest", ExpectedResult = "finest")]
-        [TestCase(null, "debug", ExpectedResult = "debug")]
-        [TestCase("debug", "finest", ExpectedResult = "debug")]
-        [TestCase("info", "finest", ExpectedResult = "info")]
+        [TestCase(null, "finest", ExpectedResult = "FINEST")]
+        [TestCase(null, "debug", ExpectedResult = "DEBUG")]
+        [TestCase("debug", "finest", ExpectedResult = "DEBUG")]
+        [TestCase("info", "finest", ExpectedResult = "INFO")]
         public string LoggingLevelTests(string environmentValue, string localConfigValue)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LOG_LEVEL")).Returns(environmentValue);
@@ -3892,8 +3892,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(firstLoggingLevelValue, Is.EqualTo("debug"));
-                Assert.That(secondLoggingLevelValue, Is.EqualTo("debug"));
+                Assert.That(firstLoggingLevelValue, Is.EqualTo("DEBUG"));
+                Assert.That(secondLoggingLevelValue, Is.EqualTo("DEBUG"));
             });
         }
 
