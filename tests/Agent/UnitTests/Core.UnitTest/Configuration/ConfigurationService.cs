@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 Assert.Multiple(() =>
                 {
                     Assert.That(_logLevelChanged, Is.EqualTo(true));
-                    Assert.That(_newLogLevel, Is.EqualTo("finest"));
+                    Assert.That(_newLogLevel, Is.EqualTo("FINEST"));
                 });
             }
 
