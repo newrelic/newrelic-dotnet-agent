@@ -258,21 +258,17 @@ namespace NewRelic.Agent.Core.Config
                     var newRelicHome = ConfigurationLoader.GetNewRelicHome();
                     if (newRelicHome != null)
                     {
-                        fileName.Append(newRelicHome);
-                        if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                            fileName.Append(Path.DirectorySeparatorChar);
-                        fileName.Append("logs").Append(Path.DirectorySeparatorChar);
+                        logDirectory = Path.Combine(newRelicHome, "logs");
+                    }
+                    else
+                    {
+                        // This case should not be possible within the agent but it is here to simplify some of the tests
+                        // and code scanners.
+                        logDirectory = string.Empty;
                     }
                 }
-                else
-                {
-                    fileName.Append(logDirectory);
-                }
-                if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                    fileName.Append(Path.DirectorySeparatorChar);
 
-                fileName.Append(GetLogFileName());
-                return fileName.ToString();
+                return Path.Combine(logDirectory, GetLogFileName());
             }
 
             private string GetNewRelicLogDirectory()

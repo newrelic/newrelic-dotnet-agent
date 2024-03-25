@@ -319,7 +319,7 @@ namespace NewRelic.Agent.Core.Config
 
         [TestCase("home", ExpectedResult = @"home\logs\logfilename.log")]
         [TestCase(@"home\", ExpectedResult = @"home\logs\logfilename.log")]
-        [TestCase(null, ExpectedResult = @"\logfilename.log")]
+        [TestCase(null, ExpectedResult = @"logfilename.log")]
         public string LogFileFallsBackToHomeDirectory(string homeDirectory)
         {
             var originalHomeDirectoryGetter = ConfigurationLoader.GetNewRelicHome;
