@@ -3822,6 +3822,83 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        #region Agent Logs
+
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("1", true, ExpectedResult = true)]
+        [TestCase("0", true, ExpectedResult = false)]
+        [TestCase("True", true, ExpectedResult = true)]
+        [TestCase("False", true, ExpectedResult = false)]
+        public bool LoggingEnabledTests(string environmentValue, bool localConfigValue)
+        {
+            Mock.Arrange(() =>_environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
+            _localConfig.log.enabled = localConfigValue;
+
+            return _defaultConfig.LoggingEnabled;
+        }
+
+        [Test]
+        public void LoggingEnabledValueIsCached()
+        {
+            _localConfig.log.enabled = true;
+
+            var firstLoggingEnabledValue = _defaultConfig.LoggingEnabled;
+
+            _localConfig.log.enabled = false;
+
+            var secondLoggingEnabledValue = _defaultConfig.LoggingEnabled;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstLoggingEnabledValue, Is.True);
+                Assert.That(secondLoggingEnabledValue, Is.True);
+            });
+        }
+
+        [TestCase(null, "finest", ExpectedResult = "finest")]
+        [TestCase(null, "debug", ExpectedResult = "debug")]
+        [TestCase("debug", "finest", ExpectedResult = "debug")]
+        [TestCase("info", "finest", ExpectedResult = "info")]
+        public string LoggingLevelTests(string environmentValue, string localConfigValue)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LOG_LEVEL")).Returns(environmentValue);
+            _localConfig.log.level = localConfigValue;
+
+            return _defaultConfig.LoggingLevel;
+        }
+
+        [Test]
+        public void LoggingLevelIsOffWhenNotEnabled()
+        {
+            _localConfig.log.level = "info";
+            _localConfig.log.enabled = false;
+
+            Assert.That(_defaultConfig.LoggingLevel, Is.EqualTo("off"));
+        }
+
+        [Test]
+        public void LoggingLevelValueIsCached()
+        {
+            _localConfig.log.level = "debug";
+
+            var firstLoggingLevelValue = _defaultConfig.LoggingLevel;
+
+            _localConfig.log.level = "finest";
+
+            var secondLoggingLevelValue = _defaultConfig.LoggingLevel;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstLoggingLevelValue, Is.EqualTo("debug"));
+                Assert.That(secondLoggingLevelValue, Is.EqualTo("debug"));
+            });
+        }
+
+        #endregion Agent Logs
+
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
