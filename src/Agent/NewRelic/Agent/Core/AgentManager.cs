@@ -133,6 +133,8 @@ namespace NewRelic.Agent.Core
 
             LoggerBootstrapper.ConfigureLogger(bootstrapConfig.LogConfig);
 
+            // At this point all configuration checks should use Configuration instead of the local and bootstrap configs.
+
             AssertAgentEnabled();
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
