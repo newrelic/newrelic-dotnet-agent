@@ -73,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return;
             }
 
-            Log.Info("The log level was updated to {0} from ", newLogLevel, previousLogLevel);
+            Log.Info("The log level was updated to {0} from {1}", newLogLevel, previousLogLevel);
             ChangeLogLevelAction(newLogLevel);
         }
 
