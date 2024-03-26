@@ -7,8 +7,8 @@ namespace NewRelic.Core.JsonConverters
 {
     public static class BedrockHelpers
     {
-        // This method is intended to be used from wrapper code so that the ILRepacked version of Newtonsoft.Json gets used
-        // rather than relying on the customer application to provide it
+        // This method is used from the Bedrock wrapper code in order to avoid the wrapper
+        // having a dependency on Newtonsoft.Json being available
         public static T DeserializeObject<T>(string payload)
         {
             return JsonConvert.DeserializeObject<T>(payload);

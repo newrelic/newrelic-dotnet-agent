@@ -258,6 +258,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             switch (model)
             {
+                // We're using a helper method in NewRelic.Core because it has Newtonsoft.Json ILRepacked into it
+                // This avoids depending on Newtonsoft.Json being available in the customer application
                 case LlmModelType.Llama2:
                     return BedrockHelpers.DeserializeObject<Llama2RequestPayload>(utf8Json);
                 case LlmModelType.CohereCommand:
