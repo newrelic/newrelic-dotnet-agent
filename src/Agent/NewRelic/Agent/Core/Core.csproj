@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.25.3" />
+    <PackageReference Include="Google.Protobuf" Version="3.26.0" />
     <PackageReference Include="Grpc.Tools" Version="2.62.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -49,7 +49,7 @@
     <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="ILRepack" Version="2.0.27">
+    <PackageReference Include="ILRepack" Version="2.0.28">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -151,7 +151,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <ILRepackCommand>"$(ILRepack)" --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+      <ILRepackCommand>"$(ILRepack)" /parallel /internalize /norepackres /keepotherversionreferences /keyfile:"$(AssemblyOriginatorKeyFile)" /lib:"$(ILRepackSearchDirOutputPath)" /out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
     </PropertyGroup>
 
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />

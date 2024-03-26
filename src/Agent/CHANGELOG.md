@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.22.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.1...v10.22.0) (2024-03-19)
+
+
+### New features
+
+* Add a new API method to time currently unsupported datastore method calls. ([#2320](https://github.com/newrelic/newrelic-dotnet-agent/issues/2320)) ([81abc5c](https://github.com/newrelic/newrelic-dotnet-agent/commit/81abc5c78e39655f4153b2f9f0f7e5e8328f3577))
+* Add transaction ID to intrinsic attributes for error events and traces regardless of DT/CAT settings ([#2341](https://github.com/newrelic/newrelic-dotnet-agent/issues/2341)) ([1df0342](https://github.com/newrelic/newrelic-dotnet-agent/commit/1df03420a690b1f1e46b9ef17b2184d27d314667))
+
+
+### Fixes
+
+* Fix a context data capture when the Microsoft.Extensions.Logging console logger is used (thanks [@lowell-trimble](https://github.com/lowell-trimble)!) ([#2261](https://github.com/newrelic/newrelic-dotnet-agent/issues/2261)) ([#2315](https://github.com/newrelic/newrelic-dotnet-agent/issues/2315)) ([f8422d6](https://github.com/newrelic/newrelic-dotnet-agent/commit/f8422d6c538db6ff32e0b1055e824b3536245c59))
+
 ## [10.21.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.0...v10.21.1) (2024-03-07)
 
 

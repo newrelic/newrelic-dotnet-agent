@@ -133,5 +133,20 @@ namespace NewRelic.Parsing
             var actual = StringsHelper.CleanUri(uri);
             Assert.That(actual, Is.EqualTo(expected));
         }
+
+#if NET6_0_OR_GREATER
+        [Test]
+        public void validate_CleanUri_handles_invalidoperationexception()
+        {
+            var options = new UriCreationOptions 
+            {
+                DangerousDisablePathAndQueryCanonicalization = true // only avaialable in .NET 6+
+            };
+            var uri = new Uri("http://www.example.com:8080/dir/?query=test", options);
+
+            var actual = StringsHelper.CleanUri(uri);
+            Assert.That(actual, Is.EqualTo("http://www.example.com:8080/dir/"));
+        }
+#endif
     }
 }

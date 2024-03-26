@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(12); // long enough to ensure metric harvest runs before error traces
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(15); // long enough to ensure metric harvest runs before error traces
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.AddExpectedStatusCodes("410-450")
                     .AddExpectedErrorMessages("System.Exception", new List<string> { "test exception"})
@@ -57,9 +57,9 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"ErrorsExpected/all", callCount = 3},
-                new Assertions.ExpectedMetric { metricName = @"Supportability/Events/TransactionError/Seen", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/Events/TransactionError/Sent", callCount = 3 },
+                new Assertions.ExpectedMetric {metricName = @"ErrorsExpected/all", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric { metricName = @"Supportability/Events/TransactionError/Seen", CallCountAllHarvests= 3 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/Events/TransactionError/Sent", CallCountAllHarvests = 3 },
 
             };
 

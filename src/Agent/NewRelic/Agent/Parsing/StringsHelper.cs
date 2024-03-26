@@ -29,6 +29,7 @@ namespace NewRelic.Parsing
             // Can't clean up relative URIs (Uri.GetComponents will throw an exception for relative URIs)
             if (!uri.IsAbsoluteUri)
                 return CleanUri(uri.ToString());
+
             try
             {
                 return uri.GetComponents(
@@ -37,9 +38,8 @@ namespace NewRelic.Parsing
                         UriComponents.Path,
                         UriFormat.UriEscaped);
             }
-            catch (System.InvalidOperationException)
+            catch (InvalidOperationException) // can throw in .NET 6+ if the uri was created with UriCreationOptions.DangerousDisablePathAndQueryCanonicalization = true
             {
-                // In .NET 8, AWS Bedrock sets UriCreationOptions.DangerousDisablePathAndQueryCanonicalization which prevents using Uri.GetComponents
                 return CleanUri(uri.ToString());
             }
         }
