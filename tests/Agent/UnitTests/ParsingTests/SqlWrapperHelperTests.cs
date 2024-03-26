@@ -3,8 +3,10 @@
 
 using System;
 using System.Data;
+#if NETFRAMEWORK
 using System.Data.OleDb;
 using System.Data.OracleClient;
+#endif
 using System.Data.SqlClient;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
@@ -17,6 +19,7 @@ namespace SqlTests
     {
         #region GetVendorName
 
+#if NETFRAMEWORK
         [Test]
         [TestCase("SQL Server", ExpectedResult = DatastoreVendor.MSSQL)]
         [TestCase("MySql", ExpectedResult = DatastoreVendor.MySQL)]
@@ -33,7 +36,7 @@ namespace SqlTests
 
             return SqlWrapperHelper.GetVendorName(command);
         }
-
+#endif
         [Test]
         [TestCase("SqlCommand", ExpectedResult = DatastoreVendor.MSSQL)]
         [TestCase("MySqlCommand", ExpectedResult = DatastoreVendor.MySQL)]
@@ -56,7 +59,7 @@ namespace SqlTests
 
             Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.MSSQL));
         }
-
+#if NETFRAMEWORK
         [Test]
         public void GetVendorName_ReturnsOracle_IfTypeNameIsNotProvidedAndCommandIsOracleCommand()
         {
@@ -68,7 +71,7 @@ namespace SqlTests
 
             Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.Oracle));
         }
-
+#endif
         [Test]
         public void GetVendorName_ReturnsUnknown_IfCommandIsOfUnknownType()
         {

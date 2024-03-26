@@ -30,11 +30,18 @@ namespace NewRelic.Parsing
             if (!uri.IsAbsoluteUri)
                 return CleanUri(uri.ToString());
 
-            return uri.GetComponents(
-                    UriComponents.Scheme |
-                    UriComponents.HostAndPort |
-                    UriComponents.Path,
-                    UriFormat.UriEscaped);
+            try
+            {
+                return uri.GetComponents(
+                        UriComponents.Scheme |
+                        UriComponents.HostAndPort |
+                        UriComponents.Path,
+                        UriFormat.UriEscaped);
+            }
+            catch (InvalidOperationException) // can throw in .NET 6+ if the uri was created with UriCreationOptions.DangerousDisablePathAndQueryCanonicalization = true
+            {
+                return CleanUri(uri.ToString());
+            }
         }
 
         public static string FixDatabaseObjectName(string s)

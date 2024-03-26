@@ -814,6 +814,7 @@ namespace ParsingTests
             });
         }
 
+#if NETFRAMEWORK
         [TestCaseSource(nameof(BinaryTestDatas))]
         public void SqlParserTest_FixParameterizedSql_DoesNotParse_Binary(string originalSql, string expectedSql, string sqlParameterName, object sqlParameterValue)
         {
@@ -834,6 +835,7 @@ namespace ParsingTests
                 Assert.That(shouldGeneratePlan, Is.False, "FixParameterizedSql should return false if it is not parsing a statement");
             });
         }
+#endif
 
         [TestCaseSource(nameof(CustomObjectTestDatas))]
         public void SqlParserTest_FixParameterizedSql_DoesNotParse_CustomObject(string originalSql, string expectedSql, string sqlParameterName, object sqlParameterValue)
@@ -856,6 +858,7 @@ namespace ParsingTests
             });
         }
 
+#if NETFRAMEWORK
         public static IEnumerable<TestCaseData> BinaryTestDatas
         {
             get
@@ -874,6 +877,7 @@ namespace ParsingTests
                     ObjectToByteArray(new List<bool> { true, false }));
             }
         }
+#endif
 
         public static IEnumerable<TestCaseData> CustomObjectTestDatas
         {
@@ -911,7 +915,7 @@ namespace ParsingTests
             }
             return new string(buffer);
         }
-
+#if NETFRAMEWORK
         private static byte[] ObjectToByteArray(object obj)
         {
             using (var ms = new MemoryStream())
@@ -921,5 +925,6 @@ namespace ParsingTests
                 return ms.ToArray();
             }
         }
+#endif
     }
 }
