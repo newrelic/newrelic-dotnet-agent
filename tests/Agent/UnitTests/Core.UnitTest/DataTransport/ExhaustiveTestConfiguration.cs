@@ -468,5 +468,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         public bool LoggingEnabled => true;
+
+        public string LoggingLevel => "info";
     }
 }

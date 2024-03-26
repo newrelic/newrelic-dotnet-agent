@@ -1,13 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using System.Linq;
-using Telerik.JustMock;
-using System.Collections.Generic;
-using System;
 using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -35,6 +30,7 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.ErrorGroupCallback, Is.Not.Null);
                 Assert.That(agentSettings.AgentEnabledAt, Is.Not.Null);
                 Assert.That(agentSettings.ServerlessModeEnabled, Is.False);
+                Assert.That(agentSettings.LoggingLevel, Is.Not.Null);
                 Assert.That(json, Is.EqualTo(expectedJson));
             });
         }

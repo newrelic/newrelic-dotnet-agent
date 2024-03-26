@@ -3,19 +3,19 @@
 
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
-using System.Configuration;
 using System.IO;
-using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 #if NETSTANDARD2_0
 using System.Reflection;
+#else
+using System.Configuration;
+using System.Web;
 #endif
 
 namespace NewRelic.Agent.Core.Config
@@ -55,6 +55,12 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetAppDomainAppPath = InternalGetAppDomainAppPath;
 
         public static Func<string, System.Configuration.Configuration> OpenWebConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration;
+#else
+        private static string InternalGetAppDomainName()
+        {
+            return AppDomain.CurrentDomain.FriendlyName;
+        }
+        public static Func<string> GetAppDomainName = InternalGetAppDomainName;
 #endif
 
         public static Func<string, bool> FileExists = File.Exists;
@@ -529,132 +535,6 @@ namespace NewRelic.Agent.Core.Config
         }
     }
 
-    public partial class configurationLog : ILogConfig
-    {
-        private static readonly IProcessStatic _processStatic = new ProcessStatic();
-
-        [XmlIgnore()]
-        public string LogLevel
-        {
-            get
-            {
-                if (!Enabled)
-                {
-                    return "off";
-                }
-                // Environment variable or log.level from config...
-                return (AgentInstallConfiguration.NewRelicLogLevel
-                    ?? this.level).ToUpper();
-            }
-        }
-
-        public string GetFullLogFileName()
-        {
-            var fileName = new System.Text.StringBuilder();
-
-            // Environment variable or log.directory from config...
-            var logDirectory = AgentInstallConfiguration.NewRelicLogDirectory
-                ?? directory;
-
-            if (logDirectory == null)
-            {
-                if (AgentInstallConfiguration.NewRelicHome != null)
-                {
-                    fileName.Append(AgentInstallConfiguration.NewRelicHome);
-                    if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                        fileName.Append(Path.DirectorySeparatorChar);
-                    fileName.Append("logs").Append(Path.DirectorySeparatorChar);
-                }
-            }
-            else
-            {
-                fileName.Append(logDirectory);
-            }
-            if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                fileName.Append(Path.DirectorySeparatorChar);
-
-            fileName.Append(GetLogFileName());
-            return fileName.ToString();
-        }
-
-        private string GetLogFileName()
-        {
-            string name = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_LOG");
-            if (name != null)
-            {
-                return Strings.SafeFileName(name);
-            }
-
-            name = fileName;
-            if (name != null)
-            {
-                return Strings.SafeFileName(name);
-            }
-
-#if NETSTANDARD2_0
-            try
-            {
-                name = AppDomain.CurrentDomain.FriendlyName;
-            }
-            catch (Exception)
-            {
-                name = _processStatic.GetCurrentProcess().ProcessName;
-            }
-#else
-            if (HttpRuntime.AppDomainAppId != null)
-            {
-                name = HttpRuntime.AppDomainAppId.ToString();
-            }
-            else
-            {
-                name = _processStatic.GetCurrentProcess().ProcessName;
-            }
-#endif
-
-            return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
-        }
-
-        public bool Console
-        {
-            get
-            {
-                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_CONSOLE", console);
-            }
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                return ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
-            }
-        }
-
-        public bool IsAuditLogEnabled
-        {
-            get
-            {
-                return auditLog;
-            }
-        }
-
-        public int MaxLogFileSizeMB => ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILE_SIZE_MB", maxLogFileSizeMB);
-        public int MaxLogFiles => ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILES", maxLogFiles);
-        public LogRollingStrategy LogRollingStrategy
-        {
-            get
-            {
-                var strategy = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_ROLLING_STRATEGY", logRollingStrategy.ToString());
-                if (Enum.TryParse(strategy, true, out LogRollingStrategy result))
-                {
-                    return result;
-                }
-
-                throw new ConfigurationLoaderException($"Invalid value for logRollingStrategy or NEW_RELIC_LOG_ROLLING_STRATEGY: {strategy}");
-            }
-        }
-    }
-
     /// <summary>
     /// Thrown when there is some problem loading the configuration.
     /// </summary>
@@ -671,36 +551,33 @@ namespace NewRelic.Agent.Core.Config
         }
     }
 
+    /// <summary>
+    /// This class contains helper methods that allow resusing logic from the non-static DefaultConfiguration
+    /// class from within static contexts like the bootstrap process.
+    /// </summary>
     public static class ConfigLoaderHelpers
     {
+        // This field exists only for testing purposes. It allows bootstrap logic and regular
+        // configuration logic to use the same environment variable logic.
+        public static IEnvironment EnvironmentVariableProxy = new SystemInterfaces.Environment();
+
+        public static string GetEnvironmentVar(string name)
+        {
+            return EnvironmentVariableProxy.GetEnvironmentVariable(name);
+        }
+
         public static string GetOverride(string name, string fallback)
         {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null)
-            {
-                return val;
-            }
-
-            return fallback;
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name);
         }
         public static int GetOverride(string name, int fallback)
         {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null && int.TryParse(val, out var parsedValue))
-            {
-                return parsedValue;
-            }
-
-            return fallback;
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name).Value;
         }
 
         public static bool GetOverride(string name, bool fallback)
         {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            return val.TryToBoolean(out var boolVal) ? boolVal : fallback;
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name);
         }
 
         public static bool TryToBoolean(this string val, out bool boolVal)
@@ -730,6 +607,16 @@ namespace NewRelic.Agent.Core.Config
                 default:
                     return false;
             }
+        }
+
+        public static bool GetLoggingEnabledValue(configurationLog localLogConfiguration)
+        {
+            return DefaultConfiguration.GetLoggingEnabledValue(EnvironmentVariableProxy, localLogConfiguration);
+        }
+
+        public static string GetLoggingLevelValue(configurationLog localLogConfiguration, bool isLoggingEnabled)
+        {
+            return DefaultConfiguration.GetLoggingLevelValue(EnvironmentVariableProxy, localLogConfiguration, isLoggingEnabled);
         }
     }
 
