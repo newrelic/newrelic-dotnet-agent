@@ -8,11 +8,11 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.Bedrock.Payloads;
 using NewRelic.Reflection;
 using System.Net;
 using System.IO;
 using NewRelic.Core.JsonConverters;
+using NewRelic.Core.JsonConverters.BedrockPayloads;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -259,16 +259,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             switch (model)
             {
                 case LlmModelType.Llama2:
-                    return JsonHelpers.DeserializeObject<Llama2RequestPayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<Llama2RequestPayload>(utf8Json);
                 case LlmModelType.CohereCommand:
-                    return JsonHelpers.DeserializeObject<CohereCommandRequestPayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<CohereCommandRequestPayload>(utf8Json);
                 case LlmModelType.Claude:
-                    return JsonHelpers.DeserializeObject<ClaudeRequestPayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<ClaudeRequestPayload>(utf8Json);
                 case LlmModelType.Titan:
                 case LlmModelType.TitanEmbedded:
-                    return JsonHelpers.DeserializeObject<TitanRequestPayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<TitanRequestPayload>(utf8Json);
                 case LlmModelType.Jurassic:
-                    return JsonHelpers.DeserializeObject<JurassicRequestPayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<JurassicRequestPayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
@@ -287,17 +287,17 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             switch (model)
             {
                 case LlmModelType.Llama2:
-                    return JsonHelpers.DeserializeObject<Llama2ResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<Llama2ResponsePayload>(utf8Json);
                 case LlmModelType.CohereCommand:
-                    return JsonHelpers.DeserializeObject<CohereCommandResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<CohereCommandResponsePayload>(utf8Json);
                 case LlmModelType.Claude:
-                    return JsonHelpers.DeserializeObject<ClaudeResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<ClaudeResponsePayload>(utf8Json);
                 case LlmModelType.Titan:
-                    return JsonHelpers.DeserializeObject<TitanResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<TitanResponsePayload>(utf8Json);
                 case LlmModelType.TitanEmbedded:
-                    return JsonHelpers.DeserializeObject<TitanEmbeddedResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<TitanEmbeddedResponsePayload>(utf8Json);
                 case LlmModelType.Jurassic:
-                    return JsonHelpers.DeserializeObject<JurassicResponsePayload>(utf8Json);
+                    return BedrockHelpers.DeserializeObject<JurassicResponsePayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }

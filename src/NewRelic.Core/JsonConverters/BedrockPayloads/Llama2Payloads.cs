@@ -3,7 +3,7 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Providers.Wrapper.Bedrock.Payloads
+namespace NewRelic.Core.JsonConverters.BedrockPayloads
 {
     public class Llama2RequestPayload : IRequestPayload
     {
