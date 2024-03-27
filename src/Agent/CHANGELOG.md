@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.23.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.22.0...v10.23.0) (2024-03-27)
+
+
+### New features
+
+* **deps:** Updated `Elastic.Clients.ElasticSearch` instrumentation points to work with v8.12.1+ ([453d15e](https://github.com/newrelic/newrelic-dotnet-agent/commit/453d15e9de84f91bea6ca5507bbecba354c773dd))
+
+
+### Fixes
+
+* Handle InvalidOperationException in StringsHelper.CleanUri() [#2373](https://github.com/newrelic/newrelic-dotnet-agent/issues/2373) ([#2374](https://github.com/newrelic/newrelic-dotnet-agent/issues/2374)) ([9f1a6af](https://github.com/newrelic/newrelic-dotnet-agent/commit/9f1a6af7d6006f6af70c98a21486ceb5795aa39f))
+
 ## [10.22.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.1...v10.22.0) (2024-03-19)
 
 
