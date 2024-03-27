@@ -37,6 +37,8 @@ namespace NewRelic.Agent.Core.Transactions
         void SetSyntheticsMonitorId(string syntheticsMonitorId);
         void MarkHasCatResponseHeaders();
 
+        void SetLlmTransaction(bool isLlmTransaction);
+
         long GetCrossApplicationReferrerContentLength();
 
         ITransactionErrorState TransactionErrorState { get; }
@@ -95,6 +97,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
         private volatile bool _hasResponseCatHeaders;
+        private volatile bool _isLlmTransaction = false;
 
         private readonly string _transactionGuid;
 
@@ -130,6 +133,11 @@ namespace NewRelic.Agent.Core.Transactions
         public void SetReferrerUri(string uri)
         {
             _referrerUri = uri;
+        }
+
+        public void SetLlmTransaction(bool isLlmTransaction)
+        {
+            _isLlmTransaction = isLlmTransaction;
         }
 
         public void SetQueueTime(TimeSpan queueTime)
@@ -250,5 +258,7 @@ namespace NewRelic.Agent.Core.Transactions
         public string CrossApplicationPathHash => _latestCrossApplicationPathHash;
 
         public bool HasCatResponseHeaders => _hasResponseCatHeaders;
+
+        public bool IsLlmTransaction => _isLlmTransaction;
     }
 }

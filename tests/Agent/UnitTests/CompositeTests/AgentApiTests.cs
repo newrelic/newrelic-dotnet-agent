@@ -1911,6 +1911,57 @@ namespace CompositeTests
 
         #endregion
 
+        #region RecordLlmFeedbackEvent
+
+        [Test]
+        public void Test_RecordLlmFeedbackEvent()
+        {
+            // ARRANGE
+            var agentWrapperApi = _compositeTestAgent.GetAgent();
+            var transaction =
+                agentWrapperApi.CreateTransaction(true, EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+                                                             "TransactionName",true);
+            var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+            dynamic traceMetadata = agentWrapperApi.TraceMetadata;
+            var traceId = traceMetadata.TraceId;
+            var metadata = new Dictionary<string, object>
+            {
+                { "key1", "val1" },
+                { "key2", 1 }
+            };
+
+            // ACT
+            AgentApi.RecordLlmFeedbackEvent(traceId, "myRating", "myCategory", "myMessage", metadata);
+
+            segment.End();
+            transaction.End();
+            _compositeTestAgent.Harvest();
+
+            // ASSERT
+            var actualMetrics = _compositeTestAgent.Metrics;
+            var expectedMetrics = new List<ExpectedCountMetric>
+            {
+                new() { Name = "Supportability/ApiInvocation/RecordLlmFeedbackEvent", CallCount = 1 }
+            };
+
+            var customEvent = _compositeTestAgent.CustomEvents.SingleOrDefault();
+            var expectedEventAttributes = new List<ExpectedAttribute>
+            {
+                new() {Key = "trace_id", Value = traceId},
+                new() {Key = "ingest_source", Value = "DotNet"},
+                new() {Key = "rating", Value = "myRating"},
+                new() {Key = "category", Value = "myCategory"},
+                new() {Key = "message", Value = "myMessage"},
+                new() {Key = "key1", Value = "val1"},
+                new() {Key = "key2", Value = 1}
+            };
+            CustomEventAssertions.HasAttributes(expectedEventAttributes, AttributeClassification.UserAttributes, customEvent);
+            MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+        }
+
+        #endregion
+
         #region GetRequestMetadata
 
         [Test]

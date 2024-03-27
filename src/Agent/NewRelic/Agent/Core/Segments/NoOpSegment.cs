@@ -71,5 +71,7 @@ namespace NewRelic.Agent.Core.Segments
         {
             return string.Empty;
         }
+
+        public TimeSpan DurationOrZero => TimeSpan.Zero;
     }
 }

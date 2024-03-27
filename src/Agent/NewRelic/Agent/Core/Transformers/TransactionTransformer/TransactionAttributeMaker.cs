@@ -210,6 +210,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 }
             }
 
+            if (metadata.IsLlmTransaction)
+            {
+                _attribDefs.LlmTransaction.TrySetValue(attribValues, true);
+            }
+
             attribValues.AddRange(metadata.UserAndRequestAttributes);
         }
 

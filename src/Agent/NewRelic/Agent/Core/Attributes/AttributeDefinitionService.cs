@@ -131,6 +131,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName);
 
         AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue destination);
+
+        AttributeDefinition<bool, bool> LlmTransaction { get; }
     }
 
 
@@ -1054,5 +1056,12 @@ namespace NewRelic.Agent.Core.Attributes
             .AppliesTo(AttributeDestinations.SpanEvent)
             .Build(_attribFilter)
         );
+
+        private AttributeDefinition<bool, bool> _llmTransaction;
+        public AttributeDefinition<bool, bool> LlmTransaction => _llmTransaction ?? (_llmTransaction =
+            AttributeDefinitionBuilder.CreateBool("llm", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
     }
 }

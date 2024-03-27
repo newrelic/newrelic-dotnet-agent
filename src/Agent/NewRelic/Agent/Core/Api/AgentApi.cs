@@ -642,6 +642,40 @@ namespace NewRelic.Agent.Core
             }
             TryInvoke(work, apiName, ApiMethod.SetErrorGroupCallback);
         }
+
+        /// <summary> Sets the method that will be invoked to define the token count of completion.
+        ///
+        /// The callback takes the model name and input value, and returns an integer of the token count.
+        /// A value returned from the callback that is less than or equal to 0 will be ignored.
+        /// </summary>
+        /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
+        public static void SetLlmTokenCountingCallback(Func<string, string, int> callback)
+        {
+            const string apiName = nameof(SetLlmTokenCountingCallback);
+            void work()
+            {
+                InternalApi.SetLlmTokenCountingCallback(callback);
+            }
+            TryInvoke(work, apiName, ApiMethod.SetLlmTokenCountingCallback);
+        }
+
+        /// <summary>
+        /// Creates an event with the customer feedback on the LLM interaction.
+        /// </summary>
+        /// <param name="traceId">Required. ID of the trace where the chat completion(s) related to the feedback occurred</param>
+        /// <param name="rating">Required. Rating provided by an end user. Must be string or int</param>
+        /// <param name="category">Optional. Category of the feedback as provided by the end user</param>
+        /// <param name="message">Optional. Freeform text feedback from an end user</param>
+        /// <param name="metadata">Optional. Set of key-value pairs to store any other desired data to submit with the feedback event</param>
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        {
+            const string apiName = nameof(RecordLlmFeedbackEvent);
+            void work()
+            {
+                InternalApi.RecordLlmFeedbackEvent(traceId, rating, category, message, metadata);
+            }
+            TryInvoke(work, apiName, ApiMethod.RecordLlmFeedbackEvent);
+        }
     }
 }
 

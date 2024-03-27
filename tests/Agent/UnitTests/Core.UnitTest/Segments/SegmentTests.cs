@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using System;
 using NewRelic.Agent.Core.Metrics;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -37,6 +38,25 @@ namespace NewRelic.Agent.Core.Segments.Tests
             segment.SetMessageBrokerDestination("destination");
 
             Assert.That(((MessageBrokerSegmentData)segment.SegmentData).Destination, Is.EqualTo("destination"));
+        }
+
+        [Test]
+        public void DurationOrZero_ReturnsZero_IfDurationIsNotSet()
+        {
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+
+            var duration = segment.DurationOrZero;
+
+            Assert.That(duration, Is.EqualTo(TimeSpan.Zero));
+        }
+        [Test]
+        public void DurationOrZero_ReturnsDuration_IfDurationIsSet()
+        {
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1), TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+            var duration = segment.DurationOrZero;
+
+            Assert.That(duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
         }
     }
 }

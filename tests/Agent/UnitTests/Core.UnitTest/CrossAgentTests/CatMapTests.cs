@@ -32,6 +32,7 @@ using System.Linq;
 using System.Reflection;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.Transformers;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
 {
@@ -86,8 +87,9 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var simpleSchedulingService = Mock.Create<ISimpleSchedulingService>();
             var logEventAggregator = Mock.Create<ILogEventAggregator>();
             var logContextDataFilter = Mock.Create<ILogContextDataFilter>();
+            var customEventTransformer = Mock.Create<ICustomEventTransformer>();
 
-            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService);
+            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
