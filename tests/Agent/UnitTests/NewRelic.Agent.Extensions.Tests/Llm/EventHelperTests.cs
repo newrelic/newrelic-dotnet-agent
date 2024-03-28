@@ -201,18 +201,18 @@ namespace Agent.Extensions.Tests.Llm
             });
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
         [Test]
-        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent()
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse)
         {
             // Arrange
             var requestId = "123";
             var responseModel = "model1";
             var content = "Hello";
-            var role = "user";
             var sequence = 1;
             var completionId = "456";
-            var tokenCount = 10;
-            var isResponse = true;
+            var role = "role";
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(
             new Dictionary<string, string>
@@ -229,7 +229,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, tokenCount, isResponse);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, isResponse);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -238,7 +238,7 @@ namespace Agent.Extensions.Tests.Llm
             {
                 // assert that the attributes passed to _agent.RecordLlmEvent are correct
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(13));
+                Assert.That(llmAttributes.Count, Is.EqualTo(isResponse ? 12 : 11));
                 Assert.That(llmAttributes["id"], Is.EqualTo(requestId + "-" + sequence));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -250,9 +250,13 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["role"], Is.EqualTo(role));
                 Assert.That(llmAttributes["sequence"], Is.EqualTo(sequence));
                 Assert.That(llmAttributes["completion_id"], Is.EqualTo(completionId));
-                Assert.That(llmAttributes["token_count"], Is.EqualTo(tokenCount));
-                Assert.That(llmAttributes["is_response"], Is.True);
             });
+
+            if (isResponse)
+                Assert.That(llmAttributes["is_response"], Is.True);
+            else
+                Assert.That(llmAttributes, Does.Not.ContainKey("is_response"));
+
         }
 
         [Test]
@@ -264,7 +268,6 @@ namespace Agent.Extensions.Tests.Llm
             var requestModel = "model1";
             var responseModel = "model2";
             var vendor = "vendor1";
-            var tokenCount = 10;
 
             var headers = new Dictionary<string, string>
             {
@@ -297,7 +300,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, false, headers, null);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, false, headers, null);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -305,7 +308,7 @@ namespace Agent.Extensions.Tests.Llm
             Assert.Multiple(() =>
             {
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(21));
+                Assert.That(llmAttributes.Count, Is.EqualTo(20));
                 Assert.That(llmAttributes.ContainsKey("id"));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -316,7 +319,6 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
                 Assert.That(llmAttributes["duration"], Is.EqualTo((float)_segment.DurationOrZero.TotalMilliseconds));
-                Assert.That(llmAttributes["token_count"], Is.EqualTo(tokenCount));
                 Assert.That(llmAttributes["llmVersion"], Is.EqualTo("1.0"));
 
                 Assert.That(llmAttributes["ratelimitLimitRequests"], Is.EqualTo(99));
@@ -345,8 +347,7 @@ namespace Agent.Extensions.Tests.Llm
             var requestModel = "model1";
             var responseModel = "model2";
             var vendor = "vendor1";
-            var tokenCount = 10;
-
+            
             var errorData = new LlmErrorData
             {
                 ErrorMessage = "error_message",
@@ -389,7 +390,7 @@ namespace Agent.Extensions.Tests.Llm
             
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, tokenCount, true, null, errorData);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, true, null, errorData);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -397,7 +398,7 @@ namespace Agent.Extensions.Tests.Llm
             Assert.Multiple(() =>
             {
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(12));
+                Assert.That(llmAttributes.Count, Is.EqualTo(11));
                 Assert.That(llmAttributes.ContainsKey("id"));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -408,7 +409,6 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
                 Assert.That(llmAttributes["duration"], Is.EqualTo((float)_segment.DurationOrZero.TotalMilliseconds));
-                Assert.That(llmAttributes["token_count"], Is.EqualTo(tokenCount));
 
                 Assert.That(llmAttributes, Does.Not.ContainKey("llmVersion"));
 

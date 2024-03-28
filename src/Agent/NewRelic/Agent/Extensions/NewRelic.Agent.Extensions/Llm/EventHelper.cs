@@ -83,7 +83,6 @@ namespace NewRelic.Agent.Extensions.Llm
             string role,
             int sequence,
             string completionId,
-            int? tokenCount,
             bool isResponse)
         {
             var attributes = new Dictionary<string, object>
@@ -99,7 +98,6 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "role", role },
                 { "sequence", sequence },
                 { "completion_id", completionId },
-                { "token_count", tokenCount },
                 //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
             };
 
@@ -118,7 +116,6 @@ namespace NewRelic.Agent.Extensions.Llm
             string requestModel,
             string responseModel,
             string vendor,
-            int? tokenCount,
             bool isError,
             IDictionary<string, string> headers,
             LlmErrorData errorData)
@@ -135,7 +132,6 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "request.model", requestModel },
                 { "response.model", responseModel },
                 //{ "response.organization", "not available" },
-                { "token_count", tokenCount },
                 { "vendor", vendor },
                 { "ingest_source", "DotNet" },
                 { "duration", (float)segment.DurationOrZero.TotalMilliseconds },

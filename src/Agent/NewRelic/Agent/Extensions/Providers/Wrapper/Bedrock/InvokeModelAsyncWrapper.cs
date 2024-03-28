@@ -124,7 +124,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelRequest.ModelId,
                     invokeModelRequest.ModelId,
                     "bedrock",
-                    responsePayload.PromptTokenCount,
                     false,
                     null, // not available in AWS
                     null
@@ -156,12 +155,10 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     invokeModelRequest.ModelId,
                     requestPayload.Prompt,
-                    string.Empty,
+                    "user",
                     0,
                     completionId,
-                    responsePayload.PromptTokenCount,
-                    false
-                );
+                    false);
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -172,10 +169,9 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelResponse.ResponseMetadata.RequestId,
                     invokeModelRequest.ModelId,
                     responsePayload.Responses[i].Content,
-                    string.Empty,
+                    "assistant",
                     i + 1,
                     completionId,
-                    responsePayload.Responses[i].TokenCount,
                     true);
             }
         }
@@ -221,7 +217,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelRequest.ModelId,
                     null,
                     "bedrock",
-                    null,
                     true,
                     null,
                     errorData);
