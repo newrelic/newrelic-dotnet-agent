@@ -124,7 +124,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelRequest.ModelId,
                     invokeModelRequest.ModelId,
                     "bedrock",
-                    null,
                     false,
                     null, // not available in AWS
                     null
@@ -159,7 +158,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     "user",
                     0,
                     completionId,
-                    null,
                     false);
 
             // Responses
@@ -174,7 +172,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     "assistant",
                     i + 1,
                     completionId,
-                    null,
                     true);
             }
         }
@@ -220,7 +217,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     invokeModelRequest.ModelId,
                     null,
                     "bedrock",
-                    null,
                     true,
                     null,
                     errorData);
