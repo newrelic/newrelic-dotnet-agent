@@ -80,7 +80,6 @@ namespace NewRelic.Agent.Extensions.Llm
             string requestId,
             string responseModel,
             string content,
-            string role,
             int sequence,
             string completionId,
             int? tokenCount,
@@ -96,11 +95,10 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "vendor", "bedrock" },
                 { "ingest_source", "DotNet" },
                 { "content", content },
-                { "role", role },
                 { "sequence", sequence },
                 { "completion_id", completionId },
                 { "token_count", tokenCount },
-                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
+                { "role", isResponse ? "assistant" : "user" }
             };
 
             if (isResponse)

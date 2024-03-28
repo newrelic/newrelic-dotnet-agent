@@ -201,18 +201,18 @@ namespace Agent.Extensions.Tests.Llm
             });
         }
 
+        [TestCase(false, "user")]
+        [TestCase(true, "assistant")]
         [Test]
-        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent()
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse, string role)
         {
             // Arrange
             var requestId = "123";
             var responseModel = "model1";
             var content = "Hello";
-            var role = "user";
             var sequence = 1;
             var completionId = "456";
             var tokenCount = 10;
-            var isResponse = true;
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(
             new Dictionary<string, string>
@@ -229,7 +229,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, tokenCount, isResponse);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, sequence, completionId, tokenCount, isResponse);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -238,7 +238,7 @@ namespace Agent.Extensions.Tests.Llm
             {
                 // assert that the attributes passed to _agent.RecordLlmEvent are correct
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(13));
+                Assert.That(llmAttributes.Count, Is.EqualTo(isResponse ? 13 : 12));
                 Assert.That(llmAttributes["id"], Is.EqualTo(requestId + "-" + sequence));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -251,8 +251,11 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["sequence"], Is.EqualTo(sequence));
                 Assert.That(llmAttributes["completion_id"], Is.EqualTo(completionId));
                 Assert.That(llmAttributes["token_count"], Is.EqualTo(tokenCount));
-                Assert.That(llmAttributes["is_response"], Is.True);
             });
+
+            if (isResponse)
+                Assert.That(llmAttributes["is_response"], Is.True);
+
         }
 
         [Test]
