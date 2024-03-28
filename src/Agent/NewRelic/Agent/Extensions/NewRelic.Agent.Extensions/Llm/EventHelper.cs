@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "sequence", sequence },
                 { "completion_id", completionId },
                 { "token_count", tokenCount },
-                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent"},
+                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
             };
 
             if (isResponse)
@@ -164,7 +164,7 @@ namespace NewRelic.Agent.Extensions.Llm
                     { "error.param", errorData.ErrorParam },
                     { "http.statusCode", errorData.HttpStatusCode },
                     //{ "completion_id", completionId }, not available for embedding
-                    { "embedding_id", embeddingId }
+                    { "embedding_id", embeddingId } 
                 };
 
                 InternalApi.NoticeError(errorData.ErrorMessage, errorAttributes);

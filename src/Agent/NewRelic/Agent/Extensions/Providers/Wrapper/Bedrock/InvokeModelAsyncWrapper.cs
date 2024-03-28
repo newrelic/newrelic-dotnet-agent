@@ -155,7 +155,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     segment,
                     invokeModelResponse.ResponseMetadata.RequestId,
                     invokeModelRequest.ModelId,
-                    requestPayload.Prompt, "user", 0, completionId, responsePayload.PromptTokenCount, false);
+                    requestPayload.Prompt,
+                    "user",
+                    0,
+                    completionId,
+                    responsePayload.PromptTokenCount,
+                    false);
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -165,7 +170,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     segment,
                     invokeModelResponse.ResponseMetadata.RequestId,
                     invokeModelRequest.ModelId,
-                    responsePayload.Responses[i].Content, "assistant", i + 1, completionId, responsePayload.Responses[i].TokenCount, true);
+                    responsePayload.Responses[i].Content,
+                    "assistant",
+                    i + 1,
+                    completionId,
+                    responsePayload.Responses[i].TokenCount,
+                    true);
             }
         }
 
