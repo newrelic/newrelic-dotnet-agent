@@ -201,10 +201,10 @@ namespace Agent.Extensions.Tests.Llm
             });
         }
 
-        [TestCase(false, "user")]
-        [TestCase(true, "assistant")]
+        [TestCase(false)]
+        [TestCase(true)]
         [Test]
-        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse, string role)
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse)
         {
             // Arrange
             var requestId = "123";
@@ -213,6 +213,7 @@ namespace Agent.Extensions.Tests.Llm
             var sequence = 1;
             var completionId = "456";
             var tokenCount = 10;
+            var role = "role";
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(
             new Dictionary<string, string>
@@ -229,7 +230,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, sequence, completionId, tokenCount, isResponse);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, sequence, completionId, tokenCount, isResponse, role);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -255,6 +256,8 @@ namespace Agent.Extensions.Tests.Llm
 
             if (isResponse)
                 Assert.That(llmAttributes["is_response"], Is.True);
+            else
+                Assert.That(llmAttributes, Does.Not.ContainKey("is_response"));
 
         }
 

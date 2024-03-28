@@ -159,8 +159,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     0,
                     completionId,
                     responsePayload.PromptTokenCount,
-                    false
-                );
+                    false, "user");
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -174,7 +173,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     i + 1,
                     completionId,
                     responsePayload.Responses[i].TokenCount,
-                    true);
+                    true, "assistant");
             }
         }
 

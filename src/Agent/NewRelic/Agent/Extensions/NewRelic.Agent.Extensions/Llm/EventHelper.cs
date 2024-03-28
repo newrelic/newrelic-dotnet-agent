@@ -83,7 +83,8 @@ namespace NewRelic.Agent.Extensions.Llm
             int sequence,
             string completionId,
             int? tokenCount,
-            bool isResponse)
+            bool isResponse,
+            string role)
         {
             var attributes = new Dictionary<string, object>
             {
@@ -98,7 +99,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "sequence", sequence },
                 { "completion_id", completionId },
                 { "token_count", tokenCount },
-                { "role", isResponse ? "assistant" : "user" }
+                { "role", role }
             };
 
             if (isResponse)
