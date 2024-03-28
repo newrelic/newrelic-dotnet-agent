@@ -80,11 +80,11 @@ namespace NewRelic.Agent.Extensions.Llm
             string requestId,
             string responseModel,
             string content,
+            string role,
             int sequence,
             string completionId,
             int? tokenCount,
-            bool isResponse,
-            string role)
+            bool isResponse)
         {
             var attributes = new Dictionary<string, object>
             {
@@ -96,10 +96,11 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "vendor", "bedrock" },
                 { "ingest_source", "DotNet" },
                 { "content", content },
+                { "role", role },
                 { "sequence", sequence },
                 { "completion_id", completionId },
                 { "token_count", tokenCount },
-                { "role", role }
+                //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent"},
             };
 
             if (isResponse)
@@ -163,7 +164,7 @@ namespace NewRelic.Agent.Extensions.Llm
                     { "error.param", errorData.ErrorParam },
                     { "http.statusCode", errorData.HttpStatusCode },
                     //{ "completion_id", completionId }, not available for embedding
-                    { "embedding_id", embeddingId } 
+                    { "embedding_id", embeddingId }
                 };
 
                 InternalApi.NoticeError(errorData.ErrorMessage, errorAttributes);
