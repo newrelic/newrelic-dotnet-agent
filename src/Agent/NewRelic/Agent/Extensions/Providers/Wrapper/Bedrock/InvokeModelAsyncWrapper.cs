@@ -223,7 +223,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
             else
             {
-                EventHelper.CreateChatCompletionEvent(
+                var completionId = EventHelper.CreateChatCompletionEvent(
                     agent,
                     segment,
                     requestId,
@@ -238,6 +238,17 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     null,
                     errorData);
 
+                // Prompt
+                EventHelper.CreateChatMessageEvent(
+                        agent,
+                        segment,
+                        requestId,
+                        invokeModelRequest.ModelId,
+                        requestPayload.Prompt,
+                        "user",
+                        0,
+                        completionId,
+                        false);
             }
         }
 

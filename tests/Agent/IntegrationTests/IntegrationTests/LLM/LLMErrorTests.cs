@@ -62,6 +62,9 @@ where TFixture : ConsoleDynamicMethodFixture
             }
             Assert.Equal(2, errors);
 
+            var promptEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionMessage");
+            Assert.Equal(2, promptEvents.Count());
+
             var completionEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionSummary");
             Assert.Equal(2, completionEvents.Count());
             foreach (var evt  in completionEvents)
