@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.23.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.22.0...v10.23.0) (2024-04-02)
+
+
+### Notice
+
+* AI monitoring offers custom-built insights and tracing for the complete lifecycle of an LLM’s prompts and responses, from raw user input to repaired/polished responses. AI monitoring provides built-in integrations with popular LLMs and components of the AI development stack. This release provides instrumentation for AWS Bedrock. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* New Relic AI monitoring is the industry’s first APM solution that provides end-to-end visibility for AI Large Language Model (LLM) applications. It enables end-to-end visibility into the key components of an AI LLM application. With AI monitoring, users can monitor, alert, and debug AI-powered applications for reliability, latency, performance, security and cost. AI monitoring also enables AI/LLM specific insights (metrics, events, logs and traces) which can easily integrate to build advanced guardrails for enterprise security, privacy and compliance. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* When AI monitoring is enabled, the agent will now capture AI LLM related data. This data will be visible under a new APM tab called AI Responses. See our [AI Monitoring documentation](https://docs.newrelic.com/docs/ai-monitoring/intro-to-ai-monitoring/) for more details. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+
+
+### New features
+
+* A new AI monitoring related public API method has been added - [SetLlmTokenCountingCallback](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/set-llm-token-counting-callback/) ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* Add auto-instrumentation for AWS Bedrock ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* **deps:** Updated `Elastic.Clients.ElasticSearch` instrumentation points to work with v8.12.1+ ([453d15e](https://github.com/newrelic/newrelic-dotnet-agent/commit/453d15e9de84f91bea6ca5507bbecba354c773dd))
+* New configuration options are available specific to [AI monitoring](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring). ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+
+
+### Fixes
+
+* Handle InvalidOperationException in StringsHelper.CleanUri() [#2373](https://github.com/newrelic/newrelic-dotnet-agent/issues/2373) ([#2374](https://github.com/newrelic/newrelic-dotnet-agent/issues/2374)) ([9f1a6af](https://github.com/newrelic/newrelic-dotnet-agent/commit/9f1a6af7d6006f6af70c98a21486ceb5795aa39f))
+
 ## [10.22.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.1...v10.22.0) (2024-03-19)
 
 
