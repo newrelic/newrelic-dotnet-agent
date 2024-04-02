@@ -207,5 +207,10 @@ namespace NewRelic.Agent.Configuration
         TimeSpan StackExchangeRedisCleanupCycle { get; }
         bool LoggingEnabled { get; }
         IEnumerable<IDictionary<string, string>> IgnoredInstrumentation { get; }
+
+        bool AiMonitoringEnabled { get; }
+        bool AiMonitoringStreamingEnabled { get; }
+        bool AiMonitoringRecordContentEnabled { get; }
+        public Func<string, string, int> LlmTokenCountingCallback { get; }
     }
 }

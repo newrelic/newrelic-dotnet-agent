@@ -454,5 +454,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.RemoveIgnoredInstrumentation(_configFilePath, assemblyName, className);
             return this;
         }
+
+        public NewRelicConfigModifier EnableAiMonitoring(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "aiMonitoring" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
     }
 }

@@ -1402,6 +1402,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             transaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash2");
             transaction.TransactionMetadata.SetCrossApplicationReferrerPathHash("referringPathHash");
             transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid("referringTransactionGuid");
+            transaction.TransactionMetadata.SetLlmTransaction(true);
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             
@@ -1420,7 +1421,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(builderAttributes), Is.EqualTo(10)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(builderAttributes), Is.EqualTo(11)),  // Assert that only these attributes are generated
                 () => Assert.That(txBuilderAttributes["original_url"], Is.EqualTo("originalUri")),
                 () => Assert.That(transactionAttributes["request.uri"], Is.EqualTo("uri")),
                 () => Assert.That(txBuilderAttributes["request.referer"], Is.EqualTo("referrerUri")),
@@ -1430,10 +1431,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(txBuilderAttributes["request.parameters.requestParameterKey"], Is.EqualTo("requestParameterValue")),
                 () => Assert.That(txBuilderAttributes["userAttributeKey"], Is.EqualTo("userAttributeValue")),
                 () => Assert.That(txBuilderAttributes["userErrorAttributeKey"], Is.EqualTo("userErrorAttributeValue")),
+                () => Assert.That(txBuilderAttributes["llm"], Is.EqualTo(true)),
                 () => Assert.That(txBuilderAttributes.Keys, Does.Contain("host.displayName"))
             );
             NrAssert.Multiple(
-                () => Assert.That(GetCount(attributes), Is.EqualTo(10)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(11)),  // Assert that only these attributes are generated
                 () => Assert.That(transactionAttributes["original_url"], Is.EqualTo("originalUri")),
                 () => Assert.That(transactionAttributes["request.uri"], Is.EqualTo("uri")),
                 () => Assert.That(transactionAttributes["request.referer"], Is.EqualTo("referrerUri")),
@@ -1443,6 +1445,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(transactionAttributes["request.parameters.requestParameterKey"], Is.EqualTo("requestParameterValue")),
                 () => Assert.That(transactionAttributes["userAttributeKey"], Is.EqualTo("userAttributeValue")),
                 () => Assert.That(transactionAttributes["userErrorAttributeKey"], Is.EqualTo("userErrorAttributeValue")),
+                () => Assert.That(transactionAttributes["llm"], Is.EqualTo(true)),
                 () => Assert.That(transactionAttributes.Keys, Does.Contain("host.displayName"))
             );
         }

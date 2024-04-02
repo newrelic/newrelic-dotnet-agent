@@ -9,6 +9,12 @@
 // ------------------------------------------------------------------------------
 namespace NewRelic.Agent.Core.Config
 {
+    using System;
+    using System.Diagnostics;
+    using System.Xml.Serialization;
+    using System.Collections;
+    using System.Xml.Schema;
+    using System.ComponentModel;
     using System.Collections.Generic;
     
     
@@ -76,6 +82,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationPools applicationPoolsField;
         
+        private configurationAiMonitoring aiMonitoringField;
+        
         private configurationApplicationLogging applicationLoggingField;
         
         private List<string> threadProfilingField;
@@ -115,6 +123,7 @@ namespace NewRelic.Agent.Core.Config
             this.appSettingsField = new List<configurationAdd>();
             this.threadProfilingField = new List<string>();
             this.applicationLoggingField = new configurationApplicationLogging();
+            this.aiMonitoringField = new configurationAiMonitoring();
             this.applicationPoolsField = new configurationApplicationPools();
             this.browserMonitoringField = new configurationBrowserMonitoring();
             this.errorCollectorField = new configurationErrorCollector();
@@ -484,6 +493,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.applicationPoolsField = value;
+            }
+        }
+        
+        public configurationAiMonitoring aiMonitoring
+        {
+            get
+            {
+                return this.aiMonitoringField;
+            }
+            set
+            {
+                this.aiMonitoringField = value;
             }
         }
         
@@ -5034,6 +5055,162 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationPoolsApplicationPool Clone()
         {
             return ((configurationApplicationPoolsApplicationPool)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoring
+    {
+        
+        private configurationAiMonitoringStreaming streamingField;
+        
+        private configurationAiMonitoringRecordContent recordContentField;
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoring class constructor
+        /// </summary>
+        public configurationAiMonitoring()
+        {
+            this.recordContentField = new configurationAiMonitoringRecordContent();
+            this.streamingField = new configurationAiMonitoringStreaming();
+            this.enabledField = false;
+        }
+        
+        public configurationAiMonitoringStreaming streaming
+        {
+            get
+            {
+                return this.streamingField;
+            }
+            set
+            {
+                this.streamingField = value;
+            }
+        }
+        
+        public configurationAiMonitoringRecordContent recordContent
+        {
+            get
+            {
+                return this.recordContentField;
+            }
+            set
+            {
+                this.recordContentField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoring object
+        /// </summary>
+        public virtual configurationAiMonitoring Clone()
+        {
+            return ((configurationAiMonitoring)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoringStreaming
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoringStreaming class constructor
+        /// </summary>
+        public configurationAiMonitoringStreaming()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoringStreaming object
+        /// </summary>
+        public virtual configurationAiMonitoringStreaming Clone()
+        {
+            return ((configurationAiMonitoringStreaming)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoringRecordContent
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoringRecordContent class constructor
+        /// </summary>
+        public configurationAiMonitoringRecordContent()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoringRecordContent object
+        /// </summary>
+        public virtual configurationAiMonitoringRecordContent Clone()
+        {
+            return ((configurationAiMonitoringRecordContent)(this.MemberwiseClone()));
         }
         #endregion
     }
