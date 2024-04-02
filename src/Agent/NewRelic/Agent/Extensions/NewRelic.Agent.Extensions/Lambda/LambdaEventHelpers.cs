@@ -46,7 +46,8 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
                 attributes.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
                 attributes.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                attributes.AddEventSourceAttribute("time", (string)cloudWatchScheduledEvent.Time);
+                // TODO: Figure out if the time value should be in some specific format. The spec doesn't say.
+                attributes.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
                 break;
 
             case AwsLambdaEventType.KinesisStreamingEvent:
@@ -72,7 +73,8 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
                 attributes.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
                 attributes.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
-                attributes.AddEventSourceAttribute("eventTime", (string)s3Event.Records[0].EventTime);
+                // TODO: Figure out if the eventTime value should be in some specific format. The spec doesn't say.
+                attributes.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
                 attributes.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
                 attributes.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
                 attributes.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
@@ -96,7 +98,8 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
                 attributes.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
                 attributes.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
-                attributes.AddEventSourceAttribute("timestamp", (string)snsEvent.Records[0].Sns.Timestamp);
+                // TODO: Figure out if the timestamp value should be in some specific format. The spec doesn't say.
+                attributes.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
                 attributes.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
                 attributes.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
 
@@ -142,10 +145,9 @@ public static class LambdaEventHelpers
     private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, Dictionary<string, string> attributes)
     {
         var record = sqsEvent.Records[0];
-        dynamic traceHeader = null;
-        if (record.MessageAttributes != null && ((Dictionary<string, dynamic>)record.MessageAttributes).TryGetValue(NEWRELIC_TRACE_HEADER, out traceHeader))
+        if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
         {
-            attributes.Add(NEWRELIC_TRACE_HEADER, traceHeader.StringValue);
+            attributes.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
@@ -162,10 +164,9 @@ public static class LambdaEventHelpers
     private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, Dictionary<string, string> attributes)
     {
         var record = snsEvent.Records[0];
-        dynamic traceHeader = null;
-        if (record.Sns.MessageAttributes != null && ((Dictionary<string, dynamic>)record.Sns.MessageAttributes).TryGetValue(NEWRELIC_TRACE_HEADER, out traceHeader))
+        if (record.Sns.MessageAttributes != null && record.Sns.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
         {
-            attributes.Add(NEWRELIC_TRACE_HEADER, (string)traceHeader.Value);
+            attributes.Add(NEWRELIC_TRACE_HEADER, (string)record.Sns.MessageAttributes[NEWRELIC_TRACE_HEADER].Value);
         }
     }
 
