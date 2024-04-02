@@ -7,6 +7,7 @@ using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Agent.Api;
 using System.Collections.Generic;
 using System;
+using NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents;
 
 namespace Agent.Extensions.Tests.Lambda;
 
@@ -33,7 +34,7 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
         {
-            RequestContext = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.RequestContext
+            RequestContext = new ()
             {
                 AccountId = "testAccountId",
                 ApiId = "testApiId",
@@ -41,7 +42,7 @@ public class LambdaEventHelpersTests
                 ResourcePath = "testResourcePath",
                 Stage = "testStage"
             },
-            MultiValueHeaders = new Dictionary<string, IList<string>>
+            MultiValueHeaders = new ()
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
@@ -49,7 +50,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new Dictionary<string, string>
+            QueryStringParameters = new ()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -89,7 +90,7 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
         {
-            RequestContext = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.RequestContext
+            RequestContext = new ()
             {
                 AccountId = "testAccountId",
                 ApiId = "testApiId",
@@ -97,7 +98,7 @@ public class LambdaEventHelpersTests
                 ResourcePath = "testResourcePath",
                 Stage = "testStage"
             },
-            Headers = new Dictionary<string, string>
+            Headers = new ()
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
@@ -105,7 +106,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new Dictionary<string, string>
+            QueryStringParameters = new ()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -149,14 +150,14 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
         {
-            RequestContext = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContext
+            RequestContext = new ()
             {
-                Elb = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContextElb
+                Elb = new ()
                 {
                     TargetGroupArn = "testTargetGroupArn"
                 }
             },
-            Headers = new Dictionary<string, string>
+            Headers = new ()
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
@@ -164,7 +165,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new Dictionary<string, string>
+            QueryStringParameters = new ()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -200,14 +201,14 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
         {
-            RequestContext = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContext
+            RequestContext = new ()
             {
-                Elb = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.RequestContextElb
+                Elb = new ()
                 {
                     TargetGroupArn = "testTargetGroupArn"
                 }
             },
-            MultiValueHeaders = new Dictionary<string, IList<string>>
+            MultiValueHeaders = new ()
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
@@ -215,7 +216,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new Dictionary<string, string>
+            QueryStringParameters = new ()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -250,6 +251,7 @@ public class LambdaEventHelpersTests
     public void AddEventTypeAttributes_CloudWatchScheduledEvent_AddsCorrectAttributes()
     {
         // Arrange
+        var testTime = DateTime.UtcNow;
         var eventType = AwsLambdaEventType.CloudWatchScheduledEvent;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
         {
@@ -257,7 +259,7 @@ public class LambdaEventHelpersTests
             Id = "testId",
             Region = "testRegion",
             Resources = ["testResource"],
-            Time = "testTime"
+            Time = testTime
         };
 
         // Act
@@ -271,7 +273,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.id"], Is.EqualTo("testId"));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testRegion"));
             Assert.That(_attributes["aws.lambda.eventSource.resource"], Is.EqualTo("testResource"));
-            Assert.That(_attributes["aws.lambda.eventSource.time"], Is.EqualTo("testTime"));
+            Assert.That(_attributes["aws.lambda.eventSource.time"], Is.EqualTo(testTime.ToString()));
         });
     }
 
@@ -313,7 +315,7 @@ public class LambdaEventHelpersTests
             Region = "testRegion",
             Records =
             [
-                new() { Data = "testData" }
+                new()
             ]
         };
 
@@ -334,6 +336,7 @@ public class LambdaEventHelpersTests
     public void AddEventTypeAttributes_S3Event_AddsCorrectAttributes()
     {
         // Arrange
+        var eventTime = DateTime.UtcNow;
         var eventType = AwsLambdaEventType.S3Event;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
         {
@@ -341,19 +344,19 @@ public class LambdaEventHelpersTests
                 new() {
                     AwsRegion = "testAwsRegion",
                     EventName = "testEventName",
-                    EventTime = "testEventTime",
-                    ResponseElements = new NewRelic.Mock.Amazon.Lambda.S3Events.S3ResponseElements {
+                    EventTime = eventTime,
+                    ResponseElements = new (){
                         XAmzId2 = "testXAmzId2",
                     },
-                    S3 = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Entity {
-                        Bucket = new NewRelic.Mock.Amazon.Lambda.S3Events.S3BucketEntity {
+                    S3 = new () {
+                        Bucket = new () {
                             Name = "testName",
                             Arn = "testArn"
                         },
-                        Object = new NewRelic.Mock.Amazon.Lambda.S3Events.S3ObjectEntity {
+                        Object = new () {
                             Key = "testKey",
                             Sequencer = "testSequencer",
-                            Size = "123"
+                            Size = 123
                         },
                     }
                 }
@@ -370,7 +373,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testAwsRegion"));
             Assert.That(_attributes["aws.lambda.eventSource.eventName"], Is.EqualTo("testEventName"));
-            Assert.That(_attributes["aws.lambda.eventSource.eventTime"], Is.EqualTo("testEventTime"));
+            Assert.That(_attributes["aws.lambda.eventSource.eventTime"], Is.EqualTo(eventTime.ToString()));
             Assert.That(_attributes["aws.lambda.eventSource.xAmzId2"], Is.EqualTo("testXAmzId2"));
             Assert.That(_attributes["aws.lambda.eventSource.bucketName"], Is.EqualTo("testName"));
             Assert.That(_attributes["aws.lambda.eventSource.objectKey"], Is.EqualTo("testKey"));
@@ -385,13 +388,13 @@ public class LambdaEventHelpersTests
     {
         // Arrange
         var eventType = AwsLambdaEventType.SimpleEmailEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
         {
             Records = [
                 new() {
-                    Ses = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SesEntity {
-                        Mail = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEntity {
-                            CommonHeaders = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailCommonHeadersEntity
+                    Ses = new () {
+                        Mail = new() {
+                            CommonHeaders = new ()
                             {
                                 Date = "testDate",
                                 MessageId = "testMessageId",
@@ -421,6 +424,7 @@ public class LambdaEventHelpersTests
     public void AddEventTypeAttributes_SNSEvent_AddsCorrectAttributes()
     {
         // Arrange
+        var testTimestamp = DateTime.UtcNow;
         var eventType = AwsLambdaEventType.SNSEvent;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
         {
@@ -428,12 +432,12 @@ public class LambdaEventHelpersTests
             [
                 new() {
                     EventSubscriptionArn = "testEventSubscriptionArn",
-                    Sns = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNS {
+                    Sns = new() {
                         MessageId = "testMessageId",
                         TopicArn = "testTopicArn",
-                        Timestamp = "testTimestamp",
+                        Timestamp = testTimestamp,
                         Type = "testType",
-                        MessageAttributes = new Dictionary<string, object> { {"newrelic", new  NewRelic.Mock.DistributedTrace.DistributedTraceHeaderModel { Value = "testDistributedTraceHeader"} } }
+                        MessageAttributes = new () { {"newrelic", new  () { Value = "testDistributedTraceHeader"} } }
                     }
                 }
             ]
@@ -448,7 +452,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSubscriptionArn"));
             Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
-            Assert.That(_attributes["aws.lambda.eventSource.timestamp"], Is.EqualTo("testTimestamp"));
+            Assert.That(_attributes["aws.lambda.eventSource.timestamp"], Is.EqualTo(testTimestamp.ToString()));
             Assert.That(_attributes["aws.lambda.eventSource.topicArn"], Is.EqualTo("testTopicArn"));
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
             Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
@@ -466,7 +470,7 @@ public class LambdaEventHelpersTests
             Records = [
                 new() {
                     EventSourceArn = "testEventSourceArn",
-                    MessageAttributes = new Dictionary<string, object> { {"newrelic", new  NewRelic.Mock.DistributedTrace.DistributedTraceHeaderModel { StringValue = "testDistributedTraceHeader"} } }
+                    MessageAttributes = new () { {"newrelic", new () { StringValue = "testDistributedTraceHeader"} } }
                 }]
         };
 

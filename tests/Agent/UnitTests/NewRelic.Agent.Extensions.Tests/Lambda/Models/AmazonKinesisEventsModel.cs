@@ -5,14 +5,17 @@ using System.Collections.Generic;
 
 namespace NewRelic.Mock.Amazon.Lambda.KinesisEvents
 {
+    /// <summary>
+    /// https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.KinesisEvents/KinesisEvent.cs
+    /// </summary>
     public class KinesisEvent
     {
         public List<KinesisEventRecord> Records { get; set; }
-    }
 
-    public class KinesisEventRecord
-    {
-        public string EventSourceArn { get; set; }
-        public string AwsRegion { get; set; }
+        public class KinesisEventRecord
+        {
+            public string EventSourceArn { get; set; }
+            public string AwsRegion { get; set; }
+        }
     }
 }
