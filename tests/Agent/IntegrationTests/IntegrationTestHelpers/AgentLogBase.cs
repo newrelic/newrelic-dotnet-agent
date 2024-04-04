@@ -72,6 +72,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
 
+        // Serverless payloads
+        public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;
@@ -555,6 +558,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #endregion
+
+        #region ServerlessPayloads
+
+        public IEnumerable<ServerlessPayload> GetServerlessPayloads()
+        {
+            return TryGetLogLines(ServerlessPayloadLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .Where(json => json != null)
+                .Select(ServerlessPayload.FromJson);
+        }
+
+        #endregion ServerlessPayloads
 
         private string Timestamp
         {
