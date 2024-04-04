@@ -48,8 +48,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private object _writeLock = new object();
         private readonly IDateTimeStatic _dateTimeStatic;
         private DateTime _lastMetricSendTime;
-        private static string _arn;
-        private static string _functionVersion;
+        private static string _arn = null;
+        private static string _functionVersion = null;
         private static string _executionEnvironment = null;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
 
@@ -213,7 +213,10 @@ namespace NewRelic.Agent.Core.DataTransport
         public static void SetMetadata(string functionVersion, string arn)
         {
             _arn = arn; // It doesn't seem like there's a fallback way to get the ARN without the ILambdaContext
-            _functionVersion = functionVersion ?? System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ?? "$LATEST";
+            _functionVersion = _functionVersion ??
+                functionVersion ??
+                System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ??
+                "$LATEST";
             _executionEnvironment ??= System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV");
         }
 
