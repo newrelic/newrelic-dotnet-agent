@@ -50,6 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private DateTime _lastMetricSendTime;
         private static string _arn;
         private static string _functionVersion;
+        private static string _executionEnvironment = null;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
 
         public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic)
@@ -211,8 +212,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static void SetMetadata(string functionVersion, string arn)
         {
-            _arn = arn;
-            _functionVersion = functionVersion;
+            _arn = arn; // It doesn't seem like there's a fallback way to get the ARN without the ILambdaContext
+            _functionVersion = functionVersion ?? System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ?? "$LATEST";
+            _executionEnvironment ??= System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV");
         }
 
         private void WritePayload(string payloadJson, string path)
@@ -257,7 +259,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private string BuildPayload(WireData eventsToFlush)
         {
-            var metadata = GetMetadata(System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            var metadata = GetMetadata();
             var basePayload = GetCompressiblePayload(eventsToFlush);
 
             List<object> payload;
@@ -308,18 +310,28 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         // Metadata is not compressed or encoded.
-        private static IDictionary<string, object> GetMetadata(string executionEnv)
+        private static IDictionary<string, object> GetMetadata()
         {
             Dictionary<string, object> metadata = new Dictionary<string, object>
             {
-                { "arn", _arn },
                 { "protocol_version", 17 },
-                { "function_version", _functionVersion},
-                { "execution_environment", executionEnv },
                 { "agent_version", AgentInstallConfiguration.AgentVersion },
                 { "metadata_version", 2 },
                 { "agent_language", "dotnet" } // Should match "connect" string
             };
+            if (!string.IsNullOrEmpty(_functionVersion))
+            {
+                metadata["function_version"] = _functionVersion;
+            }
+            if (!string.IsNullOrEmpty(_executionEnvironment))
+            {
+                metadata["execution_environment"] = _executionEnvironment;
+            }
+            if (!string.IsNullOrEmpty(_arn))
+            {
+                metadata["arn"] = _arn;
+            }
+
             return metadata;
         }
 

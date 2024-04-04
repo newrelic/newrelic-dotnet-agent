@@ -36,46 +36,102 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         {
             var isAsync = instrumentedMethodCall.IsAsync;
 
-            var inputObject = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            var lambdaContext = instrumentedMethodCall.MethodCall.MethodArguments[1]; // TODO handle case where this doesn't exist
+            object lambdaContext = null;
+            object inputObject = null;
+            AwsLambdaEventType eventType = AwsLambdaEventType.Unknown;
 
-            var functionNameGetter = _getFunctionNameFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
-            var functionVersionGetter = _getFunctionVersionFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
-            var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
-            var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
+            foreach (var arg in instrumentedMethodCall.MethodCall.MethodArguments)
+            {
+                // TODO: I don't like this approach, but our options are limited without access to the interface
+                if (arg.GetType().FullName.Contains("LambdaContext"))
+                {
+                    if (lambdaContext == null)
+                    {
+                        lambdaContext = arg;
+                    }
+                    else
+                    {
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Found multiple Lambda contexts, will use the first found");
+                    }
+                }
+                else
+                {
+                    var fullName = arg.GetType().FullName;
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {fullName}");
+                    eventType = fullName.ToEventType();
+                    if (eventType != AwsLambdaEventType.Unknown)
+                    {
+                        inputObject = arg;
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"eventType = {eventType}");
+                    }
+                }
+            }
 
-            var fullName = inputObject.GetType().FullName;
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {fullName}");
-            var eventType = fullName.ToEventType();
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"eventType = {eventType}");
+            string requestId = null;
+            string arn = null;
+            string functionName = null;
+            string functionVersion = null;
 
-            var lambdaFunctionName = functionNameGetter(lambdaContext);
-            var lambdaFunctionArn = functionArnGetter(lambdaContext);
-            var lambdaFunctionVersion = functionVersionGetter(lambdaContext);
+            if (lambdaContext != null)
+            {
+                try
+                {
+                    var functionNameGetter = _getFunctionNameFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
+                    var functionVersionGetter = _getFunctionVersionFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
+                    var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
+                    var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
+
+                    requestId = requestIdGetter(lambdaContext);
+
+                    functionName = functionNameGetter(lambdaContext);
+                    arn = functionArnGetter(lambdaContext);
+                    functionVersion = functionVersionGetter(lambdaContext);
+                }
+                catch (Exception ex)
+                {
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Failed to read lambda context: {ex.Message}");
+                }
+            }
+            else
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
+            }
+
+            if (eventType == AwsLambdaEventType.Unknown)
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, "Could not find a known event type");
+            }
+            functionName ??= System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") ?? instrumentedMethodCall.MethodCall.Method.MethodName;
 
             transaction = agent.CreateTransaction(
                 isWeb: eventType.IsWebEvent(),
                 category: "Lambda", // TODO: is this is correct/useful?
-                transactionDisplayName: lambdaFunctionName,
+                transactionDisplayName: functionName,
                 doNotTrackAsUnitOfWork: true);
 
             var attributes = new Dictionary<string, string>();
 
             attributes.AddEventSourceAttribute("eventType", eventType.ToEventTypeString());
 
-            attributes.Add("aws.requestId", requestIdGetter(lambdaContext));
-            attributes.Add("aws.lambda.arn", lambdaFunctionArn);
+            if (requestId != null)
+            {
+                attributes.Add("aws.requestId", requestId);
+            }
+            if (arn != null)
+            {
+                attributes.Add("aws.lambda.arn", arn);
+            }
 
             if (IsColdStart) // only report this attribute if it's a cold start
                 attributes.Add("aws.coldStart", "true");
 
-            agent.SetServerlessParameters(lambdaFunctionVersion ?? "$LATEST", lambdaFunctionArn);
+            agent.SetServerlessParameters(functionVersion, arn);
 
             LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, eventType, inputObject, attributes);
 
             transaction.AddLambdaAttributes(attributes);
 
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, lambdaFunctionName);
+            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionName);
 
             if (isAsync)
             {

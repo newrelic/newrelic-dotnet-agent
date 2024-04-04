@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core.Transactions
             };
 
             // The completion of transactions can be run on thread or off thread. We made this configurable.  
-            if (Agent.Configuration.CompleteTransactionsOnThread)
+            if (Agent.Configuration.CompleteTransactionsOnThread || Agent.Configuration.ServerlessModeEnabled)
             {
                 transformWork.CatchAndLog();
             }
