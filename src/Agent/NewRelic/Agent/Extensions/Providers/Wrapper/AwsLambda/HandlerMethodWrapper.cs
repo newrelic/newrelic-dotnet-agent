@@ -13,14 +13,109 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 {
     public class HandlerMethodWrapper : IWrapper
     {
+        private class FunctionDetails
+        {
+            public string FunctionName { get; private set; }
+            public string FunctionVersion { get; private set; }
+            public string Arn { get; private set; }
+            private int ContextIdx = -1;
+            private int InputIdx = -1;
+            private Func<object, string> _requestIdGetter;
+            public AwsLambdaEventType EventType { get; private set; } = AwsLambdaEventType.Unknown;
+
+            public bool HasContext() => ContextIdx != -1;
+            public bool HasInputObject() => InputIdx != -1;
+
+            public void SetContext(object lambdaContext, int contextIdx)
+            {
+                ContextIdx = contextIdx;
+                SetName(lambdaContext);
+                SetVersion(lambdaContext);
+                SetArn(lambdaContext);
+                SetRequestIdGetter(lambdaContext);
+            }
+
+            public bool SetEventType(string fullName, int idx)
+            {
+                var eventType = fullName.ToEventType();
+                if (eventType != AwsLambdaEventType.Unknown)
+                {
+                    InputIdx = idx;
+                    EventType = eventType;
+                    return true;
+                }
+                return false;
+            }
+
+            public void Validate(string fallbackName)
+            {
+                ValidateName(fallbackName);
+                ValidateVersion();
+            }
+
+            private void SetName(object lambdaContext)
+            {
+                var functionNameGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
+                FunctionName = functionNameGetter(lambdaContext);
+            }
+
+            private void ValidateName(string fallbackName)
+            {
+                if (string.IsNullOrEmpty(_functionDetails.FunctionName))
+                {
+                    FunctionName = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") ?? fallbackName;
+                }
+            }
+
+            private void SetVersion(object lambdaContext)
+            {
+                var functionVersionGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
+                FunctionVersion = functionVersionGetter(lambdaContext);
+            }
+
+            private void ValidateVersion()
+            {
+                if (string.IsNullOrEmpty(FunctionVersion))
+                {
+                    FunctionVersion = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ?? "$LATEST";
+                }
+            }
+
+            private void SetArn(object lambdaContext)
+            {
+                var functionArnGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
+                Arn = functionArnGetter(lambdaContext);
+            }
+
+            private void SetRequestIdGetter(object lambdaContext)
+            {
+                _requestIdGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
+            }
+
+            public string GetRequestId(InstrumentedMethodCall instrumentedMethodCall)
+            {
+                if (HasContext() && (ContextIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
+                {
+                    return _requestIdGetter(instrumentedMethodCall.MethodCall.MethodArguments[ContextIdx]);
+                }
+                return null;
+            }
+
+            public object GetInputObject(InstrumentedMethodCall instrumentedMethodCall)
+            {
+                if (HasInputObject() && (InputIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
+                {
+                    return instrumentedMethodCall.MethodCall.MethodArguments[InputIdx];
+                }
+                return null;
+            }
+        }
+
         private List<string> _webResponseHeaders = ["Content-Type", "Content-Length"];
 
         private static Func<object, object> _getRequestResponseFromGeneric;
-        private static Func<object, string> _getFunctionNameFromLambdaContext;
-        private static Func<object, string> _getFunctionVersionFromLambdaContext;
-        private static Func<object, string> _getAwsRequestIdFromLambdaContext;
-        private static Func<object, string> _getInvokedFunctionArnFromLambdaContext;
-
+        private static object _initLock = new object();
+        private static FunctionDetails _functionDetails = null;
 
         public bool IsTransactionRequired => false;
 
@@ -32,22 +127,20 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             return new CanWrapResponse("NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod".Equals(methodInfo.RequestedWrapperName));
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        private void InitLambdaData(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
         {
-            var isAsync = instrumentedMethodCall.IsAsync;
+            _functionDetails = new FunctionDetails();
 
-            object lambdaContext = null;
-            object inputObject = null;
-            AwsLambdaEventType eventType = AwsLambdaEventType.Unknown;
-
-            foreach (var arg in instrumentedMethodCall.MethodCall.MethodArguments)
+            for (int idx = 0; idx < instrumentedMethodCall.MethodCall.MethodArguments.Length; idx++)
             {
+                var arg = instrumentedMethodCall.MethodCall.MethodArguments[idx];
+
                 // TODO: I don't like this approach, but our options are limited without access to the interface
                 if (arg.GetType().FullName.Contains("LambdaContext"))
                 {
-                    if (lambdaContext == null)
+                    if (!_functionDetails.HasContext())
                     {
-                        lambdaContext = arg;
+                        _functionDetails.SetContext(arg, idx);
                     }
                     else
                     {
@@ -56,82 +149,70 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
                 else
                 {
-                    var fullName = arg.GetType().FullName;
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"input object fullname = {fullName}");
-                    eventType = fullName.ToEventType();
-                    if (eventType != AwsLambdaEventType.Unknown)
+                    string name = arg.GetType().FullName;
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Checking parameter: {name}");
+                    if (_functionDetails.SetEventType(name, idx))
                     {
-                        inputObject = arg;
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"eventType = {eventType}");
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
+                    }
+                }
+            }
+            _functionDetails.Validate(instrumentedMethodCall.MethodCall.Method.MethodName);
+            if (!_functionDetails.HasContext())
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
+            }
+            agent.SetServerlessParameters(_functionDetails.FunctionVersion, _functionDetails.Arn);
+        }
+
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        {
+            lock (_initLock)
+            {
+                if (_functionDetails == null)
+                {
+                    try
+                    {
+                        InitLambdaData(instrumentedMethodCall, agent);
+                    }
+                    catch (Exception ex)
+                    {
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
                     }
                 }
             }
 
-            string requestId = null;
-            string arn = null;
-            string functionName = null;
-            string functionVersion = null;
-
-            if (lambdaContext != null)
-            {
-                try
-                {
-                    var functionNameGetter = _getFunctionNameFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
-                    var functionVersionGetter = _getFunctionVersionFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
-                    var requestIdGetter = _getAwsRequestIdFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
-                    var functionArnGetter = _getInvokedFunctionArnFromLambdaContext ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
-
-                    requestId = requestIdGetter(lambdaContext);
-
-                    functionName = functionNameGetter(lambdaContext);
-                    arn = functionArnGetter(lambdaContext);
-                    functionVersion = functionVersionGetter(lambdaContext);
-                }
-                catch (Exception ex)
-                {
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Failed to read lambda context: {ex.Message}");
-                }
-            }
-            else
-            {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
-            }
-
-            if (eventType == AwsLambdaEventType.Unknown)
-            {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, "Could not find a known event type");
-            }
-            functionName ??= System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") ?? instrumentedMethodCall.MethodCall.Method.MethodName;
+            var isAsync = instrumentedMethodCall.IsAsync;
+            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
+            var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
             transaction = agent.CreateTransaction(
-                isWeb: eventType.IsWebEvent(),
+                isWeb: _functionDetails.EventType.IsWebEvent(),
                 category: "Lambda", // TODO: is this is correct/useful?
-                transactionDisplayName: functionName,
+                transactionDisplayName: _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             var attributes = new Dictionary<string, string>();
 
-            attributes.AddEventSourceAttribute("eventType", eventType.ToEventTypeString());
+            attributes.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
 
             if (requestId != null)
             {
                 attributes.Add("aws.requestId", requestId);
             }
-            if (arn != null)
+            if (_functionDetails.Arn != null)
             {
-                attributes.Add("aws.lambda.arn", arn);
+                attributes.Add("aws.lambda.arn", _functionDetails.Arn);
             }
 
             if (IsColdStart) // only report this attribute if it's a cold start
                 attributes.Add("aws.coldStart", "true");
 
-            agent.SetServerlessParameters(functionVersion, arn);
-
-            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, eventType, inputObject, attributes);
+            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject, attributes);
 
             transaction.AddLambdaAttributes(attributes);
 
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionName);
+            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
 
             if (isAsync)
             {
@@ -145,7 +226,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     }
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
-                    if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                    if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
                         CaptureResponseData(transaction, response);
                 }
             }
@@ -154,7 +235,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            if (eventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                            if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
                                 CaptureResponseData(transaction, response);
 
                             segment.End();

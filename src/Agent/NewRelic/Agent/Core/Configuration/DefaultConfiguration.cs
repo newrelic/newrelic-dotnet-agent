@@ -794,7 +794,7 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual int CollectorMaxPayloadSizeInBytes { get { return _serverConfiguration.MaxPayloadSizeInBytes ?? MaxPayloadSizeInBytes; } }
         #endregion
 
-        public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
+        public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread || ServerlessModeEnabled; } }
 
         public long ConfigurationVersion { get; private set; }
 
