@@ -13,6 +13,7 @@ using NewRelic.SystemInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
@@ -1364,6 +1365,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
             Assert.That(_defaultConfig.TransactionEventsAttributesEnabled, Is.True);
+        }
+
+        [TestCase(true, true, ExpectedResult = true)]
+        [TestCase(true, false, ExpectedResult = true)]
+        [TestCase(false, true, ExpectedResult = true)]
+        [TestCase(false, false, ExpectedResult = false)]
+        public bool CompleteTransactionsOnThreadConfig(
+            bool completeTransactionsOnThread,
+            bool serverlessModeEnabled)
+        {
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(serverlessModeEnabled);
+
+            _localConfig.service.completeTransactionsOnThread = completeTransactionsOnThread;
+
+            return _defaultConfig.CompleteTransactionsOnThread;
         }
 
         [TestCase(null, null, null, ExpectedResult = null)]

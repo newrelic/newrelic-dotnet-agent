@@ -48,9 +48,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private object _writeLock = new object();
         private readonly IDateTimeStatic _dateTimeStatic;
         private DateTime _lastMetricSendTime;
-        private static string _arn;
-        private static string _functionVersion;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
+        private static IDictionary<string, object> _metadata = null;
 
         public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic)
         {
@@ -211,8 +210,19 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static void SetMetadata(string functionVersion, string arn)
         {
-            _arn = arn;
-            _functionVersion = functionVersion;
+            if (_metadata == null)
+            {
+                _metadata = new Dictionary<string, object>()
+                {
+                    { "protocol_version", 17 },
+                    { "agent_version", AgentInstallConfiguration.AgentVersion },
+                    { "metadata_version", 2 },
+                    { "agent_language", "dotnet" } // Should match "connect" string
+                };
+                _metadata.AddStringIfNotNullOrEmpty("execution_environment", System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+                _metadata.AddStringIfNotNullOrEmpty("function_version", functionVersion);
+                _metadata.AddStringIfNotNullOrEmpty("arn", arn);
+            }
         }
 
         private void WritePayload(string payloadJson, string path)
@@ -257,7 +267,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private string BuildPayload(WireData eventsToFlush)
         {
-            var metadata = GetMetadata(System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            var metadata = GetMetadata();
             var basePayload = GetCompressiblePayload(eventsToFlush);
 
             List<object> payload;
@@ -308,21 +318,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         // Metadata is not compressed or encoded.
-        private static IDictionary<string, object> GetMetadata(string executionEnv)
-        {
-            Dictionary<string, object> metadata = new Dictionary<string, object>
-            {
-                { "arn", _arn },
-                { "protocol_version", 17 },
-                { "function_version", _functionVersion},
-                { "execution_environment", executionEnv },
-                { "agent_version", AgentInstallConfiguration.AgentVersion },
-                { "metadata_version", 2 },
-                { "agent_language", "dotnet" } // Should match "connect" string
-            };
-            return metadata;
-        }
-
+        private static IDictionary<string, object> GetMetadata() => _metadata;
     }
 
     internal enum WireModelEventType
