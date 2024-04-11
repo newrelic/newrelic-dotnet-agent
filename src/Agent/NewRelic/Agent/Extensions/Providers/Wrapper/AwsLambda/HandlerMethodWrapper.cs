@@ -192,6 +192,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transactionDisplayName: _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
+            if (isAsync)
+            {
+                transaction.AttachToAsync();
+                transaction.DetachFromPrimary(); //Remove from thread-local type storage
+            }
+
             var attributes = new Dictionary<string, string>();
 
             attributes.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
@@ -224,10 +230,19 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     {
                         return;
                     }
+
+                    if (responseTask.Status == TaskStatus.Faulted)
+                    {
+                        transaction.NoticeError(responseTask.Exception);
+                    }
+
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
                     if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
                         CaptureResponseData(transaction, response);
+
+                    segment.End();
+                    transaction.End();
                 }
             }
             else
