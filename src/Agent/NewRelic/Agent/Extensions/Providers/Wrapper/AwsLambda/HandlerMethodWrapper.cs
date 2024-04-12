@@ -226,14 +226,16 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
                 void InvokeTryProcessResponse(Task responseTask)
                 {
-                    if (!ValidTaskResponse(responseTask) || (segment == null))
-                    {
-                        return;
-                    }
-
                     if (responseTask.Status == TaskStatus.Faulted)
                     {
                         transaction.NoticeError(responseTask.Exception);
+                    }
+
+                    if (!ValidTaskResponse(responseTask) || (segment == null))
+                    {
+                        segment?.End();
+                        transaction.End();
+                        return;
                     }
 
                     // capture response data for specific request / response types
