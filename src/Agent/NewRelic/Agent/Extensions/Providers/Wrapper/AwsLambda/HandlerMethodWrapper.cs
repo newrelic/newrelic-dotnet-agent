@@ -206,7 +206,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
 
             if (IsColdStart) // only report this attribute if it's a cold start
-                attributes.Add("aws.coldStart", "true");
+                attributes.Add("aws.lambda.coldStart", "true");
 
             LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject, attributes);
 
@@ -224,10 +224,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     {
                         return;
                     }
+
+                    // capture response data for specific request / response types
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
-                    if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
-                        CaptureResponseData(transaction, response);
+                    CaptureResponseData(transaction, response, agent);
                 }
             }
             else
@@ -236,7 +237,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                         onSuccess: response =>
                         {
                             if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
-                                CaptureResponseData(transaction, response);
+                                CaptureResponseData(transaction, response, agent);
 
                             segment.End();
                             transaction.End();
@@ -249,11 +250,26 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
         }
 
-        private void CaptureResponseData(ITransaction transaction, object response)
+        private void CaptureResponseData(ITransaction transaction, object response, IAgent agent)
         {
-                dynamic webResponse = response;
-                transaction.SetHttpResponseStatusCode(webResponse.StatusCode); 
-                IDictionary<string, string> responseHeaders = webResponse.Headers; 
+            if (response == null)
+                return;
+
+            // check response type based on request type to be sure it has the properties we're looking for 
+            var responseType = response.GetType().FullName;
+            if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                ||
+                (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.Amazon.Lambda.ApplicationLoadBalancerEvents"))
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"AwsLambda CaptureResponseData: unexpected response type {responseType}. Not capturing any response data.");
+                return;
+            }
+
+            dynamic webResponse = response;
+            transaction.SetHttpResponseStatusCode(webResponse.StatusCode);
+            IDictionary<string, string> responseHeaders = webResponse.Headers;
+            if (webResponse.Headers != null)
+            {
                 foreach (var header in _webResponseHeaders)
                 {
                     if (responseHeaders.TryGetValue(header, out var value))
@@ -261,6 +277,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                         transaction.AddCustomAttribute(header, value);
                     }
                 }
+            }
         }
 
         private static bool ValidTaskResponse(Task response)

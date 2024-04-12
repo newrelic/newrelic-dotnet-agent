@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -18,15 +19,18 @@ public static class LambdaEventHelpers
                 dynamic apiReqEvent = inputObject; // Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
                 SetWebRequestProperties(agent, transaction, apiReqEvent);
 
-                dynamic requestContext = apiReqEvent.RequestContext;
-                // arn is not available
-                attributes.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
-                attributes.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
-                attributes.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
-                attributes.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
-                attributes.AddEventSourceAttribute("stage", (string)requestContext.Stage);
+                if (apiReqEvent.RequestContext != null)
+                {
+                    dynamic requestContext = apiReqEvent.RequestContext;
+                    // arn is not available
+                    attributes.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
+                    attributes.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
+                    attributes.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
+                    attributes.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
+                    attributes.AddEventSourceAttribute("stage", (string)requestContext.Stage);
 
-                TryParseWebRequestDistributedTraceHeaders(apiReqEvent, attributes);
+                    TryParseWebRequestDistributedTraceHeaders(apiReqEvent, attributes);
+                }
                 break;
 
             case AwsLambdaEventType.ApplicationLoadBalancerRequest:
@@ -181,12 +185,11 @@ public static class LambdaEventHelpers
 
         if (multiValueHeaders != null)
             transaction.SetRequestHeaders(multiValueHeaders, agent.Configuration.AllowAllRequestHeaders ? multiValueHeaders.Keys : Statics.DefaultCaptureHeaders, multiValueHeadersGetter);
-        else
-            transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers.Keys : Statics.DefaultCaptureHeaders, headersGetter);
+        else if (headers != null)
+            transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers?.Keys : Statics.DefaultCaptureHeaders, headersGetter);
 
         transaction.SetRequestMethod(webReqEvent.HttpMethod);
         transaction.SetUri(webReqEvent.Path); // TODO: not sure if this is correct
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
-
 }
