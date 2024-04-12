@@ -192,6 +192,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transactionDisplayName: _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
+            if (isAsync)
+            {
+                transaction.AttachToAsync();
+                transaction.DetachFromPrimary(); //Remove from thread-local type storage
+            }
+
             var attributes = new Dictionary<string, string>();
 
             attributes.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
@@ -220,8 +226,15 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
                 void InvokeTryProcessResponse(Task responseTask)
                 {
+                    if (responseTask.Status == TaskStatus.Faulted)
+                    {
+                        transaction.NoticeError(responseTask.Exception);
+                    }
+
                     if (!ValidTaskResponse(responseTask) || (segment == null))
                     {
+                        segment?.End();
+                        transaction.End();
                         return;
                     }
 
@@ -229,6 +242,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                     var response = responseGetter(responseTask);
                     CaptureResponseData(transaction, response, agent);
+
+                    segment.End();
+                    transaction.End();
                 }
             }
             else
