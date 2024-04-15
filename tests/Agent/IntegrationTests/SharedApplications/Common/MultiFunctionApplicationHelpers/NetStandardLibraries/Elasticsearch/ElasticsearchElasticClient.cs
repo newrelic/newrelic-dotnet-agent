@@ -85,7 +85,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 .From(0)
                 .Size(10)
                 .Query(q => q
-                    .Term(t => t.Field(t => t.Departure))
+                    .Term(t => t.Field(t => t.Departure)
+                    .Value(FlightRecord.GetSample().Departure)
+                    )
                 )
             );
 #pragma warning restore CS0618
