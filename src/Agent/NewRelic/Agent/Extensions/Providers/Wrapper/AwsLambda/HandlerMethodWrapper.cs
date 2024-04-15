@@ -239,9 +239,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     }
 
                     // capture response data for specific request / response types
-                    var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
-                    var response = responseGetter(responseTask);
-                    CaptureResponseData(transaction, response, agent);
+                    if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                    {
+                        var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
+                        var response = responseGetter(responseTask);
+                        CaptureResponseData(transaction, response, agent);
+                    }
 
                     segment.End();
                     transaction.End();
