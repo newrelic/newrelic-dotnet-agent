@@ -188,7 +188,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             transaction = agent.CreateTransaction(
                 isWeb: _functionDetails.EventType.IsWebEvent(),
-                category: "Lambda", // TODO: is this is correct/useful?
+                category: "Lambda",
                 transactionDisplayName: _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
