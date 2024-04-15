@@ -88,13 +88,13 @@
     <PackageReference Include="MongoDB.Driver" Version="2.3.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MongoDB.Driver" Version="2.14.1" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MongoDB.Driver" Version="2.17.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.24.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.25.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MongoDB.Driver .NET/Core references -->
     <!-- Minimum version we can use with .NET core 3.0 or greater is 2.8.1, due to this bug: https://github.com/mongodb/mongo-csharp-driver/pull/372 -->
     <PackageReference Include="MongoDB.Driver" Version="2.8.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="MongoDB.Driver" Version="2.23.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.24.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.25.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- MySqlConnector framework references -->
     <PackageReference Include="MySqlConnector" Version="1.0.1" Condition="'$(TargetFramework)' == 'net462'" />
@@ -144,12 +144,12 @@
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.12.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.5" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- Elastic.Clients.Elasticsearch .NET/Core references - only actually testing oldest and newest -->
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.12.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.12.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.5" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.5" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- Serilog .NET framework references -->
     <PackageReference Include="Serilog" Version="1.5.14" Condition="'$(TargetFramework)' == 'net462'" />
