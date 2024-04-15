@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New features
 
-* A new AI monitoring related public API method has been added - [SetLlmTokenCountingCallback](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/set-llm-token-counting-callback/) ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* A new AI monitoring related public API method has been added - [SetLlmTokenCountingCallback](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/setllmtokencountingcallback-net-agent-api/) ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
 * Add auto-instrumentation for AWS Bedrock ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
 * **deps:** Updated `Elastic.Clients.ElasticSearch` instrumentation points to work with v8.12.1+ ([453d15e](https://github.com/newrelic/newrelic-dotnet-agent/commit/453d15e9de84f91bea6ca5507bbecba354c773dd))
 * New configuration options are available specific to [AI monitoring](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring). ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
