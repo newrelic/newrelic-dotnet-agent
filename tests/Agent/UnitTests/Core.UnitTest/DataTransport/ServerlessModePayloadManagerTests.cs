@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;

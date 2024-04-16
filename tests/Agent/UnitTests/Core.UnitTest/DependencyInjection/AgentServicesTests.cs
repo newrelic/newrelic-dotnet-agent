@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
