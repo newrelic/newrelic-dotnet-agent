@@ -53,7 +53,7 @@ jobs:
           if [ "${{ inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'AwsLambda', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
-          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
+          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'LLM', 'Logging.ContextData', \
           'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding', 'Logging.ZeroMaxSamplesStored', \
           'Owin', 'MassTransit', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
           'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
@@ -100,7 +100,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           fetch-depth: 0
 
@@ -219,7 +219,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           fetch-depth: 0
 

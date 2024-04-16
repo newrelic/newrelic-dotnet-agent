@@ -1,7 +1,8 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
@@ -46,7 +47,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             // This isn't necessary but will log the response, which can help troubleshoot if
             // you're having connection errors
+#pragma warning disable CS0618 // obsolete usage is ok here
             _client.Ping();
+#pragma warning restore CS0618
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -76,14 +79,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
+#pragma warning disable CS0618 // obsolete usage is ok here
             var response = _client.Search<FlightRecord>(s => s
                 .Index(IndexName)
                 .From(0)
                 .Size(10)
                 .Query(q => q
-                    .Term(t => t.Departure, FlightRecord.GetSample().Departure)
+                    .Term(t => t.Field(t => t.Departure)
+                    .Value(FlightRecord.GetSample().Departure)
+                    )
                 )
             );
+#pragma warning restore CS0618
 
             AssertResponseIsSuccess(response);
         }
@@ -96,7 +103,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 .From(0)
                 .Size(10)
                 .Query(q => q
-                    .Term(t => t.Departure, FlightRecord.GetSample().Departure)
+                    .Term(t => t.Field(t => t.Departure)
+                    .Value(FlightRecord.GetSample().Departure)
+                    )
                 )
             );
 
@@ -133,7 +142,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             // Currently unable to figure out how to make a real multisearch work in 8.x
             // This empty call is enough to make the instrumentation (wrapper) execute and generate the data
             // we are looking for, but we can't assert for success.
+#pragma warning disable CS0618 // obsolete usage is ok here
             var response = _client.MultiSearch<FlightRecord>();
+#pragma warning restore CS0618
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -158,7 +169,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var client = new ElasticsearchClient(settings);
 
+#pragma warning disable CS0618 // obsolete usage is ok here
             var response = client.Ping();
+#pragma warning restore CS0618
 
             if (response.IsSuccess())
             {

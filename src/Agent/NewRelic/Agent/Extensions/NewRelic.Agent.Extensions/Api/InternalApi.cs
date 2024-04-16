@@ -329,6 +329,22 @@ namespace NewRelic.Agent.Api
         {
             _agentApiImplementation?.SetErrorGroupCallback(callback);
         }
+
+        /// <summary> Sets the method that will be invoked to define the token count of completion.
+        ///
+        /// The callback takes the model name and input value, and returns an integer of the token count.
+        /// A value returned from the callback that is less than or equal to 0 will be ignored.
+        /// </summary>
+        /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
+        public static void SetLlmTokenCountingCallback(Func<string, string, int> callback)
+        {
+            _agentApiImplementation?.SetLlmTokenCountingCallback(callback);
+        }
+
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category, string message, IDictionary<string, object>? metadata)
+        {
+            _agentApiImplementation?.RecordLlmFeedbackEvent(traceId, rating, category, message, metadata);
+        }
     }
 }
 

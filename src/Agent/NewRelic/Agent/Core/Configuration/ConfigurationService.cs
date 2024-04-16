@@ -49,6 +49,7 @@ namespace NewRelic.Agent.Core.Configuration
             _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
             _subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
             _subscriptions.Add<ErrorGroupCallbackUpdateEvent>(OnErrorGroupCallbackUpdate);
+            _subscriptions.Add<LlmTokenCountingCallbackUpdateEvent>(OnLlmTokenCountingCallbackUpdate);
             _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
             _subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
         }
@@ -95,7 +96,7 @@ namespace NewRelic.Agent.Core.Configuration
             if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
                 return;
 
-            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames, _runTimeConfiguration.ErrorGroupCallback);
+            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames, _runTimeConfiguration.ErrorGroupCallback, _runTimeConfiguration.LlmTokenCountingCallback);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
         }
 
@@ -104,7 +105,16 @@ namespace NewRelic.Agent.Core.Configuration
             if (_runTimeConfiguration.ErrorGroupCallback == errorGroupCallbackUpdateEvent.ErrorGroupCallback)
                 return;
 
-            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, errorGroupCallbackUpdateEvent.ErrorGroupCallback);
+            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, errorGroupCallbackUpdateEvent.ErrorGroupCallback, _runTimeConfiguration.LlmTokenCountingCallback);
+            UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
+        }
+
+        private void OnLlmTokenCountingCallbackUpdate(LlmTokenCountingCallbackUpdateEvent llmTokenCountingCallbackUpdateEvent)
+        {
+            if (_runTimeConfiguration.LlmTokenCountingCallback == llmTokenCountingCallbackUpdateEvent.LlmTokenCountingCallback)
+                return;
+
+            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, _runTimeConfiguration.ErrorGroupCallback, llmTokenCountingCallbackUpdateEvent.LlmTokenCountingCallback);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
         }
 

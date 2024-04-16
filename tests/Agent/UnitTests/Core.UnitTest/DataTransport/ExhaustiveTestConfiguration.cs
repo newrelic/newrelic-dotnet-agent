@@ -469,6 +469,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool LoggingEnabled => true;
 
+        public bool AiMonitoringEnabled => true;
+        public bool AiMonitoringStreamingEnabled => true;
+        public bool AiMonitoringRecordContentEnabled => true;
+
+        public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
+
         public string LoggingLevel => "info";
     }
 }

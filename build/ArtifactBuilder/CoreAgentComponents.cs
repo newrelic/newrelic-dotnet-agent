@@ -59,6 +59,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll",
             };
 
@@ -83,6 +84,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml",
             };
 
