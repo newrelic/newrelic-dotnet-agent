@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -80,6 +81,18 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 // Assert
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
                 Assert.DoesNotThrow(() => AgentServices.StartServices(container, true));
+
+                // ensure dependent services are registered
+                if (serverlessModeEnabled)
+                {
+                    Assert.DoesNotThrow(() => container.Resolve<IServerlessModePayloadManager>());
+                    var serverlessModePayloadManager = container.Resolve<IServerlessModePayloadManager>();
+                    Assert.That(serverlessModePayloadManager.GetType() == typeof(ServerlessModePayloadManager));
+
+                    Assert.DoesNotThrow(() => container.Resolve<IFileWrapper>());
+                    var fileWrapper = container.Resolve<IFileWrapper>();
+                    Assert.That(fileWrapper.GetType() == typeof(FileWrapper));
+                }
 
                 var dataTransportService = container.Resolve<IDataTransportService>();
                 var expectedDataTransportServiceType = serverlessModeEnabled ? typeof(ServerlessModeDataTransportService) : typeof(DataTransportService);
