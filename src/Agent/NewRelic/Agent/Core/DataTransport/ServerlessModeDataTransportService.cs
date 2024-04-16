@@ -40,20 +40,29 @@ namespace NewRelic.Agent.Core.DataTransport
     }
 
     /// <summary>
+    /// Handles building and writing the serverless payload. Created primarily to facilitate unit testing.
+    /// </summary>
+    public interface IServerlessModePayloadManager
+    {
+        void WritePayload(string jsonPayload, string outputPath);
+        string BuildPayload(WireData data);
+    }
+
+    /// <summary>
     /// An IDataTransportService implementation specifically for use in serverless mode
     /// </summary>
     public class ServerlessModeDataTransportService : ConfigurationBasedService, IServerlessModeDataTransportService
     {
         private TransactionWireData _transactionWireData;
-        private object _writeLock = new object();
         private readonly IDateTimeStatic _dateTimeStatic;
+        private readonly IServerlessModePayloadManager _serverlessModePayloadManager;
         private DateTime _lastMetricSendTime;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
-        private static IDictionary<string, object> _metadata = null;
 
-        public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic)
+        public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic, IServerlessModePayloadManager serverlessModePayloadManager)
         {
             _dateTimeStatic = dateTimeStatic;
+            _serverlessModePayloadManager = serverlessModePayloadManager;
             _lastMetricSendTime = _dateTimeStatic.UtcNow;
             _transactionWireData = new TransactionWireData();
             _subscriptions.Add<FlushServerlessDataEvent>(OnFlushServerlessDataEvent);
@@ -193,10 +202,10 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             // Build a payload as per the Lambda spec, compressing portions of the data as per the spec
-            var jsonPayload = BuildPayload(data);
+            var jsonPayload = _serverlessModePayloadManager.BuildPayload(data);
 
             // Write the payload to the /tmp/newrelic-telemetry file if it exists or to stdout if that file does not exist, as per the spec
-            WritePayload(jsonPayload, _outputPath);
+            _serverlessModePayloadManager.WritePayload(jsonPayload, _outputPath);
 
             // Done with this transaction
             if (!_transactionWireData.TryRemove(transactionId, out _))
@@ -210,22 +219,51 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static void SetMetadata(string functionVersion, string arn)
         {
-            if (_metadata == null)
-            {
-                _metadata = new Dictionary<string, object>()
-                {
-                    { "protocol_version", 17 },
-                    { "agent_version", AgentInstallConfiguration.AgentVersion },
-                    { "metadata_version", 2 },
-                    { "agent_language", "dotnet" } // Should match "connect" string
-                };
-                _metadata.AddStringIfNotNullOrEmpty("execution_environment", System.Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-                _metadata.AddStringIfNotNullOrEmpty("function_version", functionVersion);
-                _metadata.AddStringIfNotNullOrEmpty("arn", arn);
-            }
+            ServerlessModePayloadManager.SetMetadata(functionVersion, arn);
         }
 
-        private void WritePayload(string payloadJson, string path)
+    }
+
+    public class FileWrapper : IFileWrapper
+    {
+        public bool Exists(string path)
+        {
+            return File.Exists(path);
+
+        }
+
+        public FileStream OpenWrite(string path)
+        {
+            return File.OpenWrite(path);
+        }
+
+    }
+
+    /// <summary>
+    /// Wraps some File methods to allow for unit testing
+    /// </summary>
+    public interface IFileWrapper
+    {
+        bool Exists(string path);
+        FileStream OpenWrite(string path);
+    }
+
+    public class ServerlessModePayloadManager : IServerlessModePayloadManager
+    {
+        private readonly IFileWrapper _fileWrapper;
+        private readonly IEnvironment _environment;
+        private readonly object _writeLock = new object();
+        private static IDictionary<string, object> _metadata = null;
+        private static string _functionVersion;
+        private static string _arn;
+
+        public ServerlessModePayloadManager(IFileWrapper fileWrapper, IEnvironment environment)
+        {
+            _fileWrapper = fileWrapper;
+            _environment = environment;
+        }
+
+        public void WritePayload(string payloadJson, string path)
         {
             bool success = false;
 
@@ -235,9 +273,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 try
                 {
                     var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
-                    if (File.Exists(path))
+                    if (_fileWrapper.Exists(path))
                     {
-                        using (var fs = File.OpenWrite(path))
+                        using (var fs = _fileWrapper.OpenWrite(path))
                         {
                             fs.Write(payloadBytes, 0, payloadBytes.Length);
                             fs.Flush(true);
@@ -265,26 +303,26 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private string BuildPayload(WireData eventsToFlush)
+        public string BuildPayload(WireData eventsToFlush)
         {
+            InitializeMetadata();
             var metadata = GetMetadata();
             var basePayload = GetCompressiblePayload(eventsToFlush);
-
-            List<object> payload;
 
             if (Log.IsFinestEnabled)
             {
                 var uncompressedPayload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, basePayload };
                 Log.Finest("Serverless payload: {0}", JsonConvert.SerializeObject(uncompressedPayload));
             }
+
             var compressedAndEncodedPayload = CompressAndEncode(JsonConvert.SerializeObject(basePayload));
-            payload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, compressedAndEncodedPayload };
+            var payload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, compressedAndEncodedPayload };
 
             return JsonConvert.SerializeObject(payload);
         }
 
-        private Dictionary<string, object> GetCompressiblePayload(
-            WireData eventsToFlush)
+
+        private Dictionary<string, object> GetCompressiblePayload(WireData eventsToFlush)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             foreach (var kvp in eventsToFlush)
@@ -302,8 +340,8 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                MemoryStream output = new MemoryStream();
-                GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+                using MemoryStream output = new MemoryStream();
+                using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
                 var data = Encoding.UTF8.GetBytes(compressiblePayload);
                 gzip.Write(data, 0, data.Length);
                 gzip.Flush();
@@ -317,47 +355,30 @@ namespace NewRelic.Agent.Core.DataTransport
             return string.Empty;
         }
 
+        private void InitializeMetadata()
+        {
+            if (_metadata == null)
+            {
+                _metadata = new Dictionary<string, object>()
+                {
+                    { "protocol_version", 17 },
+                    { "agent_version", AgentInstallConfiguration.AgentVersion },
+                    { "metadata_version", 2 },
+                    { "agent_language", "dotnet" } // Should match "connect" string
+                };
+                _metadata.AddStringIfNotNullOrEmpty("execution_environment", _environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+                _metadata.AddStringIfNotNullOrEmpty("function_version", _functionVersion);
+                _metadata.AddStringIfNotNullOrEmpty("arn", _arn);
+            }
+        }
+
         // Metadata is not compressed or encoded.
         private static IDictionary<string, object> GetMetadata() => _metadata;
-    }
 
-    internal enum WireModelEventType
-    {
-        TransactionTraces, // transaction_sample_data
-        Metrics, // metric_data
-        ErrorEvents, // error_event_data
-        Errors, // error_data
-        SpanEvents, // span_event_data
-        SqlTraces, // sql_trace_data
-        CustomEvents, // custom_event_data
-        TransactionEvents // analytic_event_data
-    }
-
-    internal static class WireEventModelTypeHelpers
-    {
-        public static string ToJsonTag(this WireModelEventType wireModelEventType)
+        public static void SetMetadata(string functionVersion, string arn)
         {
-            switch (wireModelEventType)
-            {
-                case WireModelEventType.TransactionTraces:
-                    return "transaction_sample_data";
-                case WireModelEventType.Metrics:
-                    return "metric_data";
-                case WireModelEventType.ErrorEvents:
-                    return "error_event_data";
-                case WireModelEventType.Errors:
-                    return "error_data";
-                case WireModelEventType.SpanEvents:
-                    return "span_event_data";
-                case WireModelEventType.SqlTraces:
-                    return "sql_trace_data";
-                case WireModelEventType.CustomEvents:
-                    return "custom_event_data";
-                case WireModelEventType.TransactionEvents:
-                    return "analytic_event_data";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(wireModelEventType), wireModelEventType, null);
-            }
+            _functionVersion = functionVersion;
+            _arn = arn;
         }
     }
 }

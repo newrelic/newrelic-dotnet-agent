@@ -87,6 +87,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
                 if (serverlessModeEnabled)
                 {
+                    Assert.DoesNotThrow(() => container.Resolve<IServerlessModePayloadManager>());
+                    var serverlessModePayloadManager = container.Resolve<IServerlessModePayloadManager>();
+                    Assert.That(serverlessModePayloadManager.GetType() == typeof(ServerlessModePayloadManager));
+
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionHandler>());
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionManager>());
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<CommandService>());
