@@ -81,16 +81,24 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
                 Assert.DoesNotThrow(() => AgentServices.StartServices(container, true));
 
-                var dataTransportService = container.Resolve<IDataTransportService>();
-                var expectedDataTransportServiceType = serverlessModeEnabled ? typeof(ServerlessModeDataTransportService) : typeof(DataTransportService);
-                Assert.That(dataTransportService.GetType() == expectedDataTransportServiceType);
-
+                // ensure dependent services are registered
                 if (serverlessModeEnabled)
                 {
                     Assert.DoesNotThrow(() => container.Resolve<IServerlessModePayloadManager>());
                     var serverlessModePayloadManager = container.Resolve<IServerlessModePayloadManager>();
                     Assert.That(serverlessModePayloadManager.GetType() == typeof(ServerlessModePayloadManager));
 
+                    Assert.DoesNotThrow(() => container.Resolve<IFileWrapper>());
+                    var fileWrapper = container.Resolve<IFileWrapper>();
+                    Assert.That(fileWrapper.GetType() == typeof(FileWrapper));
+                }
+
+                var dataTransportService = container.Resolve<IDataTransportService>();
+                var expectedDataTransportServiceType = serverlessModeEnabled ? typeof(ServerlessModeDataTransportService) : typeof(DataTransportService);
+                Assert.That(dataTransportService.GetType() == expectedDataTransportServiceType);
+
+                if (serverlessModeEnabled)
+                {
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionHandler>());
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionManager>());
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<CommandService>());
