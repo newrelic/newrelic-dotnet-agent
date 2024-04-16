@@ -455,6 +455,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier EnableAiMonitoring(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "aiMonitoring" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
         public void SetCompleteTransactionsOnThread(bool enable)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },

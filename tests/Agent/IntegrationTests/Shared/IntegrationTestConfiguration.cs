@@ -109,6 +109,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsTestRoleArn { get; set; }
         public string AwsAccessKeyId { get; set; }
         public string AwsSecretAccessKey { get; set; }
+        public string AwsRegion { get; set; }
         public string AwsAccountNumber { get; set; }
         public string TraceObserverUrl { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }

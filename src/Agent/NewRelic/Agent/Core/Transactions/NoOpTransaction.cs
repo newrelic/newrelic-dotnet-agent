@@ -313,5 +313,9 @@ namespace NewRelic.Agent.Core.Transactions
             return;
         }
 
+        public void SetLlmTransaction(bool isLlmTransaction)
+        {
+            return;
+        }
     }
 }

@@ -1348,5 +1348,14 @@ namespace NewRelic.Agent.Core.Transactions
                 TransactionMetadata.UserAndRequestAttributes.TrySetValue(_attribDefs.EndUserId, userid);
             }
         }
+
+        /// <summary>
+        /// Marks a transaction as containing one or more instrumented LLM methods.
+        /// </summary>
+        /// <param name="isLlmTransaction"></param>
+        public void SetLlmTransaction(bool isLlmTransaction)
+        {
+            TransactionMetadata.SetLlmTransaction(isLlmTransaction);
+        }
     }
 }

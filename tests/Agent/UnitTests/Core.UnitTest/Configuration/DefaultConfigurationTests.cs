@@ -3838,6 +3838,89 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        #region AI Monitoring Tests
+        [Test]
+        public void AiMonitoringDisabledByDefault()
+        {
+            Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
+        }
+        [Test]
+        public void AiMonitoringEnabledByLocalConfig()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
+        }
+        [Test]
+        public void AiMonitoringEnabledByEnvironmentVariable()
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
+            Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
+        }
+        [Test]
+        public void AiMonitoringDisabledWhenHighSecurityModeEnabled()
+        {
+            _localConfig.highSecurity.enabled = true;
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
+        }
+        
+        [Test]
+        public void AiMonitoringStreamingDisabledByLocalConfig()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            _localConfig.aiMonitoring.streaming.enabled = false;
+            Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
+        }
+        [Test]
+        public void AiMonitoringStreamingEnabledByDefaultWhenAiMonitoringEnabled()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.True);
+        }
+        [Test]
+        public void AiMonitoringStreamingDisabledByEnvironmentVariableWhenAiMonitoringEnabled()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_STREAMING_ENABLED")).Returns("false");
+            Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
+        }
+
+        [Test]
+        public void AiMonitoringRecordContentEnabledWhenAiMonitoringEnabled()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.True);
+        }
+        [Test]
+        public void AiMonitoringRecordContentDisabledByLocalConfig()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            _localConfig.aiMonitoring.recordContent.enabled = false;
+            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
+        }
+        [Test]
+        public void AiMonitoringRecordContentDisabledByEnvironmentVariable()
+        {
+            _localConfig.aiMonitoring.enabled = true;
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED")).Returns("false");
+            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
+        }
+        [Test]
+        public void AiMonitoringRecordContentDisabledWhenAiMonitoringDisabled()
+        {
+            _localConfig.aiMonitoring.enabled = false;
+            Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
+        }
+
+        [Test]
+        public void LlmTokenCountingCallbackComesFromRuntimeConfig()
+        {
+            var runtimeConfig = new RunTimeConfiguration(Enumerable.Empty<string>(), null, (s1, s2) => 42);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, runtimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            Assert.That(defaultConfig.LlmTokenCountingCallback("foo", "bar"), Is.EqualTo(42));
+        }
+        #endregion
+
         #region Agent Logs
 
         [TestCase(null, true, ExpectedResult = true)]

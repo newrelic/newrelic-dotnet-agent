@@ -487,4 +487,22 @@ public class TransactionTests
         // Assert
         Mock.Assert(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(_transaction, carrier, setter));
     }
+    [Test]
+    public void TransactionMetadata_IsLlmTransaction_ReturnsFalse_WhenLlmTransactionIsNotSet()
+    {
+        // Act
+        var result = _transaction.TransactionMetadata.IsLlmTransaction;
+
+        // Assert
+        Assert.That(result, Is.False);
+    }
+    [Test]
+    public void TransactionMetadata_IsLlmTransaction_ReturnsTrue_WhenLlmTransactionIsSet()
+    {
+        // Act
+        _transaction.SetLlmTransaction(true);
+
+        // Assert
+        Assert.That(_transaction.TransactionMetadata.IsLlmTransaction, Is.True);
+    }
 }

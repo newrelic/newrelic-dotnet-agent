@@ -52,6 +52,8 @@ namespace NewRelic.Agent.Core.Transactions
         public bool HasCatResponseHeaders { get; }
         public float Priority { get; }
 
+        public bool IsLlmTransaction { get; }
+
         public IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 
         public TestImmutableTransactionMetadata(
