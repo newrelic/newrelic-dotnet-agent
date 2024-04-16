@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -64,13 +65,33 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
             }
         }
 
-        private string WarmUpTestTool()
+        private void WarmUpTestTool()
         {
-            var address = $"http://localhost:{LambdaTestTool.Port}";
 
-            TestLogger?.WriteLine($"[LambdaTestToolFixture] Warming up collector via: {address}");
+            for (var attempt = 1; attempt <= 3; attempt++)
+            {
+                try
+                {
+                    var address = $"http://localhost:{LambdaTestTool.Port}";
 
-            return GetString(address);
+                    TestLogger?.WriteLine($"[LambdaTestToolFixture] Warming up lambda test tool via: {address} attempt {attempt}.");
+
+                    GetString(address);
+                    return;
+                }
+                catch(Exception e)
+                {
+                    TestLogger?.WriteLine($"Unable to warm up lambda test tool during attempt {attempt}. Exception: {e}");
+                    if (attempt == 3)
+                    {
+                        // Halt the test because the test tool was unable to start
+                        throw;
+                    }
+
+                    // Wait a little to give the test tool more time to start
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+                }
+            }
         }
 
         public override void Initialize()
