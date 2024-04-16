@@ -117,7 +117,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 container.Register<IDataTransportService, DataTransportService>();
             }
             else
+            {
                 container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+                container.Register<IFileWrapper, FileWrapper>();
+                container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
+            }
 
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();

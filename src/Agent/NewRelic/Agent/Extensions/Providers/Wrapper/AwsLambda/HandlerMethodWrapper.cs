@@ -226,28 +226,32 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
                 void InvokeTryProcessResponse(Task responseTask)
                 {
-                    if (responseTask.Status == TaskStatus.Faulted)
+                    try
                     {
-                        transaction.NoticeError(responseTask.Exception);
-                    }
 
-                    if (!ValidTaskResponse(responseTask) || (segment == null))
+                        if (responseTask.Status == TaskStatus.Faulted)
+                        {
+                            transaction.NoticeError(responseTask.Exception);
+                        }
+
+                        if (!ValidTaskResponse(responseTask) || (segment == null))
+                        {
+                            return;
+                        }
+
+                        // capture response data for specific request / response types
+                        if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                        {
+                            var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
+                            var response = responseGetter(responseTask);
+                            CaptureResponseData(transaction, response, agent);
+                        }
+                    }
+                    finally
                     {
                         segment?.End();
                         transaction.End();
-                        return;
                     }
-
-                    // capture response data for specific request / response types
-                    if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
-                    {
-                        var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
-                        var response = responseGetter(responseTask);
-                        CaptureResponseData(transaction, response, agent);
-                    }
-
-                    segment.End();
-                    transaction.End();
                 }
             }
             else
