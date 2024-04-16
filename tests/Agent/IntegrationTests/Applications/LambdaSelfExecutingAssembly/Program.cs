@@ -41,11 +41,15 @@ namespace LambdaSelfExecutingAssembly
                 throw new Exception("The handler name should be in the format 'AssemblyName::Namespace.ClassName::MethodName'.");
             }
 
+            var serializer = new DefaultLambdaJsonSerializer();
+
             var handlerMethodName = handlerParts[2];
             switch (handlerMethodName)
             {
                 case nameof(SnsHandler):
-                    return HandlerWrapper.GetHandlerWrapper<SNSEvent>(SnsHandler, new DefaultLambdaJsonSerializer());
+                    return HandlerWrapper.GetHandlerWrapper<SNSEvent>(SnsHandler, serializer);
+                case nameof(SnsHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<SNSEvent>(SnsHandlerAsync, serializer);
                 default:
                     throw new Exception("An unknown lambda method name was requested.");
             }
@@ -64,9 +68,16 @@ namespace LambdaSelfExecutingAssembly
             return handlerName;
         }
 
-        public static void SnsHandler(SNSEvent evnt, ILambdaContext _)
+        public static void SnsHandler(SNSEvent _, ILambdaContext __)
         {
+            Console.WriteLine("Executing lambda {0}", nameof(SnsHandler));
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
+        }
+
+        public static async Task SnsHandlerAsync(SNSEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(SnsHandlerAsync));
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
         }
     }
 }

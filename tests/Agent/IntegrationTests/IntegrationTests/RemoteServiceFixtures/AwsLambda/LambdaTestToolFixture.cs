@@ -8,7 +8,7 @@ using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 {
     public class LambdaTestToolFixture : RemoteApplicationFixture
     {
