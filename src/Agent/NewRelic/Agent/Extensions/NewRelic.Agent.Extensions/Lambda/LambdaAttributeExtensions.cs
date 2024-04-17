@@ -17,7 +17,8 @@ public static class LambdaAttributeExtensions
     {
         foreach (var attribute in attributes)
         {
-            transaction.AddCustomAttribute(attribute.Key, attribute.Value); // TODO: figure out if custom attributes are correct
+            // TODO: change to adding these as agent attributes instead of custom attributes
+            transaction.AddCustomAttribute(attribute.Key, attribute.Value);
         }
     }
 }

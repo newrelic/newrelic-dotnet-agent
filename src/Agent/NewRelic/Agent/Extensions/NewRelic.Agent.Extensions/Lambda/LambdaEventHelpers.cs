@@ -189,7 +189,7 @@ public static class LambdaEventHelpers
             transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers?.Keys : Statics.DefaultCaptureHeaders, headersGetter);
 
         transaction.SetRequestMethod(webReqEvent.HttpMethod);
-        transaction.SetUri(webReqEvent.Path); // TODO: not sure if this is correct
+        transaction.SetUri(webReqEvent.Path);
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
 }
