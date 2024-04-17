@@ -128,7 +128,7 @@ namespace CompositeTests
 
         public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
-        public CompositeTestAgent(bool enableServerlessMode = true) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode)
+        public CompositeTestAgent(bool enableServerlessMode = false) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode)
         {
         }
 
