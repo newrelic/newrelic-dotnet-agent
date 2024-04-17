@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
@@ -24,7 +25,6 @@ namespace CompositeTests
             _compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = true;
             _compositeTestAgent.LocalConfiguration.datastoreTracer.databaseNameReporting.enabled = true;
         }
-
 
         [Test]
         public void ServerlessDataTransport_TracksAndReportsExpectedData()

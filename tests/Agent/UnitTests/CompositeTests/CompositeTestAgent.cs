@@ -225,7 +225,7 @@ namespace CompositeTests
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration(enableServerlessMode);
+            LocalConfiguration = GetDefaultTestLocalConfiguration();
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -310,6 +310,9 @@ namespace CompositeTests
             //by another test.
             var transaction = _primaryTransactionContextStorage.GetData();
             transaction?.Finish();
+
+            // reset the bootstrap configuration in case this was a serverless mode test
+            ConfigurationLoader.UseBootstrapConfigurationForTesting(BootstrapConfiguration.GetDefault());
 
             _container.Dispose();
         }
@@ -404,15 +407,12 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration(bool enableServerlessMode)
+        private static configuration GetDefaultTestLocalConfiguration()
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
-
-            if (enableServerlessMode)
-                configuration.serverlessModeEnabled = true;
 
             return configuration;
         }
