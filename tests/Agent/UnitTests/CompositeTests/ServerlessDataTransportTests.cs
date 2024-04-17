@@ -14,17 +14,11 @@ namespace CompositeTests
     internal class ServerlessDataTransportTests
     {
         private CompositeTestAgent _compositeTestAgent;
-        private IConfigurationService _configSvc;
-        private IServerlessModeDataTransportService _dataTransportService;
 
         [SetUp]
         public void Setup()
         {
             _compositeTestAgent = new CompositeTestAgent(enableServerlessMode: true);
-
-            _configSvc = _compositeTestAgent.Container.Resolve<IConfigurationService>();
-
-            _dataTransportService = _compositeTestAgent.Container.Resolve<IServerlessModeDataTransportService>();
         }
 
 
@@ -41,14 +35,15 @@ namespace CompositeTests
             segment.End();
             transaction.End();
 
-            _compositeTestAgent.Harvest();
+            // Harvest happens automatically when the transaction ends
 
             // Assert
             var payloadJson = _compositeTestAgent.ServerlessPayload;
             var unzippedPayload = payloadJson.GetUnzippedPayload();
             dynamic payload = JsonConvert.DeserializeObject(unzippedPayload);
             var transactionData = payload["transaction_sample_data"];
-            Assert.That(transactionData[1][0][2].Value).IsEqualTo("WebTransaction/Lambda/TransactionName");
+            var transactionName = transactionData[1][0][2].Value;
+            Assert.That(transactionName, Is.EqualTo("WebTransaction/Lambda/TransactionName"));
         }
     }
 }
