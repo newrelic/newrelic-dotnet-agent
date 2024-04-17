@@ -114,7 +114,8 @@ where TFixture : ConsoleDynamicMethodFixture
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = 5 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 }
+                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
             };
 
             var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
