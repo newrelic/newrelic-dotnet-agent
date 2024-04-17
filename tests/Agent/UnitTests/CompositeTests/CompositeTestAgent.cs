@@ -155,7 +155,7 @@ namespace CompositeTests
                 Mock.Arrange(() => mockBootstrapConfig.ConfigurationFileName).Returns((string)null);
                 Mock.Arrange(() => mockBootstrapConfig.AgentEnabled).Returns(true);
 
-                ConfigurationLoader.UseBootstrapConfiguration(mockBootstrapConfig);
+                ConfigurationLoader.UseBootstrapConfigurationForTesting(mockBootstrapConfig);
             }
 
             var wrappers = Enumerable.Empty<IWrapper>();
