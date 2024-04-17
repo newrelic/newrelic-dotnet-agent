@@ -167,23 +167,26 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            lock (_initLock)
+            if (_functionDetails == null)
             {
-                if (_functionDetails == null)
+                lock (_initLock)
                 {
-                    try
+                    if (_functionDetails == null)
                     {
-                        InitLambdaData(instrumentedMethodCall, agent);
-                    }
-                    catch (Exception ex)
-                    {
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
+                        try
+                        {
+                            InitLambdaData(instrumentedMethodCall, agent);
+                        }
+                        catch (Exception ex)
+                        {
+                            agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
+                        }
                     }
                 }
             }
 
             var isAsync = instrumentedMethodCall.IsAsync;
-            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
+            string requestId = _functionDetails!.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
             transaction = agent.CreateTransaction(

@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public string Arn { get; set; }
 
         [JsonProperty("protocol_version")]
-        public string ProtocolVersion { get; set; }
+        public int ProtocolVersion { get; set; }
 
         [JsonProperty("function_version")]
         public string FunctionVersion { get; set; }
