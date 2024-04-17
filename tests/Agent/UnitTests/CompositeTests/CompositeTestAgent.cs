@@ -31,10 +31,13 @@ using NewRelic.Providers.Storage.AsyncLocal;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using Telerik.JustMock;
+using Telerik.JustMock.Helpers;
 
 namespace CompositeTests
 {
@@ -87,10 +90,26 @@ namespace CompositeTests
 
         public InstrumentationWatcher InstrumentationWatcher { get; }
 
+        public string ServerlessPayload
+        {
+            get
+            {
+                if (_serverlessPayloadMemoryStream != null)
+                {
+                    _serverlessPayloadMemoryStream.Position = 0;
+                    var actualBytes = _serverlessPayloadMemoryStream.ToArray();
+                    return Encoding.UTF8.GetString(actualBytes);
+                }
+
+                return string.Empty;
+            }
+        }
+
         private IAttributeDefinitionService _attribDefSvc;
         public IAttributeDefinitions AttributeDefinitions => _attribDefSvc?.AttributeDefs;
 
         private readonly bool _shouldAllowThreads;
+        private MemoryStream _serverlessPayloadMemoryStream;
 
         public IContainer Container => _container;
 
@@ -103,15 +122,17 @@ namespace CompositeTests
             ErrorTraces.Clear();
             ErrorEvents.Clear();
             SpanEvents.Clear();
+
+            _serverlessPayloadMemoryStream = null;
         }
 
         public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
-        public CompositeTestAgent() : this(shouldAllowThreads: false, includeAsyncLocalStorage: false)
+        public CompositeTestAgent(bool enableServerlessMode = true) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode)
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false)
         {
             Log.Initialize(new Logger());
 
@@ -125,6 +146,16 @@ namespace CompositeTests
             if (includeAsyncLocalStorage)
             {
                 transactionContextFactories.Add(new AsyncLocalStorageFactory());
+            }
+
+            if (enableServerlessMode)
+            {
+                var mockBootstrapConfig = Mock.Create<IBootstrapConfiguration>(Constructor.Mocked);
+                Mock.Arrange(() => mockBootstrapConfig.ServerlessModeEnabled).Returns(true);
+                Mock.Arrange(() => mockBootstrapConfig.ConfigurationFileName).Returns((string)null);
+                Mock.Arrange(() => mockBootstrapConfig.AgentEnabled).Returns(true);
+
+                ConfigurationLoader.UseBootstrapConfiguration(mockBootstrapConfig);
             }
 
             var wrappers = Enumerable.Empty<IWrapper>();
@@ -146,7 +177,7 @@ namespace CompositeTests
 
             // Construct services
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container, false);
+            AgentServices.RegisterServices(_container, enableServerlessMode);
 
             // Replace existing registrations with mocks before resolving any services
             _container.ReplaceInstanceRegistration(mockEnvironment);
@@ -154,7 +185,23 @@ namespace CompositeTests
             _container.ReplaceInstanceRegistration<ICallStackManagerFactory>(
                 new TestCallStackManagerFactory());
             _container.ReplaceInstanceRegistration(wrappers);
-            _container.ReplaceInstanceRegistration(dataTransportService);
+
+            if (!enableServerlessMode)
+                _container.ReplaceInstanceRegistration(dataTransportService);
+            else
+            {
+                // for serverless mode, we mock the IFileWrapper so we can
+                // intercept the file output and write it to a memory stream instead
+                _serverlessPayloadMemoryStream = new MemoryStream();
+                FileStream fs = Mock.Create<FileStream>(Constructor.Mocked);
+                Mock.Arrange(() => fs.Write(null, 0, 0)).IgnoreArguments()
+                    .DoInstead((byte[] content, int offset, int len) => _serverlessPayloadMemoryStream.Write(content, 0, content.Length));
+                var fileWrapper = Mock.Create<IFileWrapper>();
+                Mock.Arrange(() => fileWrapper.Exists(Arg.IsAny<string>())).Returns(true);
+                Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+
+                _container.ReplaceInstanceRegistration(fileWrapper);
+            }
             _container.ReplaceInstanceRegistration(scheduler);
             _container.ReplaceInstanceRegistration(NativeMethods);
 
@@ -178,7 +225,7 @@ namespace CompositeTests
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration();
+            LocalConfiguration = GetDefaultTestLocalConfiguration(enableServerlessMode);
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -186,23 +233,26 @@ namespace CompositeTests
 
             _attribDefSvc = _container.Resolve<IAttributeDefinitionService>();
 
-            // Redirect the mock DataTransportService to capture harvested wire models
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(Metrics));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(CustomEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(TransactionTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(ErrorTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(SqlTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
-                .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
+            if (!enableServerlessMode)
+            {
+                // Redirect the mock DataTransportService to capture harvested wire models
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(Metrics));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(CustomEvents));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(TransactionTraces));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(ErrorTraces));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(SqlTraces));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
+                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
+                    .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
+            }
 
             EnableAggregators();
         }
@@ -354,12 +404,16 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration()
+        private static configuration GetDefaultTestLocalConfiguration(bool enableServerlessMode)
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
+
+            if (enableServerlessMode)
+                configuration.serverlessModeEnabled = true;
+
             return configuration;
         }
 
