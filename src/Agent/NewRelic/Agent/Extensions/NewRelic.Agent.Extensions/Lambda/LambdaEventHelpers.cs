@@ -50,7 +50,6 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
                 attributes.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
                 attributes.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                // TODO: Figure out if the time value should be in some specific format. The spec doesn't say.
                 attributes.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
                 break;
 
@@ -77,7 +76,6 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
                 attributes.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
                 attributes.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
-                // TODO: Figure out if the eventTime value should be in some specific format. The spec doesn't say.
                 attributes.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
                 attributes.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
                 attributes.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
@@ -102,7 +100,6 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
                 attributes.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
                 attributes.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
-                // TODO: Figure out if the timestamp value should be in some specific format. The spec doesn't say.
                 attributes.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
                 attributes.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
                 attributes.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
