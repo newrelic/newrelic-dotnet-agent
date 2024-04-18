@@ -45,20 +45,14 @@ namespace NewRelic.Agent.Core.DataTransport
         private TransactionWireData _transactionWireData;
         private readonly IDateTimeStatic _dateTimeStatic;
         private readonly IServerlessModePayloadManager _serverlessModePayloadManager;
-        private DateTime _lastMetricSendTime;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
-        private readonly string _instanceId;
 
         public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic, IServerlessModePayloadManager serverlessModePayloadManager)
         {
             _dateTimeStatic = dateTimeStatic;
             _serverlessModePayloadManager = serverlessModePayloadManager;
-            _lastMetricSendTime = _dateTimeStatic.UtcNow;
             _transactionWireData = new TransactionWireData();
             _subscriptions.Add<FlushServerlessDataEvent>(OnFlushServerlessDataEvent);
-
-            _instanceId = Guid.NewGuid().ToString();
-            Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId}: Initial _lastMetricSendTime is {_lastMetricSendTime.Ticks}");
         }
 
         private void OnFlushServerlessDataEvent(FlushServerlessDataEvent flushServerlessDataEvent)
@@ -103,34 +97,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
-            var callGuid = Guid.NewGuid().ToString();
-
-            Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}: Send() starting at {_dateTimeStatic.UtcNow.Ticks} - _lastMetricSendTime is {_lastMetricSendTime.Ticks}");
-
             if (!metrics.Any())
             {
-                Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}: No metric_data to harvest");
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
-            var beginTime = _lastMetricSendTime;
-            var endTime = _dateTimeStatic.UtcNow;
-            if (beginTime >= endTime)
-            {
-                Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
-                Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}:  The last data send timestamp ({_lastMetricSendTime.Ticks}) is greater than or equal to the current timestamp ({endTime.Ticks}). The metrics in this batch will be dropped.");
-
-                _lastMetricSendTime = _dateTimeStatic.UtcNow;
-                Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}:  _lastMetricSendTime set to {_lastMetricSendTime.Ticks}.");
-                return DataTransportResponseStatus.Discard;
-            }
-
-            var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
+            var collectionTime = _dateTimeStatic.UtcNow.ToUnixTimeMilliseconds();
+            var model = new MetricWireModelCollection(_configuration.AgentRunId as string, collectionTime, collectionTime, metrics);
 
             Enqueue(transactionId, "metric_data", model);
-            _lastMetricSendTime = endTime;
-            Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}:  _lastMetricSendTime set to {_lastMetricSendTime.Ticks}.");
-            Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid} - TransactionID: {transactionId}: Send() successful at {_dateTimeStatic.UtcNow.Ticks}");
 
             return DataTransportResponseStatus.RequestSuccessful;
         }
