@@ -70,9 +70,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         [JsonProperty("analytic_event_data")]
         public TransactionEventPayload TransactionEventsPayload { get; set; }
 
-        // TODO: Add custom event support
-        //[JsonProperty("custom_event_data")]
-        //public CustomEventPayload CustomEventsPayload { get; set; }
+        [JsonProperty("custom_event_data")]
+        public CustomEventPayload CustomEventsPayload { get; set; }
 
         [JsonProperty("error_event_data")]
         public ErrorEventPayload ErrorEventsPayload { get; set; }
@@ -141,5 +140,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonArrayIndex(Index = 1)]
         public TransactionTrace[] TransactionTraces { get; set; }
+    }
+
+    [JsonConverter(typeof(JsonArrayConverter))]
+    public class CustomEventPayload
+    {
+        [JsonArrayIndex(Index = 0)]
+        public object AgentRunId { get; set; }
+
+        [JsonArrayIndex(Index = 1)]
+        public CustomEventData[] CustomEvents { get; set; }
     }
 }
