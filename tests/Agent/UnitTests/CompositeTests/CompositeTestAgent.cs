@@ -47,7 +47,7 @@ namespace CompositeTests
     /// Using this test agent in combination with the Agent allows us to write tests that cover a very
     /// broad stroke of the code base with very good performance (e.g. no/minimal disk activity).
     /// </summary>
-    public class CompositeTestAgent
+    public class CompositeTestAgent : IDisposable
     {
         private readonly object _harvestActionsLockObject = new object();
         private readonly object _queuedCallbacksLockObject = new object();

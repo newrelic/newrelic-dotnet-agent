@@ -27,6 +27,12 @@ namespace CompositeTests
             _compositeTestAgent.LocalConfiguration.datastoreTracer.databaseNameReporting.enabled = true;
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _compositeTestAgent.Dispose();
+        }
+
         internal enum TestType
         {
             TransactionOnly,
