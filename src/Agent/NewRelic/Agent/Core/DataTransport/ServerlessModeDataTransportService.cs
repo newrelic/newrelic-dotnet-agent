@@ -58,6 +58,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _subscriptions.Add<FlushServerlessDataEvent>(OnFlushServerlessDataEvent);
 
             _instanceId = Guid.NewGuid().ToString();
+            Console.WriteLine($"InstanceId: {_instanceId} - ThreadId: {Thread.CurrentThread.ManagedThreadId}: Initial _lastMetricSendTime is {_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}");
         }
 
         private void OnFlushServerlessDataEvent(FlushServerlessDataEvent flushServerlessDataEvent)
