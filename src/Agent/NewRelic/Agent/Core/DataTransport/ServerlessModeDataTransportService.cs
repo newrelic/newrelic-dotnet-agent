@@ -151,7 +151,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-       // Not supported in serverless mode
+        // Not supported in serverless mode
         public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId) => throw new NotImplementedException();
         #endregion
 
