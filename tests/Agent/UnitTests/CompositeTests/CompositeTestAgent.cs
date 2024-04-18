@@ -110,6 +110,7 @@ namespace CompositeTests
 
         private readonly bool _shouldAllowThreads;
         private MemoryStream _serverlessPayloadMemoryStream;
+        private readonly IBootstrapConfiguration _originalBootstrapConfig;
 
         public IContainer Container => _container;
 
@@ -155,6 +156,7 @@ namespace CompositeTests
                 Mock.Arrange(() => mockBootstrapConfig.ConfigurationFileName).Returns((string)null);
                 Mock.Arrange(() => mockBootstrapConfig.AgentEnabled).Returns(true);
 
+                _originalBootstrapConfig = ConfigurationLoader.BootstrapConfig;
                 ConfigurationLoader.UseBootstrapConfigurationForTesting(mockBootstrapConfig);
             }
 
@@ -311,8 +313,9 @@ namespace CompositeTests
             var transaction = _primaryTransactionContextStorage.GetData();
             transaction?.Finish();
 
-            // reset the bootstrap configuration in case this was a serverless mode test
-            ConfigurationLoader.UseBootstrapConfigurationForTesting(BootstrapConfiguration.GetDefault());
+            // reset the bootstrap configuration if this was a serverless mode test
+            if (_originalBootstrapConfig != null)
+                ConfigurationLoader.UseBootstrapConfigurationForTesting(_originalBootstrapConfig);
 
             _container.Dispose();
         }
