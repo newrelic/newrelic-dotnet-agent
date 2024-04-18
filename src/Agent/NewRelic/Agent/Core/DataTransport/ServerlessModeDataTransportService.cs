@@ -99,11 +99,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
-            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: Send() starting at {_dateTimeStatic.UtcNow}");
+            var callGuid = Guid.NewGuid().ToString();
+
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: Send() starting at {_dateTimeStatic.UtcNow.ToString("HH:mm:ss.ffffff")}");
 
             if (!metrics.Any())
             {
-                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: No metric_data to harvest");
+                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: No metric_data to harvest");
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
@@ -112,7 +114,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (beginTime >= endTime)
             {
                 Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
-                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}:  The last data send timestamp ({_lastMetricSendTime}) is greater than or equal to the current timestamp ({endTime}). The metrics in this batch will be dropped.");
+                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}:  The last data send timestamp ({_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}) is greater than or equal to the current timestamp ({endTime.ToString("HH:mm:ss.ffffff")}). The metrics in this batch will be dropped.");
 
                 _lastMetricSendTime = _dateTimeStatic.UtcNow;
                 return DataTransportResponseStatus.Discard;
@@ -123,7 +125,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Enqueue(transactionId, "metric_data", model);
             _lastMetricSendTime = endTime;
 
-            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: Send() successful at {_dateTimeStatic.UtcNow}");
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: Send() successful at {_dateTimeStatic.UtcNow.ToString("HH:mm:ss.ffffff")}");
 
             return DataTransportResponseStatus.RequestSuccessful;
         }
