@@ -24,9 +24,9 @@ namespace Agent.Extensions.Tests.Lambda
         public void AddLambdaAttributes_AddsToTransaction()
         {
             var transaction = Mock.Create<ITransaction>();
-            Dictionary<string, object> actualCustomAttributes = new();;
-            Mock.Arrange(() => transaction.AddCustomAttribute(Arg.IsAny<string>(), Arg.IsAny<string>()))
-                .DoInstead((string key, object value) => actualCustomAttributes.Add(key, value));
+            Dictionary<string, string> actualCustomAttributes = new();;
+            Mock.Arrange(() => transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<string>()))
+                .DoInstead((string key, string value) => actualCustomAttributes.Add(key, value));
 
             var attributes = new Dictionary<string, string>
             {
