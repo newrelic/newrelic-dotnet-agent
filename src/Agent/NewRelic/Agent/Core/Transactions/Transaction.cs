@@ -164,7 +164,9 @@ namespace NewRelic.Agent.Core.Transactions
 
                 if (Agent.Configuration.ServerlessModeEnabled)
                 {
+                    Console.WriteLine($"Initiating Manual harvest for transaction {Guid}");
                     EventBus<ManualHarvestEvent>.Publish(new ManualHarvestEvent(Guid));
+                    Console.WriteLine($"Initiating Flush Serverless Data Event for transaction {Guid}");
                     EventBus<FlushServerlessDataEvent>.Publish(new FlushServerlessDataEvent(Guid));
                 }
             };
