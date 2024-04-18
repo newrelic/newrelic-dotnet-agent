@@ -49,6 +49,8 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<string, string>(StringInputAndOutputHandlerAsync, serializer);
                 case nameof(LambdaContextOnlyHandler):
                     return HandlerWrapper.GetHandlerWrapper(LambdaContextOnlyHandler);
+                case nameof(StreamParameterHandler):
+                    return HandlerWrapper.GetHandlerWrapper(StreamParameterHandler);
                 default:
                     return null;
             }
@@ -139,6 +141,13 @@ namespace LambdaSelfExecutingAssembly
         public static void OutOfOrderParametersHandler(ILambdaContext _, string input)
         {
             Console.WriteLine("Executing lambda {0} with input {1}", nameof(OutOfOrderParametersHandler), input);
+        }
+
+        public static Stream StreamParameterHandler(Stream requestStream, ILambdaContext context)
+        {
+            var input = new DefaultLambdaJsonSerializer().Deserialize<string>(requestStream);
+            Console.WriteLine("Executing lambda {0} with input {1}", nameof(StreamParameterHandler), input);
+            return new MemoryStream(0);
         }
     }
 }
