@@ -120,6 +120,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         public bool IsTransactionRequired => false;
 
         private static bool _coldStart = true;
+        private HashSet<string> _unexpectedResponseTypes = new();
+        private HashSet<string> _unsupportedInputTypes = new();
+
         private static bool IsColdStart => _coldStart && !(_coldStart = false);
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -154,6 +157,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     if (_functionDetails.SetEventType(name, idx))
                     {
                         agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
+                    }
+                    else if (!_unsupportedInputTypes.Contains(name))
+                    {
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
+                        _unsupportedInputTypes.Add(name);
                     }
                 }
             }
@@ -287,7 +295,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 ||
                 (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.Amazon.Lambda.ApplicationLoadBalancerEvents"))
             {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"AwsLambda CaptureResponseData: unexpected response type {responseType}. Not capturing any response data.");
+                if (!_unexpectedResponseTypes.Contains(responseType))
+                {
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unexpected response type {responseType} for request event type {_functionDetails.EventType}. Not capturing any response data.");
+                    _unexpectedResponseTypes.Add(responseType);
+                }
+
                 return;
             }
 
