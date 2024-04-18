@@ -201,25 +201,21 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            var attributes = new Dictionary<string, string>();
-
-            attributes.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
 
             if (requestId != null)
             {
-                attributes.Add("aws.requestId", requestId);
+                transaction.AddLambdaAttribute("aws.requestId", requestId);
             }
             if (_functionDetails.Arn != null)
             {
-                attributes.Add("aws.lambda.arn", _functionDetails.Arn);
+                transaction.AddLambdaAttribute("aws.lambda.arn", _functionDetails.Arn);
             }
 
             if (IsColdStart) // only report this attribute if it's a cold start
-                attributes.Add("aws.lambda.coldStart", "true");
+                transaction.AddLambdaAttribute("aws.lambda.coldStart", "true");
 
-            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject, attributes);
-
-            transaction.AddLambdaAttributes(attributes);
+            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
 
