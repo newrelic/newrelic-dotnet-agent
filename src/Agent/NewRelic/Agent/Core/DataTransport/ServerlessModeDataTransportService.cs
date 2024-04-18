@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var callGuid = Guid.NewGuid().ToString();
 
-            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: Send() starting at {_dateTimeStatic.UtcNow.ToString("HH:mm:ss.ffffff")}");
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: Send() starting at {_dateTimeStatic.UtcNow.ToString("HH:mm:ss.ffffff")} - _lastMetricSendTime is {_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}");
 
             if (!metrics.Any())
             {
@@ -117,6 +117,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}:  The last data send timestamp ({_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}) is greater than or equal to the current timestamp ({endTime.ToString("HH:mm:ss.ffffff")}). The metrics in this batch will be dropped.");
 
                 _lastMetricSendTime = _dateTimeStatic.UtcNow;
+                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}:  _lastMetricSendTime set to {_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}.");
                 return DataTransportResponseStatus.Discard;
             }
 
@@ -124,7 +125,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Enqueue(transactionId, "metric_data", model);
             _lastMetricSendTime = endTime;
-
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}:  _lastMetricSendTime set to {_lastMetricSendTime.ToString("HH:mm:ss.ffffff")}.");
             Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId} - CallID {callGuid}: Send() successful at {_dateTimeStatic.UtcNow.ToString("HH:mm:ss.ffffff")}");
 
             return DataTransportResponseStatus.RequestSuccessful;
