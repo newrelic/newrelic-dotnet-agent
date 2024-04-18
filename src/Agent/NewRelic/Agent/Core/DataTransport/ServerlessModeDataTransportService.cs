@@ -100,6 +100,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             if (!metrics.Any())
             {
+                Console.WriteLine("No metric_data to harvest");
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
@@ -109,6 +110,7 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
                 _lastMetricSendTime = _dateTimeStatic.UtcNow;
+                Console.WriteLine("Discarding metric_data");
                 return DataTransportResponseStatus.Discard;
             }
 
