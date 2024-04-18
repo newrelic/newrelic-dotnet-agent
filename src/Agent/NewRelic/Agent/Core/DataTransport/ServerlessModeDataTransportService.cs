@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
@@ -98,9 +99,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: Send() starting at {_dateTimeStatic.UtcNow}");
+
             if (!metrics.Any())
             {
-                Console.WriteLine("No metric_data to harvest");
+                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: No metric_data to harvest");
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
@@ -109,8 +112,9 @@ namespace NewRelic.Agent.Core.DataTransport
             if (beginTime >= endTime)
             {
                 Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
+                Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}:  The last data send timestamp ({_lastMetricSendTime}) is greater than or equal to the current timestamp ({endTime}). The metrics in this batch will be dropped.");
+
                 _lastMetricSendTime = _dateTimeStatic.UtcNow;
-                Console.WriteLine("Discarding metric_data");
                 return DataTransportResponseStatus.Discard;
             }
 
@@ -118,6 +122,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Enqueue(transactionId, "metric_data", model);
             _lastMetricSendTime = endTime;
+
+            Console.WriteLine($"ThreadId: {Thread.CurrentThread.ManagedThreadId}: Send() successful at {_dateTimeStatic.UtcNow}");
 
             return DataTransportResponseStatus.RequestSuccessful;
         }
