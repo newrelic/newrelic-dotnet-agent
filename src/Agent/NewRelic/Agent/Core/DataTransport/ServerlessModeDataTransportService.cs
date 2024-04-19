@@ -45,12 +45,14 @@ namespace NewRelic.Agent.Core.DataTransport
         private TransactionWireData _transactionWireData;
         private readonly IDateTimeStatic _dateTimeStatic;
         private readonly IServerlessModePayloadManager _serverlessModePayloadManager;
+        private DateTime _lastMetricSendTime;
         private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
 
         public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic, IServerlessModePayloadManager serverlessModePayloadManager)
         {
             _dateTimeStatic = dateTimeStatic;
             _serverlessModePayloadManager = serverlessModePayloadManager;
+            _lastMetricSendTime = _dateTimeStatic.UtcNow;
             _transactionWireData = new TransactionWireData();
             _subscriptions.Add<FlushServerlessDataEvent>(OnFlushServerlessDataEvent);
         }
@@ -102,10 +104,14 @@ namespace NewRelic.Agent.Core.DataTransport
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
-            var collectionTime = _dateTimeStatic.UtcNow.ToUnixTimeMilliseconds();
-            var model = new MetricWireModelCollection(_configuration.AgentRunId as string, collectionTime, collectionTime, metrics);
+            var beginTime = _lastMetricSendTime;
+            var endTime = _dateTimeStatic.UtcNow;
+
+            var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
 
             Enqueue(transactionId, "metric_data", model);
+
+            _lastMetricSendTime = endTime;
 
             return DataTransportResponseStatus.RequestSuccessful;
         }
