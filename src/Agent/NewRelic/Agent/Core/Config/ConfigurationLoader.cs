@@ -434,6 +434,14 @@ namespace NewRelic.Agent.Core.Config
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
         }
 
+        /// <summary>
+        /// Used ONLY FOR TESTING!
+        /// </summary>
+        public static void UseBootstrapConfigurationForTesting(IBootstrapConfiguration bootstrapConfiguration)
+        {
+            BootstrapConfig = bootstrapConfiguration;
+        }
+
 
         private static void ValidateConfigXmlWithSchema(string configXml, string schemaXml)
         {

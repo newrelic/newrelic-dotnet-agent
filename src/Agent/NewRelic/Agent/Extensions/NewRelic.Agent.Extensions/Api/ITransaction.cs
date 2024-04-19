@@ -299,5 +299,7 @@ namespace NewRelic.Agent.Api
         void SetUserId(string userid);
 
         void SetLlmTransaction(bool isLlmTransaction);
+
+        void AddLambdaAttribute(string name, string value);
     }
 }

@@ -505,4 +505,36 @@ public class TransactionTests
         // Assert
         Assert.That(_transaction.TransactionMetadata.IsLlmTransaction, Is.True);
     }
+
+    [Test]
+    public void AddLambdaAttribute_SetAttributeInTransactionMetadata()
+    {
+        // Arrange
+        var key = "TestAttribute";
+        var value = "TestValue";
+
+        // Act
+        _transaction.AddLambdaAttribute(key, value);
+
+        // Assert
+        var allAttributeValuesDic = _transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();
+
+        var attributeValue = allAttributeValuesDic[key];
+        Assert.That(attributeValue, Is.EqualTo(value));
+    }
+
+    [TestCase("   ")]
+    [TestCase("")]
+    [TestCase(null)]
+    public void AddLambdaAttribute_DoesNotSetAttribute_WhenKeyIsBad(string key)
+    {
+        // Arrange
+        var value = "TestValue";
+
+        // Act
+        _transaction.AddLambdaAttribute(key, value);
+
+        // Assert
+        Assert.That(_transaction.TransactionMetadata.UserAndRequestAttributes.Count, Is.EqualTo(0));
+    }
 }

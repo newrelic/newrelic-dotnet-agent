@@ -10,113 +10,127 @@ namespace NewRelic.Agent.Extensions.Lambda;
 
 public static class LambdaEventHelpers
 {
-    public static void AddEventTypeAttributes(IAgent agent, ITransaction transaction, AwsLambdaEventType eventType, object inputObject, Dictionary<string, string> attributes)
+    public static void AddEventTypeAttributes(IAgent agent, ITransaction transaction, AwsLambdaEventType eventType, object inputObject)
     {
-        switch (eventType)
+        try
         {
-            case AwsLambdaEventType.APIGatewayProxyRequest:
-                dynamic apiReqEvent = inputObject; // Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
-                SetWebRequestProperties(agent, transaction, apiReqEvent);
+            switch (eventType)
+            {
+                case AwsLambdaEventType.APIGatewayProxyRequest:
+                    dynamic apiReqEvent = inputObject; // Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+                    SetWebRequestProperties(agent, transaction, apiReqEvent);
 
-                if (apiReqEvent.RequestContext != null)
-                {
-                    dynamic requestContext = apiReqEvent.RequestContext;
+                    if (apiReqEvent.RequestContext != null)
+                    {
+                        dynamic requestContext = apiReqEvent.RequestContext;
+                        // arn is not available
+                        transaction.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
+                        transaction.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
+                        transaction.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
+                        transaction.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
+                        transaction.AddEventSourceAttribute("stage", (string)requestContext.Stage);
+
+                        TryParseWebRequestDistributedTraceHeaders(apiReqEvent, transaction);
+                    }
+                    break;
+
+                case AwsLambdaEventType.ApplicationLoadBalancerRequest:
+                    dynamic albReqEvent = inputObject; //Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
+
+                    SetWebRequestProperties(agent, transaction, albReqEvent);
+
+                    transaction.AddEventSourceAttribute("arn", (string)albReqEvent.RequestContext.Elb.TargetGroupArn);
+                    TryParseWebRequestDistributedTraceHeaders(albReqEvent, transaction);
+                    break;
+
+                case AwsLambdaEventType.CloudWatchScheduledEvent:
+                    dynamic cloudWatchScheduledEvent = inputObject; //Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
+
+                    transaction.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
+                    transaction.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
+                    transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
+                    transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
+                    transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
+                    // TODO: Figure out if the time value should be in some specific format. The spec doesn't say.
+                    transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
+                    break;
+
+                case AwsLambdaEventType.KinesisStreamingEvent:
+                    dynamic kinesisStreamingEvent = inputObject; //Amazon.Lambda.KinesisEvents.KinesisEvent
+
+                    transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
+                    transaction.AddEventSourceAttribute("length", (string)kinesisStreamingEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
+                    break;
+
+                case AwsLambdaEventType.KinesisFirehoseEvent:
+                    dynamic kinesisFirehoseEvent = inputObject; //Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
+
+                    transaction.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
+                    transaction.AddEventSourceAttribute("length", (string)kinesisFirehoseEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("region", (string)kinesisFirehoseEvent.Region);
+                    break;
+
+                case AwsLambdaEventType.S3Event:
+                    dynamic s3Event = inputObject; //Amazon.Lambda.S3Events.S3Event
+
+                    transaction.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
+                    transaction.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
+                    transaction.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
+                    // TODO: Figure out if the eventTime value should be in some specific format. The spec doesn't say.
+                    transaction.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
+                    transaction.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
+                    transaction.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
+                    transaction.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
+                    transaction.AddEventSourceAttribute("objectSequencer", (string)s3Event.Records[0].S3.Object.Sequencer);
+                    transaction.AddEventSourceAttribute("objectSize", (string)s3Event.Records[0].S3.Object.Size.ToString());
+                    break;
+
+                case AwsLambdaEventType.SimpleEmailEvent:
+                    dynamic sesEvent = inputObject; //Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
+
                     // arn is not available
-                    attributes.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
-                    attributes.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
-                    attributes.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
-                    attributes.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
-                    attributes.AddEventSourceAttribute("stage", (string)requestContext.Stage);
-                }
-                break;
+                    transaction.AddEventSourceAttribute("length", (string)sesEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);
+                    transaction.AddEventSourceAttribute("messageId", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.MessageId);
+                    transaction.AddEventSourceAttribute("returnPath", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.ReturnPath);
+                    break;
 
-            case AwsLambdaEventType.ApplicationLoadBalancerRequest:
-                dynamic albReqEvent = inputObject; //Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
+                case AwsLambdaEventType.SNSEvent:
+                    dynamic snsEvent = inputObject; //Amazon.Lambda.SNSEvents.SNSEvent
 
-                SetWebRequestProperties(agent, transaction, albReqEvent);
+                    transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
+                    transaction.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
+                    // TODO: Figure out if the timestamp value should be in some specific format. The spec doesn't say.
+                    transaction.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
+                    transaction.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
+                    transaction.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
 
-                attributes.AddEventSourceAttribute("arn", (string)albReqEvent.RequestContext.Elb.TargetGroupArn);
-                break;
+                    TryParseSNSDistributedTraceHeaders(snsEvent, transaction);
+                    break;
 
-            case AwsLambdaEventType.CloudWatchScheduledEvent:
-                dynamic cloudWatchScheduledEvent = inputObject; //Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
+                case AwsLambdaEventType.SQSEvent:
+                    dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
 
-                attributes.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
-                attributes.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
-                attributes.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
-                attributes.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
-                attributes.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                attributes.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
-                break;
+                    transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
+                    transaction.AddEventSourceAttribute("length", (string)sqsEvent.Records.Count.ToString());
 
-            case AwsLambdaEventType.KinesisStreamingEvent:
-                dynamic kinesisStreamingEvent = inputObject; //Amazon.Lambda.KinesisEvents.KinesisEvent
+                    TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
+                    break;
 
-                attributes.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
-                attributes.AddEventSourceAttribute("length", (string)kinesisStreamingEvent.Records.Count.ToString());
-                attributes.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
-                break;
+                case AwsLambdaEventType.Unknown:
+                    break; // nothing to do for unknown event type
 
-            case AwsLambdaEventType.KinesisFirehoseEvent:
-                dynamic kinesisFirehoseEvent = inputObject; //Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
-
-                attributes.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
-                attributes.AddEventSourceAttribute("length", (string)kinesisFirehoseEvent.Records.Count.ToString());
-                attributes.AddEventSourceAttribute("region", (string)kinesisFirehoseEvent.Region);
-                break;
-
-            case AwsLambdaEventType.S3Event:
-                dynamic s3Event = inputObject; //Amazon.Lambda.S3Events.S3Event
-
-                attributes.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
-                attributes.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
-                attributes.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
-                attributes.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
-                attributes.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
-                attributes.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
-                attributes.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
-                attributes.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
-                attributes.AddEventSourceAttribute("objectSequencer", (string)s3Event.Records[0].S3.Object.Sequencer);
-                attributes.AddEventSourceAttribute("objectSize", (string)s3Event.Records[0].S3.Object.Size.ToString());
-                break;
-
-            case AwsLambdaEventType.SimpleEmailEvent:
-                dynamic sesEvent = inputObject; //Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
-
-                // arn is not available
-                attributes.AddEventSourceAttribute("length", (string)sesEvent.Records.Count.ToString());
-                attributes.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);
-                attributes.AddEventSourceAttribute("messageId", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.MessageId);
-                attributes.AddEventSourceAttribute("returnPath", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.ReturnPath);
-                break;
-
-            case AwsLambdaEventType.SNSEvent:
-                dynamic snsEvent = inputObject; //Amazon.Lambda.SNSEvents.SNSEvent
-
-                attributes.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
-                attributes.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
-                attributes.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
-                attributes.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
-                attributes.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
-                attributes.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
-
-                TryParseSNSDistributedTraceHeaders(snsEvent, transaction);
-                break;
-
-            case AwsLambdaEventType.SQSEvent:
-                dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
-
-                attributes.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
-                attributes.AddEventSourceAttribute("length", (string)sqsEvent.Records.Count.ToString());
-
-                TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
-                break;
-
-            case AwsLambdaEventType.Unknown:
-                break; // nothing to do for unknown event type
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unexpected eventType");
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unexpected eventType");
+            }
+        }
+        catch (Exception e)
+        {
+            agent.Logger.Log(Logging.Level.Warn, $"Unexpected exception in AddEventTypeAttributes(). Event type {eventType} had an inputObject of type {inputObject.GetType().FullName}. Exception: {e}");
+            throw;
         }
     }
 
@@ -124,6 +138,8 @@ public static class LambdaEventHelpers
 
     // TODO: does this need to handle W3C trace context headers as well?
     private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
+    private static void TryParseWebRequestDistributedTraceHeaders(dynamic webRequestEvent, ITransaction transaction)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
         // message attributes to a new <string,string> dict and then pass that to AcceptDTHeaders
@@ -133,6 +149,23 @@ public static class LambdaEventHelpers
         if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
         {
             sqsHeaders.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
+        if (webRequestEvent.MultiValueHeaders != null && ((IDictionary<string, IList<string>>)webRequestEvent.MultiValueHeaders).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValues) && headerValues != null)
+        {
+            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, string.Join(",", headerValues));
+        }
+        else if (webRequestEvent.Headers != null && ((IDictionary<string, string>)webRequestEvent.Headers).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValue) && !string.IsNullOrEmpty(headerValue))
+        {
+            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, headerValue);
+        }
+    }
+
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
+    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
+    {
+        var record = sqsEvent.Records[0];
+        if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
+        {
+            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
@@ -142,11 +175,13 @@ public static class LambdaEventHelpers
             var endIndex = record.Body.IndexOf('"', startIndex);
             var payload = record.Body.Substring(startIndex, endIndex - startIndex);
             sqsHeaders.Add(NEWRELIC_TRACE_HEADER, (string)payload);
+            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, (string)payload);
         }
 
         transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
 
+    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
     private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, ITransaction transaction)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sns message attributes
@@ -161,6 +196,7 @@ public static class LambdaEventHelpers
                 snsHeaders.Add(attribute.Key, attribute.Value.Value);
 
             }
+            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, (string)record.Sns.MessageAttributes[NEWRELIC_TRACE_HEADER].Value);
         }
         transaction.AcceptDistributedTraceHeaders(snsHeaders, GetHeaderValue, TransportType.Other);
     }

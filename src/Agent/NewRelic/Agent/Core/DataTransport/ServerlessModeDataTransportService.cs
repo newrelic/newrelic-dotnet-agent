@@ -9,7 +9,6 @@ using System.Linq;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
@@ -105,16 +104,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var beginTime = _lastMetricSendTime;
             var endTime = _dateTimeStatic.UtcNow;
-            if (beginTime >= endTime)
-            {
-                Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
-                _lastMetricSendTime = _dateTimeStatic.UtcNow;
-                return DataTransportResponseStatus.Discard;
-            }
 
             var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
 
             Enqueue(transactionId, "metric_data", model);
+
             _lastMetricSendTime = endTime;
 
             return DataTransportResponseStatus.RequestSuccessful;

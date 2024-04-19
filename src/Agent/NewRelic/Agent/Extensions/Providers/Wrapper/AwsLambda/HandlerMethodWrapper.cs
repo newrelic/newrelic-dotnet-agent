@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System;
 using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Reflection;
+using System.Collections.Concurrent;
+using NewRelic.Collections;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {
@@ -120,6 +122,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
         public bool IsTransactionRequired => false;
 
         private static bool _coldStart = true;
+        private ConcurrentHashSet<string> _unexpectedResponseTypes = new();
+        private ConcurrentHashSet<string> _unsupportedInputTypes = new();
+
         private static bool IsColdStart => _coldStart && !(_coldStart = false);
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -155,6 +160,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                     {
                         agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
                     }
+                    else if (!_unsupportedInputTypes.Contains(name))
+                    {
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
+                        _unsupportedInputTypes.Add(name);
+                    }
                 }
             }
             _functionDetails.Validate(instrumentedMethodCall.MethodCall.Method.MethodName);
@@ -167,23 +177,26 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            lock (_initLock)
+            if (_functionDetails == null)
             {
-                if (_functionDetails == null)
+                lock (_initLock)
                 {
-                    try
+                    if (_functionDetails == null)
                     {
-                        InitLambdaData(instrumentedMethodCall, agent);
-                    }
-                    catch (Exception ex)
-                    {
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
+                        try
+                        {
+                            InitLambdaData(instrumentedMethodCall, agent);
+                        }
+                        catch (Exception ex)
+                        {
+                            agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
+                        }
                     }
                 }
             }
 
             var isAsync = instrumentedMethodCall.IsAsync;
-            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
+            string requestId = _functionDetails!.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
             transaction = agent.CreateTransaction(
@@ -198,25 +211,21 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            var attributes = new Dictionary<string, string>();
-
-            attributes.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
 
             if (requestId != null)
             {
-                attributes.Add("aws.requestId", requestId);
+                transaction.AddLambdaAttribute("aws.requestId", requestId);
             }
             if (_functionDetails.Arn != null)
             {
-                attributes.Add("aws.lambda.arn", _functionDetails.Arn);
+                transaction.AddLambdaAttribute("aws.lambda.arn", _functionDetails.Arn);
             }
 
             if (IsColdStart) // only report this attribute if it's a cold start
-                attributes.Add("aws.lambda.coldStart", "true");
+                transaction.AddLambdaAttribute("aws.lambda.coldStart", "true");
 
-            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject, attributes);
-
-            transaction.AddLambdaAttributes(attributes);
+            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject);
 
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
 
@@ -284,7 +293,12 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 ||
                 (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.Amazon.Lambda.ApplicationLoadBalancerEvents"))
             {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"AwsLambda CaptureResponseData: unexpected response type {responseType}. Not capturing any response data.");
+                if (!_unexpectedResponseTypes.Contains(responseType))
+                {
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unexpected response type {responseType} for request event type {_functionDetails.EventType}. Not capturing any response data.");
+                    _unexpectedResponseTypes.Add(responseType);
+                }
+
                 return;
             }
 
