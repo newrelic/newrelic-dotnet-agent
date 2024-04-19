@@ -268,7 +268,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
             cache.GetOrAdd("key1", () => "value1");
             cache.GetOrAdd("key2", () => "value2");
 
-            Thread.Sleep(1000);
+            Thread.Sleep(2500); // unnecessarily long, but should eliminate test flickers
 
             EvaluateCacheMetrics(cache, 0, 2, 2, 0);
         }
