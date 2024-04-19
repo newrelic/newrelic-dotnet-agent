@@ -136,7 +136,7 @@ public static class LambdaEventHelpers
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
         // message attributes to a new <string,string> dict and then pass that to AcceptDTHeaders
-        var sqsHeaders = new Dictionary<string, string>();
+        IDictionary<string, string> sqsHeaders = new Dictionary<string, string>();
 
         var record = sqsEvent.Records[0];
         if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
@@ -159,7 +159,7 @@ public static class LambdaEventHelpers
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sns message attributes
         // to a new <string,string> dict which is then passed to AcceptDTHeaders
-        var snsHeaders = new Dictionary<string, string>();
+        IDictionary<string, string> snsHeaders = new Dictionary<string, string>();
 
         var record = snsEvent.Records[0];
         if (record.Sns.MessageAttributes != null)
