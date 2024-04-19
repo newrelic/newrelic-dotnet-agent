@@ -30,7 +30,6 @@ public static class LambdaEventHelpers
                         transaction.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
                         transaction.AddEventSourceAttribute("stage", (string)requestContext.Stage);
 
-                        TryParseWebRequestDistributedTraceHeaders(apiReqEvent, transaction);
                     }
                     break;
 
@@ -40,7 +39,6 @@ public static class LambdaEventHelpers
                     SetWebRequestProperties(agent, transaction, albReqEvent);
 
                     transaction.AddEventSourceAttribute("arn", (string)albReqEvent.RequestContext.Elb.TargetGroupArn);
-                    TryParseWebRequestDistributedTraceHeaders(albReqEvent, transaction);
                     break;
 
                 case AwsLambdaEventType.CloudWatchScheduledEvent:
@@ -51,7 +49,6 @@ public static class LambdaEventHelpers
                     transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
                     transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
                     transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                    // TODO: Figure out if the time value should be in some specific format. The spec doesn't say.
                     transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
                     break;
 
@@ -78,7 +75,6 @@ public static class LambdaEventHelpers
                     transaction.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
                     transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
                     transaction.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
-                    // TODO: Figure out if the eventTime value should be in some specific format. The spec doesn't say.
                     transaction.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
                     transaction.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
                     transaction.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
@@ -103,7 +99,6 @@ public static class LambdaEventHelpers
                     transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
                     transaction.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
                     transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
-                    // TODO: Figure out if the timestamp value should be in some specific format. The spec doesn't say.
                     transaction.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
                     transaction.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
                     transaction.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
@@ -136,10 +131,8 @@ public static class LambdaEventHelpers
 
     private const string NEWRELIC_TRACE_HEADER = "newrelic";
 
-    // TODO: does this need to handle W3C trace context headers as well?
+    // TODO: Also handle W3C trace context headers
     private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
-    private static void TryParseWebRequestDistributedTraceHeaders(dynamic webRequestEvent, ITransaction transaction)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
         // message attributes to a new <string,string> dict and then pass that to AcceptDTHeaders
@@ -149,39 +142,19 @@ public static class LambdaEventHelpers
         if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
         {
             sqsHeaders.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
-        if (webRequestEvent.MultiValueHeaders != null && ((IDictionary<string, IList<string>>)webRequestEvent.MultiValueHeaders).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValues) && headerValues != null)
-        {
-            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, string.Join(",", headerValues));
-        }
-        else if (webRequestEvent.Headers != null && ((IDictionary<string, string>)webRequestEvent.Headers).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValue) && !string.IsNullOrEmpty(headerValue))
-        {
-            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, headerValue);
-        }
-    }
-
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
-    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
-    {
-        var record = sqsEvent.Records[0];
-        if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
-        {
-            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
             // This is an SNS subscription with attributes
-            var newrelicIndex = record.Body.IndexOf("newrelic", System.StringComparison.InvariantCultureIgnoreCase) + 9;
-            var startIndex = record.Body.IndexOf("Value\":\"", newrelicIndex, System.StringComparison.InvariantCultureIgnoreCase) + 8;
+            var newrelicIndex = record.Body.IndexOf("newrelic", StringComparison.InvariantCultureIgnoreCase) + 9;
+            var startIndex = record.Body.IndexOf("Value\":\"", newrelicIndex, StringComparison.InvariantCultureIgnoreCase) + 8;
             var endIndex = record.Body.IndexOf('"', startIndex);
             var payload = record.Body.Substring(startIndex, endIndex - startIndex);
             sqsHeaders.Add(NEWRELIC_TRACE_HEADER, (string)payload);
-            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, (string)payload);
         }
-
         transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
 
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
     private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, ITransaction transaction)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sns message attributes
@@ -196,7 +169,6 @@ public static class LambdaEventHelpers
                 snsHeaders.Add(attribute.Key, attribute.Value.Value);
 
             }
-            transaction.AddLambdaAttribute(NEWRELIC_TRACE_HEADER, (string)record.Sns.MessageAttributes[NEWRELIC_TRACE_HEADER].Value);
         }
         transaction.AcceptDistributedTraceHeaders(snsHeaders, GetHeaderValue, TransportType.Other);
     }
