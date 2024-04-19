@@ -39,7 +39,7 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
 
       - name: Setup VSTest Path
-        uses: darenm/Setup-VSTest@fbb574e849d6225ce9702f86e64eb6cdc4b4e561 # v1.1.1
+        uses: darenm/Setup-VSTest@d9a5dffa3f11d9c27ec42eb69515d3aaeaad9ef8 # v1.2
       
       - name: Build Lambda Tracer
         run: |
