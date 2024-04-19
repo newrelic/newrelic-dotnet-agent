@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -28,8 +27,6 @@ public static class LambdaEventHelpers
                     attributes.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
                     attributes.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
                     attributes.AddEventSourceAttribute("stage", (string)requestContext.Stage);
-
-                    TryParseWebRequestDistributedTraceHeaders(apiReqEvent, attributes);
                 }
                 break;
 
@@ -39,7 +36,6 @@ public static class LambdaEventHelpers
                 SetWebRequestProperties(agent, transaction, albReqEvent);
 
                 attributes.AddEventSourceAttribute("arn", (string)albReqEvent.RequestContext.Elb.TargetGroupArn);
-                TryParseWebRequestDistributedTraceHeaders(albReqEvent, attributes);
                 break;
 
             case AwsLambdaEventType.CloudWatchScheduledEvent:
@@ -104,7 +100,7 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
                 attributes.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
 
-                TryParseSNSDistributedTraceHeaders(snsEvent, attributes);
+                TryParseSNSDistributedTraceHeaders(snsEvent, transaction);
                 break;
 
             case AwsLambdaEventType.SQSEvent:
@@ -113,7 +109,7 @@ public static class LambdaEventHelpers
                 attributes.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
                 attributes.AddEventSourceAttribute("length", (string)sqsEvent.Records.Count.ToString());
 
-                TryParseSQSDistributedTraceHeaders(sqsEvent, attributes);
+                TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
                 break;
 
             case AwsLambdaEventType.Unknown:
@@ -126,29 +122,17 @@ public static class LambdaEventHelpers
 
     private const string NEWRELIC_TRACE_HEADER = "newrelic";
 
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
-    private static void TryParseWebRequestDistributedTraceHeaders(dynamic webRequestEvent, Dictionary<string, string> attributes)
+    // TODO: does this need to handle W3C trace context headers as well?
+    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
     {
-        IList<string> headerValues = null;
-        string headerValue = null;
+        // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
+        // message attributes to a new <string,string> dict and then pass that to AcceptDTHeaders
+        var sqsHeaders = new Dictionary<string, string>();
 
-        if (webRequestEvent.MultiValueHeaders != null && ((IDictionary<string, IList<string>>)webRequestEvent.MultiValueHeaders).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValues) && headerValues != null)
-        {
-            attributes.Add(NEWRELIC_TRACE_HEADER, string.Join(",", headerValues));
-        }
-        else if (webRequestEvent.Headers != null && ((IDictionary<string, string>)webRequestEvent.Headers).TryGetValue(NEWRELIC_TRACE_HEADER, out headerValue) && !string.IsNullOrEmpty(headerValue))
-        {
-            attributes.Add(NEWRELIC_TRACE_HEADER, headerValue);
-        }
-    }
-
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
-    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, Dictionary<string, string> attributes)
-    {
         var record = sqsEvent.Records[0];
         if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
         {
-            attributes.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
+            sqsHeaders.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
@@ -157,18 +141,28 @@ public static class LambdaEventHelpers
             var startIndex = record.Body.IndexOf("Value\":\"", newrelicIndex, System.StringComparison.InvariantCultureIgnoreCase) + 8;
             var endIndex = record.Body.IndexOf('"', startIndex);
             var payload = record.Body.Substring(startIndex, endIndex - startIndex);
-            attributes.Add(NEWRELIC_TRACE_HEADER, (string)payload);
+            sqsHeaders.Add(NEWRELIC_TRACE_HEADER, (string)payload);
         }
+
+        transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
 
-    // TODO: based on OpenTracing.AmazonLambda.Wrapper.IOParser.cs, no idea if it's correct for current use or not
-    private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, Dictionary<string, string> attributes)
+    private static void TryParseSNSDistributedTraceHeaders(dynamic snsEvent, ITransaction transaction)
     {
+        // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sns message attributes
+        // to a new <string,string> dict which is then passed to AcceptDTHeaders
+        var snsHeaders = new Dictionary<string, string>();
+
         var record = snsEvent.Records[0];
-        if (record.Sns.MessageAttributes != null && record.Sns.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
+        if (record.Sns.MessageAttributes != null)
         {
-            attributes.Add(NEWRELIC_TRACE_HEADER, (string)record.Sns.MessageAttributes[NEWRELIC_TRACE_HEADER].Value);
+            foreach (var attribute in record.Sns.MessageAttributes)
+            {
+                snsHeaders.Add(attribute.Key, attribute.Value.Value);
+
+            }
         }
+        transaction.AcceptDistributedTraceHeaders(snsHeaders, GetHeaderValue, TransportType.Other);
     }
 
     private static void SetWebRequestProperties(IAgent agent, ITransaction transaction, dynamic webReqEvent)
@@ -181,12 +175,49 @@ public static class LambdaEventHelpers
         Func<IDictionary<string, IList<string>>, string, string> multiValueHeadersGetter = (h, k) => string.Join(",", h[k]);
 
         if (multiValueHeaders != null)
+        {
             transaction.SetRequestHeaders(multiValueHeaders, agent.Configuration.AllowAllRequestHeaders ? multiValueHeaders.Keys : Statics.DefaultCaptureHeaders, multiValueHeadersGetter);
+            transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, TransportType.HTTP);
+        }
         else if (headers != null)
+        {
             transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers?.Keys : Statics.DefaultCaptureHeaders, headersGetter);
+            transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+        }
 
         transaction.SetRequestMethod(webReqEvent.HttpMethod);
         transaction.SetUri(webReqEvent.Path);
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
+
+    // DT getter for generic <string,string> header dict
+    private static IEnumerable<string> GetHeaderValue(IDictionary<string, string> headers, string key)
+    {
+        var headerValues = new List<string>();
+        foreach (var item in headers)
+        {
+            if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                headerValues.Add(item.Value);
+            }
+        }
+
+        return headerValues;
+    }
+
+    // DT getter for web event multiValueHeaders
+    private static IEnumerable<string> GetMultiHeaderValue(IDictionary<string, IList<string>> multiValueHeaders, string key)
+    {
+        var headerValues = new List<string>();
+        foreach (var item in multiValueHeaders)
+        {
+            if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                headerValues.Add(string.Join(",", item.Value));
+            }
+        }
+
+        return headerValues;
+    }
+
 }
