@@ -90,14 +90,6 @@ namespace CompositeTests
 
             foreach (var unexpectedPayloadDataType in unexpectedPayloadDataTypes)
                 Assert.That(unzippedPayload, Does.Not.Contain(unexpectedPayloadDataType));
-
-            //Assert.That(unzippedPayload, Contains.Substring("error_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("error_event_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("analytic_event_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("span_event_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("custom_event_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("transaction_sample_data"));
-            //Assert.That(unzippedPayload, Contains.Substring("sql_trace_data"));
         }
     }
 }
