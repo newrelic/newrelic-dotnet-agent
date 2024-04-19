@@ -5,9 +5,9 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System;
-using NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents;
 
 namespace Agent.Extensions.Tests.Lambda;
 
@@ -60,11 +60,12 @@ public class LambdaEventHelpersTests
             }
         };
 
-        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
@@ -77,13 +78,13 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.resourceId"], Is.EqualTo("testResourceId"));
             Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("testResourcePath"));
             Assert.That(_attributes["aws.lambda.eventSource.stage"], Is.EqualTo("testStage"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader1,testDistributedTraceHeader2"));
 
-            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.MultiValueHeaders, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
         });
     }
     [Test]
@@ -116,11 +117,13 @@ public class LambdaEventHelpersTests
             }
         };
 
-        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
+
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
@@ -134,13 +137,13 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("testResourcePath"));
             Assert.That(_attributes["aws.lambda.eventSource.stage"], Is.EqualTo("testStage"));
 
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
-
-            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.Headers, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.Headers, Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP));
+
         });
     }
 
@@ -175,11 +178,12 @@ public class LambdaEventHelpersTests
             }
         };
 
-        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -188,13 +192,13 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testTargetGroupArn"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
 
-            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.Headers, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.Headers, Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP));
         });
     }
     [Test]
@@ -226,11 +230,12 @@ public class LambdaEventHelpersTests
             }
         };
 
-        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -239,13 +244,13 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testTargetGroupArn"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader1,testDistributedTraceHeader2"));
 
-            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, and SetRequestParameters methods were called with the correct arguments
+            // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods were called with the correct arguments
             Mock.Assert(() => _transaction.SetRequestHeaders(inputObject.MultiValueHeaders, Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>()));
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
         });
     }
 
@@ -446,6 +451,9 @@ public class LambdaEventHelpersTests
             ]
         };
 
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other)).DoNothing();
+
+
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
@@ -458,7 +466,8 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.timestamp"], Is.EqualTo(testTimestamp.ToString()));
             Assert.That(_attributes["aws.lambda.eventSource.topicArn"], Is.EqualTo("testTopicArn"));
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string,string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other));
         });
     }
 
@@ -477,6 +486,8 @@ public class LambdaEventHelpersTests
                 }]
         };
 
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue)).DoNothing();
+
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
@@ -485,7 +496,8 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
         });
     }
     [Test]
@@ -502,6 +514,8 @@ public class LambdaEventHelpersTests
                 }]
         };
 
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue)).DoNothing();
+
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
@@ -510,7 +524,8 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
-            Assert.That(_attributes["newrelic"], Is.EqualTo("testDistributedTraceHeader"));
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
         });
     }
 }
