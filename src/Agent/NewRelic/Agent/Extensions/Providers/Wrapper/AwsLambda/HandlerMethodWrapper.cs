@@ -140,7 +140,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             {
                 var arg = instrumentedMethodCall.MethodCall.MethodArguments[idx];
 
-                // TODO: I don't like this approach, but our options are limited without access to the interface
+                // It's theoretically possible that a customer could implement their own custom class
+                // that implements the ILambdaContext interface without naming it something with
+                // 'LambdaContext' in the name, but they would have to jump through a lot of hoops to
+                // do so. This should cover nearly all real-world usage scenarios.
                 if (arg.GetType().FullName.Contains("LambdaContext"))
                 {
                     if (!_functionDetails.HasContext())
