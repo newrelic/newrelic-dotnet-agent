@@ -21,9 +21,12 @@ public class LambdaEventHelpersTests
     [SetUp]
     public void SetUp()
     {
+        _attributes = new Dictionary<string, string>();
         _agent = Mock.Create<IAgent>();
         _transaction = Mock.Create<ITransaction>();
-        _attributes = new Dictionary<string, string>();
+        Mock.Arrange(() => _transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<string>()))
+            .DoInstead((string key, string value) => _attributes.Add(key, value));
+        
     }
 
     // APIGatewayProxyRequest
@@ -64,7 +67,7 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -120,7 +123,7 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -179,7 +182,7 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -230,7 +233,7 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -263,7 +266,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -292,7 +295,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -320,7 +323,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -364,7 +367,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -407,7 +410,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -444,7 +447,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -475,7 +478,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>
@@ -500,7 +503,7 @@ public class LambdaEventHelpersTests
         };
 
         // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject, _attributes);
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
 
         // Assert
         Assert.Multiple(() =>

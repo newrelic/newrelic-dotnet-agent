@@ -63,9 +63,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
         private static bool IsColdStartPayload(ServerlessPayload serverlessPayload)
         {
             var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
-
-            // TODO: Check for the cold start in an agent attribute once that fix is merged
-            return transactionEvent.UserAttributes.TryGetValue("aws.lambda.coldStart", out var coldStartAttributeValue)
+            return transactionEvent.AgentAttributes.TryGetValue("aws.lambda.coldStart", out var coldStartAttributeValue)
                 && (string)coldStartAttributeValue == "true";
         }
     }

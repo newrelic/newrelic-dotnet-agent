@@ -342,6 +342,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.SetRequestParameters(new[]
             {
                 new KeyValuePair<string,string>("requestParameterKey", "requestParameterValue"),
@@ -392,7 +393,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(transactionAttributes), Is.EqualTo(45)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(transactionAttributes), Is.EqualTo(46)),  // Assert that only these attributes are generated
                 () => Assert.That(GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent), Is.EqualTo("Transaction")),
                 () => Assert.That(GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent), Is.EqualTo("TransactionError")),
                 () => Assert.That(GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent), Is.EqualTo(expectedStartTime.ToUnixTimeMilliseconds())),
@@ -416,6 +417,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(GetAttributeValue(transactionAttributes, "http.statusCode"), Is.EqualTo(400)),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey"), Is.EqualTo("requestParameterValue")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "userAttributeKey"), Is.EqualTo("userAttributeValue")),
+                () => Assert.That(GetAttributeValue(transactionAttributes, "lambdaAttributeKey"), Is.EqualTo("lambdaAttributeValue")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "client_cross_process_id"), Is.EqualTo("referrerProcessId")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "trip_id"), Is.EqualTo("referrerTripId")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "nr.tripId"), Is.EqualTo("referrerTripId")),
@@ -517,6 +519,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -540,7 +543,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var tripId = immutableTransaction.Guid;
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(attributes), Is.EqualTo(28)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(29)),  // Assert that only these attributes are generated
                 () => Assert.That(GetAttributeValue(transactionAttributes, "type", AttributeDestinations.TransactionEvent), Is.EqualTo("Transaction")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent), Is.EqualTo(expectedStartTime.ToUnixTimeMilliseconds())),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "name"), Is.EqualTo("WebTransaction/TransactionName")),
@@ -567,7 +570,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(GetAttributeValue(transactionAttributes, "path_hash"), Is.EqualTo("pathHash2")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "nr.pathHash"), Is.EqualTo("pathHash2")),
                 () => Assert.That(GetAttributeValue(transactionAttributes, "nr.alternatePathHashes"), Is.EqualTo("pathHash")),
-                () => Assert.That(DoAttributesContain(transactionAttributes, "host.displayName"), Is.True)
+                () => Assert.That(DoAttributesContain(transactionAttributes, "host.displayName"), Is.True),
+                () => Assert.That(GetAttributeValue(transactionAttributes, "lambdaAttributeKey"), Is.EqualTo("lambdaAttributeValue"))
             );
         }
 
@@ -616,6 +620,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -640,7 +645,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(attributes), Is.EqualTo(39)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(40)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "type", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.CustomEvent, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "name", AttributeDestinations.TransactionEvent),
@@ -675,7 +680,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => AssertAttributeShouldBeAvailableFor(attributes, "errorMessage", AttributeDestinations.TransactionEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "error.message", AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "error", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(attributes, "host.displayName", AttributeDestinations.TransactionTrace , AttributeDestinations.TransactionEvent , AttributeDestinations.ErrorTrace , AttributeDestinations.ErrorEvent)
+                () => AssertAttributeShouldBeAvailableFor(attributes, "host.displayName", AttributeDestinations.TransactionTrace , AttributeDestinations.TransactionEvent , AttributeDestinations.ErrorTrace , AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes, "lambdaAttributeKey", AttributeDestinations.TransactionEvent, AttributeDestinations.TransactionTrace)
             );
         }
 
@@ -694,6 +700,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -720,7 +727,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple
             (
-                () => Assert.That(GetCount(attributes), Is.EqualTo(32)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(33)),  // Assert that only these attributes are generated
                 () => Assert.That(transactionAttributes, Has.Member("type")),
                 () => Assert.That(transactionAttributes, Has.Member("timestamp")),
                 () => Assert.That(transactionAttributes, Has.Member("name")),
@@ -751,7 +758,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(transactionAttributes, Has.Member("nr.referringPathHash")),
                 () => Assert.That(transactionAttributes, Has.Member("referring_transaction_guid")),
                 () => Assert.That(transactionAttributes, Has.Member("nr.referringTransactionGuid")),
-                () => Assert.That(transactionAttributes, Has.Member("nr.alternatePathHashes"))
+                () => Assert.That(transactionAttributes, Has.Member("nr.alternatePathHashes")),
+                () => Assert.That(transactionAttributes, Has.Member("lambdaAttributeKey"))
             );
 
 
@@ -772,6 +780,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -800,7 +809,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(attributes), Is.EqualTo(34)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(35)),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "type", AttributeDestinations.TransactionEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent, AttributeDestinations.CustomEvent),
                 () => Assert.That(intrinsicAttributes, Has.Member("name")),
@@ -823,6 +832,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(agentAttributes, Has.Member("http.statusCode")),
                 () => Assert.That(agentAttributes, Has.Member("request.parameters.requestParameterKey")),
                 () => Assert.That(agentAttributes, Has.Member("host.displayName")),
+                () => Assert.That(agentAttributes, Has.Member("lambdaAttributeKey")),
                 () => Assert.That(intrinsicAttributes, Has.Member("client_cross_process_id")),
                 () => Assert.That(intrinsicAttributes, Has.Member("trip_id")),
                 () => Assert.That(intrinsicAttributes, Has.Member("nr.tripId")),
@@ -1392,6 +1402,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -1423,7 +1434,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.That(GetCount(builderAttributes), Is.EqualTo(11)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(builderAttributes), Is.EqualTo(12)),  // Assert that only these attributes are generated
                 () => Assert.That(txBuilderAttributes["original_url"], Is.EqualTo("originalUri")),
                 () => Assert.That(transactionAttributes["request.uri"], Is.EqualTo("uri")),
                 () => Assert.That(txBuilderAttributes["request.referer"], Is.EqualTo("referrerUri")),
@@ -1434,10 +1445,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(txBuilderAttributes["userAttributeKey"], Is.EqualTo("userAttributeValue")),
                 () => Assert.That(txBuilderAttributes["userErrorAttributeKey"], Is.EqualTo("userErrorAttributeValue")),
                 () => Assert.That(txBuilderAttributes["llm"], Is.EqualTo(true)),
-                () => Assert.That(txBuilderAttributes.Keys, Does.Contain("host.displayName"))
+                () => Assert.That(txBuilderAttributes.Keys, Does.Contain("host.displayName")),
+                () => Assert.That(txBuilderAttributes["lambdaAttributeKey"], Is.EqualTo("lambdaAttributeValue"))
             );
             NrAssert.Multiple(
-                () => Assert.That(GetCount(attributes), Is.EqualTo(11)),  // Assert that only these attributes are generated
+                () => Assert.That(GetCount(attributes), Is.EqualTo(12)),  // Assert that only these attributes are generated
                 () => Assert.That(transactionAttributes["original_url"], Is.EqualTo("originalUri")),
                 () => Assert.That(transactionAttributes["request.uri"], Is.EqualTo("uri")),
                 () => Assert.That(transactionAttributes["request.referer"], Is.EqualTo("referrerUri")),
@@ -1447,6 +1459,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.That(transactionAttributes["request.parameters.requestParameterKey"], Is.EqualTo("requestParameterValue")),
                 () => Assert.That(transactionAttributes["userAttributeKey"], Is.EqualTo("userAttributeValue")),
                 () => Assert.That(transactionAttributes["userErrorAttributeKey"], Is.EqualTo("userErrorAttributeValue")),
+                () => Assert.That(transactionAttributes["lambdaAttributeKey"], Is.EqualTo("lambdaAttributeValue")),
                 () => Assert.That(transactionAttributes["llm"], Is.EqualTo(true)),
                 () => Assert.That(transactionAttributes.Keys, Does.Contain("host.displayName"))
             );

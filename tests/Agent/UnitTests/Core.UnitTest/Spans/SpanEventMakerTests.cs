@@ -658,6 +658,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var allAttribValues = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
+            _attribDefs.GetLambdaAttribute("lambdaAttributeKey").TrySetValue(allAttribValues, "lambdaAttributeValue");
             _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
 
             // ACT

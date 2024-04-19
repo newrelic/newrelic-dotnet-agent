@@ -1357,5 +1357,23 @@ namespace NewRelic.Agent.Core.Transactions
         {
             TransactionMetadata.SetLlmTransaction(isLlmTransaction);
         }
+
+        /// <summary>
+        /// Create an Agent attribute for Lambda.
+        /// Name cannot be null, empty, or whitespace.
+        /// </summary>
+        /// <param name="name">Full name of attribute.</param>
+        /// <param name="value">Value for attribute.</param>
+        public void AddLambdaAttribute(string name, string value)
+        {
+            if(string.IsNullOrWhiteSpace(name))
+            {
+                Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
+                return;
+            }
+
+            var lambdaAttrib = _attribDefs.GetLambdaAttribute(name);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(lambdaAttrib, value);
+        }
     }
 }
