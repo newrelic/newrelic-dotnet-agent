@@ -3,6 +3,7 @@
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.S3Events;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.SNSEvents;
 using ApplicationLifecycle;
@@ -51,6 +52,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper(LambdaContextOnlyHandler);
                 case nameof(StreamParameterHandler):
                     return HandlerWrapper.GetHandlerWrapper(StreamParameterHandler);
+                case nameof(S3EventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<S3Event>(S3EventHandler, serializer);
+                case nameof(S3EventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<S3Event>(S3EventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -148,6 +153,17 @@ namespace LambdaSelfExecutingAssembly
             var input = new DefaultLambdaJsonSerializer().Deserialize<string>(requestStream);
             Console.WriteLine("Executing lambda {0} with input {1}", nameof(StreamParameterHandler), input);
             return new MemoryStream(0);
+        }
+
+        public static void S3EventHandler(S3Event _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(S3EventHandler));
+        }
+
+        public static async Task S3EventHandlerAsync(S3Event _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(S3EventHandler));
+            await Task.Delay(100);
         }
     }
 }
