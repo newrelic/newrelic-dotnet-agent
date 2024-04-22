@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -43,40 +44,56 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
             Assert.Multiple(
                 () => Assert.Equal(2, serverlessPayloads.Count),
                 () => Assert.All(serverlessPayloads, ValidateServerlessPayload),
-                () => Assert.Single(serverlessPayloads, ValidateTraceHasNoParent),
-                () => Assert.Single(serverlessPayloads, ValidateTraceHasParent)
-                );
+                () => ValidateTraceHasNoParent(serverlessPayloads[0]),
+                () => ValidateTraceHasParent(serverlessPayloads[1])
+                ); ;
         }
 
         private static void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
         {
             var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
 
-            Assert.Multiple(
-                () => Assert.Equal(ExpectedTransactionName, transactionEvent.IntrinsicAttributes["name"]),
-                () => Assert.False(string.IsNullOrWhiteSpace((string)transactionEvent.AgentAttributes["aws.lambda.arn"])),
-                () => Assert.Equal("arn:{partition}:sns:EXAMPLE1", transactionEvent.AgentAttributes["aws.lambda.eventSource.arn"]),
-                () => Assert.Equal("sns", transactionEvent.AgentAttributes["aws.lambda.eventSource.eventType"]),
-                () => Assert.False(string.IsNullOrWhiteSpace((string)transactionEvent.AgentAttributes["aws.requestId"])),
-                () => Assert.Equal((long)1, transactionEvent.AgentAttributes["aws.lambda.eventSource.length"]), // Json.NET deserializes to long by default
-                () => Assert.Equal("95df01b4-ee98-5cb9-9903-4c221d41eb5e", transactionEvent.AgentAttributes["aws.lambda.eventSource.messageId"]),
-                () => Assert.Equal("1/1/1970 12:00:00 AM", transactionEvent.AgentAttributes["aws.lambda.eventSource.timestamp"]),
-                () => Assert.Equal("arn:{partition}:sns:EXAMPLE2", transactionEvent.AgentAttributes["aws.lambda.eventSource.topicArn"]),
-                () => Assert.Equal("Notification", transactionEvent.AgentAttributes["aws.lambda.eventSource.type"])
-                );
+            var expectedAgentAttributes = new[]
+            {
+                "aws.lambda.arn",
+                "aws.requestId"
+            };
+
+            var expectedAgentAttributeValues = new Dictionary<string, object>
+            {
+                { "aws.lambda.eventSource.arn", "arn:{partition}:sns:EXAMPLE1" },
+                { "aws.lambda.eventSource.eventType", "sns" },
+                { "aws.lambda.eventSource.length", 1 },
+                { "aws.lambda.eventSource.messageId", "95df01b4-ee98-5cb9-9903-4c221d41eb5e" },
+                { "aws.lambda.eventSource.timestamp", "1/1/1970 12:00:00 AM" },
+                { "aws.lambda.eventSource.topicArn", "arn:{partition}:sns:EXAMPLE2" },
+                { "aws.lambda.eventSource.type", "Notification" }
+            };
+
+            Assert.Equal(ExpectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
+
+            Assertions.TransactionEventHasAttributes(expectedAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+            Assertions.TransactionEventHasAttributes(expectedAgentAttributeValues, TransactionEventAttributeType.Agent, transactionEvent);
         }
 
-        private static bool ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
-        {
-            return !ValidateTraceHasParent(serverlessPayload);
-        }
-
-        private static bool ValidateTraceHasParent(ServerlessPayload serverlessPayload)
+        private static void ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
         {
             var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == ExpectedTransactionName);
 
-            return entrySpan.IntrinsicAttributes.TryGetValue("traceId", out var traceId) && (string)traceId == TestTraceId
-                && entrySpan.IntrinsicAttributes.TryGetValue("parentId", out var parentId) && (string)parentId == TestParentSpanId;
+            Assertions.SpanEventDoesNotHaveAttributes(["parentId"], SpanEventAttributeType.Intrinsic, entrySpan);
+        }
+
+        private static void ValidateTraceHasParent(ServerlessPayload serverlessPayload)
+        {
+            var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == ExpectedTransactionName);
+
+            var expectedAttributeValues = new Dictionary<string, object>
+            {
+                { "traceId", TestTraceId },
+                { "parentId", TestParentSpanId }
+            };
+
+            Assertions.SpanEventHasAttributes(expectedAttributeValues, SpanEventAttributeType.Intrinsic, entrySpan);
         }
     }
 
