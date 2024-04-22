@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
                 () => Assert.All(serverlessPayloads, ValidateServerlessPayload),
                 () => Assert.Single(serverlessPayloads, ValidateTraceHasNoParent),
                 () => Assert.Single(serverlessPayloads, ValidateTraceHasParent)
-                ); ;
+                );
         }
 
         private static void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
@@ -58,8 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
                 () => Assert.Equal("arn:{partition}:sns:EXAMPLE1", transactionEvent.AgentAttributes["aws.lambda.eventSource.arn"]),
                 () => Assert.Equal("sns", transactionEvent.AgentAttributes["aws.lambda.eventSource.eventType"]),
                 () => Assert.False(string.IsNullOrWhiteSpace((string)transactionEvent.AgentAttributes["aws.requestId"])),
-                // TODO: This attribute should be an integer and not a string
-                () => Assert.Equal("1", transactionEvent.AgentAttributes["aws.lambda.eventSource.length"]),
+                () => Assert.Equal((long)1, transactionEvent.AgentAttributes["aws.lambda.eventSource.length"]), // Json.NET deserializes to long by default
                 () => Assert.Equal("95df01b4-ee98-5cb9-9903-4c221d41eb5e", transactionEvent.AgentAttributes["aws.lambda.eventSource.messageId"]),
                 () => Assert.Equal("1/1/1970 12:00:00 AM", transactionEvent.AgentAttributes["aws.lambda.eventSource.timestamp"]),
                 () => Assert.Equal("arn:{partition}:sns:EXAMPLE2", transactionEvent.AgentAttributes["aws.lambda.eventSource.topicArn"]),

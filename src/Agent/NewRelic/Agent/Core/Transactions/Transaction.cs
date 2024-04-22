@@ -1364,7 +1364,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// </summary>
         /// <param name="name">Full name of attribute.</param>
         /// <param name="value">Value for attribute.</param>
-        public void AddLambdaAttribute(string name, string value)
+        public void AddLambdaAttribute(string name, object value)
         {
             if(string.IsNullOrWhiteSpace(name))
             {

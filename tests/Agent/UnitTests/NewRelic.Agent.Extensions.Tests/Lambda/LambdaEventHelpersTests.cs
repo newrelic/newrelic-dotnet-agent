@@ -16,16 +16,16 @@ public class LambdaEventHelpersTests
 {
     private IAgent _agent;
     private ITransaction _transaction;
-    private Dictionary<string, string> _attributes;
+    private Dictionary<string, object> _attributes;
 
     [SetUp]
     public void SetUp()
     {
-        _attributes = new Dictionary<string, string>();
+        _attributes = new Dictionary<string, object>();
         _agent = Mock.Create<IAgent>();
         _transaction = Mock.Create<ITransaction>();
-        Mock.Arrange(() => _transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<string>()))
-            .DoInstead((string key, string value) => _attributes.Add(key, value));
+        Mock.Arrange(() => _transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<object>()))
+            .DoInstead((string key, object value) => _attributes.Add(key, value));
         
     }
 
@@ -306,7 +306,7 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testRegion"));
         });
     }
@@ -335,7 +335,7 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testDeliveryStreamArn"));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testRegion"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
         });
     }
 
@@ -378,7 +378,7 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testAwsRegion"));
             Assert.That(_attributes["aws.lambda.eventSource.eventName"], Is.EqualTo("testEventName"));
             Assert.That(_attributes["aws.lambda.eventSource.eventTime"], Is.EqualTo(eventTime.ToString()));
@@ -386,7 +386,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.bucketName"], Is.EqualTo("testName"));
             Assert.That(_attributes["aws.lambda.eventSource.objectKey"], Is.EqualTo("testKey"));
             Assert.That(_attributes["aws.lambda.eventSource.objectSequencer"], Is.EqualTo("testSequencer"));
-            Assert.That(_attributes["aws.lambda.eventSource.objectSize"], Is.EqualTo("123"));
+            Assert.That(_attributes["aws.lambda.eventSource.objectSize"], Is.EqualTo(123));
         });
     }
 
@@ -423,7 +423,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.date"], Is.EqualTo("testDate"));
             Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
             Assert.That(_attributes["aws.lambda.eventSource.returnPath"], Is.EqualTo("testReturnPath"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
         });
     }
 
@@ -462,7 +462,7 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSubscriptionArn"));
             Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
             Assert.That(_attributes["aws.lambda.eventSource.timestamp"], Is.EqualTo(testTimestamp.ToString()));
             Assert.That(_attributes["aws.lambda.eventSource.topicArn"], Is.EqualTo("testTopicArn"));
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
@@ -495,7 +495,7 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
         });
@@ -523,7 +523,7 @@ public class LambdaEventHelpersTests
         Assert.Multiple(() =>
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo("1"));
+            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
         });
