@@ -7,7 +7,7 @@ namespace NewRelic.Agent.Extensions.Lambda;
 
 public static class LambdaAttributeExtensions
 {
-    public static void AddEventSourceAttribute(this ITransaction transaction, string suffix, string value)
+    public static void AddEventSourceAttribute(this ITransaction transaction, string suffix, object value)
     {
         // This is faster than string interpolation
         transaction.AddLambdaAttribute("aws.lambda.eventSource." + suffix, value);

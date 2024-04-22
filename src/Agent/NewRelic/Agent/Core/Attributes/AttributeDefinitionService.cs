@@ -126,7 +126,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<object, object> GetCustomAttributeForSpan(string name);
         AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name);
 
-        AttributeDefinition<string, string> GetLambdaAttribute(string name);
+        AttributeDefinition<object, object> GetLambdaAttribute(string name);
 
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
@@ -178,7 +178,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _customEventCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
-        private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
@@ -239,17 +239,17 @@ namespace NewRelic.Agent.Core.Attributes
                 .Build(_attribFilter);
         }
 
-        private AttributeDefinition<string, string> CreateLambdaAttribute(string attribName)
+        private AttributeDefinition<object, object> CreateLambdaAttribute(string attribName)
         {
             return AttributeDefinitionBuilder
-                .CreateString(attribName, AttributeClassification.AgentAttributes)
+                .Create<object, object>(attribName, AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter);
         }
 
-        public AttributeDefinition<string, string> GetLambdaAttribute(string name)
+        public AttributeDefinition<object, object> GetLambdaAttribute(string name)
         {
             return _lambdaAttributes.GetOrAdd(name, CreateLambdaAttribute);
         }

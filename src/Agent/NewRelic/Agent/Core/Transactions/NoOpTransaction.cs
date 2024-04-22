@@ -318,7 +318,7 @@ namespace NewRelic.Agent.Core.Transactions
             return;
         }
 
-        public void AddLambdaAttribute(string name, string value)
+        public void AddLambdaAttribute(string name, object value)
         {
             return;
         }

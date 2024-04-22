@@ -56,7 +56,7 @@ public static class LambdaEventHelpers
                     dynamic kinesisStreamingEvent = inputObject; //Amazon.Lambda.KinesisEvents.KinesisEvent
 
                     transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
-                    transaction.AddEventSourceAttribute("length", (string)kinesisStreamingEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)kinesisStreamingEvent.Records.Count);
                     transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
                     break;
 
@@ -64,7 +64,7 @@ public static class LambdaEventHelpers
                     dynamic kinesisFirehoseEvent = inputObject; //Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
 
                     transaction.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
-                    transaction.AddEventSourceAttribute("length", (string)kinesisFirehoseEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)kinesisFirehoseEvent.Records.Count);
                     transaction.AddEventSourceAttribute("region", (string)kinesisFirehoseEvent.Region);
                     break;
 
@@ -72,7 +72,7 @@ public static class LambdaEventHelpers
                     dynamic s3Event = inputObject; //Amazon.Lambda.S3Events.S3Event
 
                     transaction.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
-                    transaction.AddEventSourceAttribute("length", (string)s3Event.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)s3Event.Records.Count);
                     transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
                     transaction.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
                     transaction.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
@@ -80,14 +80,14 @@ public static class LambdaEventHelpers
                     transaction.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
                     transaction.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
                     transaction.AddEventSourceAttribute("objectSequencer", (string)s3Event.Records[0].S3.Object.Sequencer);
-                    transaction.AddEventSourceAttribute("objectSize", (string)s3Event.Records[0].S3.Object.Size.ToString());
+                    transaction.AddEventSourceAttribute("objectSize", (long)s3Event.Records[0].S3.Object.Size);
                     break;
 
                 case AwsLambdaEventType.SimpleEmailEvent:
                     dynamic sesEvent = inputObject; //Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
 
                     // arn is not available
-                    transaction.AddEventSourceAttribute("length", (string)sesEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)sesEvent.Records.Count);
                     transaction.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);
                     transaction.AddEventSourceAttribute("messageId", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.MessageId);
                     transaction.AddEventSourceAttribute("returnPath", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.ReturnPath);
@@ -97,7 +97,7 @@ public static class LambdaEventHelpers
                     dynamic snsEvent = inputObject; //Amazon.Lambda.SNSEvents.SNSEvent
 
                     transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
-                    transaction.AddEventSourceAttribute("length", (string)snsEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)snsEvent.Records.Count);
                     transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
                     transaction.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
                     transaction.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
@@ -110,7 +110,7 @@ public static class LambdaEventHelpers
                     dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
 
                     transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
-                    transaction.AddEventSourceAttribute("length", (string)sqsEvent.Records.Count.ToString());
+                    transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
 
                     TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
                     break;
