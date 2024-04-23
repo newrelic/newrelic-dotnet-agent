@@ -27,7 +27,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log = new SerilogLoggingAdapter();
                     break;
                 case "SERILOGWEB": // .NET 7.0+ ONLY
-#if NET7_0_OR_GREATER    
+#if NET8_0_OR_GREATER    
                     _log = new SerilogLoggingWebAdapter(loggingPort);
 #endif
                     break;
@@ -55,7 +55,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 #endif
                     break;
                 case "NLOGEL":
-#if NET7_0_OR_GREATER || NET481_OR_GREATER
+#if NET8_0_OR_GREATER || NET481_OR_GREATER
                     _log = new NLogExtensionsLoggingAdapter();
 #endif
                     break;

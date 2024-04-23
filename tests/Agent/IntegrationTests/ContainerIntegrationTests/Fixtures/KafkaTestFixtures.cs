@@ -45,12 +45,12 @@ public class KafkaDotNet6TestFixture : KafkaTestFixtureBase
     public KafkaDotNet6TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class KafkaDotNet7TestFixture : KafkaTestFixtureBase
+public class KafkaDotNet8TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "bullseye-slim";
-    private const string DotnetVersion = "7.0";
+    private const string DotnetVersion = "8.0";
 
-    public KafkaDotNet7TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

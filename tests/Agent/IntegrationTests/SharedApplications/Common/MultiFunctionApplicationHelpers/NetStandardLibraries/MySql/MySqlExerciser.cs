@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NET7_0 // there is no .NET 7 test for MySql
+#if !NET8_0 // there is no .NET 7 test for MySql
 
 using System.Collections.Generic;
 using System.Linq;

@@ -1,8 +1,8 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NET7_0_OR_GREATER || NET481_OR_GREATER
+#if NET8_0_OR_GREATER || NET481_OR_GREATER
 
 using System;
 using System.Collections.Generic;

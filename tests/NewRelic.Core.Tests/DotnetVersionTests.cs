@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NUnit.Framework;
@@ -13,7 +13,8 @@ namespace NewRelic.Core.Tests
         [TestCase(DotnetCoreVersion.netcoreapp31, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net5, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net6, ExpectedResult = false)]
-        [TestCase(DotnetCoreVersion.net7, ExpectedResult = false)]
+        [TestCase(DotnetCoreVersion.net7, ExpectedResult = true)]
+        [TestCase(DotnetCoreVersion.net8, ExpectedResult = false)]
         [TestCase(DotnetCoreVersion.Other, ExpectedResult = false)]
         public bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
         {
