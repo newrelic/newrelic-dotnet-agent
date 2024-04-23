@@ -136,8 +136,8 @@ jobs:
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
-          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
+          RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net8.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net8.0/config.yml
           AGENT_VERSION: ${{ inputs.agent_version }}
 
   validate-nuget-packages:
