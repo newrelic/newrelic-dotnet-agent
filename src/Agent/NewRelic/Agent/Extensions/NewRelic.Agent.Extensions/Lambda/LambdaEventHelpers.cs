@@ -130,8 +130,11 @@ public static class LambdaEventHelpers
     }
 
     private const string NEWRELIC_TRACE_HEADER = "newrelic";
+    private const string W3C_TRACEPARENT_HEADER = "traceparent";
+    private const string W3C_TRACESTATE_HEADER = "tracestate";
+    private static readonly List<string> TracingKeys = new List<string> { NEWRELIC_TRACE_HEADER, W3C_TRACEPARENT_HEADER, W3C_TRACESTATE_HEADER };
+    private const string SQS_MSG_ATTR_VALUE_PREFIX = @"Value"":""";
 
-    // TODO: Also handle W3C trace context headers
     private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
@@ -139,18 +142,27 @@ public static class LambdaEventHelpers
         IDictionary<string, string> sqsHeaders = new Dictionary<string, string>();
 
         var record = sqsEvent.Records[0];
-        if (record.MessageAttributes != null && record.MessageAttributes.ContainsKey(NEWRELIC_TRACE_HEADER))
+        if (record.MessageAttributes != null)
         {
-            sqsHeaders.Add(NEWRELIC_TRACE_HEADER, record.MessageAttributes[NEWRELIC_TRACE_HEADER].StringValue);
+            foreach (var tracingKey in TracingKeys)
+            {
+                if (record.MessageAttributes.ContainsKey(tracingKey))
+                {
+                    sqsHeaders.Add(tracingKey, record.MessageAttributes[tracingKey].StringValue);
+                }
+            }
         }
         else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
             // This is an SNS subscription with attributes
-            var newrelicIndex = record.Body.IndexOf("newrelic", StringComparison.InvariantCultureIgnoreCase) + 9;
-            var startIndex = record.Body.IndexOf("Value\":\"", newrelicIndex, StringComparison.InvariantCultureIgnoreCase) + 8;
-            var endIndex = record.Body.IndexOf('"', startIndex);
-            var payload = record.Body.Substring(startIndex, endIndex - startIndex);
-            sqsHeaders.Add(NEWRELIC_TRACE_HEADER, (string)payload);
+            foreach (var tracingKey in TracingKeys)
+            {
+                var headerValue = TryParseAttributeFromSqsMessageBody(record.Body, tracingKey);
+                if (headerValue != null)
+                {
+                    sqsHeaders.Add(tracingKey, headerValue);
+                }
+            }
         }
         transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
@@ -226,6 +238,20 @@ public static class LambdaEventHelpers
         }
 
         return headerValues;
+    }
+
+    private static string TryParseAttributeFromSqsMessageBody(string body, string key)
+    {
+        if (!body.Contains(key))
+        {
+            return null;
+        }
+        var newrelicIndex = body.IndexOf(key, StringComparison.InvariantCultureIgnoreCase) + key.Length;
+        var startIndex = body.IndexOf(SQS_MSG_ATTR_VALUE_PREFIX, newrelicIndex, StringComparison.InvariantCultureIgnoreCase) + SQS_MSG_ATTR_VALUE_PREFIX.Length;
+        var endIndex = body.IndexOf('"', startIndex);
+        var payload = body.Substring(startIndex, endIndex - startIndex);
+
+        return payload;
     }
 
 }
