@@ -62,14 +62,14 @@ jobs:
 
       - name: Build Release Notes
         run: |
-          dotnet build --configuration Release "$BUILD_PATH"
-          notes_file=$("$RUN_PATH/ReleaseNotesBuilder" -p "$RUN_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH")
+          dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
+          notes_file=$("$PUBLISH_PATH/ReleaseNotesBuilder" -p "$PUBLISH_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH")
           echo "$notes_file"
           echo "notes_file=$notes_file" >> $GITHUB_ENV
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
-          RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net8.0/
+          PUBLISH_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/publish
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
           CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
