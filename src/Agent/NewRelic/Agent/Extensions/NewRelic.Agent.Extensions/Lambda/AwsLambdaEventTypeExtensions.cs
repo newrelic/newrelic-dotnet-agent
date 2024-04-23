@@ -18,7 +18,8 @@ public static class AwsLambdaEventTypeExtensions
             "Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent" => AwsLambdaEventType.KinesisFirehoseEvent,
             "Amazon.Lambda.SNSEvents.SNSEvent" => AwsLambdaEventType.SNSEvent,
             "Amazon.Lambda.S3Events.S3Event" => AwsLambdaEventType.S3Event,
-            "Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent" => AwsLambdaEventType.SimpleEmailEvent,
+            // SimpleEmailEvents are a generic type in newer library versions
+            string typeName when typeName.StartsWith("Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent") => AwsLambdaEventType.SimpleEmailEvent,
             "Amazon.Lambda.SQSEvents.SQSEvent" => AwsLambdaEventType.SQSEvent,
             _ => AwsLambdaEventType.Unknown
         };

@@ -11,6 +11,7 @@
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.10.0" />
     <PackageReference Include="Amazon.Lambda.S3Events" Version="3.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.1" />
+    <PackageReference Include="Amazon.Lambda.SimpleEmailEvents" Version="3.1.0" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.1.0" />
   </ItemGroup>
 
