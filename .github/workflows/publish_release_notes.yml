@@ -69,7 +69,7 @@ jobs:
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
-          RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net7.0/
+          RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net8.0/
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
           CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
