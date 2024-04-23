@@ -46,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
                 () => Assert.All(serverlessPayloads, ValidateServerlessPayload),
                 () => ValidateTraceHasNoParent(serverlessPayloads[0]),
                 () => ValidateTraceHasParent(serverlessPayloads[1])
-                ); ;
+                );
         }
 
         private static void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
