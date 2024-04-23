@@ -73,8 +73,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     if (messageAsObject is MessageMetadata messageMetaData)
                     {
                         headersSize = GetHeadersSize(messageMetaData.Headers);
-
-                        transaction.InsertDistributedTraceHeaders(messageMetaData.Headers, DistributedTraceHeadersSetter);
+                        transaction.InsertDistributedTraceHeaders(messageMetaData, DistributedTraceHeadersSetter);
                     }
 
                     ReportSizeMetrics(agent, transaction, topic, headersSize, messageAsObject);
@@ -134,10 +133,14 @@ namespace NewRelic.Providers.Wrapper.Kafka
         private static Func<object, object> GetValueAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Value");
 
-        private static void DistributedTraceHeadersSetter(Headers carrier, string key, string value)
+        private static void DistributedTraceHeadersSetter(MessageMetadata carrier, string key, string value)
         {
-            carrier ??= new Headers();
-            carrier.Add(key, Encoding.ASCII.GetBytes(value));
+            carrier.Headers ??= new Headers();
+            if (!string.IsNullOrEmpty(key))
+            {
+                carrier.Headers.Remove(key);
+                carrier.Headers.Add(key, Encoding.ASCII.GetBytes(value));
+            }
         }
 
         private static long TryGetSize(object obj)
