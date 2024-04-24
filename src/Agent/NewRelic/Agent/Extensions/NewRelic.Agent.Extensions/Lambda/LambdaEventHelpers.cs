@@ -71,6 +71,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.S3Event:
                     dynamic s3Event = inputObject; //Amazon.Lambda.S3Events.S3Event
 
+                    if (s3Event.Records == null || s3Event.Records.Count == 0)
+                    {
+                        break;
+                    }
+
                     transaction.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
                     transaction.AddEventSourceAttribute("length", (int)s3Event.Records.Count);
                     transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);

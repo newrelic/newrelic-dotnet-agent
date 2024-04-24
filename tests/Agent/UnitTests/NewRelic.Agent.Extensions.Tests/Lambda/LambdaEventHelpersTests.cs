@@ -411,6 +411,66 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [Test]
+    public void AddEventTypeAttributes_S3Event_HandlesNullRecords()
+    {
+        // Arrange
+        var eventTime = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.S3Event;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventTime"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.xAmzId2"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.bucketName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectKey"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSequencer"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSize"), Is.False);
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_S3Event_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventTime = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.S3Event;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventTime"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.xAmzId2"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.bucketName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectKey"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSequencer"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSize"), Is.False);
+        });
+    }
+
     // SimpleEmailEvent
     [Test]
     public void AddEventTypeAttributes_SimpleEmailEvent_AddsCorrectAttributes()
