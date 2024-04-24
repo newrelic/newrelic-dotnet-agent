@@ -1,5 +1,3 @@
-version: "3"
-
 # The following must be set either in environment variables or via a .env file in the same folder as this file:
 #
 # AGENT_PATH      host path to the Agent linux home folder - will map to /usr/local/newrelic-dotnet-agent in the container

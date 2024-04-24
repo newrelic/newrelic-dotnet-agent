@@ -27,12 +27,12 @@ RUN dotnet restore "KafkaTestApp/KafkaTestApp.csproj" -p:TargetFramework=net${AP
 
 COPY . .
 WORKDIR "/src/KafkaTestApp"
-RUN dotnet build "KafkaTestApp.csproj" -c Release -o /app/build --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet build "KafkaTestApp.csproj" -c Release -o /app/build --self-contained --os linux --framework net${APP_DOTNET_VERSION}
 
 
 FROM build AS publish
 ARG APP_DOTNET_VERSION
-RUN dotnet publish "KafkaTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet publish "KafkaTestApp.csproj" -c Release -o /app/publish --self-contained --os linux --framework net${APP_DOTNET_VERSION}
 
 
 FROM base AS final
