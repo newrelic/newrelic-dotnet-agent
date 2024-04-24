@@ -91,7 +91,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("parentId")),
             () => Assert.NotNull(consumeTxnSpan),
             () => Assert.True(consumeTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeTxnSpan.UserAttributes["kafka.consume.byteCount"], 20, 30), // usually is 24 - 26
+            () => Assert.InRange((long)consumeTxnSpan.UserAttributes["kafka.consume.byteCount"], 460, 470), // includes headers
             () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.False(consumeTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );
