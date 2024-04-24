@@ -55,6 +55,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.KinesisStreamingEvent:
                     dynamic kinesisStreamingEvent = inputObject; //Amazon.Lambda.KinesisEvents.KinesisEvent
 
+                    if (kinesisStreamingEvent.Records == null || kinesisStreamingEvent.Records.Count == 0)
+                    {
+                        break;
+                    }
+
                     transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
                     transaction.AddEventSourceAttribute("length", (int)kinesisStreamingEvent.Records.Count);
                     transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
@@ -62,6 +67,11 @@ public static class LambdaEventHelpers
 
                 case AwsLambdaEventType.KinesisFirehoseEvent:
                     dynamic kinesisFirehoseEvent = inputObject; //Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
+
+                    if (kinesisFirehoseEvent.Records == null)
+                    {
+                        break;
+                    }
 
                     transaction.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
                     transaction.AddEventSourceAttribute("length", (int)kinesisFirehoseEvent.Records.Count);
