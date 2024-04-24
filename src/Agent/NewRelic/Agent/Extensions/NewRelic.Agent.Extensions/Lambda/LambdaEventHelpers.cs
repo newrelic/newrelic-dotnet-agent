@@ -96,6 +96,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.SNSEvent:
                     dynamic snsEvent = inputObject; //Amazon.Lambda.SNSEvents.SNSEvent
 
+                    if (snsEvent.Records == null || snsEvent.Records.Count == 0)
+                    {
+                        break;
+                    }
+
                     transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
                     transaction.AddEventSourceAttribute("length", (int)snsEvent.Records.Count);
                     transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);

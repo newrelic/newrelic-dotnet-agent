@@ -489,6 +489,62 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [Test]
+    public void AddEventTypeAttributes_SNSEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var testTimestamp = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.SNSEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.timestamp"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.topicArn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.type"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other), Occurs.Never());
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SNSEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var testTimestamp = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.SNSEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.timestamp"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.topicArn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.type"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other), Occurs.Never());
+        });
+    }
+
     // SQSEvent
     [TestCase(TracingTestCase.Newrelic)]
     [TestCase(TracingTestCase.W3C)]
