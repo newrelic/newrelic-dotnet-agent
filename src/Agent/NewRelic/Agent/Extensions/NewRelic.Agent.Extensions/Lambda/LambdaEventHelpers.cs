@@ -86,6 +86,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.SimpleEmailEvent:
                     dynamic sesEvent = inputObject; //Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
 
+                    if (sesEvent.Records == null || sesEvent.Records.Count == 0)
+                    {
+                        break;
+                    }
+
                     // arn is not available
                     transaction.AddEventSourceAttribute("length", (int)sesEvent.Records.Count);
                     transaction.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);

@@ -448,6 +448,52 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [Test]
+    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SimpleEmailEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.date"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.returnPath"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SimpleEmailEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.date"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.returnPath"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+        });
+    }
+
     // SNSEvent
     [Test]
     public void AddEventTypeAttributes_SNSEvent_AddsCorrectAttributes()
