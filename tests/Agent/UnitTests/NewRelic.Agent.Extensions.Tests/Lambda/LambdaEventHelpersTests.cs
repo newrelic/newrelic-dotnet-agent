@@ -8,6 +8,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System;
+using NewRelic.Mock.Amazon.Lambda.SQSEvents;
 
 namespace Agent.Extensions.Tests.Lambda;
 
@@ -17,6 +18,16 @@ public class LambdaEventHelpersTests
     private IAgent _agent;
     private ITransaction _transaction;
     private Dictionary<string, object> _attributes;
+    private IDictionary<string, string> _parsedHeaders;
+
+    private const string NewRelicDistributedTraceKey = "newrelic";
+    private const string NewRelicDistributedTracePayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiYWNjb3VudElkIiwiYXAiOiJhcHBJZCIsInRyIjoiMGFmNzY1MTkxNmNkNDNkZDg0NDhlYjIxMWM4MDMxOWMiLCJwciI6MC42NSwic2EiOnRydWUsInRpIjoxNzEzOTc3NjM3MDcxLCJ0ayI6IjMzIiwidHgiOiJ0cmFuc2FjdGlvbklkIiwiaWQiOiI1NTY5MDY1YTViMTMxM2JkIn19";
+    private const string NewRelicDistributedTracePayload2 = "eyAidiI6WzIsNV0sImQiOnsidHkiOiJIVFRQIiwiYWMiOiJhY2NvdW50SWQiLCJhcCI6ImFwcElkIiwidHIiOiJ0cmFjZUlkIiwicHIiOjAuNjUsInNhIjp0cnVlLCJ0aSI6MCwidGsiOiJ0cnVzdEtleSIsInR4IjoidHJhbnNhY3Rpb25JZCIsImlkIjoiZ3VpZCJ9fQ==";
+
+    private const string W3CTraceParentKey = "traceparent";
+    private const string W3CTraceStateKey = "tracestate";
+    private const string W3CTraceParentPayload = "00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01";
+    private const string W3CTraceStatePayload = "33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035";
 
     [SetUp]
     public void SetUp()
@@ -26,7 +37,9 @@ public class LambdaEventHelpersTests
         _transaction = Mock.Create<ITransaction>();
         Mock.Arrange(() => _transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<object>()))
             .DoInstead((string key, object value) => _attributes.Add(key, value));
-        
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue))
+            .DoInstead((IDictionary<string, string> headers, Func<IDictionary<string, string>, string, IEnumerable<string>> getter, TransportType transportType) => { _parsedHeaders = headers; });
+
     }
 
     // APIGatewayProxyRequest
@@ -49,7 +62,7 @@ public class LambdaEventHelpersTests
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
-                { "newrelic", new [] { "testDistributedTraceHeader1", "testDistributedTraceHeader2"} }
+                { NewRelicDistributedTraceKey, new [] { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2} }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -60,12 +73,15 @@ public class LambdaEventHelpersTests
             }
         };
 
+        IDictionary<string, IList<string>> _multiValueHeaders = new Dictionary<string, IList<string>>();
+
         // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP))
+            .DoInstead((IDictionary<string, IList<string>> headers, Func<IDictionary<string, IList<string>>, string, IEnumerable<string>> getter, TransportType transportType) => { _multiValueHeaders = headers; });
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
@@ -85,6 +101,8 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
+
+            Assert.That(_multiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
         });
     }
     [Test]
@@ -106,7 +124,7 @@ public class LambdaEventHelpersTests
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
-                { "newrelic", "testDistributedTraceHeader" }
+                { NewRelicDistributedTraceKey, NewRelicDistributedTracePayload }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -122,7 +140,6 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
 
 
         // Act
@@ -167,7 +184,7 @@ public class LambdaEventHelpersTests
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
-                { "newrelic", "testDistributedTraceHeader" }
+                { NewRelicDistributedTraceKey, NewRelicDistributedTracePayload }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -183,7 +200,6 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -219,7 +235,7 @@ public class LambdaEventHelpersTests
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
-                { "newrelic", new [] { "testDistributedTraceHeader1", "testDistributedTraceHeader2"} }
+                { NewRelicDistributedTraceKey, new [] { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2} }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -230,12 +246,15 @@ public class LambdaEventHelpersTests
             }
         };
 
+        IDictionary<string, IList<string>> _multiValueHeaders = new Dictionary<string, IList<string>>();
+
         // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP)).DoNothing();
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP))
+                        .DoInstead((IDictionary<string, IList<string>> headers, Func<IDictionary<string, IList<string>>, string, IEnumerable<string>> getter, TransportType transportType) => { _multiValueHeaders = headers; });
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -251,6 +270,8 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
+
+            Assert.That(_multiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
         });
     }
 
@@ -445,14 +466,11 @@ public class LambdaEventHelpersTests
                         TopicArn = "testTopicArn",
                         Timestamp = testTimestamp,
                         Type = "testType",
-                        MessageAttributes = new () { {"newrelic", new  () { Value = "testDistributedTraceHeader"} } }
+                        MessageAttributes = new () { {NewRelicDistributedTraceKey, new  () { Value = NewRelicDistributedTracePayload} } }
                     }
                 }
             ]
         };
-
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other)).DoNothing();
-
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -472,21 +490,22 @@ public class LambdaEventHelpersTests
     }
 
     // SQSEvent
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromMessageAttributes()
+    [TestCase(TracingTestCase.Newrelic)]
+    [TestCase(TracingTestCase.W3C)]
+    [TestCase(TracingTestCase.Both)]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromMessageAttributes(TracingTestCase testCase)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var inputObject = new SQSEvent
         {
             Records = [
-                new() {
+                new()
+                {
                     EventSourceArn = "testEventSourceArn",
-                    MessageAttributes = new () { {"newrelic", new () { StringValue = "testDistributedTraceHeader"} } }
+                    MessageAttributes = GenerateSQSMessageAttributes(testCase)
                 }]
         };
-
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -498,23 +517,35 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
+            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            }
+            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
+            }
         });
     }
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromBody()
+
+    [TestCase(TracingTestCase.Newrelic)]
+    [TestCase(TracingTestCase.W3C)]
+    [TestCase(TracingTestCase.Both)]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromBody(TracingTestCase testCase)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var messageAttributes = GenerateSQSMessageBodyAttributes(testCase);
+        var inputObject = new SQSEvent
         {
             Records = [
-                new() {
+                new()
+                {
                     EventSourceArn = "testEventSourceArn",
-                    Body = "\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish newrelic \"Value\":\"testDistributedTraceHeader\""
+                    Body = $"\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish {messageAttributes}"
                 }]
         };
-
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue)).DoNothing();
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -526,6 +557,103 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
+            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            }
+            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
+            }
         });
     }
+
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SQSEvent;
+        var inputObject = new SQSEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SQSEvent;
+        var inputObject = new SQSEvent
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
+        });
+    }
+
+
+    private Dictionary<string, SQSEvent.MessageAttribute> GenerateSQSMessageAttributes(TracingTestCase testCase)
+    {
+        var attributes = new Dictionary<string, SQSEvent.MessageAttribute>();
+
+        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+        {
+            attributes.Add(NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload });
+        }
+        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+        {
+            attributes.Add(W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload });
+            attributes.Add(W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload });
+        }
+
+        return attributes;
+    }
+
+    private string GenerateSQSMessageBodyAttributes(TracingTestCase testCase)
+    {
+        var attributes = string.Empty;
+
+        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+        {
+            attributes += $"{NewRelicDistributedTraceKey} \"Value\":\"{NewRelicDistributedTracePayload}\" ";
+        }
+
+        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+        {
+            attributes += $"{W3CTraceParentKey} \"Value\":\"{W3CTraceParentPayload}\" {W3CTraceStateKey} \"Value\":\"{W3CTraceStatePayload}\" ";
+        }
+
+        return attributes;
+    }
+}
+
+public enum TracingTestCase
+{
+    Newrelic,
+    W3C,
+    Both
 }
