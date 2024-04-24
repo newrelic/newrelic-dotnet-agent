@@ -109,6 +109,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.SQSEvent:
                     dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
 
+                    if (sqsEvent.Records == null || sqsEvent.Records.Count == 0)
+                    {
+                        break;
+                    }
+
                     transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
                     transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
 

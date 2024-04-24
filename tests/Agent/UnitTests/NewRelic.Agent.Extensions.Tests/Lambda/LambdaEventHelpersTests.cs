@@ -497,7 +497,7 @@ public class LambdaEventHelpersTests
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var inputObject = new SQSEvent
         {
             Records = [
                 new()
@@ -537,7 +537,7 @@ public class LambdaEventHelpersTests
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
         var messageAttributes = GenerateSQSMessageBodyAttributes(testCase);
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var inputObject = new SQSEvent
         {
             Records = [
                 new()
@@ -568,6 +568,53 @@ public class LambdaEventHelpersTests
             }
         });
     }
+
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SQSEvent;
+        var inputObject = new SQSEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SQSEvent;
+        var inputObject = new SQSEvent
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
+        });
+    }
+
 
     private Dictionary<string, SQSEvent.MessageAttribute> GenerateSQSMessageAttributes(TracingTestCase testCase)
     {
