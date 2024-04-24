@@ -8,6 +8,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System;
+using NewRelic.Mock.Amazon.Lambda.SQSEvents;
 
 namespace Agent.Extensions.Tests.Lambda;
 
@@ -20,13 +21,13 @@ public class LambdaEventHelpersTests
     private IDictionary<string, string> _parsedHeaders;
 
     private const string NewRelicDistributedTraceKey = "newrelic";
-    private const string NewRelicDistributedTracePayload = "testDistributedTracePayload";
-    private const string NewRelicDistributedTracePayload2 = "testDistributedTracePayload2";
+    private const string NewRelicDistributedTracePayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiYWNjb3VudElkIiwiYXAiOiJhcHBJZCIsInRyIjoiMGFmNzY1MTkxNmNkNDNkZDg0NDhlYjIxMWM4MDMxOWMiLCJwciI6MC42NSwic2EiOnRydWUsInRpIjoxNzEzOTc3NjM3MDcxLCJ0ayI6IjMzIiwidHgiOiJ0cmFuc2FjdGlvbklkIiwiaWQiOiI1NTY5MDY1YTViMTMxM2JkIn19";
+    private const string NewRelicDistributedTracePayload2 = "eyAidiI6WzIsNV0sImQiOnsidHkiOiJIVFRQIiwiYWMiOiJhY2NvdW50SWQiLCJhcCI6ImFwcElkIiwidHIiOiJ0cmFjZUlkIiwicHIiOjAuNjUsInNhIjp0cnVlLCJ0aSI6MCwidGsiOiJ0cnVzdEtleSIsInR4IjoidHJhbnNhY3Rpb25JZCIsImlkIjoiZ3VpZCJ9fQ==";
 
     private const string W3CTraceParentKey = "traceparent";
     private const string W3CTraceStateKey = "tracestate";
-    private const string W3CTraceParentPayload = "testTraceParentPayload";
-    private const string W3CTraceStatePayload = "testTraceStatePayload";
+    private const string W3CTraceParentPayload = "00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01";
+    private const string W3CTraceStatePayload = "33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035";
 
     [SetUp]
     public void SetUp()
@@ -489,8 +490,10 @@ public class LambdaEventHelpersTests
     }
 
     // SQSEvent
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromMessageAttributes()
+    [TestCase(TracingTestCase.Newrelic)]
+    [TestCase(TracingTestCase.W3C)]
+    [TestCase(TracingTestCase.Both)]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromMessageAttributes(TracingTestCase testCase)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
@@ -500,7 +503,7 @@ public class LambdaEventHelpersTests
                 new()
                 {
                     EventSourceArn = "testEventSourceArn",
-                    MessageAttributes = new() { { NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload } } }
+                    MessageAttributes = GenerateSQSMessageAttributes(testCase)
                 }]
         };
 
@@ -514,23 +517,33 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            }
+            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
+            }
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_W3CHeaders_FromMessageAttributes()
+    [TestCase(TracingTestCase.Newrelic)]
+    [TestCase(TracingTestCase.W3C)]
+    [TestCase(TracingTestCase.Both)]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromBody(TracingTestCase testCase)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
+        var messageAttributes = GenerateSQSMessageBodyAttributes(testCase);
         var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
         {
             Records = [
                 new()
                 {
                     EventSourceArn = "testEventSourceArn",
-                    MessageAttributes = new() { { W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload } },
-                                                { W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload } }}
+                    Body = $"\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish {messageAttributes}"
                 }]
         };
 
@@ -544,67 +557,56 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
-            Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
+            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            }
+            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
+            {
+                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
+            }
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_DTHeaders_FromBody()
+    private Dictionary<string, SQSEvent.MessageAttribute> GenerateSQSMessageAttributes(TracingTestCase testCase)
     {
-        // Arrange
-        var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var attributes = new Dictionary<string, SQSEvent.MessageAttribute>();
+
+        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
         {
-            Records = [
-                new()
-                {
-                    EventSourceArn = "testEventSourceArn",
-                    Body = $"\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish {NewRelicDistributedTraceKey} \"Value\":\"{NewRelicDistributedTracePayload}\""
-                }]
-        };
-
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
+            attributes.Add(NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload });
+        }
+        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
         {
-            Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+            attributes.Add(W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload });
+            attributes.Add(W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload });
+        }
 
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
-        });
+        return attributes;
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_W3CHeaders_FromBody()
+    private string GenerateSQSMessageBodyAttributes(TracingTestCase testCase)
     {
-        // Arrange
-        var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SQSEvents.SQSEvent
+        var attributes = string.Empty;
+
+        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
         {
-            Records = [
-                new()
-                {
-                    EventSourceArn = "testEventSourceArn",
-                    Body = $"\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish {W3CTraceParentKey} \"Value\":\"{W3CTraceParentPayload}\" {W3CTraceStateKey} \"Value\":\"{W3CTraceStatePayload}\""
-                }]
-        };
+            attributes += $"{NewRelicDistributedTraceKey} \"Value\":\"{NewRelicDistributedTracePayload}\" ";
+        }
 
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
+        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
         {
-            Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
-            Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+            attributes += $"{W3CTraceParentKey} \"Value\":\"{W3CTraceParentPayload}\" {W3CTraceStateKey} \"Value\":\"{W3CTraceStatePayload}\" ";
+        }
 
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
-            Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
-        });
+        return attributes;
     }
+}
+
+public enum TracingTestCase
+{
+    Newrelic,
+    W3C,
+    Both
 }
