@@ -29,15 +29,19 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, BrokerVendorName, topicPartition.Topic);
 
-            transaction.InsertDistributedTraceHeaders(messageMetadata.Headers, DistributedTraceHeadersSetter);
+            transaction.InsertDistributedTraceHeaders(messageMetadata, DistributedTraceHeadersSetter);
 
             return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);
         }
 
-        private static void DistributedTraceHeadersSetter(Headers carrier, string key, string value)
+        private static void DistributedTraceHeadersSetter(MessageMetadata carrier, string key, string value)
         {
-            carrier ??= new Headers();
-            carrier.Add(key, Encoding.ASCII.GetBytes(value));
+            carrier.Headers ??= new Headers();
+            if (!string.IsNullOrEmpty(key))
+            {
+                carrier.Headers.Remove(key);
+                carrier.Headers.Add(key, Encoding.ASCII.GetBytes(value));
+            }
         }
 
     }
