@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.23.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.23.0...v10.23.1) (2024-04-24)
+
+
+### Fixes
+
+* Fix duplicate key error when using Kafka with DT enabled ([#2433](https://github.com/newrelic/newrelic-dotnet-agent/issues/2433)) ([6a85c03](https://github.com/newrelic/newrelic-dotnet-agent/commit/6a85c034ba14d408d5b63fe6e77c9132f9f11c6c))
+* Fix incorrectly tagging AIM data when AIM is disabled ([#2408](https://github.com/newrelic/newrelic-dotnet-agent/issues/2408)) ([30d12bb](https://github.com/newrelic/newrelic-dotnet-agent/commit/30d12bbc28795a857ed2b241fb157fa55bf9f17d))
+
 ## [10.23.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.22.0...v10.23.0) (2024-04-02)
 
 

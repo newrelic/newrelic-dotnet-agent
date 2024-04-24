@@ -84,7 +84,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
         with:
           fetch-depth: 0
 
@@ -125,21 +125,19 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
         with:
           fetch-depth: 0
 
       - name: Build and Run S3Validator
         run: |
-          dotnet build --configuration Release "$BUILD_PATH"
-          "$RUN_PATH/S3Validator" -v $AGENT_VERSION -c $CONFIG_PATH
-        shell: bash
+          dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
+          "$PUBLISH_PATH/S3Validator" -v $AGENT_VERSION -c $PUBLISH_PATH/config.yml
+
         env:
           BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
-          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
           AGENT_VERSION: ${{ inputs.agent_version }}
-
+          PUBLISH_PATH: ${{ github.workspace }}/build/S3Validator/publish
   validate-nuget-packages:
     name: Validate NuGet Package Deployment
     runs-on: ubuntu-latest
@@ -151,7 +149,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
         with:
           fetch-depth: 0
 
@@ -163,7 +161,7 @@ jobs:
         env:
           AGENT_VERSION: ${{ inputs.agent_version }}
           BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
-          PUBLISH_PATH: ${{ github.workspace }}/publish
+          PUBLISH_PATH: ${{ github.workspace }}/build/NugetValidator/publish
 
   report-deprecated-nuget-packages:
     name: Report Deprecated NuGet Packages
@@ -179,7 +177,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
         with:
           fetch-depth: 0
 

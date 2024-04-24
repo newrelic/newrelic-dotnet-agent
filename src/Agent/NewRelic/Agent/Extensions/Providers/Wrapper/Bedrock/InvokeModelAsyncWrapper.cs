@@ -31,6 +31,12 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            // Don't do anything, including sending the version Supportability metric, if we're disabled
+            if (!agent.Configuration.AiMonitoringEnabled)
+            {
+                return Delegates.NoOp;
+            }
+
             if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
