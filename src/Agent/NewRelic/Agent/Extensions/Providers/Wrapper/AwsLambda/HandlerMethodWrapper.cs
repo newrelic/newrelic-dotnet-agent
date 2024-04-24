@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System;
 using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Reflection;
-using System.Collections.Concurrent;
 using NewRelic.Collections;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
@@ -140,41 +139,36 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             {
                 var arg = instrumentedMethodCall.MethodCall.MethodArguments[idx];
 
-                // It's theoretically possible that a customer could implement their own custom class
-                // that implements the ILambdaContext interface without naming it something with
-                // 'LambdaContext' in the name, but they would have to jump through a lot of hoops to
-                // do so. This should cover nearly all real-world usage scenarios.
-                if (arg.GetType().FullName.Contains("LambdaContext"))
+                if (!_functionDetails.HasContext())
                 {
-                    if (!_functionDetails.HasContext())
+                    var iLambdaContext = arg.GetType().GetInterface("ILambdaContext");
+                    if (iLambdaContext != null)
                     {
                         _functionDetails.SetContext(arg, idx);
-                    }
-                    else
-                    {
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Found multiple Lambda contexts, will use the first found");
+                        continue; // go to the next arg
                     }
                 }
-                else
+
+                string name = arg.GetType().FullName;
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Checking parameter: {name}");
+                if (_functionDetails.SetEventType(name, idx))
                 {
-                    string name = arg.GetType().FullName;
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Checking parameter: {name}");
-                    if (_functionDetails.SetEventType(name, idx))
-                    {
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
-                    }
-                    else if (!_unsupportedInputTypes.Contains(name))
-                    {
-                        agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
-                        _unsupportedInputTypes.Add(name);
-                    }
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
+                }
+                else if (!_unsupportedInputTypes.Contains(name))
+                {
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
+                    _unsupportedInputTypes.Add(name);
                 }
             }
+
             _functionDetails.Validate(instrumentedMethodCall.MethodCall.Method.MethodName);
+
             if (!_functionDetails.HasContext())
             {
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
             }
+
             agent.SetServerlessParameters(_functionDetails.FunctionVersion, _functionDetails.Arn);
         }
 
