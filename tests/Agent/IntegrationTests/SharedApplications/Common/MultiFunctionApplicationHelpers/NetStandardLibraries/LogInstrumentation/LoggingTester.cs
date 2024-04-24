@@ -26,7 +26,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "SERILOG":
                     _log = new SerilogLoggingAdapter();
                     break;
-                case "SERILOGWEB": // .NET 7.0+ ONLY
+                case "SERILOGWEB": // .NET 8.0+ ONLY
 #if NET8_0_OR_GREATER    
                     _log = new SerilogLoggingWebAdapter(loggingPort);
 #endif
