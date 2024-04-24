@@ -17,7 +17,10 @@ namespace Agent.Extensions.Tests.Lambda
         [TestCase("Amazon.Lambda.SNSEvents.SNSEvent", AwsLambdaEventType.SNSEvent)]
         [TestCase("Amazon.Lambda.S3Events.S3Event", AwsLambdaEventType.S3Event)]
         [TestCase("Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent", AwsLambdaEventType.SimpleEmailEvent)]
+        [TestCase("Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<LambdaReceiptAction>", AwsLambdaEventType.SimpleEmailEvent)]
         [TestCase("Amazon.Lambda.SQSEvents.SQSEvent", AwsLambdaEventType.SQSEvent)]
+        [TestCase("Amazon.Lambda.DynamoDBEvents.DynamoDBEvent", AwsLambdaEventType.DynamoStream)]
+        [TestCase("Amazon.Lambda.DynamoDBEvents.DynamoDBTimeWindowEvent", AwsLambdaEventType.DynamoStream)]
         [TestCase("Gibberish", AwsLambdaEventType.Unknown)]
         public void ToEventType_ReturnsCorrectEventType(string inputType, AwsLambdaEventType expectedEventType)
         {
@@ -34,6 +37,7 @@ namespace Agent.Extensions.Tests.Lambda
         [TestCase(AwsLambdaEventType.S3Event, "s3")]
         [TestCase(AwsLambdaEventType.SimpleEmailEvent, "ses")]
         [TestCase(AwsLambdaEventType.SQSEvent, "sqs")]
+        [TestCase(AwsLambdaEventType.DynamoStream, "dynamo_streams")]
         [TestCase(AwsLambdaEventType.Unknown, "Unknown")]
         public void ToEventTypeString_ReturnsCorrectEventTypeString(AwsLambdaEventType inputEventType, string expectedEventTypeString)
         {

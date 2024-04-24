@@ -649,6 +649,53 @@ public class LambdaEventHelpersTests
 
         return attributes;
     }
+
+    // DynamoStream events
+    [Test]
+    public void AddEventTypeAttributes_DynamoStream_AddsCorrectAttributes()
+    {
+        //Arrange
+        var eventType = AwsLambdaEventType.DynamoStream;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.DynamoDBEvents.DynamoDBEvent
+        {
+            Records = [
+                new() {
+                    EventSourceArn = "testEventSourceArn"
+                }]
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
+        });
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_DynamoStream_HandlesNoRecords(bool isEmpty)
+    {
+        //Arrange
+        var eventType = AwsLambdaEventType.DynamoStream;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.DynamoDBEvents.DynamoDBEvent();
+
+        if (isEmpty)
+        {
+            inputObject.Records = [];
+        }
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+        });
+    }
 }
 
 public enum TracingTestCase

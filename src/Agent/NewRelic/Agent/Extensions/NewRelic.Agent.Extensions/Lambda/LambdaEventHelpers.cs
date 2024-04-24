@@ -120,6 +120,17 @@ public static class LambdaEventHelpers
                     TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
                     break;
 
+                case AwsLambdaEventType.DynamoStream:
+                    dynamic dynamoEvent = inputObject; //Amazon.Lambda.DynamoDBEvents.DynamoDBEvent is the expected class or base class
+
+                    if (dynamoEvent.Records == null || dynamoEvent.Records.Count == 0)
+                    {
+                        break;
+                    }
+
+                    transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
+                    break;
+
                 case AwsLambdaEventType.Unknown:
                     break; // nothing to do for unknown event type
 

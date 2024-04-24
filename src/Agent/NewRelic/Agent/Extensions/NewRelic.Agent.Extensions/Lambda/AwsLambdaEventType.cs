@@ -15,4 +15,5 @@ public enum AwsLambdaEventType
     S3Event,
     SimpleEmailEvent,
     SQSEvent,
+    DynamoStream,
 }
