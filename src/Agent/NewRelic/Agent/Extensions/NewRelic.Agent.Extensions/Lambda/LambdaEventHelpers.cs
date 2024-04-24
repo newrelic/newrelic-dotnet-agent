@@ -55,94 +55,82 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.KinesisStreamingEvent:
                     dynamic kinesisStreamingEvent = inputObject; //Amazon.Lambda.KinesisEvents.KinesisEvent
 
-                    if (kinesisStreamingEvent.Records == null || kinesisStreamingEvent.Records.Count == 0)
+                    if (kinesisStreamingEvent.Records != null && kinesisStreamingEvent.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
+                        transaction.AddEventSourceAttribute("length", (int)kinesisStreamingEvent.Records.Count);
+                        transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
-                    transaction.AddEventSourceAttribute("length", (int)kinesisStreamingEvent.Records.Count);
-                    transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
                     break;
 
                 case AwsLambdaEventType.KinesisFirehoseEvent:
                     dynamic kinesisFirehoseEvent = inputObject; //Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
 
-                    if (kinesisFirehoseEvent.Records == null)
+                    if (kinesisFirehoseEvent.Records != null)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
+                        transaction.AddEventSourceAttribute("length", (int)kinesisFirehoseEvent.Records.Count);
+                        transaction.AddEventSourceAttribute("region", (string)kinesisFirehoseEvent.Region);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)kinesisFirehoseEvent.DeliveryStreamArn);
-                    transaction.AddEventSourceAttribute("length", (int)kinesisFirehoseEvent.Records.Count);
-                    transaction.AddEventSourceAttribute("region", (string)kinesisFirehoseEvent.Region);
                     break;
 
                 case AwsLambdaEventType.S3Event:
                     dynamic s3Event = inputObject; //Amazon.Lambda.S3Events.S3Event
 
-                    if (s3Event.Records == null || s3Event.Records.Count == 0)
+                    if (s3Event.Records != null && s3Event.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
+                        transaction.AddEventSourceAttribute("length", (int)s3Event.Records.Count);
+                        transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
+                        transaction.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
+                        transaction.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
+                        transaction.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
+                        transaction.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
+                        transaction.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
+                        transaction.AddEventSourceAttribute("objectSequencer", (string)s3Event.Records[0].S3.Object.Sequencer);
+                        transaction.AddEventSourceAttribute("objectSize", (long)s3Event.Records[0].S3.Object.Size);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)s3Event.Records[0].S3.Bucket.Arn);
-                    transaction.AddEventSourceAttribute("length", (int)s3Event.Records.Count);
-                    transaction.AddEventSourceAttribute("region", (string)s3Event.Records[0].AwsRegion);
-                    transaction.AddEventSourceAttribute("eventName", (string)s3Event.Records[0].EventName);
-                    transaction.AddEventSourceAttribute("eventTime", ((DateTime)s3Event.Records[0].EventTime).ToString());
-                    transaction.AddEventSourceAttribute("xAmzId2", (string)s3Event.Records[0].ResponseElements.XAmzId2);
-                    transaction.AddEventSourceAttribute("bucketName", (string)s3Event.Records[0].S3.Bucket.Name);
-                    transaction.AddEventSourceAttribute("objectKey", (string)s3Event.Records[0].S3.Object.Key);
-                    transaction.AddEventSourceAttribute("objectSequencer", (string)s3Event.Records[0].S3.Object.Sequencer);
-                    transaction.AddEventSourceAttribute("objectSize", (long)s3Event.Records[0].S3.Object.Size);
                     break;
 
                 case AwsLambdaEventType.SimpleEmailEvent:
                     dynamic sesEvent = inputObject; //Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent
 
-                    if (sesEvent.Records == null || sesEvent.Records.Count == 0)
+                    if (sesEvent.Records != null && sesEvent.Records.Count > 0)
                     {
-                        break;
+                        // arn is not available
+                        transaction.AddEventSourceAttribute("length", (int)sesEvent.Records.Count);
+                        transaction.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);
+                        transaction.AddEventSourceAttribute("messageId", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.MessageId);
+                        transaction.AddEventSourceAttribute("returnPath", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.ReturnPath);
                     }
-
-                    // arn is not available
-                    transaction.AddEventSourceAttribute("length", (int)sesEvent.Records.Count);
-                    transaction.AddEventSourceAttribute("date", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.Date);
-                    transaction.AddEventSourceAttribute("messageId", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.MessageId);
-                    transaction.AddEventSourceAttribute("returnPath", (string)sesEvent.Records[0].Ses.Mail.CommonHeaders.ReturnPath);
                     break;
 
                 case AwsLambdaEventType.SNSEvent:
                     dynamic snsEvent = inputObject; //Amazon.Lambda.SNSEvents.SNSEvent
 
-                    if (snsEvent.Records == null || snsEvent.Records.Count == 0)
+                    if (snsEvent.Records != null && snsEvent.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
+                        transaction.AddEventSourceAttribute("length", (int)snsEvent.Records.Count);
+                        transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
+                        transaction.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
+                        transaction.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
+                        transaction.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
+
+                        TryParseSNSDistributedTraceHeaders(snsEvent, transaction);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)snsEvent.Records[0].EventSubscriptionArn);
-                    transaction.AddEventSourceAttribute("length", (int)snsEvent.Records.Count);
-                    transaction.AddEventSourceAttribute("messageId", (string)snsEvent.Records[0].Sns.MessageId);
-                    transaction.AddEventSourceAttribute("timestamp", ((DateTime)snsEvent.Records[0].Sns.Timestamp).ToString());
-                    transaction.AddEventSourceAttribute("topicArn", (string)snsEvent.Records[0].Sns.TopicArn);
-                    transaction.AddEventSourceAttribute("type", (string)snsEvent.Records[0].Sns.Type);
-
-                    TryParseSNSDistributedTraceHeaders(snsEvent, transaction);
                     break;
 
                 case AwsLambdaEventType.SQSEvent:
                     dynamic sqsEvent = inputObject; //Amazon.Lambda.SQSEvents.SQSEvent
 
-                    if (sqsEvent.Records == null || sqsEvent.Records.Count == 0)
+                    if (sqsEvent.Records != null && sqsEvent.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
+                        transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
+
+                        TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
-                    transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
-
-                    TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
                     break;
 
                 case AwsLambdaEventType.Unknown:
