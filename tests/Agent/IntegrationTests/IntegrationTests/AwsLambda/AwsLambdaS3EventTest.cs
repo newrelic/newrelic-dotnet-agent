@@ -16,7 +16,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
     public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where T : LambdaS3EventTriggerFixtureBase
     {
         private readonly LambdaS3EventTriggerFixtureBase _fixture;
-        private const string ExpectedTransactionName = "OtherTransaction/Lambda/S3Event";
         private readonly string _expectedTransactionName;
 
         protected AwsLambdaS3EventTest(T fixture, ITestOutputHelper output, string expectedTransactionName)

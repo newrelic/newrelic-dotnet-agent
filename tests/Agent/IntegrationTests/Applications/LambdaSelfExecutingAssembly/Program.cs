@@ -5,6 +5,8 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.S3Events;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.Lambda.SimpleEmailEvents;
+using Amazon.Lambda.SimpleEmailEvents.Actions;
 using Amazon.Lambda.SNSEvents;
 using ApplicationLifecycle;
 
@@ -56,6 +58,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<S3Event>(S3EventHandler, serializer);
                 case nameof(S3EventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<S3Event>(S3EventHandlerAsync, serializer);
+                case nameof(SesEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<SimpleEmailEvent<LambdaReceiptAction>>(SesEventHandler, serializer);
+                case nameof(SesEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<SimpleEmailEvent<LambdaReceiptAction>>(SesEventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -162,7 +168,18 @@ namespace LambdaSelfExecutingAssembly
 
         public static async Task S3EventHandlerAsync(S3Event _, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(S3EventHandler));
+            Console.WriteLine("Executing lambda {0}", nameof(S3EventHandlerAsync));
+            await Task.Delay(100);
+        }
+
+        public static void SesEventHandler(SimpleEmailEvent<LambdaReceiptAction> _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(SesEventHandler));
+        }
+
+        public static async Task SesEventHandlerAsync(SimpleEmailEvent<LambdaReceiptAction> _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(SesEventHandler));
             await Task.Delay(100);
         }
     }
