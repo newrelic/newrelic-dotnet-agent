@@ -21,6 +21,8 @@ public static class AwsLambdaEventTypeExtensions
             // SimpleEmailEvents are a generic type in newer library versions
             string typeName when typeName.StartsWith("Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent") => AwsLambdaEventType.SimpleEmailEvent,
             "Amazon.Lambda.SQSEvents.SQSEvent" => AwsLambdaEventType.SQSEvent,
+            "Amazon.Lambda.DynamoDBEvents.DynamoDBEvent" => AwsLambdaEventType.DynamoStream,
+            "Amazon.Lambda.DynamoDBEvents.DynamoDBTimeWindowEvent" => AwsLambdaEventType.DynamoStream,
             _ => AwsLambdaEventType.Unknown
         };
     }
@@ -37,6 +39,7 @@ public static class AwsLambdaEventTypeExtensions
             AwsLambdaEventType.S3Event => "s3",
             AwsLambdaEventType.SimpleEmailEvent => "ses",
             AwsLambdaEventType.SQSEvent => "sqs",
+            AwsLambdaEventType.DynamoStream => "dynamo_streams",
             AwsLambdaEventType.Unknown => "Unknown",
             _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unexpected eventType"),
         };

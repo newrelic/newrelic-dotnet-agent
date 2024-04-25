@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Amazon.Lambda.Core;
+using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.S3Events;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -62,6 +63,14 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<SimpleEmailEvent<LambdaReceiptAction>>(SesEventHandler, serializer);
                 case nameof(SesEventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<SimpleEmailEvent<LambdaReceiptAction>>(SesEventHandlerAsync, serializer);
+                case nameof(DynamoDbEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<DynamoDBEvent>(DynamoDbEventHandler, serializer);
+                case nameof(DynamoDbEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<DynamoDBEvent>(DynamoDbEventHandlerAsync, serializer);
+                case nameof(DynamoDbTimeWindowEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandler, serializer);
+                case nameof(DynamoDbTimeWindowEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -180,6 +189,28 @@ namespace LambdaSelfExecutingAssembly
         public static async Task SesEventHandlerAsync(SimpleEmailEvent<LambdaReceiptAction> _, ILambdaContext __)
         {
             Console.WriteLine("Executing lambda {0}", nameof(SesEventHandler));
+            await Task.Delay(100);
+        }
+
+        public static void DynamoDbEventHandler(DynamoDBEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(DynamoDbEventHandler));
+        }
+
+        public static async Task DynamoDbEventHandlerAsync(DynamoDBEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(DynamoDbEventHandlerAsync));
+            await Task.Delay(100);
+        }
+
+        public static void DynamoDbTimeWindowEventHandler(DynamoDBTimeWindowEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(DynamoDbTimeWindowEventHandler));
+        }
+
+        public static async Task DynamoDbTimeWindowEventHandlerAsync(DynamoDBTimeWindowEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(DynamoDbTimeWindowEventHandler));
             await Task.Delay(100);
         }
     }
