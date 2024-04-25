@@ -137,12 +137,10 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.DynamoStream:
                     dynamic dynamoEvent = inputObject; //Amazon.Lambda.DynamoDBEvents.DynamoDBEvent is the expected class or base class
 
-                    if (dynamoEvent.Records == null || dynamoEvent.Records.Count == 0)
+                    if (dynamoEvent.Records != null && dynamoEvent.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
                     }
-
-                    transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
                     break;
 
                 case AwsLambdaEventType.Unknown:
