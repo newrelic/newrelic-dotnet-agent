@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.RuntimeSupport;
@@ -71,6 +72,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandler, serializer);
                 case nameof(DynamoDbTimeWindowEventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandlerAsync, serializer);
+                case nameof(ScheduledCloudWatchEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandler, serializer);
+                case nameof(ScheduledCloudWatchEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -211,6 +216,17 @@ namespace LambdaSelfExecutingAssembly
         public static async Task DynamoDbTimeWindowEventHandlerAsync(DynamoDBTimeWindowEvent _, ILambdaContext __)
         {
             Console.WriteLine("Executing lambda {0}", nameof(DynamoDbTimeWindowEventHandler));
+            await Task.Delay(100);
+        }
+
+        public static void ScheduledCloudWatchEventHandler(ScheduledEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ScheduledCloudWatchEventHandler));
+        }
+
+        public static async Task ScheduledCloudWatchEventHandlerAsync(ScheduledEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ScheduledCloudWatchEventHandlerAsync));
             await Task.Delay(100);
         }
     }

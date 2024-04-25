@@ -46,12 +46,15 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.CloudWatchScheduledEvent:
                     dynamic cloudWatchScheduledEvent = inputObject; //Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
 
-                    transaction.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
-                    transaction.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
-                    transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
-                    transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
-                    transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                    transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
+                    if (cloudWatchScheduledEvent.Resources != null && cloudWatchScheduledEvent.Resources.Count > 0)
+                    {
+                        transaction.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
+                        transaction.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
+                        transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
+                        transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
+                        transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
+                        transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
+                    }
                     break;
 
                 case AwsLambdaEventType.KinesisStreamingEvent:
