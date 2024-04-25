@@ -306,6 +306,41 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_CloudWatchScheduledEvent_HandlesNullOrEmptyRecords(bool isEmpty)
+    {
+        // Arrange
+        var testTime = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.CloudWatchScheduledEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
+        {
+            Account = "testAccount",
+            Id = "testId",
+            Region = "testRegion",
+            Time = testTime
+        };
+
+        if (isEmpty)
+        {
+            inputObject.Resources = [];
+        }
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.account"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.id"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.resource"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.time"), Is.False);
+        });
+    }
+
     // KinesisStreamingEvent
     [Test]
     public void AddEventTypeAttributes_KinesisStreamingEvent_AddsCorrectAttributes()
