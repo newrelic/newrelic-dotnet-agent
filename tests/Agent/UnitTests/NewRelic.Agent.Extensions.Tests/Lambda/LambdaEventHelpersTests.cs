@@ -29,6 +29,39 @@ public class LambdaEventHelpersTests
     private const string W3CTraceParentPayload = "00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01";
     private const string W3CTraceStatePayload = "33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035";
 
+    // I don't like hardcoding the same values for the tracing data in this JSON string as are already defined above, but
+    // having to escape everything else to make string interpolation possible is gross.
+    private const string SnsBodyJson = @"{
+    ""Type"": ""Notification"",
+    ""MessageId"": ""773af62d-cff4-5340-b73c-a88942c8b7b0"",
+    ""TopicArn"": ""arn:aws:sns:us-west-2:342444490463:CoolSnsTopic"",
+    ""Subject"": ""MessageSubject"",
+    ""Message"": ""Hello, world."",
+    ""Timestamp"": ""2024-04-25T16:55:24.199Z"",
+    ""SignatureVersion"": ""1"",
+    ""Signature"": ""asdflkasdjflkasdjlkfas"",
+    ""SigningCertURL"": ""https://some.host.com/some/path"",
+    ""UnsubscribeURL"": ""https://sns.us-west-2.amazonaws.com/?goaway"",
+    ""MessageAttributes"": {
+        ""newrelic"": {
+            ""Type"": ""String"",
+            ""Value"": ""eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiYWNjb3VudElkIiwiYXAiOiJhcHBJZCIsInRyIjoiMGFmNzY1MTkxNmNkNDNkZDg0NDhlYjIxMWM4MDMxOWMiLCJwciI6MC42NSwic2EiOnRydWUsInRpIjoxNzEzOTc3NjM3MDcxLCJ0ayI6IjMzIiwidHgiOiJ0cmFuc2FjdGlvbklkIiwiaWQiOiI1NTY5MDY1YTViMTMxM2JkIn19""
+        },
+        ""traceparent"": {
+            ""Type"": ""String"",
+            ""Value"": ""00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01""
+        },
+        ""tracestate"": {
+            ""Type"": ""String"",
+            ""Value"": ""33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035""
+        },
+        ""ExtraAttribute"": {
+            ""Type"": ""String"",
+            ""Value"": ""SomethingExtra""
+        }
+    }
+}";
+
     [SetUp]
     public void SetUp()
     {
@@ -332,37 +365,17 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_KinesisStreamingEvent_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_KinesisStreamingEvent_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var eventType = AwsLambdaEventType.KinesisStreamingEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisEvents.KinesisEvent
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisEvents.KinesisEvent();
+        if (isEmpty)
         {
-            Records = null
-        };
-
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
-        {
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
-        });
-    }
-
-    [Test]
-    public void AddEventTypeAttributes_KinesisStreamingEvent_HandlesEmptyRecords()
-    {
-        // Arrange
-        var eventType = AwsLambdaEventType.KinesisStreamingEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisEvents.KinesisEvent
-        {
-            Records = null
-        };
+            inputObject.Records = [];
+        }
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -404,8 +417,9 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_KinesisFirehoseEvent_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_KinesisFirehoseEvent_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var eventType = AwsLambdaEventType.KinesisFirehoseEvent;
@@ -413,7 +427,7 @@ public class LambdaEventHelpersTests
         {
             DeliveryStreamArn = "testDeliveryStreamArn",
             Region = "testRegion",
-            Records = null
+            Records = isEmpty ? [] : null
         };
 
         // Act
@@ -479,46 +493,19 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_S3Event_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_S3Event_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var eventTime = DateTime.UtcNow;
         var eventType = AwsLambdaEventType.S3Event;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
-        {
-            Records = null
-        };
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event();
 
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
+        if (isEmpty)
         {
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventName"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventTime"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.xAmzId2"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.bucketName"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectKey"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSequencer"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSize"), Is.False);
-        });
-    }
-
-    [Test]
-    public void AddEventTypeAttributes_S3Event_HandlesEmptyRecords()
-    {
-        // Arrange
-        var eventTime = DateTime.UtcNow;
-        var eventType = AwsLambdaEventType.S3Event;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
-        {
-            Records = []
-        };
+            inputObject.Records = [];
+        }
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -576,38 +563,18 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SimpleEmailEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
-        {
-            Records = null
-        };
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>();
 
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
+        if (isEmpty)
         {
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.date"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.returnPath"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
-        });
-    }
-
-    [Test]
-    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesEmptyRecords()
-    {
-        // Arrange
-        var eventType = AwsLambdaEventType.SimpleEmailEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
-        {
-            Records = []
-        };
+            inputObject.Records = [];
+        }
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -663,44 +630,18 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SNSEvent_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_SNSEvent_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var testTimestamp = DateTime.UtcNow;
         var eventType = AwsLambdaEventType.SNSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent();
+        if (isEmpty)
         {
-            Records = null
-        };
-
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
-        {
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.timestamp"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.topicArn"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.type"), Is.False);
-
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other), Occurs.Never());
-        });
-    }
-
-    [Test]
-    public void AddEventTypeAttributes_SNSEvent_HandlesEmptyRecords()
-    {
-        // Arrange
-        var testTimestamp = DateTime.UtcNow;
-        var eventType = AwsLambdaEventType.SNSEvent;
-        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
-        {
-            Records = []
-        };
+            inputObject.Records = [];
+        }
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -720,10 +661,8 @@ public class LambdaEventHelpersTests
     }
 
     // SQSEvent
-    [TestCase(TracingTestCase.Newrelic)]
-    [TestCase(TracingTestCase.W3C)]
-    [TestCase(TracingTestCase.Both)]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromMessageAttributes(TracingTestCase testCase)
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromMessageAttributes()
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
@@ -733,7 +672,11 @@ public class LambdaEventHelpersTests
                 new()
                 {
                     EventSourceArn = "testEventSourceArn",
-                    MessageAttributes = GenerateSQSMessageAttributes(testCase)
+                    MessageAttributes = new() {
+                        { NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload } },
+                        { W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload } },
+                        { W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload } }
+                    }
                 }]
         };
 
@@ -747,33 +690,24 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
-            {
-                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
-            }
-            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
-            {
-                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
-                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
-            }
+            Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+            Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
         });
     }
 
-    [TestCase(TracingTestCase.Newrelic)]
-    [TestCase(TracingTestCase.W3C)]
-    [TestCase(TracingTestCase.Both)]
-    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromBody(TracingTestCase testCase)
+    [Test]
+    public void AddEventTypeAttributes_SQSEvent_AddsCorrectAttributes_TracingHeaders_FromBody()
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
-        var messageAttributes = GenerateSQSMessageBodyAttributes(testCase);
         var inputObject = new SQSEvent
         {
             Records = [
                 new()
                 {
                     EventSourceArn = "testEventSourceArn",
-                    Body = $"\"Type\" : \"Notification\"  gibberish \"MessageAttributes\" gibberish {messageAttributes}"
+                    Body = SnsBodyJson
                 }]
         };
 
@@ -787,26 +721,22 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
-            if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
-            {
-                Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
-            }
-            if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
-            {
-                Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
-                Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
-            }
+            Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
+            Assert.That(_parsedHeaders[W3CTraceParentKey], Is.EqualTo(W3CTraceParentPayload));
+            Assert.That(_parsedHeaders[W3CTraceStateKey], Is.EqualTo(W3CTraceStatePayload));
         });
     }
 
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_HandlesNullRecords()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void AddEventTypeAttributes_SQSEvent_HandlesNoRecords(bool isEmpty)
     {
         // Arrange
         var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new SQSEvent
+        var inputObject = new SQSEvent();
+        if (isEmpty) { }
         {
-            Records = null
+            inputObject.Records = [];
         };
 
         // Act
@@ -820,64 +750,6 @@ public class LambdaEventHelpersTests
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
         });
-    }
-
-    [Test]
-    public void AddEventTypeAttributes_SQSEvent_HandlesEmptyRecords()
-    {
-        // Arrange
-        var eventType = AwsLambdaEventType.SQSEvent;
-        var inputObject = new SQSEvent
-        {
-            Records = []
-        };
-
-        // Act
-        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
-
-        // Assert
-        Assert.Multiple(() =>
-        {
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
-            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
-
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue), Occurs.Never());
-        });
-    }
-
-
-    private Dictionary<string, SQSEvent.MessageAttribute> GenerateSQSMessageAttributes(TracingTestCase testCase)
-    {
-        var attributes = new Dictionary<string, SQSEvent.MessageAttribute>();
-
-        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
-        {
-            attributes.Add(NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload });
-        }
-        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
-        {
-            attributes.Add(W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload });
-            attributes.Add(W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload });
-        }
-
-        return attributes;
-    }
-
-    private string GenerateSQSMessageBodyAttributes(TracingTestCase testCase)
-    {
-        var attributes = string.Empty;
-
-        if (testCase == TracingTestCase.Newrelic || testCase == TracingTestCase.Both)
-        {
-            attributes += $"{NewRelicDistributedTraceKey} \"Value\":\"{NewRelicDistributedTracePayload}\" ";
-        }
-
-        if (testCase == TracingTestCase.W3C || testCase == TracingTestCase.Both)
-        {
-            attributes += $"{W3CTraceParentKey} \"Value\":\"{W3CTraceParentPayload}\" {W3CTraceStateKey} \"Value\":\"{W3CTraceStatePayload}\" ";
-        }
-
-        return attributes;
     }
 
     // DynamoStream events

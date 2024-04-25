@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -181,18 +182,24 @@ public static class LambdaEventHelpers
                 }
             }
         }
-        else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
+        else if (record.Body != null && record.Body.Contains("\"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
             // This is an SNS subscription with attributes
-            foreach (var tracingKey in TracingKeys)
+            try
             {
-                var headerValue = TryParseAttributeFromSqsMessageBody(record.Body, tracingKey);
-                if (headerValue != null)
+                string bodyAsString = record.Body;
+                var snsMessage = JsonSerializer.Deserialize<SnsMessage>(bodyAsString);
+                foreach (var messageAttribute in snsMessage.MessageAttributes)
                 {
-                    sqsHeaders.Add(tracingKey, headerValue);
+                    sqsHeaders.Add(messageAttribute.Key, messageAttribute.Value.Value);
                 }
             }
+            catch
+            {
+                // do nothing
+            }
         }
+
         transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
 
@@ -284,3 +291,4 @@ public static class LambdaEventHelpers
     }
 
 }
+
