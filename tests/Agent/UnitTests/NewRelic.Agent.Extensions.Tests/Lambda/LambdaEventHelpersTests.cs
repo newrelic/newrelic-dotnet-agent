@@ -332,6 +332,50 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [Test]
+    public void AddEventTypeAttributes_KinesisStreamingEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.KinesisStreamingEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisEvents.KinesisEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_KinesisStreamingEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.KinesisStreamingEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisEvents.KinesisEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+        });
+    }
+
     // KinesisFirehoseEvent
     [Test]
     public void AddEventTypeAttributes_KinesisFirehoseEvent_AddsCorrectAttributes()
@@ -357,6 +401,30 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testDeliveryStreamArn"));
             Assert.That(_attributes["aws.lambda.eventSource.region"], Is.EqualTo("testRegion"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_KinesisFirehoseEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.KinesisFirehoseEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent
+        {
+            DeliveryStreamArn = "testDeliveryStreamArn",
+            Region = "testRegion",
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
         });
     }
 
@@ -411,6 +479,66 @@ public class LambdaEventHelpersTests
         });
     }
 
+    [Test]
+    public void AddEventTypeAttributes_S3Event_HandlesNullRecords()
+    {
+        // Arrange
+        var eventTime = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.S3Event;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventTime"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.xAmzId2"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.bucketName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectKey"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSequencer"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSize"), Is.False);
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_S3Event_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventTime = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.S3Event;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.S3Events.S3Event
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.region"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.eventTime"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.xAmzId2"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.bucketName"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectKey"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSequencer"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.objectSize"), Is.False);
+        });
+    }
+
     // SimpleEmailEvent
     [Test]
     public void AddEventTypeAttributes_SimpleEmailEvent_AddsCorrectAttributes()
@@ -445,6 +573,52 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
             Assert.That(_attributes["aws.lambda.eventSource.returnPath"], Is.EqualTo("testReturnPath"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SimpleEmailEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.date"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.returnPath"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SimpleEmailEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.SimpleEmailEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.SimpleEmailEvent<NewRelic.Mock.Amazon.Lambda.SimpleEmailEvents.MockReceiptAction>
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.date"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.returnPath"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
         });
     }
 
@@ -486,6 +660,62 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string,string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other));
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SNSEvent_HandlesNullRecords()
+    {
+        // Arrange
+        var testTimestamp = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.SNSEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
+        {
+            Records = null
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.timestamp"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.topicArn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.type"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other), Occurs.Never());
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_SNSEvent_HandlesEmptyRecords()
+    {
+        // Arrange
+        var testTimestamp = DateTime.UtcNow;
+        var eventType = AwsLambdaEventType.SNSEvent;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.SNSEvents.SNSEvent
+        {
+            Records = []
+        };
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.arn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.messageId"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.length"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.timestamp"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.topicArn"), Is.False);
+            Assert.That(_attributes.ContainsKey("aws.lambda.eventSource.type"), Is.False);
+
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other), Occurs.Never());
         });
     }
 
