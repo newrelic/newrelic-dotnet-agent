@@ -208,7 +208,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            if (_functionDetails.EventType != AwsLambdaEventType.Unknown)
+            {
+                transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            }
 
             if (requestId != null)
             {
