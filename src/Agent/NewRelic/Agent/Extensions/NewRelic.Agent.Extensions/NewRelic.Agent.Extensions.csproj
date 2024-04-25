@@ -16,7 +16,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">

@@ -3,9 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.JsonConverters;
+using NewRelic.Core.JsonConverters.LambdaPayloads;
 
 namespace NewRelic.Agent.Extensions.Lambda;
 
@@ -185,7 +186,7 @@ public static class LambdaEventHelpers
             // This is an SNS subscription with attributes
             try
             {
-                var snsMessage = JsonSerializer.Deserialize<SnsMessage>((string)record.Body);
+                var snsMessage = BedrockHelpers.DeserializeObject<SnsMessage>((string)record.Body);
                 foreach (var messageAttribute in snsMessage.MessageAttributes)
                 {
                     sqsHeaders.Add(messageAttribute.Key, messageAttribute.Value.Value);
