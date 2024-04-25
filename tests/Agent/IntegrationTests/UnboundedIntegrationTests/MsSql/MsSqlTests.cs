@@ -261,20 +261,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlTests_SystemDataSqlClient_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  libraryName: "System.Data.SqlClient")
-        {
-        }
-    }
-
     [NetCoreTest]
     public class MsSqlTests_SystemDataSqlClient_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
@@ -305,20 +291,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     public class MsSqlTests_MicrosoftDataSqlClient_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser",
-                  libraryName: "Microsoft.Data.SqlClient")
-        {
-        }
-    }
-
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

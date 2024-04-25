@@ -124,7 +124,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             {
                 var transactionName = GetTransactionNameFromString(request.OutboundTxnName);
                 _transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
+#if NETFRAMEWORK
                 var outboundHeaders = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
+#else
+                var outboundHeaders = Enumerable.ToDictionary(_agent.CurrentTransaction.GetRequestMetadata());
+#endif
                 var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders, GetHeaderValue);
                 var requestData = new CrossApplicationRequestData(
                     (string)request.ExpectedOutboundPayload[0],

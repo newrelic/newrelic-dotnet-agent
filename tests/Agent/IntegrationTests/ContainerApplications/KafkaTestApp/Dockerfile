@@ -1,5 +1,5 @@
 ARG DISTRO_TAG
-FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 RUN apt-get update \
@@ -12,7 +12,7 @@ RUN apt-get update \
 
 
 # build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
-FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim AS build
+FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 RUN apt-get update \
     && apt-get install -y wget \
     && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
@@ -27,12 +27,12 @@ RUN dotnet restore "KafkaTestApp/KafkaTestApp.csproj" -p:TargetFramework=net${AP
 
 COPY . .
 WORKDIR "/src/KafkaTestApp"
-RUN dotnet build "KafkaTestApp.csproj" -c Release -o /app/build --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet build "KafkaTestApp.csproj" -c Release -o /app/build --self-contained --os linux --framework net${APP_DOTNET_VERSION}
 
 
 FROM build AS publish
 ARG APP_DOTNET_VERSION
-RUN dotnet publish "KafkaTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet publish "KafkaTestApp.csproj" -c Release -o /app/publish --self-contained --os linux --framework net${APP_DOTNET_VERSION}
 
 
 FROM base AS final

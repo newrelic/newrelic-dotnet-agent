@@ -117,9 +117,9 @@ public class KafkaDotNet6Test : LinuxKafkaTest<KafkaDotNet6TestFixture>
     }
 }
 
-public class KafkaDotNet7Test : LinuxKafkaTest<KafkaDotNet7TestFixture>
+public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 {
-    public KafkaDotNet7Test(KafkaDotNet7TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
