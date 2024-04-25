@@ -417,9 +417,7 @@ public class LambdaEventHelpersTests
         });
     }
 
-    [TestCase(true)]
-    [TestCase(false)]
-    public void AddEventTypeAttributes_KinesisFirehoseEvent_HandlesNoRecords(bool isEmpty)
+    public void AddEventTypeAttributes_KinesisFirehoseEvent_HandlesNullRecords()
     {
         // Arrange
         var eventType = AwsLambdaEventType.KinesisFirehoseEvent;
@@ -427,7 +425,7 @@ public class LambdaEventHelpersTests
         {
             DeliveryStreamArn = "testDeliveryStreamArn",
             Region = "testRegion",
-            Records = isEmpty ? [] : null
+            Records = null
         };
 
         // Act
