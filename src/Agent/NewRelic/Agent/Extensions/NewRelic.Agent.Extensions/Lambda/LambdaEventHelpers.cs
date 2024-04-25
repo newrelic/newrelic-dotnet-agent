@@ -186,7 +186,7 @@ public static class LambdaEventHelpers
             // This is an SNS subscription with attributes
             try
             {
-                var snsMessage = BedrockHelpers.DeserializeObject<SnsMessage>((string)record.Body);
+                var snsMessage = WrapperHelpers.DeserializeObject<SnsMessage>((string)record.Body);
                 foreach (var messageAttribute in snsMessage.MessageAttributes)
                 {
                     sqsHeaders.Add(messageAttribute.Key, messageAttribute.Value.Value);

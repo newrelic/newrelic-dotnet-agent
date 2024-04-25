@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace NewRelic.Core.JsonConverters
 {
-    public static class BedrockHelpers
+    public static class WrapperHelpers
     {
         // This method is used from the Bedrock wrapper code in order to avoid the wrapper
         // having a dependency on Newtonsoft.Json being available
