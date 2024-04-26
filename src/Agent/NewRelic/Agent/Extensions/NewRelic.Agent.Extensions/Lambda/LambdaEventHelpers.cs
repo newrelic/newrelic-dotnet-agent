@@ -45,12 +45,15 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.CloudWatchScheduledEvent:
                     dynamic cloudWatchScheduledEvent = inputObject; //Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent
 
-                    transaction.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
-                    transaction.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
-                    transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
-                    transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
-                    transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
-                    transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
+                    if (cloudWatchScheduledEvent.Resources != null && cloudWatchScheduledEvent.Resources.Count > 0)
+                    {
+                        transaction.AddEventSourceAttribute("arn", (string)cloudWatchScheduledEvent.Resources[0]);
+                        transaction.AddEventSourceAttribute("account", (string)cloudWatchScheduledEvent.Account);
+                        transaction.AddEventSourceAttribute("id", (string)cloudWatchScheduledEvent.Id);
+                        transaction.AddEventSourceAttribute("region", (string)cloudWatchScheduledEvent.Region);
+                        transaction.AddEventSourceAttribute("resource", (string)cloudWatchScheduledEvent.Resources[0]);
+                        transaction.AddEventSourceAttribute("time", ((DateTime)cloudWatchScheduledEvent.Time).ToString());
+                    }
                     break;
 
                 case AwsLambdaEventType.KinesisStreamingEvent:
@@ -137,12 +140,11 @@ public static class LambdaEventHelpers
                 case AwsLambdaEventType.DynamoStream:
                     dynamic dynamoEvent = inputObject; //Amazon.Lambda.DynamoDBEvents.DynamoDBEvent is the expected class or base class
 
-                    if (dynamoEvent.Records == null || dynamoEvent.Records.Count == 0)
+                    if (dynamoEvent.Records != null && dynamoEvent.Records.Count > 0)
                     {
-                        break;
+                        transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
                     }
 
-                    transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
                     break;
 
                 case AwsLambdaEventType.Unknown:

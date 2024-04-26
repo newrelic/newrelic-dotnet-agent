@@ -3,6 +3,7 @@
 
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
+using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.RuntimeSupport;
@@ -81,6 +82,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandler, serializer);
                 case nameof(ApplicationLoadBalancerRequestHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandlerAsync, serializer);
+                case nameof(ScheduledCloudWatchEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandler, serializer);
+                case nameof(ScheduledCloudWatchEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -252,6 +257,17 @@ namespace LambdaSelfExecutingAssembly
             await Task.Delay(100);
 
             return new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static void ScheduledCloudWatchEventHandler(ScheduledEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ScheduledCloudWatchEventHandler));
+        }
+
+        public static async Task ScheduledCloudWatchEventHandlerAsync(ScheduledEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ScheduledCloudWatchEventHandlerAsync));
+            await Task.Delay(100);
         }
     }
 }
