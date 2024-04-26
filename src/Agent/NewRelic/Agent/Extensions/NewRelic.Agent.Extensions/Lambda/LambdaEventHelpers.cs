@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -158,6 +159,7 @@ public static class LambdaEventHelpers
         }
     }
 
+    private const string xForwardedProtoHeader = "X-Forwarded-Proto";
     private const string NEWRELIC_TRACE_HEADER = "newrelic";
     private const string W3C_TRACEPARENT_HEADER = "traceparent";
     private const string W3C_TRACESTATE_HEADER = "tracestate";
@@ -226,17 +228,43 @@ public static class LambdaEventHelpers
         if (multiValueHeaders != null)
         {
             transaction.SetRequestHeaders(multiValueHeaders, agent.Configuration.AllowAllRequestHeaders ? multiValueHeaders.Keys : Statics.DefaultCaptureHeaders, multiValueHeadersGetter);
-            transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, TransportType.HTTP);
+
+            // DT transport comes from the X-Forwarded-Proto header, if present
+            var forwardedProto = GetMultiHeaderValue(multiValueHeaders, xForwardedProtoHeader).FirstOrDefault();
+            var dtTransport = GetDistributedTransportType(forwardedProto);
+
+            transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, dtTransport);
         }
         else if (headers != null)
         {
             transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers?.Keys : Statics.DefaultCaptureHeaders, headersGetter);
-            transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+
+            // DT transport comes from the X-Forwarded-Proto header, if present
+            var forwardedProto = GetHeaderValue(headers, xForwardedProtoHeader).FirstOrDefault();
+            var dtTransport = GetDistributedTransportType(forwardedProto);
+
+            transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, dtTransport);
         }
 
         transaction.SetRequestMethod(webReqEvent.HttpMethod);
         transaction.SetUri(webReqEvent.Path);
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
+    }
+
+    private static TransportType GetDistributedTransportType(string forwardedProto)
+    {
+        if (forwardedProto != null)
+        {
+            switch (forwardedProto.ToLower())
+            {
+                case "http":
+                    return TransportType.HTTP;
+                case "https":
+                    return TransportType.HTTPS;
+            }
+        }
+
+        return TransportType.Unknown;
     }
 
     // DT getter for generic <string,string> header dict
