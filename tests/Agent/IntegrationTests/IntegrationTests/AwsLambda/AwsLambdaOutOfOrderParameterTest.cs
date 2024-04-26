@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,6 +14,8 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
     [NetCoreTest]
     public abstract class AwsLambdaOutOfOrderParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaOutOfOrderParameterFixtureBase
     {
+        private const string ExpectedTransactionName = "OtherTransaction/Lambda/OutOfOrderParameters";
+
         private readonly LambdaOutOfOrderParameterFixtureBase _fixture;
 
         protected AwsLambdaOutOfOrderParameterTest(T fixture, ITestOutputHelper output)
@@ -38,8 +41,38 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
 
             Assert.Multiple(
                 () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
-                () => Assert.Equal("OtherTransaction/Lambda/OutOfOrderParameters", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
+                () => ValidateServerlessPayload(serverlessPayload),
+                () => ValidateTraceHasNoParent(serverlessPayload)
                 );
+        }
+
+        private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
+        {
+            var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
+
+            var expectedAgentAttributes = new[]
+            {
+                "aws.lambda.arn",
+                "aws.requestId"
+            };
+
+            var expectedMissingAgentAttributeValues = new[]
+            {
+                // Unknown event types should omit the eventType attribute
+                "aws.lambda.eventSource.eventType"
+            };
+
+            Assert.Equal(ExpectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
+
+            Assertions.TransactionEventHasAttributes(expectedAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+            Assertions.TransactionEventDoesNotHaveAttributes(expectedMissingAgentAttributeValues, TransactionEventAttributeType.Agent, transactionEvent);
+        }
+
+        private void ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
+        {
+            var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == ExpectedTransactionName);
+
+            Assertions.SpanEventDoesNotHaveAttributes(["parentId"], SpanEventAttributeType.Intrinsic, entrySpan);
         }
     }
 

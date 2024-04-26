@@ -112,7 +112,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
         }
 
-        private List<string> _webResponseHeaders = ["Content-Type", "Content-Length"];
+        private List<string> _webResponseHeaders = ["content-type", "content-length"];
 
         private static Func<object, object> _getRequestResponseFromGeneric;
         private static object _initLock = new object();
@@ -208,7 +208,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            if (_functionDetails.EventType != AwsLambdaEventType.Unknown)
+            {
+                transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+            }
 
             if (requestId != null)
             {
@@ -288,7 +291,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             var responseType = response.GetType().FullName;
             if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
                 ||
-                (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.Amazon.Lambda.ApplicationLoadBalancerEvents"))
+                (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
             {
                 if (!_unexpectedResponseTypes.Contains(responseType))
                 {
@@ -301,14 +304,20 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
 
             dynamic webResponse = response;
             transaction.SetHttpResponseStatusCode(webResponse.StatusCode);
+
             IDictionary<string, string> responseHeaders = webResponse.Headers;
             if (webResponse.Headers != null)
             {
-                foreach (var header in _webResponseHeaders)
+                // copy and lowercase the headers
+                Dictionary<string, string> copiedHeaders = new Dictionary<string, string>();
+                foreach(var kvp in responseHeaders)
+                    copiedHeaders.Add(kvp.Key.ToLower(), kvp.Value);
+
+                foreach (var header in _webResponseHeaders) // only capture specific headers
                 {
-                    if (responseHeaders.TryGetValue(header, out var value))
+                    if (copiedHeaders.TryGetValue(header, out var value))
                     {
-                        transaction.AddCustomAttribute(header, value);
+                        transaction.AddLambdaAttribute($"response.headers.{header.ToLower()}", value);
                     }
                 }
             }
