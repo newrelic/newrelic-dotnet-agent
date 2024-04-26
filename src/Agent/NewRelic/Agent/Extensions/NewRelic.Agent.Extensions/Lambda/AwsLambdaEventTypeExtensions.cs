@@ -15,6 +15,7 @@ public static class AwsLambdaEventTypeExtensions
             "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest" => AwsLambdaEventType.ApplicationLoadBalancerRequest,
             "Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent" => AwsLambdaEventType.CloudWatchScheduledEvent,
             "Amazon.Lambda.KinesisEvents.KinesisEvent" => AwsLambdaEventType.KinesisStreamingEvent,
+            "Amazon.Lambda.KinesisEvents.KinesisTimeWindowEvent" => AwsLambdaEventType.KinesisStreamingEvent,
             "Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent" => AwsLambdaEventType.KinesisFirehoseEvent,
             "Amazon.Lambda.SNSEvents.SNSEvent" => AwsLambdaEventType.SNSEvent,
             "Amazon.Lambda.S3Events.S3Event" => AwsLambdaEventType.S3Event,

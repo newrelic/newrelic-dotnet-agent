@@ -61,7 +61,7 @@ public static class LambdaEventHelpers
 
                     if (kinesisStreamingEvent.Records != null && kinesisStreamingEvent.Records.Count > 0)
                     {
-                        transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceArn);
+                        transaction.AddEventSourceAttribute("arn", (string)kinesisStreamingEvent.Records[0].EventSourceARN);
                         transaction.AddEventSourceAttribute("length", (int)kinesisStreamingEvent.Records.Count);
                         transaction.AddEventSourceAttribute("region", (string)kinesisStreamingEvent.Records[0].AwsRegion);
                     }

@@ -6,6 +6,8 @@ using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.KinesisFirehoseEvents;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.S3Events;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -86,6 +88,18 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandler, serializer);
                 case nameof(ScheduledCloudWatchEventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandlerAsync, serializer);
+                case nameof(KinesisFirehoseEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisFirehoseEvent, KinesisFirehoseResponse>(KinesisFirehoseEventHandler, serializer);
+                case nameof(KinesisFirehoseEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisFirehoseEvent, KinesisFirehoseResponse>(KinesisFirehoseEventHandlerAsync, serializer);
+                case nameof(KinesisEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisEvent>(KinesisEventHandler, serializer);
+                case nameof(KinesisEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisEvent>(KinesisEventHandlerAsync, serializer);
+                case nameof(KinesisTimeWindowEventHandler):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisTimeWindowEvent>(KinesisTimeWindowEventHandler, serializer);
+                case nameof(KinesisTimeWindowEventHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<KinesisTimeWindowEvent>(KinesisTimeWindowEventHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -267,6 +281,76 @@ namespace LambdaSelfExecutingAssembly
         public static async Task ScheduledCloudWatchEventHandlerAsync(ScheduledEvent _, ILambdaContext __)
         {
             Console.WriteLine("Executing lambda {0}", nameof(ScheduledCloudWatchEventHandlerAsync));
+            await Task.Delay(100);
+        }
+
+        public static KinesisFirehoseResponse KinesisFirehoseEventHandler(KinesisFirehoseEvent evnt,  ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisFirehoseEventHandler));
+
+            var response = new KinesisFirehoseResponse
+            {
+                Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
+            };
+
+            foreach (var record in evnt.Records)
+            {
+                var transformedRecord = new KinesisFirehoseResponse.FirehoseRecord
+                {
+                    RecordId = record.RecordId,
+                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_OK
+                };
+                transformedRecord.EncodeData(record.DecodeData().ToUpperInvariant());
+
+                response.Records.Add(transformedRecord);
+            }
+
+            return response;
+        }
+
+        public static async Task<KinesisFirehoseResponse> KinesisFirehoseEventHandlerAsync(KinesisFirehoseEvent evnt, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisFirehoseEventHandlerAsync));
+
+            var response = new KinesisFirehoseResponse
+            {
+                Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
+            };
+
+            foreach (var record in evnt.Records)
+            {
+                var transformedRecord = new KinesisFirehoseResponse.FirehoseRecord
+                {
+                    RecordId = record.RecordId,
+                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_OK
+                };
+                transformedRecord.EncodeData(record.DecodeData().ToUpperInvariant());
+
+                response.Records.Add(transformedRecord);
+            }
+
+            return await Task.FromResult(response);
+        }
+
+        public static void KinesisEventHandler(KinesisEvent _,  ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisEventHandler));
+        }
+
+        public static async Task KinesisEventHandlerAsync(KinesisEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisEventHandlerAsync));
+            await Task.Delay(100);
+        }
+
+        public static void KinesisTimeWindowEventHandler(KinesisTimeWindowEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisEventHandler));
+        }
+
+        public static async Task KinesisTimeWindowEventHandlerAsync(KinesisTimeWindowEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(KinesisEventHandlerAsync));
             await Task.Delay(100);
         }
     }
