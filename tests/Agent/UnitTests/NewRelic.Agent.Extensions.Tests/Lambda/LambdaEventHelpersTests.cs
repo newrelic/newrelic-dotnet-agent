@@ -19,6 +19,8 @@ public class LambdaEventHelpersTests
     private ITransaction _transaction;
     private Dictionary<string, object> _attributes;
     private IDictionary<string, string> _parsedHeaders;
+    IDictionary<string, IList<string>> _parsedMultiValueHeaders = new Dictionary<string, IList<string>>();
+    private TransportType _transportType;
 
     private const string NewRelicDistributedTraceKey = "newrelic";
     private const string NewRelicDistributedTracePayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiYWNjb3VudElkIiwiYXAiOiJhcHBJZCIsInRyIjoiMGFmNzY1MTkxNmNkNDNkZDg0NDhlYjIxMWM4MDMxOWMiLCJwciI6MC42NSwic2EiOnRydWUsInRpIjoxNzEzOTc3NjM3MDcxLCJ0ayI6IjMzIiwidHgiOiJ0cmFuc2FjdGlvbklkIiwiaWQiOiI1NTY5MDY1YTViMTMxM2JkIn19";
@@ -37,8 +39,11 @@ public class LambdaEventHelpersTests
         _transaction = Mock.Create<ITransaction>();
         Mock.Arrange(() => _transaction.AddLambdaAttribute(Arg.IsAny<string>(), Arg.IsAny<object>()))
             .DoInstead((string key, object value) => _attributes.Add(key, value));
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue))
-            .DoInstead((IDictionary<string, string> headers, Func<IDictionary<string, string>, string, IEnumerable<string>> getter, TransportType transportType) => { _parsedHeaders = headers; });
+
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>()))
+            .DoInstead((IDictionary<string, string> headers, Func<IDictionary<string, string>, string, IEnumerable<string>> getter, TransportType transportType) => { _parsedHeaders = headers; _transportType = transportType;});
+        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>()))
+            .DoInstead((IDictionary<string, IList<string>> headers, Func<IDictionary<string, IList<string>>, string, IEnumerable<string>> getter, TransportType transportType) => { _parsedMultiValueHeaders = headers; _transportType = transportType; });
 
     }
 
@@ -50,7 +55,7 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
         {
-            RequestContext = new ()
+            RequestContext = new()
             {
                 AccountId = "testAccountId",
                 ApiId = "testApiId",
@@ -58,7 +63,7 @@ public class LambdaEventHelpersTests
                 ResourcePath = "testResourcePath",
                 Stage = "testStage"
             },
-            MultiValueHeaders = new ()
+            MultiValueHeaders = new()
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
@@ -66,22 +71,18 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new ()
+            QueryStringParameters = new()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
             }
         };
 
-        IDictionary<string, IList<string>> _multiValueHeaders = new Dictionary<string, IList<string>>();
-
         // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP))
-            .DoInstead((IDictionary<string, IList<string>> headers, Func<IDictionary<string, IList<string>>, string, IEnumerable<string>> getter, TransportType transportType) => { _multiValueHeaders = headers; });
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
@@ -100,19 +101,23 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
 
-            Assert.That(_multiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
+            Assert.That(_parsedMultiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
+            Assert.That(_transportType, Is.EqualTo(TransportType.Unknown));
         });
     }
+
     [Test]
-    public void AddEventTypeAttributes_APIGatewayProxyRequest_AddsCorrectAttributes_SingleValueHeaders()
+    [TestCase("http", TransportType.HTTP)]
+    [TestCase("https", TransportType.HTTPS)]
+    [TestCase("gibberish", TransportType.Unknown)]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_MultiValueHeaders(string forwardedProto, TransportType expecteTransportType)
     {
         // Arrange
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
         {
-            RequestContext = new ()
+            RequestContext = new()
             {
                 AccountId = "testAccountId",
                 ApiId = "testApiId",
@@ -120,7 +125,51 @@ public class LambdaEventHelpersTests
                 ResourcePath = "testResourcePath",
                 Stage = "testStage"
             },
-            Headers = new ()
+            MultiValueHeaders = new()
+            {
+                { "header1", new [] {"value1", "value1a" } },
+                { "header2", new [] {"value2" } },
+                { NewRelicDistributedTraceKey, new [] { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2} },
+                { "X-Forwarded-Proto", new [] {forwardedProto} }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path",
+            QueryStringParameters = new()
+            {
+                { "param1", "value1" },
+                { "param2", "value2" }
+            }
+        };
+
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
+        Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
+
+        // Assert
+        Assert.That(_transportType, Is.EqualTo(expecteTransportType));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_AddsCorrectAttributes_SingleValueHeaders()
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new()
+            {
+                AccountId = "testAccountId",
+                ApiId = "testApiId",
+                ResourceId = "testResourceId",
+                ResourcePath = "testResourcePath",
+                Stage = "testStage"
+            },
+            Headers = new()
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
@@ -128,7 +177,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new ()
+            QueryStringParameters = new()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -140,7 +189,6 @@ public class LambdaEventHelpersTests
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
@@ -159,9 +207,56 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.Headers, Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP));
 
+            Assert.That(_transportType, Is.EqualTo(TransportType.Unknown));
         });
+    }
+
+    [Test]
+    [TestCase("http", TransportType.HTTP)]
+    [TestCase("https", TransportType.HTTPS)]
+    [TestCase("gibberish", TransportType.Unknown)]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_SingleValueHeaders(string forwardedProto, TransportType expecteTransportType)
+    {
+        // Arrange
+        var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new()
+            {
+                AccountId = "testAccountId",
+                ApiId = "testApiId",
+                ResourceId = "testResourceId",
+                ResourcePath = "testResourcePath",
+                Stage = "testStage"
+            },
+            Headers = new()
+            {
+                { "header1", "value1" },
+                { "header2", "value2" },
+                { NewRelicDistributedTraceKey, NewRelicDistributedTracePayload },
+                { "X-Forwarded-Proto", forwardedProto }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path",
+            QueryStringParameters = new()
+            {
+                { "param1", "value1" },
+                { "param2", "value2" }
+            }
+        };
+
+        // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
+        Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
+        Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
+
+        // Act
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
+
+        // Assert
+        Assert.That(_transportType, Is.EqualTo(expecteTransportType));
     }
 
 
@@ -173,14 +268,14 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
         {
-            RequestContext = new ()
+            RequestContext = new()
             {
-                Elb = new ()
+                Elb = new()
                 {
                     TargetGroupArn = "testTargetGroupArn"
                 }
             },
-            Headers = new ()
+            Headers = new()
             {
                 { "header1", "value1" },
                 { "header2", "value2" },
@@ -188,7 +283,7 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new ()
+            QueryStringParameters = new()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
@@ -214,7 +309,8 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.Headers, Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.HTTP));
+
+            Assert.That(_transportType, Is.EqualTo(TransportType.Unknown));
         });
     }
     [Test]
@@ -224,14 +320,14 @@ public class LambdaEventHelpersTests
         var eventType = AwsLambdaEventType.ApplicationLoadBalancerRequest;
         var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
         {
-            RequestContext = new ()
+            RequestContext = new()
             {
-                Elb = new ()
+                Elb = new()
                 {
                     TargetGroupArn = "testTargetGroupArn"
                 }
             },
-            MultiValueHeaders = new ()
+            MultiValueHeaders = new()
             {
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
@@ -239,22 +335,18 @@ public class LambdaEventHelpersTests
             },
             HttpMethod = "GET",
             Path = "/test/path",
-            QueryStringParameters = new ()
+            QueryStringParameters = new()
             {
                 { "param1", "value1" },
                 { "param2", "value2" }
             }
         };
 
-        IDictionary<string, IList<string>> _multiValueHeaders = new Dictionary<string, IList<string>>();
-
         // Mock the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods
         Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, string>>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestMethod(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetUri(Arg.IsAny<string>())).DoNothing();
         Mock.Arrange(() => _transaction.SetRequestParameters(Arg.IsAny<IDictionary<string, string>>())).DoNothing();
-        Mock.Arrange(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, IList<string>>>(), Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP))
-                        .DoInstead((IDictionary<string, IList<string>> headers, Func<IDictionary<string, IList<string>>, string, IEnumerable<string>> getter, TransportType transportType) => { _multiValueHeaders = headers; });
 
         // Act
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, inputObject);
@@ -269,9 +361,9 @@ public class LambdaEventHelpersTests
             Mock.Assert(() => _transaction.SetRequestMethod(inputObject.HttpMethod));
             Mock.Assert(() => _transaction.SetUri(inputObject.Path));
             Mock.Assert(() => _transaction.SetRequestParameters(inputObject.QueryStringParameters));
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(inputObject.MultiValueHeaders, Arg.IsAny<Func<IDictionary<string, IList<string>>, string, IEnumerable<string>>>(), TransportType.HTTP));
 
-            Assert.That(_multiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
+            Assert.That(_parsedMultiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
+            Assert.That(_transportType, Is.EqualTo(TransportType.Unknown));
         });
     }
 
@@ -694,7 +786,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.topicArn"], Is.EqualTo("testTopicArn"));
             Assert.That(_attributes["aws.lambda.eventSource.type"], Is.EqualTo("testType"));
 
-            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string,string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other));
+            Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Other));
         });
     }
 

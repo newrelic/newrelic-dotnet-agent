@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
@@ -72,6 +74,14 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandler, serializer);
                 case nameof(DynamoDbTimeWindowEventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<DynamoDBTimeWindowEvent>(DynamoDbTimeWindowEventHandlerAsync, serializer);
+                case nameof(ApiGatewayProxyRequestHandler):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, APIGatewayProxyResponse>(ApiGatewayProxyRequestHandler, serializer);
+                case nameof(ApiGatewayProxyRequestHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, APIGatewayProxyResponse>(ApiGatewayProxyRequestHandlerAsync, serializer);
+                case nameof(ApplicationLoadBalancerRequestHandler):
+                    return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandler, serializer);
+                case nameof(ApplicationLoadBalancerRequestHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandlerAsync, serializer);
                 case nameof(ScheduledCloudWatchEventHandler):
                     return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandler, serializer);
                 case nameof(ScheduledCloudWatchEventHandlerAsync):
@@ -217,6 +227,36 @@ namespace LambdaSelfExecutingAssembly
         {
             Console.WriteLine("Executing lambda {0}", nameof(DynamoDbTimeWindowEventHandler));
             await Task.Delay(100);
+        }
+
+        public static APIGatewayProxyResponse ApiGatewayProxyRequestHandler(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(APIGatewayProxyRequest));
+
+            return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static async Task<APIGatewayProxyResponse> ApiGatewayProxyRequestHandlerAsync(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(APIGatewayProxyRequest));
+            await Task.Delay(100);
+
+            return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static ApplicationLoadBalancerResponse ApplicationLoadBalancerRequestHandler(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(applicationLoadBalancerRequest));
+
+            return new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static async Task<ApplicationLoadBalancerResponse> ApplicationLoadBalancerRequestHandlerAsync(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(applicationLoadBalancerRequest));
+            await Task.Delay(100);
+
+            return new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
         }
 
         public static void ScheduledCloudWatchEventHandler(ScheduledEvent _, ILambdaContext __)
