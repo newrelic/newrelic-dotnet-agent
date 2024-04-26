@@ -6,11 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.JsonConverters;
+using NewRelic.Core.JsonConverters.LambdaPayloads;
 
 namespace NewRelic.Agent.Extensions.Lambda;
 
 public static class LambdaEventHelpers
 {
+    private static int _sqsTracingHeadersParsingMaxExceptionsToLog = 3;
+
     public static void AddEventTypeAttributes(IAgent agent, ITransaction transaction, AwsLambdaEventType eventType, object inputObject)
     {
         try
@@ -133,7 +137,7 @@ public static class LambdaEventHelpers
                         transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
                         transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
 
-                        TryParseSQSDistributedTraceHeaders(sqsEvent, transaction);
+                        TryParseSQSDistributedTraceHeaders(sqsEvent, transaction, agent);
                     }
                     break;
 
@@ -144,7 +148,6 @@ public static class LambdaEventHelpers
                     {
                         transaction.AddEventSourceAttribute("arn", (string)dynamoEvent.Records[0].EventSourceArn);
                     }
-
                     break;
 
                 case AwsLambdaEventType.Unknown:
@@ -168,7 +171,7 @@ public static class LambdaEventHelpers
     private static readonly List<string> TracingKeys = new List<string> { NEWRELIC_TRACE_HEADER, W3C_TRACEPARENT_HEADER, W3C_TRACESTATE_HEADER };
     private const string SQS_MSG_ATTR_VALUE_PREFIX = @"Value"":""";
 
-    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction)
+    private static void TryParseSQSDistributedTraceHeaders(dynamic sqsEvent, ITransaction transaction, IAgent agent)
     {
         // We can't pass anything dynamic to AcceptDTHeaders, so we have to copy the sqs
         // message attributes to a new <string,string> dict and then pass that to AcceptDTHeaders
@@ -185,18 +188,27 @@ public static class LambdaEventHelpers
                 }
             }
         }
-        else if (record.Body != null && record.Body.Contains("\"Type\" : \"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
+        else if (record.Body != null && record.Body.Contains("\"Notification\"") && record.Body.Contains("\"MessageAttributes\""))
         {
             // This is an SNS subscription with attributes
-            foreach (var tracingKey in TracingKeys)
+            try
             {
-                var headerValue = TryParseAttributeFromSqsMessageBody(record.Body, tracingKey);
-                if (headerValue != null)
+                var snsMessage = WrapperHelpers.DeserializeObject<SnsMessage>((string)record.Body);
+                foreach (var messageAttribute in snsMessage.MessageAttributes)
                 {
-                    sqsHeaders.Add(tracingKey, headerValue);
+                    sqsHeaders.Add(messageAttribute.Key, messageAttribute.Value.Value);
+                }
+            }
+            catch (Exception e)
+            {
+                if (_sqsTracingHeadersParsingMaxExceptionsToLog > 0)
+                {
+                    agent.Logger.Log(Logging.Level.Debug, $"Caught exception in TryParseSQSDistributedTraceHeaders: {e.Message}");
+                    _sqsTracingHeadersParsingMaxExceptionsToLog--;
                 }
             }
         }
+
         transaction.AcceptDistributedTraceHeaders(sqsHeaders, GetHeaderValue, TransportType.Queue);
     }
 
@@ -314,3 +326,4 @@ public static class LambdaEventHelpers
     }
 
 }
+
