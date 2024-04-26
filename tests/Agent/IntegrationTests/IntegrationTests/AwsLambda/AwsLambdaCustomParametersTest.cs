@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 using Xunit.Abstractions;
@@ -41,8 +42,34 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
 
             Assert.Multiple(
                 () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
-                () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
+                () => ValidateServerlessPayload(serverlessPayload),
+                () => ValidateTraceHasNoParent(serverlessPayload)
                 );
+        }
+
+        private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
+        {
+            var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
+
+            var expectedMissingAgentAttributes = new[]
+            {
+                // These attributes are expected to come from an ILambdaContext parameter which this lambda does not have
+                "aws.lambda.arn",
+                "aws.requestId",
+                // Unknown event types should omit the eventType attribute
+                "aws.lambda.eventSource.eventType"
+            };
+
+            Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
+
+            Assertions.TransactionEventDoesNotHaveAttributes(expectedMissingAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+        }
+
+        private void ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
+        {
+            var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == _expectedTransactionName);
+
+            Assertions.SpanEventDoesNotHaveAttributes(["parentId"], SpanEventAttributeType.Intrinsic, entrySpan);
         }
     }
 
