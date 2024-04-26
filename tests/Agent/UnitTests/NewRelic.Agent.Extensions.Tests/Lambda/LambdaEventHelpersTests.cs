@@ -108,7 +108,10 @@ public class LambdaEventHelpersTests
     }
 
     [Test]
-    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_MultiValueHeaders()
+    [TestCase("http", TransportType.HTTP)]
+    [TestCase("https", TransportType.HTTPS)]
+    [TestCase("gibberish", TransportType.Unknown)]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_MultiValueHeaders(string forwardedProto, TransportType expecteTransportType)
     {
         // Arrange
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
@@ -127,7 +130,7 @@ public class LambdaEventHelpersTests
                 { "header1", new [] {"value1", "value1a" } },
                 { "header2", new [] {"value2" } },
                 { NewRelicDistributedTraceKey, new [] { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2} },
-                { "X-Forwarded-Proto", new [] {"https"} }
+                { "X-Forwarded-Proto", new [] {forwardedProto} }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -148,7 +151,7 @@ public class LambdaEventHelpersTests
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
 
         // Assert
-        Assert.That(_transportType, Is.EqualTo(TransportType.HTTPS));
+        Assert.That(_transportType, Is.EqualTo(expecteTransportType));
     }
 
     [Test]
@@ -210,7 +213,10 @@ public class LambdaEventHelpersTests
     }
 
     [Test]
-    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_SingleValueHeaders()
+    [TestCase("http", TransportType.HTTP)]
+    [TestCase("https", TransportType.HTTPS)]
+    [TestCase("gibberish", TransportType.Unknown)]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_SetsDistributedTransportType_FromXForwardedProtoHeader_SingleValueHeaders(string forwardedProto, TransportType expecteTransportType)
     {
         // Arrange
         var eventType = AwsLambdaEventType.APIGatewayProxyRequest;
@@ -229,7 +235,7 @@ public class LambdaEventHelpersTests
                 { "header1", "value1" },
                 { "header2", "value2" },
                 { NewRelicDistributedTraceKey, NewRelicDistributedTracePayload },
-                { "X-Forwarded-Proto", "https" }
+                { "X-Forwarded-Proto", forwardedProto }
             },
             HttpMethod = "GET",
             Path = "/test/path",
@@ -250,7 +256,7 @@ public class LambdaEventHelpersTests
         LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, eventType, (dynamic)inputObject);
 
         // Assert
-        Assert.That(_transportType, Is.EqualTo(TransportType.HTTPS));
+        Assert.That(_transportType, Is.EqualTo(expecteTransportType));
     }
 
 
