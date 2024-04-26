@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -19,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Instrumentations occur in this test are AspNetCore and HttpClient.
     /// </summary>
     [NetCoreTest]
-    public class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
+    public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
 
@@ -30,11 +31,12 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         private const string TestTracingVendors = "rojo,congo";
         private const string TestOtherVendorEntries = "rojo=1,congo=2";
 
-        public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+        public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output, bool excludeNRheader)
             : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _fixture.IncludeNewRelicHeaders = excludeNRheader;
             _fixture.AddActions
             (
                 exerciseApplication: () =>
@@ -46,7 +48,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                     };
 
                     _fixture.ExecuteTraceRequestChain("CallNext", "CallNext", "CallEnd", headers);
-
                     _fixture.FirstCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.SecondCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
@@ -157,4 +158,22 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             );
         }
     }
+
+    public class HttpClientW3CTestsNetCoreWithNRHeaders : HttpClientW3CTestsNetCore
+    {
+        public HttpClientW3CTestsNetCoreWithNRHeaders(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+
+    }
+
+    public class HttpClientW3CTestsNetCoreWithoutNRHeaders : HttpClientW3CTestsNetCore
+    {
+        public HttpClientW3CTestsNetCoreWithoutNRHeaders(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+    }
+
 }

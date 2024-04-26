@@ -243,6 +243,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
+        /// <summary>
+        /// Sets or deletes the excludeNewrelicHeader setting in the newrelic.config.
+        /// </summary>
+        /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
+        public void SetOrDeleteDistributedTraceExcludeNewRelicHeaders(bool? exclude)
+        {
+            const string config = "configuration";
+            const string distributedTracing = "distributedTracing";
+            if (null == exclude)
+            {
+                CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { config }, distributedTracing);
+            }
+            else
+            {
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
+                    "excludeNewrelicHeader", exclude.Value ? "true" : "false");
+            }
+        }
+
         public NewRelicConfigModifier SetAllowAllHeaders(bool? enabled)
         {
             const string config = "configuration";
