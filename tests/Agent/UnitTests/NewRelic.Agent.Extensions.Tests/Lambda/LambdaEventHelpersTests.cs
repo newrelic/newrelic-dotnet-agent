@@ -31,38 +31,38 @@ public class LambdaEventHelpersTests
     private const string W3CTraceParentPayload = "00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01";
     private const string W3CTraceStatePayload = "33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035";
 
-    // I don't like hardcoding the same values for the tracing data in this JSON string as are already defined above, but
-    // having to escape everything else to make string interpolation possible is gross.
-    private const string SnsBodyJson = @"{
-    ""Type"": ""Notification"",
-    ""MessageId"": ""773af62d-cff4-5340-b73c-a88942c8b7b0"",
-    ""TopicArn"": ""arn:aws:sns:us-west-2:342444490463:CoolSnsTopic"",
-    ""Subject"": ""MessageSubject"",
-    ""Message"": ""Hello, world."",
-    ""Timestamp"": ""2024-04-25T16:55:24.199Z"",
-    ""SignatureVersion"": ""1"",
-    ""Signature"": ""asdflkasdjflkasdjlkfas"",
-    ""SigningCertURL"": ""https://some.host.com/some/path"",
-    ""UnsubscribeURL"": ""https://sns.us-west-2.amazonaws.com/?goaway"",
-    ""MessageAttributes"": {
-        ""newrelic"": {
-            ""Type"": ""String"",
-            ""Value"": ""eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiYWNjb3VudElkIiwiYXAiOiJhcHBJZCIsInRyIjoiMGFmNzY1MTkxNmNkNDNkZDg0NDhlYjIxMWM4MDMxOWMiLCJwciI6MC42NSwic2EiOnRydWUsInRpIjoxNzEzOTc3NjM3MDcxLCJ0ayI6IjMzIiwidHgiOiJ0cmFuc2FjdGlvbklkIiwiaWQiOiI1NTY5MDY1YTViMTMxM2JkIn19""
-        },
-        ""traceparent"": {
-            ""Type"": ""String"",
-            ""Value"": ""00-da8bc8cc6d062849b0efcf3c169afb5a-7d3efb1b173fecfa-01""
-        },
-        ""tracestate"": {
-            ""Type"": ""String"",
-            ""Value"": ""33@nr=0-0-33-2827902-7d3efb1b173fecfa-e8b91a159289ff74-1-1.23456-1518469636035""
-        },
-        ""ExtraAttribute"": {
-            ""Type"": ""String"",
-            ""Value"": ""SomethingExtra""
+    private const string SnsBodyJson = $$"""
+        {
+            "Type": "Notification",
+            "MessageId": "773af62d-cff4-5340-b73c-a88942c8b7b0",
+            "TopicArn": "arn:aws:sns:us-west-2:342444490463:CoolSnsTopic",
+            "Subject": "MessageSubject",
+            "Message": "Hello, world.",
+            "Timestamp": "2024-04-25T16:55:24.199Z",
+            "SignatureVersion": "1",
+            "Signature": "asdflkasdjflkasdjlkfas",
+            "SigningCertURL": "https://some.host.com/some/path",
+            "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?goaway",
+            "MessageAttributes": {
+                "{{NewRelicDistributedTraceKey}}": {
+                    "Type": "String",
+                    "Value": "{{NewRelicDistributedTracePayload}}"
+                },
+                "{{W3CTraceParentKey}}": {
+                    "Type": "String",
+                    "Value": "{{W3CTraceParentPayload}}"
+                },
+                "{{W3CTraceStateKey}}": {
+                    "Type": "String",
+                    "Value": "{{W3CTraceStatePayload}}"
+                },
+                "ExtraAttribute": {
+                    "Type": "String",
+                    "Value": "SomethingExtra"
+                }
+            }
         }
-    }
-}";
+        """;
 
     [SetUp]
     public void SetUp()
