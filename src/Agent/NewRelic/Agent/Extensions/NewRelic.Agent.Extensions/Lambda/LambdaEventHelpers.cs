@@ -13,6 +13,8 @@ namespace NewRelic.Agent.Extensions.Lambda;
 
 public static class LambdaEventHelpers
 {
+    private static int _sqsTracingHeadersParsingMaxExceptionsToLog = 3;
+
     public static void AddEventTypeAttributes(IAgent agent, ITransaction transaction, AwsLambdaEventType eventType, object inputObject)
     {
         try
@@ -199,7 +201,11 @@ public static class LambdaEventHelpers
             }
             catch (Exception e)
             {
-                agent.Logger.Log(Logging.Level.Debug, $"Caught exception in TryParseSQSDistributedTraceHeaders. Exception: {e.Message}, record.Body={(string)record.Body}");
+                if (_sqsTracingHeadersParsingMaxExceptionsToLog > 0)
+                {
+                    agent.Logger.Log(Logging.Level.Debug, $"Caught exception in TryParseSQSDistributedTraceHeaders: {e.Message}");
+                    _sqsTracingHeadersParsingMaxExceptionsToLog--;
+                }
             }
         }
 
