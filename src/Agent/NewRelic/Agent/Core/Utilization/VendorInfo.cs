@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Utilization
 #if NETSTANDARD2_0
         private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
+        private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 #endif
 
         private const string AwsName = @"aws";
@@ -34,6 +35,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string PcfName = @"pcf";
         private const string DockerName = @"docker";
         private const string KubernetesName = @"kubernetes";
+        private const string EcsFargateName = @"ecs-fargate";
 
         private readonly string AwsTokenUri = @"http://169.254.169.254/latest/api/token";
         private readonly string AwsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
@@ -279,37 +281,51 @@ namespace NewRelic.Agent.Core.Utilization
 #if NETSTANDARD2_0
         public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper)
         {
-                IVendorModel vendorModel = null;
+            IVendorModel vendorModel = null;
+            try
+            {
+                var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
+                vendorModel = TryGetDockerCGroupV2(fileContent);
+                if (vendorModel == null)
+                    Log.Finest("Found /proc/self/mountinfo but failed to parse Docker container id.");
+
+            }
+            catch (Exception ex)
+            {
+                Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
+            }
+
+            if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+            {
                 try
                 {
-                    var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
-                    vendorModel = TryGetDockerCGroupV2(fileContent);
+                    var fileContent = fileReaderWrapper.ReadAllText("/proc/self/cgroup");
+                    vendorModel = TryGetDockerCGroupV1(fileContent);
                     if (vendorModel == null)
-                        Log.Finest("Found /proc/self/mountinfo but failed to parse Docker container id.");
-
+                        Log.Finest("Found /proc/self/cgroup but failed to parse Docker container id.");
                 }
                 catch (Exception ex)
                 {
-                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
+                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
                 }
+            }
 
-                if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+            if (vendorModel == null)
+            {
+                try
                 {
-                    try
-                    {
-                        var fileContent = fileReaderWrapper.ReadAllText("/proc/self/cgroup");
-                        vendorModel = TryGetDockerCGroupV1(fileContent);
-                        if (vendorModel == null)
-                            Log.Finest("Found /proc/self/cgroup but failed to parse Docker container id.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
-                        return null;
-                    }
+                    vendorModel = TryGetEcsFargateDockerId();
+                    if (vendorModel == null)
+                        Log.Finest("Found ECS_CONTAINER_METADATA_URI_V4 but failed to parse Docker container id.");
                 }
+                catch (Exception ex)
+                {
+                    Log.Finest(ex, "Failed to parse Docker container id from ECS_CONTAINER_METADATA_URI_V4.");
+                    return null;
+                }
+            }
 
-                return vendorModel;
+            return vendorModel;
         }
 
         private IVendorModel TryGetDockerCGroupV1(string fileContent)
@@ -353,6 +369,19 @@ namespace NewRelic.Agent.Core.Utilization
 
             return id == null ? null : new DockerVendorModel(id);
         }
+
+        private IVendorModel TryGetEcsFargateDockerId()
+        {
+            var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
+            if (string.IsNullOrWhiteSpace(metadataUri))
+            {
+                return null;
+            }
+
+            var id = new Uri(metadataUri).Segments.LastOrDefault();
+            return id == null ? null : new DockerVendorModel(id);
+        }
+
 #endif
 
         public IVendorModel GetKubernetesInfo()

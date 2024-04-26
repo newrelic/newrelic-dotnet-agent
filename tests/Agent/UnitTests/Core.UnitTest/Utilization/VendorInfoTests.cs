@@ -4,9 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -27,6 +26,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string PcfInstanceIp = @"CF_INSTANCE_IP";
         private const string PcfMemoryLimit = @"MEMORY_LIMIT";
         private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
+        private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 
         [SetUp]
         public void Setup()
@@ -468,7 +468,23 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
-        public void GetVendors_GetDockerVendorInfo_ReturnsNull_IfUnableToParseV1OrV2()
+        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_IfUnableToParseV1OrV2()
+        {
+            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo(dockerId));
+        }
+
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ReturnsNull_IfUnableToParseV1OrV2OrEcsFargate()
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
