@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Text;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
@@ -13,6 +14,7 @@ using Amazon.Lambda.SimpleEmailEvents;
 using Amazon.Lambda.SimpleEmailEvents.Actions;
 using Amazon.Lambda.SNSEvents;
 using ApplicationLifecycle;
+using Newtonsoft.Json;
 
 namespace LambdaSelfExecutingAssembly
 {
@@ -78,10 +80,18 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, APIGatewayProxyResponse>(ApiGatewayProxyRequestHandler, serializer);
                 case nameof(ApiGatewayProxyRequestHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, APIGatewayProxyResponse>(ApiGatewayProxyRequestHandlerAsync, serializer);
+                case nameof (ApiGatewayProxyRequestHandlerReturnsStream):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, Stream>(ApiGatewayProxyRequestHandlerReturnsStream, serializer);
+                case nameof (ApiGatewayProxyRequestHandlerReturnsStreamAsync):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, Stream>(ApiGatewayProxyRequestHandlerReturnsStreamAsync, serializer);
                 case nameof(ApplicationLoadBalancerRequestHandler):
                     return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandler, serializer);
                 case nameof(ApplicationLoadBalancerRequestHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandlerAsync, serializer);
+                case nameof(ApplicationLoadBalancerRequestHandlerReturnsStream):
+                    return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, Stream>(ApplicationLoadBalancerRequestHandlerReturnsStream, serializer);
+                case nameof(ApplicationLoadBalancerRequestHandlerReturnsStreamAsync):
+                    return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, Stream>(ApplicationLoadBalancerRequestHandlerReturnsStreamAsync, serializer);
                 case nameof(ScheduledCloudWatchEventHandler):
                     return HandlerWrapper.GetHandlerWrapper<ScheduledEvent>(ScheduledCloudWatchEventHandler, serializer);
                 case nameof(ScheduledCloudWatchEventHandlerAsync):
@@ -231,14 +241,37 @@ namespace LambdaSelfExecutingAssembly
 
         public static APIGatewayProxyResponse ApiGatewayProxyRequestHandler(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(APIGatewayProxyRequest));
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandler));
 
             return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
         }
 
+        public static Stream ApiGatewayProxyRequestHandlerReturnsStream(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerReturnsStream));
+
+            var response = new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+            var stream = new MemoryStream(bytes);
+            return stream;
+        }
+
+        public static async Task<Stream> ApiGatewayProxyRequestHandlerReturnsStreamAsync(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerReturnsStreamAsync));
+
+            await Task.Delay(100);
+
+            var response = new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+            var stream = new MemoryStream(bytes);
+
+            return stream;
+        }
+
         public static async Task<APIGatewayProxyResponse> ApiGatewayProxyRequestHandlerAsync(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(APIGatewayProxyRequest));
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerAsync));
             await Task.Delay(100);
 
             return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
@@ -246,17 +279,40 @@ namespace LambdaSelfExecutingAssembly
 
         public static ApplicationLoadBalancerResponse ApplicationLoadBalancerRequestHandler(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(applicationLoadBalancerRequest));
+            Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandler));
 
             return new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
         }
 
         public static async Task<ApplicationLoadBalancerResponse> ApplicationLoadBalancerRequestHandlerAsync(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(applicationLoadBalancerRequest));
+            Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandlerAsync));
             await Task.Delay(100);
 
             return new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static Stream ApplicationLoadBalancerRequestHandlerReturnsStream(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandlerReturnsStream));
+
+            var response = new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+            var stream = new MemoryStream(bytes);
+
+            return stream;
+        }
+
+        public static async Task<Stream> ApplicationLoadBalancerRequestHandlerReturnsStreamAsync(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandlerReturnsStreamAsync));
+            await Task.Delay(100);
+
+            var response = new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+            var stream = new MemoryStream(bytes);
+
+            return stream;
         }
 
         public static void ScheduledCloudWatchEventHandler(ScheduledEvent _, ILambdaContext __)

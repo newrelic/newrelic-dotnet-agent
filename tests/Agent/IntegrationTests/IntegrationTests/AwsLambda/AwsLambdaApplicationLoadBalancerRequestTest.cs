@@ -139,4 +139,35 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
         {
         }
     }
+
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet6 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet6(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream")
+        {
+        }
+    }
+
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet8(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream")
+        {
+        }
+    }
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet6 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet6(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync")
+        {
+        }
+    }
+
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync")
+        {
+        }
+    }
 }
