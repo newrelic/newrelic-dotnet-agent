@@ -128,13 +128,6 @@ jobs:
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
-      - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-        with:
-          name: NewRelic.OpenTracing.AmazonLambda.Tracer
-          path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
-          if-no-files-found: error
-
   run-linux-container-tests:
     name: Run Linux Container Tests
     needs: 
@@ -667,12 +660,6 @@ jobs:
         with:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
-
-      - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
-        with:
-          name: NewRelic.OpenTracing.AmazonLambda.Tracer
-          path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
