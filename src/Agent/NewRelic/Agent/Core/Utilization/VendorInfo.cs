@@ -378,7 +378,10 @@ namespace NewRelic.Agent.Core.Utilization
                 return null;
             }
 
-            var id = new Uri(metadataUri).Segments.LastOrDefault();
+            var responseJson = _vendorHttpApiRequestor.CallVendorApi(new Uri(metadataUri), GetMethod, EcsFargateName);
+            var jObject = JObject.Parse(responseJson);
+            var idToken = jObject.SelectToken("DockerId");
+            var id = NormalizeAndValidateMetadata((string)idToken, "DockerId", EcsFargateName);
             return id == null ? null : new DockerVendorModel(id);
         }
 
