@@ -16,7 +16,6 @@ using Amazon.Lambda.SimpleEmailEvents;
 using Amazon.Lambda.SimpleEmailEvents.Actions;
 using Amazon.Lambda.SNSEvents;
 using ApplicationLifecycle;
-using Newtonsoft.Json;
 
 namespace LambdaSelfExecutingAssembly
 {
@@ -264,9 +263,11 @@ namespace LambdaSelfExecutingAssembly
         {
             Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerReturnsStream));
 
+            var serializer = new DefaultLambdaJsonSerializer();
+
             var response = new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
-            var stream = new MemoryStream(bytes);
+            var stream = new MemoryStream();
+            serializer.Serialize(response, stream);
             return stream;
         }
 
@@ -276,9 +277,11 @@ namespace LambdaSelfExecutingAssembly
 
             await Task.Delay(100);
 
+            var serializer = new DefaultLambdaJsonSerializer();
+
             var response = new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
-            var stream = new MemoryStream(bytes);
+            var stream = new MemoryStream();
+            serializer.Serialize(response, stream);
 
             return stream;
         }
@@ -310,9 +313,10 @@ namespace LambdaSelfExecutingAssembly
         {
             Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandlerReturnsStream));
 
+            var serializer = new DefaultLambdaJsonSerializer();
             var response = new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
-            var stream = new MemoryStream(bytes);
+            var stream = new MemoryStream();
+            serializer.Serialize(response, stream);
 
             return stream;
         }
@@ -322,10 +326,10 @@ namespace LambdaSelfExecutingAssembly
             Console.WriteLine("Executing lambda {0}", nameof(ApplicationLoadBalancerRequestHandlerReturnsStreamAsync));
             await Task.Delay(100);
 
+            var serializer = new DefaultLambdaJsonSerializer();
             var response = new ApplicationLoadBalancerResponse() { Body = applicationLoadBalancerRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
-            var stream = new MemoryStream(bytes);
-
+            var stream = new MemoryStream();
+            serializer.Serialize(response, stream);
             return stream;
         }
 
