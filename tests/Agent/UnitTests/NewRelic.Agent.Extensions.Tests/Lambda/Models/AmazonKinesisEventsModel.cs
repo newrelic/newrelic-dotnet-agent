@@ -14,7 +14,7 @@ namespace NewRelic.Mock.Amazon.Lambda.KinesisEvents
 
         public class KinesisEventRecord
         {
-            public string EventSourceArn { get; set; }
+            public string EventSourceARN { get; set; }
             public string AwsRegion { get; set; }
         }
     }

@@ -13,6 +13,7 @@ namespace Agent.Extensions.Tests.Lambda
         [TestCase("Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest", AwsLambdaEventType.ApplicationLoadBalancerRequest)]
         [TestCase("Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent", AwsLambdaEventType.CloudWatchScheduledEvent)]
         [TestCase("Amazon.Lambda.KinesisEvents.KinesisEvent", AwsLambdaEventType.KinesisStreamingEvent)]
+        [TestCase("Amazon.Lambda.KinesisEvents.KinesisTimeWindowEvent", AwsLambdaEventType.KinesisStreamingEvent)]
         [TestCase("Amazon.Lambda.KinesisFirehoseEvents.KinesisFirehoseEvent", AwsLambdaEventType.KinesisFirehoseEvent)]
         [TestCase("Amazon.Lambda.SNSEvents.SNSEvent", AwsLambdaEventType.SNSEvent)]
         [TestCase("Amazon.Lambda.S3Events.S3Event", AwsLambdaEventType.S3Event)]

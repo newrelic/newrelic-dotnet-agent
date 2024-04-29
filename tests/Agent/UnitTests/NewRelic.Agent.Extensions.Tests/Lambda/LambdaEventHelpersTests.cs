@@ -476,7 +476,7 @@ public class LambdaEventHelpersTests
         {
             Records =
             [
-                new() { EventSourceArn = "testArn", AwsRegion = "testRegion" }
+                new() { EventSourceARN = "testArn", AwsRegion = "testRegion" }
             ]
         };
 
