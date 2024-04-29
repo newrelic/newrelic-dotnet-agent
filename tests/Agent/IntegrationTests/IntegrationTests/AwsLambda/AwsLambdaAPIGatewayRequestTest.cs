@@ -151,4 +151,35 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
         {
         }
     }
+
+    public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestNet6 : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6>
+    {
+        public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestNet6(LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayProxyRequestHandlerReturnsStream")
+        {
+        }
+    }
+
+    public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestNet8 : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8>
+    {
+        public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestNet8(LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayProxyRequestHandlerReturnsStream")
+        {
+        }
+    }
+    public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncNet6 : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6>
+    {
+        public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncNet6(AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayProxyRequestHandlerReturnsStreamAsync")
+        {
+        }
+    }
+
+    public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncNet8 : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8>
+    {
+        public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncNet8(AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayProxyRequestHandlerReturnsStreamAsync")
+        {
+        }
+    }
 }

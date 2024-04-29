@@ -13,11 +13,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
             return "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ApiGatewayProxyRequestHandler" + (isAsync ? "Async" : "");
         }
 
-        protected LambdaAPIGatewayProxyRequestTriggerFixtureBase(string targetFramework, bool isAsync) :
+        protected LambdaAPIGatewayProxyRequestTriggerFixtureBase(string targetFramework, bool isAsync, bool returnsStream) :
             base(targetFramework,
                 null,
                 GetHandlerString(isAsync),
-                "ApiGatewayProxyRequestHandler" + (isAsync ? "Async" : ""),
+                "ApiGatewayProxyRequestHandler" + (returnsStream ? "ReturnsStream" : "") + (isAsync ? "Async" : ""),
                 null)
         {
         }
@@ -155,21 +155,41 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 
     public class LambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", false) { }
+        public LambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", false, false) { }
     }
 
     public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", true) { }
+        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", true, false) { }
     }
 
     public class LambdaAPIGatewayProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", false) { }
+        public LambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", false, false) { }
     }
 
     public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", true) { }
+        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", true, false) { }
+    }
+
+    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    {
+        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", false, true) { }
+    }
+
+    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    {
+        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", true, true) { }
+    }
+
+    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    {
+        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", false, true) { }
+    }
+
+    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    {
+        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", true, true) { }
     }
 }
