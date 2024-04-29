@@ -22,81 +22,85 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 
         public void EnqueueSnsEvent()
         {
-            var snsJson = @"{
-  ""Records"": [
-    {
-      ""EventSource"": ""aws:sns"",
-      ""EventVersion"": ""1.0"",
-      ""EventSubscriptionArn"": ""arn:{partition}:sns:EXAMPLE1"",
-      ""Sns"": {
-        ""Type"": ""Notification"",
-        ""MessageId"": ""95df01b4-ee98-5cb9-9903-4c221d41eb5e"",
-        ""TopicArn"": ""arn:{partition}:sns:EXAMPLE2"",
-        ""Subject"": ""TestInvoke"",
-        ""Message"": ""Hello from SNS!"",
-        ""Timestamp"": ""1970-01-01T00:00:00Z"",
-        ""SignatureVersion"": ""1"",
-        ""Signature"": ""EXAMPLE"",
-        ""SigningCertUrl"": ""EXAMPLE"",
-        ""UnsubscribeUrl"": ""EXAMPLE"",
-        ""MessageAttributes"": {
-          ""Test"": {
-            ""Type"": ""String"",
-            ""Value"": ""TestString""
-          },
-          ""TestBinary"": {
-            ""Type"": ""Binary"",
-            ""Value"": ""TestBinary""
-          }
-        }
-      }
-    }
-  ]
-}";
+            var snsJson = """
+                          {
+                            "Records": [
+                              {
+                                "EventSource": "aws:sns",
+                                "EventVersion": "1.0",
+                                "EventSubscriptionArn": "arn:{partition}:sns:EXAMPLE1",
+                                "Sns": {
+                                  "Type": "Notification",
+                                  "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+                                  "TopicArn": "arn:{partition}:sns:EXAMPLE2",
+                                  "Subject": "TestInvoke",
+                                  "Message": "Hello from SNS!",
+                                  "Timestamp": "1970-01-01T00:00:00Z",
+                                  "SignatureVersion": "1",
+                                  "Signature": "EXAMPLE",
+                                  "SigningCertUrl": "EXAMPLE",
+                                  "UnsubscribeUrl": "EXAMPLE",
+                                  "MessageAttributes": {
+                                    "Test": {
+                                      "Type": "String",
+                                      "Value": "TestString"
+                                    },
+                                    "TestBinary": {
+                                      "Type": "Binary",
+                                      "Value": "TestBinary"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                          """;
             EnqueueLambdaEvent(snsJson);
         }
 
         public void EnqueueSnsEventWithDTHeaders(string traceId, string spanId)
         {
-            var snsJson = @$"{{
-  ""Records"": [
-    {{
-      ""EventSource"": ""aws:sns"",
-      ""EventVersion"": ""1.0"",
-      ""EventSubscriptionArn"": ""arn:{{partition}}:sns:EXAMPLE1"",
-      ""Sns"": {{
-        ""Type"": ""Notification"",
-        ""MessageId"": ""95df01b4-ee98-5cb9-9903-4c221d41eb5e"",
-        ""TopicArn"": ""arn:{{partition}}:sns:EXAMPLE2"",
-        ""Subject"": ""TestInvoke"",
-        ""Message"": ""Hello from SNS!"",
-        ""Timestamp"": ""1970-01-01T00:00:00Z"",
-        ""SignatureVersion"": ""1"",
-        ""Signature"": ""EXAMPLE"",
-        ""SigningCertUrl"": ""EXAMPLE"",
-        ""UnsubscribeUrl"": ""EXAMPLE"",
-        ""MessageAttributes"": {{
-          ""Test"": {{
-            ""Type"": ""String"",
-            ""Value"": ""TestString""
-          }},
-          ""TestBinary"": {{
-            ""Type"": ""Binary"",
-            ""Value"": ""TestBinary""
-          }},
-          ""traceparent"": {{
-            ""Type"": ""String"",
-            ""Value"": ""{GetTestTraceParentHeaderValue(traceId, spanId)}""
-          }},
-          ""tracestate"": {{
-            ""Type"": ""String"",
-            ""Value"": ""{GetTestTraceStateHeaderValue(spanId)}""
-          }}
-        }}
-      }}
-    }}
-  ]
-}}";
+            var snsJson = $$"""
+                            {
+                              "Records": [
+                                {
+                                  "EventSource": "aws:sns",
+                                  "EventVersion": "1.0",
+                                  "EventSubscriptionArn": "arn:{partition}:sns:EXAMPLE1",
+                                  "Sns": {
+                                    "Type": "Notification",
+                                    "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+                                    "TopicArn": "arn:{partition}:sns:EXAMPLE2",
+                                    "Subject": "TestInvoke",
+                                    "Message": "Hello from SNS!",
+                                    "Timestamp": "1970-01-01T00:00:00Z",
+                                    "SignatureVersion": "1",
+                                    "Signature": "EXAMPLE",
+                                    "SigningCertUrl": "EXAMPLE",
+                                    "UnsubscribeUrl": "EXAMPLE",
+                                    "MessageAttributes": {
+                                      "Test": {
+                                        "Type": "String",
+                                        "Value": "TestString"
+                                      },
+                                      "TestBinary": {
+                                        "Type": "Binary",
+                                        "Value": "TestBinary"
+                                      },
+                                      "traceparent": {
+                                        "Type": "String",
+                                        "Value": "{{GetTestTraceParentHeaderValue(traceId, spanId)}}"
+                                      },
+                                      "tracestate": {
+                                        "Type": "String",
+                                        "Value": "{{GetTestTraceStateHeaderValue(spanId)}}"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                            """;
             EnqueueLambdaEvent(snsJson);
         }
     }
