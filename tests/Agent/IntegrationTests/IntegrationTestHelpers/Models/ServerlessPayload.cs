@@ -139,7 +139,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public object AgentRunId { get; set; }
 
         [JsonArrayIndex(Index = 1)]
-        public TransactionTrace[] TransactionTraces { get; set; }
+        public TransactionSample[] TransactionSamples { get; set; }
     }
 
     [JsonConverter(typeof(JsonArrayConverter))]
