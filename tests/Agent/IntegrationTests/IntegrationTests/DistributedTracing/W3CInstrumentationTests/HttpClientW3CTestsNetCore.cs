@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -31,12 +30,12 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         private const string TestTracingVendors = "rojo,congo";
         private const string TestOtherVendorEntries = "rojo=1,congo=2";
 
-        public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output, bool excludeNRheader)
+        public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output, bool excludeNewRelicHeader)
             : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.IncludeNewRelicHeaders = excludeNRheader;
+            _fixture.ExcludeNewRelicHeader = excludeNewRelicHeader;
             _fixture.AddActions
             (
                 exerciseApplication: () =>
@@ -121,12 +120,16 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 
             var senderExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
             };
+
+            if (! _fixture.ExcludeNewRelicHeader)
+            {
+                senderExpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 });
+            }
 
             var accountId = _fixture.SecondCallAppAgentLog.GetAccountId();
             var appId = _fixture.SecondCallAppAgentLog.GetApplicationId();
@@ -159,19 +162,19 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         }
     }
 
-    public class HttpClientW3CTestsNetCoreWithNRHeaders : HttpClientW3CTestsNetCore
+    public class HttpClientW3CTestsNetCoreWithNRHeader : HttpClientW3CTestsNetCore
     {
-        public HttpClientW3CTestsNetCoreWithNRHeaders(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
+        public HttpClientW3CTestsNetCoreWithNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, excludeNewRelicHeader: false)
         {
         }
 
     }
 
-    public class HttpClientW3CTestsNetCoreWithoutNRHeaders : HttpClientW3CTestsNetCore
+    public class HttpClientW3CTestsNetCoreWithoutNRHeader : HttpClientW3CTestsNetCore
     {
-        public HttpClientW3CTestsNetCoreWithoutNRHeaders(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
+        public HttpClientW3CTestsNetCoreWithoutNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, excludeNewRelicHeader: true)
         {
         }
     }

@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public RemoteService FirstCallApplication { get; set; }
         public RemoteService SecondCallApplication { get; set; }
 
-        public bool IncludeNewRelicHeaders = true;
+        public bool ExcludeNewRelicHeader = false;
 
         private AgentLogFile _firstCallAppAgentLog;
         private AgentLogFile _secondCallAppAgentLog;
@@ -43,8 +43,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 configModifier.SetLogLevel("all");
 
                 //Do during setup so TestLogger is set.
-                FirstCallApplication = SetupDistributedTracingApplication(IncludeNewRelicHeaders);
-                SecondCallApplication = SetupDistributedTracingApplication(IncludeNewRelicHeaders);
+                FirstCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
+                SecondCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
 
                 var environmentVariables = new Dictionary<string, string>();
 
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             }
         }
 
-        protected RemoteService SetupDistributedTracingApplication(bool includeNewRelicHeaders)
+        protected RemoteService SetupDistributedTracingApplication(bool excludeNewRelicHeader)
         {
             var service = new RemoteService(
                 ApplicationDirectoryName,
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var configModifier = new NewRelicConfigModifier(service.DestinationNewRelicConfigFilePath);
             configModifier.SetOrDeleteDistributedTraceEnabled(true);
             configModifier.SetOrDeleteSpanEventsEnabled(true);
-            configModifier.SetOrDeleteDistributedTraceExcludeNewRelicHeaders(includeNewRelicHeaders);
+            configModifier.SetOrDeleteDistributedTraceExcludeNewRelicHeader(excludeNewRelicHeader);
             configModifier.SetLogLevel("all");
 
             return service;
