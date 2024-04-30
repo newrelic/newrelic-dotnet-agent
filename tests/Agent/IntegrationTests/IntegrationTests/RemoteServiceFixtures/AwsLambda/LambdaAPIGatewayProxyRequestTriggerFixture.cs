@@ -8,15 +8,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 {
     public abstract class LambdaAPIGatewayProxyRequestTriggerFixtureBase : LambdaSelfExecutingAssemblyFixture
     {
-        private static string GetHandlerString(bool isAsync)
+        private static string GetHandlerString(bool isAsync, bool returnsStream)
         {
-            return "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ApiGatewayProxyRequestHandler" + (isAsync ? "Async" : "");
+            return "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ApiGatewayProxyRequestHandler" + (returnsStream ? "ReturnsStream" : "") + (isAsync ? "Async" : "");
         }
 
         protected LambdaAPIGatewayProxyRequestTriggerFixtureBase(string targetFramework, bool isAsync, bool returnsStream) :
             base(targetFramework,
                 null,
-                GetHandlerString(isAsync),
+                GetHandlerString(isAsync, returnsStream),
                 "ApiGatewayProxyRequestHandler" + (returnsStream ? "ReturnsStream" : "") + (isAsync ? "Async" : ""),
                 null)
         {

@@ -8,15 +8,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 {
     public abstract class LambdaApplicationLoadBalancerRequestTriggerFixtureBase : LambdaSelfExecutingAssemblyFixture
     {
-        private static string GetHandlerString(bool isAsync)
+        private static string GetHandlerString(bool isAsync, bool returnsStream)
         {
-            return "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ApplicationLoadBalancerRequestHandler" + (isAsync ? "Async" : "");
+            return "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ApplicationLoadBalancerRequestHandler" + (returnsStream ? "ReturnsStream" : "") + (isAsync ? "Async" : "");
         }
 
         protected LambdaApplicationLoadBalancerRequestTriggerFixtureBase(string targetFramework, bool isAsync, bool returnsStream) :
             base(targetFramework,
                 null,
-                GetHandlerString(isAsync),
+                GetHandlerString(isAsync, returnsStream),
                 "ApplicationLoadBalancerRequestHandler" + (returnsStream ? "ReturnsStream" : "") + (isAsync ? "Async" : ""),
                 null)
         {
