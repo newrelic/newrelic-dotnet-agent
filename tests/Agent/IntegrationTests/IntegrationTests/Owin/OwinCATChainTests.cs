@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
-using TestSerializationHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {

@@ -4,9 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using TestSerializationHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
-namespace TestSerializationHelpers.Test.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Tests.Models
 {
     public class ExpectedTransactionTraceSegmentTests
     {

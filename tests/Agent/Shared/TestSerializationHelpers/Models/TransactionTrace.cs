@@ -12,7 +12,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     [JsonConverter(typeof(TransactionTraceConverter))]
     public class TransactionTrace

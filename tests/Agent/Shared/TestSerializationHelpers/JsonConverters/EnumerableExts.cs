@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace TestSerializationHelpers.JsonConverters
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
 {
     public static class IEnumerableExtensions
     {

@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TestSerializationHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers

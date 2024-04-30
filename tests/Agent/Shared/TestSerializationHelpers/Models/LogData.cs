@@ -6,7 +6,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     public class LogEventData
     {

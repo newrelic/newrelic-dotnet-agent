@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     public class Environment : List<object[]>
     {

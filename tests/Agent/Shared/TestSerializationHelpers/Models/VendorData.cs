@@ -4,7 +4,7 @@
 
 using Newtonsoft.Json;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     public class VendorData
     {

@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using Newtonsoft.Json;
-using TestSerializationHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers

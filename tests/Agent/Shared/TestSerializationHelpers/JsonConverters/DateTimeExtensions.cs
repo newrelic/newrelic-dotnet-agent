@@ -4,7 +4,7 @@
 
 using System;
 
-namespace TestSerializationHelpers.JsonConverters
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
 {
     public enum TimeUnit
     {

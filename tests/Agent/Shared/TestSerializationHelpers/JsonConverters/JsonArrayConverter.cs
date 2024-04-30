@@ -9,7 +9,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace TestSerializationHelpers.JsonConverters
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
 {
     public class JsonArrayConverter : JsonConverter
     {

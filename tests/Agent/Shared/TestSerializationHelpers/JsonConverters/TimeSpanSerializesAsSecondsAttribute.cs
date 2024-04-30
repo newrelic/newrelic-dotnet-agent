@@ -4,7 +4,7 @@
 
 using System;
 
-namespace TestSerializationHelpers.JsonConverters
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public sealed class TimeSpanSerializesAsSecondsAttribute : System.Attribute { }

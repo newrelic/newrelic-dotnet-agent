@@ -5,14 +5,12 @@ using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
-using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using TestSerializationHelpers.Models;
-using static CompositeTests.ServerlessDataTransportTests;
 
 namespace CompositeTests
 {

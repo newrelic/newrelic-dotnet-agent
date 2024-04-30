@@ -4,11 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TestSerializationHelpers.JsonConverters;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     [JsonConverter(typeof(SpanEventConverter))]
     public class SpanEvent

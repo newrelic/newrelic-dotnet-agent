@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     // Note: this data is referred to as "AppData" in the CAT spec.
     [JsonConverter(typeof(CrossApplicationResponseDataConverter))]

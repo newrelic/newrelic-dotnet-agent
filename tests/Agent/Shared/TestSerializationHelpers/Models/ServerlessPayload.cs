@@ -3,11 +3,11 @@
 
 
 using System.Globalization;
+using NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using TestSerializationHelpers.JsonConverters;
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     [JsonConverter(typeof(JsonArrayConverter))]
     public class ServerlessPayload

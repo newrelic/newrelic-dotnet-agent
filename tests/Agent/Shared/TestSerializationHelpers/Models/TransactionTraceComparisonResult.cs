@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
 {
     public class TransactionTraceComparisonResult
     {
