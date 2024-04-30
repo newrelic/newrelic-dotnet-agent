@@ -9,9 +9,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TestSerializationHelpers.Models;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers

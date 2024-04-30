@@ -52,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda
                 () => Assert.NotNull(serverlessPayload.Telemetry.TransactionEventsPayload),
                 () => Assert.NotNull(serverlessPayload.Telemetry.SpanEventsPayload),
                 () => Assert.Null(serverlessPayload.Telemetry.SqlTracePayload),
-                () => Assert.Null(serverlessPayload.Telemetry.TransctionTracePayload),
+                () => Assert.Null(serverlessPayload.Telemetry.TransactionTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorEventsPayload),
                 () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])

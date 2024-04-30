@@ -7,8 +7,8 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {

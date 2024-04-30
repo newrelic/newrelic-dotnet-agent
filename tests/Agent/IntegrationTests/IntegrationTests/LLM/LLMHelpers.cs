@@ -3,7 +3,7 @@
 
 using System;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {

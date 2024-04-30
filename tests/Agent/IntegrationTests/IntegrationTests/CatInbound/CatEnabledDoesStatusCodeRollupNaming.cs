@@ -5,8 +5,8 @@
 using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+using TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
