@@ -18,11 +18,9 @@ From a Powershell command prompt in the same folder as this README file:
 
 ```
 docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 --push .
-docker buildx  build --build-arg DOTNET_VERSION="7.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:7.0 --platform linux/amd64,linux/arm64/v8 --push .
 docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
 
 docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 -push .
-docker buildx  build --build-arg DOTNET_VERSION="7.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:7.0 --platform linux/amd64,linux/arm64/v8 -push .
 docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 -push .
 ```
 

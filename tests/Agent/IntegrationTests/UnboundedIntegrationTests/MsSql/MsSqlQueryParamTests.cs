@@ -205,34 +205,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region System.Data.SqlClient (.NET Core/5+ only)
 
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: false)
-        {
-        }
-    }
-
     [NetCoreTest]
     public class MsSqlQueryParamTests_SystemDataSqlClient_CoreOldest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
@@ -311,34 +283,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
 
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser",
-                  paramsWithAtSign: false)
-        {
-        }
-    }
-
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    // Set to net7 since the package this relies on does not currently support net8.
-    [NetCoreTest]
-    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
-    {
-        public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

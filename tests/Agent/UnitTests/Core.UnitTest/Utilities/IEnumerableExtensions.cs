@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Utilities
         [TestCase(5, 6, 8, 9, ExpectedResult = false, Description = "Broken sequence")]
         public bool IsSequential_ReturnsTrue_IfSequenceIsSequential(params int[] list)
         {
-            var isSequential = list.Cast<uint>().IsSequential();
+            var isSequential = list.Select(Convert.ToUInt32).IsSequential();
 
             return isSequential;
         }
