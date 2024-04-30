@@ -5,10 +5,12 @@ using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
-using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.TestUtilities;
+using Newtonsoft.Json;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace CompositeTests
 {
@@ -43,14 +45,26 @@ namespace CompositeTests
             All
         }
 
+        internal enum PayloadDataTypes
+        {
+            AnalyticEventData,
+            CustomEventData,
+            ErrorData,
+            ErrorEventData,
+            MetricData,
+            SpanEventData,
+            SqlTraceData,
+            TransactionSampleData
+        }
+
         [Test]
-        [TestCase(TestType.TransactionOnly, new[] { "analytic_event_data", "metric_data", "span_event_data", "transaction_sample_data" }, new[] { "custom_event_data", "error_data", "error_event_data", "sql_trace_data" })]
-        [TestCase(TestType.RecordMetric, new[] { "analytic_event_data", "metric_data", "span_event_data", "transaction_sample_data" }, new[] { "custom_event_data", "error_data", "error_event_data", "sql_trace_data" })]
-        [TestCase(TestType.NoticeError, new[] { "analytic_event_data", "error_data", "error_event_data", "metric_data", "span_event_data", "transaction_sample_data" }, new[] { "custom_event_data", "sql_trace_data" })]
-        [TestCase(TestType.RecordCustomEvent, new[] { "analytic_event_data", "custom_event_data", "metric_data", "span_event_data", "transaction_sample_data" }, new[] { "error_data", "error_event_data", "sql_trace_data" })]
-        [TestCase(TestType.DatastoreSegment, new[] { "analytic_event_data", "metric_data", "span_event_data", "sql_trace_data", "transaction_sample_data" }, new[] { "custom_event_data", "error_data", "error_event_data" })]
-        [TestCase(TestType.All, new[] { "analytic_event_data", "custom_event_data", "error_data", "error_event_data", "metric_data", "span_event_data", "sql_trace_data", "transaction_sample_data" }, new string[] {})]
-        public void ServerlessDataTransport_IncludesOnlyExpectedPayloadData(TestType testType, string[] expectedPayloadDataTypes, string[] unexpectedPayloadDataTypes)
+        [TestCase(TestType.TransactionOnly, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.TransactionSampleData }, new[] { PayloadDataTypes.CustomEventData, PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData, PayloadDataTypes.SqlTraceData })]
+        [TestCase(TestType.RecordMetric, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.TransactionSampleData }, new[] { PayloadDataTypes.CustomEventData, PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData, PayloadDataTypes.SqlTraceData })]
+        [TestCase(TestType.NoticeError, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.TransactionSampleData }, new[] { PayloadDataTypes.CustomEventData, PayloadDataTypes.SqlTraceData })]
+        [TestCase(TestType.RecordCustomEvent, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.CustomEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.TransactionSampleData }, new[] { PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData, PayloadDataTypes.SqlTraceData })]
+        [TestCase(TestType.DatastoreSegment, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.SqlTraceData, PayloadDataTypes.TransactionSampleData }, new[] { PayloadDataTypes.CustomEventData, PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData })]
+        [TestCase(TestType.All, new[] { PayloadDataTypes.AnalyticEventData, PayloadDataTypes.CustomEventData, PayloadDataTypes.ErrorData, PayloadDataTypes.ErrorEventData, PayloadDataTypes.MetricData, PayloadDataTypes.SpanEventData, PayloadDataTypes.SqlTraceData, PayloadDataTypes.TransactionSampleData }, new PayloadDataTypes[] { })]
+        public void ServerlessDataTransport_IncludesOnlyExpectedPayloadData(TestType testType, PayloadDataTypes[] expectedPayloadDataTypes, PayloadDataTypes[] unexpectedPayloadDataTypes)
         {
             // make sure the test case is configured correctly
             Assert.That(expectedPayloadDataTypes.Length + unexpectedPayloadDataTypes.Length, Is.EqualTo(8), "Expected and Unexpected payload arrays must contain a total of 8 elements between them");
@@ -84,12 +98,51 @@ namespace CompositeTests
             var payloadJson = _compositeTestAgent.ServerlessPayload;
             var unzippedPayload = payloadJson.GetUnzippedPayload();
 
+            var telemetryPayloads = JsonConvert.DeserializeObject<ServerlessTelemetryPayloads>(unzippedPayload);
+
+
             // if the serverless data transport didn't collect any of the following data types, they won't exist in the payload
             foreach (var payloadDataType in expectedPayloadDataTypes)
-                Assert.That(unzippedPayload, Does.Contain(payloadDataType));
+            {
+                ValidatePayloadData(payloadDataType, telemetryPayloads, Is.Not.Null);
+            }
 
             foreach (var unexpectedPayloadDataType in unexpectedPayloadDataTypes)
-                Assert.That(unzippedPayload, Does.Not.Contain(unexpectedPayloadDataType));
+                ValidatePayloadData(unexpectedPayloadDataType, telemetryPayloads, Is.Null);
+        }
+
+        private static void ValidatePayloadData(PayloadDataTypes payloadDataType,
+            ServerlessTelemetryPayloads telemetryPayloads, NullConstraint nullConstraint)
+        {
+            switch (payloadDataType)
+            {
+                case PayloadDataTypes.AnalyticEventData:
+                    Assert.That(telemetryPayloads.TransactionEventsPayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.CustomEventData:
+                    Assert.That(telemetryPayloads.CustomEventsPayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.ErrorData:
+                    Assert.That(telemetryPayloads.ErrorTracePayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.ErrorEventData:
+                    Assert.That(telemetryPayloads.ErrorEventsPayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.MetricData:
+                    Assert.That(telemetryPayloads.MetricsPayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.SpanEventData:
+                    Assert.That(telemetryPayloads.SpanEventsPayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.SqlTraceData:
+                    Assert.That(telemetryPayloads.SqlTracePayload, nullConstraint);
+                    break;
+                case PayloadDataTypes.TransactionSampleData:
+                    Assert.That(telemetryPayloads.TransactionTracePayload, nullConstraint); 
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }
