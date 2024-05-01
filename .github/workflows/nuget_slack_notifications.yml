@@ -80,6 +80,7 @@ jobs:
                  amazon.lambda.s3events
                  amazon.lambda.simpleemailevents
                  amazon.lambda.snsevents
+                 amazon.lambda.sqsevents
                  elasticsearch.net
                  elastic.clients.elasticsearch
                  log4net
