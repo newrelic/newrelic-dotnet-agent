@@ -47,6 +47,10 @@
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
+    <!-- 1.2.0 is from October 2020 -->
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
     <!-- Non-event libraries -->
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.10.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.1" />
