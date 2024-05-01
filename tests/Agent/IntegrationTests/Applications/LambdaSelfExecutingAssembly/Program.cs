@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Text;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
@@ -15,6 +14,7 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.SimpleEmailEvents;
 using Amazon.Lambda.SimpleEmailEvents.Actions;
 using Amazon.Lambda.SNSEvents;
+using Amazon.Lambda.SQSEvents;
 using ApplicationLifecycle;
 
 namespace LambdaSelfExecutingAssembly
@@ -43,7 +43,7 @@ namespace LambdaSelfExecutingAssembly
         private static HandlerWrapper? GetHandlerWrapper()
         {
             var serializer = new DefaultLambdaJsonSerializer();
-
+            
             var handlerMethodName = GetHandlerMethodName();
             switch (handlerMethodName)
             {
@@ -109,6 +109,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<KinesisTimeWindowEvent>(KinesisTimeWindowEventHandler, serializer);
                 case nameof(KinesisTimeWindowEventHandlerAsync):
                     return HandlerWrapper.GetHandlerWrapper<KinesisTimeWindowEvent>(KinesisTimeWindowEventHandlerAsync, serializer);
+                case nameof(SqsHandler):
+                    return HandlerWrapper.GetHandlerWrapper<SQSEvent>(SqsHandler, serializer);
+                case nameof(SqsHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<SQSEvent>(SqsHandlerAsync, serializer);
                 default:
                     return null;
             }
@@ -411,6 +415,17 @@ namespace LambdaSelfExecutingAssembly
         public static async Task KinesisTimeWindowEventHandlerAsync(KinesisTimeWindowEvent _, ILambdaContext __)
         {
             Console.WriteLine("Executing lambda {0}", nameof(KinesisEventHandlerAsync));
+            await Task.Delay(100);
+        }
+
+        public static void SqsHandler(SQSEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(SqsHandler));
+        }
+
+        public static async Task SqsHandlerAsync(SQSEvent _, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(SqsHandlerAsync));
             await Task.Delay(100);
         }
     }

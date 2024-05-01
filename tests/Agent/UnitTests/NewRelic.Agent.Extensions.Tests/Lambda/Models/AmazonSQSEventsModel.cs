@@ -16,6 +16,7 @@ namespace NewRelic.Mock.Amazon.Lambda.SQSEvents
             public string EventSourceArn { get; set; }
             public Dictionary<string, MessageAttribute> MessageAttributes { get; set; }
             public string Body { get; set; }
+            public string MessageId { get; set; }
         }
 
         public class MessageAttribute

@@ -136,6 +136,7 @@ public static class LambdaEventHelpers
                     {
                         transaction.AddEventSourceAttribute("arn", (string)sqsEvent.Records[0].EventSourceArn);
                         transaction.AddEventSourceAttribute("length", (int)sqsEvent.Records.Count);
+                        transaction.AddEventSourceAttribute("messageId", (string)sqsEvent.Records[0].MessageId);
 
                         TryParseSQSDistributedTraceHeaders(sqsEvent, transaction, agent);
                     }

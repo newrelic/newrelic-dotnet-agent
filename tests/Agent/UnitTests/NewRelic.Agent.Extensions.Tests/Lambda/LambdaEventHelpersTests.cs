@@ -801,7 +801,8 @@ public class LambdaEventHelpersTests
                         { NewRelicDistributedTraceKey, new() { StringValue = NewRelicDistributedTracePayload } },
                         { W3CTraceParentKey, new() { StringValue = W3CTraceParentPayload } },
                         { W3CTraceStateKey, new() { StringValue = W3CTraceStatePayload } }
-                    }
+                    },
+                    MessageId = "testMessageId"
                 }]
         };
 
@@ -813,6 +814,7 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+            Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
             Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
@@ -832,7 +834,8 @@ public class LambdaEventHelpersTests
                 new()
                 {
                     EventSourceArn = "testEventSourceArn",
-                    Body = SnsBodyJson
+                    Body = SnsBodyJson,
+                    MessageId = "testMessageId"
                 }]
         };
 
@@ -844,6 +847,7 @@ public class LambdaEventHelpersTests
         {
             Assert.That(_attributes["aws.lambda.eventSource.arn"], Is.EqualTo("testEventSourceArn"));
             Assert.That(_attributes["aws.lambda.eventSource.length"], Is.EqualTo(1));
+            Assert.That(_attributes["aws.lambda.eventSource.messageId"], Is.EqualTo("testMessageId"));
 
             Mock.Assert(() => _transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IDictionary<string, string>>(), Arg.IsAny<Func<IDictionary<string, string>, string, IEnumerable<string>>>(), TransportType.Queue));
             Assert.That(_parsedHeaders[NewRelicDistributedTraceKey], Is.EqualTo(NewRelicDistributedTracePayload));
