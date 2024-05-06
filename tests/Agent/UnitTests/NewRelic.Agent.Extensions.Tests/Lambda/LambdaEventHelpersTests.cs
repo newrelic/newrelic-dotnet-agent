@@ -341,7 +341,7 @@ public class LambdaEventHelpersTests
             Assert.That(_attributes["aws.lambda.eventSource.accountId"], Is.EqualTo("testAccountId"));
             Assert.That(_attributes["aws.lambda.eventSource.apiId"], Is.EqualTo("testApiId"));
             Assert.That(_attributes["aws.lambda.eventSource.resourceId"], Is.EqualTo("testRouteKey"));
-            Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("tesetPath"));
+            Assert.That(_attributes["aws.lambda.eventSource.resourcePath"], Is.EqualTo("testPath"));
             Assert.That(_attributes["aws.lambda.eventSource.stage"], Is.EqualTo("testStage"));
 
             // Assert that the SetRequestHeaders, SetRequestMethod, SetUri, SetRequestParameters, and AcceptDistributedTraceHeaders methods were called with the correct arguments
