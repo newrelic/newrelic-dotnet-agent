@@ -23,7 +23,7 @@ public static class LambdaEventHelpers
             {
                 case AwsLambdaEventType.APIGatewayProxyRequest:
                     dynamic apiReqEvent = inputObject; // Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
-                    SetWebRequestProperties(agent, transaction, apiReqEvent);
+                    SetWebRequestProperties(agent, transaction, apiReqEvent, eventType);
 
                     if (apiReqEvent.RequestContext != null)
                     {
@@ -34,14 +34,29 @@ public static class LambdaEventHelpers
                         transaction.AddEventSourceAttribute("resourceId", (string)requestContext.ResourceId);
                         transaction.AddEventSourceAttribute("resourcePath", (string)requestContext.ResourcePath);
                         transaction.AddEventSourceAttribute("stage", (string)requestContext.Stage);
+                    }
+                    break;
 
+                case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
+                    dynamic apiReqv2Event = inputObject; // Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest
+                    SetWebRequestProperties(agent, transaction, apiReqv2Event, eventType);
+
+                    if (apiReqv2Event.RequestContext != null)
+                    {
+                        dynamic requestContext = apiReqv2Event.RequestContext;
+                        // arn is not available
+                        transaction.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
+                        transaction.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
+                        transaction.AddEventSourceAttribute("resourceId", (string)requestContext.RouteKey); // TODO: Is this right?
+                        transaction.AddEventSourceAttribute("resourcePath", (string)requestContext.Http.Path); // TODO: Is this right?
+                        transaction.AddEventSourceAttribute("stage", (string)requestContext.Stage);
                     }
                     break;
 
                 case AwsLambdaEventType.ApplicationLoadBalancerRequest:
                     dynamic albReqEvent = inputObject; //Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
 
-                    SetWebRequestProperties(agent, transaction, albReqEvent);
+                    SetWebRequestProperties(agent, transaction, albReqEvent, eventType);
 
                     transaction.AddEventSourceAttribute("arn", (string)albReqEvent.RequestContext.Elb.TargetGroupArn);
                     break;
@@ -231,24 +246,27 @@ public static class LambdaEventHelpers
         transaction.AcceptDistributedTraceHeaders(snsHeaders, GetHeaderValue, TransportType.Other);
     }
 
-    private static void SetWebRequestProperties(IAgent agent, ITransaction transaction, dynamic webReqEvent)
+    private static void SetWebRequestProperties(IAgent agent, ITransaction transaction, dynamic webReqEvent, AwsLambdaEventType eventType)
     {
         //HTTP headers
         IDictionary<string, string> headers = webReqEvent.Headers;
         Func<IDictionary<string, string>, string, string> headersGetter = (h, k) => h[k];
 
-        IDictionary<string, IList<string>> multiValueHeaders = webReqEvent.MultiValueHeaders;
-        Func<IDictionary<string, IList<string>>, string, string> multiValueHeadersGetter = (h, k) => string.Join(",", h[k]);
-
-        if (multiValueHeaders != null)
+        if (eventType != AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest) // v2 doesn't have MultiValueHeaders
         {
-            transaction.SetRequestHeaders(multiValueHeaders, agent.Configuration.AllowAllRequestHeaders ? multiValueHeaders.Keys : Statics.DefaultCaptureHeaders, multiValueHeadersGetter);
+            IDictionary<string, IList<string>> multiValueHeaders = webReqEvent.MultiValueHeaders;
+            Func<IDictionary<string, IList<string>>, string, string> multiValueHeadersGetter = (h, k) => string.Join(",", h[k]);
 
-            // DT transport comes from the X-Forwarded-Proto header, if present
-            var forwardedProto = GetMultiHeaderValue(multiValueHeaders, xForwardedProtoHeader).FirstOrDefault();
-            var dtTransport = GetDistributedTransportType(forwardedProto);
+            if (multiValueHeaders != null)
+            {
+                transaction.SetRequestHeaders(multiValueHeaders, agent.Configuration.AllowAllRequestHeaders ? multiValueHeaders.Keys : Statics.DefaultCaptureHeaders, multiValueHeadersGetter);
 
-            transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, dtTransport);
+                // DT transport comes from the X-Forwarded-Proto header, if present
+                var forwardedProto = GetMultiHeaderValue(multiValueHeaders, xForwardedProtoHeader).FirstOrDefault();
+                var dtTransport = GetDistributedTransportType(forwardedProto);
+
+                transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, dtTransport);
+            }
         }
         else if (headers != null)
         {
@@ -261,8 +279,18 @@ public static class LambdaEventHelpers
             transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, dtTransport);
         }
 
-        transaction.SetRequestMethod(webReqEvent.HttpMethod);
-        transaction.SetUri(webReqEvent.Path);
+        if (eventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest) // v2 buries method and path 
+        {
+            var reqContext = webReqEvent.RequestContext;
+            transaction.SetRequestMethod(reqContext.Http.Method);
+            transaction.SetUri(reqContext.Http.Path);
+        }
+        else
+        {
+            transaction.SetRequestMethod(webReqEvent.HttpMethod);
+            transaction.SetUri(webReqEvent.Path);
+        }
+
         transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
 

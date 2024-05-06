@@ -12,6 +12,7 @@ public static class AwsLambdaEventTypeExtensions
         return typeFullName switch
         {
             "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest" => AwsLambdaEventType.APIGatewayProxyRequest,
+            "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest" => AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest,
             "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest" => AwsLambdaEventType.ApplicationLoadBalancerRequest,
             "Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent" => AwsLambdaEventType.CloudWatchScheduledEvent,
             "Amazon.Lambda.KinesisEvents.KinesisEvent" => AwsLambdaEventType.KinesisStreamingEvent,
@@ -32,6 +33,7 @@ public static class AwsLambdaEventTypeExtensions
         return eventType switch
         {
             AwsLambdaEventType.APIGatewayProxyRequest => "apiGateway",
+            AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest => "apiGateway",
             AwsLambdaEventType.ApplicationLoadBalancerRequest => "alb",
             AwsLambdaEventType.CloudWatchScheduledEvent => "cloudWatch_scheduled",
             AwsLambdaEventType.KinesisStreamingEvent => "kinesis",
@@ -48,6 +50,6 @@ public static class AwsLambdaEventTypeExtensions
 
     public static bool IsWebEvent(this AwsLambdaEventType eventType)
     {
-        return eventType == AwsLambdaEventType.APIGatewayProxyRequest || eventType == AwsLambdaEventType.ApplicationLoadBalancerRequest;
+        return eventType == AwsLambdaEventType.APIGatewayProxyRequest || eventType == AwsLambdaEventType.ApplicationLoadBalancerRequest || eventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest;
     }
 }

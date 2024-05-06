@@ -10,6 +10,7 @@ namespace Agent.Extensions.Tests.Lambda
     {
         [Test]
         [TestCase("Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest", AwsLambdaEventType.APIGatewayProxyRequest)]
+        [TestCase("Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest", AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest)]
         [TestCase("Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest", AwsLambdaEventType.ApplicationLoadBalancerRequest)]
         [TestCase("Amazon.Lambda.CloudWatchEvents.ScheduledEvents.ScheduledEvent", AwsLambdaEventType.CloudWatchScheduledEvent)]
         [TestCase("Amazon.Lambda.KinesisEvents.KinesisEvent", AwsLambdaEventType.KinesisStreamingEvent)]
@@ -30,6 +31,7 @@ namespace Agent.Extensions.Tests.Lambda
         }
         [Test]
         [TestCase(AwsLambdaEventType.APIGatewayProxyRequest, "apiGateway")]
+        [TestCase(AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest, "apiGateway")]
         [TestCase(AwsLambdaEventType.ApplicationLoadBalancerRequest, "alb")]
         [TestCase(AwsLambdaEventType.CloudWatchScheduledEvent, "cloudWatch_scheduled")]
         [TestCase(AwsLambdaEventType.KinesisStreamingEvent, "kinesis")]

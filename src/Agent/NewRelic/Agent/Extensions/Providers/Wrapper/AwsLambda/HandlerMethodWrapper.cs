@@ -249,7 +249,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                         }
 
                         // capture response data for specific request / response types
-                        if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                        if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest)
                         {
                             var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                             var response = responseGetter(responseTask);
@@ -290,6 +290,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             // check response type based on request type to be sure it has the properties we're looking for 
             var responseType = response.GetType().FullName;
             if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                ||
+                (_functionDetails.EventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyResponse")
                 ||
                 (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
             {
