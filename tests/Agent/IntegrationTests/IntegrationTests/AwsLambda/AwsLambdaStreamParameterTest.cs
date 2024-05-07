@@ -9,7 +9,7 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
     [NetCoreTest]
     public abstract class AwsLambdaStreamParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaStreamParameterFixtureBase

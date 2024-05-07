@@ -10,7 +10,7 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
 {
     [NetCoreTest]
     public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where T : LambdaS3EventTriggerFixtureBase

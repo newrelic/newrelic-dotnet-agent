@@ -10,7 +10,7 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
 {
     [NetCoreTest]
     public abstract class AwsLambdaApplicationLoadBalancerRequestTest<T> : NewRelicIntegrationTest<T> where T : LambdaApplicationLoadBalancerRequestTriggerFixtureBase

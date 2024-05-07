@@ -8,7 +8,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
     [NetCoreTest]
     public abstract class AwsLambdaSmokeTestBase<T> : NewRelicIntegrationTest<T> where T : LambdaSnsEventTriggerFixtureBase
