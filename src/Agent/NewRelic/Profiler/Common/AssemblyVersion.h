@@ -75,7 +75,7 @@ namespace NewRelic { namespace Profiler
             {
                 return nullptr;
             }
-            auto identifiers = Configuration::Strings::Split(version, '.');
+            auto identifiers = Configuration::Strings::Split(version, _X("."));
             int major = 0;
             int minor = 0;
             int build = 0;

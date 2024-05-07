@@ -8,8 +8,8 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {

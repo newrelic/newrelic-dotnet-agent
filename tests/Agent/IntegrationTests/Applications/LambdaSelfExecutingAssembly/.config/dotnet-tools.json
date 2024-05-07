@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "amazon.lambda.testtool-8.0": {
+      "version": "0.15.1",
+      "commands": [
+        "dotnet-lambda-test-tool-8.0"
+      ]
+    }
+  }
+}

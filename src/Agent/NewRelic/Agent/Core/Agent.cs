@@ -32,6 +32,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core
 {
@@ -411,6 +412,11 @@ namespace NewRelic.Agent.Core
             }
 
             return metadata;
+        }
+
+        public void SetServerlessParameters(string lambdaFunctionVersion, string lambdaFunctionArn)
+        {
+            ServerlessModeDataTransportService.SetMetadata(lambdaFunctionVersion, lambdaFunctionArn);
         }
 
         #endregion GetLinkingMetadata

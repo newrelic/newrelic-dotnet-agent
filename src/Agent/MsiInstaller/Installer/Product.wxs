@@ -551,7 +551,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreBedrockWrapperComponent" Guid="{7DA522F5-38D4-4E7E-AA2B-857D01812152}">
         <File Id="CoreBedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.dll"/>
       </Component>
-
+      <Component Id="CoreAwsLambdaWrapperComponent" Guid="{778F507F-97D7-48B2-BE51-46D6DAB2D234}">
+        <File Id="CoreAwsLambdaWrapperFile" Name="NewRelic.Providers.Wrapper.AwsLambda.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll"/>
+      </Component>
       <!-- Reference libraries -->
       <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
         <File Id="CoreNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Core.dll"/>
@@ -730,6 +732,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreBedrockInstrumentationComponent" Guid="{CF3A17F1-3C5C-4B72-8E3B-10E53EB94913}">
         <File Id="CoreBedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAwsLambdaInstrumentationComponent" Guid="{FD3BEB1B-B093-4FF6-A1FA-76E621CF26D6}">
+        <File Id="CoreAwsLambdaInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

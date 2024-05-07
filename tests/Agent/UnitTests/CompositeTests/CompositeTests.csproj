@@ -43,6 +43,7 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\StackExchangeRedis2Plus\StackExchangeRedis2Plus.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
+    <ProjectReference Include="..\..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>

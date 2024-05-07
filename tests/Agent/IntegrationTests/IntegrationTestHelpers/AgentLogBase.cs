@@ -9,9 +9,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -72,6 +72,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
+
+        // Serverless payloads
+        public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";
 
         public AgentLogBase(ITestOutputHelper testLogger)
         {
@@ -556,6 +559,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #endregion
+
+        #region ServerlessPayloads
+
+        public IEnumerable<ServerlessPayload> GetServerlessPayloads()
+        {
+            return TryGetLogLines(ServerlessPayloadLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .Where(json => json != null)
+                .Select(ServerlessPayload.FromJson);
+        }
+
+        #endregion ServerlessPayloads
 
         private string Timestamp
         {

@@ -41,6 +41,14 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public string NewRelicAccountId
+        {
+            get
+            {
+                return DefaultSetting.NewRelicAccountId;
+            }
+        }
+
         public string TraceObserverUrl
         {
             get

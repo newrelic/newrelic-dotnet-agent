@@ -949,5 +949,43 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
+
+        TEST_METHOD(set_lambda_instrumentation_point_success)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyNamespace.MyClass::MyMethod"));
+
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(set_lambda_instrumentation_point_failure)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyNamespace.MyClass::"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyNamespace.MyClass::WrongMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyNamespace.MyClass:MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X(":::MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("::::::MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X(":::MyMethod::"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly:MyNamespace.MyClass:MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly/MyNamespace.MyClass/MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly_MyNamespace.MyClass_MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly MyNamespace.MyClass MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X(" MyAssembly::MyNamespace.MyClass:MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyNamespace.MyClass::MyMethod"));
+            instrumentation.AddInstrumentationPointToCollectionFromEnvironment(_X("MyAssembly::MyNamespace .MyClass:: MyMethod"));
+
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
     };
 }}}}

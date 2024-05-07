@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
     public interface IAdaptiveSampler
     {
         bool ComputeSampled(ref float priority);
+        void StartTransaction();
     }
 
 
@@ -42,19 +43,21 @@ namespace NewRelic.Agent.Core.DistributedTracing
             private int _candidatesSeenCurrentInterval;
             private int _candidatesSeenLastInterval;
             private int _candidatesSampledCurrentInterval;
+            private bool _manualIntervalCheck;
 
             private DateTimeOffset? _nextIntervalStartTime;
 
-            public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, Random rand)
+            public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, Random rand, bool manualIntervalCheck)
             {
                 _rand = rand;
                 _firstIntervalSamples = targetSamplesPerInterval;
                 TargetSamplesPerInterval = targetSamplesPerInterval;
                 TargetSamplesInterval = targetSamplesInterval;
                 _ceilingValuesForBackoff = ComputeCeilingValuesForBackOff(targetSamplesPerInterval);
+                _manualIntervalCheck = manualIntervalCheck;
             }
 
-            public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, AdaptiveSamplerState state) : this(targetSamplesPerInterval, targetSamplesInterval, state._rand)
+            public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, AdaptiveSamplerState state) : this(targetSamplesPerInterval, targetSamplesInterval, state._rand, state._manualIntervalCheck)
             {
                 _candidatesSeenCurrentInterval = state._candidatesSeenCurrentInterval;
                 _candidatesSeenLastInterval = state._candidatesSeenLastInterval;
@@ -122,9 +125,20 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return firstIntervalSamples;
             }
 
+            public void ManualCheckAndUpdateInterval()
+            {
+                if (_manualIntervalCheck)
+                {
+                    CheckAndUpdateIntervalIfNecessary();
+                }
+            }
+
             public bool ShouldSample()
             {
-                CheckAndUpdateIntervalIfNecessary();
+                if (!_manualIntervalCheck)
+                {
+                    CheckAndUpdateIntervalIfNecessary();
+                }
 
                 //account for seeing this candidate.  we will subtract one from this count for the duration of the method to get the correct count prior to 
                 // accounting for this candidate
@@ -213,7 +227,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         private AdaptiveSamplerState _state;
 
-        public AdaptiveSampler(int targetSamplesPerInterval = DefaultTargetSamplesPerInterval, int targetSamplingIntervalInSeconds = DefaultTargetSamplingIntervalInSeconds, int? seed = null)
+        public AdaptiveSampler(int targetSamplesPerInterval = DefaultTargetSamplesPerInterval, int targetSamplingIntervalInSeconds = DefaultTargetSamplingIntervalInSeconds, int? seed = null, bool? serverlessMode = null)
         {
             if (targetSamplesPerInterval < MinTargetSamplesPerInterval)
             {
@@ -223,9 +237,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
 
             var rand = (seed.HasValue) ? new Random(seed.Value) : new Random();
+            var manualIntervalCheck = serverlessMode.HasValue ? serverlessMode.Value : _configuration.ServerlessModeEnabled;
 
             //This .ctor does not trigger the start of the sampling interval timer
-            _state = new AdaptiveSamplerState(targetSamplesPerInterval, TimeSpan.FromSeconds(targetSamplingIntervalInSeconds), rand);
+            _state = new AdaptiveSamplerState(targetSamplesPerInterval, TimeSpan.FromSeconds(targetSamplingIntervalInSeconds), rand, manualIntervalCheck);
+        }
+
+        public void StartTransaction()
+        {
+            _state.ManualCheckAndUpdateInterval();
         }
 
         /// <summary>
@@ -279,7 +299,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var samplingInterval = TimeSpan.FromSeconds(_configuration.SamplingTargetPeriodInSeconds ?? DefaultTargetSamplingIntervalInSeconds);
 
-            //This .ctor will force the start of the sampling interval timer if it wasn't started previously
+            //This .ctor will force the start of the sampling interval timer if it wasn't started previously (and we aren't in serverless mode)
             _state = new AdaptiveSamplerState(samplingTarget, samplingInterval, _state);
         }
     }

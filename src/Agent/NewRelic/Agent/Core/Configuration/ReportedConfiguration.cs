@@ -32,7 +32,13 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.enabled")]
         public bool AgentEnabled => _configuration.AgentEnabled;
 
-        [JsonIgnore()]
+        [JsonIgnore]
+        public string AgentEnabledAt => _configuration.AgentEnabledAt;
+
+        [JsonIgnore]
+        public bool ServerlessModeEnabled => _configuration.ServerlessModeEnabled;
+
+        [JsonIgnore]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
         [JsonProperty("agent.license_key.configured")]
@@ -649,6 +655,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent.logging_enabled")]
         public bool LoggingEnabled => _configuration.LoggingEnabled;
+
+        [JsonIgnore]
+        public string LoggingLevel => _configuration.LoggingLevel;
 
         [JsonProperty("agent.instrumentation.ignore")]
         public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => _configuration.IgnoredInstrumentation;

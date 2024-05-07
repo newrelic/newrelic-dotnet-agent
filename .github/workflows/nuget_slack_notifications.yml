@@ -71,7 +71,17 @@ jobs:
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
             nugets:
-                 "elasticsearch.net
+                 "amazon.lambda.apigatewayevents
+                 amazon.lambda.applicationloadbalancerevents
+                 amazon.lambda.cloudwatchevents
+                 amazon.lambda.dynamodbevents
+                 amazon.lambda.kinesisevents
+                 amazon.lambda.kinesisfirehoseevents
+                 amazon.lambda.s3events
+                 amazon.lambda.simpleemailevents
+                 amazon.lambda.snsevents
+                 amazon.lambda.sqsevents
+                 elasticsearch.net
                  elastic.clients.elasticsearch
                  log4net
                  microsoft.extensions.logging

@@ -492,7 +492,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var parsedConfig = ConfigurationLoader.Initialize();
 
-                Assert.That(parsedConfig.ConfigurationFileName, Is.EqualTo(configFile.FileName));
+                Assert.That(ConfigurationLoader.BootstrapConfig.ConfigurationFileName, Is.EqualTo(configFile.FileName));
             }
         }
 

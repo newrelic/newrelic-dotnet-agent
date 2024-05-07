@@ -57,6 +57,7 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
         private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+        private readonly IBootstrapConfiguration _bootstrapConfiguration = BootstrapConfiguration.GetDefault();
         private Dictionary<string, string> _newRelicAppSettings { get; }
 
         public bool UseResourceBasedNamingForWCFEnabled { get; }
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
             : this()
         {
             _environment = environment;
@@ -101,6 +102,10 @@ namespace NewRelic.Agent.Core.Configuration
             if (securityPoliciesConfiguration != null)
             {
                 _securityPoliciesConfiguration = securityPoliciesConfiguration;
+            }
+            if (_bootstrapConfiguration != null)
+            {
+                _bootstrapConfiguration = bootstrapConfiguration;
             }
 
             LogDisabledWarnings();
@@ -189,24 +194,11 @@ namespace NewRelic.Agent.Core.Configuration
         private static readonly object _lockObj = new object();
 
 
-        public virtual bool AgentEnabled
-        {
-            get
-            {
-                // read from app setting one time only and cache the result
-                if (!_agentEnabledAppSettingParsed.HasValue)
-                {
-                    lock (_lockObj)
-                    {
-                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting(Constants.AppSettingsAgentEnabled),
-                            out _appSettingAgentEnabled);
-                    }
-                }
+        public virtual bool AgentEnabled => _bootstrapConfiguration.AgentEnabled;
 
-                // read from local config if we couldn't parse from app settings
-                return _agentEnabledAppSettingParsed.Value ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
-            }
-        }
+        public string AgentEnabledAt => _bootstrapConfiguration.AgentEnabledAt;
+
+        public bool ServerlessModeEnabled => _bootstrapConfiguration.ServerlessModeEnabled;
 
         private string _agentLicenseKey;
         public virtual string AgentLicenseKey
@@ -802,7 +794,7 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual int CollectorMaxPayloadSizeInBytes { get { return _serverConfiguration.MaxPayloadSizeInBytes ?? MaxPayloadSizeInBytes; } }
         #endregion
 
-        public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
+        public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread || ServerlessModeEnabled; } }
 
         public long ConfigurationVersion { get; private set; }
 
@@ -815,6 +807,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool IsCatEnabled()
         {
+            // CAT must be disabled in serverless mode
+            if (ServerlessModeEnabled)
+                return false;
+
             var localenabled = _localConfiguration.crossApplicationTracingEnabled;
             //If config.crossApplicationTracingEnabled is true or default then we want to check the
             //config.crossApplicationTracer, if that object is not null then use it's default or value
@@ -921,19 +917,25 @@ namespace NewRelic.Agent.Core.Configuration
             return EnvironmentOverrides(_localConfiguration.distributedTracing.enabled, "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED");
         }
 
-        public string PrimaryApplicationId => _serverConfiguration.PrimaryApplicationId;
+        public string PrimaryApplicationId => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.primary_application_id, "NEW_RELIC_PRIMARY_APPLICATION_ID")
+            : _serverConfiguration.PrimaryApplicationId;
 
-        public string TrustedAccountKey => _serverConfiguration.TrustedAccountKey;
+        public string TrustedAccountKey => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.trusted_account_key, "NEW_RELIC_TRUSTED_ACCOUNT_KEY")
+            : _serverConfiguration.TrustedAccountKey;
 
-        public string AccountId => _serverConfiguration.AccountId;
+        public string AccountId => ServerlessModeEnabled ?
+            EnvironmentOverrides(_localConfiguration.distributedTracing.account_id, "NEW_RELIC_ACCOUNT_ID")
+            : _serverConfiguration.AccountId;
 
-        public int? SamplingTarget => _serverConfiguration.SamplingTarget;
+        public int? SamplingTarget => ServerlessModeEnabled ? 10 : _serverConfiguration.SamplingTarget;
 
         // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
         public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
            EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
 
-        public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
+        public int? SamplingTargetPeriodInSeconds => ServerlessModeEnabled ? 60 : _serverConfiguration.SamplingTargetPeriodInSeconds;
 
         public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
 
@@ -1689,7 +1691,16 @@ namespace NewRelic.Agent.Core.Configuration
         #region Transaction Tracer
 
         public virtual TimeSpan TransactionTraceApdexF { get { return TransactionTraceApdexT.Multiply(4); } }
-        public virtual TimeSpan TransactionTraceApdexT { get { return TimeSpan.FromSeconds(ServerOverrides(_serverConfiguration.ApdexT, 0.5)); } }
+        public virtual TimeSpan TransactionTraceApdexT
+        {
+            get
+            {
+                if (ServerlessModeEnabled) // get apdex_t from environment variable if running in serverless mode
+                    return TimeSpan.FromSeconds(EnvironmentOverrides(0.5, "NEW_RELIC_APDEX_T").GetValueOrDefault());
+                else
+                    return TimeSpan.FromSeconds(ServerOverrides(_serverConfiguration.ApdexT, 0.5));
+            }
+        }
 
         public virtual TimeSpan TransactionTraceThreshold
         {
@@ -1838,7 +1849,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion Metric naming
 
-        public string NewRelicConfigFilePath => _localConfiguration.ConfigurationFileName;
+        public string NewRelicConfigFilePath => _bootstrapConfiguration.ConfigurationFileName;
         public string AppSettingsConfigFilePath => _configurationManagerStatic.AppSettingsFilePath;
 
         #region Utilization
@@ -2032,7 +2043,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (_ignoredInstrumentation == null)
                 {
-                    _ignoredInstrumentation =_localConfiguration.instrumentation.rules
+                    _ignoredInstrumentation = _localConfiguration.instrumentation.rules
                         .Select(i => new ReadOnlyDictionary<string, string>(
                                 new Dictionary<string, string>
                                 {
@@ -2392,8 +2403,13 @@ namespace NewRelic.Agent.Core.Configuration
 
         private string EnvironmentOverrides(string local, params string[] environmentVariableNames)
         {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static string EnvironmentOverrides(IEnvironment environment, string local,  params string[] environmentVariableNames)
+        {
             var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
-                .Select(_environment.GetEnvironmentVariable)
+                .Select(environment.GetEnvironmentVariable)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .FirstOrDefault(); // returns null if no env var found or if enumerable<string> is empty
 
@@ -2417,17 +2433,36 @@ namespace NewRelic.Agent.Core.Configuration
 
         private int? EnvironmentOverrides(int? local, params string[] environmentVariableNames)
         {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static int? EnvironmentOverrides(IEnvironment environment, int? local, params string[] environmentVariableNames)
+        {
             var env = environmentVariableNames
-                .Select(_environment.GetEnvironmentVariable)
+                .Select(environment.GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
             return int.TryParse(env, out int parsedValue) ? parsedValue : local;
         }
 
-        private bool EnvironmentOverrides(bool local, params string[] environmentVariableNames)
+        private double? EnvironmentOverrides(double? local, params string[] environmentVariableNames)
         {
             var env = environmentVariableNames
                 .Select(_environment.GetEnvironmentVariable)
+                .FirstOrDefault(value => value != null);
+
+            return double.TryParse(env, out double parsedValue) ? parsedValue : local;
+        }
+
+        private bool EnvironmentOverrides(bool local, params string[] environmentVariableNames)
+        {
+            return EnvironmentOverrides(_environment, local, environmentVariableNames);
+        }
+
+        public static bool EnvironmentOverrides(IEnvironment environment, bool local, params string[] environmentVariableNames)
+        {
+            var env = environmentVariableNames
+                .Select(environment.GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
             if (env != null)
@@ -2830,7 +2865,27 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        public bool LoggingEnabled => _localConfiguration.log.Enabled;
+        public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
+        {
+            return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");
+        }
+
+        private bool? _loggingEnabled;
+        public bool LoggingEnabled => _loggingEnabled ??= GetLoggingEnabledValue(_environment, _localConfiguration.log);
+
+        public static string GetLoggingLevelValue(IEnvironment environment, configurationLog localLogConfiguration, bool isLoggingEnabled)
+        {
+            var logLevel = "off";
+            if (isLoggingEnabled)
+            {
+                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEWRELIC_LOG_LEVEL").ToUpper();
+            }
+
+            return logLevel;
+        }
+
+        private string _loggingLevel;
+        public string LoggingLevel => _loggingLevel ??= GetLoggingLevelValue(_environment, _localConfiguration.log, LoggingEnabled);
 
         private const bool CaptureTransactionTraceAttributesDefault = true;
         private const bool CaptureErrorCollectorAttributesDefault = true;

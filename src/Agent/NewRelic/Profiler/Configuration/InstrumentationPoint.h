@@ -29,7 +29,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         std::unique_ptr<AssemblyVersion> MinVersion;    // on the <match> node
         std::unique_ptr<AssemblyVersion> MaxVersion;    // on the <match> node
 
-        InstrumentationPoint() {}
+        InstrumentationPoint():
+            TracerFactoryArgs(0) { }
 
         InstrumentationPoint(const InstrumentationPoint& other) :
             TracerFactoryName(other.TracerFactoryName),

@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 namespace NewRelic.Agent.Core.WireModels
 {
     [JsonConverter(typeof(JsonArrayConverter))]
-    public class ErrorTraceWireModel
+    public class ErrorTraceWireModel : IWireModel
     {
         /// <summary>
         /// The UTC timestamp indicating when the error occurred. 

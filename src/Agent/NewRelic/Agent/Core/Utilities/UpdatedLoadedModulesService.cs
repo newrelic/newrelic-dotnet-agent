@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Utilities
 
         private void SendUpdatedLoadedModules(LoadedModuleWireModelCollection loadedModulesCollection)
         {
-            var responseStatus = _dataTransportService.Send(loadedModulesCollection);
+            var responseStatus = _dataTransportService.Send(loadedModulesCollection, null);
             if (responseStatus != DataTransportResponseStatus.RequestSuccessful)
             {
                 // Try again next time
