@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             var tcs = new TaskCompletionSource<string>(asyncState);
 
             var task = DoWork(value.ToString(), false, false);
-            task.ContinueWith(x =>
+            _ = task.ContinueWith(x =>
             {
                 tcs.SetResult(x.Result);
                 callback(tcs.Task);
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             var tcs = new TaskCompletionSource<string>(asyncState);
 
             var task = DoWork(input, true, false);
-            task.ContinueWith(x =>
+            _ = task.ContinueWith(x =>
             {
                 tcs.SetResult(x.Result);
                 callback(tcs.Task);
@@ -176,7 +176,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 
             var task = DoWork(string.Empty, false, false);
 
-            task.ContinueWith(x =>
+            _ = task.ContinueWith(x =>
             {
                 if (x.IsFaulted)
                 {
