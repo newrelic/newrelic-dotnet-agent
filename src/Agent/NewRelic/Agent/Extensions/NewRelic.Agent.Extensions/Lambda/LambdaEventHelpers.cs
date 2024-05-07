@@ -47,8 +47,8 @@ public static class LambdaEventHelpers
                         // arn is not available
                         transaction.AddEventSourceAttribute("accountId", (string)requestContext.AccountId);
                         transaction.AddEventSourceAttribute("apiId", (string)requestContext.ApiId);
-                        transaction.AddEventSourceAttribute("resourceId", (string)requestContext.RouteKey); // TODO: Is this right?
-                        transaction.AddEventSourceAttribute("resourcePath", (string)requestContext.Http.Path); // TODO: Is this right?
+                        // resourceId is not available for v2
+                        // resourcePath is not available for v2
                         transaction.AddEventSourceAttribute("stage", (string)requestContext.Stage);
                     }
                     break;
