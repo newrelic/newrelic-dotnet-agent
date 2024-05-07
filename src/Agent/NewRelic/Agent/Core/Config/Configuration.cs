@@ -106,11 +106,15 @@ namespace NewRelic.Agent.Core.Config
         
         private bool debugAgentField;
         
+        private int debugStartupDelaySecondsField;
+        
         private bool threadProfilingEnabledField;
         
         private bool crossApplicationTracingEnabledField;
         
         private configurationTimingPrecision timingPrecisionField;
+        
+        private bool serverlessModeEnabledField;
         
         /// <summary>
         /// configuration class constructor
@@ -155,9 +159,11 @@ namespace NewRelic.Agent.Core.Config
             this.rootAgentEnabledField = false;
             this.maxStackTraceLinesField = 80;
             this.debugAgentField = false;
+            this.debugStartupDelaySecondsField = 0;
             this.threadProfilingEnabledField = true;
             this.crossApplicationTracingEnabledField = true;
             this.timingPrecisionField = configurationTimingPrecision.low;
+            this.serverlessModeEnabledField = false;
         }
         
         public configurationService service
@@ -663,6 +669,23 @@ namespace NewRelic.Agent.Core.Config
         }
         
         /// <summary>
+        /// Delays Agent initialization to allow a debugger to be attached.
+        /// </summary>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(0)]
+        public int debugStartupDelaySeconds
+        {
+            get
+            {
+                return this.debugStartupDelaySecondsField;
+            }
+            set
+            {
+                this.debugStartupDelaySecondsField = value;
+            }
+        }
+        
+        /// <summary>
         /// Turns on/off Thread Profiling.
         /// </summary>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -710,6 +733,23 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.timingPrecisionField = value;
+            }
+        }
+        
+        /// <summary>
+        /// Turns on/off serverless mode.
+        /// </summary>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool serverlessModeEnabled
+        {
+            get
+            {
+                return this.serverlessModeEnabledField;
+            }
+            set
+            {
+                this.serverlessModeEnabledField = value;
             }
         }
         
@@ -3796,6 +3836,12 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enableSuccessMetricsField;
         
+        private string account_idField;
+        
+        private string trusted_account_keyField;
+        
+        private string primary_application_idField;
+        
         /// <summary>
         /// configurationDistributedTracing class constructor
         /// </summary>
@@ -3804,6 +3850,7 @@ namespace NewRelic.Agent.Core.Config
             this.enabledField = false;
             this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
+            this.primary_application_idField = "Unknown";
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -3845,6 +3892,46 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enableSuccessMetricsField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string account_id
+        {
+            get
+            {
+                return this.account_idField;
+            }
+            set
+            {
+                this.account_idField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string trusted_account_key
+        {
+            get
+            {
+                return this.trusted_account_keyField;
+            }
+            set
+            {
+                this.trusted_account_keyField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("Unknown")]
+        public string primary_application_id
+        {
+            get
+            {
+                return this.primary_application_idField;
+            }
+            set
+            {
+                this.primary_application_idField = value;
             }
         }
         

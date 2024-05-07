@@ -90,6 +90,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
         private RunTimeConfiguration _runTimeConfiguration;
         private ServerConfiguration _serverConfig;
+        private IBootstrapConfiguration _bootstrapConfiguration;
         private configuration _localConfig;
 
 
@@ -113,7 +114,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private void PublishConfig()
         {
-            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             _config = config;
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
         }
@@ -127,6 +128,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
             
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -656,6 +658,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var allAttribValues = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
+            _attribDefs.GetLambdaAttribute("lambdaAttributeKey").TrySetValue(allAttribValues, "lambdaAttributeValue");
             _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
 
             // ACT

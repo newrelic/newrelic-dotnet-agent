@@ -16,6 +16,7 @@
     <PackageReference Include="xunit.core" Version="2.6.6" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 </Project>

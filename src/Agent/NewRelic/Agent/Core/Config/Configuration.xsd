@@ -1227,6 +1227,27 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
+                        <xs:attribute name="account_id" type="xs:string">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The account id to use for distributed tracing. Required in serverless mode if distributed tracing is enabled.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="trusted_account_key" type="xs:string">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The trusted account key to use for distributed tracing. Required in serverless mode if distributed tracing is enabled.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="primary_application_id" type="xs:string" default="Unknown">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The optional primary application id to use for distributed tracing. Used only in serverless mode.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 
@@ -2023,6 +2044,14 @@
                 </xs:annotation>
             </xs:attribute>
 
+            <xs:attribute name="debugStartupDelaySeconds" type="xs:int" default="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Delays Agent initialization to allow a debugger to be attached.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+
             <xs:attribute name="threadProfilingEnabled" type="xs:boolean" default="true">
                 <xs:annotation>
                     <xs:documentation>
@@ -2053,6 +2082,13 @@
                 </xs:simpleType>
             </xs:attribute>
 
+            <xs:attribute name="serverlessModeEnabled" type="xs:boolean" default="false">
+                <xs:annotation>
+                    <xs:documentation>
+                        Turns on/off serverless mode.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 </xs:schema>

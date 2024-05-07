@@ -8,8 +8,8 @@ using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {

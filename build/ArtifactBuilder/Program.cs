@@ -31,9 +31,6 @@ namespace ArtifactBuilder
                     case "nugetagentextensions":
                         BuildNugetAgentExtensions(args);
                         break;
-                    case "nugetawslambdaopentracer":
-                        BuildNugetAwsLambdaOpenTracer(args);
-                        break;
                     case "nugetazurecloudservices":
                         BuildNugetAzureCloudServices(args);
                         break;
@@ -114,14 +111,6 @@ namespace ArtifactBuilder
             var c = new NugetAgentExtensions(configuration);
             c.Build();
         }
-
-        private static void BuildNugetAwsLambdaOpenTracer(string[] args)
-        {
-            var configuration = args[1];
-            var c = new NugetAwsLambdaOpenTracer(configuration);
-            c.Build();
-        }
-
         private static void BuildNugetAzureCloudServices(string[] args)
         {
             var configuration = args[1];

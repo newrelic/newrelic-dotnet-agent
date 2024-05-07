@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>(), Arg.IsAny<string>());
         }
 
         protected override string GetExpectedDestinationAreaName()
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<LogEventWireModelCollection>());
+            return service.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>());
         }
 
         protected override string GetExpectedDestinationAreaName()

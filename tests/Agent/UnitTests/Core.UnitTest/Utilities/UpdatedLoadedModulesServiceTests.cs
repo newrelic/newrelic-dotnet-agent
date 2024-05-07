@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_SendsModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_NoNewModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_SendError_DuplciatesNotSaved()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
 

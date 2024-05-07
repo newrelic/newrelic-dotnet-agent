@@ -61,8 +61,9 @@ namespace NewRelic.Agent.Core.Aggregators
                 _readerWriterLock.ExitReadLock();
             }
         }
-
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override void Harvest() => InternalHarvest();
+        protected void InternalHarvest(string transactionId = null)
         {
             Log.Finest("Error Trace harvest starting.");
 
@@ -81,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (errorTraceWireModels.Count <= 0)
                 return;
 
-            var responseStatus = DataTransportService.Send(errorTraceWireModels);
+            var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
 
             HandleResponse(responseStatus, errorTraceWireModels);
 

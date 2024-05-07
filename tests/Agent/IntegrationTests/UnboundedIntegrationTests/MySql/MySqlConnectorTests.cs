@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;

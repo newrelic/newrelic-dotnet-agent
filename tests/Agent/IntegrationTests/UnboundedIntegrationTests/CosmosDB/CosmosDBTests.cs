@@ -16,6 +16,7 @@ using System.Net.NetworkInformation;
 using System.Net.PeerToPeer.Collaboration;
 using System.Reflection;
 using System.Windows.Forms;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -104,7 +105,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.Equal(6, operationDatastoreSpans.Count()),
-                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, IntegrationTestHelpers.Models.SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
+                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
 
             );
         }

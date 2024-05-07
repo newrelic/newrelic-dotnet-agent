@@ -43,7 +43,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+        protected override void Harvest() => InternalHarvest();
+
+        protected void InternalHarvest(string transactionId = null)
         {
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
@@ -60,7 +64,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             LogUnencodedTraceData(traceWireModels);
 
-            var responseStatus = DataTransportService.Send(traceWireModels);
+            var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
             HandleResponse(responseStatus, traceSamples);
         }
 

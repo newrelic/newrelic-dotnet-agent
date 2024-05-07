@@ -4,12 +4,12 @@
 
 #if NETFRAMEWORK
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.WCF
 {
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         TransactionEvent[] TrxEvents_Client { get; }
         TransactionEvent[] TrxEvents_Service { get; }
 
-        IntegrationTestHelpers.Models.ErrorTrace[] ErrorTraces { get; }
+        ErrorTrace[] ErrorTraces { get; }
 
         ErrorEventEvents[] ErrorEvents { get; }
 
@@ -170,8 +170,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         }
 
 
-        private IntegrationTestHelpers.Models.ErrorTrace[] _errorTraces;
-        public IntegrationTestHelpers.Models.ErrorTrace[] ErrorTraces => _errorTraces ?? (_errorTraces = AgentLog_Client.GetErrorTraces().Union(AgentLog_Service.GetErrorTraces()).ToArray());
+        private ErrorTrace[] _errorTraces;
+        public ErrorTrace[] ErrorTraces => _errorTraces ?? (_errorTraces = AgentLog_Client.GetErrorTraces().Union(AgentLog_Service.GetErrorTraces()).ToArray());
 
 
         private ErrorEventEvents[] _errorEvents;
@@ -276,8 +276,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         private ErrorEventEvents[] _errorEvents;
         public ErrorEventEvents[] ErrorEvents => _errorEvents ?? (_errorEvents = _fixture.AgentLog.GetErrorEvents().ToArray());
 
-        private IntegrationTestHelpers.Models.ErrorTrace[] _errorTraces;
-        public IntegrationTestHelpers.Models.ErrorTrace[] ErrorTraces => _errorTraces ?? (_errorTraces = _fixture.AgentLog.GetErrorTraces().ToArray());
+        private ErrorTrace[] _errorTraces;
+        public ErrorTrace[] ErrorTraces => _errorTraces ?? (_errorTraces = _fixture.AgentLog.GetErrorTraces().ToArray());
 
 
         private SpanEvent[] _spanEvents;
