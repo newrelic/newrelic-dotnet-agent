@@ -40,6 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 
                     // Finest level logs are necessary to read the uncompressed payloads from the agent logs
                     remoteApplication.NewRelicConfig.SetLogLevel("finest");
+                    remoteApplication.NewRelicConfig.SetDebugStartupDelaySeconds(20); // TODO: Testing only
 
                     if (LambdaTestTool.IsRunning)
                     {

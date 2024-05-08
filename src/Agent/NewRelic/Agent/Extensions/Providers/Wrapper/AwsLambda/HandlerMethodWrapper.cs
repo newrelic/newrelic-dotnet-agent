@@ -110,6 +110,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
                 return null;
             }
+
+            public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
         }
 
         private List<string> _webResponseHeaders = ["content-type", "content-length"];
@@ -249,7 +251,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                         }
 
                         // capture response data for specific request / response types
-                        if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest)
+                        if (_functionDetails.IsWebRequest)
                         {
                             var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                             var response = responseGetter(responseTask);
@@ -268,7 +270,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                            if (_functionDetails.IsWebRequest)
                                 CaptureResponseData(transaction, response, agent);
 
                             segment.End();

@@ -85,6 +85,10 @@ namespace LambdaSelfExecutingAssembly
                     return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, Stream>(ApiGatewayProxyRequestHandlerReturnsStream, serializer);
                 case nameof (ApiGatewayProxyRequestHandlerReturnsStreamAsync):
                     return HandlerWrapper.GetHandlerWrapper<APIGatewayProxyRequest, Stream>(ApiGatewayProxyRequestHandlerReturnsStreamAsync, serializer);
+                case nameof(ApiGatewayHttpApiV2ProxyRequestHandler):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayHttpApiV2ProxyRequest, APIGatewayHttpApiV2ProxyResponse>(ApiGatewayHttpApiV2ProxyRequestHandler, serializer);
+                case nameof(ApiGatewayHttpApiV2ProxyRequestHandlerAsync):
+                    return HandlerWrapper.GetHandlerWrapper<APIGatewayHttpApiV2ProxyRequest, APIGatewayHttpApiV2ProxyResponse>(ApiGatewayHttpApiV2ProxyRequestHandlerAsync, serializer);
                 case nameof(ApplicationLoadBalancerRequestHandler):
                     return HandlerWrapper.GetHandlerWrapper<ApplicationLoadBalancerRequest, ApplicationLoadBalancerResponse>(ApplicationLoadBalancerRequestHandler, serializer);
                 case nameof(ApplicationLoadBalancerRequestHandlerAsync):
@@ -263,6 +267,14 @@ namespace LambdaSelfExecutingAssembly
             return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
         }
 
+        public static async Task<APIGatewayProxyResponse> ApiGatewayProxyRequestHandlerAsync(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerAsync));
+            await Task.Delay(100);
+
+            return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
         public static Stream ApiGatewayProxyRequestHandlerReturnsStream(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
         {
             Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerReturnsStream));
@@ -290,12 +302,19 @@ namespace LambdaSelfExecutingAssembly
             return stream;
         }
 
-        public static async Task<APIGatewayProxyResponse> ApiGatewayProxyRequestHandlerAsync(APIGatewayProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        public static APIGatewayHttpApiV2ProxyResponse ApiGatewayHttpApiV2ProxyRequestHandler(APIGatewayHttpApiV2ProxyRequest apiGatewayProxyRequest, ILambdaContext __)
         {
-            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayProxyRequestHandlerAsync));
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayHttpApiV2ProxyRequestHandler));
+
+            return new APIGatewayHttpApiV2ProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+        }
+
+        public static async Task<APIGatewayHttpApiV2ProxyResponse> ApiGatewayHttpApiV2ProxyRequestHandlerAsync(APIGatewayHttpApiV2ProxyRequest apiGatewayProxyRequest, ILambdaContext __)
+        {
+            Console.WriteLine("Executing lambda {0}", nameof(ApiGatewayHttpApiV2ProxyRequestHandlerAsync));
             await Task.Delay(100);
 
-            return new APIGatewayProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
+            return new APIGatewayHttpApiV2ProxyResponse() { Body = apiGatewayProxyRequest.Body, StatusCode = 200, Headers = new Dictionary<string, string> { { "Content-Type", "application/json" }, { "Content-Length", "12345" } } };
         }
 
         public static ApplicationLoadBalancerResponse ApplicationLoadBalancerRequestHandler(ApplicationLoadBalancerRequest applicationLoadBalancerRequest, ILambdaContext __)
