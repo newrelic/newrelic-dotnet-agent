@@ -268,7 +268,8 @@ public static class LambdaEventHelpers
                 transaction.AcceptDistributedTraceHeaders(multiValueHeaders, GetMultiHeaderValue, dtTransport);
             }
         }
-        else if (headers != null)
+
+        if (headers != null)
         {
             transaction.SetRequestHeaders(headers, agent.Configuration.AllowAllRequestHeaders ? webReqEvent.Headers?.Keys : Statics.DefaultCaptureHeaders, headersGetter);
 
