@@ -1,5 +1,6 @@
 <Project Sdk="WixToolset.Sdk/5.0.0">
   <PropertyGroup>
+    <OutputName>Installer</OutputName>
     <IntermediateOutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</IntermediateOutputPath>
     <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</OutputPath>
     <DebugType>full</DebugType>
