@@ -30,7 +30,7 @@ on:
         description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
         type: boolean
         default: false
-        required: true
+        required: false
     
 permissions:
   contents: read
