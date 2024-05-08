@@ -15,7 +15,7 @@ on:
         description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
         type: boolean
         default: false
-        required: false
+        required: true
   workflow_call:
     inputs:
       agent_version:
@@ -184,7 +184,7 @@ jobs:
       - name: Build and Run NugetDeprecator
         run: |
           dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
-          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} --test-mode ${{ inputs.test_mode }}
+          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} ${{ inputs.test_mode && '--test-mode' || '' }}
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
