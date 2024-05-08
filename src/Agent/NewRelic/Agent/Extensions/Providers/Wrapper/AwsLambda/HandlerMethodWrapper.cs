@@ -110,6 +110,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
                 return null;
             }
+
+            public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
         }
 
         private List<string> _webResponseHeaders = ["content-type", "content-length"];
@@ -249,7 +251,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                         }
 
                         // capture response data for specific request / response types
-                        if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                        if (_functionDetails.IsWebRequest)
                         {
                             var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
                             var response = responseGetter(responseTask);
@@ -268,7 +270,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            if (_functionDetails.EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest)
+                            if (_functionDetails.IsWebRequest)
                                 CaptureResponseData(transaction, response, agent);
 
                             segment.End();
@@ -290,6 +292,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             // check response type based on request type to be sure it has the properties we're looking for 
             var responseType = response.GetType().FullName;
             if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                ||
+                (_functionDetails.EventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyResponse")
                 ||
                 (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
             {

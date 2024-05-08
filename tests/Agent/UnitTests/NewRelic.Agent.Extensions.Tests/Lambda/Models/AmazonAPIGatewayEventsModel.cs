@@ -10,7 +10,7 @@ namespace NewRelic.Mock.Amazon.Lambda.APIGatewayEvents
     {
         public ProxyRequestContext RequestContext { get; set; }
         public Dictionary<string, string> Headers { get; set; }
-        public Dictionary<string, IList<string>> MultiValueHeaders {get; set;}
+        public Dictionary<string, IList<string>> MultiValueHeaders { get; set; }
         public string HttpMethod { get; set; }
         public string Path { get; set; }
         public Dictionary<string, string> QueryStringParameters { get; set; }

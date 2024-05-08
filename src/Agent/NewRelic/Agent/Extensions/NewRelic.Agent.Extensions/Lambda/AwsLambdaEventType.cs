@@ -7,6 +7,7 @@ public enum AwsLambdaEventType
 {
     Unknown,
     APIGatewayProxyRequest,
+    APIGatewayHttpApiV2ProxyRequest,
     ApplicationLoadBalancerRequest,
     CloudWatchScheduledEvent,
     KinesisStreamingEvent,
