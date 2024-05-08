@@ -455,5 +455,6 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       wait_for_apt_and_yum: true
+      test_mode: false
     secrets: inherit
 

@@ -15,7 +15,7 @@ on:
         description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
         type: boolean
         default: false
-        required: false
+        required: true
   workflow_call:
     inputs:
       agent_version:
@@ -30,7 +30,7 @@ on:
         description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
         type: boolean
         default: false
-        required: false
+        required: true
     
 permissions:
   contents: read
