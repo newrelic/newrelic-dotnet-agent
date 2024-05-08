@@ -229,7 +229,7 @@ namespace ArtifactBuilder.Artifacts
 
                 foreach (var value in _frameworkIISRegistryValues)
                 {
-                    if (!component.RegistryValue.MultiStringValue.Contains(value))
+                    if (!component.RegistryValue.MultiStringValue.Any(msv => msv.Value == value))
                     {
                         throw new PackagingException($@"Product.wxs Framework registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} missing {value}");
                     }
@@ -251,7 +251,7 @@ namespace ArtifactBuilder.Artifacts
 
                 foreach (var value in _coreIISRegistryValues)
                 {
-                    if (!component.RegistryValue.MultiStringValue.Contains(value))
+                    if (!component.RegistryValue.MultiStringValue.Any(msv => msv.Value == value))
                     {
                         throw new PackagingException($@"Product.wxs Core registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} missing {value}");
                     }
