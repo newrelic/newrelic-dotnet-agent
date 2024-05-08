@@ -313,13 +313,25 @@ namespace ArtifactBuilder.Artifacts
                 return;
             }
 
+            // Wix v4+ admin install places files into proper subdirectories instead of a single directory
+            // Combining the new directories results in the same structure from Wix v3 for less changes
+            var commAppRoot = Path.Join(unpackedLocation, "CommApp", "New Relic", ".NET Agent");
+            var pFilesRootx86 = Path.Join(unpackedLocation, "PFiles", "New Relic", ".NET Agent");
+            var pFilesRootx64 = Path.Join(unpackedLocation, "PFiles64", "New Relic", ".NET Agent");
             var installedFilesRoot = Path.Join(unpackedLocation, "New Relic", ".NET Agent");
+
+            FileHelpers.CopyAll(commAppRoot, installedFilesRoot);
+            FileHelpers.CopyAll(pFilesRootx86, installedFilesRoot); // needed for both x86 and x64
+            if (Platform == "x64")
+            {
+                FileHelpers.CopyAll(pFilesRootx64, installedFilesRoot);
+            }
 
             var expectedComponents = GetExpectedComponents(installedFilesRoot);
 
             var unpackedComponents = ValidationHelpers.GetUnpackedComponents(installedFilesRoot);
 
-            ValidationHelpers.ValidateComponents(expectedComponents, unpackedComponents, "msi");
+            ValidationHelpers.ValidateComponents(expectedComponents, unpackedComponents, Platform + " msi");
 
             FileHelpers.DeleteDirectories(unpackedLocation);
         }
