@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net481</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <ProjectGuid>{E8C424D3-4493-4FE6-89B1-650A589C4209}</ProjectGuid>
     <RootNamespace>InstallerActions</RootNamespace>
     <AssemblyName>InstallerActions</AssemblyName>
