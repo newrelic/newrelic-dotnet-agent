@@ -44,3 +44,11 @@ updates:
       nuget:
         patterns:
           - "*"
+  - package-ecosystem: nuget
+    directory: /src/Agent/MsiInstaller
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
