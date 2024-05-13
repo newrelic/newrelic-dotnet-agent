@@ -8,8 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers

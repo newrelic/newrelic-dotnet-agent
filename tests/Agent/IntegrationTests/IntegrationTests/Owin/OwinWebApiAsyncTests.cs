@@ -8,10 +8,10 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 using System.IO;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {

@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.WireModels
     /// </summary>
     /// <remarks>https://pdx-hudson.datanerd.us/job/collector-master/javadoc/com/nr/entities/SqlTrace.html</remarks>
     [JsonConverter(typeof(JsonArrayConverter))]
-    public class SqlTraceWireModel
+    public class SqlTraceWireModel : IWireModel
     {
         /// <summary>
         /// ex. WebTransaction/ASP/post.aspx

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using MoreLinq;
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as LogEventWireModelCollection;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
             var logEvents = new List<LogEventWireModel>
             {
@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as LogEventWireModelCollection;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
 
             var logEvents = new List<LogEventWireModel>
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sendCalled = true;
@@ -179,7 +179,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -206,7 +206,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEventCount = events.LoggingEvents.Count();
@@ -261,7 +261,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEventCount = events.LoggingEvents.Count();
@@ -289,7 +289,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -451,7 +451,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Logs_Dropped_Metric_is_reported_when_capacity_is_exceeded()
         {
             // Arrange
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events => DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
 
             var logEvents = new List<LogEventWireModel>();

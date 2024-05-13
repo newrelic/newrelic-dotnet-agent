@@ -12,7 +12,7 @@ namespace CompositeTests
     [TestFixture]
     public class TransactionNameTests
     {
-        private static CompositeTestAgent _compositeTestAgent;
+        private CompositeTestAgent _compositeTestAgent;
 
         private IAgent _agent;
 
@@ -24,7 +24,7 @@ namespace CompositeTests
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
             _compositeTestAgent.Dispose();
         }

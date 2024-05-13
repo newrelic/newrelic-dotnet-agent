@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.XPath;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers

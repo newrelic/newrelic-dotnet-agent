@@ -13,7 +13,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     class Strings
     {
     public:
-        static std::vector<xstring_t> Split( const xstring_t& text, wchar_t delimiter )
+        static std::vector<xstring_t> Split( const xstring_t& text, const xstring_t& delimiter )
         {
             std::vector<xstring_t> result;
 
@@ -26,7 +26,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
                 result.push_back( token );
 
-                start = end + 1;
+                start = end + delimiter.length();
                 end   = text.find( delimiter, start );
             }
 

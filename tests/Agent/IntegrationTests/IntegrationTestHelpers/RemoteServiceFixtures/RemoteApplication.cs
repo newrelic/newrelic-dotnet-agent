@@ -19,7 +19,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         Bounded,
         Unbounded,
         Shared,
-        Container
+        Container,
+        DotnetTool
     }
 
     public abstract class RemoteApplication : IDisposable
@@ -256,6 +257,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     break;
                 case ApplicationType.Container:
                     applicationsFolder = "ContainerApplications";
+                    break;
+                case ApplicationType.DotnetTool:
+                    applicationsFolder = string.Empty; // No folder exists for a dotnet tool
                     break;
                 default:
                     applicationsFolder = "Applications";

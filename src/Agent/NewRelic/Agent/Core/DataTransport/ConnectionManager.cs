@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-            
+
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 

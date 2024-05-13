@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as IEnumerable<ErrorEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<ErrorEventWireModel>>(events => sentEvents = events);
             _errorEventAggregator.Collect(new ErrorEventWireModel(_attribValues, false, 0.1f));
 
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as IEnumerable<ErrorEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) => sentEvents = events);
 
             var eventsToSend = new[]
@@ -148,7 +148,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorEventWireModel>>(events =>
                 {
                     sendCalled = true;
@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
@@ -191,7 +191,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
@@ -214,7 +214,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -237,7 +237,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -260,7 +260,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;

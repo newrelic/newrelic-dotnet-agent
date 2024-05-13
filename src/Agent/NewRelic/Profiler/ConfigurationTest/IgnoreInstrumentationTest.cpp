@@ -43,7 +43,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(IgnoreInstrumentation::Matches(ignoreList, _X("myassembly"), _X("M")));
 
             auto xmlSet = GetInstrumentationXmlSet();
-            InstrumentationConfiguration instrumentation(xmlSet, ignoreList);
+            InstrumentationConfiguration instrumentation(xmlSet, ignoreList, nullptr);
 
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             // Should fail to find the instrumentation because it's in the ignore list
@@ -74,7 +74,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(IgnoreInstrumentation::Matches(ignoreList, _X(""), _X("")));
 
             auto xmlSet = GetInstrumentationXmlSet();
-            InstrumentationConfiguration instrumentation(xmlSet, ignoreList);
+            InstrumentationConfiguration instrumentation(xmlSet, ignoreList, nullptr);
 
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             // Should fail to find the instrumentation because it's in the ignore list
@@ -103,7 +103,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(IgnoreInstrumentation::Matches(ignoreList, _X(""), _X("MyNamespace.MyClass")));
 
             auto xmlSet = GetInstrumentationXmlSet();
-            InstrumentationConfiguration instrumentation(xmlSet, ignoreList);
+            InstrumentationConfiguration instrumentation(xmlSet, ignoreList, nullptr);
 
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             // Should find the instrumentation because the ignore list is invalid
@@ -138,7 +138,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(IgnoreInstrumentation::Matches(ignoreList, _X("different"), _X("MyNamespace.MyClass")));
 
             auto xmlSet = GetInstrumentationXmlSet();
-            InstrumentationConfiguration instrumentation(xmlSet, ignoreList);
+            InstrumentationConfiguration instrumentation(xmlSet, ignoreList, nullptr);
 
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
             // Should fail to find the instrumentation because it's in the ignore list

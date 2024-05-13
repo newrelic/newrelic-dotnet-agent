@@ -249,6 +249,7 @@ namespace NewRelic { namespace Profiler {
                 }
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
+                instrumentationConfiguration->CheckForEnvironmentInstrumentationPoint();
                 auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
                 this->SetMethodRewriter(methodRewriter);
 
@@ -643,7 +644,7 @@ namespace NewRelic { namespace Profiler {
                 newIgnoreInstrumentationList = oldIgnoreList;
             }
 
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, newIgnoreInstrumentationList);
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, newIgnoreInstrumentationList, _systemCalls);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogError(L"Unable to parse one or more instrumentation files.  Instrumentation will not be refreshed.");
                 return S_FALSE;
@@ -1163,7 +1164,7 @@ namespace NewRelic { namespace Profiler {
         std::shared_ptr<Configuration::InstrumentationConfiguration> InitializeInstrumentationConfig(NewRelic::Profiler::Configuration::IgnoreInstrumentationListPtr ignoreList)
         {
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
-            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, ignoreList);
+            auto instrumentationConfiguration = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationXmls, ignoreList, _systemCalls);
             if (instrumentationConfiguration->GetInvalidFileCount() > 0) {
                 LogWarn(L"Unable to parse one or more instrumentation files.  Live instrumentation reloading will not work until the unparsable file(s) are corrected or removed.");
             }

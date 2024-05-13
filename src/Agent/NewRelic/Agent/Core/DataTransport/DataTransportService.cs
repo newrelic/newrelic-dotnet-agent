@@ -26,16 +26,16 @@ namespace NewRelic.Agent.Core.DataTransport
         IEnumerable<CommandModel> GetAgentCommands();
         void SendCommandResults(IDictionary<string, object> commandResults);
         void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData);
-        DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas);
-        DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas);
-        DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable);
-        DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
-        DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents);
-        DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents);
-        DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules);
+        DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId);
+        DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId);
+        DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId);
+        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId);
+        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId);
+        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable, string transactionId);
+        DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId);
+        DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId);
+        DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId);
+        DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId);
     }
 
     public class DataTransportService : ConfigurationBasedService, IDataTransportService
@@ -74,47 +74,48 @@ namespace NewRelic.Agent.Core.DataTransport
             TrySendDataRequest("profile_data", _configuration.AgentRunId, threadProfilingData);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
         {
             return TrySendDataRequest("analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
         {
             return TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents)
+        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
         {
             return TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents)
+        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId)
         {
             return TrySendDataRequest("custom_event_data", _configuration.AgentRunId, customEvents);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas)
+        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId)
         {
+            _ = transactionId;
             return TrySendDataRequest("transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas)
+        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId)
         {
             return TrySendDataRequest("error_data", _configuration.AgentRunId, errorTraceDatas);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels)
+        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId)
         {
             return TrySendDataRequest("sql_trace_data", sqlTraceWireModels);
         }
 
-        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents)
+        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId)
         {
             return TrySendDataRequest("log_event_data", loggingEvents);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics)
+        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
             if (!metrics.Any())
             {
@@ -140,7 +141,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return status;
         }
 
-        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules)
+        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId)
         {
             if (loadedModules.LoadedModules.Count < 1)
             {

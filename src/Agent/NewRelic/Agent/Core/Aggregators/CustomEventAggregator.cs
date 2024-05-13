@@ -65,7 +65,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+        protected override void Harvest() => InternalHarvest();
+
+        protected void InternalHarvest(string transactionId = null)
         {
             Log.Finest("Custom Event harvest starting.");
 
@@ -87,7 +91,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (customEvents.Count <= 0)
                 return;
 
-            var responseStatus = DataTransportService.Send(customEvents);
+            var responseStatus = DataTransportService.Send(customEvents, transactionId);
 
             HandleResponse(responseStatus, customEvents);
 

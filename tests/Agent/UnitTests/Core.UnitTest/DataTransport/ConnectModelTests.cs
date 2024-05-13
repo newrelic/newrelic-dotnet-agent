@@ -70,6 +70,9 @@ namespace NewRelic.Agent.Core.DataTransport
                     Assert.That(agentSettings.BrowserMonitoringKey, Is.Not.Null);
                     Assert.That(agentSettings.ErrorGroupCallback, Is.Not.Null);
                     Assert.That(agentSettings.LlmTokenCountingCallback, Is.Not.Null);
+                    Assert.That(agentSettings.AgentEnabledAt, Is.Not.Null);
+                    Assert.That(agentSettings.ServerlessModeEnabled, Is.False);
+                    Assert.That(agentSettings.LoggingLevel, Is.Not.Null);
                     Assert.That(json, Is.EqualTo(expectedJson));
                 });
             }

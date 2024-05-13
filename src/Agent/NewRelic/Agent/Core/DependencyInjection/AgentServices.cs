@@ -59,7 +59,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// Registers all of the services needed for the agent to run.
         /// </summary>
         /// <param name="container"></param>
-        public static void RegisterServices(IContainer container)
+        /// <param name="serverlessModeEnabled"></param>
+        public static void RegisterServices(IContainer container, bool serverlessModeEnabled)
         {
             // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
             container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -87,10 +88,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ThreadStatsSampler, ThreadStatsSampler>();
             container.Register<IGcSampleTransformer, GcSampleTransformer>();
 #if NETFRAMEWORK
-			container.RegisterInstance<Func<string, IPerformanceCounterCategoryProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterCategoryProxy);
-			container.RegisterInstance<Func<string, string, string, IPerformanceCounterProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterProxy);
-			container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
-			container.Register<GcSampler, GcSampler>();
+            container.RegisterInstance<Func<string, IPerformanceCounterCategoryProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterCategoryProxy);
+            container.RegisterInstance<Func<string, string, string, IPerformanceCounterProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterProxy);
+            container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
+            container.Register<GcSampler, GcSampler>();
 #else
             container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
             container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
@@ -106,9 +107,22 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ISerializer, JsonSerializer>();
             container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
             container.Register<Environment, Environment>();
-            container.Register<IConnectionHandler, ConnectionHandler>();
-            container.Register<IConnectionManager, ConnectionManager>();
-            container.Register<IDataTransportService, DataTransportService>();
+
+            if (!serverlessModeEnabled)
+            {
+                // Register the connection manager and handler only if serverless mode is not enabled
+                container.Register<IConnectionHandler, ConnectionHandler>();
+                container.Register<IConnectionManager, ConnectionManager>();
+                // Register the data transport service only if serverless mode is not enabled
+                container.Register<IDataTransportService, DataTransportService>();
+            }
+            else
+            {
+                container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+                container.Register<IFileWrapper, FileWrapper>();
+                container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
+            }
+
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();
             container.Register<ISimpleTimerFactory, SimpleTimerFactory>();
@@ -179,7 +193,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionService, TransactionService>();
             container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
             container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
-            container.Register<CommandService, CommandService>();
+
+            if (!serverlessModeEnabled)
+                container.Register<CommandService, CommandService>();
+
             container.Register<ConfigurationTracker, ConfigurationTracker>();
             container.Register<IDatabaseService, DatabaseService>();
             container.Register<IErrorService, ErrorService>();
@@ -210,28 +227,34 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// <summary>
         /// Starts all of the services needed by resolving them.
         /// </summary>
-        public static void StartServices(IContainer container)
+        public static void StartServices(IContainer container, bool serverlessModeEnabled)
         {
-            container.Resolve<AssemblyResolutionService>();
+            if (!serverlessModeEnabled)
+                container.Resolve<AssemblyResolutionService>();
+
             container.Resolve<ITransactionFinalizer>();
             container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
-			// Start GCSampler on separate thread due to delay in collecting Instance Names,
-			// which can stall application startup and cause the app start to timeout
-			// (e.g. Windows Services have a default startup timeout of 30 seconds)
-			var gcSampler = container.Resolve<GcSampler>();
-			var samplerStartThread = new Thread(() => gcSampler.Start());
-			samplerStartThread.IsBackground = true;
-			samplerStartThread.Start();
+            // Start GCSampler on separate thread due to delay in collecting Instance Names,
+            // which can stall application startup and cause the app start to timeout
+            // (e.g. Windows Services have a default startup timeout of 30 seconds)
+            var gcSampler = container.Resolve<GcSampler>();
+            var samplerStartThread = new Thread(() => gcSampler.Start());
+            samplerStartThread.IsBackground = true;
+            samplerStartThread.Start();
 #else
-            container.Resolve<GCSamplerNetCore>().Start();
+            if (!serverlessModeEnabled)
+                container.Resolve<GCSamplerNetCore>().Start();
 #endif
-            container.Resolve<CpuSampler>().Start();
-            container.Resolve<MemorySampler>().Start();
-            container.Resolve<ThreadStatsSampler>().Start();
-            container.Resolve<ConfigurationTracker>();
-            container.Resolve<LiveInstrumentationServerConfigurationListener>();
-            container.Resolve<UpdatedLoadedModulesService>();
+            if (!serverlessModeEnabled)
+            {
+                container.Resolve<CpuSampler>().Start();
+                container.Resolve<MemorySampler>().Start();
+                container.Resolve<ThreadStatsSampler>().Start();
+                container.Resolve<ConfigurationTracker>();
+                container.Resolve<LiveInstrumentationServerConfigurationListener>();
+                container.Resolve<UpdatedLoadedModulesService>();
+            }
         }
     }
 }

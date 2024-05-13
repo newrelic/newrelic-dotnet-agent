@@ -14,6 +14,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool AgentEnabled => true;
 
+        public string AgentEnabledAt => "Hardcoded in test";
+
+        public bool ServerlessModeEnabled  => false;
+
         public string AgentLicenseKey => "AgentLicenseKey";
 
         public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
@@ -470,5 +474,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool AiMonitoringRecordContentEnabled => true;
 
         public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
+
+        public string LoggingLevel => "info";
     }
 }

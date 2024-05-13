@@ -15,7 +15,7 @@ on:
         description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
         type: boolean
         default: false
-        required: false
+        required: true
   workflow_call:
     inputs:
       agent_version:
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
         with:
           disable-sudo: false
           egress-policy: audit
@@ -78,13 +78,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
 
@@ -119,13 +119,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
 
@@ -143,13 +143,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
 
@@ -171,20 +171,20 @@ jobs:
       
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
 
       - name: Build and Run NugetDeprecator
         run: |
           dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
-          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} --test-mode ${{ inputs.test_mode }}
+          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} ${{ inputs.test_mode && '--test-mode' || '' }}
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj

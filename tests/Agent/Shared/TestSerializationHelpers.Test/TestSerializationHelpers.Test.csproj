@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
+    <RootNamespace>NewRelic.Agent.Tests.TestSerializationHelpers.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.abstractions" Version="2.0.3" />
+    <PackageReference Include="xunit.assert" Version="2.6.6" />
+    <PackageReference Include="xunit.core" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.console" Version="2.6.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio" version="2.5.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestSerializationHelpers\TestSerializationHelpers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,32 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+﻿<!--
 Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <Property Id="PIDTemplate">
-      <![CDATA[&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&]]>
-    </Property>
+    <Property Id="PIDTemplate" Value="&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;" />
     <UI>
       <Dialog Id="LicenseKeyDialog" Width="370" Height="270" Title="[ProductName] Setup">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}License Key"/>
-        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Please enter your license key"/>
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}License Key" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Please enter your license key" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
 
-        <Control Id="LicenseLabel" Type="Text" X="45" Y="147" Width="50" Height="10" TabSkip="no" Text="License Key:"/>
-        <Control Id="LicenseEdit" Type="MaskedEdit" X="45" Y="159" Width="250" Height="16" Property="NR_LICENSE_KEY" Text="[PIDTemplate]"/>
+        <Control Id="LicenseLabel" Type="Text" X="45" Y="147" Width="50" Height="10" TabSkip="no" Text="License Key:" />
+        <Control Id="LicenseEdit" Type="MaskedEdit" X="45" Y="159" Width="250" Height="16" Property="NR_LICENSE_KEY" Text="[PIDTemplate]" />
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg" />
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
-          <Publish Event="NewDialog" Value="FeaturesDlg"><![CDATA[NR_LICENSE_KEY <> "                                        "]]></Publish>
+          <Publish Event="NewDialog" Value="FeaturesDlg" Condition="NR_LICENSE_KEY &lt;&gt; &quot; &quot;" />
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
         </Control>
       </Dialog>
     </UI>

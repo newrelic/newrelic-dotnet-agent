@@ -74,6 +74,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
                         setter(carrier, Constants.DistributedTracePayloadKeyAllLower, distributedTracePayload);
                     }
                 }
+                else
+                {
+                    transaction.SetSampled(_adaptiveSampler);
+                }
 
                 var createOutboundTraceContextHeadersSuccess = false;
                 try

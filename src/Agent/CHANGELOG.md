@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.24.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.23.1...v10.24.0) (2024-05-07)
+
+
+### Notice
+
+* Due to an ongoing issue with the WiX Toolset, the Windows MSI installer must be run as admin. This will be addressed in an upcoming release. ([4d40da5](https://github.com/newrelic/newrelic-dotnet-agent/commit/4d40da5e8b76a32814a8cffd21f092451caaaf9e))
+
+
+### New features
+
+* Add preliminary support for AWS Lambda instrumentation. For details on how to enable this functionality, please contact your New Relic representative. ([4d40da5](https://github.com/newrelic/newrelic-dotnet-agent/commit/4d40da5e8b76a32814a8cffd21f092451caaaf9e))
+
+
+### Fixes
+
+* Fix bug in distributed tracing when `excludeNewrelicHeader` is set to true ([#2457](https://github.com/newrelic/newrelic-dotnet-agent/issues/2457)) ([1f95c9c](https://github.com/newrelic/newrelic-dotnet-agent/commit/1f95c9cdfee17172ce8517679f2f6168fd9ebb63))
+
 ## [10.23.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.23.0...v10.23.1) (2024-04-24)
 
 

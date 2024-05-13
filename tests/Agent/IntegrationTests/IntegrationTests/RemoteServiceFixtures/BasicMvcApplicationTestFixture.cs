@@ -13,8 +13,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
