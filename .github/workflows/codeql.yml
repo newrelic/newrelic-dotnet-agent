@@ -49,7 +49,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+      uses: github/codeql-action/init@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # v3.25.5
       with:
         languages: csharp
 
@@ -59,7 +59,7 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+      uses: github/codeql-action/analyze@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # v3.25.5
       with:
         category: "/language:csharp"
 
@@ -84,7 +84,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+      uses: github/codeql-action/init@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # v3.25.5
       with:
         languages: c-cpp
 
@@ -100,6 +100,6 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+      uses: github/codeql-action/analyze@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # v3.25.5
       with:
         category: "/language:c-cpp"
