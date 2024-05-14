@@ -28,6 +28,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string PcfInstanceIp = @"CF_INSTANCE_IP";
         private const string PcfMemoryLimit = @"MEMORY_LIMIT";
         private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
+        private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
         private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 
         [SetUp]
@@ -470,7 +471,7 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
-        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_IfUnableToParseV1OrV2()
+        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_VarV4_IfUnableToParseV1OrV2()
         {
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
@@ -524,6 +525,54 @@ namespace NewRelic.Agent.Core.Utilization
         }
     ],
     "Snapshotter": "overlayfs"
+}
+""");
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo(dockerId));
+        }
+
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_VarV3_IfUnableToParseV1OrV2()
+        {
+            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+            SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.IsAny<Uri>(), Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
+{
+    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+    "Name": "fargateapp",
+    "DockerName": "fargateapp",
+    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+    "Labels": {
+        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+        "com.amazonaws.ecs.container-name": "fargateapp",
+        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+        "com.amazonaws.ecs.task-definition-version": "7"
+    },
+    "DesiredStatus": "RUNNING",
+    "KnownStatus": "RUNNING",
+    "Limits": {
+        "CPU": 2
+    },
+    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+    "StartedAt": "2024-04-25T17:38:31.073208914Z",
+    "Type": "NORMAL",
+    "Networks": [
+        {
+            "NetworkMode": "awsvpc",
+            "IPv4Addresses": [
+                "10.10.10.10"
+            ]
+        }
+    ]
 }
 """);
 

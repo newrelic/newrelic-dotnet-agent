@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Utilization
 #if NETSTANDARD2_0
         private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
+        private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
         private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 #endif
 
@@ -373,6 +374,11 @@ namespace NewRelic.Agent.Core.Utilization
         private IVendorModel TryGetEcsFargateDockerId()
         {
             var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
+            if (string.IsNullOrWhiteSpace(metadataUri))
+            {
+                metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV3EnvVar);
+            }
+;
             if (string.IsNullOrWhiteSpace(metadataUri))
             {
                 return null;
