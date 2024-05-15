@@ -2628,7 +2628,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
             var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
 
-            var expectedStatusCodesArray = EnvironmentOverrides(ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal)?.ToList(), @"NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES");
+            var expectedStatusCodesArray = EnvironmentOverrides(ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal)?.ToList(), "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES");
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
             ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new List<string>();
@@ -2677,7 +2677,7 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var ignoreStatusCodes = _serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore;
+            IEnumerable<string> ignoreStatusCodes = EnvironmentOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore?.ToList(), "NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES");
             if (ignoreStatusCodes == null)
             {
                 ignoreStatusCodes = _localConfiguration.errorCollector.ignoreStatusCodes.code

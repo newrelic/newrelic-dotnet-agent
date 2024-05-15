@@ -1016,6 +1016,24 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
+        [TestCase(new[] { 401f }, new[] { "405" }, null,  ExpectedResult = new[] { "405" })]
+        [TestCase(new[] { 401f }, new string[0],   null,  ExpectedResult = new string[0])]
+        [TestCase(new[] { 401f }, null,            null,  ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0],   null,            "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0],   new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f }, new string[0], "401",   ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f }, new string[0], "401, 503",   ExpectedResult = new[] { "401", "503" })]
+        public string[] IgnoredStatusCodesSetFromLocalServerAndEnvironmentOverrides(float[] local, string[] server, string env)
+        {
+            _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
+            _localConfig.errorCollector.ignoreStatusCodes.code = (local.ToList());
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES")).Returns(env);
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.HttpStatusCodesToIgnore.ToArray();
+        }
+
         [TestCase("401-404", new string[] { "401.5", "402.3" }, new bool[] { false, false })] //does not support full status codes
         [TestCase("400,401,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401 ,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
