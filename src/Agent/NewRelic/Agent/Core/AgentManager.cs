@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core
 #else
             if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
             {
-                Log.Warn("Unsupported .NET version {0} detected. Please use a version of .NET >= net6.", AgentInstallConfiguration.DotnetCoreVersion);
+                Log.Warn("Unsupported .NET version {0} detected. Please use net6 or net8 or newer.", AgentInstallConfiguration.DotnetCoreVersion);
             }
 #endif
         }
