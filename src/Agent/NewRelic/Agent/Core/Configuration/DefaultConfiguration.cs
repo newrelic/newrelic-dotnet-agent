@@ -2628,10 +2628,10 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
             var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
 
-            var expectedStatusCodesArray = ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal);
+            var expectedStatusCodesArray = EnvironmentOverrides(ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal)?.ToList(), @"NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES");
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new string[0];
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new List<string>();
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);

@@ -999,13 +999,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", new[] { "405" }, ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0], ExpectedResult = new string[0])]
-        [TestCase("401", null, ExpectedResult = new[] { "401" })]
-        public string[] ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
+        [TestCase("401", new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0], null, ExpectedResult = new string[0])]
+        [TestCase("401", null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(null, null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(null, new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401", ExpectedResult = new[] { "401" })]
+        public string[] ExpectedStatusCodesSetFromLocalServerAndEnvironmentOverrides(string local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes = (local);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES")).Returns(env);
 
             CreateDefaultConfiguration();
 
