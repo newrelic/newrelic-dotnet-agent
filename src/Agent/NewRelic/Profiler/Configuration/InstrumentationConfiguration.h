@@ -134,7 +134,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 return;
             }
 
-            lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("NEW_RELIC_LAMBDA_FUNCTION_HANDLER"));
+            lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("NEW_RELIC_LAMBDA_HANDLER"));
             if (lambdaInstPoint != nullptr)
             {
                 AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
