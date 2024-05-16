@@ -32,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                     SetAdditionalEnvironmentVariable("NEW_RELIC_ACCOUNT_ID", TestConfiguration.NewRelicAccountId);
                     SetAdditionalEnvironmentVariable("AWS_LAMBDA_RUNTIME_API", $"localhost:{LambdaTestTool.Port}");
 
-                    AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_LAMBDA_FUNCTION_HANDLER", newRelicLambdaHandler);
+                    AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_LAMBDA_HANDLER", newRelicLambdaHandler);
                     AddAdditionalEnvironmentVariableIfNotNull("_HANDLER", lambdaHandler);
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_LAMBDA_FUNCTION_NAME", lambdaName);
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_LAMBDA_FUNCTION_VERSION", lambdaVersion);

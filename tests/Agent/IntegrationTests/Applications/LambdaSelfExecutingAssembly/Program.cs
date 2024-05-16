@@ -156,12 +156,12 @@ namespace LambdaSelfExecutingAssembly
         }
         private static string GetHandlerName()
         {
-            var handlerName = Environment.GetEnvironmentVariable("NEW_RELIC_LAMBDA_FUNCTION_HANDLER") ??
+            var handlerName = Environment.GetEnvironmentVariable("NEW_RELIC_LAMBDA_HANDLER") ??
                 Environment.GetEnvironmentVariable("_HANDLER");
 
             if (string.IsNullOrWhiteSpace(handlerName))
             {
-                throw new Exception("The lambda handler is missing. Please ensure that the correct handler is defined in either the NEW_RELIC_LAMBDA_FUNCTION_HANDLER or _HANDLER environment variables.");
+                throw new Exception("The lambda handler is missing. Please ensure that the correct handler is defined in either the NEW_RELIC_LAMBDA_HANDLER or _HANDLER environment variables.");
             }
 
             return handlerName;
