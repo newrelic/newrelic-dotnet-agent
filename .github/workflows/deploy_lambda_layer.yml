@@ -1,0 +1,36 @@
+name: Publish .NET Lambda Layer
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_version:
+        description: 'Agent version that was released.  Needs to match the version from the Deploy Agent workflow (deploy_agent.yml). Format: X.X.X'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      agent_version:
+        description: 'Agent Version to create a layer for.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-layer:
+    name: Create and Publish Lambda Layer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
+        with:
+          egress-policy: audit
+
+      - name: Create Tag
+      # A workflow in the layers repo will trigger off the creation of the tag
+        run: gh release create v${{ inputs.agent_version }}_dotnet --repo "$REPO" -t "$TITLE" --latest=false
+        env:
+          GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+          REPO: https://github.com/newrelic/newrelic-lambda-layers/
+          TITLE: "New Relic .NET Agent v${{ inputs.agent_version }}"
