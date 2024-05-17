@@ -134,7 +134,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
         private static Func<object, object> GetValueAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Value");
 
-        //IEnumerable<string> GetHeaderValue(IDictionary<string, object> carrier, string key)
         private static IEnumerable<string> DistributedTraceHeadersGetter(MessageMetadata carrier, string key)
         {
             if (carrier.Headers != null)
