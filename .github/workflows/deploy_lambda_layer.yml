@@ -14,13 +14,12 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-
 jobs:
   publish-layer:
     name: Create and Publish Lambda Layer
     runs-on: ubuntu-latest
+    permissions:
+        contents: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1

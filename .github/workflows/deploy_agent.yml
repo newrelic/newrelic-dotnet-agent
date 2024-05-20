@@ -449,8 +449,6 @@ jobs:
     secrets: inherit
 
   deploy-lambda-layer:
-    permissions:
-      contents: write
     needs: [get-release-info, deploy-linux, deploy-nuget, index-download-site]
     if: $(( inputs.lambdalayer ))
     name: Run Lambda Layer Deploy Workflow
