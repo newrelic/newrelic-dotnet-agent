@@ -200,8 +200,8 @@ jobs:
           Copy-Item .\working_dir\NewRelicDotNetAgent_*_x86.msi .\working_dir\NewRelicDotNetAgent_x86.msi -Force -Recurse
           Copy-Item .\working_dir\NewRelicDotNetAgent_*_x64.zip .\working_dir\NewRelicDotNetAgent_x64.zip -Force -Recurse
           Copy-Item .\working_dir\NewRelicDotNetAgent_*_x86.zip .\working_dir\NewRelicDotNetAgent_x86.zip -Force -Recurse
-          Copy-Item .\working_dir\NewRelicDotNetAgent_*_amd64.tar.gz .\working_dir\NewRelicDotNetAgent_amd64.tar.gz -Force -Recurse
-          Copy-Item .\working_dir\NewRelicDotNetAgent_*_arm64.tar.gz .\working_dir\NewRelicDotNetAgent_arm64.tar.gz -Force -Recurse
+          Copy-Item .\working_dir\newrelic-dotnet-agent_*_amd64.tar.gz .\working_dir\newrelic-dotnet-agent_amd64.tar.gz -Force -Recurse
+          Copy-Item .\working_dir\newrelic-dotnet-agent_*_arm64.tar.gz .\working_dir\newrelic-dotnet-agent_arm64.tar.gz -Force -Recurse
         shell: powershell
 
       - name: Deploy latest_release to Download Site
