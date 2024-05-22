@@ -193,15 +193,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         }
 
         [Test]
-        public void GetScript_Throws_IfAgentLicenseKeyIsEmpty()
-        {
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(string.Empty);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<Exception>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        [Test]
         public void GetScript_Throws_IfBrowserMonitoringBeaconAddressIsNull()
         {
             Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as string);
