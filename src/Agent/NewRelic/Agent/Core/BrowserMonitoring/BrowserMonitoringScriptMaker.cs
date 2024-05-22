@@ -70,10 +70,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
 
             var licenseKey = _configurationService.Configuration.AgentLicenseKey;
-            if (licenseKey == null)
-                throw new NullReferenceException(nameof(licenseKey));
-            if (licenseKey.Length <= 0)
-                throw new Exception("License key is empty");
+            // serverless mode doesn't require a license key, so this check can fail.
+            if (string.IsNullOrEmpty(licenseKey) || "REPLACE_WITH_LICENSE_KEY".Equals(licenseKey))
+            {
+                Log.Debug("Skipping RUM injection because license key is not set.");
+                return null;
+            }
 
             var browserConfigurationData = GetBrowserConfigurationData(transaction, transactionMetricName, licenseKey);
 

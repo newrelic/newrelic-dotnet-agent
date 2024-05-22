@@ -182,12 +182,14 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         }
 
         [Test]
-        public void GetScript_Throws_IfAgentLicenseKeyIsNull()
+        public void GetScript_ReturnsNull_IfAgentLicenseKeyIsNotSet()
         {
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+            Assert.That(script, Is.Null);
         }
 
         [Test]
