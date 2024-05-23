@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using MultiFunctionApplicationHelpers;
@@ -34,6 +34,10 @@ namespace NsbTests
             transport.StorageDirectory(".lt");
             endpointConfiguration.SendFailedMessagesTo("error");
             endpointConfiguration.EnableInstallers();
+
+#if NET8_0_OR_GREATER // serializer must be specified starting with NServiceBus 9.0.0
+            endpointConfiguration.UseSerialization<XmlSerializer>();
+#endif
 
             // We want to control which handlers are loaded for different test cases
             endpointConfiguration.AssemblyScanner().ScanAppDomainAssemblies = false;

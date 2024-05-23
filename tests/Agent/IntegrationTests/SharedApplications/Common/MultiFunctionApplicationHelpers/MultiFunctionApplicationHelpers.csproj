@@ -211,9 +211,8 @@
     <PackageReference Include="NServiceBus" Version="6.5.10" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <!-- NServiceBus 6.5 only appears to support .NET Framework. Uncomment for 'fun' -->
-    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="NServiceBus" Version="7.7.4" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="NServiceBus" Version="8.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="NServiceBus" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <ItemGroup>
