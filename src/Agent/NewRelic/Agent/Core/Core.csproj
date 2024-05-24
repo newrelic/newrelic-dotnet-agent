@@ -38,8 +38,8 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.26.1" />
-    <PackageReference Include="Grpc.Tools" Version="2.63.0">
+    <PackageReference Include="Google.Protobuf" Version="3.27.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.64.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -73,7 +73,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <!-- .NET Core can use the modern gRPC library -->
-    <PackageReference Include="Grpc.Net.Client" Version="2.60.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[2.0.0]" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="[2.0.0]" />

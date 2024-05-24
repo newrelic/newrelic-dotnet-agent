@@ -5,15 +5,13 @@ VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArtifactBuilder", "ArtifactBuilder\ArtifactBuilder.csproj", "{2FB32877-EF0C-4382-8D3C-F653F3C26A3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.NuGetHelper", "NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj", "{94BF8D27-2122-4573-AA79-90B977B40EF3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetValidator", "NugetValidator\NugetValidator.csproj", "{C3F69996-5A5F-4836-A485-C270C318C6E9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "S3Validator", "S3Validator\S3Validator.csproj", "{648D08B2-E677-4009-A593-D03E0579E859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReleaseNotesBuilder", "ReleaseNotesBuilder\ReleaseNotesBuilder.csproj", "{0E9152F2-4CA9-4F24-AADF-9B15310C3DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReleaseNotesBuilder", "ReleaseNotesBuilder\ReleaseNotesBuilder.csproj", "{0E9152F2-4CA9-4F24-AADF-9B15310C3DFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetVersionDeprecator", "NugetVersionDeprecator\NugetVersionDeprecator.csproj", "{77685AF5-5FD7-483E-B589-BDE4E2F1769C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetVersionDeprecator", "NugetVersionDeprecator\NugetVersionDeprecator.csproj", "{77685AF5-5FD7-483E-B589-BDE4E2F1769C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +23,6 @@ Global
 		{2FB32877-EF0C-4382-8D3C-F653F3C26A3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FB32877-EF0C-4382-8D3C-F653F3C26A3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FB32877-EF0C-4382-8D3C-F653F3C26A3A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C3F69996-5A5F-4836-A485-C270C318C6E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C3F69996-5A5F-4836-A485-C270C318C6E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3F69996-5A5F-4836-A485-C270C318C6E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
