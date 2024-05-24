@@ -52,3 +52,20 @@ updates:
       nuget:
         patterns:
           - "*"
+  # Update a specific set of packages in the `tests` folder          
+  - package-ecosystem: nuget
+    directory: /tests
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
+    allow:
+      - dependency-name: "xunit*"
+      - dependency-name: "NUnit*"
+      - dependency-name: "coverlet.collector"
+      - dependency-name: "Microsoft.NET.Test.Sdk"
+      - dependency-name: "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
+      - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
+      - dependency-name: "Selenium*"
