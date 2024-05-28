@@ -72,7 +72,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <!-- .NET Core can use the modern gRPC library. Version pinned at 2.60.0, newer breaks integration tests -->
     <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[2.0.0]" />
