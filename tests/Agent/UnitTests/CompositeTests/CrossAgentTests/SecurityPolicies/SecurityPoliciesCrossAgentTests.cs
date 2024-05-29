@@ -80,7 +80,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             ValidateEndingPolicies(testData);
 
             // ensure supportability metric was sent
-            Mock.Arrange(() => _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("LASP"), 1)).Occurs(1);
+            Mock.Arrange(() => _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("CSP"), 1)).Occurs(1);
         }
 
         private static List<TestCaseData> GetSecurityPoliciesTestData()
