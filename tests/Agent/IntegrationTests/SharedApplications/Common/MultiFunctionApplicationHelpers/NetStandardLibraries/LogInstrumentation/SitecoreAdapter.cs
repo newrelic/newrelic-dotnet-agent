@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NET48_OR_GREATER
@@ -114,6 +114,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             // TODO: Not supported?
             throw new System.NotImplementedException();
+        }
+
+        public void LogMessageInNestedScopes()
+        {
+            throw new NotImplementedException();
         }
 
         public void NoMessage()

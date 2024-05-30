@@ -34,24 +34,47 @@ namespace NewRelic.Agent.Core.Logging
         public void Log(Level level, string message)
         {
             if (!IsEnabledFor(level)) return;
-            var messageString = message.ToString();
 
             switch (level)
             {
                 case Level.Finest:
-                    _logger.Verbose(messageString);
+                    _logger.Verbose(message);
                     break;
                 case Level.Debug:
-                    _logger.Debug(messageString);
+                    _logger.Debug(message);
                     break;
                 case Level.Info:
-                    _logger.Information(messageString);
+                    _logger.Information(message);
                     break;
                 case Level.Warn:
-                    _logger.Warning(messageString);
+                    _logger.Warning(message);
                     break;
                 case Level.Error:
-                    _logger.Error(messageString);
+                    _logger.Error(message);
+                    break;
+            }
+        }
+
+        public void Log(Level level, Exception ex, string message)
+        {
+            if (!IsEnabledFor(level)) return;
+
+            switch (level)
+            {
+                case Level.Finest:
+                    _logger.Verbose(ex, message);
+                    break;
+                case Level.Debug:
+                    _logger.Debug(ex, message);
+                    break;
+                case Level.Info:
+                    _logger.Information(ex, message);
+                    break;
+                case Level.Warn:
+                    _logger.Warning(ex, message);
+                    break;
+                case Level.Error:
+                    _logger.Error(ex, message);
                     break;
             }
         }
