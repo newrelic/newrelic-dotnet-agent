@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -62,6 +62,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void ConfigurePatternLayoutAppenderForDecoration() => CreateMelLogger();
 
         public void ConfigureJsonLayoutAppenderForDecoration() => CreateMelLogger();
+        public void LogMessageInNestedScopes()
+        {
+            using (var _ = _logger.BeginScope("{ScopeKey1}", "scopeValue1"))
+            {
+                _logger.LogInformation("Outer Scope");
+
+                using (var __ = _logger.BeginScope("{ScopeKey1}", "scopeValue2"))
+                {
+                    _logger.LogInformation("Inner Scope");
+                }
+            }
+        }
 
         private void CreateMelLogger()
         {
