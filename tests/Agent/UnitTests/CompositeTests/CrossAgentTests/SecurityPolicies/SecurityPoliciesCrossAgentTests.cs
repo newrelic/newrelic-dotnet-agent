@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Labels;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.SystemInterfaces;
@@ -31,6 +32,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         private string _connectRawData;
         private ConnectionHandler _connectionHandler;
         private bool _receivedSecurityPoliciesException;
+        private IAgentHealthReporter _agentHealthReporter;
 
         public static List<TestCaseData> SecurityPoliciesTestDatas => GetSecurityPoliciesTestData();
 
@@ -45,7 +47,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             var processStatic = Mock.Create<IProcessStatic>();
             var configurationService = Mock.Create<IConfigurationService>();
             var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
-            var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
             Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");
@@ -54,7 +56,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             _receivedSecurityPoliciesException = false;
 
             _connectionHandler = new ConnectionHandler(new JsonSerializer(), collectorWireFactory, Mock.Create<IProcessStatic>(), Mock.Create<IDnsStatic>(),
-                Mock.Create<ILabelsService>(), agentEnvironment, systemInfo, agentHealthReporter, Mock.Create<IEnvironment>());
+                Mock.Create<ILabelsService>(), agentEnvironment, systemInfo, _agentHealthReporter, Mock.Create<IEnvironment>());
         }
 
         [TearDown]
@@ -76,6 +78,9 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             ValidateShutdownSignal(testData);
             ValidatePoliciesSentToConnect(testData);
             ValidateEndingPolicies(testData);
+
+            // ensure supportability metric was sent
+            Mock.Arrange(() => _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("CSP"), 1)).Occurs(1);
         }
 
         private static List<TestCaseData> GetSecurityPoliciesTestData()
