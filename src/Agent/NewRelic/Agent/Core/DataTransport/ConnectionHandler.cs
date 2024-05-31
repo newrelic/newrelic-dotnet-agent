@@ -88,6 +88,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
                     var securityPoliciesConfiguration = new SecurityPoliciesConfiguration(preconnectResult.SecurityPolicies);
                     EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(securityPoliciesConfiguration));
+
+                    _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("CSP"));
                 }
 
                 var serverConfiguration = SendConnectRequest();

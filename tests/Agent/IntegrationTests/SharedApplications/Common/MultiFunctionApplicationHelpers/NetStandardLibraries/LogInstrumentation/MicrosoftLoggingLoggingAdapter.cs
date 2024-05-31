@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -103,6 +103,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 .CreateLogger();
 
             CreateMelLogger(LogLevel.Debug, serilogLogger);
+        }
+
+        public void LogMessageInNestedScopes()
+        {
+            using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
+            {
+                logger.LogInformation("Outer Scope");
+
+                using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
+                {
+                    logger.LogInformation("Inner Scope");
+                }
+            }
         }
 
         private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)

@@ -142,6 +142,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             throw new NotImplementedException();
         }
 
+        public void LogMessageInNestedScopes()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class SerilogWebStartup

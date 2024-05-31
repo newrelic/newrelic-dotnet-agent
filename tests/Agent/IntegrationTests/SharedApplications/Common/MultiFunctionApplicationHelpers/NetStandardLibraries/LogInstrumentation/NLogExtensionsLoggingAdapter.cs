@@ -90,6 +90,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         }
 
+        public void LogMessageInNestedScopes()
+        {
+            using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
+            {
+                logger.LogInformation("Outer Scope");
+
+                using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
+                {
+                    logger.LogInformation("Inner Scope");
+                }
+            }
+        }
+
         private void CreateMelLogger(LogLevel minimumLogLevel)
         {
 

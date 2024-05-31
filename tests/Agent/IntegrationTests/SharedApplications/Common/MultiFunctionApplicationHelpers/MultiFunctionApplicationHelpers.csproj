@@ -43,14 +43,14 @@
     </PackageReference>
 
     <!-- Postgres SQL .NET framework references -->
-    <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="npgsql" Version="5.0.15" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="npgsql" Version="6.0.7" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="npgsql" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="npgsql" Version="4.0.14" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="npgsql" Version="5.0.18" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="npgsql" Version="6.0.11" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- Postgres SQL .NET core references -->
-    <PackageReference Include="npgsql" Version="4.1.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="npgsql" Version="7.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="npgsql" Version="4.1.13" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net8.0'" />
     <!--System.Data.SqlClient (.NET Core/5+ only) -->
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <!--<PackageReference Include="System.Data.SqlClient" Version="4.8.6" Condition="'$(TargetFramework)' == 'net8.0'" />-->
@@ -132,11 +132,11 @@
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.11" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.12" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- Elastic.Clients.Elasticsearch .NET/Core references - only actually testing oldest and newest -->
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.11" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.12" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- Serilog .NET framework references -->
     <PackageReference Include="Serilog" Version="1.5.14" Condition="'$(TargetFramework)' == 'net462'" />
@@ -192,7 +192,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0-3.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
   </ItemGroup>
 
   <!-- The following section is used to specify particular versions of the RabbitMQ client to be tested with different
@@ -211,9 +211,8 @@
     <PackageReference Include="NServiceBus" Version="6.5.10" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <!-- NServiceBus 6.5 only appears to support .NET Framework. Uncomment for 'fun' -->
-    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="NServiceBus" Version="7.7.4" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="NServiceBus" Version="8.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="NServiceBus" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,5 +11,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="RunAsync" />
       </match>
     </tracerFactory>
+    <!-- We want to detect if the OpenTracing solution is running, as it is not compatible with the full Agent. -->
+    <tracerFactory name="OpenTracingWrapper">
+      <match assemblyName="NewRelic.OpenTracing.AmazonLambda.Tracer" className="NewRelic.OpenTracing.AmazonLambda.LambdaTracer">
+        <exactMethodMatcher methodName=".ctor" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

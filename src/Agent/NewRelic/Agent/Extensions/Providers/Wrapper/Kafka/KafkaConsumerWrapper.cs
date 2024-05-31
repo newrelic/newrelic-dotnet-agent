@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
@@ -65,7 +66,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     segment.SetMessageBrokerDestination(topic);
                     transaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
-                    // get the Message.Headers property and add distributed trace headers
+                    // get the Message.Headers property and process distributed trace headers
                     var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
                     var messageAsObject = messageAccessor(resultAsObject);
 
@@ -73,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     if (messageAsObject is MessageMetadata messageMetaData)
                     {
                         headersSize = GetHeadersSize(messageMetaData.Headers);
-                        transaction.InsertDistributedTraceHeaders(messageMetaData, DistributedTraceHeadersSetter);
+                        transaction.AcceptDistributedTraceHeaders(messageMetaData, DistributedTraceHeadersGetter, TransportType.Kafka);
                     }
 
                     ReportSizeMetrics(agent, transaction, topic, headersSize, messageAsObject);
@@ -133,14 +134,22 @@ namespace NewRelic.Providers.Wrapper.Kafka
         private static Func<object, object> GetValueAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Value");
 
-        private static void DistributedTraceHeadersSetter(MessageMetadata carrier, string key, string value)
+        private static IEnumerable<string> DistributedTraceHeadersGetter(MessageMetadata carrier, string key)
         {
-            carrier.Headers ??= new Headers();
-            if (!string.IsNullOrEmpty(key))
+            if (carrier.Headers != null)
             {
-                carrier.Headers.Remove(key);
-                carrier.Headers.Add(key, Encoding.ASCII.GetBytes(value));
+                var headerValues = new List<string>();
+                foreach (var item in carrier.Headers)
+                {
+                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var decodedHeaderValue = Encoding.UTF8.GetString(item.GetValueBytes());
+                        headerValues.Add(decodedHeaderValue);
+                    }
+                }
+                return headerValues;
             }
+            return null;
         }
 
         private static long TryGetSize(object obj)

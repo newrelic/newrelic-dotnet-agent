@@ -176,8 +176,11 @@ namespace NewRelic.Agent.Core
             if (!Configuration.AgentEnabled)
                 throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", Configuration.AgentEnabledAt));
 
-            if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
-                throw new Exception("Please set your license key.");
+            if (!Configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
+            {
+                if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
+                    throw new Exception("Please set your license key.");
+            }
         }
 
         private void Initialize(bool serverlessModeEnabled)
@@ -321,7 +324,7 @@ namespace NewRelic.Agent.Core
 #else
             if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
             {
-                Log.Warn("Unsupported .NET version {0} detected. Please use a version of .NET >= net6.", AgentInstallConfiguration.DotnetCoreVersion);
+                Log.Warn("Unsupported .NET version {0} detected. Please use net6 or net8 or newer.", AgentInstallConfiguration.DotnetCoreVersion);
             }
 #endif
         }

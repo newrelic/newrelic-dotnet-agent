@@ -83,6 +83,8 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             new Assertions.ExpectedMetric { metricName = consumeTransactionName, callCount = 2 },
             new Assertions.ExpectedMetric { metricName = messageBrokerConsume, callCount = 2 },
             new Assertions.ExpectedMetric { metricName = messageBrokerConsume, metricScope = consumeTransactionName, callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
         };
 
         NrAssert.Multiple(
@@ -93,7 +95,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             () => Assert.True(consumeTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
             () => Assert.InRange((long)consumeTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
             () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.False(consumeTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
+            () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -93,6 +93,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             };
 
             _log = _log = GetLogger(LogLevel.Debug, jsonLayout);
+        }
+
+        public void LogMessageInNestedScopes()
+        {
+            throw new NotImplementedException();
         }
 
         private Logger GetLogger(LogLevel minimumLogLevel, Layout layoutOverride = null)

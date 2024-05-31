@@ -197,5 +197,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             CreateSingleLogMessageWithParam(message);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void LogMessageInNestedScopes()
+        {
+            _log.LogMessageInNestedScopes();
+        }
+
     }
 }
