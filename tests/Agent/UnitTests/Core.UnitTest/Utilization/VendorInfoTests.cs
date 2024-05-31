@@ -340,7 +340,7 @@ namespace NewRelic.Agent.Core.Utilization
 1342 1429 0:300 / /sys/firmware ro,relatime - tmpfs tmpfs ro
 ");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, true);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb"));
         }
@@ -369,7 +369,7 @@ namespace NewRelic.Agent.Core.Utilization
 1:cpuset:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, true);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
         }
@@ -434,7 +434,7 @@ namespace NewRelic.Agent.Core.Utilization
 1:name=systemd:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
 ");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, true);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo("b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58"));
         }
@@ -464,14 +464,16 @@ namespace NewRelic.Agent.Core.Utilization
 1:cpuset:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, true);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
         }
 
-        [Test]
-        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_VarV4_IfUnableToParseV1OrV2()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetVendors_GetDockerVendorInfo_ParsesEcs_VarV4_IfUnableToParseV1OrV2(bool isLinux)
         {
+            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.IsAny<Uri>(), Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
@@ -532,14 +534,16 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, isLinux);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo(dockerId));
         }
 
-        [Test]
-        public void GetVendors_GetDockerVendorInfo_ParsesEcsFargate_VarV3_IfUnableToParseV1OrV2()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetVendors_GetDockerVendorInfo_ParsesEcs_VarV3_IfUnableToParseV1OrV2(bool isLinux)
         {
+            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.IsAny<Uri>(), Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
@@ -580,13 +584,14 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, isLinux);
             Assert.That(model, Is.Not.Null);
             Assert.That(model.Id, Is.EqualTo(dockerId));
         }
 
-        [Test]
-        public void GetVendors_GetDockerVendorInfo_ReturnsNull_IfUnableToParseV1OrV2OrEcsFargate()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetVendors_GetDockerVendorInfo_ReturnsNull_IfUnableToParseV1OrV2OrEcs(bool isLinux)
         {
             // Not setting the ECS_CONTAINER_METADATA_URI_V4 env var will cause the fargate check to be skipped.
 
@@ -595,7 +600,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
 
-            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper, isLinux);
             Assert.That(model, Is.Null);
         }
 #endif

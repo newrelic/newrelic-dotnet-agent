@@ -100,13 +100,10 @@ namespace NewRelic.Agent.Core.Utilization
             if (_configuration.UtilizationDetectDocker)
             {
 #if NETSTANDARD2_0
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+                if (dockerVendorInfo != null)
                 {
-                    var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper());
-                    if (dockerVendorInfo != null)
-                    {
-                        vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
-                    }
+                    vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
                 }
 #endif
             }
@@ -280,34 +277,37 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
 #if NETSTANDARD2_0
-        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper)
+        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper, bool isLinux)
         {
             IVendorModel vendorModel = null;
-            try
-            {
-                var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
-                vendorModel = TryGetDockerCGroupV2(fileContent);
-                if (vendorModel == null)
-                    Log.Finest("Found /proc/self/mountinfo but failed to parse Docker container id.");
-
-            }
-            catch (Exception ex)
-            {
-                Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
-            }
-
-            if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+            if (isLinux)
             {
                 try
                 {
-                    var fileContent = fileReaderWrapper.ReadAllText("/proc/self/cgroup");
-                    vendorModel = TryGetDockerCGroupV1(fileContent);
+                    var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
+                    vendorModel = TryGetDockerCGroupV2(fileContent);
                     if (vendorModel == null)
-                        Log.Finest("Found /proc/self/cgroup but failed to parse Docker container id.");
+                        Log.Finest("Found /proc/self/mountinfo but failed to parse Docker container id.");
+
                 }
                 catch (Exception ex)
                 {
-                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
+                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
+                }
+
+                if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+                {
+                    try
+                    {
+                        var fileContent = fileReaderWrapper.ReadAllText("/proc/self/cgroup");
+                        vendorModel = TryGetDockerCGroupV1(fileContent);
+                        if (vendorModel == null)
+                            Log.Finest("Found /proc/self/cgroup but failed to parse Docker container id.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
+                    }
                 }
             }
 
