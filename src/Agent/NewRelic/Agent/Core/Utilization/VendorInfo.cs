@@ -12,23 +12,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-
-#if NETSTANDARD2_0
 using System.IO;
-using System.Runtime.InteropServices;
-#endif
 
 namespace NewRelic.Agent.Core.Utilization
 {
     public class VendorInfo
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
-#if NETSTANDARD2_0
         private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
         private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
         private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
-#endif
 
         private const string AwsName = @"aws";
         private const string AzureName = @"azure";
@@ -99,13 +93,11 @@ namespace NewRelic.Agent.Core.Utilization
             // If Docker info is set to be checked, it must be checked for all vendors.
             if (_configuration.UtilizationDetectDocker)
             {
-#if NETSTANDARD2_0
-                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
                 if (dockerVendorInfo != null)
                 {
                     vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
                 }
-#endif
             }
 
             if (_configuration.UtilizationDetectKubernetes)
@@ -276,7 +268,6 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 
-#if NETSTANDARD2_0
         public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper, bool isLinux)
         {
             IVendorModel vendorModel = null;
@@ -401,8 +392,6 @@ namespace NewRelic.Agent.Core.Utilization
             return id == null ? null : new DockerVendorModel(id);
         }
 
-#endif
-
         public IVendorModel GetKubernetesInfo()
         {
             var envVar = _environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST");
@@ -461,8 +450,17 @@ namespace NewRelic.Agent.Core.Utilization
         {
             return Regex.IsMatch(data, ValidateMetadataRegex);
         }
-    }
+
+        private static bool IsLinux()
+        {
 #if NETSTANDARD2_0
+            return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+#else
+            return false; // No Linux on .NET Framework
+#endif
+        }
+    }
+
     // needed for unit testing only
     public interface IFileReaderWrapper
     {
@@ -476,5 +474,4 @@ namespace NewRelic.Agent.Core.Utilization
             return File.ReadAllText(fileName);
         }
     }
-#endif
 }
