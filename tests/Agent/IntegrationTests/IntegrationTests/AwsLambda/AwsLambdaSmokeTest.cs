@@ -23,6 +23,14 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+            _fixture.AdditionalSetupConfiguration = () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+            };
+
             _fixture.Actions(
                 exerciseApplication: () =>
                 {
@@ -51,8 +59,8 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
                 () => Assert.NotNull(serverlessPayload.Telemetry.MetricsPayload),
                 () => Assert.NotNull(serverlessPayload.Telemetry.TransactionEventsPayload),
                 () => Assert.NotNull(serverlessPayload.Telemetry.SpanEventsPayload),
+                () => Assert.NotNull(serverlessPayload.Telemetry.TransactionTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.SqlTracePayload),
-                () => Assert.Null(serverlessPayload.Telemetry.TransactionTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorEventsPayload),
                 () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
