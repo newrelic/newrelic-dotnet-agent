@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NET8_0_OR_GREATER
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -278,5 +276,3 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         }
     }
 }
-
-#endif
