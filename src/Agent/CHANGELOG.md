@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.25.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.0...v10.25.1) (2024-06-04)
+
+
+### Fixes
+
+* Agent license key should be optional in Serverless mode. ([#2499](https://github.com/newrelic/newrelic-dotnet-agent/issues/2499)) ([#2500](https://github.com/newrelic/newrelic-dotnet-agent/issues/2500)) ([801edc3](https://github.com/newrelic/newrelic-dotnet-agent/commit/801edc32a01dbc62a449963a41899ca68f987e78))
+* Nested logging contexts should not disable context data for Microsoft.Extensions.Logging (2508) ([#2516](https://github.com/newrelic/newrelic-dotnet-agent/issues/2516)) ([6196af5](https://github.com/newrelic/newrelic-dotnet-agent/commit/6196af5a8f13b4c1e3bd7f315837c8b365fdb57a))
+
 ## [10.25.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.24.0...v10.25.0) (2024-05-21)
 
 
