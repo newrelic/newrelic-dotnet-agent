@@ -131,11 +131,15 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                 { "aws.lambda.eventSource.eventType", "apiGateway" },
                 {"request.method", "POST" },
                 {"request.uri", "/path/to/resource" },
-                { "http.statusCode", 200 },
-                { "response.status", "200" },
-                { "response.headers.content-type", "application/json" },
-                { "response.headers.content-length", "12345" }
             };
+
+            if (!_returnsStream) // stream response type won't have response attributes
+            {
+                expectedAgentAttributeValues.Add("http.statusCode", 200);
+                expectedAgentAttributeValues.Add("response.status", "200");
+                expectedAgentAttributeValues.Add("response.headers.content-type", "application/json");
+                expectedAgentAttributeValues.Add("response.headers.content-length", "12345");
+            }
 
             Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
 
