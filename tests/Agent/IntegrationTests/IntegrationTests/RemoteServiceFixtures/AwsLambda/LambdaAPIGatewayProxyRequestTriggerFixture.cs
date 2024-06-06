@@ -151,6 +151,21 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                                                """;
             EnqueueLambdaEvent(apiGatewayProxyRequestJson);
         }
+
+        /// <summary>
+        /// A minimal payload to validate the fix for https://github.com/newrelic/newrelic-dotnet-agent/issues/2528
+        /// </summary>
+        public void EnqueueMinimalAPIGatewayProxyRequest()
+        {
+            var apiGatewayProxyRequestJson = $$"""
+                                               {
+                                                 "body": "{\"test\":\"body\"}",
+                                                 "path": "/path/to/resource",
+                                                 "httpMethod": "POST"
+                                               }
+                                               """;
+            EnqueueLambdaEvent(apiGatewayProxyRequestJson);
+        }
     }
 
     public class LambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase

@@ -292,7 +292,8 @@ public static class LambdaEventHelpers
             transaction.SetUri(webReqEvent.Path);
         }
 
-        transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
+        if (webReqEvent.QueryStringParameters != null)
+            transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
     }
 
     private static TransportType GetDistributedTransportType(string forwardedProto)

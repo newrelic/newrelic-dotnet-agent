@@ -34,7 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                 {
                     _fixture.EnqueueAPIGatewayHttpApiV2ProxyRequest();
                     _fixture.EnqueueAPIGatewayHttpApiV2ProxyRequestWithDTHeaders(TestTraceId, TestParentSpanId);
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 2);
+                    _fixture.EnqueueMinimalAPIGatewayHttpApiV2ProxyRequest();
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 3);
                 }
             );
             _fixture.Initialize();
@@ -46,8 +47,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
             var serverlessPayloads = _fixture.AgentLog.GetServerlessPayloads().ToList();
 
             Assert.Multiple(
-                () => Assert.Equal(2, serverlessPayloads.Count),
-                () => Assert.All(serverlessPayloads, ValidateServerlessPayload),
+                () => Assert.Equal(3, serverlessPayloads.Count),
+                // validate the first 2 payloads separately from the 3rd
+                () => Assert.All(serverlessPayloads.GetRange(0, 2), ValidateServerlessPayload),
+                () => ValidateMinimalRequestPayload(serverlessPayloads[2]),
                 () => ValidateTraceHasNoParent(serverlessPayloads[0]),
                 () => ValidateTraceHasParent(serverlessPayloads[1])
                 );
@@ -76,6 +79,34 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                 { "request.uri", "/path/to/resource" },
                 { "request.parameters.parameter1", "value1,value2" },
                 { "request.parameters.parameter2", "value" },
+                { "http.statusCode", 200 },
+                { "response.status", "200" },
+                { "response.headers.content-type", "application/json" },
+                { "response.headers.content-length", "12345" }
+            };
+
+            Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
+
+            Assertions.TransactionEventHasAttributes(expectedAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+            Assertions.TransactionEventHasAttributes(expectedAgentAttributeValues, TransactionEventAttributeType.Agent, transactionEvent);
+        }
+
+        private void ValidateMinimalRequestPayload(ServerlessPayload serverlessPayload)
+        {
+            var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
+
+            var expectedAgentAttributes = new[]
+            {
+                "aws.lambda.arn",
+                "aws.requestId",
+                "host.displayName"
+            };
+
+            var expectedAgentAttributeValues = new Dictionary<string, object>
+            {
+                { "aws.lambda.eventSource.eventType", "apiGateway" },
+                {"request.method", "POST" },
+                {"request.uri", "/path/to/resource" },
                 { "http.statusCode", 200 },
                 { "response.status", "200" },
                 { "response.headers.content-type", "application/json" },
