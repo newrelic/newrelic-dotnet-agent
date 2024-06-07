@@ -5,9 +5,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -31,6 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
                     var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetLogLevel("finest");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 

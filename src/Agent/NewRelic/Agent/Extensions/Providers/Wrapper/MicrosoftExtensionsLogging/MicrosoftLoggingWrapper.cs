@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -59,7 +59,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
                 Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
                 Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
-                Func<object, Dictionary<string, object>> getContextDataFunc = nothx => GetContextData(logger, agent);
+                Func<object, Dictionary<string, object>> getContextDataFunc = _ => GetContextData(logger, agent);
 
                 var xapi = agent.GetExperimentalApi();
                 xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
@@ -81,14 +81,13 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "ScopeLoggers");
                 var loggers = getLoggersArrayFunc(logger);
 
-                // Get the first ScopeLogger in the array (logger.ScopeLoggers[0])
-                // If there is more than one scope logger, they've all received the same data, so the first
-                // one should be fine
-                object firstLogger = loggers.GetValue(0);
+                // Get the last ScopeLogger in the array (logger.ScopeLoggers[loggers.Length-1])
+                // If there is more than one scope logger, the last logger is the one with the ExternalScopeProvider set
+                object lastLogger = loggers.GetValue(loggers.Length - 1);
 
-                // Get the scope provider from that logger (logger.ScopeLoggers[0].ExternalScopeProvider)
-                var scopeProviderPI = _scopeProviderPropertyInfo ??= firstLogger.GetType().GetProperty("ExternalScopeProvider");
-                var scopeProvider = scopeProviderPI.GetValue(firstLogger) as IExternalScopeProvider;
+                // Get the scope provider from that logger (logger.ScopeLoggers[loggers.Length-1].ExternalScopeProvider)
+                var scopeProviderPI = _scopeProviderPropertyInfo ??= lastLogger.GetType().GetProperty("ExternalScopeProvider");
+                var scopeProvider = scopeProviderPI.GetValue(lastLogger) as IExternalScopeProvider;
 
                 // Get the context data
                 var harvestedKvps = new Dictionary<string, object>();
@@ -98,12 +97,12 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                     {
                         foreach (var kvp in kvps)
                         {
-                            accumulatedKvps.Add(kvp.Key, kvp.Value);
+                            accumulatedKvps[kvp.Key] = kvp.Value; // use this notation to ensure we keep the last value in case nested scopes have the same key
                         }
                     }
                     else if (scopeObject is KeyValuePair<string, object> kvp)
                     {
-                        accumulatedKvps.Add(kvp.Key, kvp.Value);
+                        accumulatedKvps[kvp.Key] = kvp.Value; // use this notation to ensure we keep the last value in case nested scopes have the same key
                     }
                     // Possibly handle case of IEnumerable<KeyValuePair<object, object>>, etc (not now though)
                 }, harvestedKvps);
@@ -112,7 +111,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             }
             catch (Exception e)
             {
-                agent.Logger.Log(Level.Warn, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework. Exception: {e}");
+                agent.Logger.Log(Level.Warn, e, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework.");
                 _contextDataNotSupported = true;
                 return null;
             }

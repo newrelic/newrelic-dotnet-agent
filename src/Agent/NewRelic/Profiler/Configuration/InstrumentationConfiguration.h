@@ -13,6 +13,9 @@
 #include "../SignatureParser/SignatureParser.h"
 #include "../RapidXML/rapidxml.hpp"
 #include "../Common/AssemblyVersion.h"
+#include "IgnoreInstrumentation.h"
+#include "../Configuration/Strings.h"
+#include "../Logging/DefaultFileLogLocation.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
@@ -23,8 +26,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     class InstrumentationConfiguration
     {
     public:
-        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
+        InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls, IgnoreInstrumentationListPtr ignoreList, std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr) :
             _instrumentationPointsSet(new InstrumentationPointSet())
+            , _ignoreList(ignoreList)
+            , _systemCalls(systemCalls)
+            , _foundServerlessInstrumentationPoint(false)
         {
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
@@ -49,17 +55,18 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     continue;
                 }
             }
-            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
+            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points (not ignored) in .xml files");
         }
 
-        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
-            _instrumentationPointsSet(instrumentationPoints)
+        InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints, IgnoreInstrumentationListPtr ignoreList) :
+            _instrumentationPointsSet(new InstrumentationPointSet())
+            , _ignoreList(ignoreList)
+            , _systemCalls(nullptr)
+            , _foundServerlessInstrumentationPoint(false)
         {
-            _instrumentationPointsSet = instrumentationPoints;
-
             for (auto instrumentationPoint : *instrumentationPoints)
             {
-                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+                AddInstrumentationPointToCollectionsIfNotIgnored(instrumentationPoint);
             }
         }
 
@@ -73,11 +80,22 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return _instrumentationPointsSet;
         }
 
+        IgnoreInstrumentationListPtr GetIgnoreList() const
+        {
+            return _ignoreList;
+        }
+
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
             const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
             const auto params = methodSignature->ToString(function->GetTokenResolver());
             const auto instPoints = TryGetInstrumentationPoints(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
+
+            if (instPoints.empty())
+            {
+                // No instrumentation points were found so there is nothing else to check
+                return nullptr;
+            }
 
             // We may have multiple matching instrumentation points that target different assembly versions. See if we can find one that meets
             // the version requirements
@@ -101,8 +119,57 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return nullptr;
         }
 
-    private:
+        void CheckForEnvironmentInstrumentationPoint(void)
+        {
+            if (_foundServerlessInstrumentationPoint || (_systemCalls == nullptr))
+            {
+                return;
+            }
 
+            auto lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("_HANDLER"));
+            if (lambdaInstPoint != nullptr)
+            {
+                AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
+                _foundServerlessInstrumentationPoint = true;
+                return;
+            }
+
+            lambdaInstPoint = _systemCalls->TryGetEnvironmentVariable(_X("NEW_RELIC_LAMBDA_HANDLER"));
+            if (lambdaInstPoint != nullptr)
+            {
+                AddInstrumentationPointToCollectionFromEnvironment(*lambdaInstPoint);
+                _foundServerlessInstrumentationPoint = true;
+            }
+        }
+
+        void AddInstrumentationPointToCollectionFromEnvironment(xstring_t text)
+        {
+            auto segments = Strings::Split(text, _X("::"));
+            if (segments.size() != 3)
+            {
+                LogWarn(text, L" is not a valid method descriptor. It must be in the format 'assembly::class::method'");
+                return;
+            }
+            LogInfo(L"Serverless mode detected. Assembly: ", segments[0], L" Class: ", segments[1], L" Method: ", segments[2]);
+
+            InstrumentationPointPtr instrumentationPoint(new InstrumentationPoint());
+            // Note that this must exactly match the wrapper name in the managed Agent
+            instrumentationPoint->TracerFactoryName = _X("NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod");
+            instrumentationPoint->MetricName = _X("");
+            instrumentationPoint->MetricType = _X("");
+            instrumentationPoint->AssemblyName = segments[0];
+            instrumentationPoint->MinVersion = nullptr;
+            instrumentationPoint->MaxVersion = nullptr;
+            instrumentationPoint->ClassName = segments[1];
+            instrumentationPoint->MethodName = segments[2];
+            instrumentationPoint->Parameters = nullptr;
+            instrumentationPoint->TracerFactoryArgs = 0;
+
+            (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+            _instrumentationPointsSet->insert(instrumentationPoint);
+        }
+
+    private:
         static bool InstrumentationXmlIsDeprecated(xstring_t instrumentationXmlFilePath)
         {
             bool returnValue = false;
@@ -128,6 +195,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             const xstring_t& methodName,
             const xstring_t& parameters) const
         {
+
             auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
             auto matchInstrumentation = TryGetInstrumentationPoints(matchKey);
 
@@ -333,8 +401,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
                 // Note that there may be "duplicated" instrumentation points that target different assembly versions
-                (*_instrumentationPointsMap)[iPoint->GetMatchKey()].insert(iPoint);
-                _instrumentationPointsSet->insert(iPoint);
+                AddInstrumentationPointToCollectionsIfNotIgnored(iPoint);
+            }
+        }
+
+        void AddInstrumentationPointToCollectionsIfNotIgnored(InstrumentationPointPtr instrumentationPoint)
+        {
+            if (!IgnoreInstrumentation::Matches(_ignoreList, instrumentationPoint->AssemblyName, instrumentationPoint->ClassName))
+            {
+                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
+                _instrumentationPointsSet->insert(instrumentationPoint);
+            }
+            else
+            {
+                LogDebug(L"Instrumentation for ", instrumentationPoint->GetMatchKey(), L" is in the ignore list in the newrelic.config file and will be ignored.");
             }
         }
 
@@ -432,6 +512,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         InstrumentationPointMapPtr _instrumentationPointsMap = InstrumentationPointMapPtr(new InstrumentationPointMap());
         InstrumentationPointSetPtr _instrumentationPointsSet;
         uint16_t _invalidFileCount = 0;
+        IgnoreInstrumentationListPtr _ignoreList;
+        std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
+        bool _foundServerlessInstrumentationPoint;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
 }}}

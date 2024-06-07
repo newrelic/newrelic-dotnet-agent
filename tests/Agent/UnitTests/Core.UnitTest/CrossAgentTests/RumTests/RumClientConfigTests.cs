@@ -48,6 +48,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         private ServerConfiguration _serverConfig;
         private RunTimeConfiguration _runTimeConfiguration;
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+        private IBootstrapConfiguration _bootstrapConfiguration;
 
         private IEnvironment _environment;
         private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -66,6 +67,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public void Teardown()
         {
             _configAutoResponder?.Dispose();
+            _attribDefSvc?.Dispose();
         }
 
         [Test]
@@ -86,6 +88,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _configurationManagerStatic = new ConfigurationManagerStaticMock();
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
 
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -95,7 +98,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _localConfig.crossApplicationTracingEnabled = true;
             _localConfig.attributes.enabled = true;
             _localConfig.service.licenseKey = testCase.LicenseKey;
-            _localConfig.appSettings.Add(new configurationAdd() { key = "NewRelic.LicenseKey", value = testCase.LicenseKey });
+            _localConfig.appSettings.Add(new configurationAdd() { key = Constants.AppSettingsLicenseKey, value = testCase.LicenseKey });
             _serverConfig.RumSettingsJavaScriptAgentLoader = "JSAGENT";
             _serverConfig.RumSettingsJavaScriptAgentFile = testCase.ConnectReply.JsAgentFile;
             _serverConfig.RumSettingsBeacon = testCase.ConnectReply.Beacon;
@@ -105,7 +108,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _serverConfig.RumSettingsApplicationId = testCase.ConnectReply.ApplicationId;
             _localConfig.browserMonitoring.attributes.enabled = testCase.BrowserMonitoringAttributesEnabled;
 
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
@@ -148,15 +151,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Agent, actualConfigurationData.Agent),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationId, actualConfigurationData.ApplicationId),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds, actualConfigurationData.ApplicationTimeMilliseconds),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.Beacon, actualConfigurationData.Beacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.BrowserLicenseKey, actualConfigurationData.BrowserLicenseKey),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ErrorBeacon, actualConfigurationData.ErrorBeacon),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedTransactionName, actualConfigurationData.ObfuscatedTransactionName),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes, actualConfigurationData.ObfuscatedUserAttributes),
-                () => Assert.AreEqual(testCase.ExpectedConfigurationData.QueueTimeMilliseconds, actualConfigurationData.QueueTimeMilliseconds)
+                () => Assert.That(actualConfigurationData.Agent, Is.EqualTo(testCase.ExpectedConfigurationData.Agent)),
+                () => Assert.That(actualConfigurationData.ApplicationId, Is.EqualTo(testCase.ExpectedConfigurationData.ApplicationId)),
+                () => Assert.That(actualConfigurationData.ApplicationTimeMilliseconds, Is.EqualTo(testCase.ExpectedConfigurationData.ApplicationTimeMilliseconds)),
+                () => Assert.That(actualConfigurationData.Beacon, Is.EqualTo(testCase.ExpectedConfigurationData.Beacon)),
+                () => Assert.That(actualConfigurationData.BrowserLicenseKey, Is.EqualTo(testCase.ExpectedConfigurationData.BrowserLicenseKey)),
+                () => Assert.That(actualConfigurationData.ErrorBeacon, Is.EqualTo(testCase.ExpectedConfigurationData.ErrorBeacon)),
+                () => Assert.That(actualConfigurationData.ObfuscatedTransactionName, Is.EqualTo(testCase.ExpectedConfigurationData.ObfuscatedTransactionName)),
+                () => Assert.That(actualConfigurationData.ObfuscatedUserAttributes, Is.EqualTo(testCase.ExpectedConfigurationData.ObfuscatedUserAttributes)),
+                () => Assert.That(actualConfigurationData.QueueTimeMilliseconds, Is.EqualTo(testCase.ExpectedConfigurationData.QueueTimeMilliseconds))
             );
 
             Teardown();
@@ -247,7 +250,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

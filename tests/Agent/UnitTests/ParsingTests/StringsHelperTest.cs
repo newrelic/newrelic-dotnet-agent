@@ -12,31 +12,31 @@ namespace NewRelic.Parsing
         [Test]
         public void DoubleBracket()
         {
-            Assert.AreEqual("dude", StringsHelper.RemoveBracketsQuotesParenthesis("[[dude]]"));
+            Assert.That(StringsHelper.RemoveBracketsQuotesParenthesis("[[dude]]"), Is.EqualTo("dude"));
         }
 
         [Test]
         public static void TestFixDatabaseObjectNameWithBrackets()
         {
-            Assert.AreEqual("dude", StringsHelper.FixDatabaseObjectName("[dude]"));
+            Assert.That(StringsHelper.FixDatabaseObjectName("[dude]"), Is.EqualTo("dude"));
         }
 
         [Test]
         public static void TestUnquoteDouble()
         {
-            Assert.AreEqual("dude", StringsHelper.FixDatabaseObjectName("\"dude\""));
+            Assert.That(StringsHelper.FixDatabaseObjectName("\"dude\""), Is.EqualTo("dude"));
         }
 
         [Test]
         public static void TestUnquoteSingle()
         {
-            Assert.AreEqual("dude", StringsHelper.FixDatabaseObjectName("'dude'"));
+            Assert.That(StringsHelper.FixDatabaseObjectName("'dude'"), Is.EqualTo("dude"));
         }
 
         [Test]
         public static void TestUnquoteTick()
         {
-            Assert.AreEqual("dude", StringsHelper.FixDatabaseObjectName("`dude`"));
+            Assert.That(StringsHelper.FixDatabaseObjectName("`dude`"), Is.EqualTo("dude"));
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace NewRelic.Parsing
         {
             Uri uri = null;
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual(string.Empty, result);
+            Assert.That(result, Is.EqualTo(string.Empty));
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace NewRelic.Parsing
         {
             Uri uri = new Uri("/relative/uri", UriKind.Relative);
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("/relative/uri", result);
+            Assert.That(result, Is.EqualTo("/relative/uri"));
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace NewRelic.Parsing
         {
             Uri uri = new Uri("/relative/uri?dude=666", UriKind.Relative);
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("/relative/uri", result);
+            Assert.That(result, Is.EqualTo("/relative/uri"));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:80/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:80/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:80/dir/"));
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:443/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:443/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:443/dir/"));
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://username:password@example.com:443/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://example.com:443/dir/", result);
+            Assert.That(result, Is.EqualTo("http://example.com:443/dir/"));
         }
 
         [Test]
@@ -92,7 +92,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:80/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:80/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:80/dir/"));
         }
 
         [Test]
@@ -100,7 +100,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:443/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:443/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:443/dir/"));
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:8080/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:8080/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:8080/dir/"));
         }
 
         [Test]
@@ -116,7 +116,7 @@ namespace NewRelic.Parsing
         {
             var uri = new Uri("http://www.example.com:8080/dir/?query=test");
             var result = StringsHelper.CleanUri(uri);
-            Assert.AreEqual("http://www.example.com:8080/dir/", result);
+            Assert.That(result, Is.EqualTo("http://www.example.com:8080/dir/"));
         }
 
         [TestCase("http://testsite.com/abc", "http://testsite.com/abc")]
@@ -131,7 +131,22 @@ namespace NewRelic.Parsing
         public void validate_CleanUri_String_Version(string uri, string expected)
         {
             var actual = StringsHelper.CleanUri(uri);
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
+
+#if NET6_0_OR_GREATER
+        [Test]
+        public void validate_CleanUri_handles_invalidoperationexception()
+        {
+            var options = new UriCreationOptions 
+            {
+                DangerousDisablePathAndQueryCanonicalization = true // only avaialable in .NET 6+
+            };
+            var uri = new Uri("http://www.example.com:8080/dir/?query=test", options);
+
+            var actual = StringsHelper.CleanUri(uri);
+            Assert.That(actual, Is.EqualTo("http://www.example.com:8080/dir/"));
+        }
+#endif
     }
 }

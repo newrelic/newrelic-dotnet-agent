@@ -25,6 +25,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionMetricNameMaker = new TransactionMetricNameMaker(_metricNameService);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _metricNameService.Dispose();
+        }
+
         [Test]
         public void BuiltTransactionName_BuildsWebTransactionMetricName_IfWebTransactionName()
         {
@@ -32,8 +38,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("WebTransaction/foo/bar", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("WebTransaction/foo/bar"));
+            });
         }
 
         [Test]
@@ -46,8 +55,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("WebTransaction/Uri/http://www.google.com/yomama/normalized", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("WebTransaction/Uri/http://www.google.com/yomama/normalized"));
+            });
         }
 
         [Test]
@@ -57,8 +69,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/foo/bar", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/foo/bar"));
+            });
         }
 
         [Test]
@@ -68,8 +83,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("WebTransaction/Custom/foo", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("WebTransaction/Custom/foo"));
+            });
         }
 
         [Test]
@@ -79,8 +97,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Custom/foo", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/Custom/foo"));
+            });
         }
 
         [Test]
@@ -90,8 +111,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Named/baz", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/Message/bar/Queue/Named/baz"));
+            });
         }
 
         [Test]
@@ -101,8 +125,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Temp", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/Message/bar/Queue/Temp"));
+            });
         }
 
         [Test]
@@ -115,8 +142,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("WebTransaction/NewName", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("WebTransaction/NewName"));
+            });
         }
 
         [Test]
@@ -126,8 +156,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Consume/Named/baz", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/Message/bar/Queue/Consume/Named/baz"));
+            });
         }
 
         [Test]
@@ -137,8 +170,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
-            Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Consume/Named/Temp", builtName.PrefixedName);
+            Assert.Multiple(() =>
+            {
+                Assert.That(builtName.ShouldIgnore, Is.False);
+                Assert.That(builtName.PrefixedName, Is.EqualTo("OtherTransaction/Message/bar/Queue/Consume/Named/Temp"));
+            });
         }
     }
 }

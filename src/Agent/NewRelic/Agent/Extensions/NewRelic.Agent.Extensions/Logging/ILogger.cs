@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace NewRelic.Agent.Extensions.Logging
 {
     public enum Level
@@ -16,5 +18,6 @@ namespace NewRelic.Agent.Extensions.Logging
     {
         bool IsEnabledFor(Level level);
         void Log(Level level, string message);
+        void Log(Level level, Exception ex,  string message);
     }
 }

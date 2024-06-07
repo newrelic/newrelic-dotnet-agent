@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.ForceTransactionTraces()
+                    configModifier.ForceTransactionTraces().DisableEventListenerSamplers()
                     .SetLogLevel("finest");
 
                 },
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/INCR", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HMSET", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HINCRBY", callCount = 4 }, // increment and decrement
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HEXISTS", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HEXISTS", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HLEN", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HVALS", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/HLEN", callCount = 2 },
@@ -77,7 +77,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                 // Delete can resolve to DEL or UNLINK depending on Redis version
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/(DEL|UNLINK)", IsRegexName = true, callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/PING", callCount = 4 }, //ping and identifyendpoint
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SADD", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SADD", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SUNION", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SISMEMBER", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SCARD", callCount = 2 },
@@ -91,8 +91,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a console app so there should be no allWeb metrics
-				new Assertions.ExpectedMetric {metricName = @"Datastore/allWeb", callCount = 1},
+                // The datastore operation happened inside a console app so there should be no allWeb metrics
+                new Assertions.ExpectedMetric {metricName = @"Datastore/allWeb", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Datastore/Redis/allWeb", callCount = 1}
             };
 

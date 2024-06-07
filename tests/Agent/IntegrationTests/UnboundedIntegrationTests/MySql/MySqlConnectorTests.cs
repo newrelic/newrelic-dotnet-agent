@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         private readonly List<string> commandList = new List<string>()
         {
-            "ExecuteReader",
+            "ExecuteReaderWithDelay",
             "ExecuteScalar",
             "ExecuteNonQuery",
             "ExecuteReaderAsync",
@@ -56,9 +56,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier
-                        .ConfigureFasterMetricsHarvestCycle(45)
-                        .ConfigureFasterTransactionTracesHarvestCycle(45)
-                        .ConfigureFasterSqlTracesHarvestCycle(45)
+                        .ConfigureFasterMetricsHarvestCycle(30)
+                        .ConfigureFasterTransactionTracesHarvestCycle(30)
+                        .ConfigureFasterSqlTracesHarvestCycle(30)
                         .ForceTransactionTraces()
                         .SetLogLevel("finest");
 
@@ -74,8 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 exerciseApplication: () =>
                 {
                     // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
-                        TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
@@ -89,20 +88,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = commandList.Count },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = commandList.Count },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // The datastore operation happened inside a non-web transaction so there should be no allWeb metrics
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", CallCountAllHarvests = 1 },
             };
 
             foreach (var command in commandList)
@@ -112,7 +111,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 expectedMetrics.Add(new Assertions.ExpectedMetric
                 {
                     metricName = @"Datastore/statement/MySQL/dates/select",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = transactionName
                 });
 
@@ -126,12 +125,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
                         metricName = @"DotNet/DatabaseResult/Iterate",
-                        callCount = commandList.Count
+                        CallCountAllHarvests = commandList.Count
                     });
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
                         metricName = @"DotNet/DatabaseResult/Iterate",
-                        callCount = 3,
+                        CallCountAllHarvests = 3,
                         metricScope = transactionName
                     });
                 }
@@ -141,12 +140,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     new Assertions.ExpectedMetric
                     {
                         metricName = @"Datastore/operation/MySQL/select",
-                        callCount = 1,
+                        CallCountAllHarvests = 1,
                         metricScope = transactionName
                     });
             }
 
-            var query = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
+            var queryWithDelay = "SELECT SLEEP(?), _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
 
             var expectedTransactionTraceSegments = new List<string> { "Datastore/statement/MySQL/dates/select" };
 
@@ -158,7 +157,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     segmentName = "Datastore/statement/MySQL/dates/select",
                     parameterName = "sql",
-                    parameterValue = query
+                    parameterValue = queryWithDelay
                 },
                 new Assertions.ExpectedSegmentParameter
                 {
@@ -186,15 +185,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            // there should be only a single trace but we've found that the TransactionName isn't predictable enough
-            // (it's supposed to be the first query, but the assumption that the first query is always the slowest one doesn't
-            // hold universally). So we'll make sure there's just one trace and that the query, metricName and ExplainPlan properties are
-            // what we expect.
+            // there may be multiple traces, but we want the slowest one (by total call time) which is always the result of ExecuteReaderWithDelay
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-            Assert.Single(sqlTraces);
+            var sqlTrace = sqlTraces.OrderByDescending(t => t.TotalCallTime).First();
 
-            var sqlTrace = sqlTraces.First();
-            Assert.Equal( query, sqlTrace.Sql );
+            Assert.Equal( queryWithDelay, sqlTrace.Sql );
             Assert.Equal("Datastore/statement/MySQL/dates/select", sqlTrace.DatastoreMetricName);
             Assert.True(sqlTrace.ParameterData.GetValueOrDefault("explain_plan") != null);
             

@@ -25,7 +25,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
     internal class SpanEventAggregatorTests
     {
         private IDataTransportService _dataTransportService;
-        private IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
         private IAgentHealthReporter _agentHealthReporter;
         private SpanEventAggregator _spanEventAggregator;
         private ConfigurationAutoResponder _configurationAutoResponder;
@@ -111,7 +110,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             _dataTransportService = Mock.Create<IDataTransportService>();
-            _spanStreamingService = Mock.Create<IDataStreamingService<Span, SpanBatch, RecordStatus>>();
+            Mock.Create<IDataStreamingService<Span, SpanBatch, RecordStatus>>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _processStatic = Mock.Create<IProcessStatic>();
 
@@ -155,7 +154,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var actualReservoirSize = int.MaxValue;
             var actualEventsSeen = int.MaxValue;
             var sentEvents = null as IEnumerable<ISpanEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<EventHarvestData, IEnumerable<ISpanEventWireModel>>((eventHarvestData, events) =>
                 {
                     sentEvents = events;
@@ -171,9 +170,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // Assert
             var SpanAttributeValueCollections = sentEvents as SpanAttributeValueCollection[] ?? sentEvents.ToArray();
             Assert.That(SpanAttributeValueCollections, Has.Exactly(EventCount).Items);
-            Assert.That(SpanAttributeValueCollections, Is.EqualTo(SpanEvents));
-            Assert.That(actualReservoirSize, Is.EqualTo(ExpectedReservoirSize));
-            Assert.That(actualEventsSeen, Is.EqualTo(ExpectedEventsSeen));
+            Assert.Multiple(() =>
+            {
+                Assert.That(SpanAttributeValueCollections, Is.EqualTo(SpanEvents));
+                Assert.That(actualReservoirSize, Is.EqualTo(ExpectedReservoirSize));
+                Assert.That(actualEventsSeen, Is.EqualTo(ExpectedEventsSeen));
+            });
         }
 
         [Test]
@@ -207,7 +209,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sendCalled = true;
@@ -226,7 +228,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             // Arrange
             IEnumerable<SpanAttributeValueCollection> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sentEvents = events;
@@ -250,7 +252,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             const int eventCount = 2;
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -277,7 +279,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // Arrange
             var firstTime = true;
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -314,7 +316,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -339,7 +341,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             const int eventCount = 1;
             // Arrange
             IEnumerable<SpanAttributeValueCollection> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sentEvents = events;
@@ -409,13 +411,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
-            Assert.AreEqual(expectedShouldHarvest, _actualWillHarvest, "Is Harvesting");
+            Assert.That(_actualWillHarvest, Is.EqualTo(expectedShouldHarvest), "Is Harvesting");
         }
 
         [Test]
         public void Harvest_cycle_should_match_configured_cycle()
         {
-            Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+            Assert.That(_harvestCycle, Is.EqualTo(ConfiguredHarvestCycle));
         }
 
         [Test]
@@ -436,8 +438,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceEnabled, "Service Enabled"),
-                () => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceAvailable, "Service Enabled")
+                () => Assert.That(_spanEventAggregator.IsServiceEnabled, Is.EqualTo(expectedIsEnabled), "Service Enabled"),
+                () => Assert.That(_spanEventAggregator.IsServiceAvailable, Is.EqualTo(expectedIsEnabled), "Service Enabled")
             );
         }
 

@@ -22,8 +22,8 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             var localContainer = remoteContainer;
 
             //ASSERT
-            Assert.NotNull(localContainer);
-            Assert.Null(localContainer.GetValue());
+            Assert.That(localContainer, Is.Not.Null);
+            Assert.That(localContainer.GetValue(), Is.Null);
         }
     }
 }

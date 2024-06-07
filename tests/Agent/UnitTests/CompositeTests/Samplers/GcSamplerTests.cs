@@ -110,16 +110,16 @@ namespace NewRelic.Agent.Core.Samplers
 
             //Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedSampleCount, perfCounterValues.Count, $"There should have been {expectedSampleCount} samples collected"),
-                () => Assert.AreEqual(_countSampleTypes, perfCounterValues[0].Count, $"There should be {_countSampleTypes} in the first sample"),
-                () => Assert.AreEqual(_countSampleTypes, perfCounterValues[1].Count, $"There should be {_countSampleTypes} in the second sample")
+                () => Assert.That(perfCounterValues, Has.Count.EqualTo(expectedSampleCount), $"There should have been {expectedSampleCount} samples collected"),
+                () => Assert.That(perfCounterValues[0], Has.Count.EqualTo(_countSampleTypes), $"There should be {_countSampleTypes} in the first sample"),
+                () => Assert.That(perfCounterValues[1], Has.Count.EqualTo(_countSampleTypes), $"There should be {_countSampleTypes} in the second sample")
             );
 
             //Validate the sampled(calculated) value for each counter type.
             foreach (var gcSampleType in perfCounterValues[0].Keys)
             {
                 //For the first sample, all should have the same value
-                Assert.AreEqual(startVal, perfCounterValues[0][gcSampleType]);
+                Assert.That(perfCounterValues[0][gcSampleType], Is.EqualTo(startVal));
 
                 //For the second sample...
                 switch (gcSampleType)
@@ -129,12 +129,12 @@ namespace NewRelic.Agent.Core.Samplers
                     case GCSampleType.Gen1CollectionCount:
                     case GCSampleType.Gen2CollectionCount:
                     case GCSampleType.InducedCount:
-                        Assert.AreEqual(deltaVal, perfCounterValues[1][gcSampleType]);
+                        Assert.That(perfCounterValues[1][gcSampleType], Is.EqualTo(deltaVal));
                         break;
 
                     //...other measurements should be passed through with the perf counter value
                     default:
-                        Assert.AreEqual(lastPerfCounterValue, perfCounterValues[1][gcSampleType]);
+                        Assert.That(perfCounterValues[1][gcSampleType], Is.EqualTo(lastPerfCounterValue));
                         break;
                 }
             }
@@ -185,11 +185,14 @@ namespace NewRelic.Agent.Core.Samplers
             Assert.DoesNotThrow(sampler.Start);
             Assert.DoesNotThrow(sampler.Sample);
 
-            //Assert
-            Assert.AreEqual(_countSampleTypes, countAttempts);
-            Assert.Greater(countFails, 0);
-            Assert.Greater(countSuccess, 0);
-            Assert.IsFalse(stopWasCalled);
+            Assert.Multiple(() =>
+            {
+                //Assert
+                Assert.That(countAttempts, Is.EqualTo(_countSampleTypes));
+                Assert.That(countFails, Is.GreaterThan(0));
+                Assert.That(countSuccess, Is.GreaterThan(0));
+                Assert.That(stopWasCalled, Is.False);
+            });
         }
 
         [Test]
@@ -226,21 +229,21 @@ namespace NewRelic.Agent.Core.Samplers
 
             Assert.DoesNotThrow(sampler.Start);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //success
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());     //fail
-            Assert.IsTrue(stopWasCalled);
+            Assert.That(stopWasCalled, Is.True);
         }
 
 
@@ -281,18 +284,21 @@ namespace NewRelic.Agent.Core.Samplers
             //Act
             Assert.DoesNotThrow(sampler.Start);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
 
-            //Assert
-            Assert.AreEqual(_countSampleTypes * 5, countAttempts);
-            Assert.IsTrue(stopWasCalled);
+            Assert.Multiple(() =>
+            {
+                //Assert
+                Assert.That(countAttempts, Is.EqualTo(_countSampleTypes * 5));
+                Assert.That(stopWasCalled, Is.True);
+            });
         }
 
         /// <summary>
@@ -333,18 +339,21 @@ namespace NewRelic.Agent.Core.Samplers
             //Act
             Assert.DoesNotThrow(sampler.Start);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
-            Assert.IsFalse(stopWasCalled);
+            Assert.That(stopWasCalled, Is.False);
             Assert.DoesNotThrow(() => _sampleAction());
 
-            //Assert
-            Assert.Greater(countAttempts, 0);
-            Assert.IsTrue(stopWasCalled);
+            Assert.Multiple(() =>
+            {
+                //Assert
+                Assert.That(countAttempts, Is.GreaterThan(0));
+                Assert.That(stopWasCalled, Is.True);
+            });
         }
 
         /// <summary>
@@ -375,7 +384,7 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Dispose(); // calls sampler.Stop()
 
             //Assert
-            Assert.AreEqual(_countSampleTypes, disposeAttempts, "Perf counter proxies were not disposed when the GcSampler was stopped.");
+            Assert.That(disposeAttempts, Is.EqualTo(_countSampleTypes), "Perf counter proxies were not disposed when the GcSampler was stopped.");
         }
     }
 }

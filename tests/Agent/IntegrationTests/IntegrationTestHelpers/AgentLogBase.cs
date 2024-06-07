@@ -9,9 +9,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -41,6 +41,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_event_data"" with : (.*)";
         public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
         public const string UpdateLoadedModulesLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""update_loaded_modules"" with : (.*)";
+        public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
 
         // Collector responses
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
@@ -52,6 +53,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string RejitInstrumentationFileChanged = InfoLogLinePrefixRegex + @"Instrumentation change detected:(.*)";
         public const string InstrumentationRefreshFileWatcherStarted = InfoLogLinePrefixRegex + @"Starting instrumentation refresh from InstrumentationWatcher";
         public const string InstrumentationRefreshFileWatcherComplete = InfoLogLinePrefixRegex + @"Completed instrumentation refresh from InstrumentationWatcher";
+        public const string ConfigFileChangeDetected = DebugLogLinePrefixRegex + @"newrelic.config file changed, reloading.";
         public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
         public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
@@ -70,6 +72,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
+
+        // Serverless payloads
+        public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";
 
         public AgentLogBase(ITestOutputHelper testLogger)
         {
@@ -156,7 +161,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
+            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds:N0} seconds. Minimum count: {minimumCount}");
 
             var timeTaken = Stopwatch.StartNew();
             do
@@ -164,14 +169,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
+                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression} in {timeTaken.Elapsed.TotalSeconds:N1}s.");
                     return matches;
                 }
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
 
-            var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
+            var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds:N0} seconds.  Expected line expression: {regularExpression}";
             _testLogger?.WriteLine(message);
             throw new Exception(message);
         }
@@ -555,6 +560,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion
 
+        #region ServerlessPayloads
+
+        public IEnumerable<ServerlessPayload> GetServerlessPayloads()
+        {
+            return TryGetLogLines(ServerlessPayloadLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .Where(json => json != null)
+                .Select(ServerlessPayload.FromJson);
+        }
+
+        #endregion ServerlessPayloads
+
         private string Timestamp
         {
             get
@@ -563,5 +580,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 return DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss,fff");
             }
         }
+
+        #region CustomEvents
+        public IEnumerable<CustomEventData> GetCustomEvents()
+        {
+            return TryGetLogLines(CustomEventDataLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .SelectMany(json => TryExtractFromJsonArray<CustomEventData>(json, 1))
+                .Where(transactionEvent => transactionEvent != null);
+        }
+
+        #endregion
     }
 }

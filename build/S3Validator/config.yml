@@ -20,17 +20,21 @@ directory-list:
 # Example: 'NewRelicDotNetAgent_10.13.0_x64.msi' becomes 'NewRelicDotNetAgent_{version}_x64.msi'
 file-list:
   - name: NewRelicDotNetAgent_{version}_x64.msi
-    size: 13000000
+    size: 11500000
   - name: NewRelicDotNetAgent_{version}_x64.zip
     size: 11500000
   - name: NewRelicDotNetAgent_{version}_x86.msi
-    size: 12500000
+    size: 11000000
   - name: NewRelicDotNetAgent_{version}_x86.zip
     size: 11500000
   - name: NewRelicDotNetAgent_x64.msi
-    size: 13000000
+    size: 11500000
   - name: NewRelicDotNetAgent_x86.msi
-    size: 12500000
+    size: 11000000
+  - name: NewRelicDotNetAgent_x64.zip
+    size: 11500000
+  - name: NewRelicDotNetAgent_x86.zip
+    size: 11500000
   - name: Readme.txt
     size: 1500
   - name: newrelic-dotnet-agent-{version}-1.x86_64.rpm
@@ -39,9 +43,13 @@ file-list:
     size: 2500000
   - name: newrelic-dotnet-agent_{version}_amd64.tar.gz
     size: 3900000
+  - name: newrelic-dotnet-agent_amd64.tar.gz
+    size: 3900000
   - name: newrelic-dotnet-agent_{version}_arm64.deb
     size: 2100000
   - name: newrelic-dotnet-agent_{version}_arm64.tar.gz
+    size: 3700000
+  - name: newrelic-dotnet-agent_arm64.tar.gz
     size: 3700000
   - name: SHA256/NewRelicDotNetAgent_{version}_x64.msi.sha256
     size: 58

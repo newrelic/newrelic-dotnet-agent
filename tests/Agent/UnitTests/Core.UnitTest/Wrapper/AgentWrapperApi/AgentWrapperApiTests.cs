@@ -24,6 +24,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -97,6 +98,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private const string ReferrerTransactionGuid = "referrerTransactionGuid";
         private const string ReferrerProcessId = "referrerProcessId";
 
+        private ICustomEventTransformer _customEventTransformer;
+
         [SetUp]
         public void SetUp()
         {
@@ -150,7 +153,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter);
             _logContextDataFilter = new LogContextDataFilter(_configurationService);
 
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService);
+            _customEventTransformer = Mock.Create<ICustomEventTransformer>();
+
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _metricNameService.Dispose();
+            _logEventAggregator.Dispose();
+            _logContextDataFilter.Dispose();
+            _attribDefSvc.Dispose();
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -221,7 +235,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 _agent.CurrentTransaction.End();
 
                 var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageBeginningWith("Transaction has already captured the response time.");
-                Assert.False(foundResponseTimeAlreadyCapturedMessage);
+                Assert.That(foundResponseTimeAlreadyCapturedMessage, Is.False);
             }
         }
 
@@ -236,7 +250,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 _agent.CurrentTransaction.End();
 
                 var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageThatContains("Transaction has already captured the response time.");
-                Assert.True(foundResponseTimeAlreadyCapturedMessage);
+                Assert.That(foundResponseTimeAlreadyCapturedMessage, Is.True);
             }
         }
 
@@ -261,8 +275,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetWebTransactionName(WebTransactionType.MVC, "foo", priority);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("MVC", addedTransactionName.Category);
-            Assert.AreEqual("foo", addedTransactionName.Name);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.Category, Is.EqualTo("MVC"));
+                Assert.That(addedTransactionName.Name, Is.EqualTo("foo"));
+            });
         }
 
         [Test]
@@ -273,8 +290,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.MVC, "some/path");
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("Uri/some/path", addedTransactionName.UnprefixedName);
-            Assert.AreEqual(true, addedTransactionName.IsWeb);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.UnprefixedName, Is.EqualTo("Uri/some/path"));
+                Assert.That(addedTransactionName.IsWeb, Is.EqualTo(true));
+            });
         }
 
         [Test]
@@ -286,8 +306,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("Message/broker/Topic/Named/dest", addedTransactionName.UnprefixedName);
-            Assert.AreEqual(false, addedTransactionName.IsWeb);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.UnprefixedName, Is.EqualTo("Message/broker/Topic/Named/dest"));
+                Assert.That(addedTransactionName.IsWeb, Is.EqualTo(false));
+            });
         }
 
         [Test]
@@ -299,8 +322,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("Message/broker/Topic/Consume/Named/dest", addedTransactionName.UnprefixedName);
-            Assert.AreEqual(false, addedTransactionName.IsWeb);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.UnprefixedName, Is.EqualTo("Message/broker/Topic/Consume/Named/dest"));
+                Assert.That(addedTransactionName.IsWeb, Is.EqualTo(false));
+            });
         }
 
         [Test]
@@ -312,8 +338,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetOtherTransactionName("cat", "foo", priority);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("cat/foo", addedTransactionName.UnprefixedName);
-            Assert.AreEqual(false, addedTransactionName.IsWeb);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.UnprefixedName, Is.EqualTo("cat/foo"));
+                Assert.That(addedTransactionName.IsWeb, Is.EqualTo(false));
+            });
         }
 
         [Test]
@@ -325,8 +354,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetCustomTransactionName("foo", TransactionNamePriority.StatusCode);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("Custom/foo", addedTransactionName.UnprefixedName);
-            Assert.AreEqual(false, addedTransactionName.IsWeb);
+            Assert.Multiple(() =>
+            {
+                Assert.That(addedTransactionName.UnprefixedName, Is.EqualTo("Custom/foo"));
+                Assert.That(addedTransactionName.IsWeb, Is.EqualTo(false));
+            });
         }
 
         [Test]
@@ -336,7 +368,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetUri("foo");
 
-            Assert.AreEqual("foo", _transaction.TransactionMetadata.Uri);
+            Assert.That(_transaction.TransactionMetadata.Uri, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -346,7 +378,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetOriginalUri("foo");
 
-            Assert.AreEqual("foo", _transaction.TransactionMetadata.OriginalUri);
+            Assert.That(_transaction.TransactionMetadata.OriginalUri, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -356,7 +388,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetReferrerUri("foo");
 
-            Assert.AreEqual("foo", _transaction.TransactionMetadata.ReferrerUri);
+            Assert.That(_transaction.TransactionMetadata.ReferrerUri, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -366,7 +398,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetQueueTime(TimeSpan.FromSeconds(4));
 
-            Assert.AreEqual(TimeSpan.FromSeconds(4), _transaction.TransactionMetadata.QueueTime);
+            Assert.That(_transaction.TransactionMetadata.QueueTime, Is.EqualTo(TimeSpan.FromSeconds(4)));
         }
 
         [Test]
@@ -380,9 +412,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var attribValDic = _transaction.TransactionMetadata.UserAndRequestAttributes.ToDictionary();
 
-            Assert.AreEqual(1, attribValDic.Count);
-            Assert.AreEqual("request.parameters.key", attribValDic.First().Key);
-            Assert.AreEqual("value", attribValDic.First().Value);
+            Assert.That(attribValDic, Has.Count.EqualTo(1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(attribValDic.First().Key, Is.EqualTo("request.parameters.key"));
+                Assert.That(attribValDic.First().Value, Is.EqualTo("value"));
+            });
         }
 
         [Test]
@@ -395,11 +430,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetRequestParameters(parameters);
 
             var result = _transaction.TransactionMetadata.UserAndRequestAttributes.ToDictionary();
-            Assert.AreEqual(2, result.Count);
-            Assert.Contains("request.parameters.firstName", result.Keys);
-            Assert.Contains("request.parameters.lastName", result.Keys);
-            Assert.Contains("Jane", result.Values);
-            Assert.Contains("Doe", result.Values);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Has.Count.EqualTo(2));
+                Assert.That(result.Keys, Does.Contain("request.parameters.firstName"));
+                Assert.That(result.Keys, Does.Contain("request.parameters.lastName"));
+                Assert.That(result.Values, Does.Contain("Jane"));
+                Assert.That(result.Values, Does.Contain("Doe"));
+            });
         }
 
         [Test]
@@ -410,8 +448,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetHttpResponseStatusCode(1, 2);
 
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-            Assert.AreEqual(1, immutableTransactionMetadata.HttpResponseStatusCode);
-            Assert.AreEqual(2, immutableTransactionMetadata.HttpResponseSubStatusCode);
+            Assert.Multiple(() =>
+            {
+                Assert.That(immutableTransactionMetadata.HttpResponseStatusCode, Is.EqualTo(1));
+                Assert.That(immutableTransactionMetadata.HttpResponseSubStatusCode, Is.EqualTo(2));
+            });
         }
 
         #endregion Transaction metadata
@@ -430,20 +471,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var method = new Method(typeof(string), "methodName", "parameterTypeNames");
             var methodCall = new MethodCall(method, invocationTarget, new object[0], false);
             var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(methodCall, "foo");
-            Assert.NotNull(opaqueSegment);
+            Assert.That(opaqueSegment, Is.Not.Null);
 
             var segment = opaqueSegment as Segment;
-            Assert.NotNull(segment);
+            Assert.That(segment, Is.Not.Null);
 
             var immutableSegment = segment as Segment;
             var simpleSegmentData = immutableSegment.Data as SimpleSegmentData;
             NrAssert.Multiple(
-                () => Assert.NotNull(immutableSegment.UniqueId),
-                () => Assert.AreEqual(expectedParentId, immutableSegment.ParentUniqueId),
-                () => Assert.AreEqual("foo", simpleSegmentData?.Name),
-                () => Assert.AreEqual("System.String", immutableSegment.MethodCallData.TypeName),
-                () => Assert.AreEqual("methodName", immutableSegment.MethodCallData.MethodName),
-                () => Assert.AreEqual(RuntimeHelpers.GetHashCode(invocationTarget), immutableSegment.MethodCallData.InvocationTargetHashCode)
+                () => Assert.That(immutableSegment.ParentUniqueId, Is.EqualTo(expectedParentId)),
+                () => Assert.That(simpleSegmentData?.Name, Is.EqualTo("foo")),
+                () => Assert.That(immutableSegment.MethodCallData.TypeName, Is.EqualTo("System.String")),
+                () => Assert.That(immutableSegment.MethodCallData.MethodName, Is.EqualTo("methodName")),
+                () => Assert.That(immutableSegment.MethodCallData.InvocationTargetHashCode, Is.EqualTo(RuntimeHelpers.GetHashCode(invocationTarget)))
             );
         }
 
@@ -457,13 +497,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 .DoInstead<object>(pushed => pushedUniqueId = pushed);
 
             var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0], false), "foo");
-            Assert.NotNull(opaqueSegment);
+            Assert.That(opaqueSegment, Is.Not.Null);
 
             var segment = opaqueSegment as Segment;
-            Assert.NotNull(segment);
+            Assert.That(segment, Is.Not.Null);
 
             var immutableSegment = segment as Segment;
-            Assert.AreEqual(pushedUniqueId, immutableSegment.UniqueId);
+            Assert.That(immutableSegment.UniqueId, Is.EqualTo(pushedUniqueId));
         }
 
         [Test]
@@ -512,10 +552,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var errorData = immutableTransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
 
             NrAssert.Multiple(
-                () => Assert.AreEqual("My message", errorData.ErrorMessage),
-                () => Assert.AreEqual("System.Exception", errorData.ErrorTypeName),
-                () => Assert.IsTrue(errorData.StackTrace?.Contains("NotNewRelic.ExceptionBuilder.BuildException") == true),
-                () => Assert.IsTrue(errorData.NoticedAt >= now && errorData.NoticedAt < now.AddMinutes(1))
+                () => Assert.That(errorData.ErrorMessage, Is.EqualTo("My message")),
+                () => Assert.That(errorData.ErrorTypeName, Is.EqualTo("System.Exception")),
+                () => Assert.That(errorData.StackTrace?.Contains("NotNewRelic.ExceptionBuilder.BuildException"), Is.EqualTo(true)),
+                () => Assert.That(errorData.NoticedAt >= now && errorData.NoticedAt < now.AddMinutes(1), Is.True)
             );
         }
 
@@ -534,7 +574,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-            Assert.AreEqual(ReferrerProcessId, _transaction.TransactionMetadata.CrossApplicationReferrerProcessId, $"CrossApplicationReferrerProcessId");
+            Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerProcessId, Is.EqualTo(ReferrerProcessId), $"CrossApplicationReferrerProcessId");
         }
 
         [Test]
@@ -549,9 +589,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-            Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
-            Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
-            Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
+            Assert.Multiple(() =>
+            {
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTripId, Is.EqualTo(ReferrerTripId), $"CrossApplicationReferrerTripId");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash, Is.EqualTo(ReferrerPathHash), $"CrossApplicationReferrerPathHash");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, Is.EqualTo(ReferrerTransactionGuid), $"CrossApplicationReferrerTransactionGuid");
+            });
         }
 
         [Test]
@@ -567,10 +610,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-            Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
-            Assert.AreEqual(200, _transaction.TransactionMetadata.GetCrossApplicationReferrerContentLength(), $"CrossApplicationContentLength");
-            Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
-            Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
+            Assert.Multiple(() =>
+            {
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTripId, Is.EqualTo(ReferrerTripId), $"CrossApplicationReferrerTripId");
+                Assert.That(_transaction.TransactionMetadata.GetCrossApplicationReferrerContentLength(), Is.EqualTo(200), $"CrossApplicationContentLength");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash, Is.EqualTo(ReferrerPathHash), $"CrossApplicationReferrerPathHash");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, Is.EqualTo(ReferrerTransactionGuid), $"CrossApplicationReferrerTransactionGuid");
+            });
         }
 
         [Test]
@@ -603,11 +649,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-            // values are for first request
-            Assert.AreEqual(ReferrerProcessId, _transaction.TransactionMetadata.CrossApplicationReferrerProcessId, $"CrossApplicationReferrerProcessId");
-            Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
-            Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
-            Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
+            Assert.Multiple(() =>
+            {
+                // values are for first request
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerProcessId, Is.EqualTo(ReferrerProcessId), $"CrossApplicationReferrerProcessId");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTripId, Is.EqualTo(ReferrerTripId), $"CrossApplicationReferrerTripId");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash, Is.EqualTo(ReferrerPathHash), $"CrossApplicationReferrerPathHash");
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, Is.EqualTo(ReferrerTransactionGuid), $"CrossApplicationReferrerTransactionGuid");
+            });
         }
 
         [Test]
@@ -621,7 +670,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
             _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer);
             SetupTransaction();
 
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
@@ -641,8 +690,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = _agent.CurrentTransaction.GetResponseMetadata();
 
-            Assert.NotNull(headers);
-            Assert.IsEmpty(headers);
+            Assert.That(headers, Is.Not.Null);
+            Assert.That(headers, Is.Empty);
         }
 
         [Test]
@@ -657,8 +706,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = _agent.CurrentTransaction.GetResponseMetadata();
 
-            Assert.NotNull(headers);
-            Assert.IsEmpty(headers);
+            Assert.That(headers, Is.Not.Null);
+            Assert.That(headers, Is.Empty);
         }
 
         [Test]
@@ -673,7 +722,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.GetResponseMetadata();
 
-            Assert.AreEqual("pathHash", _transaction.TransactionMetadata.LatestCrossApplicationPathHash);
+            Assert.That(_transaction.TransactionMetadata.LatestCrossApplicationPathHash, Is.EqualTo("pathHash"));
         }
 
         [Test]
@@ -687,10 +736,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId("CatReferrer");
             var headers = _agent.CurrentTransaction.GetResponseMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
+            Assert.That(headers, Is.Not.Null);
             NrAssert.Multiple(
-                () => Assert.AreEqual("value1", headers["key1"]),
-                () => Assert.AreEqual("value2", headers["key2"])
+                () => Assert.That(headers["key1"], Is.EqualTo("value1")),
+                () => Assert.That(headers["key2"], Is.EqualTo("value2"))
             );
         }
 
@@ -715,8 +764,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-            Assert.AreEqual(expectedCatResponseData, externalSegmentData.CrossApplicationResponseData);
-            Assert.AreEqual(true, immutableTransactionMetadata.HasCatResponseHeaders);
+            Assert.Multiple(() =>
+            {
+                Assert.That(externalSegmentData.CrossApplicationResponseData, Is.EqualTo(expectedCatResponseData));
+                Assert.That(immutableTransactionMetadata.HasCatResponseHeaders, Is.EqualTo(true));
+            });
         }
 
         [Test]
@@ -748,7 +800,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
 
-            Assert.AreEqual(externalSegmentData.CrossApplicationResponseData, expectedCatResponseData);
+            Assert.That(expectedCatResponseData, Is.EqualTo(externalSegmentData.CrossApplicationResponseData));
             Mock.Assert(() => _transaction.TransactionMetadata.MarkHasCatResponseHeaders(), Occurs.Never());
         }
 
@@ -769,8 +821,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-            Assert.AreEqual(expectedCatResponseData, externalSegmentData.CrossApplicationResponseData);
-            Assert.AreEqual(true, immutableTransactionMetadata.HasCatResponseHeaders);
+            Assert.Multiple(() =>
+            {
+                Assert.That(externalSegmentData.CrossApplicationResponseData, Is.EqualTo(expectedCatResponseData));
+                Assert.That(immutableTransactionMetadata.HasCatResponseHeaders, Is.EqualTo(true));
+            });
         }
 
         [Test]
@@ -790,8 +845,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata();
 
-            Assert.NotNull(headers);
-            Assert.IsEmpty(headers);
+            Assert.That(headers, Is.Not.Null);
+            Assert.That(headers, Is.Empty);
         }
 
         [Test]
@@ -805,7 +860,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.GetRequestMetadata();
 
-            Assert.AreEqual("pathHash", _transaction.TransactionMetadata.LatestCrossApplicationPathHash);
+            Assert.That(_transaction.TransactionMetadata.LatestCrossApplicationPathHash, Is.EqualTo("pathHash"));
         }
 
         [Test]
@@ -818,10 +873,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
-            Assert.NotNull(headers);
+            Assert.That(headers, Is.Not.Null);
             NrAssert.Multiple(
-                () => Assert.AreEqual("value1", headers["key1"]),
-                () => Assert.AreEqual("value2", headers["key2"])
+                () => Assert.That(headers["key1"], Is.EqualTo("value1")),
+                () => Assert.That(headers["key2"], Is.EqualTo("value2"))
             );
         }
 
@@ -883,7 +938,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             // Assert
             NrAssert.Multiple(
                 () => Assert.That(headers, Has.Exactly(1).Items),
-                () => Assert.AreEqual(distributedTraceHeaders.HttpSafe(), headers[DistributedTraceHeaderName])
+                () => Assert.That(headers[DistributedTraceHeaderName], Is.EqualTo(distributedTraceHeaders.HttpSafe()))
             );
         }
 
@@ -914,17 +969,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             // Assert
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-            Assert.IsNull(_transaction.TransactionMetadata.CrossApplicationReferrerProcessId);
-            Assert.IsNull(_transaction.TransactionMetadata.CrossApplicationReferrerTripId);
-            Assert.AreEqual(-1, _transaction.TransactionMetadata.GetCrossApplicationReferrerContentLength());
-            Assert.IsNull(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash);
-            Assert.IsNull(null, immutableTransactionMetadata.CrossApplicationReferrerTransactionGuid);
+            Assert.Multiple(() =>
+            {
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerProcessId, Is.Null);
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerTripId, Is.Null);
+                Assert.That(_transaction.TransactionMetadata.GetCrossApplicationReferrerContentLength(), Is.EqualTo(-1));
+                Assert.That(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash, Is.Null);
+                Assert.That(immutableTransactionMetadata.CrossApplicationReferrerTransactionGuid, Is.Null);
 
-            Assert.AreEqual(_accountId, _transaction.TracingState.AccountId);
-            Assert.AreEqual(_appId, _transaction.TracingState.AppId);
-            Assert.AreEqual(_guid, _transaction.TracingState.Guid);
-            Assert.AreEqual(_type, _transaction.TracingState.Type);
-            Assert.AreEqual(_transactionId, _transaction.TracingState.TransactionId);
+                Assert.That(_transaction.TracingState.AccountId, Is.EqualTo(_accountId));
+                Assert.That(_transaction.TracingState.AppId, Is.EqualTo(_appId));
+                Assert.That(_transaction.TracingState.Guid, Is.EqualTo(_guid));
+                Assert.That(_transaction.TracingState.Type, Is.EqualTo(_type));
+                Assert.That(_transaction.TracingState.TransactionId, Is.EqualTo(_transactionId));
+            });
         }
 
         [Test]
@@ -981,7 +1039,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var traceMetadata = _agent.TraceMetadata;
 
-            Assert.AreEqual(TraceMetadata.EmptyModel, traceMetadata);
+            Assert.That(traceMetadata, Is.EqualTo(TraceMetadata.EmptyModel));
         }
 
         [Test]
@@ -1000,9 +1058,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => traceMetadata.SpanId).Returns(testSpanId);
             Mock.Arrange(() => traceMetadata.IsSampled).Returns(testIsSampled);
 
-            Assert.AreEqual(traceMetadata.TraceId, testTraceId);
-            Assert.AreEqual(traceMetadata.SpanId, testSpanId);
-            Assert.AreEqual(traceMetadata.IsSampled, testIsSampled);
+            Assert.Multiple(() =>
+            {
+                Assert.That(traceMetadata.TraceId, Is.EqualTo(testTraceId));
+                Assert.That(traceMetadata.SpanId, Is.EqualTo(testSpanId));
+                Assert.That(traceMetadata.IsSampled, Is.EqualTo(testIsSampled));
+            });
         }
 
         #endregion Distributed Trace
@@ -1016,7 +1077,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualTraceMetadata = _agent.TraceMetadata;
 
-            Assert.AreEqual(TraceMetadata.EmptyModel, actualTraceMetadata);
+            Assert.That(actualTraceMetadata, Is.EqualTo(TraceMetadata.EmptyModel));
         }
 
         [Test]
@@ -1027,7 +1088,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualTraceMetadata = _agent.TraceMetadata;
 
-            Assert.AreEqual(TraceMetadata.EmptyModel, actualTraceMetadata);
+            Assert.That(actualTraceMetadata, Is.EqualTo(TraceMetadata.EmptyModel));
         }
 
         [Test]
@@ -1040,7 +1101,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualTraceMetadata = _agent.TraceMetadata;
 
-            Assert.AreEqual(expectedTraceMetadata, actualTraceMetadata);
+            Assert.That(actualTraceMetadata, Is.EqualTo(expectedTraceMetadata));
         }
 
         #endregion TraceMetadata
@@ -1074,7 +1135,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 { "hostname", "FullHostName" }
             };
 
-            CollectionAssert.AreEquivalent(expectedLinkingMetadata, actualLinkingMetadata);
+            Assert.That(actualLinkingMetadata, Is.EquivalentTo(expectedLinkingMetadata));
         }
 
         [Test]
@@ -1094,7 +1155,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("trace.id"));
+            Assert.That(actualLinkingMetadata.ContainsKey("trace.id"), Is.False);
         }
 
         [Test]
@@ -1114,7 +1175,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("span.id"));
+            Assert.That(actualLinkingMetadata.ContainsKey("span.id"), Is.False);
         }
 
         [Test]
@@ -1132,7 +1193,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            CollectionAssert.IsNotSupersetOf(actualLinkingMetadata.Keys, new[] { "trace.id", "span.id" });
+            Assert.That(actualLinkingMetadata.Keys, Is.Not.SupersetOf(new[] { "trace.id", "span.id" }));
         }
 
         [Test]
@@ -1152,7 +1213,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("entity.name"));
+            Assert.That(actualLinkingMetadata.ContainsKey("entity.name"), Is.False);
         }
 
         [Test]
@@ -1172,7 +1233,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("entity.name"));
+            Assert.That(actualLinkingMetadata.ContainsKey("entity.name"), Is.False);
         }
 
         [Test]
@@ -1192,7 +1253,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("entity.guid"));
+            Assert.That(actualLinkingMetadata.ContainsKey("entity.guid"), Is.False);
         }
 
         [Test]
@@ -1212,7 +1273,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.AreEqual(actualLinkingMetadata["hostname"], "HostName");
+            Assert.That(actualLinkingMetadata["hostname"], Is.EqualTo("HostName"));
         }
 
         [Test]
@@ -1232,7 +1293,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var actualLinkingMetadata = _agent.GetLinkingMetadata();
 
-            Assert.False(actualLinkingMetadata.ContainsKey("hostname"));
+            Assert.That(actualLinkingMetadata.ContainsKey("hostname"), Is.False);
         }
 
         #endregion GetLinkingMetadata
@@ -1268,8 +1329,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(0, logEvents.Count);
-            Assert.IsNull(logEvent);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Is.Empty);
+                Assert.That(logEvent, Is.Null);
+            });
         }
 
         [Test]
@@ -1306,15 +1370,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.IsNotNull(logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+            });
 
             Mock.Assert(() => _agentHealthReporter.IncrementLogLinesCount(Arg.AnyString), Occurs.Once());
         }
@@ -1352,15 +1418,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.IsNotNull(logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+            });
         }
 
         [Test]
@@ -1395,15 +1466,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.IsNotNull(logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+            });
         }
 
         [Test]
@@ -1435,8 +1511,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
             var logEvent = logEvents?.FirstOrDefault()?.Data;
 
-            Assert.AreEqual(0, logEvents.Count);
-            Assert.IsNull(logEvent);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Is.Empty);
+                Assert.That(logEvent, Is.Null);
+            });
         }
 
         [Test]
@@ -1472,15 +1551,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
-            Assert.AreEqual(1, harvestedLogEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(harvestedLogEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1517,15 +1602,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
-            Assert.AreEqual(1, harvestedLogEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(harvestedLogEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1561,15 +1652,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
-            Assert.AreEqual(1, harvestedLogEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(harvestedLogEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1602,8 +1699,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
-            Assert.AreEqual(0, harvestedLogEvents.Count);
-            Assert.IsNull(logEvent);
+            Assert.Multiple(() =>
+            {
+                Assert.That(harvestedLogEvents, Is.Empty);
+                Assert.That(logEvent, Is.Null);
+            });
         }
 
         [Test]
@@ -1642,15 +1742,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1687,18 +1793,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
-            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
-            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.IsNotNull(logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ErrorStack, Is.EqualTo(fixedStackTrace));
+                Assert.That(logEvent.ErrorMessage, Is.EqualTo(exception.Message));
+                Assert.That(logEvent.ErrorClass, Is.EqualTo(exception.GetType().ToString()));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+            });
         }
 
         [Test]
@@ -1736,18 +1847,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
-            Assert.AreEqual(1, harvestedLogEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
-            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
-            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(harvestedLogEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ErrorStack, Is.EqualTo(fixedStackTrace));
+                Assert.That(logEvent.ErrorMessage, Is.EqualTo(exception.Message));
+                Assert.That(logEvent.ErrorClass, Is.EqualTo(exception.GetType().ToString()));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1788,18 +1905,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
-            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
-            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
-            Assert.AreEqual(contextData, logEvent.ContextData);
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvent.TimeStamp, Is.EqualTo(timestampUnix));
+                Assert.That(logEvent.Level, Is.EqualTo(level));
+                Assert.That(logEvent.Message, Is.EqualTo(message));
+                Assert.That(logEvent.SpanId, Is.EqualTo(spanId));
+                Assert.That(logEvent.TraceId, Is.EqualTo(traceId));
+                Assert.That(logEvent.ErrorStack, Is.EqualTo(fixedStackTrace));
+                Assert.That(logEvent.ErrorMessage, Is.EqualTo(exception.Message));
+                Assert.That(logEvent.ErrorClass, Is.EqualTo(exception.GetType().ToString()));
+                Assert.That(logEvent.ContextData, Is.EqualTo(contextData));
+                Assert.That(logEvent.Priority, Is.EqualTo(priority));
+            });
         }
 
         [Test]
@@ -1842,9 +1965,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(logEvent);
-            Assert.IsNull(logEvent.ContextData);
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(logEvent, Is.Not.Null);
+            });
+            Assert.That(logEvent.ContextData, Is.Null);
         }
 
         [Test]
@@ -1890,12 +2016,254 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
-            Assert.AreEqual(0, logEvents.Count);
+            Assert.That(logEvents, Is.Empty);
             Mock.Assert(() => _agentHealthReporter.IncrementLogDeniedCount(Arg.AnyString), Occurs.Once());
 
 
         }
 
+        #endregion
+
+        #region RecordLlmEvent
+        [Test]
+        public void RecordLlmEvent_DoesNothing_WhenAiMonitoringIsDisabled()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(false);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            Mock.Assert(() => _transactionService.GetCurrentInternalTransaction(), Occurs.Never());
+        }
+        [Test]
+        public void RecordLlmEvent_RecordsSupportabilityMetric_WhenAiMonitoringStreamingEnabledIsDisabled()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringStreamingEnabled)
+                .Returns(false);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            SetupTransaction();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCountMetric("Supportability/DotNet/ML/Streaming/Disabled", 1), Occurs.Once());
+        }
+        [Test]
+        public void RecordLlmEvent_SetsLlmTransactionMetadata()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringStreamingEnabled)
+                .Returns(true);
+
+            var eventName = "eventName";
+            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            SetupTransaction();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, attributes);
+
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            Assert.That(transaction.TransactionMetadata.IsLlmTransaction, Is.True);
+        }
+
+        [Test]
+        public void RecordLlmEvent_IncludesCustomAttributes_WithLlmPrefix()
+        {
+            // Arrange
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+            .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+            {
+                foreach (var attribute in attributes)
+                {
+                    actualAttributes.Add(attribute.Key, attribute.Value);
+                }
+            });
+
+            var eventName = "eventName";
+
+            SetupTransaction();
+            _transaction.AddCustomAttribute("llm.key1", "value1");
+            _transaction.AddCustomAttribute("llm.key2", 1);
+            _transaction.AddCustomAttribute("key3", "value3");
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventName, new Dictionary<string, object>());
+
+            var expectedAttributes = new Dictionary<string, object>() { { "llm.key1", "value1" }, { "llm.key2", 1 } };
+            Assert.That(actualAttributes, Is.EqualTo(expectedAttributes));
+        }
+        [Test]
+        [TestCase("LlmChatCompletionMessage")]
+        [TestCase("LlmEmbedding")]
+        public void RecordLlmEvent_SetsTokenCount_IfLlmTokenCountingCallback_IsSetAndReturnsGreaterThanZero(string eventType)
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            string actualModel = null;
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.LlmTokenCountingCallback).Returns((model, content) =>
+            {
+                actualModel = model;
+                if (model == "model1" && content == "This is a test message")
+                {
+                    return 10;
+                }
+                return 0;
+            });
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var modelAttribute = eventType == "LlmChatCompletionMessage" ? "request.model" : "response.model";
+            var attributes = new Dictionary<string, object>
+            {
+                { eventType == "LlmChatCompletionMessage" ? "content" : "input", "This is a test message" },
+                { modelAttribute, "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventType, attributes);
+
+            // Assert
+            Assert.That(actualAttributes["token_count"], Is.EqualTo(10));
+            Assert.That(actualModel, Is.EqualTo("model1"));
+        }
+        [Test]
+        public void RecordLlmEvent_DoesNotSetTokenCount_IfLlmTokenCountingCallback_IsNotSet()
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { "content", "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent("LlmChatCompletionMessage", attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey("token_count"), Is.False);
+        }
+
+        [Test]
+        public void RecordLlmEvent_DoesNotSetTokenCount_IfLlmTokenCountingCallback_ReturnsZero()
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((eventType, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            Mock.Arrange(() => _configurationService.Configuration.LlmTokenCountingCallback).Returns((model, content) => 0);
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { "content", "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent("LlmChatCompletionMessage", attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey("token_count"), Is.False);
+        }
+
+        [Test]
+        [TestCase("LlmChatCompletionMessage", "content", true, false)]
+        [TestCase("LlmChatCompletionMessage", "content", false, true)]
+        [TestCase("LlmEmbedding", "input", true, false)]
+        [TestCase("LlmEmbedding", "input", false, true)]
+        public void RecordLlmEvent_RemovesAttribute_IfHighSecurityMode_IsEnabled_OrRecordContentIsDisabled(string eventType, string attributeName, bool highSecurityMode, bool recordContentEnabled)
+        {
+            // Arrange
+            var actualAttributes = new Dictionary<string, object>();
+            Mock.Arrange(() => _customEventTransformer.Transform(Arg.IsAny<string>(), Arg.IsAny<IEnumerable<KeyValuePair<string, object>>>(), Arg.IsAny<float>()))
+                .DoInstead<string, IEnumerable<KeyValuePair<string, object>>, float>((_, attributes, priority) =>
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        actualAttributes.Add(attribute.Key, attribute.Value);
+                    }
+                });
+
+            if (highSecurityMode)
+                Mock.Arrange(() => _configurationService.Configuration.HighSecurityModeEnabled)
+                    .Returns(true);
+            if (!recordContentEnabled)
+                Mock.Arrange(() => _configurationService.Configuration.AiMonitoringRecordContentEnabled)
+                    .Returns(false);
+
+            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
+                    .Returns(true);
+
+            var attributes = new Dictionary<string, object>
+            {
+                { attributeName, "This is a test message" },
+                { "request.model", "model1" }
+            };
+
+            SetupTransaction();
+
+            // Act
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLlmEvent(eventType, attributes);
+
+            // Assert
+            Assert.That(actualAttributes.ContainsKey(attributeName), Is.False);
+        }
         #endregion
 
         private void SetupTransaction()

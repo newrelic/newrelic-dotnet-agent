@@ -16,8 +16,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<string>>(json);
 
-            Assert.NotNull(result);
-            Assert.AreEqual("Hello!", result.ReturnValue);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.ReturnValue, Is.EqualTo("Hello!"));
         }
     }
 }

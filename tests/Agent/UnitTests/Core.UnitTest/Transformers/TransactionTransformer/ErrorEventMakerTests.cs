@@ -78,6 +78,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _exception = new OutOfMemoryException("Out of Memory Message");
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+        }
+
         private ErrorData GetErrorDataFromException(object value)
         {
             Dictionary<string, object> customAttributes = null;
@@ -119,26 +125,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(7, intrinsicAttributes.Length),
-                () => Assert.AreEqual(0, userAttributes.Length),
+                () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(false)),
+                () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(8)),
+                () => Assert.That(userAttributes, Is.Empty),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
+                () => Assert.That(agentAttributes, Does.Contain("response.status")),
+                () => Assert.That(agentAttributes, Does.Contain("http.statusCode")),
+                () => Assert.That(agentAttributes, Does.Contain("original_url")),
+                () => Assert.That(agentAttributes, Does.Contain("request.uri")),
+                () => Assert.That(agentAttributes, Does.Contain("request.referer")),
+                () => Assert.That(agentAttributes, Does.Contain("host.displayName")),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes)
+                () => Assert.That(intrinsicAttributes, Does.Contain("duration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.class")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("type"))
             );
         }
 
@@ -162,26 +169,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(7, intrinsicAttributes.Length),
-                () => Assert.AreEqual(0, userAttributes.Length),
+                () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(false)),
+                () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(8)),
+                () => Assert.That(userAttributes, Is.Empty),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
+                () => Assert.That(agentAttributes, Does.Contain("response.status")),
+                () => Assert.That(agentAttributes, Does.Contain("original_url")),
+                () => Assert.That(agentAttributes, Does.Contain("request.uri")),
+                () => Assert.That(agentAttributes, Does.Contain("http.statusCode")),
+                () => Assert.That(agentAttributes, Does.Contain("request.referer")),
+                () => Assert.That(agentAttributes, Does.Contain("host.displayName")),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes)
+                () => Assert.That(intrinsicAttributes, Does.Contain("duration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.class")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("type"))
             );
         }
 
@@ -213,38 +221,39 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var userAttributes = errorEvent.UserAttributes().Keys.ToArray();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(true, errorEvent.IsSynthetics),
+                () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(true)),
 
-                () => Assert.AreEqual(7, agentAttributes.Length),
-                () => Assert.AreEqual(16, intrinsicAttributes.Length),
-                () => Assert.AreEqual(1, userAttributes.Length),
+                () => Assert.That(agentAttributes, Has.Length.EqualTo(7)),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(17)),
+                () => Assert.That(userAttributes, Has.Length.EqualTo(1)),
 
-                () => Assert.Contains("queue_wait_time_ms", agentAttributes),
-                () => Assert.Contains("response.status", agentAttributes),
-                () => Assert.Contains("http.statusCode", agentAttributes),
-                () => Assert.Contains("original_url", agentAttributes),
-                () => Assert.Contains("request.uri", agentAttributes),
-                () => Assert.Contains("request.referer", agentAttributes),
-                () => Assert.Contains("host.displayName", agentAttributes),
+                () => Assert.That(agentAttributes, Does.Contain("queue_wait_time_ms")),
+                () => Assert.That(agentAttributes, Does.Contain("response.status")),
+                () => Assert.That(agentAttributes, Does.Contain("http.statusCode")),
+                () => Assert.That(agentAttributes, Does.Contain("original_url")),
+                () => Assert.That(agentAttributes, Does.Contain("request.uri")),
+                () => Assert.That(agentAttributes, Does.Contain("request.referer")),
+                () => Assert.That(agentAttributes, Does.Contain("host.displayName")),
 
-                () => Assert.Contains("duration", intrinsicAttributes),
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("queueDuration", intrinsicAttributes),
-                () => Assert.Contains("transactionName", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsJobId", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsResourceId", intrinsicAttributes),
-                () => Assert.Contains("nr.syntheticsMonitorId", intrinsicAttributes),
-                () => Assert.Contains("nr.referringTransactionGuid", intrinsicAttributes),
-                () => Assert.Contains("databaseDuration", intrinsicAttributes),
-                () => Assert.Contains("databaseCallCount", intrinsicAttributes),
-                () => Assert.Contains("externalDuration", intrinsicAttributes),
-                () => Assert.Contains("externalCallCount", intrinsicAttributes),
-                () => Assert.Contains("nr.guid", intrinsicAttributes),
+                () => Assert.That(intrinsicAttributes, Does.Contain("duration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.class")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("queueDuration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("transactionName")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("guid")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("type")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("nr.syntheticsJobId")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("nr.syntheticsResourceId")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("nr.syntheticsMonitorId")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("nr.referringTransactionGuid")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("databaseDuration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("databaseCallCount")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("externalDuration")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("externalCallCount")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("nr.guid")),
 
-                () => Assert.Contains("sample.user.attribute", userAttributes)
+                () => Assert.That(userAttributes, Does.Contain("sample.user.attribute"))
             );
         }
 
@@ -266,17 +275,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(false, errorEvent.IsSynthetics),
-                () => Assert.AreEqual(0, agentAttributes.Length),
-                () => Assert.AreEqual(4, intrinsicAttributes.Length),
-                () => Assert.AreEqual(1, userAttributes.Length),
+                () => Assert.That(errorEvent.IsSynthetics, Is.EqualTo(false)),
+                () => Assert.That(agentAttributes, Is.Empty),
+                () => Assert.That(intrinsicAttributes, Has.Length.EqualTo(4)),
+                () => Assert.That(userAttributes, Has.Length.EqualTo(1)),
 
-                () => Assert.Contains("error.class", intrinsicAttributes),
-                () => Assert.Contains("error.message", intrinsicAttributes),
-                () => Assert.Contains("timestamp", intrinsicAttributes),
-                () => Assert.Contains("type", intrinsicAttributes),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.class")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("error.message")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("timestamp")),
+                () => Assert.That(intrinsicAttributes, Does.Contain("type")),
 
-                () => Assert.Contains("custom attribute name", userAttributes)
+                () => Assert.That(userAttributes, Does.Contain("custom attribute name"))
             );
         }
 
@@ -292,7 +301,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
         [TestCase(null)]
@@ -305,7 +314,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         [Test]
@@ -314,7 +323,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorData = GetErrorDataFromMessage(null);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         [TestCase("value")]
@@ -340,7 +349,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.AreEqual("test group", errorGroupAttribute);
+            Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
         [Test]
@@ -363,7 +372,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+            Assert.That(agentAttributeKeys, Has.No.Member("error_group"));
         }
 
         [TestCase(null)]
@@ -389,7 +398,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         #endregion
@@ -411,10 +420,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            Assert.That(passedInDict, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(passedInDict.ContainsKey("stack_trace"), Is.True);
+                Assert.That(passedInDict.ContainsKey("exception"), Is.True);
+                Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
+            });
         }
 
         [TestCase(null)]
@@ -427,7 +439,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         [Test]
@@ -436,7 +448,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorData = GetErrorDataFromException(null);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         [TestCase("value")]
@@ -467,10 +479,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
-            Assert.IsNotNull(passedInDict);
-            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
-            Assert.IsTrue(passedInDict.ContainsKey("exception"));
-            Assert.AreEqual("test group", errorGroupAttribute);
+            Assert.That(passedInDict, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(passedInDict.ContainsKey("stack_trace"), Is.True);
+                Assert.That(passedInDict.ContainsKey("exception"), Is.True);
+                Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
+            });
         }
 
         [Test]
@@ -493,7 +508,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+            Assert.That(agentAttributeKeys, Has.No.Member("error_group"));
         }
 
         [TestCase(null)]
@@ -519,7 +534,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+            Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
         #endregion

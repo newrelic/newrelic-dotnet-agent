@@ -17,7 +17,7 @@ using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Attributes
 {
-    public interface IAttributeDefinitionService
+    public interface IAttributeDefinitionService : IDisposable
     {
         IAttributeDefinitions AttributeDefs { get; }
     }
@@ -126,11 +126,15 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<object, object> GetCustomAttributeForSpan(string name);
         AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name);
 
+        AttributeDefinition<object, object> GetLambdaAttribute(string name);
+
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
         AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName);
 
         AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue destination);
+
+        AttributeDefinition<bool, bool> LlmTransaction { get; }
     }
 
 
@@ -174,7 +178,8 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _customEventCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
-
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
+        
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
 
@@ -232,6 +237,21 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.ErrorEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
                 .AppliesTo(AttributeDestinations.SpanEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
                 .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<object, object> CreateLambdaAttribute(string attribName)
+        {
+            return AttributeDefinitionBuilder
+                .Create<object, object>(attribName, AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter);
+        }
+
+        public AttributeDefinition<object, object> GetLambdaAttribute(string name)
+        {
+            return _lambdaAttributes.GetOrAdd(name, CreateLambdaAttribute);
         }
 
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
@@ -1054,5 +1074,12 @@ namespace NewRelic.Agent.Core.Attributes
             .AppliesTo(AttributeDestinations.SpanEvent)
             .Build(_attribFilter)
         );
+
+        private AttributeDefinition<bool, bool> _llmTransaction;
+        public AttributeDefinition<bool, bool> LlmTransaction => _llmTransaction ?? (_llmTransaction =
+            AttributeDefinitionBuilder.CreateBool("llm", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
     }
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <!-- Start the agent init process during the init stage of the lambda for better performance and reduced cost. -->
+    <tracerFactory name="NewRelic.Agent.Core.Wrapper.NoOpWrapper">
+      <match assemblyName="Amazon.Lambda.RuntimeSupport" className="Amazon.Lambda.RuntimeSupport.LambdaBootstrap">
+        <exactMethodMatcher methodName="RunAsync" />
+      </match>
+    </tracerFactory>
+    <!-- We want to detect if the OpenTracing solution is running, as it is not compatible with the full Agent. -->
+    <tracerFactory name="OpenTracingWrapper">
+      <match assemblyName="NewRelic.OpenTracing.AmazonLambda.Tracer" className="NewRelic.OpenTracing.AmazonLambda.LambdaTracer">
+        <exactMethodMatcher methodName=".ctor" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

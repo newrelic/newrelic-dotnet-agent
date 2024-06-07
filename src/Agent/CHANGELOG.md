@@ -4,6 +4,149 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.25.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.0...v10.25.1) (2024-06-04)
+
+
+### Fixes
+
+* Agent license key should be optional in Serverless mode. ([#2499](https://github.com/newrelic/newrelic-dotnet-agent/issues/2499)) ([#2500](https://github.com/newrelic/newrelic-dotnet-agent/issues/2500)) ([801edc3](https://github.com/newrelic/newrelic-dotnet-agent/commit/801edc32a01dbc62a449963a41899ca68f987e78))
+* Nested logging contexts should not disable context data for Microsoft.Extensions.Logging (2508) ([#2516](https://github.com/newrelic/newrelic-dotnet-agent/issues/2516)) ([6196af5](https://github.com/newrelic/newrelic-dotnet-agent/commit/6196af5a8f13b4c1e3bd7f315837c8b365fdb57a))
+
+## [10.25.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.24.0...v10.25.0) (2024-05-21)
+
+
+### New features
+
+* Add support for AWS Lambda `APIGatewayHttpApiV2ProxyRequest` ([#2472](https://github.com/newrelic/newrelic-dotnet-agent/issues/2472)) ([3f06bf6](https://github.com/newrelic/newrelic-dotnet-agent/commit/3f06bf6a95465c37ee141c566b501d290e62d1fc))
+* Enable configuration of ignored and expected HTTP status code errors with environment variables ([#2487](https://github.com/newrelic/newrelic-dotnet-agent/issues/2487)) ([eeb574f](https://github.com/newrelic/newrelic-dotnet-agent/commit/eeb574f3adfa1d90fcf39cd68b11e936d28292b4))
+
+
+### Fixes
+
+* Accept inbound tracing headers in Kafka consume method instrumentation ([#2488](https://github.com/newrelic/newrelic-dotnet-agent/issues/2488)) ([476378a](https://github.com/newrelic/newrelic-dotnet-agent/commit/476378aaddb58da22de3cbe30ce0cf778973fe5a))
+* Upgrade Wix to v5 to fix an issue with non-elevated installs. ([#2471](https://github.com/newrelic/newrelic-dotnet-agent/issues/2471)) ([acd12fa](https://github.com/newrelic/newrelic-dotnet-agent/commit/acd12fae2b2bd4af6a1b29cb5574ea7e4513b870))
+
+## [10.24.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.23.1...v10.24.0) (2024-05-07)
+
+
+### Notice
+
+* Due to an ongoing issue with the WiX Toolset, the Windows MSI installer must be run as admin. This will be addressed in an upcoming release. ([4d40da5](https://github.com/newrelic/newrelic-dotnet-agent/commit/4d40da5e8b76a32814a8cffd21f092451caaaf9e))
+
+
+### New features
+
+* Add preliminary support for AWS Lambda instrumentation. For details on how to enable this functionality, please contact your New Relic representative. ([4d40da5](https://github.com/newrelic/newrelic-dotnet-agent/commit/4d40da5e8b76a32814a8cffd21f092451caaaf9e))
+
+
+### Fixes
+
+* Fix bug in distributed tracing when `excludeNewrelicHeader` is set to true ([#2457](https://github.com/newrelic/newrelic-dotnet-agent/issues/2457)) ([1f95c9c](https://github.com/newrelic/newrelic-dotnet-agent/commit/1f95c9cdfee17172ce8517679f2f6168fd9ebb63))
+
+## [10.23.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.23.0...v10.23.1) (2024-04-24)
+
+
+### Fixes
+
+* Fix duplicate key error when using Kafka with DT enabled ([#2433](https://github.com/newrelic/newrelic-dotnet-agent/issues/2433)) ([6a85c03](https://github.com/newrelic/newrelic-dotnet-agent/commit/6a85c034ba14d408d5b63fe6e77c9132f9f11c6c))
+* Fix incorrectly tagging AIM data when AIM is disabled ([#2408](https://github.com/newrelic/newrelic-dotnet-agent/issues/2408)) ([30d12bb](https://github.com/newrelic/newrelic-dotnet-agent/commit/30d12bbc28795a857ed2b241fb157fa55bf9f17d))
+
+## [10.23.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.22.0...v10.23.0) (2024-04-02)
+
+
+### Notice
+
+* AI monitoring offers custom-built insights and tracing for the complete lifecycle of an LLM’s prompts and responses, from raw user input to repaired/polished responses. AI monitoring provides built-in integrations with popular LLMs and components of the AI development stack. This release provides instrumentation for AWS Bedrock. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* New Relic AI monitoring is the industry’s first APM solution that provides end-to-end visibility for AI Large Language Model (LLM) applications. It enables end-to-end visibility into the key components of an AI LLM application. With AI monitoring, users can monitor, alert, and debug AI-powered applications for reliability, latency, performance, security and cost. AI monitoring also enables AI/LLM specific insights (metrics, events, logs and traces) which can easily integrate to build advanced guardrails for enterprise security, privacy and compliance. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* When AI monitoring is enabled, the agent will now capture AI LLM related data. This data will be visible under a new APM tab called AI Responses. See our [AI Monitoring documentation](https://docs.newrelic.com/docs/ai-monitoring/intro-to-ai-monitoring/) for more details. ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+
+
+### New features
+
+* A new AI monitoring related public API method has been added - [SetLlmTokenCountingCallback](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/setllmtokencountingcallback-net-agent-api/) ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* Add auto-instrumentation for AWS Bedrock ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+* **deps:** Updated `Elastic.Clients.ElasticSearch` instrumentation points to work with v8.12.1+ ([453d15e](https://github.com/newrelic/newrelic-dotnet-agent/commit/453d15e9de84f91bea6ca5507bbecba354c773dd))
+* New configuration options are available specific to [AI monitoring](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring). ([a6f3364](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6f3364d799e836d50862135b25d8ae654e9d613))
+
+
+### Fixes
+
+* Handle InvalidOperationException in StringsHelper.CleanUri() [#2373](https://github.com/newrelic/newrelic-dotnet-agent/issues/2373) ([#2374](https://github.com/newrelic/newrelic-dotnet-agent/issues/2374)) ([9f1a6af](https://github.com/newrelic/newrelic-dotnet-agent/commit/9f1a6af7d6006f6af70c98a21486ceb5795aa39f))
+
+## [10.22.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.1...v10.22.0) (2024-03-19)
+
+
+### New features
+
+* Add a new API method to time currently unsupported datastore method calls. ([#2320](https://github.com/newrelic/newrelic-dotnet-agent/issues/2320)) ([81abc5c](https://github.com/newrelic/newrelic-dotnet-agent/commit/81abc5c78e39655f4153b2f9f0f7e5e8328f3577))
+* Add transaction ID to intrinsic attributes for error events and traces regardless of DT/CAT settings ([#2341](https://github.com/newrelic/newrelic-dotnet-agent/issues/2341)) ([1df0342](https://github.com/newrelic/newrelic-dotnet-agent/commit/1df03420a690b1f1e46b9ef17b2184d27d314667))
+
+
+### Fixes
+
+* Fix a context data capture when the Microsoft.Extensions.Logging console logger is used (thanks [@lowell-trimble](https://github.com/lowell-trimble)!) ([#2261](https://github.com/newrelic/newrelic-dotnet-agent/issues/2261)) ([#2315](https://github.com/newrelic/newrelic-dotnet-agent/issues/2315)) ([f8422d6](https://github.com/newrelic/newrelic-dotnet-agent/commit/f8422d6c538db6ff32e0b1055e824b3536245c59))
+
+## [10.21.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.21.0...v10.21.1) (2024-03-07)
+
+
+### Fixes
+
+* Update regex parsing for CGroup v1 to match agent spec. ([#2286](https://github.com/newrelic/newrelic-dotnet-agent/issues/2286)) ([7fa3410](https://github.com/newrelic/newrelic-dotnet-agent/commit/7fa34102a27114f3bc09f47a5c9e08a9e0382f52))
+
+## [10.21.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.2...v10.21.0) (2024-02-26)
+
+
+### Notice
+
+* [Browser monitoring instrumentation](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent) for **ASP.NET CORE v6+ web applications** is disabled by default but can be [manually enabled by following these instructions](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent/#enable_netcore6plus). ([da8dd44](https://github.com/newrelic/newrelic-dotnet-agent/commit/da8dd446acf2f1a491c213838220294d67e7c1c5))
+
+
+### New features
+
+* Add new configuration options for logging to control log file size, log retention and log rollover strategy. Refer to our [log configuration documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#log) for details. ([#1880](https://github.com/newrelic/newrelic-dotnet-agent/issues/1880)) ([#2264](https://github.com/newrelic/newrelic-dotnet-agent/issues/2264)) ([d33714f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d33714f066f9cb521e2154cbae0570b84a07dd8d))
+* Allows instrumentation to be disabled from a newrelic.config file. ([#2250](https://github.com/newrelic/newrelic-dotnet-agent/issues/2250)) ([1632adb](https://github.com/newrelic/newrelic-dotnet-agent/commit/1632adb94827c159e66fc000cb216caac5d80865))
+
+
+### Fixes
+
+* Certain Profiler log messages did not print correctly when running under Linux. ([#2200](https://github.com/newrelic/newrelic-dotnet-agent/issues/2200)) ([#2209](https://github.com/newrelic/newrelic-dotnet-agent/issues/2209)) ([1b75bf9](https://github.com/newrelic/newrelic-dotnet-agent/commit/1b75bf95c7b219c7bf310b1a8cd2fa1a95b11768))
+* Use original regex to get container id from cgroup v1 in fallback case ([#2263](https://github.com/newrelic/newrelic-dotnet-agent/issues/2263)) ([9ecb88d](https://github.com/newrelic/newrelic-dotnet-agent/commit/9ecb88d5ceb582597937c7ac89a9ab0de6c98cb5))
+
+## [10.20.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.1...v10.20.2) (2024-01-16)
+
+
+### Fixes
+
+* Eliminate intermittent deadlock on agent startup. ([#2183](https://github.com/newrelic/newrelic-dotnet-agent/issues/2183)) ([#2184](https://github.com/newrelic/newrelic-dotnet-agent/issues/2184)) ([11c0241](https://github.com/newrelic/newrelic-dotnet-agent/commit/11c02417ebb3cf845083ffa0c22e7338d7f99691))
+* Path to agentinfo.json was built incorrectly, leading to file not found errors when running on Linux. ([#2156](https://github.com/newrelic/newrelic-dotnet-agent/issues/2156)) ([#2157](https://github.com/newrelic/newrelic-dotnet-agent/issues/2157)) ([bd7e0c3](https://github.com/newrelic/newrelic-dotnet-agent/commit/bd7e0c3b95010c7f5be3a207959801c8f620870a))
+* Prevent multiple SessionCache instances from being created. ([#2180](https://github.com/newrelic/newrelic-dotnet-agent/issues/2180) ) ([#2186](https://github.com/newrelic/newrelic-dotnet-agent/issues/2186)) ([08a3015](https://github.com/newrelic/newrelic-dotnet-agent/commit/08a301513ede5792320ff87891f033cc4ef23e4a))
+* Prevent null reference exceptions while serializing LoadedModuleWireModelCollection. ([#2185](https://github.com/newrelic/newrelic-dotnet-agent/issues/2185)) ([#2187](https://github.com/newrelic/newrelic-dotnet-agent/issues/2187)) ([afb6352](https://github.com/newrelic/newrelic-dotnet-agent/commit/afb635290173badc48c48846bc9cafdcf63dedd9))
+
+## [10.20.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.20.0...v10.20.1) (2023-12-12)
+
+
+### Fixes
+
+* Fix a crash that can occur when the profiler logs certain characters. ([#1982](https://github.com/newrelic/newrelic-dotnet-agent/issues/1982)) ([#2109](https://github.com/newrelic/newrelic-dotnet-agent/issues/2109)) ([742d232](https://github.com/newrelic/newrelic-dotnet-agent/commit/742d232189ae5c94480711172d5db4219b20c384))
+* Improve handling of .NET environments and settings from appsettings.*.json files ([#2125](https://github.com/newrelic/newrelic-dotnet-agent/issues/2125)) ([3c21fe9](https://github.com/newrelic/newrelic-dotnet-agent/commit/3c21fe9172f5e788f6d4879e50ced2fff9a07983))
+* Obfuscate logged appSettings values ([#2110](https://github.com/newrelic/newrelic-dotnet-agent/issues/2110)) ([2d8da68](https://github.com/newrelic/newrelic-dotnet-agent/commit/2d8da680294b7dd5c0ae30e9ebcb93f1c940f754))
+* Revert RabbitMQ HandleBasicDeliver instrumentation change from [#1972](https://github.com/newrelic/newrelic-dotnet-agent/issues/1972). Resolves [#2047](https://github.com/newrelic/newrelic-dotnet-agent/issues/2047) ([#2118](https://github.com/newrelic/newrelic-dotnet-agent/issues/2118)) ([0525182](https://github.com/newrelic/newrelic-dotnet-agent/commit/05251824d7540d01356760c126c4ec478722a8eb))
+* Update instrumentation to support Elasticsearch v8.11.0 ([#2100](https://github.com/newrelic/newrelic-dotnet-agent/issues/2100)) ([9effb5d](https://github.com/newrelic/newrelic-dotnet-agent/commit/9effb5d952984141af18634f7eb3073fc1bd44c3))
+
+## [10.20.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.2...v10.20.0) (2023-11-21)
+
+
+### New features
+
+* Allow the agent to run in environments with read-only filesystems. ([#2085](https://github.com/newrelic/newrelic-dotnet-agent/issues/2085)) ([09ab29d](https://github.com/newrelic/newrelic-dotnet-agent/commit/09ab29dabeef358cb8c6c035c4d726f5c14f0029))
+
+
+### Fixes
+
+* Defensively handle null source address in MassTransit instrumentation. ([#2055](https://github.com/newrelic/newrelic-dotnet-agent/issues/2055)) ([0249582](https://github.com/newrelic/newrelic-dotnet-agent/commit/024958260f628da018be883eb1b446713091760e))
+* During browser agent injection, don't set ContentLength if headers have already been sent. Resolves [#2051](https://github.com/newrelic/newrelic-dotnet-agent/issues/2051) ([#2059](https://github.com/newrelic/newrelic-dotnet-agent/issues/2059)) ([c191aa6](https://github.com/newrelic/newrelic-dotnet-agent/commit/c191aa6035de4d0d95b94d8adbc80560745d06e0))
+* Remove dependency on Serilog.Expressions. Resolves [#2083](https://github.com/newrelic/newrelic-dotnet-agent/issues/2083). ([9e355f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/9e355f3507130394e0660e1eb7c99e6d368f6bfc))
+
 ## [10.19.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.1...v10.19.2) (2023-11-09)
 
 

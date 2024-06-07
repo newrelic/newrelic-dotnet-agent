@@ -27,35 +27,35 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void bool_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", 0 }, { "collect_analytics_events", false } });
-            Assert.AreEqual(false, serverConfiguration.AnalyticsEventCollectionEnabled);
+            Assert.That(serverConfiguration.AnalyticsEventCollectionEnabled, Is.EqualTo(false));
         }
 
         [Test]
         public void decimal_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", 0 }, { "apdex_t", 1.2m } });
-            Assert.AreEqual(1.2, serverConfiguration.ApdexT);
+            Assert.That(serverConfiguration.ApdexT, Is.EqualTo(1.2));
         }
 
         [Test]
         public void double_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", 0 }, { "apdex_t", 1.2d } });
-            Assert.AreEqual(1.2, serverConfiguration.ApdexT);
+            Assert.That(serverConfiguration.ApdexT, Is.EqualTo(1.2));
         }
 
         [Test]
         public void string_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", 0 }, { "application_id", "Bacon!" } });
-            Assert.AreEqual("Bacon!", serverConfiguration.RumSettingsApplicationId);
+            Assert.That(serverConfiguration.RumSettingsApplicationId, Is.EqualTo("Bacon!"));
         }
 
         [Test]
         public void Int32_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", (int)1234 } });
-            Assert.AreEqual(1234, serverConfiguration.AgentRunId);
+            Assert.That(serverConfiguration.AgentRunId, Is.EqualTo(1234));
         }
 
 
@@ -63,21 +63,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void NullableInt32_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", (long)1234 }, { "sampling_rate", (int?)1357 } });
-            Assert.AreEqual(1357, serverConfiguration.SamplingRate);
+            Assert.That(serverConfiguration.SamplingRate, Is.EqualTo(1357));
         }
 
         [Test]
         public void NullableInt32_converts_correctly_when_no_optional_value_is_provided()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", (long)1234 } });
-            Assert.IsNull(serverConfiguration.SamplingRate);
+            Assert.That(serverConfiguration.SamplingRate, Is.Null);
         }
 
         [Test]
         public void Int64_converts_correctly()
         {
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", (long)1234 } });
-            Assert.AreEqual(1234, serverConfiguration.AgentRunId);
+            Assert.That(serverConfiguration.AgentRunId, Is.EqualTo(1234));
         }
 
         [Test]
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void when_agent_config_is_missing_from_json_then_RpmConfig_is_not_null()
         {
             var serverConfiguration = ServerConfiguration.FromJson("{\"agent_run_id\":42}");
-            Assert.IsNotNull(serverConfiguration.RpmConfig);
+            Assert.That(serverConfiguration.RpmConfig, Is.Not.Null);
         }
 
         [Test]

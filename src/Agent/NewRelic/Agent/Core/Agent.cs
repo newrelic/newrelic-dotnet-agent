@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -28,11 +29,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core
 {
@@ -65,8 +65,9 @@ namespace NewRelic.Agent.Core
         private readonly ILogEventAggregator _logEventAggregator;
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
-        private volatile IStackExchangeRedisCache _stackExchangeRedisCache;
         private readonly ISimpleSchedulingService _simpleSchedulingService;
+
+        private readonly ICustomEventTransformer _customEventTransformer;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
@@ -75,7 +76,8 @@ namespace NewRelic.Agent.Core
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
-            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService)
+            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService,
+            ICustomEventTransformer customEventTransformer)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -97,6 +99,8 @@ namespace NewRelic.Agent.Core
             _logEventAggregator = logEventAggregator;
             _logContextDataFilter = logContextDataFilter;
             _simpleSchedulingService = simpleSchedulingService;
+
+            _customEventTransformer = customEventTransformer;
 
             Instance = this;
         }
@@ -410,20 +414,76 @@ namespace NewRelic.Agent.Core
             return metadata;
         }
 
+        public void SetServerlessParameters(string lambdaFunctionVersion, string lambdaFunctionArn)
+        {
+            ServerlessModeDataTransportService.SetMetadata(lambdaFunctionVersion, lambdaFunctionArn);
+        }
+
         #endregion GetLinkingMetadata
 
         #region ExperimentalApi
+
+        public void RecordLlmEvent(string eventType, IDictionary<string, object> attributes)
+        {
+            if (!_configurationService.Configuration.AiMonitoringEnabled)
+            {
+                return;
+            }
+
+            // Record metric is streaming has been disabled
+            if (!_configurationService.Configuration.AiMonitoringStreamingEnabled)
+            {
+                RecordSupportabilityMetric("Supportability/DotNet/ML/Streaming/Disabled");
+            }
+
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            transaction.SetLlmTransaction(true);
+
+            // Any custom attributes that are prefixed with "llm." must be added to the event
+            var transactionAttributes = transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();
+            foreach (var attribute in transactionAttributes)
+            {
+                if (attribute.Key.StartsWith("llm.", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    attributes.Add(attribute.Key, attribute.Value);
+                }
+            }
+
+            // Always use callback for token count if one is provided
+            if ((eventType == "LlmChatCompletionMessage" || eventType == "LlmEmbedding")
+                && _configurationService.Configuration.LlmTokenCountingCallback != null)
+            {
+                // message and embedding events have different attribute names for the content of the message
+                var content = eventType == "LlmChatCompletionMessage" ? (string)attributes["content"] : (string)attributes["input"];
+
+                // messages only have response models, embeddings have both
+                var model = attributes.TryGetValue("request.model", out var requestModel) ? (string)requestModel : (string)attributes["response.model"];
+
+                // Use a nullable so that the CustomEvent code will automatically remove the attribute if the callback returns null
+                var tokenCount = _configurationService.Configuration.LlmTokenCountingCallback?.Invoke(model, content);
+                if (tokenCount.HasValue && tokenCount.Value > 0)
+                {
+                    attributes["token_count"] = tokenCount;
+                }
+            }
+
+            // If record content is disabled, we need to remove the content and input attributes
+            // We will still want the token counts so removal occurs after the attempt to get the token count
+            if (!_configurationService.Configuration.AiMonitoringRecordContentEnabled)
+            {
+                attributes.Remove("content"); // ChatMessages
+                attributes.Remove("input"); // Embeddings
+            }
+
+            _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
+        }
 
         public ISimpleSchedulingService SimpleSchedulingService
         {
             get { return _simpleSchedulingService; }
         }
 
-        public IStackExchangeRedisCache StackExchangeRedisCache
-        {
-            get { return _stackExchangeRedisCache; }
-            set { _stackExchangeRedisCache = value; }
-        }
+        public IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
 
         public void RecordSupportabilityMetric(string metricName, long count = 1)
         {

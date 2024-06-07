@@ -28,6 +28,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         private ServerConfiguration _serverConfig;
         private RunTimeConfiguration _runTimeConfiguration;
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+        private IBootstrapConfiguration _bootstrapConfiguration;
 
         private IEnvironment _environment;
         private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -55,6 +56,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             _configurationManagerStatic = new ConfigurationManagerStaticMock();
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
 
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -90,7 +92,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual(expectedAttributeNames, string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo(expectedAttributeNames));
         }
 
         [Test]
@@ -105,7 +107,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual("key1,key2", string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo("key1,key2"));
 
             // Update config
 
@@ -114,7 +116,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             UpdateConfig();
 
             filteredData = filter.FilterLogContextData(_unfilteredContextData);
-            Assert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
+            Assert.That(string.Join(",", filteredData.Keys.ToList()), Is.EqualTo(""));
         }
 
         [Test]
@@ -133,7 +135,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 var filteredData = filter.FilterLogContextData(unfilteredContextData);
 
-                Assert.IsTrue(logging.HasMessageThatContains("LogContextDataFilter: max #"));
+                Assert.That(logging.HasMessageThatContains("LogContextDataFilter: max #"), Is.True);
             }
 
         }
@@ -145,15 +147,18 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void LogContextDataFilterRule(string inputRuleText, bool isInclude, string expectedRuleText, bool isWildcard, int specificity)
         {
             var rule = new LogContextDataFilterRule(inputRuleText, isInclude);
-            Assert.AreEqual(isInclude, rule.Include);
-            Assert.AreEqual(expectedRuleText, rule.Text);
-            Assert.AreEqual(isWildcard, rule.IsWildCard);
-            Assert.AreEqual(specificity, rule.Specificity);
+            Assert.Multiple(() =>
+            {
+                Assert.That(rule.Include, Is.EqualTo(isInclude));
+                Assert.That(rule.Text, Is.EqualTo(expectedRuleText));
+                Assert.That(rule.IsWildCard, Is.EqualTo(isWildcard));
+                Assert.That(rule.Specificity, Is.EqualTo(specificity));
+            });
 
         }
         private void UpdateConfig()
         {
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }

@@ -78,8 +78,11 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var unicastIPAddressEnumerable = (IList<UnicastIPAddressInformation>)activeInterface.UnicastIPAddresses;
 
             Assert.That(activeInterface, Is.Not.Null);
-            Assert.That(activeInterface.UnicastIPAddresses.Count, Is.EqualTo(1));
-            Assert.That(unicastIPAddressEnumerable[0].Address.ToString(), Is.EqualTo(correctIPAddress.ToString()));
+            Assert.Multiple(() =>
+            {
+                Assert.That(activeInterface.UnicastIPAddresses, Has.Count.EqualTo(1));
+                Assert.That(unicastIPAddressEnumerable[0].Address.ToString(), Is.EqualTo(correctIPAddress.ToString()));
+            });
         }
 
         [Test]
@@ -102,7 +105,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var unicastIPAddressEnumerable = (IList<UnicastIPAddressInformation>)activeInterface.UnicastIPAddresses;
 
             Assert.That(activeInterface, Is.Not.Null);
-            Assert.That(activeInterface.UnicastIPAddresses.Count, Is.EqualTo(0));
+            Assert.That(activeInterface.UnicastIPAddresses, Is.Empty);
         }
 
         [Test]
@@ -125,8 +128,11 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var unicastIPAddressEnumerable = (IList<UnicastIPAddressInformation>)activeInterface.UnicastIPAddresses;
 
             Assert.That(activeInterface, Is.Not.Null);
-            Assert.That(activeInterface.UnicastIPAddresses.Count, Is.EqualTo(1));
-            Assert.That(unicastIPAddressEnumerable[0].Address.ToString(), Is.EqualTo(correctIPAddress.ToString()));
+            Assert.Multiple(() =>
+            {
+                Assert.That(activeInterface.UnicastIPAddresses, Has.Count.EqualTo(1));
+                Assert.That(unicastIPAddressEnumerable[0].Address.ToString(), Is.EqualTo(correctIPAddress.ToString()));
+            });
         }
 
         [Test]

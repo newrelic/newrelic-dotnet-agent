@@ -1,8 +1,8 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NET7_0
+#if NET8_0_OR_GREATER
 
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;

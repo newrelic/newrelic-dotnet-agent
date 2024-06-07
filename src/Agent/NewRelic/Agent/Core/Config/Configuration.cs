@@ -9,6 +9,12 @@
 // ------------------------------------------------------------------------------
 namespace NewRelic.Agent.Core.Config
 {
+    using System;
+    using System.Diagnostics;
+    using System.Xml.Serialization;
+    using System.Collections;
+    using System.Xml.Schema;
+    using System.ComponentModel;
     using System.Collections.Generic;
     
     
@@ -76,6 +82,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationPools applicationPoolsField;
         
+        private configurationAiMonitoring aiMonitoringField;
+        
         private configurationApplicationLogging applicationLoggingField;
         
         private List<string> threadProfilingField;
@@ -98,11 +106,15 @@ namespace NewRelic.Agent.Core.Config
         
         private bool debugAgentField;
         
+        private int debugStartupDelaySecondsField;
+        
         private bool threadProfilingEnabledField;
         
         private bool crossApplicationTracingEnabledField;
         
         private configurationTimingPrecision timingPrecisionField;
+        
+        private bool serverlessModeEnabledField;
         
         /// <summary>
         /// configuration class constructor
@@ -115,6 +127,7 @@ namespace NewRelic.Agent.Core.Config
             this.appSettingsField = new List<configurationAdd>();
             this.threadProfilingField = new List<string>();
             this.applicationLoggingField = new configurationApplicationLogging();
+            this.aiMonitoringField = new configurationAiMonitoring();
             this.applicationPoolsField = new configurationApplicationPools();
             this.browserMonitoringField = new configurationBrowserMonitoring();
             this.errorCollectorField = new configurationErrorCollector();
@@ -146,9 +159,11 @@ namespace NewRelic.Agent.Core.Config
             this.rootAgentEnabledField = false;
             this.maxStackTraceLinesField = 80;
             this.debugAgentField = false;
+            this.debugStartupDelaySecondsField = 0;
             this.threadProfilingEnabledField = true;
             this.crossApplicationTracingEnabledField = true;
             this.timingPrecisionField = configurationTimingPrecision.low;
+            this.serverlessModeEnabledField = false;
         }
         
         public configurationService service
@@ -487,6 +502,18 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        public configurationAiMonitoring aiMonitoring
+        {
+            get
+            {
+                return this.aiMonitoringField;
+            }
+            set
+            {
+                this.aiMonitoringField = value;
+            }
+        }
+        
         public configurationApplicationLogging applicationLogging
         {
             get
@@ -642,6 +669,23 @@ namespace NewRelic.Agent.Core.Config
         }
         
         /// <summary>
+        /// Delays Agent initialization to allow a debugger to be attached.
+        /// </summary>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(0)]
+        public int debugStartupDelaySeconds
+        {
+            get
+            {
+                return this.debugStartupDelaySecondsField;
+            }
+            set
+            {
+                this.debugStartupDelaySecondsField = value;
+            }
+        }
+        
+        /// <summary>
         /// Turns on/off Thread Profiling.
         /// </summary>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -689,6 +733,23 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.timingPrecisionField = value;
+            }
+        }
+        
+        /// <summary>
+        /// Turns on/off serverless mode.
+        /// </summary>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool serverlessModeEnabled
+        {
+            get
+            {
+                return this.serverlessModeEnabledField;
+            }
+            set
+            {
+                this.serverlessModeEnabledField = value;
             }
         }
         
@@ -1284,9 +1345,10 @@ namespace NewRelic.Agent.Core.Config
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationLog
     {
-        private bool enabledField;
         
         private string levelField;
+        
+        private bool enabledField;
         
         private string directoryField;
         
@@ -1296,15 +1358,24 @@ namespace NewRelic.Agent.Core.Config
         
         private bool auditLogField;
         
+        private configurationLogLogRollingStrategy logRollingStrategyField;
+        
+        private int maxLogFileSizeMBField;
+        
+        private int maxLogFilesField;
+        
         /// <summary>
         /// configurationLog class constructor
         /// </summary>
         public configurationLog()
         {
-            this.enabledField = true;
             this.levelField = "info";
+            this.enabledField = true;
             this.consoleField = false;
             this.auditLogField = false;
+            this.logRollingStrategyField = configurationLogLogRollingStrategy.size;
+            this.maxLogFileSizeMBField = 50;
+            this.maxLogFilesField = 4;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -1318,6 +1389,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.levelField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
             }
         }
         
@@ -1360,20 +1445,6 @@ namespace NewRelic.Agent.Core.Config
                 this.consoleField = value;
             }
         }
-
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
-        public bool enabled
-        {
-            get
-            {
-                return this.enabledField;
-            }
-            set
-            {
-                this.enabledField = value;
-            }
-        }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(false)]
@@ -1386,6 +1457,48 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.auditLogField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(configurationLogLogRollingStrategy.size)]
+        public configurationLogLogRollingStrategy logRollingStrategy
+        {
+            get
+            {
+                return this.logRollingStrategyField;
+            }
+            set
+            {
+                this.logRollingStrategyField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(50)]
+        public int maxLogFileSizeMB
+        {
+            get
+            {
+                return this.maxLogFileSizeMBField;
+            }
+            set
+            {
+                this.maxLogFileSizeMBField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(4)]
+        public int maxLogFiles
+        {
+            get
+            {
+                return this.maxLogFilesField;
+            }
+            set
+            {
+                this.maxLogFilesField = value;
             }
         }
         
@@ -1402,10 +1515,25 @@ namespace NewRelic.Agent.Core.Config
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public enum configurationLogLogRollingStrategy
+    {
+        
+        /// <remarks/>
+        size,
+        
+        /// <remarks/>
+        day,
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationInstrumentation
     {
+        
+        private List<configurationInstrumentationIgnore> rulesField;
         
         private List<configurationInstrumentationApplication> applicationsField;
         
@@ -1417,7 +1545,21 @@ namespace NewRelic.Agent.Core.Config
         public configurationInstrumentation()
         {
             this.applicationsField = new List<configurationInstrumentationApplication>();
+            this.rulesField = new List<configurationInstrumentationIgnore>();
             this.logField = false;
+        }
+        
+        [System.Xml.Serialization.XmlArrayItemAttribute("ignore", IsNullable=false)]
+        public List<configurationInstrumentationIgnore> rules
+        {
+            get
+            {
+                return this.rulesField;
+            }
+            set
+            {
+                this.rulesField = value;
+            }
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("application", IsNullable=false)]
@@ -1454,6 +1596,54 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationInstrumentation Clone()
         {
             return ((configurationInstrumentation)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationInstrumentationIgnore
+    {
+        
+        private string assemblyNameField;
+        
+        private string classNameField;
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string assemblyName
+        {
+            get
+            {
+                return this.assemblyNameField;
+            }
+            set
+            {
+                this.assemblyNameField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string className
+        {
+            get
+            {
+                return this.classNameField;
+            }
+            set
+            {
+                this.classNameField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationInstrumentationIgnore object
+        /// </summary>
+        public virtual configurationInstrumentationIgnore Clone()
+        {
+            return ((configurationInstrumentationIgnore)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -3646,6 +3836,12 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enableSuccessMetricsField;
         
+        private string account_idField;
+        
+        private string trusted_account_keyField;
+        
+        private string primary_application_idField;
+        
         /// <summary>
         /// configurationDistributedTracing class constructor
         /// </summary>
@@ -3654,6 +3850,7 @@ namespace NewRelic.Agent.Core.Config
             this.enabledField = false;
             this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
+            this.primary_application_idField = "Unknown";
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -3695,6 +3892,46 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enableSuccessMetricsField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string account_id
+        {
+            get
+            {
+                return this.account_idField;
+            }
+            set
+            {
+                this.account_idField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string trusted_account_key
+        {
+            get
+            {
+                return this.trusted_account_keyField;
+            }
+            set
+            {
+                this.trusted_account_keyField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("Unknown")]
+        public string primary_application_id
+        {
+            get
+            {
+                return this.primary_application_idField;
+            }
+            set
+            {
+                this.primary_application_idField = value;
             }
         }
         
@@ -4905,6 +5142,162 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationPoolsApplicationPool Clone()
         {
             return ((configurationApplicationPoolsApplicationPool)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoring
+    {
+        
+        private configurationAiMonitoringStreaming streamingField;
+        
+        private configurationAiMonitoringRecordContent recordContentField;
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoring class constructor
+        /// </summary>
+        public configurationAiMonitoring()
+        {
+            this.recordContentField = new configurationAiMonitoringRecordContent();
+            this.streamingField = new configurationAiMonitoringStreaming();
+            this.enabledField = false;
+        }
+        
+        public configurationAiMonitoringStreaming streaming
+        {
+            get
+            {
+                return this.streamingField;
+            }
+            set
+            {
+                this.streamingField = value;
+            }
+        }
+        
+        public configurationAiMonitoringRecordContent recordContent
+        {
+            get
+            {
+                return this.recordContentField;
+            }
+            set
+            {
+                this.recordContentField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoring object
+        /// </summary>
+        public virtual configurationAiMonitoring Clone()
+        {
+            return ((configurationAiMonitoring)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoringStreaming
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoringStreaming class constructor
+        /// </summary>
+        public configurationAiMonitoringStreaming()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoringStreaming object
+        /// </summary>
+        public virtual configurationAiMonitoringStreaming Clone()
+        {
+            return ((configurationAiMonitoringStreaming)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoringRecordContent
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationAiMonitoringRecordContent class constructor
+        /// </summary>
+        public configurationAiMonitoringRecordContent()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoringRecordContent object
+        /// </summary>
+        public virtual configurationAiMonitoringRecordContent Clone()
+        {
+            return ((configurationAiMonitoringRecordContent)(this.MemberwiseClone()));
         }
         #endregion
     }

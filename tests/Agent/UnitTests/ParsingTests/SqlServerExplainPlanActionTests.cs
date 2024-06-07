@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace ParsingTests
 
             var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(invalidCommand);
 
-            Assert.IsNull(explainPlan);
+            Assert.That(explainPlan, Is.Null);
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace ParsingTests
 
             var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command);
 
-            Assert.IsNull(explainPlan);
+            Assert.That(explainPlan, Is.Null);
         }
 
         [Test]
@@ -88,13 +88,13 @@ namespace ParsingTests
             var actualCreatedCommands = mockConnection.CreatedMockCommands.Select(c => c.CommandText);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(explainPlan, "An explain plan should be returned."),
-                () => Assert.AreEqual("EXEC mystoredproc", command.CommandText, "Expected the command text to not be modified."),
-                () => CollectionAssert.AreEquivalent(expectedCreatedCommands, actualCreatedCommands, "Expected 2 commands for enabling and disabling explain plans for the connection."),
-                () => CollectionAssert.AreEquivalent(new[] { 0, 1 }, explainPlan.ObfuscatedHeaders, "Expected the first 2 headers to be obfuscated."),
-                () => CollectionAssert.AreEquivalent(expectedHeaders, explainPlan.ExplainPlanHeaders, "Expected the headers collections to match."),
-                () => Assert.AreEqual(1, explainPlan.ExplainPlanDatas.Count, "Expected only 1 row of data for the explain plain."),
-                () => CollectionAssert.AreEquivalent(new[] {"value0", "value1", "value2"}, explainPlan.ExplainPlanDatas[0], "Expected the explain plan results to match.")
+                () => Assert.That(explainPlan, Is.Not.Null, "An explain plan should be returned."),
+                () => Assert.That(command.CommandText, Is.EqualTo("EXEC mystoredproc"), "Expected the command text to not be modified."),
+                () => Assert.That(actualCreatedCommands, Is.EquivalentTo(expectedCreatedCommands), "Expected 2 commands for enabling and disabling explain plans for the connection."),
+                () => Assert.That(explainPlan.ObfuscatedHeaders, Is.EquivalentTo(new[] { 0, 1 }), "Expected the first 2 headers to be obfuscated."),
+                () => Assert.That(explainPlan.ExplainPlanHeaders, Is.EquivalentTo(expectedHeaders), "Expected the headers collections to match."),
+                () => Assert.That(explainPlan.ExplainPlanDatas, Has.Count.EqualTo(1), "Expected only 1 row of data for the explain plain."),
+                () => Assert.That(explainPlan.ExplainPlanDatas[0], Is.EquivalentTo(new[] {"value0", "value1", "value2"}), "Expected the explain plan results to match.")
             );
         }
 
@@ -105,7 +105,7 @@ namespace ParsingTests
 
             var resources = SqlServerExplainPlanActions.AllocateResources(mockDbCommand);
 
-            Assert.IsNull(resources);
+            Assert.That(resources, Is.Null);
         }
 
         [Test]
@@ -121,10 +121,10 @@ namespace ParsingTests
             var resources = SqlServerExplainPlanActions.AllocateResources(mockDbCommand);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(resources, "Expected the new resource to be not null."),
-                () => Assert.AreNotSame(mockDbCommand, resources, "The command is expected to be cloned."),
-                () => Assert.AreNotSame(mockDbCommand.Connection, ((IDbCommand)resources).Connection, "The connection is expected to be cloned."),
-                () => Assert.IsNull(((IDbCommand)resources).Transaction, "The transaction is expected to be null.")
+                () => Assert.That(resources, Is.Not.Null, "Expected the new resource to be not null."),
+                () => Assert.That(resources, Is.Not.SameAs(mockDbCommand), "The command is expected to be cloned."),
+                () => Assert.That(((IDbCommand)resources).Connection, Is.Not.SameAs(mockDbCommand.Connection), "The connection is expected to be cloned."),
+                () => Assert.That(((IDbCommand)resources).Transaction, Is.Null, "The transaction is expected to be null.")
             );
         }
 
@@ -133,7 +133,7 @@ namespace ParsingTests
         {
             var indexes = SqlServerExplainPlanActions.GetObfuscatedIndexes(new List<string>());
 
-            CollectionAssert.IsEmpty(indexes);
+            Assert.That(indexes, Is.Empty);
         }
 
         [Test]
@@ -141,7 +141,7 @@ namespace ParsingTests
         {
             var indexes = SqlServerExplainPlanActions.GetObfuscatedIndexes(new List<string> { "header1", "header2", "header3" });
 
-            CollectionAssert.IsEmpty(indexes);
+            Assert.That(indexes, Is.Empty);
         }
 
         [Test]
@@ -149,7 +149,7 @@ namespace ParsingTests
         {
             var indexes = SqlServerExplainPlanActions.GetObfuscatedIndexes(new List<string> { "header1", "StmtText", "header3", "Argument" });
 
-            CollectionAssert.AreEquivalent(new[] { 1, 3 }, indexes, "Expected the indexes for all headers that should be obfuscated to be returned.");
+            Assert.That(indexes, Is.EquivalentTo(new[] { 1, 3 }), "Expected the indexes for all headers that should be obfuscated to be returned.");
         }
     }
 }

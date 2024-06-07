@@ -11,7 +11,6 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System;
 using System.Linq;
-using System.Reflection;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -22,11 +21,17 @@ namespace NewRelic.Agent.Core.Configuration
         private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
+        private readonly IBootstrapConfiguration _bootstrapConfiguration = ConfigurationLoader.BootstrapConfig;
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly IProcessStatic _processStatic;
         private readonly IHttpRuntimeStatic _httpRuntimeStatic;
         private readonly IConfigurationManagerStatic _configurationManagerStatic;
         private readonly IDnsStatic _dnsStatic;
+
+        /// <summary>
+        /// Do not use this field outside of this class. It only exists for testing purposes.
+        /// </summary>
+        public Action<string> ChangeLogLevelAction = LoggerBootstrapper.SetLoggingLevel;
 
         public IConfiguration Configuration { get; private set; }
 
@@ -38,12 +43,13 @@ namespace NewRelic.Agent.Core.Configuration
             _configurationManagerStatic = configurationManagerStatic;
             _dnsStatic = dnsStatic;
 
-            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
 
             _subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
             _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
             _subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
             _subscriptions.Add<ErrorGroupCallbackUpdateEvent>(OnErrorGroupCallbackUpdate);
+            _subscriptions.Add<LlmTokenCountingCallbackUpdateEvent>(OnLlmTokenCountingCallbackUpdate);
             _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
             _subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
         }
@@ -57,14 +63,19 @@ namespace NewRelic.Agent.Core.Configuration
         private void OnConfigurationDeserialized(ConfigurationDeserializedEvent configurationDeserializedEvent)
         {
             _localConfiguration = configurationDeserializedEvent.Configuration;
-            UpdateLogLevel(_localConfiguration);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
         }
 
-        private static void UpdateLogLevel(configuration localConfiguration)
+        private void UpdateLogLevel(string previousLogLevel)
         {
-            Log.Info("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
-            LoggerBootstrapper.SetLoggingLevel(localConfiguration.LogConfig.LogLevel);
+            var newLogLevel = Configuration.LoggingLevel;
+            if (previousLogLevel == newLogLevel)
+            {
+                return;
+            }
+
+            Log.Info("The log level was updated to {0} from {1}", newLogLevel, previousLogLevel);
+            ChangeLogLevelAction(newLogLevel);
         }
 
         private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
@@ -85,7 +96,7 @@ namespace NewRelic.Agent.Core.Configuration
             if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
                 return;
 
-            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames, _runTimeConfiguration.ErrorGroupCallback);
+            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames, _runTimeConfiguration.ErrorGroupCallback, _runTimeConfiguration.LlmTokenCountingCallback);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
         }
 
@@ -94,13 +105,26 @@ namespace NewRelic.Agent.Core.Configuration
             if (_runTimeConfiguration.ErrorGroupCallback == errorGroupCallbackUpdateEvent.ErrorGroupCallback)
                 return;
 
-            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, errorGroupCallbackUpdateEvent.ErrorGroupCallback);
+            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, errorGroupCallbackUpdateEvent.ErrorGroupCallback, _runTimeConfiguration.LlmTokenCountingCallback);
+            UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
+        }
+
+        private void OnLlmTokenCountingCallbackUpdate(LlmTokenCountingCallbackUpdateEvent llmTokenCountingCallbackUpdateEvent)
+        {
+            if (_runTimeConfiguration.LlmTokenCountingCallback == llmTokenCountingCallbackUpdateEvent.LlmTokenCountingCallback)
+                return;
+
+            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, _runTimeConfiguration.ErrorGroupCallback, llmTokenCountingCallbackUpdateEvent.LlmTokenCountingCallback);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
         }
 
         private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
         {
-            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var previousLogLevel = Configuration.LoggingLevel;
+
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            UpdateLogLevel(previousLogLevel);
 
             var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
             EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -16,7 +16,7 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-    public interface ILogEventAggregator
+    public interface ILogEventAggregator : IDisposable
     {
         void Collect(LogEventWireModel loggingEventWireModel);
 
@@ -71,7 +71,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+        protected override void Harvest() => InternalHarvest();
+
+        protected void InternalHarvest(string transactionId = null)
         {
             Log.Finest("Log Event harvest starting.");
 
@@ -101,7 +105,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 hostname,
                 aggregatedEvents);
 
-            var responseStatus = DataTransportService.Send(modelsCollection);
+            var responseStatus = DataTransportService.Send(modelsCollection, transactionId);
 
             HandleResponse(responseStatus, aggregatedEvents);
 

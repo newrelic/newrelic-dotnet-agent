@@ -5,8 +5,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -80,24 +80,26 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
 
-            var expectedAttributes = new Dictionary<string, string>
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
+            var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+
+            var transactionId = transactionEvents[0].IntrinsicAttributes["guid"].ToString();
+
+            var expectedTransactionEventAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Exception" },
                 { "errorMessage", "!Exception~Message!" },
+                { "error", "true" }
             };
 
             var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "error.message", "!Exception~Message!" },
+                { "guid", transactionId }
             };
-
-            var expectedErrorTransactionEventAttributes2 = new List<string> { "error" };
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
@@ -108,12 +110,12 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assert.Equal("System.Exception", errorTraces[0].ExceptionClassName),
                 () => Assert.Equal("!Exception~Message!", errorTraces[0].Message),
                 () => Assert.NotEmpty(errorTraces[0].Attributes.StackTrace),
+                () => Assert.Equal(errorTraces[0].Attributes.IntrinsicAttributes["guid"], transactionId),
                 () => Assert.True(transactionEvents.Any(), "No transaction events found."),
                 () => Assert.True(transactionEvents.Count == 1, $"Expected 1 transaction event but found {transactionEvents.Count}"),
-                () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
                 () => Assert.Single(errorEvents),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0]),
-                () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvents[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0])
             );
         }
     }

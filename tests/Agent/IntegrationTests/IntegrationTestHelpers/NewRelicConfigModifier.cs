@@ -64,6 +64,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 host);
         }
 
+        public void SetHostPort(int port)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "port",
+                port.ToString());
+        }
+
         public void SetRequestTimeout(TimeSpan duration)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "requestTimeout",
@@ -234,6 +240,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             {
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
                     "enabled", enabled.Value ? "true" : "false");
+            }
+        }
+
+        /// <summary>
+        /// Sets or deletes the excludeNewrelicHeader setting in the newrelic.config.
+        /// </summary>
+        /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
+        public void SetOrDeleteDistributedTraceExcludeNewRelicHeader(bool? exclude)
+        {
+            const string config = "configuration";
+            const string distributedTracing = "distributedTracing";
+            if (null == exclude)
+            {
+                CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { config }, distributedTracing);
+            }
+            else
+            {
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
+                    "excludeNewrelicHeader", exclude.Value ? "true" : "false");
             }
         }
 
@@ -413,6 +438,64 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "EnableAspNetCore6PlusBrowserInjection");
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enableBrowserInjection}");
             return this;
+        }
+
+        public NewRelicConfigModifier DisableEventListenerSamplers()
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", "false", "urn:newrelic-config");
+            return this;
+        }
+
+        public void EnableAuditLog(bool enableAuditLog)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "auditLog",
+                enableAuditLog.ToString().ToLower());
+        }
+
+        public NewRelicConfigModifier AddIgnoredInstrumentationAssembly(string assemblyName)
+        {
+            return AddIgnoredInstrumentationAssemblyAndClass(assemblyName, null);
+        }
+
+        public NewRelicConfigModifier AddIgnoredInstrumentationAssemblyAndClass(string assemblyName, string className)
+        {
+            CommonUtils.AddIgnoredInstrumentation(_configFilePath, assemblyName, className);
+            return this;
+        }
+
+        public NewRelicConfigModifier RemoveIgnoredInstrumentationAssembly(string assemblyName)
+        {
+            return RemoveIgnoredInstrumentationAssemblyAndClass(assemblyName, null);
+        }
+
+        public NewRelicConfigModifier RemoveIgnoredInstrumentationAssemblyAndClass(string assemblyName, string className)
+        {
+            CommonUtils.RemoveIgnoredInstrumentation(_configFilePath, assemblyName, className);
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableAiMonitoring(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "aiMonitoring" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public void SetCompleteTransactionsOnThread(bool enable)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                "completeTransactionsOnThread", enable ? "true" : "false");
+        }
+
+        public void SetSyncStartup(bool enable)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                "syncStartup", enable ? "true" : "false");
+        }
+
+        public void SetDebugStartupDelaySeconds(int delaySeconds)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", },
+                "debugStartupDelaySeconds", delaySeconds.ToString());
         }
     }
 }

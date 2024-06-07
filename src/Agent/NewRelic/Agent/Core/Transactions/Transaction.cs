@@ -161,6 +161,12 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 timer?.StopAndRecordMetric();
                 Agent._transactionTransformer.Transform(this);
+
+                if (Agent.Configuration.ServerlessModeEnabled)
+                {
+                    EventBus<ManualHarvestEvent>.Publish(new ManualHarvestEvent(Guid));
+                    EventBus<FlushServerlessDataEvent>.Publish(new FlushServerlessDataEvent(Guid));
+                }
             };
 
             // The completion of transactions can be run on thread or off thread. We made this configurable.  
@@ -892,11 +898,6 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void SetQueueTime(TimeSpan queueTime)
         {
-            if (queueTime == null)
-            {
-                throw new ArgumentNullException(nameof(queueTime));
-            }
-
             TransactionMetadata.SetQueueTime(queueTime);
         }
 
@@ -1346,6 +1347,33 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 TransactionMetadata.UserAndRequestAttributes.TrySetValue(_attribDefs.EndUserId, userid);
             }
+        }
+
+        /// <summary>
+        /// Marks a transaction as containing one or more instrumented LLM methods.
+        /// </summary>
+        /// <param name="isLlmTransaction"></param>
+        public void SetLlmTransaction(bool isLlmTransaction)
+        {
+            TransactionMetadata.SetLlmTransaction(isLlmTransaction);
+        }
+
+        /// <summary>
+        /// Create an Agent attribute for Lambda.
+        /// Name cannot be null, empty, or whitespace.
+        /// </summary>
+        /// <param name="name">Full name of attribute.</param>
+        /// <param name="value">Value for attribute.</param>
+        public void AddLambdaAttribute(string name, object value)
+        {
+            if(string.IsNullOrWhiteSpace(name))
+            {
+                Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
+                return;
+            }
+
+            var lambdaAttrib = _attribDefs.GetLambdaAttribute(name);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(lambdaAttrib, value);
         }
     }
 }

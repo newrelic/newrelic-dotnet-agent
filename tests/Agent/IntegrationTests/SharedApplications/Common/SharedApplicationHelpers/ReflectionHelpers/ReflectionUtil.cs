@@ -79,7 +79,18 @@ namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
 
             foreach (var assembly in assemblies)
             {
-                foreach (var type in assembly.GetTypes())
+                Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($"Exception calling .GetTypes on assembly {assembly.FullName}");
+                    throw;
+                }
+
+                foreach (var type in types)
                 {
                     if (type.IsDefined(attribType, true))
                     {

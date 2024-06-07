@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
@@ -34,9 +34,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(45);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(45);
-                    configModifier.ConfigureFasterSqlTracesHarvestCycle(45);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -189,9 +189,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlTestsCore : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MySqlTestsCoreLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public MySqlTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

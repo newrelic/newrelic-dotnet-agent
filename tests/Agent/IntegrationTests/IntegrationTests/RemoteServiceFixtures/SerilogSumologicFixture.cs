@@ -10,7 +10,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"SerilogSumologicApplication";
         private const string ExecutableName = @"SerilogSumologicApplication.exe";
-        public SerilogSumologicFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
+        public SerilogSumologicFixture() :
+            base(new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
         }
 

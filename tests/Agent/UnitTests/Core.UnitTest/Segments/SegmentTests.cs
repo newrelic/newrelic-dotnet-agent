@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using System;
 using NewRelic.Agent.Core.Metrics;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -19,9 +20,12 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.End(new Exception("Unhandled exception"));
 
-            Assert.IsNotNull(segment.ErrorData);
-            Assert.AreEqual("System.Exception", segment.ErrorData.ErrorTypeName);
-            Assert.AreEqual("Unhandled exception", segment.ErrorData.ErrorMessage);
+            Assert.That(segment.ErrorData, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(segment.ErrorData.ErrorTypeName, Is.EqualTo("System.Exception"));
+                Assert.That(segment.ErrorData.ErrorMessage, Is.EqualTo("Unhandled exception"));
+            });
         }
 
         [Test]
@@ -33,7 +37,26 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             segment.SetMessageBrokerDestination("destination");
 
-            Assert.AreEqual("destination", ((MessageBrokerSegmentData)segment.SegmentData).Destination );
+            Assert.That(((MessageBrokerSegmentData)segment.SegmentData).Destination, Is.EqualTo("destination"));
+        }
+
+        [Test]
+        public void DurationOrZero_ReturnsZero_IfDurationIsNotSet()
+        {
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+
+            var duration = segment.DurationOrZero;
+
+            Assert.That(duration, Is.EqualTo(TimeSpan.Zero));
+        }
+        [Test]
+        public void DurationOrZero_ReturnsDuration_IfDurationIsSet()
+        {
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1), TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+            var duration = segment.DurationOrZero;
+
+            Assert.That(duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
         }
     }
 }

@@ -35,42 +35,54 @@ namespace NewRelic.Collections.UnitTests
 
             // Peek
             var head = _concurrentQueue.Peek();
-            Assert.AreEqual(numbersToAdd.First(), head);
+            Assert.That(head, Is.EqualTo(numbersToAdd.First()));
 
             // GetEnumerator<T>
             var index = 0;
             var genericEnumerator = _concurrentQueue.GetEnumerator();
             while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                Assert.That(genericEnumerator.Current, Is.EqualTo(numbersToAdd[index++]));
+            Assert.That(index, Is.EqualTo(numbersToAdd.Length));
 
             // GetEnumerator
             index = 0;
             var nongenericEnumerator = ((IEnumerable)_concurrentQueue).GetEnumerator();
             while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-                Assert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
-            Assert.AreEqual(numbersToAdd.Length, index);
+                Assert.That(nongenericEnumerator.Current, Is.EqualTo(numbersToAdd[index++]));
+            Assert.Multiple(() =>
+            {
+                Assert.That(index, Is.EqualTo(numbersToAdd.Length));
 
-            // Count
-            Assert.AreEqual(_concurrentQueue.Count, numbersToAdd.Length);
+                // Count
+                Assert.That(numbersToAdd, Has.Length.EqualTo(_concurrentQueue.Count));
+            });
 
             // CopyTo
             var destinationArray = new int[numbersToAdd.Length];
             _concurrentQueue.CopyTo(destinationArray, 0);
-            Assert.True(numbersToAdd.SequenceEqual(destinationArray));
+            Assert.Multiple(() =>
+            {
+                Assert.That(numbersToAdd.SequenceEqual(destinationArray), Is.True);
 
-            // Contains
-            Assert.True(numbersToAdd.All(_concurrentQueue.Contains));
+                // Contains
+                Assert.That(numbersToAdd.All(_concurrentQueue.Contains), Is.True);
+            });
 
             // Dequeue
             head = _concurrentQueue.Dequeue();
-            Assert.AreEqual(numbersToAdd.First(), head);
-            Assert.True(_concurrentQueue.SequenceEqual(numbersToAdd.Skip(1)));
+            Assert.Multiple(() =>
+            {
+                Assert.That(head, Is.EqualTo(numbersToAdd.First()));
+                Assert.That(_concurrentQueue.SequenceEqual(numbersToAdd.Skip(1)), Is.True);
+            });
 
             // Clear
             _concurrentQueue.Clear();
-            Assert.AreEqual(0, _concurrentQueue.Count);
-            Assert.False(numbersToAdd.Any(_concurrentQueue.Contains));
+            Assert.Multiple(() =>
+            {
+                Assert.That(_concurrentQueue, Is.Empty);
+                Assert.That(numbersToAdd.Any(_concurrentQueue.Contains), Is.False);
+            });
         }
 
         [Test]

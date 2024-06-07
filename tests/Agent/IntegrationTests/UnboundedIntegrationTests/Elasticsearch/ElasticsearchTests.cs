@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -8,6 +8,7 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -174,16 +175,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
 
-            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault().AgentAttributes;
+            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault()?.AgentAttributes;
 
-            var uri = operationDatastoreAgentAttributes.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
+            var uri = operationDatastoreAgentAttributes?.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.Single(operationDatastoreSpans),
                 () => Assert.Equal(_host, uri),
-                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, IntegrationTestHelpers.Models.SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
+                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
             );
         }
 

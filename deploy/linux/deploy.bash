@@ -24,6 +24,8 @@ fi
 AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-2}
 AWS_DEFAULT_OUTPUT=${AWS_DEFAULT_OUTPUT:-text}
 
+# a magic incantation that somehow prevents aws cli failures when running in Github. See https://github.com/aws/aws-cli/issues/5623
+export AWS_EC2_METADATA_DISABLED=true
 
 ## Actions
 # 'release' => release new packages

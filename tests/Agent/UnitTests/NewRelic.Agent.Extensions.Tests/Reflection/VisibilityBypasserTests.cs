@@ -75,7 +75,7 @@ namespace NewRelic.Reflection.UnitTests
             var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, int>(fieldName);
             var actualValue = fieldAccessor(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace NewRelic.Reflection.UnitTests
             var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<int>(assemblyName, typeName, fieldName);
             var actualValue = fieldAccessor(privateInner);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace NewRelic.Reflection.UnitTests
             var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, object>(fieldName);
             var actualValue = fieldAccessor(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -140,7 +140,7 @@ namespace NewRelic.Reflection.UnitTests
             var newStringValue = "newStringValue";
             var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(typeof(PublicOuter), fieldName);
             Assert.DoesNotThrow(() => action(publicOuter, newStringValue));
-            Assert.That(publicOuter.GetWritableStringField == newStringValue);
+            Assert.That(publicOuter.GetWritableStringField, Is.EqualTo(newStringValue));
         }
 
         [Test]
@@ -151,7 +151,7 @@ namespace NewRelic.Reflection.UnitTests
             var newStringValue = "newStringValue";
             var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(typeof(PublicOuter), fieldName);
             Assert.DoesNotThrow(() => action(new List<string>(), newStringValue));
-            Assert.That(publicOuter.GetWritableStringField != newStringValue);
+            Assert.That(publicOuter.GetWritableStringField, Is.Not.EqualTo(newStringValue));
         }
 
         [Test]
@@ -162,7 +162,7 @@ namespace NewRelic.Reflection.UnitTests
             var newIntValue = 42;
             var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<int>(typeof(PublicOuter), fieldName);
             Assert.DoesNotThrow(() => action(publicOuter, newIntValue));
-            Assert.That(publicOuter.GetWriteableIntField == newIntValue);
+            Assert.That(publicOuter.GetWriteableIntField, Is.EqualTo(newIntValue));
         }
     }
 
@@ -177,7 +177,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, PublicOuter>(methodName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.NotNull(actualValue);
+            Assert.That(actualValue, Is.Not.Null);
         }
 
         [Test]
@@ -190,7 +190,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, int>(methodName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<object>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(privateInner);
 
-            Assert.NotNull(actualValue);
+            Assert.That(actualValue, Is.Not.Null);
         }
 
         [Test]
@@ -219,7 +219,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<int>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(privateInner);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -240,7 +240,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, object>(methodName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -259,7 +259,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, string, string>(methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -272,7 +272,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, object, string>(methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -287,7 +287,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<string, string>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
     }
 
@@ -303,7 +303,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, int>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -315,8 +315,11 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Dictionary<string, object>>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.NotNull(actualValue);
-            Assert.That((string)actualValue["originalKey"] == "originalValue");
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualValue, Is.Not.Null);
+                Assert.That((string)actualValue["originalKey"], Is.EqualTo("originalValue"));
+            });
         }
 
         [Test]
@@ -330,7 +333,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(assemblyName, typeName, propertyName);
             var actualValue = methodCaller(privateInner);
 
-            Assert.NotNull(actualValue);
+            Assert.That(actualValue, Is.Not.Null);
         }
 
         [Test]
@@ -345,7 +348,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(assemblyName, typeName, propertyName);
             var actualValue = methodCaller(privateInner);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -366,7 +369,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, object>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
 
         [Test]
@@ -385,7 +388,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<Base, string>(propertyName);
             var actualValue = methodCaller(derived);
 
-            Assert.AreEqual(expectedValue, actualValue);
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
         }
     }
 
@@ -406,7 +409,7 @@ namespace NewRelic.Reflection.UnitTests
 
             var newValue = getter(publicOuter);
 
-            Assert.AreEqual(newValue, originalValue + 1);
+            Assert.That(originalValue + 1, Is.EqualTo(newValue));
         }
 
         [Test]
@@ -424,8 +427,11 @@ namespace NewRelic.Reflection.UnitTests
 
             var newValue = getter(publicOuter);
 
-            Assert.AreNotSame(originalValue, newValue);
-            Assert.That((string)newValue["newKey"] == "newValue");
+            Assert.Multiple(() =>
+            {
+                Assert.That(newValue, Is.Not.SameAs(originalValue));
+                Assert.That((string)newValue["newKey"], Is.EqualTo("newValue"));
+            });
         }
 
         [Test]
@@ -445,8 +451,11 @@ namespace NewRelic.Reflection.UnitTests
 
             var newValue = (Dictionary<string,object>)getter(privateInner);
 
-            Assert.AreNotSame(originalValue, newValue);
-            Assert.That((string)newValue["newKey"] == "newValue");
+            Assert.Multiple(() =>
+            {
+                Assert.That(newValue, Is.Not.SameAs(originalValue));
+                Assert.That((string)newValue["newKey"], Is.EqualTo("newValue"));
+            });
         }
 
         [Test]
@@ -465,7 +474,7 @@ namespace NewRelic.Reflection.UnitTests
 
             var newValue = getter(privateInner);
 
-            Assert.AreEqual(newValue, originalValue + 1);
+            Assert.That(originalValue + 1, Is.EqualTo(newValue));
         }
 
         [Test]
@@ -495,7 +504,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<PublicOuter>();
             var publicOuter = publicOuterFactory();
 
-            Assert.AreEqual("0 parameters", publicOuter.ConstructorCalled);
+            Assert.That(publicOuter.ConstructorCalled, Is.EqualTo("0 parameters"));
         }
 
         [Test]
@@ -504,7 +513,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, PublicOuter>();
             var publicOuter = publicOuterFactory(true);
 
-            Assert.AreEqual("1 parameters", publicOuter.ConstructorCalled);
+            Assert.That(publicOuter.ConstructorCalled, Is.EqualTo("1 parameters"));
         }
 
         [Test]
@@ -513,7 +522,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, string, PublicOuter>();
             var publicOuter = publicOuterFactory(true, "rawr");
 
-            Assert.AreEqual("2 parameters", publicOuter.ConstructorCalled);
+            Assert.That(publicOuter.ConstructorCalled, Is.EqualTo("2 parameters"));
         }
 
         [Test]
@@ -525,7 +534,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory(assemblyName, typeName);
             var publicOuter = publicOuterFactory();
 
-            Assert.AreEqual("0 parameters", publicOuter.ToString());
+            Assert.That(publicOuter.ToString(), Is.EqualTo("0 parameters"));
         }
 
         [Test]
@@ -537,7 +546,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool>(assemblyName, typeName);
             var publicOuter = publicOuterFactory(true);
 
-            Assert.AreEqual("1 parameters", publicOuter.ToString());
+            Assert.That(publicOuter.ToString(), Is.EqualTo("1 parameters"));
         }
 
         [Test]
@@ -549,7 +558,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, string>(assemblyName, typeName);
             var publicOuter = publicOuterFactory(true, "rawr");
 
-            Assert.AreEqual("2 parameters", publicOuter.ToString());
+            Assert.That(publicOuter.ToString(), Is.EqualTo("2 parameters"));
         }
 
         [Test]
@@ -627,7 +636,7 @@ namespace NewRelic.Reflection.UnitTests
 
             var method = VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<int>(assemblyName, typeName, methodName);
             var result = method();
-            Assert.AreEqual(3, result);
+            Assert.That(result, Is.EqualTo(3));
 
             Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<int>(assemblyName, typeName, "NoSuchMethod"));
         }

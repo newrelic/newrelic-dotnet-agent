@@ -28,8 +28,6 @@ namespace NewRelic.Agent.Core
         private const string RuntimeDirectoryName = "netframework";
 #endif
         private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
-        private const string NewRelicLogDirectoryEnvironmentVariable = "NEWRELIC_LOG_DIRECTORY";
-        private const string NewRelicLogLevelEnvironmentVariable = "NEWRELIC_LOG_LEVEL";
 
         public static bool IsWindows { get; }
 #if NETFRAMEWORK
@@ -43,7 +41,6 @@ namespace NewRelic.Agent.Core
         public static string NewRelicHome { get; }
         public static string NewRelicInstallPath { get; }
         public static string NewRelicLogDirectory { get; }
-        public static string NewRelicLogLevel { get; }
         public static string HomeExtensionsDirectory { get; }
         public static string RuntimeHomeExtensionsDirectory { get; }
         public static string InstallPathExtensionsDirectory { get; }
@@ -63,8 +60,6 @@ namespace NewRelic.Agent.Core
 #endif
             NewRelicHome = GetNewRelicHome();
             NewRelicInstallPath = GetNewRelicInstallPath();
-            NewRelicLogDirectory = GetNewRelicLogDirectory();
-            NewRelicLogLevel = GetNewRelicLogLevel();
             HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
             RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
             InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
@@ -185,33 +180,29 @@ namespace NewRelic.Agent.Core
             return newRelicInstallPath;
         }
 
-        private static string GetNewRelicLogDirectory()
+        public static AgentInfo GetAgentInfo()
         {
-            var newRelicLogDirectory = System.Environment.GetEnvironmentVariable(NewRelicLogDirectoryEnvironmentVariable);
-            if (newRelicLogDirectory != null && Directory.Exists(newRelicLogDirectory)) return Path.GetFullPath(newRelicLogDirectory);
+            if (string.IsNullOrEmpty(NewRelicHome))
+            {
+                Log.Debug($"Could not get agent info. NewRelicHome is null or empty.");
+                return null;
+            }
 
-            return newRelicLogDirectory;
-        }
+            var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
 
-        private static string GetNewRelicLogLevel()
-        {
-            return System.Environment.GetEnvironmentVariable(NewRelicLogLevelEnvironmentVariable);
-        }
-
-        private static AgentInfo GetAgentInfo()
-        {
-            var agentInfoPath = $@"{NewRelicHome}\agentinfo.json";
             if (File.Exists(agentInfoPath))
             {
                 try
                 {
                     return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
                 }
-                catch
+                catch (Exception e)
                 {
-                    // Fail silently
+                    Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
                 }
             }
+            else
+                Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
 
             return null;
         }

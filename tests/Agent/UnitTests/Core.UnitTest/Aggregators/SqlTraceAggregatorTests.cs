@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -113,23 +113,23 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentSqlTraces.Count());
+            Assert.That(sentSqlTraces.Count(), Is.EqualTo(1));
             var trace = sentSqlTraces.First();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, sentSqlTraces.Count()),
-                () => Assert.AreEqual(1, trace.SqlId),
-                () => Assert.AreEqual("transactionName1", trace.TransactionName),
-                () => Assert.AreEqual("sql1", trace.Sql),
-                () => Assert.AreEqual("uri1", trace.Uri),
-                () => Assert.AreEqual("datastoreMetricName1", trace.DatastoreMetricName),
-                () => Assert.AreEqual(2, trace.CallCount),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(3), trace.MinCallTime),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(5), trace.MaxCallTime),
-                () => Assert.AreEqual(TimeSpan.FromSeconds(8), trace.TotalCallTime),
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(1)),
+                () => Assert.That(trace.SqlId, Is.EqualTo(1)),
+                () => Assert.That(trace.TransactionName, Is.EqualTo("transactionName1")),
+                () => Assert.That(trace.Sql, Is.EqualTo("sql1")),
+                () => Assert.That(trace.Uri, Is.EqualTo("uri1")),
+                () => Assert.That(trace.DatastoreMetricName, Is.EqualTo("datastoreMetricName1")),
+                () => Assert.That(trace.CallCount, Is.EqualTo(2)),
+                () => Assert.That(trace.MinCallTime, Is.EqualTo(TimeSpan.FromSeconds(3))),
+                () => Assert.That(trace.MaxCallTime, Is.EqualTo(TimeSpan.FromSeconds(5))),
+                () => Assert.That(trace.TotalCallTime, Is.EqualTo(TimeSpan.FromSeconds(8))),
 
-                () => Assert.AreEqual(1, trace.ParameterData.Count),
-                () => Assert.AreEqual("bar", trace.ParameterData["foo"])
+                () => Assert.That(trace.ParameterData, Has.Count.EqualTo(1)),
+                () => Assert.That(trace.ParameterData["foo"], Is.EqualTo("bar"))
                 );
         }
 
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
             _sqlTraceAggregator.Collect(new SqlTraceStatsCollection());
 
@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            Assert.That(sentSqlTraces, Is.Null);
         }
 
         [Test]
@@ -163,7 +163,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -182,12 +182,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(sqlTracesPerPeriod)),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 2), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 4), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 5), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 6), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 7), Is.True)
                 );
         }
 
@@ -213,7 +213,7 @@ namespace NewRelic.Agent.Core.Aggregators
             sqlTrStats.Insert(GetSqlTrace(10, maxCallTime: TimeSpan.FromSeconds(100)));
             sqlTrStats.Insert(GetSqlTrace(11, maxCallTime: TimeSpan.FromSeconds(110)));
 
-            Assert.AreEqual(maxTraces, sqlTrStats.Collection.Count);
+            Assert.That(sqlTrStats.Collection, Has.Count.EqualTo(maxTraces));
         }
 
         [Test]
@@ -224,7 +224,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 10);
@@ -248,12 +248,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 7))
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(sqlTracesPerPeriod)),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 2), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 4), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 5), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 6), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 7), Is.True)
                 );
         }
 
@@ -265,7 +265,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -283,12 +283,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 3)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 2)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 1))
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(sqlTracesPerPeriod)),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 5), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 4), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 3), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 2), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 1), Is.True)
                 );
         }
 
@@ -300,7 +300,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -327,12 +327,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(sqlTracesPerPeriod)),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 10), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 12), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 5), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 6), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 4), Is.True)
                 );
         }
 
@@ -344,7 +344,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -371,12 +371,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             NrAssert.Multiple(
-                () => Assert.AreEqual(sqlTracesPerPeriod, sentSqlTraces.Count()),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 10)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 12)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 5)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 6)),
-                () => Assert.IsTrue(sentSqlTraces.Any(trace => trace.SqlId == 4))
+                () => Assert.That(sentSqlTraces.Count(), Is.EqualTo(sqlTracesPerPeriod)),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 10), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 12), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 5), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 6), Is.True),
+                () => Assert.That(sentSqlTraces.Any(trace => trace.SqlId == 4), Is.True)
                 );
         }
 
@@ -389,7 +389,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -401,9 +401,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, sentSqlTraces.Count());
-            Assert.AreEqual(sentSqlTraces, sqlTracesToSend.Collection.Values.ToList());
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentSqlTraces.Count(), Is.EqualTo(3));
+                Assert.That(sqlTracesToSend.Collection.Values.ToList(), Is.EqualTo(sentSqlTraces));
+            });
         }
 
         [Test]
@@ -411,7 +414,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sendCalled = true;
@@ -422,7 +425,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            Assert.That(sendCalled, Is.False);
         }
 
         #endregion
@@ -434,7 +437,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;
@@ -453,7 +456,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            Assert.That(sentSqlTraces, Is.Null);
         }
 
         [Test]
@@ -461,7 +464,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;
@@ -480,7 +483,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            Assert.That(sentSqlTraces, Is.Null);
         }
 
         [Test]
@@ -488,7 +491,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTracesCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTracesCount = sqlTraces.Count();
@@ -505,7 +508,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentSqlTracesCount);
+            Assert.That(sentSqlTracesCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -513,7 +516,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;
@@ -530,7 +533,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentSqlTraces);
+            Assert.That(sentSqlTraces, Is.Null);
         }
 
         #endregion

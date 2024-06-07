@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       agent_version:
-        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent version that was released.  Needs to match the version from the Deploy Agent workflow (deploy_agent.yml). Format: X.X.X'
         required: true
         type: string
       run_id:
@@ -30,74 +30,48 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-
-  get-external-artifacts:
-    name: Get and Publish Deploy Artifacts Locally
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          disable-sudo: true
-          egress-policy: audit
-
-      - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
-          name: deploy-artifacts
-          path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
-      
-      - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: deploy-artifacts
-          path: ${{ github.workspace }}/build/BuildArtifacts
-          if-no-files-found: error
-
   publish-release-notes:
-    needs: get-external-artifacts
     name: Create and Publish Release Notes
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
         with:
           egress-policy: audit
       
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
       
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
           name: deploy-artifacts
-          path: ${{ github.workspace }}/artifacts
+          path: ${{ github.workspace }}/deploy-artifacts
+          repository: ${{ github.repository }}
 
       - name: Set Docs PR Branch Name
         run: |
-          cleaned_branch=$(echo "${{ github.event.inputs.agent_version }}" | sed 's/\./-/g')
+          cleaned_branch=$(echo "${{ inputs.agent_version }}" | sed 's/\./-/g')
           echo "branch_name=dotnet-release-$cleaned_branch"
           echo "branch_name=dotnet-release-$cleaned_branch" >> $GITHUB_ENV
         shell: bash
 
       - name: Build Release Notes
         run: |
-          dotnet build --configuration Release "$BUILD_PATH"
-          notes_file=$("$RUN_PATH/ReleaseNotesBuilder" -p "$RUN_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH")
+          dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
+          notes_file=$("$PUBLISH_PATH/ReleaseNotesBuilder" -p "$PUBLISH_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH")
           echo "$notes_file"
           echo "notes_file=$notes_file" >> $GITHUB_ENV
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
-          RUN_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/bin/Release/net7.0/
+          PUBLISH_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/publish
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
-          CHECKSUMS: ${{ github.workspace }}/artifacts/DownloadSite/SHA256/checksums.md
+          CHECKSUMS: ${{ github.workspace }}/deploy-artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
 
       - name: Create branch
@@ -112,7 +86,7 @@ jobs:
           user_name: 'dotnet-agent-team-bot'
           destination_branch: 'develop'
           destination_branch_create: ${{env.branch_name}}
-          commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.agent_version }}.'
+          commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ inputs.agent_version }}.'
 
       - name: Create pull request
         run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
@@ -120,5 +94,5 @@ jobs:
           GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           REPO: https://github.com/newrelic/docs-website/
           HEAD: ${{env.branch_name}}
-          TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
+          TITLE: ".NET Agent Release Notes for v${{ inputs.agent_version }}"
           BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."

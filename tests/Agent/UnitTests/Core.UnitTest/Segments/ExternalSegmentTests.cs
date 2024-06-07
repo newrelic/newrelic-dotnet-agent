@@ -25,8 +25,11 @@ namespace NewRelic.Agent.Core.Segments.Tests
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
             segment.End();
 
-            Assert.IsTrue(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
-            Assert.AreEqual("guid", segment.Parameters.ToDictionary()[TransactionGuidSegmentParameterKey]);
+            Assert.Multiple(() =>
+            {
+                Assert.That(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey), Is.True);
+                Assert.That(segment.Parameters.ToDictionary()[TransactionGuidSegmentParameterKey], Is.EqualTo("guid"));
+            });
         }
 
         [Test]
@@ -35,7 +38,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
-            Assert.IsFalse(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));
+            Assert.That(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey), Is.False);
         }
     }
 }

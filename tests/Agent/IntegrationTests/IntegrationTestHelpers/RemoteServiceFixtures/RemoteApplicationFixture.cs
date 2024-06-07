@@ -4,10 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
 using Xunit;
@@ -53,6 +55,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public bool AgentLogExpected { get; set; } = true;
 
         public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
+
+        private AuditLogFile _auditLogFile;
+        public bool AuditLogExpected { get; set; } = false;
+        public AuditLogFile AuditLog => _auditLogFile ?? (_auditLogFile = new AuditLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, timeoutOrZero: Timing.TimeToWaitForLog, throwIfNotFound: AuditLogExpected));
 
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
@@ -251,19 +257,28 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                         RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
-                        RemoteApplication.DeleteWorkingSpace();
-
-                        RemoteApplication.CopyToRemote();
-
-                        SetupConfiguration();
-
                         var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
 
-                        RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
+                        var timer = new ExecutionTimer();
+                        timer.Aggregate(() =>
+                        {
+                            RemoteApplication.DeleteWorkingSpace();
+
+                            RemoteApplication.CopyToRemote();
+
+                            SetupConfiguration();
+
+                            RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
+                        });
+
+                        TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
 
                         try
                         {
-                            ExerciseApplication();
+                            timer = new ExecutionTimer();
+                            timer.Aggregate(ExerciseApplication);
+                            TestLogger?.WriteLine($"ExerciseApplication execution time: {timer.Total:N4} seconds");
+
                         }
                         catch (Exception ex)
                         {
@@ -272,50 +287,56 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         finally
                         {
+                            timer = new ExecutionTimer();
 
-                            ShutdownRemoteApplication();
-
-                            if (captureStandardOutput)
+                            timer.Aggregate(() =>
                             {
-                                RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
 
-                                // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
-                                // WCF tests. For the HWC tests we carefully validate the console output in order
-                                // to detect process-level failures that may cause test flickers. For the self-
-                                // hosted tests, unfortunately, we just punt that.
-                                if (RemoteApplication.ValidateHostedWebCoreOutput)
+                                ShutdownRemoteApplication();
+
+                                if (captureStandardOutput)
                                 {
-                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
+
+                                    // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
+                                    // WCF tests. For the HWC tests we carefully validate the console output in order
+                                    // to detect process-level failures that may cause test flickers. For the self-
+                                    // hosted tests, unfortunately, we just punt that.
+                                    if (RemoteApplication.ValidateHostedWebCoreOutput)
+                                    {
+                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    }
+                                    else
+                                    {
+                                        TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
+                                    }
                                 }
                                 else
                                 {
-                                    TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
+                                    TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
                                 }
-                            }
-                            else
-                            {
-                                TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
-                            }
 
-                            RemoteApplication.WaitForExit();
+                                RemoteApplication.WaitForExit();
 
-                            applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
-                            var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
+                                applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
+                                var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
 
-                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
+                                TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
 
-                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
-                            {
-                                retryMessage = $"{formattedExitCode} is a known error.";
-                                retryTest = true;
-                            }
+                                if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
+                                {
+                                    retryMessage = $"{formattedExitCode} is a known error.";
+                                    retryTest = true;
+                                }
 
-                            if (retryTest && (numberOfTries < MaxTries))
-                            {
-                                TestLogger?.WriteLine(retryMessage + " Retrying test.");
-                                Thread.Sleep(1000);
-                                numberOfTries++;
-                            }
+                                if (retryTest && (numberOfTries < MaxTries))
+                                {
+                                    TestLogger?.WriteLine(retryMessage + " Retrying test.");
+                                    Thread.Sleep(1000);
+                                    numberOfTries++;
+                                }
+                            });
+                            TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
                         }
 
                     } while (retryTest && numberOfTries < MaxTries);
@@ -538,6 +559,67 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     Assert.Equal(expectedSuccessStatus, response.IsSuccessStatusCode);
                 }
             }
+        }
+    }
+
+
+    // borrowed from XUnit.Sdk.ExecutionTimer, as using their implementation caused a runtime error looking for xunit.execution.dotnet.dll
+    /// <summary>
+    /// Measures and aggregates execution time of one or more actions.
+    /// </summary>
+    public class ExecutionTimer
+    {
+        TimeSpan total;
+
+        /// <summary>
+        /// Returns the total time aggregated across all the actions.
+        /// </summary>
+        public decimal Total
+        {
+            get { return (decimal)total.TotalSeconds; }
+        }
+
+        /// <summary>
+        /// Executes an action and aggregates its run time into the total.
+        /// </summary>
+        /// <param name="action">The action to measure.</param>
+        public void Aggregate(Action action)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                action();
+            }
+            finally
+            {
+                total += stopwatch.Elapsed;
+            }
+        }
+
+        /// <summary>
+        /// Executes an asynchronous action and aggregates its run time into the total.
+        /// </summary>
+        /// <param name="asyncAction">The action to measure.</param>
+        public async Task AggregateAsync(Func<Task> asyncAction)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                await asyncAction();
+            }
+            finally
+            {
+                total += stopwatch.Elapsed;
+            }
+        }
+
+        /// <summary>
+        /// Aggregates a time span into the total time.
+        /// </summary>
+        /// <param name="time">The time to add.</param>
+        public void Aggregate(TimeSpan time)
+        {
+            total += time;
         }
     }
 }

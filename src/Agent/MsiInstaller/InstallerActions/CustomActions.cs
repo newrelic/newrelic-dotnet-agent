@@ -7,8 +7,8 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.Win32;
+using WixToolset.Dtf.WindowsInstaller;
 
 namespace InstallerActions
 {

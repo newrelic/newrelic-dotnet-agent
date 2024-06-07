@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
@@ -19,16 +19,8 @@ using System.Data.Odbc;
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
     [Library]
-    public class SystemDataExerciser
+    public class SystemDataExerciser : MsSqlExerciserBase
     {
-        private const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
-        private const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
-        private const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
-        private static readonly string CreateProcedureStatement = @"CREATE OR ALTER PROCEDURE [dbo].[{0}] {1} AS RETURN 0";
-        private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
-        private const string DropPersonTableMsSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP TABLE {0}";
-        private const string DropProcedureSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP PROCEDURE {0}";
-
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -40,7 +32,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
+                using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
                 {
 
                     using (var reader = command.ExecuteReader())
@@ -90,7 +82,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
+                using (var command = new SqlCommand(SelectPersonByLastNameMsSql, connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -139,7 +131,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
+                using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
                 {
                     command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
                     using (var reader = command.ExecuteReader())
@@ -163,7 +155,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> MsSqlAsync_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
+        public async Task<string> MsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 
@@ -171,9 +163,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
+                using (var command = new SqlCommand(SelectPersonByParameterizedLastNameMsSql, connection))
                 {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
+                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
@@ -186,25 +178,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                         }
                     }
                 }
-
-                var insertSql = string.Format(InsertPersonMsSql, tableName);
-                var countSql = string.Format(CountPersonMsSql, tableName);
-                var deleteSql = string.Format(DeletePersonMsSql, tableName);
-
-                using (var command = new SqlCommand(insertSql, connection))
-                {
-                    var insertCount = await command.ExecuteNonQueryAsync();
-                }
-
-                using (var command = new SqlCommand(countSql, connection))
-                {
-                    var teamMemberCount = await command.ExecuteScalarAsync();
-                }
-
-                using (var command = new SqlCommand(deleteSql, connection))
-                {
-                    var deleteCount = await command.ExecuteNonQueryAsync();
-                }
             }
 
             return string.Join(",", teamMembers);
@@ -213,7 +186,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+        }
+
+        private int ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
@@ -237,7 +216,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
 
@@ -257,14 +242,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
+        public void MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureNameWith, string procedureNameWithout)
+        {
+            ExecuteParameterizedStoredProcedureUsingOleDbDriver(procedureNameWith, true);
+            ExecuteParameterizedStoredProcedureUsingOleDbDriver(procedureNameWithout, false);
+        }
+
+        private void ExecuteParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
 
@@ -282,7 +273,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
                 }
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
         }
 

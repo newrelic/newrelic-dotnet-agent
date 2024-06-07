@@ -48,6 +48,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             _attribDefs.TransactionName.TrySetValue(attribValues, transactionMetricName.PrefixedName);
             _attribDefs.TransactionNameForError.TrySetValue(attribValues, transactionMetricName.PrefixedName);
+            _attribDefs.Guid.TrySetValue(attribValues, immutableTransaction.Guid);
 
             // Duration is just EndTime minus StartTime for non-web transactions and response time otherwise
             _attribDefs.Duration.TrySetValue(attribValues, immutableTransaction.ResponseTimeOrDuration);
@@ -161,7 +162,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                _attribDefs.Guid.TrySetValue(attribValues, immutableTransaction.Guid);
                 _attribDefs.DistributedTraceId.TrySetValue(attribValues, immutableTransaction.TraceId);
                 _attribDefs.Priority.TrySetValue(attribValues, immutableTransaction.Priority);
                 _attribDefs.Sampled.TrySetValue(attribValues, immutableTransaction.Sampled);
@@ -208,6 +208,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                     _attribDefs.GetCustomAttributeForError(errAttrib.Key).TrySetValue(attribValues, errAttrib.Value);
 
                 }
+            }
+
+            if (metadata.IsLlmTransaction)
+            {
+                _attribDefs.LlmTransaction.TrySetValue(attribValues, true);
             }
 
             attribValues.AddRange(metadata.UserAndRequestAttributes);

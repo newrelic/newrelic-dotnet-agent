@@ -24,32 +24,36 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public ProfilerLogFile(string logDirectoryPath, TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+        public ProfilerLogFile(string logDirectoryPath, TimeSpan? timeoutOrZero = null, bool logFileExpected = true)
         {
             Contract.Assert(logDirectoryPath != null);
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
             var timeTaken = Stopwatch.StartNew();
-            do
+
+            if (logFileExpected)
             {
-                var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
-                    Directory.EnumerateFiles(logDirectoryPath, "NewRelic.Profiler.*.log")
-                        .Where(file => file != null)
-                        .OrderByDescending(File.GetLastWriteTimeUtc)
-                        .FirstOrDefault() : null;
-
-                if (mostRecentlyUpdatedFile != null)
+                do
                 {
-                    _filePath = mostRecentlyUpdatedFile;
-                    return;
-                }
+                    var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
+                        Directory.EnumerateFiles(logDirectoryPath, "NewRelic.Profiler.*.log")
+                            .Where(file => file != null)
+                            .OrderByDescending(File.GetLastWriteTimeUtc)
+                            .FirstOrDefault() : null;
 
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            } while (timeTaken.Elapsed < timeout);
+                    if (mostRecentlyUpdatedFile != null)
+                    {
+                        _filePath = mostRecentlyUpdatedFile;
+                        return;
+                    }
 
-            if (throwIfNotFound)
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                } while (timeTaken.Elapsed < timeout);
+
                 throw new Exception("No profiler log file found.");
+            }
+
         }
 
         #region Log Lines

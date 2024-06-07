@@ -38,6 +38,7 @@ namespace CompositeTests
         public void AfterEachTest()
         {
             _compositeTestAgent.Dispose();
+            _adaptiveSampler.Dispose();
             _adaptiveSampler = null;
         }
 
@@ -90,7 +91,7 @@ namespace CompositeTests
             var rand = new Random();
             var sampleSequence = _expectedSampleSequences[testCaseName];
 
-            Assert.That(sampleSequence.Length, Is.EqualTo(secondHarvestTransactionCount), $"testCaseName {testCaseName} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
+            Assert.That(sampleSequence, Has.Length.EqualTo(secondHarvestTransactionCount), $"testCaseName {testCaseName} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
             // Act
             for (var callCounter = 0; callCounter < secondHarvestTransactionCount; ++callCounter)
             {

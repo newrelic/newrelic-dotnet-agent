@@ -1,0 +1,81 @@
+name: .NET Agent Linux Container Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      external_call:
+        type: boolean
+        default: true
+        required: false
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the build workflow (all_solutions.yml) to use the agent from. ID can be found in URL for run.'
+        required: true
+
+env:
+  DOTNET_NOLOGO: true
+  NR_DEV_BUILD_HOME: false
+
+
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: linux-container-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  run-linux-container-tests:
+    name: Run Linux Container Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      test_results_path: tests\TestResults
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+  
+  
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+        with:
+          egress-policy: audit
+          
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+    
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        with:
+          fetch-depth: 0
+
+      - name: Download Agent Home Folders (Call)
+        if: ${{ inputs.external_call }}
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Agent Home Folders (Dispatch)
+        if: ${{ !inputs.external_call }}
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/src/Agent
+          repository: ${{ github.repository }}
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+  
+      - name: Build & Run Linux Container Integration Tests
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net8.0

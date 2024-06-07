@@ -14,13 +14,13 @@ namespace NewRelic.Agent.Core
         [Test]
         public void when_ClampString_then_string_is_trimmed()
         {
-            Assert.AreEqual("fo", Clamper.ClampLength("foo", 2));
+            Assert.That(Clamper.ClampLength("foo", 2), Is.EqualTo("fo"));
         }
 
         [Test]
         public void when_ClampString_with_maxlength_larger_than_string_then_string_is_not_trimmed()
         {
-            Assert.AreEqual("foo", Clamper.ClampLength("foo", 200));
+            Assert.That(Clamper.ClampLength("foo", 200), Is.EqualTo("foo"));
         }
 
         [Test]
@@ -28,8 +28,8 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 6);
-            Assert.AreEqual(1, ndict.Count);
-            Assert.AreEqual("bar", ndict["foo"]);
+            Assert.That(ndict, Has.Count.EqualTo(1));
+            Assert.That(ndict["foo"], Is.EqualTo("bar"));
         }
 
         [Test]
@@ -37,8 +37,8 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 7);
-            Assert.AreEqual(1, ndict.Count);
-            Assert.AreEqual("bar", ndict["foo"]);
+            Assert.That(ndict, Has.Count.EqualTo(1));
+            Assert.That(ndict["foo"], Is.EqualTo("bar"));
         }
 
         [Test]
@@ -46,14 +46,14 @@ namespace NewRelic.Agent.Core
         {
             var dict = new Dictionary<string, string> { { "foo", "bar" } };
             var ndict = Clamper.ClampLength(dict, 5);
-            Assert.AreEqual(0, ndict.Count);
+            Assert.That(ndict, Is.Empty);
         }
 
         [Test]
         public void when_input_dictionary_is_null_output_dictionary_is_null()
         {
             var actualResult = Clamper.ClampLength(null as IDictionary<string, string>, 0);
-            Assert.AreEqual(null, actualResult);
+            Assert.That(actualResult, Is.EqualTo(null));
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core
         {
             var inner = new Exception("Inner");
             var outer = new Exception("Outer", inner);
-            Assert.AreEqual(outer, Clamper.ClampLength(outer, 100));
+            Assert.That(Clamper.ClampLength(outer, 100), Is.EqualTo(outer));
         }
 
     }

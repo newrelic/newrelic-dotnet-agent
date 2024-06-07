@@ -54,7 +54,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
-            Assert.IsFalse(parameters.Keys.Contains("backtrace"));
+            Assert.That(parameters.Keys, Does.Not.Contain("backtrace"));
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace is List<string>);
+            Assert.That(stackTrace is List<string>, Is.True);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace.Count > 2); // should be around 15
+            Assert.That(stackTrace, Has.Count.GreaterThan(2)); // should be around 15
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace is List<string>);
+            Assert.That(stackTrace is List<string>, Is.True);
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace.Count > 2); // should be around 15
+            Assert.That(stackTrace, Has.Count.GreaterThan(2)); // should be around 15
         }
 
         [Test]
@@ -169,7 +169,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace is List<string>);
+            Assert.That(stackTrace is List<string>, Is.True);
         }
 
         [Test]
@@ -190,7 +190,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace.Count > 2); // should be around 15
+            Assert.That(stackTrace, Has.Count.GreaterThan(2)); // should be around 15
         }
 
         [Test]
@@ -211,7 +211,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace is List<string>);
+            Assert.That(stackTrace is List<string>, Is.True);
         }
 
         [Test]
@@ -232,7 +232,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace.Count > 2); // should be around 15
+            Assert.That(stackTrace, Has.Count.GreaterThan(2)); // should be around 15
         }
 
         [Test]
@@ -253,7 +253,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace is List<string>);
+            Assert.That(stackTrace is List<string>, Is.True);
         }
 
         [Test]
@@ -274,7 +274,7 @@ namespace CompositeTests
             var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
 
             var stackTrace = parameters["backtrace"] as List<string>;
-            Assert.IsTrue(stackTrace.Count > 2); // should be around 15
+            Assert.That(stackTrace, Has.Count.GreaterThan(2)); // should be around 15
         }
     }
 }

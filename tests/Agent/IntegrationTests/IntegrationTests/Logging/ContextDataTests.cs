@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -16,6 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     {
         private readonly TFixture _fixture;
         private LoggingFramework _loggingFramework;
+        private readonly bool _testNestedContexts;
 
         private const string InfoMessage = "HelloWorld";
 
@@ -30,10 +31,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         };
 
 
-        public ContextDataTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
+        public ContextDataTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework, bool testNestedContexts) : base(fixture)
         {
             _fixture = fixture;
             _loggingFramework = loggingFramework;
+            _testNestedContexts = testNestedContexts;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
@@ -43,6 +45,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
             string context = string.Join(",", _expectedAttributes.Select(x => x.Key + "=" + x.Value).ToArray());
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {InfoMessage} INFO {context}");
+
+            if (_testNestedContexts) // on supported frameworks, ensure that we don't blow up when accumulating the context key/value pairs
+                _fixture.AddCommand($"LoggingTester LogMessageInNestedScopes");
 
             _fixture.AddActions
             (
@@ -78,8 +83,39 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
 
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
 
-            // different verions of log4net add varying amounts of default attributes, we ignore the counts becuase of this
+            // different versions of log4net add varying amounts of default attributes, we ignore the counts because of this
             Assertions.LogLinesExist(expectedLogLines, logLines, ignoreAttributeCount: true);
+
+            if (_testNestedContexts)
+            {
+                var outerContextExpectedAttributes = new Dictionary<string, string>();
+                foreach(var kvp in _expectedAttributes)
+                    outerContextExpectedAttributes.Add(kvp.Key, kvp.Value);
+                outerContextExpectedAttributes.Add("ScopeKey1", "scopeValue1");
+
+                var innerContextExpectedAttributes = new Dictionary<string, string>();
+                foreach(var kvp in _expectedAttributes)
+                    innerContextExpectedAttributes.Add(kvp.Key, kvp.Value);
+                innerContextExpectedAttributes.Add("ScopeKey1", "scopeValue2");
+
+                var contextExpectedLogLines = new []
+                {
+                    new Assertions.ExpectedLogLine
+                    {
+                        Level = LogUtils.GetLevelName(_loggingFramework, "INFO"),
+                        LogMessage = "Outer Scope",
+                        Attributes = outerContextExpectedAttributes
+                    },
+                    new Assertions.ExpectedLogLine
+                    {
+                        Level = LogUtils.GetLevelName(_loggingFramework, "INFO"),
+                        LogMessage = "Inner Scope",
+                        Attributes = innerContextExpectedAttributes
+                    }
+                };
+
+                Assertions.LogLinesExist(contextExpectedLogLines, logLines, ignoreAttributeCount: true);
+            }
         }
     }
 
@@ -89,7 +125,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class Log4NetContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4NetContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
+            : base(fixture, output, LoggingFramework.Log4net, false)
         {
         }
     }
@@ -98,7 +134,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class Log4NetContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4NetContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
+            : base(fixture, output, LoggingFramework.Log4net, false)
         {
         }
     }
@@ -107,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class Log4NetContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4NetContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
+            : base(fixture, output, LoggingFramework.Log4net, false)
         {
         }
     }
@@ -116,7 +152,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class Log4NetContextDataNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4NetContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
+            : base(fixture, output, LoggingFramework.Log4net, false)
         {
         }
     }
@@ -125,7 +161,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class Log4NetContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public Log4NetContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
+            : base(fixture, output, LoggingFramework.Log4net, false)
         {
         }
     }
@@ -138,7 +174,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NLogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NLogContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
+            : base(fixture, output, LoggingFramework.NLog, false)
         {
         }
     }
@@ -147,7 +183,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NLogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NLogContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
+            : base(fixture, output, LoggingFramework.NLog, false)
         {
         }
     }
@@ -156,7 +192,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NLogContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public NLogContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
+            : base(fixture, output, LoggingFramework.NLog, false)
         {
         }
     }
@@ -165,7 +201,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NLogContextDataNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
+            : base(fixture, output, LoggingFramework.NLog, false)
         {
         }
     }
@@ -174,7 +210,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NLogContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NLogContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
+            : base(fixture, output, LoggingFramework.NLog, false)
         {
         }
     }
@@ -187,7 +223,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
+            : base(fixture, output, LoggingFramework.Serilog, false)
         {
         }
     }
@@ -196,7 +232,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public SerilogContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
+            : base(fixture, output, LoggingFramework.Serilog, false)
         {
         }
     }
@@ -205,7 +241,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public SerilogContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
+            : base(fixture, output, LoggingFramework.Serilog, false)
         {
         }
     }
@@ -214,7 +250,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
+            : base(fixture, output, LoggingFramework.Serilog, false)
         {
         }
     }
@@ -223,7 +259,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public SerilogContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
+            : base(fixture, output, LoggingFramework.Serilog, false)
         {
         }
     }
@@ -236,7 +272,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class MELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging, true)
         {
         }
     }
@@ -245,7 +281,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class MELContextDataNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MELContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging, true)
         {
         }
     }
@@ -254,7 +290,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class MELContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MELContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging, true)
         {
         }
     }
@@ -265,7 +301,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SitecoreContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SitecoreContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Sitecore)
+            : base(fixture, output, LoggingFramework.Sitecore, false)
         {
         }
     }
@@ -273,7 +309,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SitecoreContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public SitecoreContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Sitecore)
+            : base(fixture, output, LoggingFramework.Sitecore, false)
         {
         }
     }
@@ -284,7 +320,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogEL)
+            : base(fixture, output, LoggingFramework.SerilogEL, true)
         {
         }
     }
@@ -292,7 +328,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SELContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public SELContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogEL)
+            : base(fixture, output, LoggingFramework.SerilogEL, true)
         {
         }
     }
@@ -300,7 +336,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SELContextDataCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SELContextDataCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogEL)
+            : base(fixture, output, LoggingFramework.SerilogEL, true)
         {
         }
     }
@@ -308,7 +344,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SELContextDataCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public SELContextDataCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogEL)
+            : base(fixture, output, LoggingFramework.SerilogEL, true)
         {
         }
     }
@@ -319,7 +355,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLogEL)
+            : base(fixture, output, LoggingFramework.NLogEL, true)
         {
         }
     }
@@ -327,7 +363,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class NELContextDataCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NELContextDataCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLogEL)
+            : base(fixture, output, LoggingFramework.NLogEL, true)
         {
         }
     }

@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Utilization
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
 #if NETSTANDARD2_0
-        private const string ContainerIdV1Regex = @".*:cpu:/docker/([0-9a-f]{64}).*";
+        private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
 #endif
 
@@ -314,18 +314,28 @@ namespace NewRelic.Agent.Core.Utilization
 
         private IVendorModel TryGetDockerCGroupV1(string fileContent)
         {
-            string id = null;
+            string id;
             var matches = Regex.Matches(fileContent, ContainerIdV1Regex);
+            if (TryGetIdFromRegexMatch(matches, out id))
+            {
+                return new DockerVendorModel(id);
+            }
+            return null;
+        }
+
+        private bool TryGetIdFromRegexMatch(MatchCollection matches, out string id)
+        {
+            id = null;
             if (matches.Count > 0)
             {
                 var firstMatch = matches[0];
                 if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
                 {
                     id = firstMatch.Groups[1].Value;
+                    return true;
                 }
             }
-
-            return id == null ? null : new DockerVendorModel(id);
+            return false;
         }
 
         private IVendorModel TryGetDockerCGroupV2(string fileContent)

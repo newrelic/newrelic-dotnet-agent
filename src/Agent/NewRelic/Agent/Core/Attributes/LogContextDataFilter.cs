@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -12,7 +12,7 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Attributes
 {
-    public interface ILogContextDataFilter
+    public interface ILogContextDataFilter : IDisposable
     {
         Dictionary<string, object> FilterLogContextData(Dictionary<string, object> contextData);
     }

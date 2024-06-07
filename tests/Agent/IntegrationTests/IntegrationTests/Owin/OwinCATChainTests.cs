@@ -7,9 +7,9 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
@@ -79,7 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 "parent.account",
                 "parent.transportType",
                 "parent.transportDuration",
-                "guid",
                 "traceId",
                 "priority",
                 "sampled"

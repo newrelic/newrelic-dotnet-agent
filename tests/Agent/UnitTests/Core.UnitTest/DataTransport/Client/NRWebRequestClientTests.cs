@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
@@ -45,6 +45,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _client = new NRWebRequestClient(_proxy, _mockConfiguration);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _client.Dispose();
+        }
+
         [Test]
         public async Task SendAsync_ShouldReturnValidResponse_WhenWebRequestIsSuccessful()
         {
@@ -54,7 +60,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.GetRequestStream()).Returns(new MemoryStream());
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).TaskResult((WebResponse)fakeResponse);
+                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).ReturnsAsync((WebResponse)fakeResponse);
                 return mockWebRequest;
             });
 
@@ -62,7 +68,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var response = await _client.SendAsync(_request);
 
             // Assert
-            Assert.IsNotNull(response);
+            Assert.That(response, Is.Not.Null);
         }
 
         [Test]
@@ -117,8 +123,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var response = await _client.SendAsync(_request);
 
             // Assert
-            Assert.IsNotNull(response);
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.That(response, Is.Not.Null);
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
         private IHttpRequest CreateHttpRequest()
         {

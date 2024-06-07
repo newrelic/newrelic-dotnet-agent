@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.Time
             wasExecuted = false;
             Thread.Sleep(TimeSpan.FromMilliseconds(5));
 
-            Assert.False(wasExecuted);
+            Assert.That(wasExecuted, Is.False);
         }
 
         [Test]

@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             var serialized = JsonConvert.SerializeObject(data);
 
-            Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
+            Assert.That(serialized, Is.EqualTo("[\"guid\",true,\"tripId\",\"pathHash\"]"));
         }
 
         [Test]
@@ -26,12 +26,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
             var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
 
-            Assert.NotNull(deserialized);
+            Assert.That(deserialized, Is.Not.Null);
             NrAssert.Multiple(
-                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
-                () => Assert.AreEqual(true, deserialized.Unused),
-                () => Assert.AreEqual("tripId", deserialized.TripId),
-                () => Assert.AreEqual("pathHash", deserialized.PathHash)
+                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+                () => Assert.That(deserialized.Unused, Is.EqualTo(true)),
+                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
                 );
         }
     }

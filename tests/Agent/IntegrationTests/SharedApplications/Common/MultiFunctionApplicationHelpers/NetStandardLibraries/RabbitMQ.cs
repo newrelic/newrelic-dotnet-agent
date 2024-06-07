@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 // See this project's .csproj file for target framework => RabbitMQ.Client version mappings
@@ -227,9 +227,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 #endif
                     VerifyHeaders(basicDeliverEventArgs.BasicProperties.Headers);
 
+                    InstrumentedChildMethod(); // to verify we're getting a child span
+
                     manualResetEvent.Set();
                 }
             }
+        }
+
+        [Trace]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        private void InstrumentedChildMethod()
+        {
+            Thread.Sleep(100);
         }
 
         private void VerifyHeaders(IDictionary<string, object> headers)

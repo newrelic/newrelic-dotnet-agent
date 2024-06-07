@@ -36,18 +36,18 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
         with:
           egress-policy: audit 
 
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
 
       - name: Cache Multiverse Testing Suite
         id: cache-multiverse
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: ${{ env.multiverse_path }}
           key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
@@ -62,7 +62,7 @@ jobs:
         shell: bash
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
         with:
           dotnet-version: '3.1.100'
 
@@ -73,7 +73,7 @@ jobs:
         shell: bash
 
       - name: Upload MVS
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: mvs
           path: |
@@ -102,23 +102,23 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
         with:
           egress-policy: audit 
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
         with:
           dotnet-version: '3.1.100'
 
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           ref: 'gh-pages'
           fetch-depth: 0
 
       - name: Download MVS
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: mvs
           path: ${{ env.multiverse_path }}
@@ -127,11 +127,11 @@ jobs:
         run: |
           cd ${{ env.multiverse_reportbuilder_path }}
           sudo chmod 777 ./ReportBuilder
-          ./ReportBuilder "${{ github.event.inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
+          ./ReportBuilder "${{ inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
         shell: bash
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@a1ea191d508feb8485aceba848389d49f80ca2dc # 4.4.3
+        uses: JamesIves/github-pages-deploy-action@5c6e9e9f3672ce8fd37b9856193d2a537941e66c # 4.6.1
         with:
           branch: gh-pages
           folder: .

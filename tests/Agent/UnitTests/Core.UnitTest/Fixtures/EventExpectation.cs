@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Fixtures
         public void Dispose()
         {
             _subscription.Dispose();
-            Assert.True(_eventWasFired, "Expected event {0} was not fired", typeof(T).Name);
+            Assert.That(_eventWasFired, Is.True, $"Expected event {typeof(T).Name} was not fired");
         }
     }
 }

@@ -10,15 +10,12 @@ Scorecard](https://api.securityscorecards.dev/projects/github.com/newrelic/newre
 #### .NET Agent
 New Relic's .NET agent monitors your .NET app, giving you an end-to-end view of your app's performance. It works with all .NET compatible languages, such as C#, VB.NET and CLI.
 
-#### Amazon Lambda Tracer (Deprecated)
-The New Relic Lambda Tracer is an OpenTracing Tracer implementation specifically designed to support AWS Lambda. For installation and usage instructions, refer to our [documentation](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring). See our [changelog](src/AwsLambda/CHANGELOG.md) for release notes.
-
 ## Installation
 
 <!-- markdown-link-check-disable-next-line -->
 The latest released binaries for the .NET Agent can be found either [here](https://download.newrelic.com/dot_net_agent/latest_release/) or on [NuGet.org](https://www.nuget.org/profiles/newrelic).
 
-See our [agent installation documentation](https://docs.newrelic.com/docs/agents/net-agent/installation/introduction-net-agent-install) to understand which of these files are appropriate for your application type and hosting environment.
+See our [agent installation documentation](https://docs.newrelic.com/install/dotnet/) to understand which of these files are appropriate for your application type and hosting environment.
 
 ## Getting Started
 

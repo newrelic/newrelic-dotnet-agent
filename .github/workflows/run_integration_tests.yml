@@ -15,11 +15,11 @@ on:
         - UnboundedIntegrationTests
         - Both
       integration-test-namespaces:
-        description: 'A comma-separated, single-quoted list of integration test namespaces to run (e.g. "''AgentFeatures'', ''BasicInstrumentation''").  If not specified, all integration tests will be run.'
+        description: 'A comma-separated, single-quoted list of integration test namespaces to run (e.g. "''AgentFeatures'', ''BasicInstrumentation''").  If set to ALL, all integration tests will be run.'
         required: true
         default: 'ALL'
       unbounded-test-namespaces:
-        description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If not specified, all unbounded tests will be run.'
+        description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If set to ALL, all unbounded tests will be run.'
         required: true
         default: 'ALL'
       parallelize:
@@ -44,37 +44,37 @@ jobs:
       unbounded-tests-matrix: ${{ steps.configure_unbounded_tests_matrix.outputs.matrix }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
         with:
           egress-policy: audit 
 
       - id: configure_integration_tests_matrix
         run: |
-          if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
-          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
+            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'AwsLambda', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
+          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'LLM', 'Logging.ContextData', \
           'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding', 'Logging.ZeroMaxSamplesStored', \
           'Owin', 'MassTransit', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
           'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
           'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
+            namespaces="[ ${{ inputs.integration-test-namespaces }} ]"
           fi
           echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
 
       - id: configure_unbounded_tests_matrix
         run: |
-          if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             # Oracle is disabled temporarily
             #namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
             namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
+            namespaces="[ ${{ inputs.unbounded-test-namespaces }} ]"
           fi
           echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
@@ -83,7 +83,7 @@ jobs:
 
   run-integration-tests:
     needs: [setup-matrices]
-    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
+    if: inputs.solutions == 'Both' || inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
     runs-on: windows-2022 # TODO: make this a input so we can test different OSes?
     strategy:
@@ -100,7 +100,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
 
@@ -131,24 +131,22 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Download Integration Tests
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
           name: integrationtests
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
 
       - name: Install dependencies
         run: |
@@ -173,7 +171,7 @@ jobs:
           #   $json.parallelizeAssembly = $true
           #   $json.parallelizeTestCollections = $true
           # }
-          if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+          if ("${{ inputs.parallelize }}" -eq "true") {
             $json.parallelizeAssembly = $true
             $json.parallelizeTestCollections = $true
           }
@@ -190,28 +188,21 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive integration test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
-          name: integration-test-artifacts
+          name: integration-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\**\appsettings.json
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   run-unbounded-tests:
     needs: [setup-matrices]
-    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
+    if: inputs.solutions == 'Both' || inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
     runs-on: windows-2022
     strategy:
@@ -228,29 +219,27 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
           name: homefolders
           path: ${{ github.workspace }}/src/Agent
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Download Integration Tests
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
           name: unboundedintegrationtests
           path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
+          repository: ${{ github.repository }}
       
       - name: Disable TLS 1.3
         run: |
@@ -285,7 +274,7 @@ jobs:
 
       - name: Set up secrets
         env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.UNBOUNDED_TEST_SECRETS }}
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
@@ -305,7 +294,7 @@ jobs:
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
-          if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+          if ("${{ inputs.parallelize }}" -eq "true") {
             $json.parallelizeAssembly = $true
             $json.parallelizeTestCollections = $true
           }
@@ -322,23 +311,16 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
+      - name: Archive unbounded test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
-          name: integration-test-artifacts
+          name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\**\appsettings.json
-          if-no-files-found: error
-
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        with:
-          name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
 

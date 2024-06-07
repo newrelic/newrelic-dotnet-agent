@@ -57,10 +57,10 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => Assert.That(rootSegment.Children, Has.Count.EqualTo(1)),
 
-                () => Assert.AreEqual("childSegment", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count)
+                () => Assert.That(rootSegment.Children[0].Name, Is.EqualTo("childSegment")),
+                () => Assert.That(rootSegment.Children[0].Children, Is.Empty)
                 );
         }
 
@@ -82,13 +82,13 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, rootSegment.Children.Count),
+                () => Assert.That(rootSegment.Children, Has.Count.EqualTo(2)),
 
-                () => Assert.AreEqual("childSegment1", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count),
+                () => Assert.That(rootSegment.Children[0].Name, Is.EqualTo("childSegment1")),
+                () => Assert.That(rootSegment.Children[0].Children, Is.Empty),
 
-                () => Assert.AreEqual("childSegment2", rootSegment.Children[1].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[1].Children.Count)
+                () => Assert.That(rootSegment.Children[1].Name, Is.EqualTo("childSegment2")),
+                () => Assert.That(rootSegment.Children[1].Children, Is.Empty)
                 );
         }
 
@@ -111,15 +111,15 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var rootSegment = GetFirstSegmentOrThrow();
-            Assert.AreEqual(2, rootSegment.Children.Count);
+            Assert.That(rootSegment.Children, Has.Count.EqualTo(2));
             var finishedSegment = rootSegment.Children.ElementAt(0);
             var unfinishedSegment = rootSegment.Children.ElementAt(1);
             NrAssert.Multiple(
-                () => Assert.AreEqual("segmentName1", finishedSegment.Name),
-                () => Assert.IsFalse(finishedSegment.Parameters.ContainsKey("unfinished")),
+                () => Assert.That(finishedSegment.Name, Is.EqualTo("segmentName1")),
+                () => Assert.That(finishedSegment.Parameters.ContainsKey("unfinished"), Is.False),
 
-                () => Assert.AreEqual("segmentName2", unfinishedSegment.Name),
-                () => Assert.IsTrue(unfinishedSegment.Parameters.ContainsKey("unfinished"))
+                () => Assert.That(unfinishedSegment.Name, Is.EqualTo("segmentName2")),
+                () => Assert.That(unfinishedSegment.Parameters.ContainsKey("unfinished"), Is.True)
                 );
         }
 
@@ -144,10 +144,10 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => Assert.That(rootSegment.Children, Has.Count.EqualTo(1)),
 
-                () => Assert.AreEqual("childSegment", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children.Count)
+                () => Assert.That(rootSegment.Children[0].Name, Is.EqualTo("childSegment")),
+                () => Assert.That(rootSegment.Children[0].Children, Is.Empty)
                 );
         }
 
@@ -169,13 +169,13 @@ namespace CompositeTests
 
             var rootSegment = GetFirstSegmentOrThrow();
             NrAssert.Multiple(
-                () => Assert.AreEqual(1, rootSegment.Children.Count),
+                () => Assert.That(rootSegment.Children, Has.Count.EqualTo(1)),
 
-                () => Assert.AreEqual("childSegment1", rootSegment.Children[0].Name),
-                () => Assert.AreEqual(1, rootSegment.Children[0].Children.Count),
+                () => Assert.That(rootSegment.Children[0].Name, Is.EqualTo("childSegment1")),
+                () => Assert.That(rootSegment.Children[0].Children, Has.Count.EqualTo(1)),
 
-                () => Assert.AreEqual("childSegment2", rootSegment.Children[0].Children[0].Name),
-                () => Assert.AreEqual(0, rootSegment.Children[0].Children[0].Children.Count)
+                () => Assert.That(rootSegment.Children[0].Children[0].Name, Is.EqualTo("childSegment2")),
+                () => Assert.That(rootSegment.Children[0].Children[0].Children, Is.Empty)
                 );
         }
 
@@ -710,7 +710,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Less(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+            Assert.That(segment.ExclusiveDurationOrZero, Is.LessThan(TimeSpan.FromMilliseconds(100)));
         }
 
         [Test]
@@ -733,7 +733,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Greater(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+            Assert.That(segment.ExclusiveDurationOrZero, Is.GreaterThan(TimeSpan.FromMilliseconds(100)));
         }
 
         [Test]
@@ -761,7 +761,7 @@ namespace CompositeTests
             segment.End();
             tx.End();
 
-            Assert.Less(segment.ExclusiveDurationOrZero, childSegmentDuration);
+            Assert.That(segment.ExclusiveDurationOrZero, Is.LessThan(childSegmentDuration));
         }
 
         [Test]
@@ -780,7 +780,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            Assert.That(spanEvents, Has.Length.EqualTo(2));
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -807,7 +807,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            Assert.That(spanEvents, Has.Length.EqualTo(2));
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {
@@ -836,7 +836,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(2, spanEvents.Length);
+            Assert.That(spanEvents, Has.Length.EqualTo(2));
         }
 
         [Test]
@@ -856,7 +856,7 @@ namespace CompositeTests
             _compositeTestAgent.Harvest();
 
             var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
-            Assert.AreEqual(3, spanEvents.Length);
+            Assert.That(spanEvents, Has.Length.EqualTo(3));
 
             var expectedSpanErrorAttributes = new List<ExpectedAttribute>
             {

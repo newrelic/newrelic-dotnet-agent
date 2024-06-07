@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_SendsModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -69,15 +69,18 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.NotNull(loadedModulesCollection);
-            Assert.IsTrue(loadedModules.Count > 0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModulesCollection, Is.Not.Null);
+                Assert.That(loadedModules, Is.Not.Empty);
+            });
         }
 
         [Test]
         public void GetLoadedModules_NoNewModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -94,14 +97,14 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
         }
 
         [Test]
         public void GetLoadedModules_SendError_DuplciatesNotSaved()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
 
@@ -113,9 +116,12 @@ namespace NewRelic.Agent.Core.Utilities
 
             var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.Greater(initialModules.Count, 0);
-            Assert.Greater(loadedModules.Count, 0);
-            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(initialModules.Count, Is.GreaterThan(0));
+                Assert.That(loadedModules.Count, Is.GreaterThan(0));
+            });
+            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
         }
     }
 }

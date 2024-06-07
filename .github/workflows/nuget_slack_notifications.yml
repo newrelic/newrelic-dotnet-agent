@@ -33,12 +33,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
         with:
           egress-policy: audit # Leave it audit mode
 
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
 
@@ -50,10 +50,10 @@ jobs:
 
       - name: Check for updates to core technology packages
         run: |
-          if [ ${{ github.event.inputs.daysToSearch }} != "" ]; then
-            export DOTTY_DAYS_TO_SEARCH=${{ github.event.inputs.daysToSearch }}
+          if [ ${{ inputs.daysToSearch }} != "" ]; then
+            export DOTTY_DAYS_TO_SEARCH=${{ inputs.daysToSearch }}
           fi
-          if [ "${{ github.event.inputs.testMode }}" == "true" ]; then
+          if [ "${{ inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
           cd ${{ env.scan-tool-path }}/bin/Debug/net6.0
@@ -71,7 +71,17 @@ jobs:
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
             nugets:
-                 "elasticsearch.net
+                 "amazon.lambda.apigatewayevents
+                 amazon.lambda.applicationloadbalancerevents
+                 amazon.lambda.cloudwatchevents
+                 amazon.lambda.dynamodbevents
+                 amazon.lambda.kinesisevents
+                 amazon.lambda.kinesisfirehoseevents
+                 amazon.lambda.s3events
+                 amazon.lambda.simpleemailevents
+                 amazon.lambda.snsevents
+                 amazon.lambda.sqsevents
+                 elasticsearch.net
                  elastic.clients.elasticsearch
                  log4net
                  microsoft.extensions.logging

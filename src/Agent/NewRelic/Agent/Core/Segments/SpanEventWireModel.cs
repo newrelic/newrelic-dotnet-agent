@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.Segments
     }
 
     [JsonConverter(typeof(SpanEventWireModelSerializer))]
-    public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority
+    public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority, IWireModel
     {
         Span Span { get; }
     }

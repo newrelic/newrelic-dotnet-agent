@@ -44,14 +44,14 @@ namespace NewRelic.Agent.Core.Transformers
 
             Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
+                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
             var sample = new ThreadpoolUsageStatsSample(countWorkerThreadsRemaining + countWorkerThreadsInUse, countWorkerThreadsRemaining, countCompletionThreadsRemaining + countCompletionThreadsInUse, countCompletionThreadsRemaining);
 
             _threadStatsTransformer.Transform(sample);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(4, generatedMetrics.Count),
+                () => Assert.That(generatedMetrics, Has.Count.EqualTo(4)),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.InUse), countWorkerThreadsInUse),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.Available), countWorkerThreadsRemaining),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.InUse), countCompletionThreadsInUse),
@@ -70,14 +70,14 @@ namespace NewRelic.Agent.Core.Transformers
 
             Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
+                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
             var sample = new ThreadpoolThroughputEventsSample(countThreadRequestsQueued, countThreadRequestsDequeued, countThreadRequestQueueLength);
 
             _threadStatsTransformer.Transform(sample);
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(3, generatedMetrics.Count),
+                () => Assert.That(generatedMetrics, Has.Count.EqualTo(3)),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Requested), countThreadRequestsQueued),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Started), countThreadRequestsDequeued),
                 () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.QueueLength), countThreadRequestQueueLength)

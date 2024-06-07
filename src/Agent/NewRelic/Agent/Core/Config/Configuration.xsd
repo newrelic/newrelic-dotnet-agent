@@ -320,7 +320,7 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
-                        
+
                         <xs:attribute name="directory" type="xs:string" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
@@ -355,6 +355,48 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="logRollingStrategy" default="size" use="optional" >
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The strategy to use for rolling over the Agent log file. Default is size.
+                                </xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:enumeration value="size">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The Agent log file will be rolled over when it reaches the size specified in maxLogFileSizeMB.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                    <xs:enumeration value="day">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The Agent log file will be rolled over once each day.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:enumeration>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFileSizeMB" type="xs:int" default="50" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum size of the Agent log file in megabytes before it is rolled over. Default is 50MB. If this is set to 0, no size limit will be enforced. Only used if logRollingStrategy is set to "size".
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
+                        <xs:attribute name="maxLogFiles" type="xs:int" default="4" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The maximum number of Agent log files to keep. Defaults to 4. If this is set to 0, then all log files will be kept.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
@@ -373,7 +415,45 @@
                     </xs:annotation>
 
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
+
+                            <xs:element name="rules" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:annotation>
+                                        <xs:documentation>
+                                            A list of rules that can affect the behavior of instrumentation.
+                                        </xs:documentation>
+                                    </xs:annotation>
+                                    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+
+                                        <xs:element name="ignore" minOccurs="0" maxOccurs="unbounded">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Disables instrumentation for a given assembly or class.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:attribute name="assemblyName" type="xs:string" use="required">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            The assembly name to not instrument.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="className" type="xs:string" use="optional">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            The class name to not instrument. If blank, no classes in the given assembly will be instrumented.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+
                             <xs:element name="applications" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -397,7 +477,7 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                        </xs:sequence>
+                        </xs:all>
 
                         <xs:attribute name="log" type="xs:boolean" default="false">
                             <xs:annotation>
@@ -1147,6 +1227,27 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
+                        <xs:attribute name="account_id" type="xs:string">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The account id to use for distributed tracing. Required in serverless mode if distributed tracing is enabled.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="trusted_account_key" type="xs:string">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The trusted account key to use for distributed tracing. Required in serverless mode if distributed tracing is enabled.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="primary_application_id" type="xs:string" default="Unknown">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The optional primary application id to use for distributed tracing. Used only in serverless mode.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 
@@ -1587,6 +1688,64 @@
                     </xs:complexType>
                 </xs:element>
 
+
+                <xs:element name="aiMonitoring" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Allows configuration of AI monitoring instrumentation.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="streaming" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        When enabled, AI monitoring of streams occurs.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether or not AI monitoring of streams is enabled.
+                                                Defaults to true.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                            
+                            <xs:element name="recordContent" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        When enabled, AI monitoring events will include the content of the chat and embedding messages.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether or not AI monitoring will include the content of the chat and embedding messages.
+                                                Defaults to true.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Controls whether or not AI monitoring features are enabled.
+                                    When set to 'false', all AI monitoring sub-features are disabled.
+                                    Defaults to false.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+                
                 <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
@@ -1885,6 +2044,14 @@
                 </xs:annotation>
             </xs:attribute>
 
+            <xs:attribute name="debugStartupDelaySeconds" type="xs:int" default="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Delays Agent initialization to allow a debugger to be attached.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+
             <xs:attribute name="threadProfilingEnabled" type="xs:boolean" default="true">
                 <xs:annotation>
                     <xs:documentation>
@@ -1915,6 +2082,13 @@
                 </xs:simpleType>
             </xs:attribute>
 
+            <xs:attribute name="serverlessModeEnabled" type="xs:boolean" default="false">
+                <xs:annotation>
+                    <xs:documentation>
+                        Turns on/off serverless mode.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 </xs:schema>

@@ -125,7 +125,10 @@ namespace NewRelic.Agent.Core
                     AddVariable("Physical Processors", () => managementObject["NumberOfProcessors"]);
                     AddVariable("Logical Processors", () => managementObject["NumberOfLogicalProcessors"]);
                 }
+
 #endif
+
+                AddVariable("Install Type", () => AgentInstallConfiguration.GetAgentInfo()?.ToString() ?? "Unknown");
             }
             catch (Exception ex)
             {

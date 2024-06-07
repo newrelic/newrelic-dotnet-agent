@@ -12,6 +12,10 @@ namespace NewRelic.Agent.Configuration
         IReadOnlyDictionary<string, string> GetAppSettings();
         object AgentRunId { get; }
         bool AgentEnabled { get; }
+        string AgentEnabledAt { get; }
+
+        bool ServerlessModeEnabled { get; }
+
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
         string ApplicationNamesSource { get; }
@@ -197,7 +201,7 @@ namespace NewRelic.Agent.Configuration
         bool AppDomainCachingDisabled { get; }
         bool LegacyCachingEnabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
-        bool CodeLevelMetricsEnabled {  get; }
+        bool CodeLevelMetricsEnabled { get; }
         TimeSpan MetricsHarvestCycle { get; }
         TimeSpan TransactionTracesHarvestCycle { get; }
         TimeSpan ErrorTracesHarvestCycle { get; }
@@ -207,5 +211,12 @@ namespace NewRelic.Agent.Configuration
         TimeSpan UpdateLoadedModulesCycle { get; }
         TimeSpan StackExchangeRedisCleanupCycle { get; }
         bool LoggingEnabled { get; }
+        string LoggingLevel { get; }
+        IEnumerable<IDictionary<string, string>> IgnoredInstrumentation { get; }
+
+        bool AiMonitoringEnabled { get; }
+        bool AiMonitoringStreamingEnabled { get; }
+        bool AiMonitoringRecordContentEnabled { get; }
+        public Func<string, string, int> LlmTokenCountingCallback { get; }
     }
 }

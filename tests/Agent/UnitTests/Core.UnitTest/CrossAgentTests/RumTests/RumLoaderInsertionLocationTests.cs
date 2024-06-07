@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public void TestFilesCanEnumerate()
         {
             var testCases = GetRumTestData();
-            Assert.Greater(testCases.Count(), 0);
+            Assert.That(testCases.Count(), Is.GreaterThan(0));
         }
 
         [Test, TestCaseSource(nameof(GetRumTestData))]
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         {
             var writer = new BrowserMonitoringWriter(() => "EXPECTED_RUM_LOADER_LOCATION");
             var result = writer.WriteScriptHeaders(data);
-            Assert.AreEqual(expected, result);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test, TestCaseSource(nameof(GetRumTestData))]
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
                 var resultBytes = ms.ToArray();
                 var result = Encoding.UTF8.GetString(resultBytes);
 
-                Assert.AreEqual(expected, result);
+                Assert.That(result, Is.EqualTo(expected));
 
             }
         }

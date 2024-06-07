@@ -52,6 +52,8 @@ namespace NewRelic.Agent.Core.Transactions
         public bool HasCatResponseHeaders { get; }
         public float Priority { get; }
 
+        public bool IsLlmTransaction { get; }
+
         public IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 
         public TestImmutableTransactionMetadata(
@@ -181,7 +183,7 @@ namespace NewRelic.Agent.Core.Transactions
         }
 
         //Transactions should always have a root segment
-        private List<Segment> _segments = new List<Segment>() { SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false) };
+        private List<Segment> _segments = new List<Segment>() { SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false) };
 
         public ImmutableTransactionBuilder WithSegments(List<Segment> segments)
         {

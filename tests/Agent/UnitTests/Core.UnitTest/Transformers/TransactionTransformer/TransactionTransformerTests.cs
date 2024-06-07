@@ -145,7 +145,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, _logEventAggregator);
         }
 
-        public IMetricBuilder GetSimpleMetricBuilder()
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+            _databaseService.Dispose();
+            _logEventAggregator.Dispose();
+            _metricNameService.Dispose();
+            _sqlTraceAggregator.Dispose();
+        }
+
+        private IMetricBuilder GetSimpleMetricBuilder()
         {
             _metricNameService = Mock.Create<IMetricNameService>();
             Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
@@ -209,22 +219,22 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer.Transform(transaction);
 
             var scopedStats = txStats.GetScopedForTesting();
-            Assert.AreEqual(3, scopedStats.Count);
+            Assert.That(scopedStats, Has.Count.EqualTo(3));
             var oneStat = scopedStats["DotNet/seg1"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
             oneStat = scopedStats["DotNet/seg2"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
             oneStat = scopedStats["DotNet/seg3"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
 
             var unscopedStats = txStats.GetUnscopedForTesting();
-            Assert.AreEqual(3, scopedStats.Count);
+            Assert.That(scopedStats, Has.Count.EqualTo(3));
             oneStat = unscopedStats["DotNet/seg1"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
             oneStat = unscopedStats["DotNet/seg2"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
             oneStat = unscopedStats["DotNet/seg3"];
-            Assert.AreEqual(1, oneStat.Value0);
+            Assert.That(oneStat.Value0, Is.EqualTo(1));
         }
 
         [Test]
@@ -242,7 +252,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _transactionTransformer.Transform(transaction);
 
-            Assert.AreEqual("WebTransaction/TransactionName", txStats.GetTransactionName().PrefixedName);
+            Assert.That(txStats.GetTransactionName().PrefixedName, Is.EqualTo("WebTransaction/TransactionName"));
         }
 
         [Test]
@@ -266,19 +276,28 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer.Transform(transaction);
 
             var scopedStats = txStats.GetScopedForTesting();
-            Assert.AreEqual(3, scopedStats.Count);
+            Assert.That(scopedStats, Has.Count.EqualTo(3));
             var oneStat = scopedStats["DotNet/seg1"];
-            Assert.AreEqual(1, oneStat.Value0);
-            Assert.AreEqual(5, oneStat.Value1);
-            Assert.AreEqual(0, oneStat.Value2);
+            Assert.Multiple(() =>
+            {
+                Assert.That(oneStat.Value0, Is.EqualTo(1));
+                Assert.That(oneStat.Value1, Is.EqualTo(5));
+                Assert.That(oneStat.Value2, Is.EqualTo(0));
+            });
             oneStat = scopedStats["DotNet/seg2"];
-            Assert.AreEqual(1, oneStat.Value0);
-            Assert.AreEqual(1, oneStat.Value1);
-            Assert.AreEqual(1, oneStat.Value2);
+            Assert.Multiple(() =>
+            {
+                Assert.That(oneStat.Value0, Is.EqualTo(1));
+                Assert.That(oneStat.Value1, Is.EqualTo(1));
+                Assert.That(oneStat.Value2, Is.EqualTo(1));
+            });
             oneStat = scopedStats["DotNet/seg3"];
-            Assert.AreEqual(1, oneStat.Value0);
-            Assert.AreEqual(999, oneStat.Value1);
-            Assert.AreEqual(999, oneStat.Value2);
+            Assert.Multiple(() =>
+            {
+                Assert.That(oneStat.Value0, Is.EqualTo(1));
+                Assert.That(oneStat.Value1, Is.EqualTo(999));
+                Assert.That(oneStat.Value2, Is.EqualTo(999));
+            });
         }
 
         public enum TestMode { DTDisabled, DTEnabled, PayloadDisabled, PayloadEnabled, SpanDisabled, SpanEnabled, CatDisabled, CatEnabled, WebTransaction, OtherTransaction, WithError, NoError };
@@ -416,9 +435,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "OtherTransactionTotalTime", "OtherTransactionTotalTime/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.TryGetValue(current, out MetricDataWireModel data));
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(6, data.Value1);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.TryGetValue(current, out MetricDataWireModel data), Is.True);
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(6));
+                });
             }
 
         }
@@ -438,9 +460,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _segmentTreeMaker.BuildSegmentTrees(Arg.IsAny<IEnumerable<Segment>>()))
                 .Returns(new[] { node1.Build() });
 
-            Assert.AreEqual(1, node1.Segment.ExclusiveDurationOrZero.TotalSeconds);
-            Assert.AreEqual(3, node2.Segment.ExclusiveDurationOrZero.TotalSeconds);
-            Assert.AreEqual(3, node3.Segment.ExclusiveDurationOrZero.TotalSeconds);
+            Assert.Multiple(() =>
+            {
+                Assert.That(node1.Segment.ExclusiveDurationOrZero.TotalSeconds, Is.EqualTo(1));
+                Assert.That(node2.Segment.ExclusiveDurationOrZero.TotalSeconds, Is.EqualTo(3));
+                Assert.That(node3.Segment.ExclusiveDurationOrZero.TotalSeconds, Is.EqualTo(3));
+            });
 
             var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
@@ -462,24 +487,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 }
             }
 
-            Assert.AreEqual(expected, generatedMetrics.Count);
-            Assert.IsTrue(generatedMetrics.ContainsKey("DotNet/MyOtherMockedRootNode"));
+            Assert.That(generatedMetrics, Has.Count.EqualTo(expected));
+            Assert.That(generatedMetrics.ContainsKey("DotNet/MyOtherMockedRootNode"), Is.True);
             //check the total time metrics
             var unscoped = new[] {
                 "WebTransactionTotalTime", "WebTransactionTotalTime/TransactionName"};
 
             foreach (var current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.TryGetValue(current, out MetricDataWireModel data));
-                Assert.AreEqual(1, data.Value0);
-                Assert.AreEqual(7, data.Value1);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.TryGetValue(current, out MetricDataWireModel data), Is.True);
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    Assert.That(data.Value1, Is.EqualTo(7));
+                });
             }
 
         }
 
         private static void AddDummySegment(Transaction transaction)
         {
-            transaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "", false));
+            transaction.Add(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "", false));
         }
 
         [Test]
@@ -502,9 +530,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             "WebTransactionTotalTime"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current));
+                Assert.That(generatedMetrics.ContainsKey(current), Is.True);
                 var data = generatedMetrics[current];
-                Assert.AreEqual(1, data.Value0);
+                Assert.That(data.Value0, Is.EqualTo(1));
             }
         }
 
@@ -524,13 +552,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ApdexAll", "Apdex", "Apdex/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current));
+                Assert.That(generatedMetrics.ContainsKey(current), Is.True);
                 var data = generatedMetrics[current];
-                //satisfying
-                Assert.AreEqual(1, data.Value0);
-                // 3 and 4 are total time
-                Assert.AreEqual(1, data.Value3);
-                Assert.AreEqual(1, data.Value4);
+                Assert.Multiple(() =>
+                {
+                    //satisfying
+                    Assert.That(data.Value0, Is.EqualTo(1));
+                    // 3 and 4 are total time
+                    Assert.That(data.Value3, Is.EqualTo(1));
+                    Assert.That(data.Value4, Is.EqualTo(1));
+                });
             }
         }
 
@@ -555,9 +586,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             //Apdex value based on the response time should be satisfying
             NrAssert.Multiple(
-                    () => Assert.AreEqual(1, generatedMetrics["Apdex/TransactionName"].Value0),
-                    () => Assert.AreEqual(1, generatedMetrics["Apdex"].Value0),
-                    () => Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0)
+                    () => Assert.That(generatedMetrics["Apdex/TransactionName"].Value0, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["Apdex"].Value0, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["ApdexAll"].Value0, Is.EqualTo(1))
                 );
         }
 
@@ -582,11 +613,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             //Apdex value based on the duration should be frustrating
             NrAssert.Multiple(
-                    () => Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2),
-                    () => Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2),
-                    () => Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2),
+                    () => Assert.That(generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["ApdexOther"].Value2, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["ApdexAll"].Value2, Is.EqualTo(1)),
                     //We should not see apdex metrics that are for web transactions
-                    () => CollectionAssert.IsNotSubsetOf(new[] { "Apdex/TransactionName", "Apdex" }, generatedMetrics.Keys)
+                    () => Assert.That(new[] { "Apdex/TransactionName", "Apdex" }, Is.Not.SubsetOf(generatedMetrics.Keys))
                 );
         }
 
@@ -606,14 +637,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ApdexAll", "Apdex", "Apdex/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current));
+                Assert.That(generatedMetrics.ContainsKey(current), Is.True);
                 var data = generatedMetrics[current];
-                //satisfying
-                Assert.AreEqual(0, data.Value0);
-                //tolerating
-                Assert.AreEqual(0, data.Value1);
-                // frustration
-                Assert.AreEqual(1, data.Value2);
+                Assert.Multiple(() =>
+                {
+                    //satisfying
+                    Assert.That(data.Value0, Is.EqualTo(0));
+                    //tolerating
+                    Assert.That(data.Value1, Is.EqualTo(0));
+                    // frustration
+                    Assert.That(data.Value2, Is.EqualTo(1));
+                });
             }
         }
 
@@ -635,14 +669,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ApdexAll", "Apdex", "Apdex/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current));
+                Assert.That(generatedMetrics.ContainsKey(current), Is.True);
                 var data = generatedMetrics[current];
-                //satisfying
-                Assert.AreEqual(0, data.Value0);
-                //tolerating
-                Assert.AreEqual(0, data.Value1);
-                // frustration
-                Assert.AreEqual(1, data.Value2);
+                Assert.Multiple(() =>
+                {
+                    //satisfying
+                    Assert.That(data.Value0, Is.EqualTo(0));
+                    //tolerating
+                    Assert.That(data.Value1, Is.EqualTo(0));
+                    // frustration
+                    Assert.That(data.Value2, Is.EqualTo(1));
+                });
             }
         }
 
@@ -662,7 +699,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ApdexAll", "Apdex", "Apdex/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsFalse(generatedMetrics.ContainsKey(current));
+                Assert.That(generatedMetrics.ContainsKey(current), Is.False);
             }
         }
 
@@ -691,10 +728,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/allWeb"
             };
 
-            CollectionAssert.IsSubsetOf(expectedMetrics, actualMetrics.Keys);
+            Assert.That(expectedMetrics, Is.SubsetOf(actualMetrics.Keys));
             foreach (var expected in expectedMetrics)
             {
-                Assert.AreEqual(1, actualMetrics[expected].Value0, $"Expected {expected} metric to have a count value of 1");
+                Assert.That(actualMetrics[expected].Value0, Is.EqualTo(1), $"Expected {expected} metric to have a count value of 1");
             }
         }
 
@@ -723,7 +760,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/allWeb"
             };
 
-            CollectionAssert.IsNotSubsetOf(unexpectedMetrics, actualMetrics.Keys);
+            Assert.That(unexpectedMetrics, Is.Not.SubsetOf(actualMetrics.Keys));
         }
 
         [Test]
@@ -742,8 +779,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "Errors/all", "Errors/allWeb", "Errors/WebTransaction/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
-                Assert.AreEqual(1, generatedMetrics[current].Value0);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.ContainsKey(current), Is.True, "Metric is not contained: " + current);
+                    Assert.That(generatedMetrics[current].Value0, Is.EqualTo(1));
+                });
             }
         }
 
@@ -763,8 +803,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
-                Assert.AreEqual(1, generatedMetrics[current].Value0);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.ContainsKey(current), Is.True, "Metric is not contained: " + current);
+                    Assert.That(generatedMetrics[current].Value0, Is.EqualTo(1));
+                });
             }
         }
 
@@ -784,7 +827,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
             foreach (string current in unscoped)
             {
-                Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric is contained: " + current);
+                Assert.That(generatedMetrics.ContainsKey(current), Is.False, "Metric is contained: " + current);
             }
         }
 
@@ -826,33 +869,42 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 if (expectForError)
                 {
-                    Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric should not contain: " + current);
+                    Assert.That(generatedMetrics.ContainsKey(current), Is.False, "Metric should not contain: " + current);
 
                 }
                 else
                 {
-                    Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric should contain: " + current);
+                    Assert.That(generatedMetrics.ContainsKey(current), Is.True, "Metric should contain: " + current);
                 }
             }
 
             // When an error is expected, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
             if (expectForError)
             {
-                Assert.IsTrue(generatedMetrics.ContainsKey("ErrorsExpected/all"));
-                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying apdex
-                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying apdex
-                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0); //sastisfying
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.ContainsKey("ErrorsExpected/all"), Is.True);
+                    Assert.That(generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0, Is.EqualTo(1)); //sastisfying apdex
+                    Assert.That(generatedMetrics["ApdexOther"].Value0, Is.EqualTo(1)); //sastisfying apdex
+                    Assert.That(generatedMetrics["ApdexAll"].Value0, Is.EqualTo(1)); //sastisfying
+                });
             }
             else
             {
-                Assert.IsFalse(generatedMetrics.ContainsKey("ErrorsExpected/all"));
-                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2); //frustrating apdex
-                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2); //frustrating apdex
-                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2); //frustrating apdex
+                Assert.Multiple(() =>
+                {
+                    Assert.That(generatedMetrics.ContainsKey("ErrorsExpected/all"), Is.False);
+                    Assert.That(generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2, Is.EqualTo(1)); //frustrating apdex
+                    Assert.That(generatedMetrics["ApdexOther"].Value2, Is.EqualTo(1)); //frustrating apdex
+                    Assert.That(generatedMetrics["ApdexAll"].Value2, Is.EqualTo(1)); //frustrating apdex
+                });
             }
 
-            Assert.That(errorEvents.Count > 0, "Expect error events.");
-            Assert.That(errorTraces.Count > 0, "Expect error traces.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(errorEvents, Is.Not.Empty, "Expect error events.");
+                Assert.That(errorTraces, Is.Not.Empty, "Expect error traces.");
+            });
         }
 
         [Test]
@@ -890,17 +942,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // When an error is ignored, unscoped error metrics should not be generated.
             foreach (string current in unscoped)
             {
-                Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric should not contain: " + current);
+                Assert.That(generatedMetrics.ContainsKey(current), Is.False, "Metric should not contain: " + current);
             }
 
-            // When an error is ignored, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
-            Assert.IsFalse(generatedMetrics.ContainsKey("ErrorsExpected/all"));
-            Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying apdex
-            Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying apdex
-            Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0); //sastisfying apdex
+            Assert.Multiple(() =>
+            {
+                // When an error is ignored, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
+                Assert.That(generatedMetrics.ContainsKey("ErrorsExpected/all"), Is.False);
+                Assert.That(generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0, Is.EqualTo(1)); //sastisfying apdex
+                Assert.That(generatedMetrics["ApdexOther"].Value0, Is.EqualTo(1)); //sastisfying apdex
+                Assert.That(generatedMetrics["ApdexAll"].Value0, Is.EqualTo(1)); //sastisfying apdex
 
-            Assert.That(errorEvents.Count == 0, "Expect no error events.");
-            Assert.That(errorTraces.Count == 0, "Expect no error traces.");
+                Assert.That(errorEvents, Is.Empty, "Expect no error events.");
+                Assert.That(errorTraces, Is.Empty, "Expect no error traces.");
+            });
         }
 
         [Test]
@@ -922,12 +977,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer.Transform(transaction);
 
             NrAssert.Multiple(
-                    () => Assert.AreEqual(1, generatedMetrics["ClientApplication/123#456/all"].Value0),
-                    () => Assert.AreEqual(0.8f, generatedMetrics["ClientApplication/123#456/all"].Value1),
-                    () => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value0),
-                    () => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value1),
-                    () => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value0),
-                    () => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value1)
+                    () => Assert.That(generatedMetrics["ClientApplication/123#456/all"].Value0, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["ClientApplication/123#456/all"].Value1, Is.EqualTo(0.8f)),
+                    () => Assert.That(generatedMetrics["HttpDispatcher"].Value0, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["HttpDispatcher"].Value1, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["WebTransaction"].Value0, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["WebTransaction"].Value1, Is.EqualTo(1))
                 );
         }
 
@@ -948,7 +1003,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _transactionTransformer.Transform(transaction);
 
-            CollectionAssert.DoesNotContain(generatedMetrics.Keys, "ClientApplication/123#456/all");
+            Assert.That(generatedMetrics.Keys, Has.No.Member("ClientApplication/123#456/all"));
         }
 
         [Test]
@@ -969,9 +1024,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer.Transform(transaction);
 
             NrAssert.Multiple(
-                    () => Assert.AreEqual(1, generatedMetrics["WebTransaction/TransactionName"].Value1),
-                    () => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value1),
-                    () => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value1)
+                    () => Assert.That(generatedMetrics["WebTransaction/TransactionName"].Value1, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["WebTransaction"].Value1, Is.EqualTo(1)),
+                    () => Assert.That(generatedMetrics["HttpDispatcher"].Value1, Is.EqualTo(1))
                 );
         }
 
@@ -993,9 +1048,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionTransformer.Transform(transaction);
 
             NrAssert.Multiple(
-                    () => Assert.AreEqual(3, generatedMetrics["OtherTransaction/TransactionName"].Value1),
-                    () => Assert.AreEqual(3, generatedMetrics["OtherTransaction/all"].Value1),
-                    () => CollectionAssert.DoesNotContain(generatedMetrics.Keys, "HttpDispatcher")
+                    () => Assert.That(generatedMetrics["OtherTransaction/TransactionName"].Value1, Is.EqualTo(3)),
+                    () => Assert.That(generatedMetrics["OtherTransaction/all"].Value1, Is.EqualTo(3)),
+                    () => Assert.That(generatedMetrics.Keys, Has.No.Member("HttpDispatcher"))
                 );
         }
 
@@ -1022,10 +1077,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // note: metric strings below include default values from .WithW3CTracing; those values can/should be parameterized if other tests start using .WithW3CTracing
             NrAssert.Multiple(
-                () => Assert.IsTrue(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/all"), $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/all"),
-                () => Assert.IsTrue(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/allWeb"), $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/allWeb"),
-                () => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/all"].Value1 > 0),
-                () => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/allWeb"].Value1 > 0)
+                () => Assert.That(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/all"), Is.True, $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/all"),
+                () => Assert.That(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/allWeb"), Is.True, $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/allWeb"),
+                () => Assert.That(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/all"].Value1, Is.GreaterThan(0)),
+                () => Assert.That(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/allWeb"].Value1, Is.GreaterThan(0))
                 );
         }
 
@@ -1214,8 +1269,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(testValHasCapacity + testValNoCapacity, actualSpansSeen),
-                () => Assert.AreEqual(testValNoCapacity, actualSpansDropped)
+                () => Assert.That(actualSpansSeen, Is.EqualTo(testValHasCapacity + testValNoCapacity)),
+                () => Assert.That(actualSpansDropped, Is.EqualTo(testValNoCapacity))
             );
         }
 
@@ -1271,8 +1326,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectTraditionalTracingCalled ? 1 : 0, actualCallCountTraditionalTracingAggregator, $"Traditional Tracing should {(expectTraditionalTracingCalled ? "" : "NOT ")}have been called"),
-                () => Assert.AreEqual(expect8TCalled ? 1 : 0, actualCallCountInfiniteTracingAggregator, $"Infinite Tracing should {(expect8TCalled ? "" : "NOT ")}have been called"),
+                () => Assert.That(actualCallCountTraditionalTracingAggregator, Is.EqualTo(expectTraditionalTracingCalled ? 1 : 0), $"Traditional Tracing should {(expectTraditionalTracingCalled ? "" : "NOT ")}have been called"),
+                () => Assert.That(actualCallCountInfiniteTracingAggregator, Is.EqualTo(expect8TCalled ? 1 : 0), $"Infinite Tracing should {(expect8TCalled ? "" : "NOT ")}have been called"),
                 () => Mock.Assert(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>(), Arg.IsAny<IAttributeValueCollection>()), expectedGetSpanEventsCalled ? Occurs.Once() : Occurs.Never(), $"GetSpanEvents should {(expectedGetSpanEventsCalled ? "" : "NOT ")} have been called.")
             );
         }
@@ -1414,9 +1469,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
 
             var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(handledLogEvent);
-            Assert.AreEqual(transaction.Priority, handledLogEvent.Priority, $"{transaction.Priority} vs {handledLogEvent.Priority}");
+            Assert.Multiple(() =>
+            {
+                Assert.That(logEvents, Has.Count.EqualTo(1));
+                Assert.That(handledLogEvent, Is.Not.Null);
+            });
+            Assert.That(handledLogEvent.Priority, Is.EqualTo(transaction.Priority), $"{transaction.Priority} vs {handledLogEvent.Priority}");
         }
 
         [Test]
@@ -1427,7 +1485,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _transactionTransformer.Transform(transaction);
 
-            Assert.False(transaction.AddLogEvent(logEvent));
+            Assert.That(transaction.AddLogEvent(logEvent), Is.False);
         }
 
         #endregion
@@ -1473,12 +1531,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             return builder;
         }
 
-        public Segment GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
+        private Segment GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
         {
             return new Segment(start, TimeSpan.FromSeconds(duration), GetSegment(name), null);
         }
 
-        public static IConfiguration GetDefaultConfiguration()
+        private static IConfiguration GetDefaultConfiguration()
         {
             return TestTransactions.GetDefaultConfiguration();
         }

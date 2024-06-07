@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="1.9.71" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.Owin" Version="2.1.0" />
     <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="2.1.0" />
     <PackageReference Include="Microsoft.Owin.Hosting" Version="2.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Owin" Version="1.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.1.2" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.1.2" />

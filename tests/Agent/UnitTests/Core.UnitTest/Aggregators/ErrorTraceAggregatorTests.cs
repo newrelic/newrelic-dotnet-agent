@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentErrors = null as IEnumerable<ErrorTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<ErrorTraceWireModel>>(errors => sentErrors = errors);
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
 
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         #endregion
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentErrors = null as IEnumerable<ErrorTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<ErrorTraceWireModel>>(errors => sentErrors = errors);
             var errorsToSend = new[]
             {
@@ -115,9 +115,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, sentErrors.Count());
-            Assert.AreEqual(sentErrors, errorsToSend);
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentErrors.Count(), Is.EqualTo(3));
+                Assert.That(errorsToSend, Is.EqualTo(sentErrors));
+            });
         }
 
         [Test]
@@ -125,7 +128,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sendCalled = true;
@@ -136,7 +139,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            Assert.That(sendCalled, Is.False);
         }
 
         #endregion
@@ -148,7 +151,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
@@ -163,7 +166,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         [Test]
@@ -171,7 +174,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
@@ -186,7 +189,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         [Test]
@@ -194,7 +197,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentErrorsCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrorsCount = errors.Count();
@@ -208,7 +211,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentErrorsCount);
+            Assert.That(sentErrorsCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -216,7 +219,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
@@ -230,7 +233,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentErrors);
+            Assert.That(sentErrors, Is.Null);
         }
 
         #endregion
@@ -269,7 +272,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void error_trace_recollected_is_reported_to_agent_health()
         {
             // Arrange
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     return DataTransportResponseStatus.Retain;

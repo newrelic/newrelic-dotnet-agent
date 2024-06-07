@@ -1,0 +1,105 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main", "feature/*"]
+  schedule:
+    - cron: '20 3 * * 1'
+
+permissions:
+  contents: read    
+  
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-modified-files:
+    name: Check if source files were modified, skip remaining jobs if not
+    uses: ./.github/workflows/check_modified_files.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      pull-requests: read
+
+  analyze-dotnet:
+    name: Analyze .NET
+    needs: check-modified-files
+    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 120
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+
+    env:
+        fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      with:
+        fetch-depth: 0
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
+      with:
+        languages: csharp
+
+    - name: Build .NET Agent Solution
+      run: |
+        dotnet build ${{ env.fullagent_solution_path }}
+      shell: powershell
+   
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
+      with:
+        category: "/language:csharp"
+
+  analyze-cpp:
+    name: Analyze C++
+    needs: check-modified-files
+    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 120
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    env:
+        profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      with:
+        fetch-depth: 0
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
+      with:
+        languages: c-cpp
+
+    - name: Add msbuild to PATH for Profiler build
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
+
+    - name: Build Profiler
+      run: |
+        Write-Host "List NuGet Sources"
+        dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+        Write-Host "MSBuild.exe -restore -m -p:Platform=x64 ${{ env.profiler_solution_path }}"
+        MSBuild.exe -restore -m -p:Platform=x64 ${{ env.profiler_solution_path }}
+      shell: powershell
+   
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
+      with:
+        category: "/language:c-cpp"

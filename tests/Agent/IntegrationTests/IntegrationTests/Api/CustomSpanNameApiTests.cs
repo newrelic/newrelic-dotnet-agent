@@ -7,8 +7,8 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {
@@ -48,6 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 

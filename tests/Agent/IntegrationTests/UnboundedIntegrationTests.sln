@@ -23,8 +23,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDBApplication", "Unbou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicMvcCoreApplication", "UnboundedApplications\BasicMvcCoreApplication\BasicMvcCoreApplication.csproj", "{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedApplications", "SharedApplications", "{859E490D-4C1A-4D9D-8271-5FE2E0726ADE}"
 	ProjectSection(SolutionItems) = preProject
 		SharedApplications\WcfAppIisHosted\WcfAppIisHosted.csproj = SharedApplications\WcfAppIisHosted\WcfAppIisHosted.csproj
@@ -45,6 +43,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{81A13A3C-2008-4756-8A5F-1E1B4F97CCAD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedApplicationHelpers", "SharedApplications\Common\SharedApplicationHelpers\SharedApplicationHelpers.csproj", "{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers", "..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj", "{E0C06F39-1F55-4700-BC4A-C01AC3C75745}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers.Test", "..\Shared\TestSerializationHelpers.Test\TestSerializationHelpers.Test.csproj", "{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -80,10 +82,6 @@ Global
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -112,6 +110,14 @@ Global
 		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0C06F39-1F55-4700-BC4A-C01AC3C75745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0C06F39-1F55-4700-BC4A-C01AC3C75745}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0C06F39-1F55-4700-BC4A-C01AC3C75745}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0C06F39-1F55-4700-BC4A-C01AC3C75745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,7 +125,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
 		{5350D3F3-CE09-4992-9756-ACCC92A9129C} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
 		{129FF113-1F3A-4DAA-8D6F-287DF67A68FA} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}

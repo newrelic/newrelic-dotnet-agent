@@ -15,20 +15,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using InternalMetricName = NewRelic.Agent.Core.Metrics.MetricName;
 
 namespace NewRelic.Agent.Core.WireModels
 {
     [JsonConverter(typeof(MetricWireModelJsonConverter))]
-    public class MetricWireModel : IAllMetricStatsCollection
+    public class MetricWireModel : IAllMetricStatsCollection, IWireModel
     {
-        public readonly MetricNameWireModel MetricName;
-        public readonly MetricDataWireModel Data;
+        public readonly MetricNameWireModel MetricNameModel;
+        public readonly MetricDataWireModel DataModel;
 
-        private MetricWireModel(MetricNameWireModel metricName, MetricDataWireModel data)
+        private MetricWireModel(MetricNameWireModel metricNameModel, MetricDataWireModel dataModel)
         {
-            MetricName = metricName;
-            Data = data;
+            MetricNameModel = metricNameModel;
+            DataModel = dataModel;
         }
 
         /// <summary>
@@ -55,13 +54,13 @@ namespace NewRelic.Agent.Core.WireModels
                 throw new Exception("At least one metric must be passed in");
             }
 
-            var metricName = metrics.First().MetricName;
-            if (metrics.Any(metric => !metric.MetricName.Equals(metricName)))
+            var metricName = metrics.First().MetricNameModel;
+            if (metrics.Any(metric => !metric.MetricNameModel.Equals(metricName)))
             {
                 throw new Exception("Cannot merge metrics with different names");
             }
 
-            var inputData = metrics.Select(metric => metric.Data);
+            var inputData = metrics.Select(metric => metric.DataModel);
             var mergedData = MetricDataWireModel.BuildAggregateData(inputData);
             return new MetricWireModel(metricName, mergedData);
         }
@@ -81,18 +80,18 @@ namespace NewRelic.Agent.Core.WireModels
 
         public override string ToString()
         {
-            return MetricName + Data.ToString();
+            return MetricNameModel + DataModel.ToString();
         }
 
         public void AddMetricsToCollection(MetricStatsCollection collection)
         {
-            if (string.IsNullOrEmpty(MetricName.Scope))
+            if (string.IsNullOrEmpty(MetricNameModel.Scope))
             {
-                collection.MergeUnscopedStats(MetricName.Name, Data);
+                collection.MergeUnscopedStats(MetricNameModel.Name, DataModel);
             }
             else
             {
-                collection.MergeScopedStats(MetricName.Scope, MetricName.Name, Data);
+                collection.MergeScopedStats(MetricNameModel.Scope, MetricNameModel.Name, DataModel);
             }
         }
 
@@ -105,7 +104,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             if (obj is MetricWireModel other)
             {
-                return other.MetricName.Equals(this.MetricName) && other.Data.Equals(this.Data);
+                return other.MetricNameModel.Equals(this.MetricNameModel) && other.DataModel.Equals(this.DataModel);
             }
 
             return false;
@@ -114,8 +113,8 @@ namespace NewRelic.Agent.Core.WireModels
         public override int GetHashCode()
         {
             var hashCode = 2074576463;
-            hashCode = hashCode * -1521134295 + EqualityComparer<MetricNameWireModel>.Default.GetHashCode(MetricName);
-            hashCode = hashCode * -1521134295 + EqualityComparer<MetricDataWireModel>.Default.GetHashCode(Data);
+            hashCode = hashCode * -1521134295 + EqualityComparer<MetricNameWireModel>.Default.GetHashCode(MetricNameModel);
+            hashCode = hashCode * -1521134295 + EqualityComparer<MetricDataWireModel>.Default.GetHashCode(DataModel);
             return hashCode;
         }
 
@@ -138,7 +137,7 @@ namespace NewRelic.Agent.Core.WireModels
                     ? MetricNames.WebTransactionAll
                     : MetricNames.OtherTransactionAll;
                 txStats.MergeUnscopedStats(proposedName, data);
-                txStats.MergeUnscopedStats(InternalMetricName.Create(txStats.GetTransactionName().PrefixedName), data);
+                txStats.MergeUnscopedStats(MetricName.Create(txStats.GetTransactionName().PrefixedName), data);
 
                 // "HttpDispacher" is a metric that is used to populate the APM response time chart.
                 if (isWebTransaction)
@@ -247,7 +246,7 @@ namespace NewRelic.Agent.Core.WireModels
                 TimeSpan apdexT, TransactionMetricStatsCollection txStats)
             {
                 var data = MetricDataWireModel.BuildApdexData(responseTime, apdexT);
-                txStats.MergeUnscopedStats(InternalMetricName.Create(transactionApdexName), data);
+                txStats.MergeUnscopedStats(MetricName.Create(transactionApdexName), data);
                 txStats.MergeUnscopedStats(MetricNames.ApdexAll, data);
                 var proposedName = isWebTransaction
                     ? MetricNames.ApdexAllWeb
@@ -264,7 +263,7 @@ namespace NewRelic.Agent.Core.WireModels
                     ? MetricNames.ApdexAllWeb
                     : MetricNames.ApdexAllOther;
                 txStats.MergeUnscopedStats(proposedName, data);
-                txStats.MergeUnscopedStats(InternalMetricName.Create(txApdexName), data);
+                txStats.MergeUnscopedStats(MetricName.Create(txApdexName), data);
             }
 
             #endregion Transaction apdex builders
@@ -444,7 +443,7 @@ namespace NewRelic.Agent.Core.WireModels
             public static void TryBuildDatastoreStatementMetric(DatastoreVendor vendor, ParsedSqlStatement sqlStatement,
                 TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
             {
-                var proposedName = InternalMetricName.Create(sqlStatement.DatastoreStatementMetricName);
+                var proposedName = MetricName.Create(sqlStatement.DatastoreStatementMetricName);
                 var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
                 txStats.MergeUnscopedStats(proposedName, data);
                 txStats.MergeScopedStats(proposedName, data);

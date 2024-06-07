@@ -3,9 +3,9 @@
 
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -23,6 +23,14 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             _fixture.TestLogger = output;
             _fixture.Actions
             (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+
+                },
                 exerciseApplication: ExerciseApplication
             );
             _fixture.Initialize();
@@ -60,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             _connectData = _connectData ?? _fixture.AgentLog.GetConnectData();
 
             var nrConfig = _connectData?.Environment?.GetPropertyString("Initial NewRelic Config");
-            var appConfig = _connectData?.Environment?.GetPropertyString("Application Config");
+            var appConfig = _connectData?.Environment?.GetPropertyString("Application Config").Split(',')[0];
 
             NrAssert.Multiple(
                 () => Assert.NotNull(nrConfig),

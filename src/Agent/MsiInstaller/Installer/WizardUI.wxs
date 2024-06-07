@@ -1,26 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+﻿<!--
 Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Fragment>
     <UI Id="WizardUI">
-      <UIRef Id="WixUI_FeatureTree"/>
-      <UIRef Id="WixUI_ErrorProgressText"/>
+      <ui:WixUI Id="WixUI_FeatureTree" />
+      <UIRef Id="WixUI_ErrorProgressText" />
 
-      <DialogRef Id="LicenseKeyDialog"/>
+      <DialogRef Id="LicenseKeyDialog" />
 
       <!-- Try to get the license key from a previous install. -->
-      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="DoAction" Value="FindPreviousLicenseKey" Order="1">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="DoAction" Value="FindPreviousLicenseKey" Order="1" />
       <!-- If there was a previous license key found and they have accepted the agreement, then go on to the customize dialog (skip license key input). -->
-      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="FeaturesDlg" Order="2">PREVLICENSEKEYFOUND AND LicenseAccepted = "1"</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="FeaturesDlg" Order="2" Condition="PREVLICENSEKEYFOUND AND LicenseAccepted = &quot;1&quot;" />
       <!-- If a previous license key was not found then prompt for the license key next. -->
-      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="LicenseKeyDialog" Order="3">NOT PREVLICENSEKEYFOUND AND LicenseAccepted = "1"</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="LicenseKeyDialog" Order="3" Condition="NOT PREVLICENSEKEYFOUND AND LicenseAccepted = &quot;1&quot;" />
       <!-- If a previous license key was not found then the back button from customize goes to the license key dialog. -->
-      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseKeyDialog" Order="2">NOT Installed AND NOT PREVLICENSEKEYFOUND</Publish>
+      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseKeyDialog" Order="2" Condition="NOT Installed AND NOT PREVLICENSEKEYFOUND" />
       <!-- If a previous license key was found then the back button from customize goes to the license agreement dialog. -->
-      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="2">NOT Installed AND PREVLICENSEKEYFOUND</Publish>
+      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="2" Condition="NOT Installed AND PREVLICENSEKEYFOUND" />
     </UI>
   </Fragment>
 </Wix>

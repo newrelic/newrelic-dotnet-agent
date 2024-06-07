@@ -165,7 +165,7 @@ fi
 export TARGET='production' # this is just a string used in local paths for repository data pulled down from S3 and then pushed back up
 
 # Make sure we have all the external tools we need
-for CMD in apt-ftparchive gpg createrepo curl rsync; do
+for CMD in apt-ftparchive gpg createrepo_c curl rsync; do
   if ! command -v $CMD > /dev/null; then
     die 'command not found:' $CMD
   fi

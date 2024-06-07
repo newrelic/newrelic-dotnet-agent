@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -18,6 +17,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public RemoteService FirstCallApplication { get; set; }
         public RemoteService SecondCallApplication { get; set; }
 
+        public bool ExcludeNewRelicHeader = false;
+
         private AgentLogFile _firstCallAppAgentLog;
         private AgentLogFile _secondCallAppAgentLog;
 
@@ -25,7 +26,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public AgentLogFile SecondCallAppAgentLog => _secondCallAppAgentLog ?? (_secondCallAppAgentLog = new AgentLogFile(SecondCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
 
         public AspNetCoreDistTraceRequestChainFixture()
-            : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
             Actions(setupConfiguration: () =>
             {
@@ -35,8 +43,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 configModifier.SetLogLevel("all");
 
                 //Do during setup so TestLogger is set.
-                FirstCallApplication = SetupDistributedTracingApplication();
-                SecondCallApplication = SetupDistributedTracingApplication();
+                FirstCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
+                SecondCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
 
                 var environmentVariables = new Dictionary<string, string>();
 
@@ -67,9 +75,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             }
         }
 
-        protected RemoteService SetupDistributedTracingApplication()
+        protected RemoteService SetupDistributedTracingApplication(bool excludeNewRelicHeader)
         {
-            var service = new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true);
+            var service = new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true);
             service.TestLogger = new XUnitTestLogger(TestLogger);
             service.DeleteWorkingSpace();
             service.CopyToRemote();
@@ -79,6 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var configModifier = new NewRelicConfigModifier(service.DestinationNewRelicConfigFilePath);
             configModifier.SetOrDeleteDistributedTraceEnabled(true);
             configModifier.SetOrDeleteSpanEventsEnabled(true);
+            configModifier.SetOrDeleteDistributedTraceExcludeNewRelicHeader(excludeNewRelicHeader);
             configModifier.SetLogLevel("all");
 
             return service;

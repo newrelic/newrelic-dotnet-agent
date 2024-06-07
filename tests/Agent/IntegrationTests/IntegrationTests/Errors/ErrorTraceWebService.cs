@@ -5,8 +5,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -52,13 +52,13 @@ namespace NewRelic.Agent.IntegrationTests.Errors
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 2},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 2},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 2},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2},
 
-				// other
-				new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2},
+                // other
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2},
                 new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", callCount = 2},
                 new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2}
             };
@@ -70,10 +70,16 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<string, string>
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
+            var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents();
+
+            var expectedTransactonEventAttributes = new Dictionary<string, string>
             {
                 { "errorType", ExpectedExceptionType },
                 { "errorMessage", "Oh no!" },
+                { "error", "true" },
             };
 
             var expectedErrorEventAttributes = new Dictionary<string, string>
@@ -81,11 +87,6 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 { "error.class", ExpectedExceptionType },
                 { "error.message", "Oh no!" },
             };
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
@@ -96,16 +97,19 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assert.Equal(ExpectedExceptionType, errorTraces[0].ExceptionClassName),
                 () => Assert.Equal("Oh no!", errorTraces[0].Message),
                 () => Assert.NotEmpty(errorTraces[0].Attributes.StackTrace),
+                () => Assert.NotNull(errorTraces[0].Attributes.IntrinsicAttributes["guid"]),
                 () => Assert.Equal("WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", errorTraces[1].Path),
                 () => Assert.Equal(ExpectedExceptionType, errorTraces[1].ExceptionClassName),
                 () => Assert.Equal("Oh no!", errorTraces[1].Message),
                 () => Assert.NotEmpty(errorTraces[1].Attributes.StackTrace),
+                () => Assert.NotNull(errorTraces[1].Attributes.IntrinsicAttributes["guid"]),
                 () => Assert.True(transactionEvents.Any(), "No transaction events found."),
                 () => Assert.True(transactionEvents.Count == 2, $"Expected 2 transaction event but found {transactionEvents.Count}"),
-                () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
-                () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[1]),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactonEventAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactonEventAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[1]),
                 () => Assert.Equal(2, errorEvents.Count()),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents.FirstOrDefault())
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents.FirstOrDefault()),
+                () => Assert.NotNull(errorEvents.FirstOrDefault().IntrinsicAttributes["guid"])
             );
         }
     }

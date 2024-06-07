@@ -23,12 +23,12 @@ namespace NewRelic.Agent.Core.DataTransport
     
     public class SendTransactionEventDataTransportServiceTests : DataTransportServiceTestBase
     {
-        public override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
+        protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>(), Arg.IsAny<string>());
         }
 
-        public override string GetExpectedDestinationAreaName()
+        protected override string GetExpectedDestinationAreaName()
         {
             return "analytic_event_data";
         }
@@ -36,12 +36,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public class SendLogEventDataTransportServiceTests : DataTransportServiceTestBase
     {
-        public override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
+        protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<LogEventWireModelCollection>());
+            return service.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>());
         }
 
-        public override string GetExpectedDestinationAreaName()
+        protected override string GetExpectedDestinationAreaName()
         {
             return "log_event_data";
         }
@@ -50,8 +50,8 @@ namespace NewRelic.Agent.Core.DataTransport
     [TestFixture]
     public abstract class DataTransportServiceTestBase
     {
-        public abstract DataTransportResponseStatus ExecuteRequest(DataTransportService service);
-        public abstract string GetExpectedDestinationAreaName();
+        protected abstract DataTransportResponseStatus ExecuteRequest(DataTransportService service);
+        protected abstract string GetExpectedDestinationAreaName();
 
         private DataTransportService _dataTransportService;
         private IConnectionManager _connectionManager;
@@ -90,6 +90,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public void TearDown()
         {
             _disposableCollection.Dispose();
+            _connectionManager.Dispose();
         }
 
         [Test]
@@ -100,7 +101,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
+            Assert.That(result, Is.EqualTo(DataTransportResponseStatus.RequestSuccessful));
         }
 
         [TestCase((HttpStatusCode)400, DataTransportResponseStatus.Discard)]
@@ -131,7 +132,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var actual = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -142,7 +143,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            Assert.That(result, Is.EqualTo(DataTransportResponseStatus.Retain));
         }
 
         [Test]
@@ -153,7 +154,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            Assert.That(result, Is.EqualTo(DataTransportResponseStatus.Retain));
         }
 
         [Test]
@@ -164,7 +165,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+            Assert.That(result, Is.EqualTo(DataTransportResponseStatus.Retain));
         }
 
         [Test]
@@ -175,7 +176,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var result = ExecuteRequest(_dataTransportService);
 
-            Assert.AreEqual(DataTransportResponseStatus.Discard, result);
+            Assert.That(result, Is.EqualTo(DataTransportResponseStatus.Discard));
         }
 
         [TestCase(HttpStatusCode.Unauthorized)]

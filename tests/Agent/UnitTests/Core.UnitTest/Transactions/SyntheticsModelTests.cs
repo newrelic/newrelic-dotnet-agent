@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-            Assert.IsNull(syntheticsData);
+            Assert.That(syntheticsData, Is.Null);
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-            Assert.IsNull(syntheticsData);
+            Assert.That(syntheticsData, Is.Null);
         }
 
         [Test]
@@ -66,12 +66,12 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(syntheticsData),
-                () => Assert.AreEqual(1, syntheticsData.Version),
-                () => Assert.AreEqual(2, syntheticsData.AccountId),
-                () => Assert.AreEqual("3", syntheticsData.ResourceId),
-                () => Assert.AreEqual("4", syntheticsData.JobId),
-                () => Assert.AreEqual("5", syntheticsData.MonitorId)
+                () => Assert.That(syntheticsData, Is.Not.Null),
+                () => Assert.That(syntheticsData.Version, Is.EqualTo(1)),
+                () => Assert.That(syntheticsData.AccountId, Is.EqualTo(2)),
+                () => Assert.That(syntheticsData.ResourceId, Is.EqualTo("3")),
+                () => Assert.That(syntheticsData.JobId, Is.EqualTo("4")),
+                () => Assert.That(syntheticsData.MonitorId, Is.EqualTo("5"))
                 );
         }
 
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
             var obfuscatedHeader = syntheticsHeader.TryGetObfuscated();
 
             var deobfuscatedHeader = Strings.Base64Decode(obfuscatedHeader, EncodingKey);
-            Assert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
+            Assert.That(deobfuscatedHeader, Is.EqualTo("[1,2,\"3\",\"4\",\"5\"]"));
         }
 
         #endregion

@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.NotNull(cpuSample);
+            Assert.That(cpuSample, Is.Not.Null);
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace NewRelic.Agent.Core.Samplers
             _sampleAction();
 
             // Assert
-            Assert.IsTrue(cpuSampleBefore.CurrentUserProcessorTime < cpuSampleAfter.CurrentUserProcessorTime, "UserProcessorTime did not increase as expected");
+            Assert.That(cpuSampleBefore.CurrentUserProcessorTime < cpuSampleAfter.CurrentUserProcessorTime, Is.True, "UserProcessorTime did not increase as expected");
         }
 
         private void IncreaseUserProcessorTime(int iterations)

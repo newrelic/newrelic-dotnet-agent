@@ -32,5 +32,30 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <!--8.10.0+-->
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
+        <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
+        <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+
+    <!--8.12.1+-->
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DistributedTransport`1">
+        <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DistributedTransport`1">
+        <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

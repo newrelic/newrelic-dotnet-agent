@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
         }
 
-        public override IConfiguration GetDefaultConfiguration()
+        protected override IConfiguration GetDefaultConfiguration()
         {
             var config = Mock.Create<IConfiguration>();
             Mock.Arrange(() => config.SpanEventsEnabled).Returns(true);
@@ -187,7 +187,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected const string DefaultLicenseKey = "defaultlicensekey";
         protected const string DefaultAgentRunToken = "defaultagentruntoken";
 
-        public abstract IConfiguration GetDefaultConfiguration();
+        protected abstract IConfiguration GetDefaultConfiguration();
         protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter);
         protected abstract TRequest GetRequestModel();
         protected abstract TResponse GetResponseModel(ulong messagesSeen);
@@ -250,6 +250,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         public void Teardown()
         {
             _streamingSvc?.Shutdown(false);
+            _streamingSvc?.Dispose();
             _agentHealthReporter = null;
         }
 
@@ -290,8 +291,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc.StartConsumingCollection(collection);
 
-            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
-            Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
+            Assert.Multiple(() =>
+            {
+                Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(5)), Is.True);
+                Assert.That(_streamingSvc.IsServiceAvailable, Is.EqualTo(expectedIsServiceAvailable), $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
+            });
         }
 
         [TestCase(false, false, false, false)]
@@ -369,8 +373,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => CollectionAssert.AreEquivalent(expectedMetadata, actualConnectionMetadata, "connection metadata did not match")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualConnectionMetadata, Is.EquivalentTo(expectedMetadata), "connection metadata did not match")
             );
         }
 
@@ -420,8 +424,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 NrAssert.Multiple
                 (
-                    () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                    () => Assert.AreEqual(expectWarningInLogs, logger.HasMessageThatContains("'grpc_proxy'"))
+                    () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                    () => Assert.That(logger.HasMessageThatContains("'grpc_proxy'"), Is.EqualTo(expectWarningInLogs))
                 );
             }
         }
@@ -477,9 +481,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal Didn't Fire"),
-                () => Assert.GreaterOrEqual(_expectedDelaySequenceConnect.Count(), succeedOnAttempt),
-                () => CollectionAssert.AreEqual(expectedDelays, actualDelays, $"After {succeedOnAttempt} attempt(s), delays should have been {string.Join(",", expectedDelays)}, but were {string.Join(",", actualDelays)}")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal Didn't Fire"),
+                () => Assert.That(_expectedDelaySequenceConnect.Count(), Is.GreaterThanOrEqualTo(succeedOnAttempt)),
+                () => Assert.That(actualDelays, Is.EqualTo(expectedDelays).AsCollection, $"After {succeedOnAttempt} attempt(s), delays should have been {string.Join(",", expectedDelays)}, but were {string.Join(",", actualDelays)}")
             );
         }
 
@@ -531,9 +535,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal Didn't Fire"),
-                () => Assert.GreaterOrEqual(_expectedDelaySequenceConnect.Count(), succeedOnAttempt),
-                () => CollectionAssert.AreEqual(expectedDelays, actualDelays, $"After {succeedOnAttempt} attempt(s), delays should have been {string.Join(",", expectedDelays)}, but were {string.Join(",", actualDelays)}")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal Didn't Fire"),
+                () => Assert.That(_expectedDelaySequenceConnect.Count(), Is.GreaterThanOrEqualTo(succeedOnAttempt)),
+                () => Assert.That(actualDelays, Is.EqualTo(expectedDelays).AsCollection, $"After {succeedOnAttempt} attempt(s), delays should have been {string.Join(",", expectedDelays)}, but were {string.Join(",", actualDelays)}")
             );
         }
 
@@ -587,8 +591,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
-                () => CollectionAssert.AreEqual(expectedAttempts, actualAttempts)
+                () => Assert.That(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), Is.True, "Task didn't complete"),
+                () => Assert.That(actualAttempts, Is.EqualTo(expectedAttempts).AsCollection)
             );
         }
 
@@ -644,19 +648,22 @@ namespace NewRelic.Agent.Core.Spans.Tests
             //var expectedAttempts = new[] { item1, item1 };
             var expectedAttempts = new List<TRequest>() { item1, item1 };
 
-            Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete");
-            CollectionAssert.AreEqual(expectedAttempts, actualAttempts);
-            CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan }, actualDelays);
+            Assert.Multiple(() =>
+            {
+                Assert.That(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), Is.True, "Task didn't complete");
+                Assert.That(actualAttempts, Is.EqualTo(expectedAttempts).AsCollection);
+                Assert.That(actualDelays, Is.EqualTo(new[] { _expectedDelayAfterErrorSendingASpan }).AsCollection);
+            });
         }
 
         [Test]
-        public void MultpleConsumersItemsSentOnlyOnce()
+        public void MultipleConsumersItemsSentOnlyOnce()
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(4);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceCountConsumers).Returns(3);
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-            var actualItems = new List<TRequest>();
+            var actualItems = new ConcurrentBag<TRequest>();
             var requestItems = new ConcurrentBag<TRequest>();
             for (var i = 0; i < 100; i++)
             {
@@ -668,7 +675,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _grpcWrapper.WithTrySendDataImpl = (stream, requestBatch, timeout, token) =>
                 {
                     var requests = GetBatchItems(requestBatch);
-                    actualItems.AddRange(requests);
+                    foreach (var streamingModel in requests)
+                        actualItems.Add(streamingModel);
 
                     return true;
                 };
@@ -689,8 +697,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(60)), "Task didn't complete"),
-                () => CollectionAssert.AreEquivalent(expectedItems, actualItems.ToList())
+                () => Assert.That(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(60)), Is.True, "Task didn't complete"),
+                () => Assert.That(actualItems.ToList(), Is.EquivalentTo(expectedItems))
             );
         }
 
@@ -733,10 +741,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountItems, queueCount, "Collection count"),
-                () => Assert.AreEqual(expectedBatchSizes.Length, actualBatchSizes.Count, "Number of Batches"),
-                () => CollectionAssert.AreEqual(expectedBatchSizes, actualBatchSizes.ToArray(), "Batch Sizes")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(queueCount, Is.EqualTo(expectedCountItems), "Collection count"),
+                () => Assert.That(actualBatchSizes, Has.Count.EqualTo(expectedBatchSizes.Length), "Number of Batches"),
+                () => Assert.That(actualBatchSizes.ToArray(), Is.EqualTo(expectedBatchSizes).AsCollection, "Batch Sizes")
             );
         }
 
@@ -774,10 +782,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created"),
-                () => Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested, "The first stream cancellation token was not triggered."),
-                () => Assert.IsFalse(streamCancellationTokens[1].IsCancellationRequested, "The second stream cancellation token was triggered.")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(streamCancellationTokens, Has.Count.EqualTo(2), "Did not see enough streams created"),
+                () => Assert.That(streamCancellationTokens[0].IsCancellationRequested, Is.True, "The first stream cancellation token was not triggered."),
+                () => Assert.That(streamCancellationTokens[1].IsCancellationRequested, Is.False, "The second stream cancellation token was triggered.")
             );
         }
 
@@ -816,14 +824,16 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
+            Assert.Multiple(() =>
+            {
+                Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire");
+                Assert.That(streamCancellationTokens, Has.Count.EqualTo(2), "Did not see enough streams created");
 
-            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
-            Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created");
-
-            Assert.IsTrue(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[0]),
-                "The first stream cancellation token was not triggered.");
-            Assert.IsTrue(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[1]),
-                "The second stream cancellation token was not triggered.");
+                Assert.That(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[0]), Is.True,
+                    "The first stream cancellation token was not triggered.");
+                Assert.That(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[1]), Is.True,
+                    "The second stream cancellation token was not triggered.");
+            });
         }
 
         private static bool WaitForCancellationTokenToBeCancelled(CancellationToken cancellationToken, int seconds = 1)
@@ -867,8 +877,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 _streamingSvc.StartConsumingCollection(new PartitionedBlockingCollection<TRequest>(1000, 3));
 
-                Assert.IsTrue(gotResponseReceivedEvent.WaitOne(TimeSpan.FromSeconds(10)), "Trigger Didn't Fire");
-                Assert.AreEqual(5, responseMessagesSeen);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(gotResponseReceivedEvent.WaitOne(TimeSpan.FromSeconds(10)), Is.True, "Trigger Didn't Fire");
+                    Assert.That(responseMessagesSeen, Is.EqualTo(5));
+                });
             }
         }
 
@@ -928,9 +941,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => CollectionAssert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors).AsCollection, "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count")
             );
         }
 
@@ -965,8 +978,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(1, actualCountTimeouts, "gRPC Timeout Count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountTimeouts, Is.EqualTo(1), "gRPC Timeout Count")
             );
         }
 
@@ -1036,9 +1049,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => CollectionAssert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors).AsCollection, "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count")
             );
         }
 
@@ -1107,7 +1120,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc.StartConsumingCollection(collection);
 
-            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)), "Signal Didn't fire");
+            Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(5)), Is.True, "Signal Didn't fire");
 
             // We sleep here since there are actually 3 consumers all doing things, and we need to give them time
             // to finish aggregating their stats (what this test covers).
@@ -1115,16 +1128,15 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             agentHealthReporter.CollectMetrics();
 
-
-            Assert.AreEqual(countItemsToProcess, actualCountSent, "All Items Processed through GRPC");
-            Assert.AreEqual(countItemsToProcess, actualBatchSizeTotal,
-                "All items reported through Agent Health Reporter");
-            Assert.LessOrEqual(actualBatchSizeMin, actualBatchSizeMax, "Min batch size should be less than max");
-            Assert.LessOrEqual(actualBatchSizeMin, actualAvgBatchSize, "Avg batch size should be greater than min");
-            Assert.LessOrEqual(actualAvgBatchSize, actualBatchSizeMax,
-                "Avg batch size should be less than than max");
-            Assert.LessOrEqual(actualBatchSizeMax, maxBatchSize,
-                "Max Batch Size should not exceed the constrained value");
+            Assert.Multiple(() =>
+            {
+                Assert.That(actualCountSent, Is.EqualTo(countItemsToProcess), "All Items Processed through GRPC");
+                Assert.That(actualBatchSizeTotal, Is.EqualTo(countItemsToProcess), "All items reported through Agent Health Reporter");
+                Assert.That(actualBatchSizeMin, Is.LessThanOrEqualTo(actualBatchSizeMax), "Min batch size should be less than max");
+                Assert.That(actualBatchSizeMin, Is.LessThanOrEqualTo(actualAvgBatchSize), "Avg batch size should be greater than min");
+                Assert.That(actualAvgBatchSize, Is.LessThanOrEqualTo(actualBatchSizeMax), "Avg batch size should be less than than max");
+                Assert.That(actualBatchSizeMax, Is.LessThanOrEqualTo(maxBatchSize), "Max Batch Size should not exceed the constrained value");
+            });
         }
 
 
@@ -1191,25 +1203,25 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedIsValidConfig, actualIsValidConfig, "Configuration is valid")
+                () => Assert.That(actualIsValidConfig, Is.EqualTo(expectedIsValidConfig), "Configuration is valid")
             );
 
             if (!expectedIsValidConfig)
             {
                 NrAssert.Multiple
                 (
-                    () => Assert.IsNull(actualHost, "Invalid config shouldn't have host"),
-                    () => Assert.AreEqual(-1, actualPort, "Invalid config should have port -1"),
-                    () => Assert.AreEqual(true, actualSsl, "Invalid config should have SSL true")
+                    () => Assert.That(actualHost, Is.Null, "Invalid config shouldn't have host"),
+                    () => Assert.That(actualPort, Is.EqualTo(-1), "Invalid config should have port -1"),
+                    () => Assert.That(actualSsl, Is.EqualTo(true), "Invalid config should have SSL true")
                 );
             }
             else
             {
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(testHost, actualHost, "Host"),
-                    () => Assert.AreEqual(expectedPort, actualPort, "Port"),
-                    () => Assert.AreEqual(expectedSsl, actualSsl, "SSL")
+                    () => Assert.That(actualHost, Is.EqualTo(testHost), "Host"),
+                    () => Assert.That(actualPort, Is.EqualTo(expectedPort), "Port"),
+                    () => Assert.That(actualSsl, Is.EqualTo(expectedSsl), "SSL")
                 );
             }
         }
@@ -1285,10 +1297,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualCountSpansSent, Is.EqualTo(expectedCountSpansSent), "Span Sent Events")
             );
         }
 
@@ -1339,9 +1351,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
-            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
-            Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count");
-            Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count");
+            Assert.Multiple(() =>
+            {
+                Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire");
+                Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count");
+                Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count");
+            });
         }
 
         [Test]
@@ -1393,9 +1408,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count")
             );
         }
 
@@ -1471,12 +1486,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(1000)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
-                () => CollectionAssert.IsEmpty(actualDelays, "The service should restart without triggering a delay"),
-                () => Assert.AreEqual(expectedCreateChannelCount, createChannelInvocationCount, "CreateChannel call count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(1000)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualCountSpansSent, Is.EqualTo(expectedCountSpansSent), "Span Sent Events"),
+                () => Assert.That(actualDelays, Is.Empty, "The service should restart without triggering a delay"),
+                () => Assert.That(createChannelInvocationCount, Is.EqualTo(expectedCreateChannelCount), "CreateChannel call count")
             );
         }
 
@@ -1539,10 +1554,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => CollectionAssert.AreEqual(_expectedDelaySequenceConnect.Take(1), actualDelays, "The delay sequence did not match")
+                () => Assert.That(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), Is.True, "Task didn't complete"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualDelays, Is.EqualTo(_expectedDelaySequenceConnect.Take(1)).AsCollection, "The delay sequence did not match")
             );
         }
 
@@ -1618,12 +1633,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
-                () => CollectionAssert.IsEmpty(actualDelays, "The service should restart without a delay"),
-                () => Assert.AreEqual(expectedCreateChannelCount, createChannelInvocationCount, "CreateChannel call count")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualCountSpansSent, Is.EqualTo(expectedCountSpansSent), "Span Sent Events"),
+                () => Assert.That(actualDelays, Is.Empty, "The service should restart without a delay"),
+                () => Assert.That(createChannelInvocationCount, Is.EqualTo(expectedCreateChannelCount), "CreateChannel call count")
             );
         }
 
@@ -1696,11 +1711,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
-                () => CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan }, actualDelays, "The expected delay sequence did not match")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualCountSpansSent, Is.EqualTo(expectedCountSpansSent), "Span Sent Events"),
+                () => Assert.That(actualDelays, Is.EqualTo(new[] { _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan }).AsCollection, "The expected delay sequence did not match")
             );
         }
 
@@ -1773,11 +1788,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
-                () => CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan, 0, _expectedDelayAfterErrorSendingASpan }, actualDelays, "The expected delay sequence did not match")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualCountSpansSent, Is.EqualTo(expectedCountSpansSent), "Span Sent Events"),
+                () => Assert.That(actualDelays, Is.EqualTo(new[] { _expectedDelayAfterErrorSendingASpan, 0, _expectedDelayAfterErrorSendingASpan }).AsCollection, "The expected delay sequence did not match")
             );
         }
 
@@ -1832,10 +1847,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => CollectionAssert.IsEmpty(actualDelays, "There should be no delays")
+                () => Assert.That(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), Is.True, "Task didn't complete"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualDelays, Is.Empty, "There should be no delays")
             );
         }
 
@@ -1902,10 +1917,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
-                () => CollectionAssert.AreEqual(expectedDelays, actualDelays, "The expected delay sequence did not match")
+                () => Assert.That(signalIsDone.Wait(TimeSpan.FromSeconds(10)), Is.True, "Signal didn't fire"),
+                () => Assert.That(actualCountGrpcErrors, Is.EqualTo(expectedCountGrpcErrors), "gRPC Error Count"),
+                () => Assert.That(actualCountGeneralErrors, Is.EqualTo(expectedCountGeneralErrors), "General Error Count"),
+                () => Assert.That(actualDelays, Is.EqualTo(expectedDelays).AsCollection, "The expected delay sequence did not match")
             );
         }
 
@@ -1922,7 +1937,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 
-            Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
+            Assert.That(actualIsConfigValid, Is.EqualTo(expectedIsConfigValid), "Is Config Valid");
         }
 
         [TestCase(-1, false)]
@@ -1938,7 +1953,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 
-            Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
+            Assert.That(actualIsConfigValid, Is.EqualTo(expectedIsConfigValid), "Is Config Valid");
         }
 
         [TestCase(-1, false)]
@@ -1955,7 +1970,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 
-            Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
+            Assert.That(actualIsConfigValid, Is.EqualTo(expectedIsConfigValid), "Is Config Valid");
         }
 
 

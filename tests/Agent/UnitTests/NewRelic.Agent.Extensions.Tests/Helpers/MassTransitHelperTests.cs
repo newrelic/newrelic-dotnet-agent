@@ -23,7 +23,7 @@ namespace Agent.Extensions.Tests.Helpers
             var queueName = MassTransitHelpers.GetQueueData(uri).QueueName;
 
             // Assert
-            Assert.AreEqual(expectedQueueName, queueName, "Did not get expected queue name");
+            Assert.That(queueName, Is.EqualTo(expectedQueueName), "Did not get expected queue name");
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace Agent.Extensions.Tests.Helpers
             var destType = MassTransitHelpers.GetQueueData(uri).DestinationType;
 
             // Assert
-            Assert.AreEqual(expectedDestType, destType, "Did not get expected queue type");
+            Assert.That(destType, Is.EqualTo(expectedDestType), "Did not get expected queue type");
         }
     }
 

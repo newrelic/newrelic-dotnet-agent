@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-    public interface ISqlTraceAggregator
+    public interface ISqlTraceAggregator : IDisposable
     {
         void Collect(SqlTraceStatsCollection sqlTrStats);
     }
@@ -45,7 +45,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+        protected override void Harvest() => InternalHarvest();
+
+        protected void InternalHarvest(string transactionId = null)
         {
             Log.Finest("SQL Trace harvest starting.");
 
@@ -65,7 +69,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (!slowestTraces.Any())
                 return;
 
-            var responseStatus = DataTransportService.Send(slowestTraces);
+            var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
 
             HandleResponse(responseStatus, slowestTraces);
 

@@ -62,7 +62,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
             instrumentationSet->insert(overload1->GetInstrumentationPoint());
             instrumentationSet->insert(overload2->GetInstrumentationPoint());
-            auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+            auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet, nullptr);
             auto methodRewriter = std::make_shared<MethodRewriter>(instrumentation, _X(""), false);
 
             uint8_t overload1CallCount = 0;
@@ -341,7 +341,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
             instrumentationSet->insert(function->GetInstrumentationPoint());
 
-            return std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+            return std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet, nullptr);
         }
 
         std::shared_ptr<MethodRewriter> GetMethodRewriterWithConfigurationForFunction(std::shared_ptr<MockFunction> function)

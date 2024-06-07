@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
         }
 
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
         }
 
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
 
         }
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsTrue(wasCalled);
+                Assert.That(wasCalled, Is.True);
             }
 
             [Test]
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                     EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
-                Assert.IsFalse(wasCalled);
+                Assert.That(wasCalled, Is.False);
             }
         }
 
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
+                Assert.That(configuration, Is.Not.Null);
             }
 
             [Test]
@@ -177,8 +177,73 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var configuration = RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest());
 
                 // ASSERT
-                Assert.NotNull(configuration);
-                Assert.AreEqual(TimeSpan.FromSeconds(42), configuration.TransactionTraceApdexT);
+                Assert.That(configuration, Is.Not.Null);
+                Assert.That(configuration.TransactionTraceApdexT, Is.EqualTo(TimeSpan.FromSeconds(42)));
+            }
+        }
+
+        [TestFixture, Category("Configuration")]
+        public class ConfigurationSeviceUpdatesLogLevel
+        {
+            private ConfigurationService _configurationService;
+            private bool _logLevelChanged;
+            private string _newLogLevel;
+
+            [SetUp]
+            public void SetUp()
+            {
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
+
+                _logLevelChanged = false;
+                _newLogLevel = null;
+                _configurationService.ChangeLogLevelAction = newLevel =>
+                {
+                    _logLevelChanged = true;
+                    _newLogLevel = newLevel;
+                };
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _configurationService.Dispose();
+            }
+
+            [Test]
+            public void UpdatesLogLevel()
+            {
+                var updatedLocalConfig = new configuration();
+                updatedLocalConfig.log.level = "finest";
+
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_logLevelChanged, Is.EqualTo(true));
+                    Assert.That(_newLogLevel, Is.EqualTo("FINEST"));
+                });
+            }
+
+            [Test]
+            public void DoesNotUpdateLogLevelWhenTheLevelIsUnchanged()
+            {
+                // Set the current log level to finest
+                var updatedLocalConfig = new configuration();
+                updatedLocalConfig.log.level = "finest";
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                // Reset the log level tracking variables
+                _newLogLevel = null;
+                _logLevelChanged = false;
+
+                // Public a config update with the log level unchanged
+                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_logLevelChanged, Is.False);
+                    Assert.That(_newLogLevel, Is.Null);
+                });
             }
         }
     }

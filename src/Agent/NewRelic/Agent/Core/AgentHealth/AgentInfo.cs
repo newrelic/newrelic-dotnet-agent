@@ -12,5 +12,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         [JsonProperty(PropertyName = "azure_site_extension", NullValueHandling = NullValueHandling.Ignore)]
         public bool AzureSiteExtension { get; set; }
+
+        public override string ToString()
+        {
+            return $"{InstallType ?? "Unknown"}{(AzureSiteExtension ? "SiteExtension" : "")}";
+        }
     }
 }

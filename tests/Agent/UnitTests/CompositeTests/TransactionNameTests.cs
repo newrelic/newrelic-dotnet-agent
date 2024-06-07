@@ -12,7 +12,7 @@ namespace CompositeTests
     [TestFixture]
     public class TransactionNameTests
     {
-        private static CompositeTestAgent _compositeTestAgent;
+        private CompositeTestAgent _compositeTestAgent;
 
         private IAgent _agent;
 
@@ -24,7 +24,7 @@ namespace CompositeTests
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
             _compositeTestAgent.Dispose();
         }
@@ -54,7 +54,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("WebTransaction/ASP/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("WebTransaction/ASP/foo"))
                 );
         }
 
@@ -80,7 +80,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("WebTransaction/Uri/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("WebTransaction/Uri/foo"))
                 );
         }
 
@@ -149,7 +149,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/cat/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/cat/foo"))
                 );
         }
 
@@ -176,7 +176,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/Message/vendor/Queue/Named/dest", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/Message/vendor/Queue/Named/dest"))
             );
         }
 
@@ -203,7 +203,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/Message/vendor/Topic/Consume/Named/dest", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/Message/vendor/Topic/Consume/Named/dest"))
                 );
         }
 
@@ -230,7 +230,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("WebTransaction/Custom/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("WebTransaction/Custom/foo"))
                 );
         }
 
@@ -256,7 +256,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/Custom/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/Custom/foo"))
                 );
         }
 
@@ -284,7 +284,7 @@ namespace CompositeTests
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/Custom/foo", transactionTrace.TransactionMetricName)
+                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/Custom/foo"))
                 );
         }
 

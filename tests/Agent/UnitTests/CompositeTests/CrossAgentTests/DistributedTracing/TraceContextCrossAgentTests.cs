@@ -382,7 +382,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                             ValidateAttributes(transactionEvent.IntrinsicAttributes(), testData, txAttrs);
                             break;
                         case "Span":
-                            Assert.That(_compositeTestAgent.SpanEvents.Count, Is.EqualTo(2));
+                            Assert.That(_compositeTestAgent.SpanEvents, Has.Count.EqualTo(2));
                             var spanEvent = _compositeTestAgent.SpanEvents.First();
                             ValidateAttributes(spanEvent.IntrinsicAttributes(), testData, testData.IntrinsicSettings.Events?["Span"]);
                             break;

@@ -1,0 +1,6 @@
+[newrelic-dotnet-agent-repo]
+name=New Relic .NET agent for Linux
+baseurl=https://yum.newrelic.com/pub/newrelic/el7/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://download.newrelic.com/548C16BF.gpg

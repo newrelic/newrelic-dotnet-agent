@@ -3,19 +3,19 @@
 
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Configuration;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
-using System.Configuration;
 using System.IO;
-using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 #if NETSTANDARD2_0
 using System.Reflection;
-using NewRelic.Agent.Core.Configuration;
+#else
+using System.Configuration;
+using System.Web;
 #endif
 
 namespace NewRelic.Agent.Core.Config
@@ -55,6 +55,12 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetAppDomainAppPath = InternalGetAppDomainAppPath;
 
         public static Func<string, System.Configuration.Configuration> OpenWebConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration;
+#else
+        private static string InternalGetAppDomainName()
+        {
+            return AppDomain.CurrentDomain.FriendlyName;
+        }
+        public static Func<string> GetAppDomainName = InternalGetAppDomainName;
 #endif
 
         public static Func<string, bool> FileExists = File.Exists;
@@ -68,6 +74,13 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetNewRelicHome = InternalGetNewRelicHome;
 
         #endregion Unit test helpers
+
+        /// <summary>
+        /// Gets the bootstrap configuration for the agent. The settings in this config does not change over time, and
+        /// it is only available after the ConfigurationLoader.Initialize method has been called. If this property is
+        /// accessed before the Initialize method has been called, it will return a default bootstrap configuration.
+        /// </summary>
+        public static IBootstrapConfiguration BootstrapConfig { get; private set; } = BootstrapConfiguration.GetDefault();
 
         /// <summary>
         /// Reads an application setting from the web configuration associated with the current virtual path,
@@ -107,11 +120,11 @@ namespace NewRelic.Agent.Core.Config
         {
             ValueWithProvenance<string> value = GetWebConfigAppSetting(key);
 #if NETFRAMEWORK
-			if (value.Value == null)
-			{
-				value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
-					"ConfigurationManager app setting");
-			}
+            if (value.Value == null)
+            {
+                value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
+                    "ConfigurationManager app setting");
+            }
 #else
             if (value?.Value == null)
             {
@@ -139,7 +152,7 @@ namespace NewRelic.Agent.Core.Config
             if (fileName != null)
                 return fileName;
 
-            throw new Exception(string.Format("Could not find {0} in NewRelic.ConfigFile path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName));
+            throw new Exception(string.Format("Could not find {0} in {1} path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName, Constants.AppSettingsConfigFile));
         }
 
         private static string TryGetAgentConfigFileFromAppConfig()
@@ -147,32 +160,32 @@ namespace NewRelic.Agent.Core.Config
 
 #if NETSTANDARD2_0
 
-			try
-			{
-				var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting("NewRelic.ConfigFile");
-				if (!File.Exists(fileName))
-				{
-					return null;
-				}
+            try
+            {
+                var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
+                if (!File.Exists(fileName))
+                {
+                    return null;
+                }
 
-				Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
-				return fileName;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                Log.Info("Configuration file found in path pointed to by {0} appSetting: {1}", Constants.AppSettingsConfigFile, fileName);
+                return fileName;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 
 #else
             try
             {
-                var fileName = GetConfigSetting("NewRelic.ConfigFile").Value;
+                var fileName = GetConfigSetting(Constants.AppSettingsConfigFile).Value;
                 if (!FileExists(fileName))
                 {
                     return null;
                 }
 
-                Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting of app/web config: {0}", fileName);
+                Log.Info("Configuration file found in path pointed to by {0} appSetting of app/web config: {1}", Constants.AppSettingsConfigFile, fileName);
                 return fileName;
             }
             catch (Exception)
@@ -185,36 +198,36 @@ namespace NewRelic.Agent.Core.Config
         private static string TryGetAgentConfigFileFromAppRoot()
         {
 #if NETSTANDARD2_0
-			try
-			{
-				var filename = string.Empty;
+            try
+            {
+                var filename = string.Empty;
 
-				var entryAssembly = Assembly.GetEntryAssembly();
-				if (entryAssembly != null)
-				{
-					var directory = Path.GetDirectoryName(entryAssembly.Location);
-					filename = Path.Combine(directory, NewRelicConfigFileName);
-					if (File.Exists(filename))
-					{
-						Log.Info("Configuration file found in app/web root directory: {0}", filename);
-						return filename;
-					}
-				}
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
+                {
+                    var directory = Path.GetDirectoryName(entryAssembly.Location);
+                    filename = Path.Combine(directory, NewRelicConfigFileName);
+                    if (File.Exists(filename))
+                    {
+                        Log.Info("Configuration file found in app/web root directory: {0}", filename);
+                        return filename;
+                    }
+                }
 
-				var currentDirectory = Directory.GetCurrentDirectory();
-				filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
-				if (File.Exists(filename))
-				{
-					Log.Info("Configuration file found in app/web root directory: {0}", filename);
-					return filename;
-				}
+                var currentDirectory = Directory.GetCurrentDirectory();
+                filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
+                if (File.Exists(filename))
+                {
+                    Log.Info("Configuration file found in app/web root directory: {0}", filename);
+                    return filename;
+                }
 
-				return null;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 #else
             try
             {
@@ -311,7 +324,7 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        public static configuration Initialize()
+        public static configuration Initialize(bool publishDeserializedEvent = true)
         {
             var fileName = string.Empty;
             try
@@ -321,7 +334,9 @@ namespace NewRelic.Agent.Core.Config
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
-                return Initialize(fileName);
+                var config = Initialize(fileName, publishDeserializedEvent);
+                BootstrapConfig = new BootstrapConfiguration(config, fileName);
+                return config;
             }
             catch (FileNotFoundException ex)
             {
@@ -347,14 +362,14 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize the configuration by reading xml contained in the file named fileName.
         /// </summary>
         /// <param name="fileName"></param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        public static configuration Initialize(string fileName)
+        public static configuration Initialize(string fileName, bool publishDeserializedEvent = true)
         {
             using (StreamReader stream = new StreamReader(fileName))
             {
-                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName);
-                config.ConfigurationFileName = fileName;
+                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName, publishDeserializedEvent);
                 return config;
             }
         }
@@ -379,8 +394,9 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="configXml"></param>
         /// <param name="configSchemaSource">A method that returns a string containing the config schema (xsd).</param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
+        /// <param name="publishDeserializedEvent"></param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown")
+        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown", bool publishDeserializedEvent = true)
         {
             configuration config;
 
@@ -395,7 +411,6 @@ namespace NewRelic.Agent.Core.Config
                 config = serializer.Deserialize(reader) as configuration;
                 if (config == null)
                     throw new InvalidDataException(string.Format("Unable to deserialize the provided xml: {0}", configXml));
-                config.Initialize(configXml, provenance);
             }
 
             // Validate the config xml with the supplied schema.  Note that any validation failures do not prevent
@@ -409,10 +424,24 @@ namespace NewRelic.Agent.Core.Config
                 Log.Warn(ex, "An unknown error occurred when performing XML schema validation on config file {0}", NewRelicConfigFileName);
             }
 
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+            if (publishDeserializedEvent)
+                PublishDeserializedEvent(config);
 
             return config;
         }
+        public static void PublishDeserializedEvent(configuration config)
+        {
+            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+        }
+
+        /// <summary>
+        /// Used ONLY FOR TESTING!
+        /// </summary>
+        public static void UseBootstrapConfigurationForTesting(IBootstrapConfiguration bootstrapConfiguration)
+        {
+            BootstrapConfig = bootstrapConfiguration;
+        }
+
 
         private static void ValidateConfigXmlWithSchema(string configXml, string schemaXml)
         {
@@ -514,190 +543,8 @@ namespace NewRelic.Agent.Core.Config
         }
     }
 
-    public partial class configurationLog : ILogConfig
-    {
-        private static readonly IProcessStatic _processStatic = new ProcessStatic();
-
-        [XmlIgnore()]
-        public string LogLevel
-        {
-            get
-            {
-                if (!Enabled)
-                {
-                    return "off";
-                }
-                // Environment variable or log.level from config...
-                return (AgentInstallConfiguration.NewRelicLogLevel
-                    ?? this.level).ToUpper();
-            }
-        }
-
-        public string GetFullLogFileName()
-        {
-            var fileName = new System.Text.StringBuilder();
-
-            // Environment variable or log.directory from config...
-            var logDirectory = AgentInstallConfiguration.NewRelicLogDirectory
-                ?? directory;
-
-            if (logDirectory == null)
-            {
-                if (AgentInstallConfiguration.NewRelicHome != null)
-                {
-                    fileName.Append(AgentInstallConfiguration.NewRelicHome);
-                    if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                        fileName.Append(Path.DirectorySeparatorChar);
-                    fileName.Append("logs").Append(Path.DirectorySeparatorChar);
-                }
-            }
-            else
-            {
-                fileName.Append(logDirectory);
-            }
-            if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
-                fileName.Append(Path.DirectorySeparatorChar);
-
-            fileName.Append(GetLogFileName());
-            return fileName.ToString();
-        }
-
-        private string GetLogFileName()
-        {
-            string name = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_LOG");
-            if (name != null)
-            {
-                return Strings.SafeFileName(name);
-            }
-
-            name = fileName;
-            if (name != null)
-            {
-                return Strings.SafeFileName(name);
-            }
-
-#if NETSTANDARD2_0
-			try
-			{
-				name = AppDomain.CurrentDomain.FriendlyName;
-			}
-			catch (Exception)
-			{
-				name = _processStatic.GetCurrentProcess().ProcessName;
-			}
-#else
-            if (HttpRuntime.AppDomainAppId != null)
-            {
-                name = HttpRuntime.AppDomainAppId.ToString();
-            }
-            else
-            {
-                name = _processStatic.GetCurrentProcess().ProcessName;
-            }
-#endif
-
-            return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
-        }
-
-        private bool GetOverride(string name, bool fallback)
-        {
-            var val = ConfigurationLoader.GetEnvironmentVar(name);
-
-            if (val != null)
-            {
-                val = val.ToLower();
-            }
-
-            if (bool.TryParse(val, out var parsedValue))
-            {
-                return parsedValue;
-            }
-
-            if ("0" == val)
-            {
-                return false;
-            }
-
-            if ("1" == val)
-            {
-                return true;
-            }
-
-            return fallback;
-        }
-
-        public bool Console
-        {
-            get
-            {
-                return GetOverride("NEW_RELIC_LOG_CONSOLE", console);
-            }
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                return GetOverride("NEW_RELIC_LOG_ENABLED", enabled);
-            }
-        }
-
-        public bool IsAuditLogEnabled
-        {
-            get
-            {
-                return auditLog;
-            }
-        }
-
-    }
-
-    // The configuration class is partial.  Part of it is implemented here,
-    // and another part is autogenerated from Configuration.xsd into Configuration.cs.
-    // Beware the tarpit surrounding the case of property names, as different cases reflect
-    // different origins of the property names.
-    // Property names such as "agentEnabled" come to us from Configuration.xsd via Configuration.cs.
-    // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
-    public partial class configuration : IBootstrapConfig
-    {
-        public string Xml { get; set; }
-
-        [XmlIgnore]
-        public string ConfigurationFileName { get; set; }
-
-        public configuration Initialize(string xml, string provenance)
-        {
-            Xml = xml;
-
-            if (log == null)
-                log = new configurationLog();
-
-            try
-            {
-                var enabledProvenance = ConfigurationLoader.GetConfigSetting("NewRelic.AgentEnabled");
-                if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
-                {
-                    agentEnabled = false;
-                    AgentEnabledAt = enabledProvenance.Provenance;
-                }
-            }
-            catch
-            {
-                Log.Error("Failed to read NewRelic.AgentEnabled from local config.");
-            }
-
-            return this;
-        }
-
-        [XmlIgnore]
-        public string AgentEnabledAt { get; private set; }
-
-        [XmlIgnore]
-        public ILogConfig LogConfig { get { return log; } }
-    }
-
     /// <summary>
-    /// Thrown when there is soime problem loading the configuration.
+    /// Thrown when there is some problem loading the configuration.
     /// </summary>
     public class ConfigurationLoaderException : Exception
     {
@@ -709,6 +556,75 @@ namespace NewRelic.Agent.Core.Config
         public ConfigurationLoaderException(string message, Exception original)
             : base(message, original)
         {
+        }
+    }
+
+    /// <summary>
+    /// This class contains helper methods that allow resusing logic from the non-static DefaultConfiguration
+    /// class from within static contexts like the bootstrap process.
+    /// </summary>
+    public static class ConfigLoaderHelpers
+    {
+        // This field exists only for testing purposes. It allows bootstrap logic and regular
+        // configuration logic to use the same environment variable logic.
+        public static IEnvironment EnvironmentVariableProxy = new SystemInterfaces.Environment();
+
+        public static string GetEnvironmentVar(string name)
+        {
+            return EnvironmentVariableProxy.GetEnvironmentVariable(name);
+        }
+
+        public static string GetOverride(string name, string fallback)
+        {
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name);
+        }
+        public static int GetOverride(string name, int fallback)
+        {
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name).Value;
+        }
+
+        public static bool GetOverride(string name, bool fallback)
+        {
+            return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name);
+        }
+
+        public static bool TryToBoolean(this string val, out bool boolVal)
+        {
+            boolVal = false;
+
+            if (string.IsNullOrEmpty(val))
+            {
+                return false;
+            }
+
+            val = val.ToLower();
+
+            if (bool.TryParse(val, out boolVal))
+            {
+                return true;
+            }
+
+            switch (val)
+            {
+                case "0":
+                    boolVal = false;
+                    return true;
+                case "1":
+                    boolVal = true;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool GetLoggingEnabledValue(configurationLog localLogConfiguration)
+        {
+            return DefaultConfiguration.GetLoggingEnabledValue(EnvironmentVariableProxy, localLogConfiguration);
+        }
+
+        public static string GetLoggingLevelValue(configurationLog localLogConfiguration, bool isLoggingEnabled)
+        {
+            return DefaultConfiguration.GetLoggingLevelValue(EnvironmentVariableProxy, localLogConfiguration, isLoggingEnabled);
         }
     }
 

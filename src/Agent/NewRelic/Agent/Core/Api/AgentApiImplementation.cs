@@ -764,6 +764,50 @@ namespace NewRelic.Agent.Core.Api
                 EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
             }
         }
+
+        /// <summary> Sets the method that will be invoked to define the token count of completion.
+        ///
+        /// The callback takes the model name and input value, and returns an integer of the token count.
+        /// A value returned from the callback that is less than or equal to 0 will be ignored.
+        /// </summary>
+        /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
+        public void SetLlmTokenCountingCallback(Func<string, string, int> callback)
+        {
+            using (new IgnoreWork())
+            {
+                EventBus<LlmTokenCountingCallbackUpdateEvent>.Publish(new LlmTokenCountingCallbackUpdateEvent(callback));
+            }
+        }
+
+        public void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", IDictionary<string, object>? metadata = null)
+        {
+            using (new IgnoreWork())
+            {
+                var attributes = new Dictionary<string, object>
+                {
+                    { "trace_id", traceId },
+                    { "rating", rating },
+                    { "ingest_source",  "DotNet" }
+                };
+
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    attributes.Add("category", category);
+                }
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    attributes.Add("message", message);
+                }
+
+                foreach (var pair in metadata ?? new Dictionary<string, object>())
+                {
+                    attributes[pair.Key] = pair.Value;
+                }
+
+                RecordCustomEvent("LlmFeedbackMessage", attributes);
+            }
+        }
     }
 }
 #nullable restore

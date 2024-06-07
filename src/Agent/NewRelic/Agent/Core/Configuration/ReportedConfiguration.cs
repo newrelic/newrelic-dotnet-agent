@@ -32,7 +32,13 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.enabled")]
         public bool AgentEnabled => _configuration.AgentEnabled;
 
-        [JsonIgnore()]
+        [JsonIgnore]
+        public string AgentEnabledAt => _configuration.AgentEnabledAt;
+
+        [JsonIgnore]
+        public bool ServerlessModeEnabled => _configuration.ServerlessModeEnabled;
+
+        [JsonIgnore]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
         [JsonProperty("agent.license_key.configured")]
@@ -652,6 +658,25 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent.logging_enabled")]
         public bool LoggingEnabled => _configuration.LoggingEnabled;
+
+        [JsonIgnore]
+        public string LoggingLevel => _configuration.LoggingLevel;
+
+        [JsonProperty("agent.instrumentation.ignore")]
+        public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => _configuration.IgnoredInstrumentation;
+
+        [JsonProperty("agent.ai_monitoring.enabled")]
+        public bool AiMonitoringEnabled => _configuration.AiMonitoringEnabled;
+
+        [JsonProperty("ai_monitoring.streaming.enabled")]
+        public bool AiMonitoringStreamingEnabled => _configuration.AiMonitoringStreamingEnabled;
+
+        [JsonProperty("ai_monitoring.record_content.enabled")]
+        public bool AiMonitoringRecordContentEnabled => _configuration.AiMonitoringRecordContentEnabled;
+
+        // Serializing this Func doesn't provide us with more information than the supportability metrics
+        [JsonIgnore()]
+        public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

@@ -27,5 +27,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         int? HttpResponseStatusCode { get; }
         TimeSpan? QueueTime { get; }
+
+        bool IsLlmTransaction { get; }
     }
 }

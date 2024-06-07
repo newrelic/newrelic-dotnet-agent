@@ -101,7 +101,11 @@ namespace NewRelic.Agent.Core.Aggregators
             _agentHealthReporter.ReportSpanEventCollected(added);
         }
 
-        protected override void Harvest()
+        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+        protected override void Harvest() => InternalHarvest();
+
+        protected void InternalHarvest(string transactionId = null)
         {
             Log.Finest("Span Event harvest starting.");
 
@@ -124,7 +128,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (wireModels.Count <= 0)
                 return;
 
-            var responseStatus = DataTransportService.Send(eventHarvestData, wireModels);
+            var responseStatus = DataTransportService.Send(eventHarvestData, wireModels, transactionId);
 
             HandleResponse(responseStatus, wireModels);
 

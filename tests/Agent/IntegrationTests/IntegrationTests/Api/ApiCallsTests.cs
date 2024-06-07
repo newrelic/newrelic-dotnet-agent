@@ -33,7 +33,9 @@ namespace NewRelic.Agent.IntegrationTests.Api
         private readonly string[] ApiCalls = new string[]
             {
                 "TestTraceMetadata",
-                "TestGetLinkingMetadata"
+                "TestGetLinkingMetadata",
+                "TestFullRecordDatastoreSegment",
+                "TestRequiredRecordDatastoreSegment"
             };
 
         protected readonly TFixture Fixture;
@@ -55,6 +57,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
                     var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetLogLevel("finest");
+                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 
@@ -67,7 +70,8 @@ namespace NewRelic.Agent.IntegrationTests.Api
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/TraceMetadata" },
-                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"}
+                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"},
+                new Assertions.ExpectedMetric(){ callCount = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
             };
 
             var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();

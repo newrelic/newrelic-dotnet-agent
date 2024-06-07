@@ -7,7 +7,6 @@ using NewRelic.Core.Logging;
 using NUnit.Framework;
 using System.IO;
 using NewRelic.Testing.Assertions;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core
 {
@@ -15,41 +14,6 @@ namespace NewRelic.Agent.Core
     [TestFixture]
     public class LoggerBootstrapperTest
     {
-        private Func<string, string> _originalGetEnvironmentVar;
-        private Dictionary<string, string> _envVars = new Dictionary<string, string>();
-
-        private void SetEnvironmentVar(string name, string value)
-        {
-            _envVars[name] = value;
-        }
-
-        private void ClearEnvironmentVars() =>_envVars.Clear();
-
-        private string MockGetEnvironmentVar(string name)
-        {
-            if (_envVars.TryGetValue(name, out var value)) return value;
-            return null;
-        }
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            _originalGetEnvironmentVar = ConfigurationLoader.GetEnvironmentVar;
-            ConfigurationLoader.GetEnvironmentVar = MockGetEnvironmentVar;
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            ConfigurationLoader.GetEnvironmentVar = _originalGetEnvironmentVar;
-        }
-
-        [SetUp]
-        public void Setup()
-        {
-            ClearEnvironmentVars();
-        }
-
         [Test]
         public static void No_log_levels_are_enabled_when_config_log_is_off()
         {
@@ -57,11 +21,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
             NrAssert.Multiple(
-                () => Assert.IsFalse(Log.IsFinestEnabled),
-                () => Assert.IsFalse(Log.IsDebugEnabled),
-                () => Assert.IsFalse(Log.IsInfoEnabled),
-                () => Assert.IsFalse(Log.IsWarnEnabled),
-                () => Assert.IsFalse(Log.IsErrorEnabled)
+                () => Assert.That(Log.IsFinestEnabled, Is.False),
+                () => Assert.That(Log.IsDebugEnabled, Is.False),
+                () => Assert.That(Log.IsInfoEnabled, Is.False),
+                () => Assert.That(Log.IsWarnEnabled, Is.False),
+                () => Assert.That(Log.IsErrorEnabled, Is.False)
             );
         }
 
@@ -73,11 +37,11 @@ namespace NewRelic.Agent.Core
             LoggerBootstrapper.ConfigureLogger(config);
 
             NrAssert.Multiple(
-                () => Assert.IsTrue(Log.IsFinestEnabled),
-                () => Assert.IsTrue(Log.IsDebugEnabled),
-                () => Assert.IsTrue(Log.IsInfoEnabled),
-                () => Assert.IsTrue(Log.IsWarnEnabled),
-                () => Assert.IsTrue(Log.IsErrorEnabled)
+                () => Assert.That(Log.IsFinestEnabled, Is.True),
+                () => Assert.That(Log.IsDebugEnabled, Is.True),
+                () => Assert.That(Log.IsInfoEnabled, Is.True),
+                () => Assert.That(Log.IsWarnEnabled, Is.True),
+                () => Assert.That(Log.IsErrorEnabled, Is.True)
             );
         }
 
@@ -97,7 +61,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("info");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsDebugEnabled);
+            Assert.That(Log.IsDebugEnabled, Is.False);
         }
 
         [Test]
@@ -115,7 +79,7 @@ namespace NewRelic.Agent.Core
             ILogConfig config = GetLogConfig("debug");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
-            Assert.IsFalse(Log.IsFinestEnabled);
+            Assert.That(Log.IsFinestEnabled, Is.False);
 
         }
 
@@ -130,7 +94,7 @@ namespace NewRelic.Agent.Core
         public static void Config_IsAuditEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.IsAuditLogEnabled);
+            Assert.That(config.IsAuditLogEnabled, Is.False);
         }
 
         [Test]
@@ -141,69 +105,41 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config()
+        {
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabled();
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Size_when_logRollingStrategy_is_size_in_config_and_maxLogFileSizeMB_and_maxLogFiles_are_set()
+        {
+            ILogConfig config = LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(100, 10);
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Size));
+            Assert.That(config.MaxLogFileSizeMB, Is.EqualTo(100));
+            Assert.That(config.MaxLogFiles, Is.EqualTo(10));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Day_when_logRollingStrategy_is_day_in_config()
+        {
+            ILogConfig config = LogConfigFixtureWithDayRollingStrategyEnabled();
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Day));
+        }
+
+        [Test]
+        public static void Config_FileSizeRollingStrategy_for_config_is_Day_when_logRollingStrategy_is_day_in_config_and_maxLogFiles_are_set()
+        {
+            ILogConfig config = LogConfigFixtureWithDayRollingStrategyEnabledAndLogFileCountSet(10);
+            Assert.That(config.LogRollingStrategy, Is.EqualTo(LogRollingStrategy.Day));
+            Assert.That(config.MaxLogFiles, Is.EqualTo(10));
+        }
+
+        [Test]
         public static void Config_IsConsoleEnabled_for_config_is_false_when_not_added_to_config()
         {
             ILogConfig config = GetLogConfig("debug");
-            Assert.IsFalse(config.Console);
-        }
-
-        [Test]
-        public static void Fatal_exception_can_be_recorded()
-        {
-            Assert.IsFalse(Log.FileLoggingHasFailed);
-            Log.FileLoggingHasFailed = true;
-            Assert.IsTrue(Log.FileLoggingHasFailed);
-        }
-
-        [Test]
-        [TestCase(null, false, false)]
-        [TestCase("0", true, false)]
-        [TestCase("0", false, false)]
-        [TestCase("false", true, false)]
-        [TestCase("false", false, false)]
-        [TestCase("1", true, true)]
-        [TestCase("1", false, true)]
-        [TestCase("true", true, true)]
-        [TestCase("true", false, true)]
-        [TestCase("not a valid bool", true, true)]
-        [TestCase("not a valid bool", false, false)]
-        public void test_ways_to_disable_logging(string envVarValue, bool logsEnabledInConfig, bool expectedLogConfig)
-        {
-            ILogConfig config;
-
-            if (envVarValue != null)
-            {
-                SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", envVarValue);
-            }
-            config = LogConfigFixtureWithLogEnabled(logsEnabledInConfig);
-            Assert.AreEqual(config.Enabled, expectedLogConfig);
-        }
-
-        [Test]
-        [TestCase(null, false, false)]
-        [TestCase("0", true, false)]
-        [TestCase("0", false, false)]
-        [TestCase("false", true, false)]
-        [TestCase("false", false, false)]
-        [TestCase("1", true, true)]
-        [TestCase("1", false, true)]
-        [TestCase("true", true, true)]
-        [TestCase("true", false, true)]
-        [TestCase("not a valid bool", true, true)]
-        [TestCase("not a valid bool", false, false)]
-        public void test_ways_to_enable_console_logging(string envVarValue, bool consoleLogEnabledInConfig, bool expectedConsoleLogConfig)
-        {
-            ILogConfig config;
-
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
-
-            if (envVarValue != null)
-            {
-                SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", envVarValue);
-            }
-            config = LogConfigFixtureWithConsoleEnabled(consoleLogEnabledInConfig);
-            Assert.AreEqual(config.Console, expectedConsoleLogConfig);
+            Assert.That(config.Console, Is.False);
         }
 
 
@@ -223,7 +159,8 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
         }
 
         private static ILogConfig LogConfigFixtureWithAuditLogEnabled(string logLevel)
@@ -242,7 +179,8 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
         }
 
         private static ILogConfig LogConfigFixtureWithConsoleLogEnabled(string logLevel)
@@ -261,7 +199,8 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
         }
         private static ILogConfig LogConfigFixtureWithLogEnabled(bool enabled)
         {
@@ -279,7 +218,8 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
         }
 
         private static ILogConfig LogConfigFixtureWithConsoleEnabled(bool enabled)
@@ -298,7 +238,84 @@ namespace NewRelic.Agent.Core
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
-            return configuration.LogConfig;
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabled()
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"size\" />" +
+                "</configuration>");
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
+        }
+        private static ILogConfig LogConfigFixtureWithFileSizeRollingStrategyEnabledAndMaxSizeAndLogFileCountSet(int maxLogFileSizeMB, int maxLogFiles)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"size\" maxLogFileSizeMB=\"{0}\" maxLogFiles=\"{1}\" />" +
+                "</configuration>",
+                maxLogFileSizeMB, maxLogFiles);
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabled()
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"day\" />" +
+                "</configuration>");
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithDayRollingStrategyEnabledAndLogFileCountSet(int maxLogFiles)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" logRollingStrategy=\"day\" maxLogFiles=\"{0}\" />" +
+                "</configuration>",
+                maxLogFiles);
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
         }
     }
 }

@@ -3,7 +3,6 @@
     <RootNamespace>NewRelic.Agent.UnboundedIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.UnboundedIntegrationTests</AssemblyName>
     <TargetFrameworks>net462</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
@@ -42,27 +41,20 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Common.Logging" Version="3.3.1" />
-    <PackageReference Include="Common.Logging.Core" Version="3.3.1" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MySqlConnector" Version="2.2.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
     <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" />
-    <PackageReference Include="xunit" version="2.6.1" />
-    <PackageReference Include="xunit.assert" Version="2.6.1" />
-    <PackageReference Include="xunit.core" Version="2.6.1" />
-    <PackageReference Include="xunit.extensibility.core" Version="2.6.1" />
-    <PackageReference Include="xunit.runner.console" Version="2.6.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3">
+    <PackageReference Include="xunit" version="2.8.0" />
+    <PackageReference Include="xunit.assert" Version="2.8.0" />
+    <PackageReference Include="xunit.core" Version="2.8.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -76,6 +68,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
+    <ProjectReference Include="..\..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>

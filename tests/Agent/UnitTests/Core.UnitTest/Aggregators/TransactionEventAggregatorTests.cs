@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as IEnumerable<TransactionEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<TransactionEventWireModel>>(events => sentEvents = events);
             var transactionEventWireModel = new TransactionEventWireModel(_attribValues, false, 0.3f);
             _transactionEventAggregator.Collect(transactionEventWireModel);
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         #endregion
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as IEnumerable<TransactionEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) => sentEvents = events);
 
             var eventsToSend = new[]
@@ -109,9 +109,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             _harvestAction();
 
-            // Assert
-            Assert.AreEqual(3, sentEvents.Count());
-            Assert.AreEqual(sentEvents, eventsToSend);
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentEvents.Count(), Is.EqualTo(3));
+                Assert.That(eventsToSend, Is.EqualTo(sentEvents));
+            });
         }
 
         [Test]
@@ -131,7 +134,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var expectedEventsSeen = eventsToSend.Length;
 
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<EventHarvestData, IEnumerable<TransactionEventWireModel>>((eventHarvestData, events) =>
                 {
                     actualReservoirSize = eventHarvestData.ReservoirSize;
@@ -142,9 +145,12 @@ namespace NewRelic.Agent.Core.Aggregators
             eventsToSend.ForEach(_transactionEventAggregator.Collect);
             _harvestAction();
 
-            // Assert
-            Assert.That(actualReservoirSize, Is.EqualTo(expectedReservoirSize));
-            Assert.That(actualEventsSeen, Is.EqualTo(expectedEventsSeen));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(actualReservoirSize, Is.EqualTo(expectedReservoirSize));
+                Assert.That(actualEventsSeen, Is.EqualTo(expectedEventsSeen));
+            });
         }
 
         [Test]
@@ -177,7 +183,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
@@ -195,7 +201,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<TransactionEventWireModel>>(events =>
                 {
                     sendCalled = true;
@@ -206,7 +212,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.False(sendCalled);
+            Assert.That(sendCalled, Is.False);
         }
 
         [Test]
@@ -214,7 +220,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
@@ -229,7 +235,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         [Test]
@@ -237,7 +243,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
@@ -252,7 +258,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
         }
 
         [Test]
@@ -260,7 +266,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -275,7 +281,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(2, sentEventCount);
+            Assert.That(sentEventCount, Is.EqualTo(2));
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
         }
 
@@ -284,7 +290,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
@@ -299,7 +305,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.AreEqual(1, sentEventCount);
+            Assert.That(sentEventCount, Is.EqualTo(1));
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
         }
 
@@ -308,7 +314,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
@@ -323,7 +329,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             // Assert
-            Assert.Null(sentEvents);
+            Assert.That(sentEvents, Is.Null);
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(1));
         }
 
@@ -383,7 +389,7 @@ namespace NewRelic.Agent.Core.Aggregators
         [Test]
         public void Harvest_cycle_should_match_configured_cycle()
         {
-            Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+            Assert.That(_harvestCycle, Is.EqualTo(ConfiguredHarvestCycle));
         }
 
         #region Helpers

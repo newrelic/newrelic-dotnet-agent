@@ -442,7 +442,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                     </instrumentation>\
                 </extension>\
                 ");
-            Configuration::InstrumentationConfigurationPtr instrumentation(new Configuration::InstrumentationConfiguration(xmlSet));
+            Configuration::InstrumentationConfigurationPtr instrumentation(new Configuration::InstrumentationConfiguration(xmlSet, nullptr));
             return std::make_shared<InstrumentationSettings>(instrumentation, _X(""));
         }
 

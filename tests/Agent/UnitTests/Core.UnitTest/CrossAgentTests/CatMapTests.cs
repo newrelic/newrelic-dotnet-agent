@@ -32,6 +32,7 @@ using System.Linq;
 using System.Reflection;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.Transformers;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
 {
@@ -86,12 +87,19 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var simpleSchedulingService = Mock.Create<ISimpleSchedulingService>();
             var logEventAggregator = Mock.Create<ILogEventAggregator>();
             var logContextDataFilter = Mock.Create<ILogContextDataFilter>();
+            var customEventTransformer = Mock.Create<ICustomEventTransformer>();
 
-            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService);
+            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
             
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
         }
 
         [Test]
@@ -116,7 +124,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             {
                 var transactionName = GetTransactionNameFromString(request.OutboundTxnName);
                 _transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
+#if NETFRAMEWORK
                 var outboundHeaders = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
+#else
+                var outboundHeaders = Enumerable.ToDictionary(_agent.CurrentTransaction.GetRequestMetadata());
+#endif
                 var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders, GetHeaderValue);
                 var requestData = new CrossApplicationRequestData(
                     (string)request.ExpectedOutboundPayload[0],
@@ -159,13 +171,16 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             // Run assertions
             testCase.ExpectedIntrinsicFields.ForEach(kvp =>
             {
-                Assert.True(intrinsics.ContainsKey(kvp.Key), $"Expected intrinsic attribute '{kvp.Key}' was not found");
-                Assert.AreEqual(kvp.Value, intrinsics[kvp.Key], $"Attribute '{kvp.Key}': expected value '{kvp.Value}' but found '{intrinsics[kvp.Key]}'");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(intrinsics.ContainsKey(kvp.Key), Is.True, $"Expected intrinsic attribute '{kvp.Key}' was not found");
+                    Assert.That(intrinsics[kvp.Key], Is.EqualTo(kvp.Value), $"Attribute '{kvp.Key}': expected value '{kvp.Value}' but found '{intrinsics[kvp.Key]}'");
+                });
             });
 
             testCase.NonExpectedIntrinsicFields.ForEach(field =>
             {
-                Assert.False(intrinsics.ContainsKey(field), $"Found unexpected intrinsic attribute '{field}'");
+                Assert.That(intrinsics.ContainsKey(field), Is.False, $"Found unexpected intrinsic attribute '{field}'");
             });
 
             if (testCase.OutboundRequests != null)
@@ -174,11 +189,14 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 {
                     var expected = kvp.Key;
                     var actual = kvp.Value;
-                    Assert.NotNull(actual, "Outbound request did not have any CAT headers");
-                    Assert.AreEqual(expected.TransactionGuid, actual.TransactionGuid, $"Expected outbound.TransactionGuid to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.PathHash, actual.PathHash, $"Expected outbound.PathHash to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.TripId, actual.TripId, $"Expected outbound.TripId to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
-                    Assert.AreEqual(expected.Unused, actual.Unused, $"Expected outbound.Unused to be '{expected.Unused}' but found '{actual.Unused}'");
+                    Assert.That(actual, Is.Not.Null, "Outbound request did not have any CAT headers");
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(actual.TransactionGuid, Is.EqualTo(expected.TransactionGuid), $"Expected outbound.TransactionGuid to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                        Assert.That(actual.PathHash, Is.EqualTo(expected.PathHash), $"Expected outbound.PathHash to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                        Assert.That(actual.TripId, Is.EqualTo(expected.TripId), $"Expected outbound.TripId to be '{expected.TransactionGuid}' but found '{actual.TransactionGuid}'");
+                        Assert.That(actual.Unused, Is.EqualTo(expected.Unused), $"Expected outbound.Unused to be '{expected.Unused}' but found '{actual.Unused}'");
+                    });
                 });
             }
         }
@@ -291,7 +309,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             get
             {
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

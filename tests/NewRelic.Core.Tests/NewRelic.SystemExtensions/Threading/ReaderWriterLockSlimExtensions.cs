@@ -47,9 +47,12 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             secondAcquire.Start();
             var secondCompletedSuccessfully = secondAcquire.Wait(timeout);
 
-            // assert
-            Assert.True(firstCompletedSuccessfully);
-            Assert.True(secondCompletedSuccessfully);
+            Assert.Multiple(() =>
+            {
+                // assert
+                Assert.That(firstCompletedSuccessfully, Is.True);
+                Assert.That(secondCompletedSuccessfully, Is.True);
+            });
         }
 
         [Test]
@@ -67,7 +70,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.False(innerCompletedSuccessfully);
+            Assert.That(innerCompletedSuccessfully, Is.False);
         }
 
         [Test]
@@ -85,7 +88,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.True(innerCompletedSuccessfully);
+            Assert.That(innerCompletedSuccessfully, Is.True);
         }
 
         [Test]
@@ -103,7 +106,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Threading
             outerDisposableLock.Dispose();
 
             // assert
-            Assert.False(innerCompletedSuccessfully);
+            Assert.That(innerCompletedSuccessfully, Is.False);
         }
 
     }

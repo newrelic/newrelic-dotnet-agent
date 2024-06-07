@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NUnit.Framework;
@@ -36,6 +36,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         private ServerConfiguration _serverConfig;
         private RunTimeConfiguration _runTimeConfiguration;
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+        private IBootstrapConfiguration _bootstrapConfiguration;
 
         private IEnvironment _environment;
         private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -61,6 +62,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             _configurationManagerStatic = new ConfigurationManagerStaticMock();
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
 
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -84,7 +86,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
         private void UpdateConfig()
         {
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
@@ -93,6 +95,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void TearDown()
         {
             _configAutoResponder?.Dispose();
+            _attribDefSvc.Dispose();
         }
 
         //        param     include                         exclude  
@@ -135,9 +138,9 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent))
+                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.EqualTo(expectCaptureRequestParams)),
+                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.EqualTo(expectCaptureRequestParams)),
+                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.EqualTo(expectCaptureRequestParams))
             );
         }
 
@@ -182,8 +185,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
-                () => Assert.AreEqual(expectCaptureRequestParams, attrib.IsAvailableForAny(AttributeDestinations.SpanEvent))
+                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.EqualTo(expectCaptureRequestParams)),
+                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.EqualTo(expectCaptureRequestParams))
             );
         }
 
@@ -222,11 +225,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.SpanEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
-                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace))
+                    () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                    () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                    () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                    () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                    () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.EqualTo(expectCaptureRequestHeaders[i]))
                 );
             }
         }
@@ -259,10 +262,10 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsNotNull(userAttribsDic[_lazyTest_AttribNameDtm], "Lazy value that resolves to NOT NULL should be included"),
-                () => Assert.AreEqual(_lazyTest_ExpectedValDtmm, userAttribsDic[_lazyTest_AttribNameDtm]),
-                () => Assert.IsFalse(userAttribsDic.ContainsKey(_lazyTest_AttribNameEmpty), "Lazy value that resolves to NULL should NOT be included"),
-                () => Assert.AreEqual(1, countAll, "There should only be 1 value in the output collection")
+                () => Assert.That(userAttribsDic[_lazyTest_AttribNameDtm], Is.Not.Null, "Lazy value that resolves to NOT NULL should be included"),
+                () => Assert.That(userAttribsDic[_lazyTest_AttribNameDtm], Is.EqualTo(_lazyTest_ExpectedValDtmm)),
+                () => Assert.That(userAttribsDic.ContainsKey(_lazyTest_AttribNameEmpty), Is.False, "Lazy value that resolves to NULL should NOT be included"),
+                () => Assert.That(countAll, Is.EqualTo(1), "There should only be 1 value in the output collection")
             );
         }
 

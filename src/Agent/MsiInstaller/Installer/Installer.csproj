@@ -1,0 +1,55 @@
+<Project Sdk="WixToolset.Sdk/5.0.0">
+  <PropertyGroup>
+    <OutputName>Installer</OutputName>
+    <IntermediateOutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</OutputPath>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\InstallerActions\InstallerActions.csproj">
+      <Name>InstallerActions</Name>
+      <Project>{e8c424d3-4493-4fe6-89b1-650a589c4209}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.Iis.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.0" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <WindowsSdkPathBin>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin</WindowsSdkPathBin>
+    <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.19041.0</WindowsSdkPath>
+    <SignToolPath>$(WindowsSdkPath)\x64\signtool.exe</SignToolPath>
+  </PropertyGroup>
+  
+  <Target Name="SignInstaller" BeforeTargets="AfterBuild">
+    <Exec Command="&quot;$(SignToolPath)&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
+    <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
+      <Output PropertyName="FileVersionString" TaskParameter="FileVersionString" />
+    </ReadFileVersionFromDll>
+    <Copy SourceFiles="$(OutputPath)\$(OutputName).msi" DestinationFiles="$(OutputPath)\NewRelicAgent_$(Platform)_$(FileVersionString).msi" />
+    <Delete Files="$(OutputPath)\$(OutputName).msi" />
+  </Target>
+  
+  <UsingTask TaskName="ReadFileVersionFromDll" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <FilePath ParameterType="System.String" Required="true" />
+      <FileVersionString ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Diagnostics" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+                FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(FilePath);
+                FileVersionString = myFileVersionInfo.FileVersion;
+                ]]></Code>
+    </Task>
+  </UsingTask>
+</Project>

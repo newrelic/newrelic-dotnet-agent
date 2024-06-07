@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 {
     internal class TestableDefaultConfiguration : DefaultConfiguration
     {
-        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
     }
 
     [TestFixture]
@@ -41,6 +41,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         private configuration _localConfig;
         private ServerConfiguration _serverConfig;
         private RunTimeConfiguration _runTimeConfig;
+        private IBootstrapConfiguration _bootstrapConfig;
         private DefaultConfiguration _defaultConfig;
 
         private ISpanEventAggregator _spanEventAggregator;
@@ -78,8 +79,9 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             _localConfig.distributedTracing.enabled = true;
             _serverConfig = new ServerConfiguration();
             _runTimeConfig = new RunTimeConfiguration();
+            _bootstrapConfig = Mock.Create<IBootstrapConfiguration>();
             _defaultConfig = new TestableDefaultConfiguration(Mock.Create<IEnvironment>(), _localConfig, _serverConfig, _runTimeConfig,
-                new SecurityPoliciesConfiguration(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(),
+                new SecurityPoliciesConfiguration(), _bootstrapConfig, Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(),
                 Mock.Create<IDnsStatic>());
 
             _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
@@ -131,6 +133,14 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var logEventAggregator = Mock.Create<ILogEventAggregator>();
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, logEventAggregator);
             _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _attribDefSvc.Dispose();
+            _metricNameService.Dispose();
+            _sqlTraceAggregator.Dispose();
         }
 
         [Test]
@@ -210,7 +220,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 var jsonString = File.ReadAllText(jsonPath);
 
                 var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(jsonString);
-                Assert.NotNull(testCases);
+                Assert.That(testCases, Is.Not.Null);
                 return testCases
                     .Where(testCase => testCase != null)
                     .Select(testCase => new[] { testCase });

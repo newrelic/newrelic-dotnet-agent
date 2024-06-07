@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var vendors = vendorInfo.GetVendors();
-            Assert.IsFalse(vendors.Any());
+            Assert.That(vendors.Any(), Is.False);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var vendors = vendorInfo.GetVendors();
-            Assert.IsFalse(vendors.Any());
+            Assert.That(vendors.Any(), Is.False);
         }
 
         [TestCase("?", "location", "azure", null)]
@@ -71,11 +71,11 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (expectedResponse == null)
             {
-                Assert.Null(result);
+                Assert.That(result, Is.Null);
             }
             else
             {
-                Assert.True(result.Equals(expectedResponse));
+                Assert.That(result, Is.EqualTo(expectedResponse));
             }
         }
 
@@ -91,10 +91,13 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.InstanceId == "i-1234567890abcdef0");
-            Assert.True(model.InstanceType == "t1.micro");
-            Assert.True(model.AvailabilityZone == "us - east - 1d");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.InstanceId, Is.EqualTo("i-1234567890abcdef0"));
+                Assert.That(model.InstanceType, Is.EqualTo("t1.micro"));
+                Assert.That(model.AvailabilityZone, Is.EqualTo("us - east - 1d"));
+            });
         }
 
         [Test]
@@ -108,7 +111,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.IsNull(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -123,7 +126,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -139,11 +142,14 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.Location == "CentralUS");
-            Assert.True(model.Name == "IMDSCanary");
-            Assert.True(model.VmId == "5c08b38e-4d57-4c23-ac45-aca61037f084");
-            Assert.True(model.VmSize == "Standard_DS2");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.Location, Is.EqualTo("CentralUS"));
+                Assert.That(model.Name, Is.EqualTo("IMDSCanary"));
+                Assert.That(model.VmId, Is.EqualTo("5c08b38e-4d57-4c23-ac45-aca61037f084"));
+                Assert.That(model.VmSize, Is.EqualTo("Standard_DS2"));
+            });
         }
 
         [Test]
@@ -158,7 +164,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -175,7 +181,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -191,11 +197,14 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.NotNull(model);
-            Assert.True(model.Id == "3161347020215157000");
-            Assert.True(model.MachineType == "custom - 1 - 1024");
-            Assert.True(model.Name == "aef-default-20170501t160547-7gh8");
-            Assert.True(model.Zone == "us-central1-c");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.Id, Is.EqualTo("3161347020215157000"));
+                Assert.That(model.MachineType, Is.EqualTo("custom - 1 - 1024"));
+                Assert.That(model.Name, Is.EqualTo("aef-default-20170501t160547-7gh8"));
+                Assert.That(model.Zone, Is.EqualTo("us-central1-c"));
+            });
         }
 
         [Test]
@@ -210,7 +219,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -226,7 +235,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -239,10 +248,13 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
-            Assert.NotNull(model);
-            Assert.True(model.CfInstanceGuid == "b977d090-83db-4bdb-793a-bb77");
-            Assert.True(model.CfInstanceIp == "10.10.147.130");
-            Assert.True(model.MemoryLimit == "1024m");
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.CfInstanceGuid, Is.EqualTo("b977d090-83db-4bdb-793a-bb77"));
+                Assert.That(model.CfInstanceIp, Is.EqualTo("10.10.147.130"));
+                Assert.That(model.MemoryLimit, Is.EqualTo("1024m"));
+            });
         }
 
         [Test]
@@ -255,7 +267,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
         [Test]
@@ -267,8 +279,8 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-            Assert.NotNull(model);
-            Assert.True(model.KubernetesServiceHost == serviceHost);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.KubernetesServiceHost, Is.EqualTo(serviceHost));
         }
 
         [Test]
@@ -279,7 +291,7 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 
 #if NET
@@ -327,8 +339,8 @@ namespace NewRelic.Agent.Core.Utilization
 ");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb"));
         }
 
         [Test]
@@ -356,8 +368,73 @@ namespace NewRelic.Agent.Core.Utilization
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
+        }
+
+        // See https://new-relic.atlassian.net/browse/NR-221128 and https://new-relic.atlassian.net/browse/NR-230908
+        // The sample files below are from a customer issue where the cgroup file was not being parsed correctly
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ParsesV1_ForCustomerIssue()
+        {
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns(@"
+14940 3711 0:1357 / / rw,relatime master:1603 - overlay overlay rw,lowerdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40241/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40240/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40239/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40238/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40237/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40236/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40235/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4615/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4614/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4613/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4612/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4611/fs,upperdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40242/fs,workdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/40242/work
+14941 14940 0:1373 / / proc rw, nosuid, nodev, noexec, relatime - proc proc rw
+14942 14940 0:1882 / / dev rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+14943 14942 0:1883 / / dev / pts rw, nosuid, noexec, relatime - devpts devpts rw, gid = 5, mode = 620, ptmxmode = 666
+14965 14942 0:1003 / / dev / mqueue rw, nosuid, nodev, noexec, relatime - mqueue mqueue rw
+14966 14940 0:1140 / / sys ro, nosuid, nodev, noexec, relatime - sysfs sysfs ro
+14967 14966 0:1953 / / sys / fs / cgroup rw, nosuid, nodev, noexec, relatime - tmpfs tmpfs rw, mode = 755
+14968 14967 0:25 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / systemd ro, nosuid, nodev, noexec, relatime master: 9 - cgroup cgroup rw, xattr, release_agent =/ usr / lib / systemd / systemd - cgroups - agent, name = systemd
+14969 14967 0:27 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / memory ro, nosuid, nodev, noexec, relatime master: 10 - cgroup cgroup rw, memory
+14970 14967 0:28 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / devices ro, nosuid, nodev, noexec, relatime master: 11 - cgroup cgroup rw, devices
+15019 14967 0:29 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / net_cls, net_prio ro, nosuid, nodev, noexec, relatime master: 12 - cgroup cgroup rw, net_cls, net_prio
+15020 14967 0:30 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / pids ro, nosuid, nodev, noexec, relatime master: 13 - cgroup cgroup rw, pids
+15021 14967 0:31 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / cpu, cpuacct ro, nosuid, nodev, noexec, relatime master: 14 - cgroup cgroup rw, cpu, cpuacct
+15022 14967 0:32 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / perf_event ro, nosuid, nodev, noexec, relatime master: 15 - cgroup cgroup rw, perf_event
+15023 14967 0:33 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / freezer ro, nosuid, nodev, noexec, relatime master: 16 - cgroup cgroup rw, freezer
+15024 14967 0:34 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / cpuset ro, nosuid, nodev, noexec, relatime master: 17 - cgroup cgroup rw, cpuset
+15025 14967 0:35 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / blkio ro, nosuid, nodev, noexec, relatime master: 18 - cgroup cgroup rw, blkio
+15026 14967 0:36 / kubepods.slice / kubepods - burstable.slice / kubepods - burstable - pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice / cri - containerd - b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope / sys / fs / cgroup / hugetlb ro, nosuid, nodev, noexec, relatime master: 19 - cgroup cgroup rw, hugetlb
+15027 14940 259:1 / var / lib / kubelet / pods / 04f9c4b4 - 5e71 - 4a0a - aa3a - f62f089e3f73 / etc - hosts / etc / hosts rw, noatime - xfs / dev / nvme0n1p1 rw, attr2, inode64, logbufs = 8, logbsize = 32k, noquota
+15028 14942 259:1 / var / lib / kubelet / pods / 04f9c4b4 - 5e71 - 4a0a - aa3a - f62f089e3f73 / containers / bank - statement - data - extractor - v2 - webapi - test / 1bd80981 / dev / termination - log rw, noatime - xfs / dev / nvme0n1p1 rw, attr2, inode64, logbufs = 8, logbsize = 32k, noquota
+15029 14940 259:1 / var / lib / containerd / io.containerd.grpc.v1.cri / sandboxes / 18845a93b0b73d68bd8bab4d75e3f109f6c387c073918ca4558eea4af96f29c6 / hostname / etc / hostname rw, noatime - xfs / dev / nvme0n1p1 rw, attr2, inode64, logbufs = 8, logbsize = 32k, noquota
+15030 14940 259:1 / var / lib / containerd / io.containerd.grpc.v1.cri / sandboxes / 18845a93b0b73d68bd8bab4d75e3f109f6c387c073918ca4558eea4af96f29c6 / resolv.conf / etc / resolv.conf rw, noatime - xfs / dev / nvme0n1p1 rw, attr2, inode64, logbufs = 8, logbsize = 32k, noquota
+15031 14942 0:160 / / dev / shm rw, nosuid, nodev, noexec, relatime - tmpfs shm rw, size = 65536k
+15032 14940 0:156 / / run / secrets / kubernetes.io / serviceaccount ro, relatime - tmpfs tmpfs rw, size = 1048576k
+15033 14940 0:152 / / run / secrets / eks.amazonaws.com / serviceaccount ro, relatime - tmpfs tmpfs rw, size = 1048576k
+3715 14941 0:1373 / bus / proc / bus ro, nosuid, nodev, noexec, relatime - proc proc rw
+3862 14941 0:1373 / fs / proc / fs ro, nosuid, nodev, noexec, relatime - proc proc rw
+3863 14941 0:1373 / irq / proc / irq ro, nosuid, nodev, noexec, relatime - proc proc rw
+3864 14941 0:1373 / sys / proc / sys ro, nosuid, nodev, noexec, relatime - proc proc rw
+3866 14941 0:1373 / sysrq - trigger / proc / sysrq - trigger ro, nosuid, nodev, noexec, relatime - proc proc rw
+3943 14941 0:1954 / / proc / acpi ro, relatime - tmpfs tmpfs ro
+4016 14941 0:1882 / null / proc / kcore rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+4028 14941 0:1882 / null / proc / keys rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+4030 14941 0:1882 / null / proc / latency_stats rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+4031 14941 0:1882 / null / proc / timer_list rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+4032 14941 0:1882 / null / proc / sched_debug rw, nosuid - tmpfs tmpfs rw, size = 65536k, mode = 755
+4033 14966 0:1955 / / sys / firmware ro, relatime - tmpfs tmpfs ro");
+
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns(@"
+11:hugetlb:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+10:blkio:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+9:cpuset:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+8:freezer:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+7:perf_event:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+6:cpu,cpuacct:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+5:pids:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+4:net_cls,net_prio:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+3:devices:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+2:memory:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+1:name=systemd:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod04f9c4b4_5e71_4a0a_aa3a_f62f089e3f73.slice/cri-containerd-b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58.scope
+");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("b10c13eeeea82c495c9e2fbb07ab448024715fdd55218e22cce6cd815c84bd58"));
         }
 
 
@@ -386,8 +463,8 @@ namespace NewRelic.Agent.Core.Utilization
 0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.NotNull(model);
-            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+            Assert.That(model, Is.Not.Null);
+            Assert.That(model.Id, Is.EqualTo("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043"));
         }
 
         [Test]
@@ -399,7 +476,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
 
             var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
-            Assert.Null(model);
+            Assert.That(model, Is.Null);
         }
 #endif
         private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)

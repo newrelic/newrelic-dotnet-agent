@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 {
     internal class TestDefaultConfiguration : DefaultConfiguration
     {
-        public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+        public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
     }
 
     [TestFixture]
@@ -43,6 +43,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 
         private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
 
+        private IBootstrapConfiguration _bootstrapConfiguration;
+
         private IDnsStatic _dnsStatic;
 
         public static List<TestCaseData> CollectorHostnameTestData
@@ -61,15 +63,16 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
             _serverConfig = new ServerConfiguration();
             _runTimeConfig = new RunTimeConfiguration();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
             _dnsStatic = Mock.Create<IDnsStatic>();
-            _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         }
 
-        [TestCaseSource("CollectorHostnameTestData")]
+        [TestCaseSource(nameof(CollectorHostnameTestData))]
         public void RunCrossAgentCollectorHostnameTests(string configFileKey, string envKey, string configOverrideHost, string envOverrideHost, string hostname)
         {
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey")).Returns<string>(null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns<string>(null);
 
             if (envKey != null)
             {
@@ -102,7 +105,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
             }
 
             var connectionInfo = new ConnectionInfo(_defaultConfig);
-            Assert.AreEqual(hostname, connectionInfo.Host);
+            Assert.That(connectionInfo.Host, Is.EqualTo(hostname));
         }
 
         private static List<TestCaseData> GetCollectorHostnameTestData()

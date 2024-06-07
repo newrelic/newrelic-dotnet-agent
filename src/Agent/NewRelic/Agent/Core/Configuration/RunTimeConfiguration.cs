@@ -13,16 +13,20 @@ namespace NewRelic.Agent.Core.Configuration
 
         public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback;
 
+        public Func<string, string, int> LlmTokenCountingCallback;
+
         public RunTimeConfiguration()
         {
             ApplicationNames = Enumerable.Empty<string>();
             ErrorGroupCallback = null;
+            LlmTokenCountingCallback = null;
         }
 
-        public RunTimeConfiguration(IEnumerable<string> applicationNames, Func<IReadOnlyDictionary<string, object>, string> errorGroupCallback)
+        public RunTimeConfiguration(IEnumerable<string> applicationNames, Func<IReadOnlyDictionary<string, object>, string> errorGroupCallback, Func<string, string, int> llmTokenCountingCallback)
         {
             ApplicationNames = applicationNames.ToList();
             ErrorGroupCallback = errorGroupCallback;
+            LlmTokenCountingCallback = llmTokenCountingCallback;
         }
     }
 }

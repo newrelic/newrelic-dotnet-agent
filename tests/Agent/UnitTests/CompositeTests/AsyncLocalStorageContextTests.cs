@@ -59,12 +59,18 @@ namespace CompositeTests
             var metrics = _compositeTestAgent.Metrics;
             var errors = _compositeTestAgent.ErrorEvents;
 
-            Assert.AreEqual(true, transactionFlowedToBackgroundThread);
-            Assert.AreEqual(1, transactionEvents.Count);
-            Assert.AreEqual("foregroundExternal", transactionEvents.First().AgentAttributes()["request.uri"]);
-            CollectionAssert.IsEmpty(errors);
-            CollectionAssert.IsEmpty(metrics.Where(x => x.MetricName.Name.Contains("backgroundExternal")));
-            CollectionAssert.IsNotEmpty(metrics.Where(x => x.MetricName.Name.Contains("foregroundExternal")));
+            Assert.Multiple(() =>
+            {
+                Assert.That(transactionFlowedToBackgroundThread, Is.EqualTo(true));
+                Assert.That(transactionEvents, Has.Count.EqualTo(1));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(transactionEvents.First().AgentAttributes()["request.uri"], Is.EqualTo("foregroundExternal"));
+                Assert.That(errors, Is.Empty);
+                Assert.That(metrics.Where(x => x.MetricNameModel.Name.Contains("backgroundExternal")), Is.Empty);
+                Assert.That(metrics.Where(x => x.MetricNameModel.Name.Contains("foregroundExternal")), Is.Not.Empty);
+            });
 
             void InstrumentationThatStartsATransaction()
             {

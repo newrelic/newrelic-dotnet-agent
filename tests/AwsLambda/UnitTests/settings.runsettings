@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-	<NUnit>
-		<!--This will put test results in dotnet_agent\TestResults directory-->
-		<TestOutputXml>.\..\..\..\..\..\..\..\TestResults</TestOutputXml>
-	</NUnit>
-</RunSettings>

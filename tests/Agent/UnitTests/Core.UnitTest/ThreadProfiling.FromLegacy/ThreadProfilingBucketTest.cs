@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     [TestFixture]
     public class ThreadProfilingBucketTest
     {
-        static public UIntPtr[] GenerateStackSnapshot(uint numFunctions, uint start, uint increment, bool randomize = false)
+        static private UIntPtr[] GenerateStackSnapshot(uint numFunctions, uint start, uint increment, bool randomize = false)
         {
             var functionIds = new UIntPtr[numFunctions];
 
@@ -37,21 +37,21 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public void verify_root_node_created_on_construction()
         {
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-            Assert.IsNotNull(bucket.Tree);
+            Assert.That(bucket.Tree, Is.Not.Null);
         }
 
         [Test]
         public void verify_root_node_has_CallCount_of_Zero_on_construction()
         {
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-            Assert.AreEqual(0, bucket.Tree.Root.RunnableCount);
+            Assert.That(bucket.Tree.Root.RunnableCount, Is.EqualTo(0));
         }
 
         [Test]
         public void verify_root_node_has_Depth_of_Zero_on_construction()
         {
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-            Assert.AreEqual(0, bucket.Tree.Root.Depth);
+            Assert.That(bucket.Tree.Root.Depth, Is.EqualTo(0));
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             {
                 ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
                 bucket.UpdateTree(null);
-                Assert.IsTrue(logging.HasMessageBeginningWith("fids passed to UpdateTree is null"));
+                Assert.That(logging.HasMessageBeginningWith("fids passed to UpdateTree is null"), Is.True);
             }
         }
 
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public void verify_NodeCount_is_zero_for_empty_tree()
         {
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-            Assert.AreEqual(0, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(0));
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
             var fids = GenerateStackSnapshot(1, 200, 50);
             bucket.UpdateTree(fids);
-            Assert.AreEqual(1, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(1));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
             var fids = GenerateStackSnapshot(numNodes, 200, 50);
             bucket.UpdateTree(fids);
-            Assert.AreEqual(numNodes, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(numNodes));
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
             var fids = GenerateStackSnapshot(numNodes, 200, 50);
             bucket.UpdateTree(fids);
-            Assert.AreEqual(numNodes, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(numNodes));
         }
 
         [Test]
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             var fids2 = GenerateStackSnapshot(1, 125, 25);
             bucket.UpdateTree(fids2);
-            Assert.AreEqual(2, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(2));
         }
 
 
@@ -161,7 +161,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
 
             // Total node count should be equal to 5 + 10 + 15 + 20 + 25 = 75
-            Assert.AreEqual(75, bucket.GetNodeCount());
+            Assert.That(bucket.GetNodeCount(), Is.EqualTo(75));
         }
 
         #endregion
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
             var fids = GenerateStackSnapshot(numFunctionIds, 200, 50);
             bucket.UpdateTree(fids);
-            Assert.AreEqual(fids.Count(), bucket.GetDepth());
+            Assert.That(bucket.GetDepth(), Is.EqualTo(fids.Count()));
 
         }
 
@@ -191,7 +191,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 bucket.UpdateTree(fids);
             }
 
-            Assert.AreEqual(fids.Count(), bucket.GetDepth());
+            Assert.That(bucket.GetDepth(), Is.EqualTo(fids.Count()));
         }
 
         private void verify_CallCount_after_multiple_calls_to_UpdateTree(int numCalls, int numFunctionIds)
@@ -223,7 +223,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             {
                 foreach (ProfileNode child in children)
                 {
-                    Assert.AreEqual(expectedCallCount, child.RunnableCount);
+                    Assert.That(child.RunnableCount, Is.EqualTo(expectedCallCount));
                     recurse_validate_call_count_for_all(child.Children, expectedCallCount);
                 }
             }

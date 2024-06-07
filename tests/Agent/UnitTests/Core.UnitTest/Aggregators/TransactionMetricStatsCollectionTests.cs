@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _metricBuilder = GetSimpleMetricBuilder();
         }
 
-        public static IMetricBuilder GetSimpleMetricBuilder()
+        private static IMetricBuilder GetSimpleMetricBuilder()
         {
             var metricNameService = Mock.Create<IMetricNameService>();
             Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
@@ -39,19 +39,25 @@ namespace NewRelic.Agent.Core.Aggregators
 
             txStats.MergeUnscopedStats(MetricName.Create("DotNet/name"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
-            Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
+            Assert.That(txStats.GetTransactionName().PrefixedName, Is.EqualTo("WebTransaction/Test"));
 
             MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
             MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
-            Assert.AreEqual(1, unscoped.Count);
-            Assert.AreEqual(0, scoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped, Has.Count.EqualTo(1));
+                Assert.That(scoped, Is.Empty);
+            });
             var data = unscoped["DotNet/name"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
-            Assert.AreEqual(3, data.Value3);
-            Assert.AreEqual(3, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(3));
+                Assert.That(data.Value2, Is.EqualTo(2));
+                Assert.That(data.Value3, Is.EqualTo(3));
+                Assert.That(data.Value4, Is.EqualTo(3));
+            });
         }
 
         #endregion MergeUnscopedStats
@@ -67,19 +73,25 @@ namespace NewRelic.Agent.Core.Aggregators
 
             txStats.MergeScopedStats(MetricName.Create("DotNet/name"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
-            Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
+            Assert.That(txStats.GetTransactionName().PrefixedName, Is.EqualTo("WebTransaction/Test"));
 
             MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
             MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
-            Assert.AreEqual(0, unscoped.Count);
-            Assert.AreEqual(1, scoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped, Is.Empty);
+                Assert.That(scoped, Has.Count.EqualTo(1));
+            });
             var data = scoped["DotNet/name"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
-            Assert.AreEqual(3, data.Value3);
-            Assert.AreEqual(3, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(3));
+                Assert.That(data.Value2, Is.EqualTo(2));
+                Assert.That(data.Value3, Is.EqualTo(3));
+                Assert.That(data.Value4, Is.EqualTo(3));
+            });
         }
 
         [Test]
@@ -93,27 +105,36 @@ namespace NewRelic.Agent.Core.Aggregators
             txStats.MergeScopedStats(MetricName.Create("DotNet/name"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
             txStats.MergeScopedStats(MetricName.Create("DotNet/other"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(3)));
 
-            Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
+            Assert.That(txStats.GetTransactionName().PrefixedName, Is.EqualTo("WebTransaction/Test"));
 
             MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
             MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
-            Assert.AreEqual(0, unscoped.Count);
-            Assert.AreEqual(2, scoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped, Is.Empty);
+                Assert.That(scoped, Has.Count.EqualTo(2));
+            });
             var data = scoped["DotNet/name"];
-            Assert.NotNull(data);
-            Assert.AreEqual(2, data.Value0);
-            Assert.AreEqual(8, data.Value1);
-            Assert.AreEqual(6, data.Value2);
-            Assert.AreEqual(3, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(2));
+                Assert.That(data.Value1, Is.EqualTo(8));
+                Assert.That(data.Value2, Is.EqualTo(6));
+                Assert.That(data.Value3, Is.EqualTo(3));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             data = scoped["DotNet/other"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(4, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(4, data.Value3);
-            Assert.AreEqual(4, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(4));
+                Assert.That(data.Value2, Is.EqualTo(3));
+                Assert.That(data.Value3, Is.EqualTo(4));
+                Assert.That(data.Value4, Is.EqualTo(4));
+            });
         }
 
         #endregion MergeScopedStats
@@ -131,35 +152,47 @@ namespace NewRelic.Agent.Core.Aggregators
             txStats.MergeUnscopedStats(MetricName.Create("DotNet/name"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
             txStats.MergeScopedStats(MetricName.Create("DotNet/other"), MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(3)));
 
-            Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
+            Assert.That(txStats.GetTransactionName().PrefixedName, Is.EqualTo("WebTransaction/Test"));
 
             MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
             MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
-            Assert.AreEqual(1, unscoped.Count);
-            Assert.AreEqual(2, scoped.Count);
+            Assert.Multiple(() =>
+            {
+                Assert.That(unscoped, Has.Count.EqualTo(1));
+                Assert.That(scoped, Has.Count.EqualTo(2));
+            });
             var data = scoped["DotNet/name"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
-            Assert.AreEqual(3, data.Value3);
-            Assert.AreEqual(3, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(3));
+                Assert.That(data.Value2, Is.EqualTo(2));
+                Assert.That(data.Value3, Is.EqualTo(3));
+                Assert.That(data.Value4, Is.EqualTo(3));
+            });
 
             data = unscoped["DotNet/name"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(4, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(5));
+                Assert.That(data.Value2, Is.EqualTo(4));
+                Assert.That(data.Value3, Is.EqualTo(5));
+                Assert.That(data.Value4, Is.EqualTo(5));
+            });
 
             data = scoped["DotNet/other"];
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(4, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(4, data.Value3);
-            Assert.AreEqual(4, data.Value4);
+            Assert.That(data, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(data.Value0, Is.EqualTo(1));
+                Assert.That(data.Value1, Is.EqualTo(4));
+                Assert.That(data.Value2, Is.EqualTo(3));
+                Assert.That(data.Value3, Is.EqualTo(4));
+                Assert.That(data.Value4, Is.EqualTo(4));
+            });
         }
 
         #endregion Mixed

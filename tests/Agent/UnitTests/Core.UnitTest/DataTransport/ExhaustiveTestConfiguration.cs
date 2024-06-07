@@ -14,6 +14,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool AgentEnabled => true;
 
+        public string AgentEnabledAt => "Hardcoded in test";
+
+        public bool ServerlessModeEnabled  => false;
+
         public string AgentLicenseKey => "AgentLicenseKey";
 
         public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
@@ -433,6 +437,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
 
+        public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => new[] {
+            new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore1" } },
+            new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
+        };
+
         public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
 
         public TimeSpan TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);
@@ -461,5 +470,13 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         public bool LoggingEnabled => true;
+
+        public bool AiMonitoringEnabled => true;
+        public bool AiMonitoringStreamingEnabled => true;
+        public bool AiMonitoringRecordContentEnabled => true;
+
+        public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
+
+        public string LoggingLevel => "info";
     }
 }

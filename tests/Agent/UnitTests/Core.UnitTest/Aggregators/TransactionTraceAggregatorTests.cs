@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_SendsTracesFromCollectors()
         {
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<TransactionTraceWireModel>>(traces => sentTraces = traces);
 
             var trace1 = Mock.Create<TransactionTraceWireModel>();
@@ -95,9 +95,9 @@ namespace NewRelic.Agent.Core.Aggregators
             _harvestAction();
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(2, sentTraces.Count()),
-                () => Assert.IsTrue(sentTraces.Contains(trace1)),
-                () => Assert.IsTrue(sentTraces.Contains(trace2))
+                () => Assert.That(sentTraces.Count(), Is.EqualTo(2)),
+                () => Assert.That(sentTraces, Does.Contain(trace1)),
+                () => Assert.That(sentTraces, Does.Contain(trace2))
                 );
         }
 
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.Aggregators
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
                 {
                     sentTraces = traces;
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core.Aggregators
             sentTraces = Enumerable.Empty<TransactionTraceWireModel>(); //reset
             _harvestAction();
 
-            Assert.AreEqual(1, sentTraces.Count());
+            Assert.That(sentTraces.Count(), Is.EqualTo(1));
         }
 
         [Test]
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
 
-            Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()), Occurs.Once());
+            Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]

@@ -1,16 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Collections;
 using NUnit.Framework;
-using Telerik.JustMock;
 using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -19,13 +14,14 @@ namespace NewRelic.Agent.Core.WireModels
     public class LoadedModuleWireModelCollectionTests
     {
         private const string BaseAssemblyName = "MyTestAssembly";
-        private const string BaseAssemblyVersion = "1.0.0";
-        private const string BaseAssemblyPath = @"C:\path\to\assembly\MyTestAssembly.dll";
-        private const string BaseCompanyName = "MyCompany";
-        private const string BaseCopyrightValue = "Copyright 2008";
-        private const int BaseHashCode = 42;
-        private const string BasePublicKeyToken = "publickeytoken";
-        private const string BasePublicKey = "7075626C69636B6579746F6B656E";
+
+        private string BaseAssemblyVersion;
+        private string BaseAssemblyPath;
+        private string BaseCompanyName;
+        private string BaseCopyrightValue;
+        private int    BaseHashCode;
+        private string BasePublicKeyToken;
+        private string BasePublicKey;
 
         private AssemblyName _baseAssemblyName;
         private TestAssembly _baseTestAssembly;
@@ -33,6 +29,15 @@ namespace NewRelic.Agent.Core.WireModels
         [SetUp]
         public void SetUp()
         {
+            
+            BaseAssemblyVersion = "1.0.0";
+            BaseAssemblyPath = @"C:\path\to\assembly\MyTestAssembly.dll";
+            BaseCompanyName = "MyCompany";
+            BaseCopyrightValue = "Copyright 2008";
+            BaseHashCode = 42;
+            BasePublicKeyToken = "publickeytoken";
+            BasePublicKey = "7075626C69636B6579746F6B656E";
+
             _baseAssemblyName = new AssemblyName();
             _baseAssemblyName.Name = BaseAssemblyName;
             _baseAssemblyName.Version = new Version(BaseAssemblyVersion);
@@ -64,7 +69,6 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 _baseTestAssembly.SetLocation = null;
             }
-
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
             _baseTestAssembly.SetDynamic = isDynamic;
             
@@ -84,19 +88,25 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
+                Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
+                Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
+                Assert.That(loadedModule.Data["copyright"], Is.EqualTo(BaseCopyrightValue));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            });
         }
 
         [Test]
@@ -110,7 +120,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Is.Empty);
         }
 
         [Test]
@@ -124,7 +134,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Is.Empty);
         }
 
         [Test]
@@ -138,19 +148,28 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.False(loadedModule.Data.ContainsKey("assemblyHashCode"));
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+            });
+            Assert.That(loadedModule.Data.ContainsKey("assemblyHashCode"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
+                Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
+                Assert.That(loadedModule.Data["copyright"], Is.EqualTo(BaseCopyrightValue));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            });
         }
 
         [Test]
@@ -165,7 +184,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(0, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Is.Empty);
         }
 
         [Test]
@@ -179,19 +198,57 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.AreEqual(BasePublicKey, loadedModule.Data["publicKeyToken"]);
-            Assert.False(loadedModule.Data.ContainsKey("Implementation-Vendor"));
-            Assert.False(loadedModule.Data.ContainsKey("copyright"));
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
+                Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data.ContainsKey("Implementation-Vendor"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("copyright"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            });
+        }
+
+        [Test]
+        public void ErrorsHandled_GetCustomAttributes_HandlesNulls()
+        {
+            _baseTestAssembly = new TestAssembly();
+            _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
+            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
+            _baseTestAssembly.SetHashCode = BaseHashCode;
+
+
+            _baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
+            _baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
+
+
+            var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
+            evilAssembly.ItemToTest = "";
+
+            var assemblies = new List<Assembly>();
+            assemblies.Add(evilAssembly);
+
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
+
+            var loadedModule = loadedModules.LoadedModules[0];
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data.ContainsKey("Implementation-Vendor"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("copyright"), Is.False);
+            });
         }
 
         [Test]
@@ -205,19 +262,28 @@ namespace NewRelic.Agent.Core.WireModels
 
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
 
             var loadedModule = loadedModules.LoadedModules[0];
 
-            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
-            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
-            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
-            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
-            Assert.False(loadedModule.Data.ContainsKey("publicKeyToken"));
-            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
-            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
-            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
-            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
+            });
+            Assert.That(loadedModule.Data.ContainsKey("publicKeyToken"), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
+                Assert.That(loadedModule.Data["copyright"], Is.EqualTo(BaseCopyrightValue));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+                Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            });
         }
     }
 
@@ -266,7 +332,6 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         public override string Location => _location;
-
         public void AddCustomAttribute(object attribute)
         {
             _customAttributes.Add(attribute);
