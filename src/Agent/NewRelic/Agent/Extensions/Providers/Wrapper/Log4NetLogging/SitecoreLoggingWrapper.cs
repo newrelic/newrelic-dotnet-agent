@@ -13,7 +13,7 @@ using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Logging
 {
-    public class Log4netWrapper : IWrapper
+    public class SitecoreLoggingWrapper : IWrapper
     {
         private static Func<object, object> _getLevel;
         private static Func<object, string> _getRenderedMessage;
@@ -22,10 +22,13 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
         private static Func<object, IDictionary> _getProperties; // getter for Properties property
 
+        private static Func<object, object> _getLegacyProperties; // getter for legacy Properties property
+        private static Func<object, Hashtable> _getLegacyHashtable; // getter for Properties hashtable property
+
         public bool IsTransactionRequired => false;
 
 
-        private const string WrapperName = "log4net";
+        private const string WrapperName = "SitecoreLogging";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -54,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
+            _getLogException ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Exception>(logEventType, "m_thrownException");
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
@@ -87,9 +90,26 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-            _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            _getGetProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext");
 
             var contextData = new Dictionary<string, object>();
+            // In older versions of log4net, there may be additional properties
+
+            // Properties is a "PropertiesCollection", an internal type
+            var getLegacyProperties = _getLegacyProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Properties");
+            var legacyProperties = getLegacyProperties(logEvent);
+
+            // PropertyCollection has an internal hashtable that stores the data. The only public method for
+            // retrieving the data is the indexer [] which is more of a pain to get via reflection.
+            var propertyCollectionType = legacyProperties.GetType();
+            var getHashtable = _getLegacyHashtable ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Hashtable>(propertyCollectionType.Assembly.ToString(), propertyCollectionType.FullName, "m_ht");
+
+            var hashtable = getHashtable(legacyProperties);
+
+            foreach (var key in hashtable.Keys)
+            {
+                contextData.Add(key.ToString(), hashtable[key]);
+            }
 
             var propertiesDictionary = _getGetProperties(logEvent);
 
