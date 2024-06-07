@@ -36,6 +36,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     configModifier.AddExpectedStatusCodes("410-450")
                     .AddExpectedErrorMessages("System.Exception", new List<string> { "test exception"})
                     .AddExpectedErrorClasses(new List<string> { "AspNetCoreMvcBasicRequestsApplication.Controllers.CustomExceptionClass" });
+                    configModifier.SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {
