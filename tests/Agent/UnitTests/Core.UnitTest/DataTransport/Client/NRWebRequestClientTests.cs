@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.GetRequestStream()).Returns(new MemoryStream());
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).ReturnsAsync((WebResponse)fakeResponse);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Returns((WebResponse)fakeResponse);
                 return mockWebRequest;
             });
 
@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.Address).Returns(new Uri("https://sometesthost.com"));
                 var webException = new WebException("testing");
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).Throws(webException);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Throws(webException);
                 return mockWebRequest;
             });
 
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Mock.Arrange(() => mockHttpWebResponse.StatusCode).Returns(HttpStatusCode.BadRequest);
                 Mock.Arrange(() => mockHttpWebResponse.StatusDescription).Returns("Bad Request");
                 var webException = new WebException("testing", null, WebExceptionStatus.SendFailure,mockHttpWebResponse);
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).Throws(webException);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Throws(webException);
                 return mockWebRequest;
             });
 
