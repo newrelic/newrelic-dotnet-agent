@@ -2058,6 +2058,14 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public bool DisableFileSystemWatcher
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.instrumentation.disableFileSystemWatcher, "NEW_RELIC_DISABLE_FILE_SYSTEM_WATCHER");
+            }
+        }
+
         #region AI Monitoring
 
         public bool AiMonitoringEnabled

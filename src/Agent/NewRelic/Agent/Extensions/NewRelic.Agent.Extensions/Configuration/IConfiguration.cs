@@ -212,7 +212,7 @@ namespace NewRelic.Agent.Configuration
         bool LoggingEnabled { get; }
         string LoggingLevel { get; }
         IEnumerable<IDictionary<string, string>> IgnoredInstrumentation { get; }
-
+        bool DisableFileSystemWatcher { get; }
         bool AiMonitoringEnabled { get; }
         bool AiMonitoringStreamingEnabled { get; }
         bool AiMonitoringRecordContentEnabled { get; }

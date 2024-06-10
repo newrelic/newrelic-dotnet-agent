@@ -440,6 +440,8 @@ namespace NewRelic.Agent.Core.DataTransport
             new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
         };
 
+        public bool DisableFileSystemWatcher => false;
+
         public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
 
         public TimeSpan TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);

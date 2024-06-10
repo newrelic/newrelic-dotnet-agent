@@ -1539,6 +1539,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool logField;
         
+        private bool disableFileSystemWatcherField;
+        
         /// <summary>
         /// configurationInstrumentation class constructor
         /// </summary>
@@ -1547,6 +1549,7 @@ namespace NewRelic.Agent.Core.Config
             this.applicationsField = new List<configurationInstrumentationApplication>();
             this.rulesField = new List<configurationInstrumentationIgnore>();
             this.logField = false;
+            this.disableFileSystemWatcherField = false;
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("ignore", IsNullable=false)]
@@ -1586,6 +1589,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.logField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool disableFileSystemWatcher
+        {
+            get
+            {
+                return this.disableFileSystemWatcherField;
+            }
+            set
+            {
+                this.disableFileSystemWatcherField = value;
             }
         }
         

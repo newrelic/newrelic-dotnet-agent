@@ -487,6 +487,14 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="disableFileSystemWatcher" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If disableFileSystemWatcher is set to true, then instrumentation XML file changes, additions, or deletions will not be detected and applied after the application has been started.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 

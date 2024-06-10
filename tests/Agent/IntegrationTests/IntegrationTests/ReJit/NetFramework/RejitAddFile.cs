@@ -20,14 +20,17 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
     [NetFrameworkTest]
-    public class RejitAddFile : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
+    public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : AspNetFrameworkReJitMvcApplicationFixture
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;
+        private readonly bool _disableFileSystemWatcher;
 
-        public RejitAddFile(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        public RejitAddFileBase(TFixture fixture, ITestOutputHelper output, bool disableFileSystemWatcher)
             : base(fixture)
         {
             _fixture = fixture;
+            _disableFileSystemWatcher = disableFileSystemWatcher;
 
             _fixture.TestLogger = output;
             _fixture.Actions(
@@ -35,6 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.AutoInstrumentBrowserMonitoring(false);
+                    configModifier.SetDisableFileSystemWatcher(disableFileSystemWatcher);
                 },
                 exerciseApplication: () =>
                 {
@@ -59,19 +63,28 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
             {
 				//transactions
 				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/HomeController/Index", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = 1 },
 
 				// Unscoped
 				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 2 },
 
 				// Scoped
 				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/HomeController/Index", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", metricScope = "WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = 1 }
             };
+
+            // Id file system watcher is disabled, these won't exist.
+            if (_disableFileSystemWatcher)
+            {
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 1 });
+            }
+            else
+            {
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 2 });
+            }
 
             var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);
             _fixture.TestLogger?.WriteLine(_fixture.AgentLog.GetFullLogAsString());
@@ -79,6 +92,22 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
+        }
+    }
+
+    public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetFrameworkReJitMvcApplicationFixture>
+    {
+        public RejitAddFileWithFileWatcherEnabled(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+    }
+
+    public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetFrameworkReJitMvcApplicationFixture>
+    {
+        public RejitAddFileWithFileWatcherDisabled(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
         }
     }
 }

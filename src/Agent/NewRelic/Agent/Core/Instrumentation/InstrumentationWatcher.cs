@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
@@ -16,18 +17,26 @@ namespace NewRelic.Agent.Core.Instrumentation
 
         private readonly IInstrumentationService _instrumentationService;
         private readonly IWrapperService _wrapperService;
+        private readonly IConfigurationService _configurationService;
 
         private List<FileSystemWatcher> _fileWatchers;
         private SignalableAction _action;
 
-        public InstrumentationWatcher(IWrapperService wrapperService, IInstrumentationService instrumentationService)
+        public InstrumentationWatcher(IWrapperService wrapperService, IInstrumentationService instrumentationService, IConfigurationService configurationService)
         {
             _wrapperService = wrapperService;
             _instrumentationService = instrumentationService;
+            _configurationService = configurationService;
         }
 
         public void Start()
         {
+            if (_configurationService.Configuration.DisableFileSystemWatcher)
+            {
+                Log.Debug("Live instrumentation updates due to instrumentation file changes will not be applied because they have been disabled by local configuration.");
+                return;
+            }
+
             if (AgentInstallConfiguration.HomeExtensionsDirectory == null)
             {
                 Log.Warn("Live instrumentation updates due to instrumentation file changes will not be applied because HomeExtensionsDirectory is null.");
