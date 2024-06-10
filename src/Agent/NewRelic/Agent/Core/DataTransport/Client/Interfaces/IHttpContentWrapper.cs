@@ -1,8 +1,7 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.IO;
-using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
@@ -12,7 +11,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     /// </summary>
     public interface IHttpContentWrapper
     {
-        Task<Stream> ReadAsStreamAsync();
+        Stream ReadAsStream();
         IHttpContentHeadersWrapper Headers { get; }
     }
 }

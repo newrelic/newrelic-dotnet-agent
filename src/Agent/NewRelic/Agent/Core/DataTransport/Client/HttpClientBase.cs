@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _proxy = proxy;
         }
 
-        public abstract Task<IHttpResponse> SendAsync(IHttpRequest request);
+        public abstract IHttpResponse Send(IHttpRequest request);
 
         public virtual void Dispose()
         {

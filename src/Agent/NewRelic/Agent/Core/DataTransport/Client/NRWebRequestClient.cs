@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _configuration = configuration;
         }
 
-        public override async Task<IHttpResponse> SendAsync(IHttpRequest request)
+        public override IHttpResponse Send(IHttpRequest request)
         {
             try
             {
@@ -61,12 +61,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                         throw new NullReferenceException("outputStream");
                     }
 
-                    // .ConfigureAwait(false) is required here for some reason
-                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength).ConfigureAwait(false);
+                    outputStream.Write(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength);
                 }
 
-                // .ConfigureAwait(false) is required here for some reason
-                var resp = (HttpWebResponse)await _httpWebRequest.GetResponseAsync().ConfigureAwait(false);
+                var resp = (HttpWebResponse)_httpWebRequest.GetResponse();
 
                 return new WebRequestClientResponse(request.RequestGuid, resp);
             }

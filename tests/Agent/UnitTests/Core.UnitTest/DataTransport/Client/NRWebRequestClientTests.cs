@@ -5,13 +5,10 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.AutoMock.Ninject.Activation;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -52,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         [Test]
-        public async Task SendAsync_ShouldReturnValidResponse_WhenWebRequestIsSuccessful()
+        public void Send_ShouldReturnValidResponse_WhenWebRequestIsSuccessful()
         {
             // Arrange
             var fakeResponse = Mock.Create<HttpWebResponse>();
@@ -60,12 +57,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.GetRequestStream()).Returns(new MemoryStream());
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).ReturnsAsync((WebResponse)fakeResponse);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Returns((WebResponse)fakeResponse);
                 return mockWebRequest;
             });
 
             // Act
-            var response = await _client.SendAsync(_request);
+            var response = _client.Send(_request);
 
             // Assert
             Assert.That(response, Is.Not.Null);
@@ -83,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             });
 
             // Act & Assert
-            Assert.ThrowsAsync<NullReferenceException>(() => _client.SendAsync(_request));
+            Assert.Throws<NullReferenceException>(() => _client.Send(_request));
         }
 
         [Test]
@@ -95,15 +92,15 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 var mockWebRequest = Mock.Create<HttpWebRequest>();
                 Mock.Arrange(() => mockWebRequest.Address).Returns(new Uri("https://sometesthost.com"));
                 var webException = new WebException("testing");
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).Throws(webException);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Throws(webException);
                 return mockWebRequest;
             });
 
             // Act & Assert
-            Assert.ThrowsAsync<WebException>(() => _client.SendAsync(_request));
+            Assert.Throws<WebException>(() => _client.Send(_request));
         }
         [Test]
-        public async Task SendAsync_ReturnsResponse_WhenWebExceptionResponseIsNotNull()
+        public void Send_ReturnsResponse_WhenWebExceptionResponseIsNotNull()
         {
             // Arrange
             _client.SetHttpWebRequestFunc(uri =>
@@ -115,12 +112,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Mock.Arrange(() => mockHttpWebResponse.StatusCode).Returns(HttpStatusCode.BadRequest);
                 Mock.Arrange(() => mockHttpWebResponse.StatusDescription).Returns("Bad Request");
                 var webException = new WebException("testing", null, WebExceptionStatus.SendFailure,mockHttpWebResponse);
-                Mock.Arrange(() => mockWebRequest.GetResponseAsync()).Throws(webException);
+                Mock.Arrange(() => mockWebRequest.GetResponse()).Throws(webException);
                 return mockWebRequest;
             });
 
             // Act
-            var response = await _client.SendAsync(_request);
+            var response = _client.Send(_request);
 
             // Assert
             Assert.That(response, Is.Not.Null);
