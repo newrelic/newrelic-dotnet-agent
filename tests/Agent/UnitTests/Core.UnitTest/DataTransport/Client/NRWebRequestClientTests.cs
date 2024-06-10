@@ -5,13 +5,10 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.AutoMock.Ninject.Activation;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -52,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         [Test]
-        public async Task SendAsync_ShouldReturnValidResponse_WhenWebRequestIsSuccessful()
+        public void Send_ShouldReturnValidResponse_WhenWebRequestIsSuccessful()
         {
             // Arrange
             var fakeResponse = Mock.Create<HttpWebResponse>();
@@ -65,7 +62,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             });
 
             // Act
-            var response = await _client.SendAsync(_request);
+            var response = _client.Send(_request);
 
             // Assert
             Assert.That(response, Is.Not.Null);
@@ -83,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             });
 
             // Act & Assert
-            Assert.ThrowsAsync<NullReferenceException>(() => _client.SendAsync(_request));
+            Assert.Throws<NullReferenceException>(() => _client.Send(_request));
         }
 
         [Test]
@@ -100,10 +97,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             });
 
             // Act & Assert
-            Assert.ThrowsAsync<WebException>(() => _client.SendAsync(_request));
+            Assert.Throws<WebException>(() => _client.Send(_request));
         }
         [Test]
-        public async Task SendAsync_ReturnsResponse_WhenWebExceptionResponseIsNotNull()
+        public void Send_ReturnsResponse_WhenWebExceptionResponseIsNotNull()
         {
             // Arrange
             _client.SetHttpWebRequestFunc(uri =>
@@ -120,7 +117,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             });
 
             // Act
-            var response = await _client.SendAsync(_request);
+            var response = _client.Send(_request);
 
             // Assert
             Assert.That(response, Is.Not.Null);

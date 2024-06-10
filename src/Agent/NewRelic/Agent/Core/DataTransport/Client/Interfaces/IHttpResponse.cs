@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -11,6 +11,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     {
         bool IsSuccessStatusCode { get; }
         HttpStatusCode StatusCode { get; }
-        Task<string> GetContentAsync();
+        string GetContent();
     }
 }

@@ -1,10 +1,9 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
 using System.IO;
 using System.Net.Http;
-using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -21,9 +20,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _httpContent = httpContent;
         }
 
-        public Task<Stream> ReadAsStreamAsync()
+        public Stream ReadAsStream()
         {
-            return _httpContent.ReadAsStreamAsync();
+            return _httpContent.ReadAsStreamAsync().GetAwaiter().GetResult();
         }
 
         public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);

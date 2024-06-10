@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 #if NETFRAMEWORK
 using System;
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _response = response;
         }
 
-        public Task<string> GetContentAsync()
+        public string GetContent()
         {
             try
             {
@@ -51,14 +51,14 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
                     var responseBody = reader.ReadLine();
-                    return Task.FromResult(responseBody ?? Constants.EmptyResponseBody);
+                    return responseBody ?? Constants.EmptyResponseBody;
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Request({0}): Unable to parse response body.", _requestGuid);
 
-                return Task.FromResult(Constants.EmptyResponseBody);
+                return Constants.EmptyResponseBody;
             }
         }
 

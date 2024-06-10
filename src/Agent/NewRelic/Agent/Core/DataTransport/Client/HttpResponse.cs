@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _httpResponseMessageWrapper = httpResponseMessageWrapper;
         }
 
-        public async Task<string> GetContentAsync()
+        public string GetContent()
         {
             try
             {
@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     return Constants.EmptyResponseBody;
                 }
 
-                var responseStream = await _httpResponseMessageWrapper.Content.ReadAsStreamAsync();
+                var responseStream = _httpResponseMessageWrapper.Content.ReadAsStream();
 
                 var contentTypeEncoding = _httpResponseMessageWrapper.Content.Headers.ContentEncoding;
                 if (contentTypeEncoding.Contains("gzip"))
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 using (responseStream)
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    var responseBody = await reader.ReadLineAsync();
+                    var responseBody = reader.ReadLineAsync().GetAwaiter().GetResult();
 
                     if (responseBody != null)
                     {
