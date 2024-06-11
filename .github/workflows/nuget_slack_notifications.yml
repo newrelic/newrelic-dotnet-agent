@@ -95,6 +95,10 @@ jobs:
                  rabbitmq.client
                  restsharp
                  serilog
+                 serilog.extensions.logging
+                 serilog.aspnetcore
+                 serilog.sinks.file
+                 serilog.sinks.console
                  stackexchange.redis
                  system.data.sqlclient"
                  
