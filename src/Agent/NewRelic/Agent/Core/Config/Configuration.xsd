@@ -223,6 +223,14 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="disableFileSystemWatcher" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If disableFileSystemWatcher is set to true, then newrelic.config and instrumentation XML file changes, additions, or deletions will not be detected and applied after the application has been started.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
@@ -483,14 +491,6 @@
                             <xs:annotation>
                                 <xs:documentation>
                                     If log is set to true, then each method that is instrumented will be logged in the application event log. This is helpful when debugging custom instrumentation.
-                                </xs:documentation>
-                            </xs:annotation>
-                        </xs:attribute>
-
-                        <xs:attribute name="disableFileSystemWatcher" type="xs:boolean" default="false">
-                            <xs:annotation>
-                                <xs:documentation>
-                                    If disableFileSystemWatcher is set to true, then instrumentation XML file changes, additions, or deletions will not be detected and applied after the application has been started.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

@@ -500,7 +500,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier SetDisableFileSystemWatcher(bool enabled = true)
         {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "instrumentation" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
             return this;
         }
     }
