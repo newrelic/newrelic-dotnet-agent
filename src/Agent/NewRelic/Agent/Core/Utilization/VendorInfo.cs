@@ -12,21 +12,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-
-#if NETSTANDARD2_0
 using System.IO;
-using System.Runtime.InteropServices;
-#endif
 
 namespace NewRelic.Agent.Core.Utilization
 {
     public class VendorInfo
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
-#if NETSTANDARD2_0
         private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
         private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
-#endif
+        private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
+        private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 
         private const string AwsName = @"aws";
         private const string AzureName = @"azure";
@@ -34,6 +30,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string PcfName = @"pcf";
         private const string DockerName = @"docker";
         private const string KubernetesName = @"kubernetes";
+        private const string EcsFargateName = @"ecs-fargate";
 
         private readonly string AwsTokenUri = @"http://169.254.169.254/latest/api/token";
         private readonly string AwsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
@@ -96,16 +93,11 @@ namespace NewRelic.Agent.Core.Utilization
             // If Docker info is set to be checked, it must be checked for all vendors.
             if (_configuration.UtilizationDetectDocker)
             {
-#if NETSTANDARD2_0
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
+                if (dockerVendorInfo != null)
                 {
-                    var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper());
-                    if (dockerVendorInfo != null)
-                    {
-                        vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
-                    }
+                    vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
                 }
-#endif
             }
 
             if (_configuration.UtilizationDetectKubernetes)
@@ -276,10 +268,11 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 
-#if NETSTANDARD2_0
-        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper)
+        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper, bool isLinux)
         {
-                IVendorModel vendorModel = null;
+            IVendorModel vendorModel = null;
+            if (isLinux)
+            {
                 try
                 {
                     var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
@@ -305,11 +298,47 @@ namespace NewRelic.Agent.Core.Utilization
                     catch (Exception ex)
                     {
                         Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
-                        return null;
                     }
                 }
+            }
 
-                return vendorModel;
+            if (vendorModel == null)
+            {
+                try
+                {
+                    var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
+                    if (!string.IsNullOrWhiteSpace(metadataUri))
+                    {
+                        vendorModel = TryGetEcsFargateDockerId(metadataUri);
+                        if (vendorModel == null)
+                            Log.Finest($"Found {AwsEcsMetadataV4EnvVar} but failed to parse Docker container id.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV4EnvVar}.");
+                }
+            }
+
+            if (vendorModel == null)
+            {
+                try
+                {
+                    var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV3EnvVar);
+                    if (!string.IsNullOrWhiteSpace(metadataUri))
+                    {
+                        vendorModel = TryGetEcsFargateDockerId(metadataUri);
+                        if (vendorModel == null)
+                            Log.Finest($"Found {AwsEcsMetadataV3EnvVar} but failed to parse Docker container id.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV3EnvVar}.");
+                }
+            }
+
+            return vendorModel;
         }
 
         private IVendorModel TryGetDockerCGroupV1(string fileContent)
@@ -353,7 +382,15 @@ namespace NewRelic.Agent.Core.Utilization
 
             return id == null ? null : new DockerVendorModel(id);
         }
-#endif
+
+        private IVendorModel TryGetEcsFargateDockerId(string metadataUri)
+        {
+            var responseJson = _vendorHttpApiRequestor.CallVendorApi(new Uri(metadataUri), GetMethod, EcsFargateName);
+            var jObject = JObject.Parse(responseJson);
+            var idToken = jObject.SelectToken("DockerId");
+            var id = NormalizeAndValidateMetadata((string)idToken, "DockerId", EcsFargateName);
+            return id == null ? null : new DockerVendorModel(id);
+        }
 
         public IVendorModel GetKubernetesInfo()
         {
@@ -413,8 +450,17 @@ namespace NewRelic.Agent.Core.Utilization
         {
             return Regex.IsMatch(data, ValidateMetadataRegex);
         }
-    }
+
+        private static bool IsLinux()
+        {
 #if NETSTANDARD2_0
+            return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+#else
+            return false; // No Linux on .NET Framework
+#endif
+        }
+    }
+
     // needed for unit testing only
     public interface IFileReaderWrapper
     {
@@ -428,5 +474,4 @@ namespace NewRelic.Agent.Core.Utilization
             return File.ReadAllText(fileName);
         }
     }
-#endif
 }
