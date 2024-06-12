@@ -662,6 +662,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.instrumentation.ignore")]
         public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => _configuration.IgnoredInstrumentation;
 
+        [JsonProperty("agent.disable_file_system_watcher")]
+        public bool DisableFileSystemWatcher => _configuration.DisableFileSystemWatcher;
+
         [JsonProperty("agent.ai_monitoring.enabled")]
         public bool AiMonitoringEnabled => _configuration.AiMonitoringEnabled;
 

@@ -4023,6 +4023,39 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion Agent Logs
 
+        [TestCase(false, null, true, false, ExpectedResult = false)] // default
+        [TestCase(true, null, true, false, ExpectedResult = true)]
+        [TestCase(false, true, true, false, ExpectedResult = true)]
+        [TestCase(true, false, true, false, ExpectedResult = false)]
+        [TestCase(false, null, false, false, ExpectedResult = true)]
+        [TestCase(false, null, false, true, ExpectedResult = true)]
+        [TestCase(false, null, true, true, ExpectedResult = true)]
+        [TestCase(true, null, false, false, ExpectedResult = true)]
+        [TestCase(true, null, false, true, ExpectedResult = true)]
+        [TestCase(true, null, true, true, ExpectedResult = true)]
+        [TestCase(false, true, false, false, ExpectedResult = true)]
+        [TestCase(false, true, false, true, ExpectedResult = true)]
+        [TestCase(false, true, true, true, ExpectedResult = true)]
+        [TestCase(true, false, false, false, ExpectedResult = true)]
+        [TestCase(true, false, false, true, ExpectedResult = true)]
+        [TestCase(true, false, true, true, ExpectedResult = true)]
+        public bool ValidateDisableFileSystemWatcher(bool localWatcherDisabled, bool? envWatcherDisabled, bool loggingEnabled, bool serverlessMode)
+        {
+            // Setup config values
+            _localConfig.service.disableFileSystemWatcher = localWatcherDisabled;
+
+            if (envWatcherDisabled.HasValue)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_FILE_SYSTEM_WATCHER")).Returns(envWatcherDisabled.ToString().ToLower());
+            }
+
+            _localConfig.log.enabled = loggingEnabled;
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(serverlessMode);
+
+            // test
+            return _defaultConfig.DisableFileSystemWatcher;
+        }
+
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);

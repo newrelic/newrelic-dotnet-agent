@@ -497,5 +497,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", },
                 "debugStartupDelaySeconds", delaySeconds.ToString());
         }
+
+        public NewRelicConfigModifier SetDisableFileSystemWatcher(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
+            return this;
+        }
     }
 }

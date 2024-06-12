@@ -25,10 +25,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         where TFixture:AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
+        private readonly bool _disableFileSystemWatcher;
 
-        protected RejitAddFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected RejitAddFileBase(TFixture fixture, ITestOutputHelper output, bool disableFileSystemWatcher) : base(fixture)
         {
             _fixture = fixture;
+            _disableFileSystemWatcher = disableFileSystemWatcher;
 
             _fixture.TestLogger = output;
             _fixture.Actions(
@@ -37,6 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("finest");
                     configModifier.AutoInstrumentBrowserMonitoring(false);
+                    configModifier.SetDisableFileSystemWatcher(disableFileSystemWatcher);
                 },
                 exerciseApplication: () =>
                 {
@@ -61,19 +64,28 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
             {
                 //transactions
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddFile", callCount = 1 },
 
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", callCount = 2 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", metricScope = "WebTransaction/MVC/Rejit/GetAddFile", callCount = 1 }
             };
+
+            // Id file system watcher is disabled, these won't exist.
+            if (_disableFileSystemWatcher)
+            {
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", callCount = 1 });
+            }
+            else
+            {
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", callCount = 2 });
+            }
 
             var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);
             _fixture.TestLogger?.WriteLine(_fixture.AgentLog.GetFullLogAsString());
@@ -84,10 +96,18 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitAddFile : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
+    public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
     {
-        public RejitAddFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        public RejitAddFileWithFileWatcherEnabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+    }
+
+    public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitAddFileWithFileWatcherDisabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
         {
         }
     }
@@ -95,7 +115,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     public class RejitAddFileWithTieredCompilation : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitAddFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
-            : base(fixture, output)
+            : base(fixture, output, false)
         {
         }
     }

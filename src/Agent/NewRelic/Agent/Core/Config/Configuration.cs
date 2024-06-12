@@ -797,6 +797,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool forceNewTransactionOnNewThreadField;
         
+        private bool disableFileSystemWatcherField;
+        
         /// <summary>
         /// configurationService class constructor
         /// </summary>
@@ -810,6 +812,7 @@ namespace NewRelic.Agent.Core.Config
             this.sendDataOnExitThresholdField = ((float)(60000F));
             this.completeTransactionsOnThreadField = false;
             this.forceNewTransactionOnNewThreadField = false;
+            this.disableFileSystemWatcherField = false;
         }
         
         public string obscuringKey
@@ -1029,6 +1032,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.forceNewTransactionOnNewThreadField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool disableFileSystemWatcher
+        {
+            get
+            {
+                return this.disableFileSystemWatcherField;
+            }
+            set
+            {
+                this.disableFileSystemWatcherField = value;
             }
         }
         

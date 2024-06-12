@@ -25,6 +25,12 @@ namespace NewRelic.Agent.Core.Config
 
         public ConfigurationTracker(IConfigurationService configurationService, INativeMethods nativeMethods)
         {
+            if (configurationService.Configuration.DisableFileSystemWatcher)
+            {
+                Log.Debug("Live updates to newrelic.config will not be applied because they have been disabled by local configuration.");
+                return;
+            }
+
             _nativeMethods = nativeMethods;
             var fileName = configurationService.Configuration.NewRelicConfigFilePath;
             if (fileName == null)
