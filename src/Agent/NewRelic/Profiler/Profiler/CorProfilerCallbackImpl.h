@@ -574,7 +574,7 @@ namespace NewRelic { namespace Profiler {
         std::shared_ptr<std::map<xstring_t, Configuration::InstrumentationPointSetPtr>> GroupByAssemblyName(Configuration::InstrumentationPointSetPtr allInstrumentationPoints)
         {
             std::shared_ptr<std::map<xstring_t, Configuration::InstrumentationPointSetPtr>> instrumentationPointsByAssembly = std::make_shared<std::map<xstring_t, Configuration::InstrumentationPointSetPtr>>();
-            for (auto point : *allInstrumentationPoints) {
+            for (auto& point : *allInstrumentationPoints) {
                 Configuration::InstrumentationPointSetPtr instrumentationPoints;
                 auto it = instrumentationPointsByAssembly->find(point->AssemblyName);
 
@@ -632,7 +632,7 @@ namespace NewRelic { namespace Profiler {
 
             auto instrumentationXmls = GetInstrumentationXmlsFromDisk(_systemCalls);
             auto customXml = _customInstrumentation.GetCustomInstrumentationXml();
-            for (auto xmlPair : *customXml) {
+            for (auto& xmlPair : *customXml) {
                 (*instrumentationXmls)[xmlPair.first] = xmlPair.second;
             }
 
@@ -683,7 +683,7 @@ namespace NewRelic { namespace Profiler {
         {
             auto oldIter = instrumentationByAssembly->find(assemblyName);
             if (oldIter != instrumentationByAssembly->end()) {
-                auto points = oldIter->second;
+                auto& points = oldIter->second;
                 return GetMethodDefs(moduleId, points);
             }
 
@@ -789,12 +789,15 @@ namespace NewRelic { namespace Profiler {
                 ModuleID* moduleIds = new ModuleID[numberMethods];
                 mdMethodDef* methodIds = new mdMethodDef[numberMethods];
 
+#pragma warning(push)
+#pragma warning(disable : 6386) // Not possible to overrun the buffer since we're using the set size
                 int i = 0;
                 for (auto methodDef : *methodSet) {
                     moduleIds[i] = moduleId;
                     methodIds[i] = methodDef;
                     i++;
                 }
+#pragma warning(pop)
 
                 func(numberMethods, moduleIds, methodIds);
 
@@ -879,7 +882,7 @@ namespace NewRelic { namespace Profiler {
 
         bool _isCoreClr = false;
 
-        MethodRewriter::MethodRewriterPtr GetMethodRewriter()
+        MethodRewriter::MethodRewriterPtr GetMethodRewriter() const
         {
             return std::atomic_load(&_methodRewriter);
         }
@@ -942,7 +945,7 @@ namespace NewRelic { namespace Profiler {
 
             auto filePaths = GetXmlFilesInExtensionsDirectory(systemCalls);
 
-            for (auto filePath : filePaths) {
+            for (auto& filePath : filePaths) {
                 instrumentationXmls->emplace(filePath, ReadFile(filePath));
             }
 
@@ -1258,7 +1261,7 @@ namespace NewRelic { namespace Profiler {
             struct LANGANDCODEPAGE {
                 WORD wLanguage;
                 WORD wCodePage;
-            } * lpTranslate;
+            } *lpTranslate = nullptr;
 
             //xstring_t expectedProductName = _X("New Relic .NET CoreCLR Agent");
 
@@ -1277,7 +1280,7 @@ namespace NewRelic { namespace Profiler {
 
                     if (VerQueryValue(versionInfo, (LPTSTR)szSFI, (LPVOID*)&lpszBuf, &uLen)) {
                         if (expectedProductName == lpszBuf) {
-                            void* block;
+                            void* block = nullptr;
                             UINT blockSize;
                             if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&block, &blockSize)) {
                                 auto fileInfo = (VS_FIXEDFILEINFO*)block;

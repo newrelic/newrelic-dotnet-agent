@@ -431,7 +431,7 @@ namespace NewRelic { namespace Profiler
             return _functionId;
         }
 
-        ModuleID GetModuleID()
+        ModuleID GetModuleID() const
         {
             return _moduleId;
         }
@@ -536,7 +536,7 @@ namespace NewRelic { namespace Profiler
         virtual ByteVectorPtr GetSignatureFromToken(mdToken token) override
         {
             ULONG signatureLength;
-            uint8_t* signature;
+            uint8_t* signature = 0;
             ThrowOnError(_metaDataImport->GetSigFromToken, token, (PCCOR_SIGNATURE*)&signature, &signatureLength);
             return std::make_shared<ByteVector>(signature, signature + signatureLength);
         }

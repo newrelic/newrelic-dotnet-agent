@@ -403,7 +403,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void AppendTryEnd()
         {
-            auto exception = _exceptionStack.top();
+            auto& exception = _exceptionStack.top();
             if (exception->_tryLength != 0)
             {
                 LogError(L"Attempted to set try close on the same exception twice.");
@@ -414,7 +414,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void AppendCatchStart(uint32_t typeToken)
         {
-            auto exception = _exceptionStack.top();
+            auto& exception = _exceptionStack.top();
             if (exception->_handlerOffset != 0)
             {
                 LogError(L"Attempted to set catch start on the same exception twice.");
@@ -439,7 +439,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void AppendCatchEnd()
         {
-            auto exception = _exceptionStack.top();
+            auto& exception = _exceptionStack.top();
             if (exception->_handlerLength != 0)
             {
                 LogError(L"Attempted to set catch end on the same exception twice.");

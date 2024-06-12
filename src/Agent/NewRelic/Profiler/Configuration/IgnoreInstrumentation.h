@@ -50,7 +50,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
 
         private:
-            bool Matches(xstring_t assembly, xstring_t className)
+            bool Matches(xstring_t assembly, xstring_t className) const
             {
                 if (!Strings::AreEqualCaseInsensitive(AssemblyName, assembly))
                 {

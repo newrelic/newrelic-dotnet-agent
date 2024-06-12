@@ -33,7 +33,10 @@
 
 
 // Profiler Header Files:
+#pragma warning(push)
+#pragma warning(disable: 26495)
 #include <corhlpr.h>
+#pragma warning(pop)
 
 // Windows Header Files:
 #ifndef _WIN32_WINNT
