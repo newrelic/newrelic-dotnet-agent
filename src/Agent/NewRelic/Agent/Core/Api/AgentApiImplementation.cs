@@ -6,7 +6,6 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;

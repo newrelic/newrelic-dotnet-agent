@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Core.CodeAttributes
+namespace NewRelic.Agent.Core.Utilities
 {
     /// <summary>
     /// Identifies a piece of code that is planned to be removed in a future release of the agent.

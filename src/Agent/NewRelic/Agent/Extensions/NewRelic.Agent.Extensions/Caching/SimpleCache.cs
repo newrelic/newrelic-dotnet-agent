@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace NewRelic.Core.Caching
+namespace NewRelic.Agent.Extensions.Caching
 {
     /// <summary>
     /// Simple cache maintains a collection. Periodically, the cache is maintained on a seperate thread.

@@ -8,7 +8,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.CodeAttributes;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

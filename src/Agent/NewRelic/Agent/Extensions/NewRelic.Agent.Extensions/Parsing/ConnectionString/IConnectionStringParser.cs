@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Caching;
+using NewRelic.Agent.Extensions.Caching;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {

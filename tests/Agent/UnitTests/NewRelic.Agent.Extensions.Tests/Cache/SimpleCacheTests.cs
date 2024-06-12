@@ -3,10 +3,10 @@
 
 using System;
 using System.Threading;
-using NewRelic.Core.Caching;
+using NewRelic.Agent.Extensions.Caching;
 using NUnit.Framework;
 
-namespace NewRelic.Core.Tests.NewRelic.Cache
+namespace Agent.Extensions.Tests.Cache
 {
     public class SimpleCacheTests
     {

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Core.CodeAttributes
+namespace NewRelic.Agent.Core.Utilities
 {
     /// <summary>
     /// A custom attribute used to exclude methods and/or classes from code coverage.

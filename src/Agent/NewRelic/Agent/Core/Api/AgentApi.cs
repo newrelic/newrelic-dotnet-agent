@@ -5,7 +5,6 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using NewRelic.Core;
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Core.CodeAttributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;

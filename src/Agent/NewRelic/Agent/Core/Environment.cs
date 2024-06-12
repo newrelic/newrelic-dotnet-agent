@@ -17,7 +17,6 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
-using NewRelic.Core.CodeAttributes;
 
 namespace NewRelic.Agent.Core
 {

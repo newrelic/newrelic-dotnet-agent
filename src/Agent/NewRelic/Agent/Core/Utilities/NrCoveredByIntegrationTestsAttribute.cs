@@ -1,9 +1,9 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 
-namespace NewRelic.Core.CodeAttributes
+namespace NewRelic.Agent.Core.Utilities
 {
     /// <summary>
     /// A custom attribute used to indicate that this method/class is covered by

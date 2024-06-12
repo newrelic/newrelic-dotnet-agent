@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core;
-using NewRelic.Core.Caching;
+using NewRelic.Agent.Extensions.Caching;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

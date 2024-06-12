@@ -3,7 +3,7 @@
 
 using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Caching;
+using NewRelic.Agent.Extensions.Caching;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Database
