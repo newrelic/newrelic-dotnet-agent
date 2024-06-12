@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System;
 using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Reflection;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 
 namespace NewRelic.Providers.Wrapper.AwsLambda
 {

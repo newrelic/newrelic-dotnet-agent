@@ -12,7 +12,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
 using System.Linq;
 using System;
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Attributes
 {

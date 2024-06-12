@@ -6,7 +6,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Diagnostics;
 using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
 #if NETFRAMEWORK
 using System.Web;
 using Microsoft.Win32;

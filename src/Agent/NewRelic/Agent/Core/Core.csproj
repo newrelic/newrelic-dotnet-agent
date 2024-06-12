@@ -26,9 +26,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="NewRelic.Core.BuildTimestamp">
+    <AssemblyAttribute Include="NewRelic.Agent.Core.Utilities.BuildTimestamp">
       <!--
-          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Core.BuildTimestamp("637213171838522390")]
+          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Agent.Core.Utilities.BuildTimestamp("637213171838522390")]
           Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
           https://github.com/microsoft/msbuild/issues/2281
       -->

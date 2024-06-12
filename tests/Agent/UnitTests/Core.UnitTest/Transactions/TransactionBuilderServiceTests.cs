@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
-using NewRelic.Core.DistributedTracing;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;

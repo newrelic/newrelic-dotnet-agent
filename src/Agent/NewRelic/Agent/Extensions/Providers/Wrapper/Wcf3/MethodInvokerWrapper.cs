@@ -6,7 +6,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

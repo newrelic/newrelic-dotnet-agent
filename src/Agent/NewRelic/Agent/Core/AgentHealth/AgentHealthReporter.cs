@@ -9,7 +9,7 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Concurrent;

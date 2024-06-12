@@ -4,7 +4,7 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.Mvc3
 {

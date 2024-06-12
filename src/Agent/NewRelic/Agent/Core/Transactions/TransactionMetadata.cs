@@ -4,7 +4,7 @@
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Concurrent;

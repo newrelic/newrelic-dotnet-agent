@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.Core.Logging;
 using System;
 

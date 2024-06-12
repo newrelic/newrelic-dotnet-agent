@@ -7,6 +7,7 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.TestUtilities;
 using System;
 using NewRelic.Core;

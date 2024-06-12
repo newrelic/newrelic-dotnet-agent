@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 

@@ -10,7 +10,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
 using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;

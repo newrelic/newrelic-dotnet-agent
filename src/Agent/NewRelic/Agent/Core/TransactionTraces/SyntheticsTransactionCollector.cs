@@ -9,7 +9,7 @@ using System.Threading;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 
 namespace NewRelic.Agent.Core.TransactionTraces
 {

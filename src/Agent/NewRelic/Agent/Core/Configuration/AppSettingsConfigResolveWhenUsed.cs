@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Configuration

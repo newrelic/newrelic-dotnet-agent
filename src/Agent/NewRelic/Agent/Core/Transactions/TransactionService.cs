@@ -11,7 +11,6 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
-using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

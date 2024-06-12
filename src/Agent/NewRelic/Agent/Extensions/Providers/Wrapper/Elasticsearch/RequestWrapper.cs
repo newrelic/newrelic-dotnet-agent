@@ -9,7 +9,7 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System.Collections.Concurrent;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 

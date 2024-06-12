@@ -216,7 +216,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             {
                 container.Register<INativeMethods, LinuxNativeMethods>();
             }
-            container.Register<NewRelicCore.DistributedTracing.ITracePriorityManager, NewRelicCore.DistributedTracing.TracePriorityManager>();
+            container.Register<ITracePriorityManager, TracePriorityManager>();
             container.Register<NewRelic.Agent.Api.Experimental.ISimpleSchedulingService, SimpleSchedulingService>();
 
             container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();

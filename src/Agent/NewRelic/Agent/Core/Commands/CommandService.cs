@@ -6,8 +6,7 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
-using System;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System.Collections.Generic;
 using System.Globalization;
 

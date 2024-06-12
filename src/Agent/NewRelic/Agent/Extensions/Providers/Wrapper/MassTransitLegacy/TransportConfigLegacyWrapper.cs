@@ -4,7 +4,7 @@
 using MassTransit;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 {
