@@ -3,7 +3,7 @@
 
 using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing.ConnectionString;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NUnit.Framework;
 
 namespace ParsingTests

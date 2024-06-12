@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using NewRelic.Core;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Core.CodeAttributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

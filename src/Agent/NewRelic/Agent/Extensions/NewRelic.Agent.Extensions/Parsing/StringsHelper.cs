@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Helpers;
 
-namespace NewRelic.Parsing
+namespace NewRelic.Agent.Extensions.Parsing
 {
     public static class StringsHelper
     {

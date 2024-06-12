@@ -7,10 +7,34 @@ using System.Data;
 using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Parsing
+namespace NewRelic.Agent.Extensions.Parsing
 {
-    public static class SqlServerExplainPlanActions
+    public class MySqlExplainPlanActions
     {
+
+        public static VendorExplainValidationResult ShouldGenerateExplainPlan(string sql, ParsedSqlStatement parsedSqlStatement)
+        {
+            var validationMessage = "";
+            var isValid = true;
+
+            var isSelectStatement = parsedSqlStatement.Operation.Equals("select", StringComparison.CurrentCultureIgnoreCase);
+            if (!isSelectStatement)
+            {
+                validationMessage += "Will not run EXPLAIN on non-select statements. ";
+                isValid = false;
+            }
+
+            var isSingleStatement = SqlParser.IsSingleSqlStatement(sql);
+            if (!isSingleStatement)
+            {
+                validationMessage += "Will not run EXPLAIN on multi-statement SQL query. ";
+                isValid = false;
+            }
+
+            return new VendorExplainValidationResult(isValid, validationMessage);
+        }
+
+
         public static ExplainPlan GenerateExplainPlan(object resources)
         {
             if (!(resources is IDbCommand))
@@ -36,7 +60,9 @@ namespace NewRelic.Parsing
                     dbCommand.Connection.Open();
                 }
 
-                SetShowPlan(dbCommand.Connection, true);
+                dbCommand.Transaction = null;
+                dbCommand.CommandText = "EXPLAIN " + dbCommand.CommandText;
+
 
                 using (IDataReader reader = dbCommand.ExecuteReader())
                 {
@@ -54,10 +80,7 @@ namespace NewRelic.Parsing
                     }
 
                     explainPlan.ExplainPlanDatas = explainPlanDatas;
-
                 }
-
-                SetShowPlan(dbCommand.Connection, false);
             }
 
             return explainPlan;
@@ -104,19 +127,7 @@ namespace NewRelic.Parsing
 
         private static string[] ObfuscateFieldNames()
         {
-            return new[] {
-                    "StmtText",
-                    "Argument"
-                };
-        }
-
-        private static void SetShowPlan(IDbConnection connection, bool on)
-        {
-            using (IDbCommand command = connection.CreateCommand())
-            {
-                command.CommandText = "SET SHOWPLAN_ALL " + (on ? "ON" : "OFF");
-                command.ExecuteNonQuery();
-            }
+            return new string[0];
         }
     }
 }

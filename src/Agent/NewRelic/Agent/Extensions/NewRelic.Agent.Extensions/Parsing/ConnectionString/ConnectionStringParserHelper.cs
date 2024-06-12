@@ -6,7 +6,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Net;
 
-namespace NewRelic.Parsing.ConnectionString
+namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
     public static class ConnectionStringParserHelper
     {

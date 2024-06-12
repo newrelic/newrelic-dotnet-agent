@@ -1,12 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
 using NewRelic.Agent.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Parsing.ConnectionString
+namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
     public class StackExchangeRedisConnectionStringParser : IConnectionStringParser
     {

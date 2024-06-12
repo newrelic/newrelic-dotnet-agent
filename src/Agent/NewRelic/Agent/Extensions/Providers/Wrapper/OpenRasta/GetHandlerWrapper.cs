@@ -4,7 +4,7 @@
 using System;
 using NewRelic.SystemExtensions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.OpenRasta

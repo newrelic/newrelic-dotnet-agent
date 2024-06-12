@@ -24,7 +24,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
-using NewRelic.Parsing;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Concurrent;

@@ -4,9 +4,8 @@
 using System;
 using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing;
-using NewRelic.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using System.Linq;
 using NewRelic.Agent.Api;
 using System.Threading.Tasks;

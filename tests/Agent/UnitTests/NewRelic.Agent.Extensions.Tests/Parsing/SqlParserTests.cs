@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Parsing;
 using System.Data;
 using System.Text;
 using NUnit.Framework;

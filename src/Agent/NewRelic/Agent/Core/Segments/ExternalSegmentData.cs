@@ -10,8 +10,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Metrics;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
-using NewRelic.Parsing;
-using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments

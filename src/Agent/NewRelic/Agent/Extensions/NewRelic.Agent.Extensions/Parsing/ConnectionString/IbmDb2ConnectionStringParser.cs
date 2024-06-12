@@ -1,13 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 
-namespace NewRelic.Parsing.ConnectionString
+namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
     public class IbmDb2ConnectionStringParser : IConnectionStringParser
     {

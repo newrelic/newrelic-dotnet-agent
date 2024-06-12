@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System;
@@ -10,7 +9,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text.RegularExpressions;
 
-namespace NewRelic.Parsing
+namespace NewRelic.Agent.Extensions.Parsing
 {
 
     /// <summary>

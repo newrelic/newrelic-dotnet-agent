@@ -9,10 +9,10 @@ using System.Data.OracleClient;
 #endif
 using System.Data.SqlClient;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 using NUnit.Framework;
 
-namespace SqlTests
+namespace ParsingTests
 {
     [TestFixture]
     public class SqlWrapperHelperTests

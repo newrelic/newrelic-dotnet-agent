@@ -13,7 +13,7 @@ using System.Data.OleDb;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Parsing
+namespace NewRelic.Agent.Extensions.Parsing
 {
     public static class SqlWrapperHelper
     {
