@@ -5,6 +5,9 @@
     <RootNamespace>NewRelic.Agent.Extensions</RootNamespace>
     <Description>Extensions for the New Relic .NET Agent</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\obj</IntermediateOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration'=='Debug'">
@@ -14,11 +17,14 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ILRepack" Version="2.0.33">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
@@ -32,4 +38,43 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
   </ItemGroup>
+
+  <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+    <ItemGroup>
+      <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">1</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">1</ILRepackIncludeCount>
+    </PropertyGroup>
+
+    <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
+
+    <ItemGroup>
+      <ILRepackExclude Include="@(PossibleRefsForILRepack)" Exclude="@(ILRepackInclude)" />
+    </ItemGroup>
+
+    <Message Importance="High" Text="ILRepack Include: %(ILRepackInclude.FullPath)" />
+    <Message Importance="High" Text="ILRepack Exclude: %(ILRepackExclude.FullPath)" />
+
+    <PropertyGroup>
+      <ILRepackSearchDirOutputPath>$([System.String]::new("$(OutputPath)").Trim('\'))</ILRepackSearchDirOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <ILRepackCommand>"$(ILRepack)" /parallel /internalize /norepackres /keepotherversionreferences /keyfile:"$(AssemblyOriginatorKeyFile)" /lib:"$(ILRepackSearchDirOutputPath)" /out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
+    <Exec Command="$(ILRepackCommand)" />
+  </Target>
 </Project>

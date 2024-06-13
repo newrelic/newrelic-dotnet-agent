@@ -3,7 +3,7 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Core.JsonConverters.BedrockPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads
 {
     public class ClaudeRequestPayload : IRequestPayload
     {

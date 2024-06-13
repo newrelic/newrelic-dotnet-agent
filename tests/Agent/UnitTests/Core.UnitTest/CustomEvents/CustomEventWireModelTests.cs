@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.TestUtilities;
 using System;
-using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.CustomEvents.Tests
 {

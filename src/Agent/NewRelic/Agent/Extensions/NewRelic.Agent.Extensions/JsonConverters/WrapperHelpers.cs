@@ -3,7 +3,7 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Core.JsonConverters
+namespace NewRelic.Agent.Extensions.JsonConverters
 {
     public static class WrapperHelpers
     {

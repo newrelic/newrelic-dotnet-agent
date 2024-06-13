@@ -14,7 +14,6 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Core;
 using NUnit.Framework;
 using System;
 using System.Text.RegularExpressions;

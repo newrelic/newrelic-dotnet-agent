@@ -114,16 +114,6 @@ function Copy-ExtensionsOther {
 
     Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" -Destination "$Destination\extensions" -Force 
     Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Extension\extension.xsd" -Destination "$Destination\extensions" -Force 
-
-    if ($Type -like "Framework"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net462-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net462\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
-    }
-
-    if ($Type -like "Core"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\netstandard2.0-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\netstandard2.0\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
-    }
 }
 
 function Copy-AgentRoot {
@@ -143,12 +133,12 @@ function Copy-AgentRoot {
     Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" -Destination "$Destination\newrelic.xsd" -Force 
     
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net462\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\net462-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net462-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\netstandard2.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\netstandard2.0-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\core-agent-readme.md" -Destination "$Destination\README.md" -Force 
     }

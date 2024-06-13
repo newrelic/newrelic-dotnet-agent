@@ -12,7 +12,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Collections;
-using NewRelic.Core;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using System;

@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Core.JsonConverters.LambdaPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.LambdaPayloads
 {
 
     public class SnsMessage

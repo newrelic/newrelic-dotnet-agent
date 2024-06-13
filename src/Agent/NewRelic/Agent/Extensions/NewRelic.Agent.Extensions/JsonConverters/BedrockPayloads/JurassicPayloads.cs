@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace NewRelic.Core.JsonConverters.BedrockPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads
 {
     public class JurassicRequestPayload : IRequestPayload
     {

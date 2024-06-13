@@ -42,7 +42,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
-using NewRelicCore = NewRelic.Core;
 using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.DependencyInjection

@@ -29,7 +29,6 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {

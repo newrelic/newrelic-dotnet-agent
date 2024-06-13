@@ -28,11 +28,7 @@ namespace ArtifactBuilder
 
         protected override void CreateAgentComponents()
         {
-            var agentDllsForExtensionDirectory = new List<string>()
-            {
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.dll"
-            };
+            var agentDllsForExtensionDirectory = new List<string>();
 
             var storageProviders = new List<string>()
             {

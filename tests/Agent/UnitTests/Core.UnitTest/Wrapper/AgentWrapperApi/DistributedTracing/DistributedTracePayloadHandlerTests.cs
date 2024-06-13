@@ -17,7 +17,6 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
-using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
