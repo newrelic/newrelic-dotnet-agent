@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 

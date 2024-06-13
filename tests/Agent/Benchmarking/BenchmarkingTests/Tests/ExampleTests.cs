@@ -12,6 +12,7 @@ using System.Data;
 using NewRelic.Core;
 using NewRelic.Agent.Extensions.Parsing;
 using System.Threading;
+using NewRelic.Agent.Core.Utilities;
 
 namespace BenchmarkingTests.Tests
 {

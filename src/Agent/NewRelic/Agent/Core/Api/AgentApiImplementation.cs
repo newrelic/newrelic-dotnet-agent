@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Api;
 using System.Linq;
 

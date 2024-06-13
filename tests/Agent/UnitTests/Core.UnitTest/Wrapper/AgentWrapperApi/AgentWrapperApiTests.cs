@@ -36,7 +36,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;

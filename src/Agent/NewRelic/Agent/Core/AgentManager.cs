@@ -15,7 +15,7 @@ using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -317,12 +317,12 @@ namespace NewRelic.Agent.Core
             }
 
 #if NETFRAMEWORK
-            if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetFrameworkVersion(AgentInstallConfiguration.DotnetFrameworkVersion))
+            if (DotnetVersion.IsUnsupportedDotnetFrameworkVersion(AgentInstallConfiguration.DotnetFrameworkVersion))
             {
                 Log.Warn("Unsupported installed .NET Framework version {0} detected. Please use a version of .NET Framework >= 4.6.2.", AgentInstallConfiguration.DotnetFrameworkVersion);
             }
 #else
-            if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
+            if (DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
             {
                 Log.Warn("Unsupported .NET version {0} detected. Please use net6 or net8 or newer.", AgentInstallConfiguration.DotnetCoreVersion);
             }

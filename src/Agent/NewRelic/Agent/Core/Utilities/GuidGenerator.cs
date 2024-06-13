@@ -1,14 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace NewRelic.Core
+namespace NewRelic.Agent.Core.Utilities
 {
     public static class GuidGenerator
     {

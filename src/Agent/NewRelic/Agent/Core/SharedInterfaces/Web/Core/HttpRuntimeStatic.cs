@@ -4,7 +4,7 @@
 #if NETSTANDARD2_0
 using System;
 
-namespace NewRelic.SystemInterfaces.Web
+namespace NewRelic.Agent.Core.SharedInterfaces.Web
 {
 
 	public class HttpRuntimeStatic : IHttpRuntimeStatic

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Core.Logging
+namespace NewRelic.Agent.Extensions.Logging
 {
     public enum LogLevel
     {

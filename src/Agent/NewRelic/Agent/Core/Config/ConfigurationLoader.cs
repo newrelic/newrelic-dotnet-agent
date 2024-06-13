@@ -4,8 +4,8 @@
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.IO;
 using System.Xml;
@@ -567,7 +567,7 @@ namespace NewRelic.Agent.Core.Config
     {
         // This field exists only for testing purposes. It allows bootstrap logic and regular
         // configuration logic to use the same environment variable logic.
-        public static IEnvironment EnvironmentVariableProxy = new SystemInterfaces.Environment();
+        public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
         public static string GetEnvironmentVar(string name)
         {

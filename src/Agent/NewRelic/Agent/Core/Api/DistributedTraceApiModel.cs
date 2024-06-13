@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 
 namespace NewRelic.Agent.Core.Api

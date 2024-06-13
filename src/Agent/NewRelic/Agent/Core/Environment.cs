@@ -13,8 +13,8 @@ using System.Web.Configuration;
 using Microsoft.Win32;
 #endif
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
 
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
                 AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
 #else
-                AddVariable(".NET Version", () => NewRelic.Core.DotnetVersion.GetDotnetFrameworkVersion().ToString());
+                AddVariable(".NET Version", () => DotnetVersion.GetDotnetFrameworkVersion().ToString());
                 AddVariable("Processor Architecture", () => (IntPtr.Size == 8) ? "X64" : "X86");
 #endif
 

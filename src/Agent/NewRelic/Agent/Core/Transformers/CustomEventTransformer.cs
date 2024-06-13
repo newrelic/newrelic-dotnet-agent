@@ -7,7 +7,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Transformers

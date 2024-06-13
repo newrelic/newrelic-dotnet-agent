@@ -5,12 +5,11 @@ using System;
 using System.IO;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Core;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Diagnostics;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.Utilities;
 #if NETFRAMEWORK
 using System.Web;

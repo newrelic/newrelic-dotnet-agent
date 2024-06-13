@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 
-namespace NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces
 {
     public interface INetworkInterfaceData
     {

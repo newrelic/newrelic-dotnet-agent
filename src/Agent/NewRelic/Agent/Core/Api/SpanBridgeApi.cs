@@ -5,7 +5,7 @@ using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Api
 {

@@ -4,8 +4,8 @@
 using System;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {

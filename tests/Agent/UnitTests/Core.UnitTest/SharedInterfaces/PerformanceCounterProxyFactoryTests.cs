@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
 
-namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.Tests.SharedInterfaces
 {
 	[TestFixture]
 	public class PerformanceCounterProxyFactoryTests

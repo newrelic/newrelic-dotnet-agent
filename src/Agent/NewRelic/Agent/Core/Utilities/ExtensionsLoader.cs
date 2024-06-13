@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.TypeInstantiation;
 using System;
 using System.Collections.Generic;

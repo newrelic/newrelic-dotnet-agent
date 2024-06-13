@@ -6,7 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Spans
 {

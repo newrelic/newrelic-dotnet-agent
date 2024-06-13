@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System.Diagnostics;
 
 namespace NewRelic.Agent.Core.Attributes

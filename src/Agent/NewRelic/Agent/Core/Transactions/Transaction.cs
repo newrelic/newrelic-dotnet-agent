@@ -23,7 +23,7 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Core;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Concurrent;

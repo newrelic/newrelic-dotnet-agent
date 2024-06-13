@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Core.Logging
+namespace NewRelic.Agent.Extensions.Logging
 {
     public class NoOpLogger : ILogger
     {
@@ -25,6 +25,16 @@ namespace NewRelic.Core.Logging
         public void Finest(string message, params object[] args) { }
         public void Info(Exception exception, string message, params object[] args) { }
         public void Info(string message, params object[] args) { }
+
+        public bool IsEnabledFor(Level level)
+        {
+            return false;
+        }
+
+        public void Log(Level level, string message) { }
+
+        public void Log(Level level, Exception ex, string message) { }
+
         public void Warn(Exception exception, string message, params object[] args) { }
         public void Warn(string message, params object[] args) { }
 

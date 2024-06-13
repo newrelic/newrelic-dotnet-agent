@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces
 {
     public interface IDnsStatic
     {

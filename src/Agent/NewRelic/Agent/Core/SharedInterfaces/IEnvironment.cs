@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Security;
 
-namespace NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces
 {
     public interface IEnvironment
     {

@@ -1,14 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using Telerik.JustMock;
 
-namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.Tests.SharedInterfaces
 {
     [TestFixture]
     public class DnsStaticTests

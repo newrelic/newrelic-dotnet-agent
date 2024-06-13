@@ -3,7 +3,7 @@
 
 using System.Threading;
 
-namespace NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces
 {
     public interface IThreadPoolStatic
     {

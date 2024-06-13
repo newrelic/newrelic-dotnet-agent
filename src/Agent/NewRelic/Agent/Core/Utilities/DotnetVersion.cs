@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 using System.Collections.Generic;
 
-namespace NewRelic.Core
+namespace NewRelic.Agent.Core.Utilities
 {
     public enum DotnetFrameworkVersion
     {

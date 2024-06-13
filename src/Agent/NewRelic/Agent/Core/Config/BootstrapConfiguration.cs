@@ -5,8 +5,8 @@ using System;
 using System.IO;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Config
 {

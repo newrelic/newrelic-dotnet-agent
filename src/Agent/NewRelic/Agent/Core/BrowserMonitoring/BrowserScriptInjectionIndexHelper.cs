@@ -4,7 +4,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

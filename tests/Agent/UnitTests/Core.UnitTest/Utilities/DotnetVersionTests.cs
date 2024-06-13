@@ -3,7 +3,7 @@
 
 using NUnit.Framework;
 
-namespace NewRelic.Core.Tests
+namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]
     public class DotnetVersionTests

@@ -9,6 +9,7 @@ using Serilog;
 using Serilog.Core;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
+
 using Serilog.Events;
 #if NETSTANDARD2_0
 using System.Runtime.InteropServices;
@@ -74,7 +75,7 @@ namespace NewRelic.Agent.Core
 
             Log.Logger = configuredLogger;
 
-            NewRelic.Core.Logging.Log.Initialize(new Logger());
+            Extensions.Logging.Log.Initialize(new Logger());
 
             Log.Logger.Information("Log level set to {0}", config.LogLevel);
         }
@@ -212,7 +213,7 @@ namespace NewRelic.Agent.Core
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
 
                 // Fallback to the event log sink if we cannot setup a file logger.
-                NewRelic.Core.Logging.Log.FileLoggingHasFailed = true;
+                Extensions.Logging.Log.FileLoggingHasFailed = true;
                 Log.Logger.Warning("Falling back to EventLog sink.");
                 loggerConfiguration.ConfigureEventLogSink();
             }

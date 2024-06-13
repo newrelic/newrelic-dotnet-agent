@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 
-namespace NewRelic.SystemInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces
 {
     public interface IPerformanceCounterProxy : IDisposable
     {
