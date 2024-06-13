@@ -13,7 +13,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="NewRelic.Agent.Internal.Profiler" Version="10.25.1.7"/>
+    <PackageReference Include="NewRelic.Agent.Internal.Profiler" Version="10.25.1.10"/>
   </ItemGroup>
 
 </Project>
