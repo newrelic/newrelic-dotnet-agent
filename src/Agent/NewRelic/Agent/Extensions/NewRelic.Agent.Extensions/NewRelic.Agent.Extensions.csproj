@@ -4,7 +4,6 @@
     <AssemblyName>NewRelic.Agent.Extensions</AssemblyName>
     <RootNamespace>NewRelic.Agent.Extensions</RootNamespace>
     <Description>Extensions for the New Relic .NET Agent</Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\obj</IntermediateOutputPath>
     <OutputPath>$(MSBuildThisFileDirectory)..\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

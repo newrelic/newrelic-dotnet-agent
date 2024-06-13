@@ -70,13 +70,6 @@ jobs:
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
           
-      - name: Archive NewRelic.Agent.Extensions
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-        with:
-          name: NewRelic.Agent.Extensions
-          path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
-          if-no-files-found: error
-
       - name: Archive FullAgent Home folders
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
@@ -664,12 +657,6 @@ jobs:
         with:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
-
-      - name: Download NewRelic.Agent.Extensions
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
-        with:
-          name: NewRelic.Agent.Extensions
-          path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
