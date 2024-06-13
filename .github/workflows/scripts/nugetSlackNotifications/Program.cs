@@ -1,4 +1,4 @@
-﻿using NewRelic.Api.Agent;
+using NewRelic.Api.Agent;
 using Octokit;
 using Serilog;
 using System;
