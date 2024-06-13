@@ -7,7 +7,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Helpers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Memoization;
 using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.SharedInterfaces;

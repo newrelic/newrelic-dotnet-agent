@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Memoization
+namespace NewRelic.Agent.Core.Utilities
 {
     public class Memoizer
     {

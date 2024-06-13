@@ -4,8 +4,7 @@
 using System;
 using NUnit.Framework;
 
-
-namespace NewRelic.Memoization.UnitTests
+namespace NewRelic.Agent.Core.Utilities
 {
     public class MemozierTests
     {
