@@ -30,6 +30,7 @@ jobs:
     
     env:
       scan-tool-path: ${{ github.workspace }}/.github/workflows/scripts/nugetSlackNotifications
+      scan-tool-publish-path: ${{ github.workspace }}/publish
 
     steps:
       - name: Harden Runner
@@ -46,7 +47,7 @@ jobs:
         run: |
           cd ${{ env.scan-tool-path }}
           dotnet add nugetSlackNotifications.csproj package NewRelic.Agent
-          dotnet build
+          dotnet publish -o ${{ env.scan-tool-publish-path }}
 
       - name: Check for updates to core technology packages
         run: |
@@ -56,7 +57,7 @@ jobs:
           if [ "${{ inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
-          cd ${{ env.scan-tool-path }}/bin/Debug/net6.0
+          cd ${{ env.scan-tool-publish-path }}
           dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
         shell: bash
 
@@ -64,9 +65,9 @@ jobs:
             DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
             DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CORECLR_ENABLE_PROFILING: 1
-            CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic
+            CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
             CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
-            CORECLR_PROFILER_PATH: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic/libNewRelicProfiler.so
+            CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
             NEW_RELIC_APP_NAME: Dotty
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
