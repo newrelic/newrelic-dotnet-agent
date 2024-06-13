@@ -4,7 +4,6 @@
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.TypeInstantiation;
 using System;
 using System.Collections.Generic;
 using System.IO;

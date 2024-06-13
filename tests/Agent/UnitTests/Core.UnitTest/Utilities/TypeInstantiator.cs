@@ -16,7 +16,7 @@ public interface IInterface2 { }
 
 public interface IInterface3 : IInterface { }
 
-namespace NewRelic.TypeInstantiation.UnitTests
+namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]
     public class Class_TypeInstantiator

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NewRelic.TypeInstantiation
+namespace NewRelic.Agent.Core.Utilities
 {
     public class TypeInstantiatorResult<T>
     {

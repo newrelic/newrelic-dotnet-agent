@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace NewRelic.TypeInstantiation
+namespace NewRelic.Agent.Core.Utilities
 {
     public class TypeInstantiator
     {

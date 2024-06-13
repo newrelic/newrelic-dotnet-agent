@@ -5,7 +5,7 @@
 using System;
 using System.Reflection;
 
-namespace NewRelic.TypeInstantiation.UnitTests
+namespace NewRelic.Agent.Core.Utilities
 {
 	public static class AppDomainExtensions
 	{
