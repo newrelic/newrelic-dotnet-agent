@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetValidator", "NugetVali
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "S3Validator", "S3Validator\S3Validator.csproj", "{648D08B2-E677-4009-A593-D03E0579E859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReleaseNotesBuilder", "ReleaseNotesBuilder\ReleaseNotesBuilder.csproj", "{0E9152F2-4CA9-4F24-AADF-9B15310C3DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReleaseNotesBuilder", "ReleaseNotesBuilder\ReleaseNotesBuilder.csproj", "{0E9152F2-4CA9-4F24-AADF-9B15310C3DFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetVersionDeprecator", "NugetVersionDeprecator\NugetVersionDeprecator.csproj", "{77685AF5-5FD7-483E-B589-BDE4E2F1769C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetVersionDeprecator", "NugetVersionDeprecator\NugetVersionDeprecator.csproj", "{77685AF5-5FD7-483E-B589-BDE4E2F1769C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nugetSlackNotifications", "..\.github\workflows\scripts\nugetSlackNotifications\nugetSlackNotifications.csproj", "{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{77685AF5-5FD7-483E-B589-BDE4E2F1769C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77685AF5-5FD7-483E-B589-BDE4E2F1769C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77685AF5-5FD7-483E-B589-BDE4E2F1769C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
