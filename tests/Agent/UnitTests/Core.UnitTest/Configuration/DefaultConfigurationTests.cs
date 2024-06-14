@@ -4039,6 +4039,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, false, false, false, ExpectedResult = true)]
         [TestCase(true, false, false, true, ExpectedResult = true)]
         [TestCase(true, false, true, true, ExpectedResult = true)]
+        [TestCase(true, true, true, true, ExpectedResult = true)]
+        [TestCase(false, false, false, false, ExpectedResult = true)]
         public bool ValidateDisableFileSystemWatcher(bool localWatcherDisabled, bool? envWatcherDisabled, bool loggingEnabled, bool serverlessMode)
         {
             // Setup config values
