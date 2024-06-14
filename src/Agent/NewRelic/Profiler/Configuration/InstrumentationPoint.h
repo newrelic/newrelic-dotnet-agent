@@ -52,7 +52,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 ParametersMatch(other);
         }
 
-        xstring_t ToString()
+        xstring_t ToString() const
         {
             if (Parameters == nullptr)
             {
@@ -63,7 +63,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
         }
 
-        xstring_t GetMatchKey()
+        xstring_t GetMatchKey() const
         {
             return Parameters == nullptr
                 ? GetMatchKey(AssemblyName, ClassName, MethodName)
@@ -82,7 +82,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
 
     private:
-        bool ParametersMatch(const InstrumentationPoint& other)
+        bool ParametersMatch(const InstrumentationPoint& other) const
         {
             // nullptr means no parameters attribute was supplied in configuration, suggesting that we should instrument all overloads
             if (this->Parameters == nullptr)

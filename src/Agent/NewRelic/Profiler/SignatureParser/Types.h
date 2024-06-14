@@ -475,7 +475,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
             stream += _type->ToString(tokenResolver);
             stream.push_back('[');
             bool first = true;
-            for (auto genericArgumentType : *_genericArgumentTypes)
+            for (auto& genericArgumentType : *_genericArgumentTypes)
             {
                 if (first) first = false;
                 else stream.push_back(',');
@@ -493,7 +493,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
             bytes->push_back(ELEMENT_TYPE_GENERICINST);
             bytes->insert(bytes->end(), typeBytes->begin(), typeBytes->end());
             bytes->insert(bytes->end(), compressedArgCount->begin(), compressedArgCount->end());
-            for (auto argumentType : *_genericArgumentTypes)
+            for (auto& argumentType : *_genericArgumentTypes)
             {
                 auto argumentTypeBytes = argumentType->ToBytes();
                 bytes->insert(bytes->end(), argumentTypeBytes->begin(), argumentTypeBytes->end());
@@ -801,11 +801,11 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
             _genericParamCount(genericParamCount)
         {}
 
-        xstring_t ToString(ITokenResolverPtr tokenResolver)
+        xstring_t ToString(ITokenResolverPtr tokenResolver) const
         {
             auto stream = xstring_t();
             bool firstParam = true;
-            for (auto parameter : *_parameters)
+            for (auto& parameter : *_parameters)
             {
                 if (firstParam) firstParam = false;
                 else stream.push_back(',');
@@ -836,7 +836,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
             auto returnTypeBytes = _returnType->ToBytes();
             bytes->insert(bytes->end(), returnTypeBytes->begin(), returnTypeBytes->end());
 
-            for (auto parameter : *_parameters)
+            for (auto& parameter : *_parameters)
             {
                 auto parameterBytes = parameter->ToBytes();
                 bytes->insert(bytes->end(), parameterBytes->begin(), parameterBytes->end());

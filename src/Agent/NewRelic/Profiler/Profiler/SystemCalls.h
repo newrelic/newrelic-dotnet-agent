@@ -44,7 +44,7 @@ namespace NewRelic { namespace Profiler
 
         static std::unique_ptr<xstring_t> TryGetRegistryStringValue(HKEY rootKey, const xstring_t& path, const xstring_t& valueName)
         {
-            DWORD valueSize;
+            DWORD valueSize = 0;
             CRegKey key;
 
             // open the key

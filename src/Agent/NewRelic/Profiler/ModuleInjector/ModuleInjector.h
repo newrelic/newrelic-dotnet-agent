@@ -10,6 +10,7 @@
 #include "../Logging/Logger.h"
 #include "../Sicily/Sicily.h"
 #include "IModule.h"
+#include "../Profiler/Exceptions.h"
 
 namespace NewRelic { namespace Profiler { namespace ModuleInjector
 {
