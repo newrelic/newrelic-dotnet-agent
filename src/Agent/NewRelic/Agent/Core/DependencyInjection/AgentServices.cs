@@ -41,9 +41,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemInterfaces;
-using NewRelic.SystemInterfaces.Web;
-using NewRelicCore = NewRelic.Core;
+using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.DependencyInjection
@@ -80,7 +78,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.RegisterInstance<AgentInstallConfiguration.IsWindowsDelegate>(AgentInstallConfiguration.GetIsWindows);
             container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
             container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
-            container.Register<IEnvironment, SystemInterfaces.Environment>();
+            container.Register<IEnvironment, SharedInterfaces.Environment>();
             container.Register<IAgent, Agent>();
             container.Register<CpuSampler, CpuSampler>();
             container.Register<MemorySampler, MemorySampler>();
@@ -216,7 +214,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             {
                 container.Register<INativeMethods, LinuxNativeMethods>();
             }
-            container.Register<NewRelicCore.DistributedTracing.ITracePriorityManager, NewRelicCore.DistributedTracing.TracePriorityManager>();
+            container.Register<ITracePriorityManager, TracePriorityManager>();
             container.Register<NewRelic.Agent.Api.Experimental.ISimpleSchedulingService, SimpleSchedulingService>();
 
             container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();

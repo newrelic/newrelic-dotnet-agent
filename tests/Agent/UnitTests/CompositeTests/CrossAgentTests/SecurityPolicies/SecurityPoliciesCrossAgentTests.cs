@@ -15,7 +15,7 @@ using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.TestUtilities;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;

@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using NewRelic.Collections;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Core.WireModels
 {

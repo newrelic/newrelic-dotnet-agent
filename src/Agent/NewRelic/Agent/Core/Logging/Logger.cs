@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core.Logging
 {
-    public class Logger : ILogger, global::NewRelic.Core.Logging.ILogger
+    public class Logger : ILogger
     {
         private readonly Serilog.ILogger _logger = Serilog.Log.Logger;
 

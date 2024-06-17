@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading;

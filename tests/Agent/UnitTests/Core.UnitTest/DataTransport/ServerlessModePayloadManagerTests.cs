@@ -10,7 +10,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;

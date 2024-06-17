@@ -5,13 +5,13 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Metrics
 {

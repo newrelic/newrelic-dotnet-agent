@@ -4,16 +4,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
-using NewRelic.Core;
-using NewRelic.Parsing;
-using NewRelic.Core.CodeAttributes;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
 using System.Linq;
 using System;
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Attributes
 {

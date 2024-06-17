@@ -10,7 +10,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NUnit.Framework;
 
 namespace CompositeTests

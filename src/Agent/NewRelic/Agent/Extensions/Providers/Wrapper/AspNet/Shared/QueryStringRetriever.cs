@@ -7,7 +7,7 @@ using System.Collections.Specialized;
 using System.Web;
 using NewRelic.Agent.Api;
 using NewRelic.Reflection;
-using NewRelic.SystemExtensions.Collections;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections;
 
 namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {

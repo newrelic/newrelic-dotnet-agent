@@ -6,8 +6,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Core.CodeAttributes;
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
@@ -21,7 +20,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Api;
 using System.Linq;
 

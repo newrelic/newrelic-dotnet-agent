@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Config;
-using NewRelic.SystemInterfaces;
-using NewRelic.SystemInterfaces.Web;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces.Web;
 
 namespace NewRelic.Agent.Core.Configuration
 {

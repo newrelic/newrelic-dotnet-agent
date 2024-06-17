@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
-using NewRelic.Core;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 
 namespace NewRelic.Agent.Core.Api

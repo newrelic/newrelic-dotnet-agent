@@ -6,7 +6,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing;
 using System.Data;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders

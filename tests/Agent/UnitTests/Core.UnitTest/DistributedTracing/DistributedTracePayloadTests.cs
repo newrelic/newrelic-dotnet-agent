@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using System;
 using Telerik.JustMock;
-using NewRelic.Core.DistributedTracing;
-using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

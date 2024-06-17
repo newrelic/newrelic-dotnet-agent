@@ -3,8 +3,8 @@
 
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;

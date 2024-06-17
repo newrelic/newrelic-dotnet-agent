@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.JsonConverters;
-using NewRelic.Core.JsonConverters.LambdaPayloads;
+using NewRelic.Agent.Extensions.JsonConverters;
+using NewRelic.Agent.Extensions.JsonConverters.LambdaPayloads;
 
 namespace NewRelic.Agent.Extensions.Lambda;
 

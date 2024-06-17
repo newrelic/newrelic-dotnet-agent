@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.ThreadProfiling;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands

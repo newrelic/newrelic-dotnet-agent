@@ -5,10 +5,9 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 

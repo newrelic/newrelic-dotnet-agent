@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Routing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.Mvc3
 {

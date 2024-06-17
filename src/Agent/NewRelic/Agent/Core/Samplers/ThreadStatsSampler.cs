@@ -3,9 +3,9 @@
 
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using System.Threading;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Diagnostics.Tracing;
 

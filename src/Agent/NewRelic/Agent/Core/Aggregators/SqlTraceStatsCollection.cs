@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Aggregators

@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.SystemInterfaces;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IDictionary<string, IVendorModel> GetVendorSettings()
         {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SystemInterfaces.Environment(), new VendorHttpApiRequestor());
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SharedInterfaces.Environment(), new VendorHttpApiRequestor());
             return vendorInfo.GetVendors();
         }
 

@@ -394,14 +394,6 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="BedrockWrapperComponent" Guid="{C913E912-97D1-4042-8E11-A35E04C6A6E5}">
         <File Id="BedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.dll" />
       </Component>
-
-      <!-- Reference libraries -->
-      <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
-        <File Id="NewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Core.dll" />
-      </Component>
-      <Component Id="NewRelicParsingReferenceComponent" Guid="{2B5FA2A3-E532-48CC-8390-D023DE693F8A}">
-        <File Id="NewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Parsing.dll" />
-      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -470,13 +462,6 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAwsLambdaWrapperComponent" Guid="{778F507F-97D7-48B2-BE51-46D6DAB2D234}">
         <File Id="CoreAwsLambdaWrapperFile" Name="NewRelic.Providers.Wrapper.AwsLambda.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll"/>
-      </Component>
-      <!-- Reference libraries -->
-      <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
-        <File Id="CoreNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Core.dll" />
-      </Component>
-      <Component Id="CoreNewRelicParsingReferenceComponent" Guid="{D446845B-C0EC-4FC6-AA4B-BD92E622CE12}">
-        <File Id="CoreNewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Parsing.dll" />
       </Component>
     </ComponentGroup>
 

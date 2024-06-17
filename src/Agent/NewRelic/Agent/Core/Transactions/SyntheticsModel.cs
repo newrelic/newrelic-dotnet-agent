@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Core;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
