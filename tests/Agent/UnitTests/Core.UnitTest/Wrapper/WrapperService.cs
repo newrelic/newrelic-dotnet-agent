@@ -10,6 +10,7 @@ using Telerik.JustMock;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Api;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -17,6 +18,7 @@ namespace NewRelic.Agent.Core.Wrapper
     public class Class_WrapperService
     {
         private const uint EmptyTracerArgs = 0;
+        private const uint AsyncTracerArgs = 1 << 23;
 
         private WrapperService _wrapperService;
 
@@ -277,6 +279,61 @@ namespace NewRelic.Agent.Core.Wrapper
                     Assert.That(afterWrappedMethod, Is.EqualTo(Delegates.NoOp), "AfterWrappedMethod was not the NoOp delegate.");
                     Assert.That(logging.HasMessage("skipping method"), Is.False);
                 });
+            }
+        }
+
+        private class ValueTaskTestClass
+        {
+            public async ValueTask<int> SomeAsyncWork()
+            {
+                await Task.Delay(1);
+                return 0;
+            }
+        }
+
+        private class TaskTestClass
+        {
+            public async Task<int> SomeOtherAsyncWork()
+            {
+                await Task.Delay(1);
+                return 0;
+            }
+        }
+
+        [Test]
+        public void BeforeWrappedMethod_WarningAboutValueTask()
+        {
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(_transactionRequiredWrapper));
+
+            var type = typeof(ValueTaskTestClass);
+            const string methodName = "SomeAsyncWork";
+            const string tracerFactoryName = "MyTracer";
+            var target = new object();
+            var arguments = new object[0];
+
+            using (var logging = new TestUtilities.Logging())
+            {
+                var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0);
+
+                Assert.That(logging.HasMessageThatContains("is not supported"), Is.True);
+            }
+        }
+        [Test]
+        public void BeforeWrappedMethod_NoWarningAboutTask()
+        {
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(_transactionRequiredWrapper));
+
+            var type = typeof(TaskTestClass);
+            const string methodName = "SomeOtherAsyncWork";
+            const string tracerFactoryName = "MyTracer";
+            var target = new object();
+            var arguments = new object[0];
+
+            using (var logging = new TestUtilities.Logging())
+            {
+                var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0);
+
+                Assert.That(logging.HasMessageThatContains("is not supported"), Is.False);
             }
         }
     }
