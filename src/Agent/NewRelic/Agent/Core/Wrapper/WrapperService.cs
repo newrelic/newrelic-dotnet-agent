@@ -10,6 +10,8 @@ using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Api;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -86,6 +88,23 @@ namespace NewRelic.Agent.Core.Wrapper
                         instrumentedMethodInfo.RequestedWrapperName);
 
                     return null;
+                }
+
+                if (isAsync)
+                {
+                    try
+                    {
+                        var returnType = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).ReturnType;
+                        if ((returnType != typeof(Task)) &&
+                            (!returnType.IsGenericType || (returnType.GetGenericTypeDefinition() != typeof(Task<>))))
+                        {
+                            Log.Warn("Instrumenting async methods that return a type other than Task or Task<> is not supported and may result in inconsistent data. '{0}' has a return type of '{1}'.", methodName, returnType?.Name);
+                        }
+                    }
+                    catch
+                    {
+                        // Since this is just for logging purposes it doesn't matter if it fails
+                    }
                 }
 
                 _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper);
