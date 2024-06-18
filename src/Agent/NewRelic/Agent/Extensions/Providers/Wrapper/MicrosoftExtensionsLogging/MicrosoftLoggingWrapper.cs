@@ -32,8 +32,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             {
                 return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
             }
-
-            return new CanWrapResponse(false, null, true);
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

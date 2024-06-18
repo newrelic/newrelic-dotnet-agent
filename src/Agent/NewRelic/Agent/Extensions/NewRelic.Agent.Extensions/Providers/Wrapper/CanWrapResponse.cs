@@ -5,17 +5,14 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     public class CanWrapResponse
     {
-        public bool CanWrap { get; }
+        public bool CanWrap;
 
-        public string AdditionalInformation { get; }
+        public string AdditionalInformation;
 
-        public bool SuppressDefaultWrapperDebugMessage { get; }
-
-        public CanWrapResponse(bool canWrap, string additionalInformation = null, bool suppressDefaultWrapperDebugMessage = false)
+        public CanWrapResponse(bool canWrap, string additionalInformation = null)
         {
             CanWrap = canWrap;
             AdditionalInformation = additionalInformation;
-            SuppressDefaultWrapperDebugMessage = suppressDefaultWrapperDebugMessage;
         }
     }
 }

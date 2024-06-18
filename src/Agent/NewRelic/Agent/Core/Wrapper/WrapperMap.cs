@@ -66,32 +66,26 @@ namespace NewRelic.Agent.Core.Wrapper
 
         public TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo)
         {
-            var suppressDefaultWrapperDebugMessage = false; 
-
             //Then, see if there's a standard wrapper supporting this method
             foreach (var wrapper in _nonDefaultWrappers)
             {
-                var (canWrap, suppressMessage) = CanWrap(instrumentedMethodInfo, wrapper);
-                if (canWrap)
+                if (CanWrap(instrumentedMethodInfo, wrapper))
                 {
                     return new TrackedWrapper(wrapper);
                 }
-                suppressDefaultWrapperDebugMessage |= suppressMessage;
             }
 
             //Next, check to see if one of the dynamic wrappers can be used
             foreach (var wrapper in ExtensionsLoader.TryGetDynamicWrapperInstance(instrumentedMethodInfo.RequestedWrapperName))
             {
-                var (canWrap, suppressMessage) = CanWrap(instrumentedMethodInfo, wrapper);
-                if (canWrap)
+                if (CanWrap(instrumentedMethodInfo, wrapper))
                 {
                     return new TrackedWrapper(wrapper);
                 }
-                suppressDefaultWrapperDebugMessage |= suppressMessage;
             }
 
             //Otherwise, return one of our defaults or a NoOp
-            return GetDefaultWrapperOrSetNoOp(instrumentedMethodInfo, suppressDefaultWrapperDebugMessage);
+            return GetDefaultWrapperOrSetNoOp(instrumentedMethodInfo);
         }
 
         public TrackedWrapper GetNoOpWrapper()
@@ -99,31 +93,28 @@ namespace NewRelic.Agent.Core.Wrapper
             return _noOpTrackedWrapper;
         }
 
-        private TrackedWrapper GetDefaultWrapperOrSetNoOp(InstrumentedMethodInfo instrumentedMethodInfo, bool suppressDefaultWrapperDebugMessage)
+        private TrackedWrapper GetDefaultWrapperOrSetNoOp(InstrumentedMethodInfo instrumentedMethodInfo)
         {
             foreach (var wrapper in _defaultWrappers)
             {
-                (var canWrap, _) = CanWrap(instrumentedMethodInfo, wrapper);
-
-                if (canWrap)
+                if (CanWrap(instrumentedMethodInfo, wrapper))
                 {
                     return new TrackedWrapper(wrapper);
                 }
             }
 
-            if (!suppressDefaultWrapperDebugMessage)
-                Log.Debug(
-                    "No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
-                    instrumentedMethodInfo.Method.Type.FullName,
-                    instrumentedMethodInfo.Method.MethodName,
-                    instrumentedMethodInfo.Method.ParameterTypeNames,
-                    instrumentedMethodInfo.Method.Type.Assembly.FullName,
-                    instrumentedMethodInfo.RequestedWrapperName);
+            Log.Debug(
+                "No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
+                instrumentedMethodInfo.Method.Type.FullName,
+                instrumentedMethodInfo.Method.MethodName,
+                instrumentedMethodInfo.Method.ParameterTypeNames,
+                instrumentedMethodInfo.Method.Type.Assembly.FullName,
+                instrumentedMethodInfo.RequestedWrapperName);
 
             return GetNoOpWrapper();
         }
 
-        private static (bool canWrap, bool suppressDefaultWrapperDebugMessage) CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, IWrapper wrapper)
+        private static bool CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, IWrapper wrapper)
         {
             var method = instrumentedMethodInfo.Method;
             var canWrapResponse = wrapper.CanWrap(instrumentedMethodInfo);
@@ -136,7 +127,7 @@ namespace NewRelic.Agent.Core.Wrapper
             if (canWrapResponse.CanWrap)
                 Log.Debug($"Wrapper \"{wrapper.GetType().FullName}\" will be used for instrumented method \"{method.Type}.{method.MethodName}\"");
 
-            return (canWrapResponse.CanWrap, canWrapResponse.SuppressDefaultWrapperDebugMessage);
+            return canWrapResponse.CanWrap;
         }
     }
 }
