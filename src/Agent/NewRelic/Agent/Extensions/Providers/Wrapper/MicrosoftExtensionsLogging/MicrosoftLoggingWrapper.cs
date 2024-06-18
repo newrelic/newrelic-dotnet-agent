@@ -28,15 +28,14 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            if (!LogProviders.KnownMELProviderEnabled)
-            {
                 return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-            }
-            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            if (LogProviders.KnownMELProviderEnabled)
+                return Delegates.NoOp;
+
             var melLoggerInstance = (MEL.ILogger)instrumentedMethodCall.MethodCall.InvocationTarget;
 
             // There is no LogEvent equivalent in MSE Logging
