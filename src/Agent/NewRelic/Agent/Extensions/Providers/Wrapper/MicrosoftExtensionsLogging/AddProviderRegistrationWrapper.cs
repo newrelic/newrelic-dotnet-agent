@@ -1,12 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using Microsoft.Extensions.Logging;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace MicrosoftExtensionsLogging
+namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 {
 	public class AddProviderRegistrationWrapper : IWrapper
     {
