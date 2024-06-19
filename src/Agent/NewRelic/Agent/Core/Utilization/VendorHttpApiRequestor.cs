@@ -82,11 +82,12 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 #else
-        // create a static HttpClient for use across all the vendor API calls
-        private static readonly HttpClient httpClient = new HttpClient
-        {
-            Timeout = TimeSpan.FromMilliseconds(WebReqeustTimeout)
-        };
+        private static readonly Lazy<HttpClient> httpClient = new Lazy<HttpClient>(() =>
+            new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(WebReqeustTimeout)
+            });
+
 
         private string CallWithHttpClient(Uri uri, string method, string vendorName, IEnumerable<string> headers = null)
         {
@@ -112,7 +113,7 @@ namespace NewRelic.Agent.Core.Utilization
                     }
                 }
 
-                var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
+                var response = httpClient.Value.SendAsync(request).GetAwaiter().GetResult();
                 if (!response.IsSuccessStatusCode)
                 {
                     var statusCode = response.StatusCode;
