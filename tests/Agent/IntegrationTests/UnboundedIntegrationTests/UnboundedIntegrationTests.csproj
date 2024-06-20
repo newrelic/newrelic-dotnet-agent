@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.UnboundedIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.UnboundedIntegrationTests</AssemblyName>
@@ -58,6 +58,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
   
   <ItemGroup>

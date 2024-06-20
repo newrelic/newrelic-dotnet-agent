@@ -34,6 +34,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         const string IndexName = "flights";
 
         protected readonly bool _syncMethodsOk;
+        const string SyncMethodSkipReason = "Synchronous methods are deprecated in latest Elastic.Clients.Elasticsearch";
 
 
         protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType) : base(fixture)
@@ -99,40 +100,32 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.Initialize();
         }
 
-        [Fact]
+        [SkippableFact]
         public void Index()
         {
-            if (_syncMethodsOk)
-            {
-                ValidateOperation("Index");
-            }
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            ValidateOperation("Index");
         }
 
-        [Fact]
+        [SkippableFact]
         public void Search()
         {
-            if (_syncMethodsOk)
-            {
-                ValidateOperation("Search");
-            }
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            ValidateOperation("Search");
         }
 
-        [Fact]
+        [SkippableFact]
         public void IndexMany()
         {
-            if (_syncMethodsOk)
-            {
-                ValidateOperation("IndexMany");
-            }
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            ValidateOperation("IndexMany");
         }
 
-        [Fact]
+        [SkippableFact]
         public void MultiSearch()
         {
-            if (_syncMethodsOk)
-            {
-                ValidateOperation("MultiSearch");
-            }
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            ValidateOperation("MultiSearch");
         }
 
         [Fact]
