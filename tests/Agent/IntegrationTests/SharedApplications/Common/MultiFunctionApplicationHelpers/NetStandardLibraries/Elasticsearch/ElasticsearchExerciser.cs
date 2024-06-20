@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -94,6 +94,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void GenerateError() => _client.GenerateError();
+        public async Task GenerateError() => await _client.GenerateError();
     }
 }

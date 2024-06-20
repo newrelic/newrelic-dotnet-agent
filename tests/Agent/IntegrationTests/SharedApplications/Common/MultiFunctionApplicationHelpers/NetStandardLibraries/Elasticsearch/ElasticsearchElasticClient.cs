@@ -188,7 +188,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void GenerateError()
+        public override async Task GenerateError()
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ElasticsearchClientSettings(Address)
@@ -198,7 +198,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var client = new ElasticsearchClient(settings);
 
-            var response = _ = client.PingAsync().Result;
+            var response = _ = await client.PingAsync();
 
             if (response.IsSuccess())
             {

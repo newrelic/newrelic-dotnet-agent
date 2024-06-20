@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -46,7 +46,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public abstract Task<long> MultiSearchAsync();
 
-        public abstract void GenerateError();
+        public abstract Task GenerateError();
     }
 
     public class FlightRecord

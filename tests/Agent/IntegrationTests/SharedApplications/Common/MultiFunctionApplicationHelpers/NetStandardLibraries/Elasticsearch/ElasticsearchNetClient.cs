@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -210,7 +210,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void GenerateError()
+        public override async Task GenerateError()
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ConnectionConfiguration(Address)
@@ -219,7 +219,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 .RequestTimeout(TimeSpan.FromMinutes(2));
 
             var client = new ElasticLowLevelClient(settings);
-            var response = client.Ping<StringResponse>();
+            var response = await client.PingAsync<StringResponse>();
 
             if (response.Success)
             {
