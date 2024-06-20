@@ -33,12 +33,25 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         const string IndexName = "flights";
 
+        protected readonly bool _syncMethodsOk;
+
 
         protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _clientType = clientType;
+
+            // non-async methods are deprecated in the latest Elastic.Clients.Elasticsearch versions
+            if (_clientType != ClientType.ElasticClients ||
+                (_fixture.GetType() != typeof(ConsoleDynamicMethodFixtureCoreLatest) && _fixture.GetType() != typeof(ConsoleDynamicMethodFixtureFWLatest)))
+            {
+                _syncMethodsOk = true;
+            }
+            else
+            {
+                _syncMethodsOk = false;
+            }
 
             _host = GetHostFromElasticServer(_clientType);
 
@@ -53,10 +66,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
 
             // Sync operations
-            _fixture.AddCommand($"ElasticsearchExerciser Index");
-            _fixture.AddCommand($"ElasticsearchExerciser Search");
-            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
-            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
+            if (_syncMethodsOk )
+            {
+                _fixture.AddCommand($"ElasticsearchExerciser Index");
+                _fixture.AddCommand($"ElasticsearchExerciser Search");
+                _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
+                _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
+
+            }
             _fixture.AddCommand($"ElasticsearchExerciser GenerateError");
 
             _fixture.AddActions
@@ -85,25 +102,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         [Fact]
         public void Index()
         {
-            ValidateOperation("Index");
+            if (_syncMethodsOk)
+            {
+                ValidateOperation("Index");
+            }
         }
 
         [Fact]
         public void Search()
         {
-            ValidateOperation("Search");
+            if (_syncMethodsOk)
+            {
+                ValidateOperation("Search");
+            }
         }
 
         [Fact]
         public void IndexMany()
         {
-            ValidateOperation("IndexMany");
+            if (_syncMethodsOk)
+            {
+                ValidateOperation("IndexMany");
+            }
         }
 
         [Fact]
         public void MultiSearch()
         {
-            ValidateOperation("MultiSearch");
+            if (_syncMethodsOk)
+            {
+                ValidateOperation("MultiSearch");
+            }
         }
 
         [Fact]
