@@ -36,13 +36,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void Connect()
+        public override async Task Connect()
         {
             var settings = new ConnectionConfiguration(Address)
                 .BasicAuthentication(Username, Password)
                 .RequestTimeout(TimeSpan.FromMinutes(2));
 
             _client = new ElasticLowLevelClient(settings);
+            await _client.PingAsync<StringResponse>();
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

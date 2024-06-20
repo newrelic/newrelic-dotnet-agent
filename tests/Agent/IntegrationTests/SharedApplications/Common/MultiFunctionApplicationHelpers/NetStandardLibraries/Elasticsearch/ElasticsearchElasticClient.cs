@@ -47,7 +47,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void Connect()
+        public override async Task Connect()
         {
             var settings = new ElasticsearchClientSettings(Address)
                     .Authentication(new BasicAuthentication(Username, Password)).
@@ -57,7 +57,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             // This isn't necessary but will log the response, which can help troubleshoot if
             // you're having connection errors
-            _ = _client.PingAsync().Result;
+            _ = await _client.PingAsync();
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

@@ -28,7 +28,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public ElasticsearchTestClient() { }
 
-        public abstract void Connect();
+        public abstract Task Connect();
 
         public abstract void Index();
 

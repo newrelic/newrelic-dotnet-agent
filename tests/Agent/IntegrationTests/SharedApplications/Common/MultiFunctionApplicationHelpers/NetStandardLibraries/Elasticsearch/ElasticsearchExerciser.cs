@@ -27,7 +27,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         /// Sets the library to use for further actions
         /// </summary>
         /// <param name="client">ElasticsearchNet, NEST, or ElasticClients</param>
-        public void SetClient(string clientType)
+        public async Task SetClient(string clientType)
         {
             if (Enum.TryParse(clientType, out ClientType client))
             {
@@ -44,7 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                         _client = new ElasticsearchElasticClient();
                         break;
                 }
-                _client.Connect();
+                await _client.Connect();
             }
             else
             {
