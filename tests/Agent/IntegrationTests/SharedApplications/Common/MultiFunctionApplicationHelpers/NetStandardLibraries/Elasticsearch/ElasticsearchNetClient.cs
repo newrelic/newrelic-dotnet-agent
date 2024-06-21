@@ -36,7 +36,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override async Task Connect()
+        public override async Task ConnectAsync()
         {
             var settings = new ConnectionConfiguration(Address)
                 .BasicAuthentication(Username, Password)
@@ -211,7 +211,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override async Task GenerateError()
+        public override async Task GenerateErrorAsync()
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ConnectionConfiguration(Address)

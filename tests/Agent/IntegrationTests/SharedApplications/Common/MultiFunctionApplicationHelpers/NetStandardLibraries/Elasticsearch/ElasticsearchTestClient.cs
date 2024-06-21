@@ -28,7 +28,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public ElasticsearchTestClient() { }
 
-        public abstract Task Connect();
+        public abstract Task ConnectAsync();
 
         public abstract void Index();
 
@@ -46,7 +46,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public abstract Task<long> MultiSearchAsync();
 
-        public abstract Task GenerateError();
+        public abstract Task GenerateErrorAsync();
     }
 
     public class FlightRecord

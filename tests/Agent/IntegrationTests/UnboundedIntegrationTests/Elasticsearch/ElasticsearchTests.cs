@@ -65,6 +65,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser SearchAsync");
             _fixture.AddCommand($"ElasticsearchExerciser IndexManyAsync");
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
+            _fixture.AddCommand($"ElasticsearchExerciser GenerateErrorAsync");
 
             // Sync operations
             if (_syncMethodsOk )
@@ -75,7 +76,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                 _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
 
             }
-            _fixture.AddCommand($"ElasticsearchExerciser GenerateError");
 
             _fixture.AddActions
             (
@@ -153,9 +153,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
 
         [Fact]
-        public void Error()
+        public void ErrorAsync()
         {
-            ValidateError("GenerateError");
+            ValidateError("GenerateErrorAsync");
         }
 
         private void ValidateError(string operationName)

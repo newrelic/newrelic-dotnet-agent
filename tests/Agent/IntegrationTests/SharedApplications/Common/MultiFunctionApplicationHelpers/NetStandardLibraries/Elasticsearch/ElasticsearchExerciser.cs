@@ -44,7 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                         _client = new ElasticsearchElasticClient();
                         break;
                 }
-                await _client.Connect();
+                await _client.ConnectAsync();
             }
             else
             {
@@ -94,6 +94,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task GenerateError() => await _client.GenerateError();
+        public async Task GenerateErrorAsync() => await _client.GenerateErrorAsync();
     }
 }
