@@ -7,6 +7,7 @@
 #include "../Logging/Logger.h"
 #include "../Common/OnDestruction.h"
 #include "../ModuleInjector/IModule.h"
+#include "../SignatureParser/ByteVectorManipulator.h"
 #include "CorTokenizer.h"
 #include "Win32Helpers.h"
 
@@ -97,17 +98,43 @@ namespace NewRelic { namespace Profiler
             AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
         }
 
+        virtual void InjectStaticSecuritySafeCtor(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
+        {
+            auto interfaceAttributes = CorMethodAttr::mdStatic | CorMethodAttr::mdPrivate | CorMethodAttr::mdHideBySig | CorMethodAttr::mdSpecialName | CorMethodAttr::mdRTSpecialName;
+            auto implementationAttributes = CorMethodImpl::miIL | CorMethodImpl::miNoInlining;
+            auto permissionBlob = GetPermissionBlob();
+            BYTEVECTOR(constructorSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS, 0, CorElementType::ELEMENT_TYPE_VOID);
+
+            auto injectionTargetClassToken = GetTypeToken(className);
+            auto constructorCodeAddress = GetMethodCodeAddress(injectionTargetClassToken, _X(".ctor"), constructorSignature);
+            auto securitySafeCriticalConstructorToken = GetSecuritySafeCriticalConstructorToken();
+            auto suppressUnmanagedCodeSecurityAttributeToken = GetSuppressUnmanagedCodeSecurityAttributeToken();
+
+            auto injectedMethodToken = AddMethodDefinition(methodName, injectionTargetClassToken, signature, interfaceAttributes, implementationAttributes, constructorCodeAddress);
+            AddAttributeToMethod(injectedMethodToken, securitySafeCriticalConstructorToken);
+            AddAttributeToMethod(injectedMethodToken, suppressUnmanagedCodeSecurityAttributeToken);
+            AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
+        }
+
         virtual void InjectNRHelperType() override
         {
             auto objectTypeToken = GetTypeToken(_X("System.Object"));
             mdTypeDef nrHelperType;
             ThrowOnError(_metaDataEmit->DefineTypeDef, _X("__NRInitializer__"), CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed, objectTypeToken, NULL, &nrHelperType);
 
+            //auto isVolatileTypeToken = GetTypeToken(_X("System.Runtime.CompilerServices.IsVolatile"));
+            //auto isVolatileSignature = Profiler::SignatureParser::CompressToken(isVolatileTypeToken);
             auto dataFieldAttributes = CorFieldAttr::fdPublic | CorFieldAttr::fdStatic;
-            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT);
+            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT /*, CorElementType::ELEMENT_TYPE_CMOD_REQD*/);
+            //dataFieldSignature.insert(dataFieldSignature.end(), isVolatileSignature->begin(), isVolatileSignature->end());
+
             mdFieldDef dataFieldToken;
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentMethodFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimMethodInfo"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+
+            //BYTEVECTOR(intFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_I4);
+            //ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_isInitialized"), dataFieldAttributes, intFieldSignature.data(), (uint32_t)intFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
         virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override

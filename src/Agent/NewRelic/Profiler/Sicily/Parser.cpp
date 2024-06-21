@@ -58,6 +58,7 @@ namespace sicily {
         ast::TypeListPtr genericTypes = nullptr;
         ast::TypePtr returnType = nullptr;
         ast::ClassTypePtr targetType = nullptr;
+        ast::TypePtr requiredModifierType = nullptr;
         SemInfo sem;
         xstring_t name;
 
@@ -68,6 +69,13 @@ namespace sicily {
                 throw UnexpectedEndTokenException();
             }
             return returnType;
+        }
+
+        if (scanner.Maybe(TOK_MODREQ))
+        {
+            scanner.Expect(TOK_LBRACKET);
+            requiredModifierType = ParseTypeSignature(scanner, true);
+            scanner.Expect(TOK_RBRACKET);
         }
 
         auto tempTargetType = ParseTypeSignature(scanner, true);
@@ -94,7 +102,7 @@ namespace sicily {
         }
 
         if (scanner.Peek(sem) == TOK_END) {
-            return std::make_shared<ast::FieldType>(ast::FieldType(targetType, name, returnType));
+            return std::make_shared<ast::FieldType>(ast::FieldType(targetType, name, returnType, requiredModifierType));
         }
 
         scanner.Expect(TOK_LBRACKET);

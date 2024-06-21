@@ -84,6 +84,52 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                             _instructions->AppendStoreLocal(resultLocalIndex);
                         }
                     }
+                    else if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
+                    {
+                        xstring_t className = _X("NewRelic.Agent.Core.AgentApi");
+                        xstring_t methodName = _function->GetFunctionName();
+                        xstring_t keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)_function->GetFunctionId());
+                        auto argumentTypesLambda = GetArrayOfTypeParametersLamdba();
+
+                        _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
+
+                        auto afterCachingInvoker = _instructions->AppendJump(CEE_BRTRUE);
+
+                        _instructions->AppendString(_instrumentationSettings->GetCorePath());
+                        _instructions->Append(_X("call void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::StoreAgentMethodInvokerFunc(string)"));
+
+                        _instructions->AppendLabel(afterCachingInvoker);
+
+                        _instructions->AppendString(_instrumentationSettings->GetCorePath());
+                        _instructions->AppendString(keyName);
+                        _instructions->AppendString(className);
+                        _instructions->AppendString(methodName);
+
+                        if (argumentTypesLambda == NULL)
+                        {
+                            _instructions->Append(CEE_LDNULL);
+                        }
+                        else
+                        {
+                            argumentTypesLambda();
+                        }
+
+                        _instructions->AppendTypeOfArgument(_methodSignature->_returnType);
+
+                        BuildObjectArrayOfParameters();
+
+                        _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::InvokeAgentMethodInvokerFunc(string, string, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, object[])"));
+
+                        if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
+                        {
+                            _instructions->Append(_X("pop"));
+                        }
+                        else {
+                            // we can't leave an object on the stack and CEE_LEAVE a protected block.
+                            // we have to store it in a local and reload it outside of the try..catch.
+                            _instructions->AppendStoreLocal(resultLocalIndex);
+                        }
+                    }
                     else
                     {
                         // delegate = System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow("NewRelic_Delegate_API_<function name><function signature>", "C:\path\to\NewRelic.Agent.Core", "NewRelic.Core.AgentApi", "<function name>", new object[] { <method parameter types> })

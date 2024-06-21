@@ -46,6 +46,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildGetMethodFromAppDomainStorageOrReflectionOrThrow();
             }
+            else if (_function->GetFunctionName() == _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"))
+            {
+                BuildGetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow();
+            }
             else if (_function->GetFunctionName() == _X("EnsureInitialized"))
             {
                 BuildEnsureInitializedMethod();
@@ -69,6 +73,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             else if (_function->GetFunctionName() == _X("StoreAgentShimFinishTracerDelegateFunc"))
             {
                 BuildStoreAgentShimFinishTracerDelegateFunc();
+            }
+            else if (_function->GetFunctionName() == _X(".cctor"))
+            {
+                BuildStaticCtor();
             }
             else
             {
@@ -132,6 +140,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // work around this.
         //
         // void StoreMethodInAppDomainStorageOrThrow(MethodInfo method, String storageKey)
+        // void StoreMethodInAppDomainStorageOrThrow(object method, String storageKey)
         void BuildStoreMethodInAppDomainStorageOrThrow()
         {
             _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
@@ -170,17 +179,74 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
             _instructions->Append(CEE_DUP);
             _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(class System.Reflection.MethodInfo,string)"));
+            //_instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(class System.Reflection.MethodInfo,string)"));
+            _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
 
             _instructions->AppendLabel(methodEnd);
             _instructions->Append(CEE_RET);
         }
 
+        void BuildGetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow()
+        {
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentShimMethodInfo"));
+
+            _instructions->Append(CEE_DUP);
+            auto afterFallback = _instructions->AppendJump(CEE_BRTRUE);
+
+            _instructions->Append(CEE_POP); // Pops the previous null value
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(CEE_LDARG_1);
+            _instructions->Append(CEE_LDARG_2);
+            _instructions->Append(CEE_LDARG_3);
+            _instructions->Append(CEE_LDARG_S, (uint8_t)4);
+            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class System.Type[])"));
+
+            _instructions->Append(CEE_DUP);
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimMethodInfo"));
+
+            _instructions->AppendLabel(afterFallback);
+
+            _instructions->Append(CEE_RET);
+        }
+
+        //void BuildGetAgentInvokerMethodFromAppDomainStorageOrReflectionOrThrow()
+        //{
+        //    _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
+
+        //    _instructions->Append(CEE_DUP);
+        //    auto afterFallback = _instructions->AppendJump(CEE_BRTRUE);
+
+        //    _instructions->Append(CEE_POP); // Pops the previous null value
+        //    _instructions->AppendString(_X("object __NRInitializer__::_agentMethodFunc"));
+        //    _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodInvoker"));
+        //    _instructions->AppendString(_X("GetInvoker"));
+        //    _instructions->Append(CEE_LDNULL);
+        //    _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
+
+        //    _instructions->Append(CEE_LDNULL);
+        //    _instructions->Append(CEE_LDNULL);
+        //    _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
+
+        //    _instructions->Append(CEE_DUP);
+        //    _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+        //    _instructions->AppendString(_X("__NRInitializer__::_agentMethodFunc"));
+        //    _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
+        //    _instructions->Append(CEE_DUP);
+        //    _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+
+        //    _instructions->AppendLabel(afterFallback);
+
+        //    _instructions->Append(CEE_RET);
+        //}
+
         // resultObject InvokeAgentMethodInvokerFunc(string assemblyPath, string storageKey, string typeName, string methodName, Type[] parameterTypes, Type returnType, object[] methodParameters)
         void BuildInvokeAgentMethodInvokerFunc()
         {
-            _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
+            if (_agentCallStrategy != AgentCallStyle::Strategy::AppDomainFallbackCache)
+            {
+                _instructions->Append(CEE_LDARG_0);
+                _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
+            }
 
             _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
 
@@ -198,15 +264,47 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void BuildGetAgentMethodInvokerObject()
         {
-            _instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_LDSFLD, _X("object modreq(System.Runtime.CompilerServices.IsVolatile) __NRInitializer__::_agentMethodFunc"));
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+
+            _instructions->Append(CEE_DUP);
+            auto afterFallback = _instructions->AppendJump(CEE_BRTRUE);
+
+            _instructions->Append(CEE_POP); // Pops the previous null value
+            _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
+            _instructions->AppendString(_X("__NRInitializer__::_agentMethodFunc"));
+            _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
+
+            _instructions->AppendLabel(afterFallback);
+
             _instructions->Append(CEE_RET);
         }
 
         void BuildGetAgentShimFinishTracerDelegateFunc()
         {
-            _instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_LDSFLD, _X("object modreq(System.Runtime.CompilerServices.IsVolatile) __NRInitializer__::_agentShimFunc"));
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentShimFunc"));
+
+            //_instructions->AppendString(_X("^^^^^checking agentshim"));
+            //_instructions->Append(CEE_CALL, _X("void System.Console::WriteLine(string)"));
+
+            _instructions->Append(CEE_DUP);
+            auto afterFallback = _instructions->AppendJump(CEE_BRTRUE);
+
+            //_instructions->AppendString(_X("^^^^^appdomain fallback"));
+            //_instructions->Append(CEE_CALL, _X("void System.Console::WriteLine(string)"));
+
+            _instructions->Append(CEE_POP); // Pops the previous null value
+            _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
+            _instructions->AppendString(_X("__NRInitializer__::_agentShimFunc"));
+            _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
+
+            _instructions->AppendLabel(afterFallback);
+
             _instructions->Append(CEE_RET);
         }
 
@@ -222,8 +320,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_LDNULL);
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
 
-            _instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_STSFLD, _X("object modreq(System.Runtime.CompilerServices.IsVolatile) __NRInitializer__::_agentMethodFunc"));
+            _instructions->Append(CEE_DUP);
             _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+            _instructions->AppendString(_X("__NRInitializer__::_agentMethodFunc"));
+            _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
             _instructions->Append(CEE_RET);
         }
 
@@ -239,15 +341,30 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_LDNULL);
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
 
-            _instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_STSFLD, _X("object  modreq(System.Runtime.CompilerServices.IsVolatile)__NRInitializer__::_agentShimFunc"));
+            _instructions->Append(CEE_DUP);
             _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimFunc"));
+            _instructions->AppendString(_X("__NRInitializer__::_agentShimFunc"));
+            _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
             _instructions->Append(CEE_RET);
         }
 
         void BuildEnsureInitializedMethod()
         {
-            _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+            //_instructions->Append(CEE_LDSFLDA, _X("int32 __NRInitializer__::_isInitialized"));
+            //_instructions->Append(_X("call void System.Threading.Interlocked::MemoryBarrier()"));
+            //_instructions->Append(CEE_LDSFLDA, _X("object __NRInitializer__::_agentMethodFunc"));
+            //_instructions->Append(CEE_LDNULL);
+            //_instructions->Append(CEE_LDNULL);
+            //_instructions->Append(CEE_LDC_I4_1);
+            //_instructions->Append(CEE_LDC_I4_0);
+            //_instructions->Append(_X("call object System.Threading.Interlocked::CompareExchange(object&, object, object)"));
+            //_instructions->Append(CEE_VOLATILE);
+            //_instructions->Append(CEE_LDSFLD, _X("object modreq(System.Runtime.CompilerServices.IsVolatile) __NRInitializer__::_agentMethodFunc"));
+
+            //_instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
+            _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
             auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
 
             _instructions->Append(CEE_LDARG_0);
@@ -256,10 +373,25 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreAgentMethodInvokerFunc(string)"));
 
+            //_instructions->Append(CEE_LDSFLDA, _X("int32 __NRInitializer__::_isInitialized"));
+            //_instructions->Append(CEE_LDC_I4_1);
+            //_instructions->Append(CEE_LDC_I4_0);
+            //_instructions->Append(_X("call int32 System.Threading.Interlocked::CompareExchange(int32&, int32, int32)"));
+            //_instructions->Append(CEE_POP);
+            //call int32 [System.Threading]System.Threading.Interlocked::CompareExchange(int32&, int32, int32)
+            //_instructions->Append(CEE_STSFLD, _X("int32 __NRInitializer__::_isInitialized"));
+
+            //_instructions->Append(_X("call void System.GC::Collect()"));
+
             _instructions->AppendLabel(afterInit);
 
             _instructions->Append(CEE_RET);
 
+        }
+
+        void BuildStaticCtor()
+        {
+            _instructions->Append(CEE_RET);
         }
     };
 }}}

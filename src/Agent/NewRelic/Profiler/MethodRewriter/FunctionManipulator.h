@@ -320,7 +320,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
         {
-            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache)
+            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache || _agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -336,7 +336,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                     argumentTypesLambda();
                 }
 
-                _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
+                if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache && Strings::AreEqualCaseInsensitive(className, _X("NewRelic.Agent.Core.AgentShim")))
+                {
+                    _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
+                }
+                else
+                {
+                    _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
+                }
             }
             else if (_agentCallStrategy == AgentCallStyle::Strategy::Reflection)
             {

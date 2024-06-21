@@ -43,6 +43,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             }
         }
 
+        std::function<void(const xstring_t&, const xstring_t&, const ByteVector&)> _injectStaticSecuritySafeCtor;
+        virtual void InjectStaticSecuritySafeCtor(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
+        {
+            if (_injectStaticSecuritySafeCtor)
+            {
+                _injectStaticSecuritySafeCtor(methodName, className, signature);
+            }
+        }
+
         std::function<void(const xstring_t&, const xstring_t&, const ByteVector&)> _injectCoreLibSecuritySafeMethodReference;
         virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
         {

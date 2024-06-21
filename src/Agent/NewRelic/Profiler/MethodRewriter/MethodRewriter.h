@@ -48,6 +48,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetThreadLocalBoolean"));
             _instrumentedFunctionNames->emplace(_X("SetThreadLocalBoolean"));
             _instrumentedFunctionNames->emplace(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("GetMethodFromAppDomainStorage"));
             _instrumentedFunctionNames->emplace(_X("GetMethodViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("GetTypeViaReflectionOrThrow"));
@@ -59,6 +60,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerObject"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
             _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));
+            _instrumentedFunctionNames->emplace(_X(".cctor"));
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 

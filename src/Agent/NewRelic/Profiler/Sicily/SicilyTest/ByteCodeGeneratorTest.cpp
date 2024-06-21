@@ -189,12 +189,30 @@ namespace sicily
                 {
                     ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
                     ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kI4, false));
-                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType));
+                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType, nullptr));
 
                     auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
                     // RetType 
                     // 0x08
                     BYTEVECTOR(expectedBytes, 0x08);
+                    Assert::AreEqual(expectedBytes, actualBytes);
+                }
+
+                TEST_METHOD(TestVolatileFieldTypeToBytes)
+                {
+                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
+                    ast::ClassTypePtr requiredModifierType(new ast::ClassType(L"System.Runtime.CompilerServices.IsVolatile", L"", true));
+                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType, requiredModifierType));
+
+                    auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
+                    // RetType 
+                    // 0x1c
+                    // modreq
+                    // 0x1f
+                    // modreq type
+                    // 0x00 (NullTokenizer resolves all type tokens to 0x00)
+                    BYTEVECTOR(expectedBytes, 0x1c, 0x1f, 0x00);
                     Assert::AreEqual(expectedBytes, actualBytes);
                 }
 

@@ -23,6 +23,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         virtual xstring_t GetModuleName() = 0;
         virtual void InjectPlatformInvoke(const xstring_t& methodName, const xstring_t& className, const xstring_t& moduleName, const ByteVector& signature) = 0;
         virtual void InjectStaticSecuritySafeMethod(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
+        virtual void InjectStaticSecuritySafeCtor(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
         virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
         virtual void InjectNRHelperType() = 0;
         virtual bool InjectReferenceToCoreLib() = 0;

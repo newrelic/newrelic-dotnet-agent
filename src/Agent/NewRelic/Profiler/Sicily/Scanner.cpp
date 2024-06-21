@@ -243,6 +243,10 @@ namespace sicily {
         else if (sem.id_ == _X("uint64")) {
             return TOK_UINT64;
         }
+        else if (sem.id_ == _X("modreq"))
+        {
+            return TOK_MODREQ;
+        }
         else {
             return TOK_ID;
         }

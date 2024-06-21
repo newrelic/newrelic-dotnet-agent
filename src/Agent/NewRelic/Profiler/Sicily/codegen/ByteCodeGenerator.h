@@ -376,6 +376,27 @@ namespace sicily { namespace codegen
             auto returnBytes = TypeToBytes(returnType);
             bytes.insert(bytes.end(), returnBytes.begin(), returnBytes.end());
 
+            auto requiredModifierType = type->GetRequiredModifierType();
+            if (requiredModifierType != nullptr)
+            {
+                auto requiredModifierBytes = TypeToRequiredModifierBytesSpecific(std::dynamic_pointer_cast<ast::ClassType, ast::Type>(requiredModifierType));
+                bytes.insert(bytes.end(), requiredModifierBytes.begin(), requiredModifierBytes.end());
+            }
+
+            return bytes;
+        }
+
+        ByteVector TypeToRequiredModifierBytesSpecific(ast::ClassTypePtr type)
+        {
+            ByteVector bytes;
+
+            // modreq
+            bytes.push_back(0x1f);
+            // TypeDefOrRefOrSpecEncoded
+            auto typeToken = TypeToTokenSpecific(type);
+            auto compressedTypeToken = CorSigCompressToken(typeToken);
+            bytes.insert(bytes.end(), compressedTypeToken.begin(), compressedTypeToken.end());
+
             return bytes;
         }
 

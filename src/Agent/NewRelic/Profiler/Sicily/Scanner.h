@@ -38,7 +38,8 @@ namespace sicily {
         TOK_BOOL,
         TOK_UINT32,
         TOK_INT32,
-        TOK_UINT64
+        TOK_UINT64,
+        TOK_MODREQ
     };
 
     struct SemInfo {
