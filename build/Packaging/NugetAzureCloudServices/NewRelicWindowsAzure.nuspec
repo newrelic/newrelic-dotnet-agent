@@ -7,7 +7,7 @@
     <authors>New Relic</authors>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/nuget-azure-cloud-services</projectUrl>
-    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Make sure you go to New Relic first to sign up and get your key at https://newrelic.com. Performance monitoring will never be the same after you do!  
