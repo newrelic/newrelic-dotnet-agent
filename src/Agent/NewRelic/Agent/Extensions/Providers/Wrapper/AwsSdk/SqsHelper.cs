@@ -13,6 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     public static class SqsHelper
     {
         public const string VendorName = "SQS";
+
         private class SqsAttributes
         {
             public string QueueName;
@@ -38,18 +39,19 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         public static void InsertDistributedTraceHeaders(ITransaction transaction, dynamic webRequest)
         {
-            var setHeaders = new Action<dynamic, string, string>((webRequest, key, value) =>
+            var setHeaders = new Action<dynamic, string, string>((wr, key, value) =>
             {
-                var headers = webRequest.Headers as IDictionary<string, object>;
+                var headers = wr.Headers as IDictionary<string, object>;
 
                 if (headers == null)
                 {
                     headers = new Dictionary<string, object>();
-                    webRequest.Headers = headers;
+                    wr.Headers = headers;
                 }
 
                 headers[key] = value;
             });
+
             transaction.InsertDistributedTraceHeaders(webRequest, setHeaders);
 
         }
