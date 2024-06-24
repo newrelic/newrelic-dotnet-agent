@@ -394,6 +394,16 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="BedrockWrapperComponent" Guid="{C913E912-97D1-4042-8E11-A35E04C6A6E5}">
         <File Id="BedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.dll" />
       </Component>
+      <Component Id="AwsSdkWrapperComponent" Guid="{00D58C03-D517-41CA-BBAD-DAC605EADD3E}">
+        <File Id="AwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
+      </Component>
+      <!-- Reference libraries -->
+      <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
+        <File Id="NewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Core.dll" />
+      </Component>
+      <Component Id="NewRelicParsingReferenceComponent" Guid="{2B5FA2A3-E532-48CC-8390-D023DE693F8A}">
+        <File Id="NewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Parsing.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -462,6 +472,16 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAwsLambdaWrapperComponent" Guid="{778F507F-97D7-48B2-BE51-46D6DAB2D234}">
         <File Id="CoreAwsLambdaWrapperFile" Name="NewRelic.Providers.Wrapper.AwsLambda.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll"/>
+      </Component>
+      <Component Id="CoreAwsSdkWrapperComponent" Guid="{7C5E31CB-BA85-4E00-BA1B-99FA0B42E414}">
+        <File Id="CoreAwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
+      </Component>
+      <!-- Reference libraries -->
+      <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
+        <File Id="CoreNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Core.dll" />
+      </Component>
+      <Component Id="CoreNewRelicParsingReferenceComponent" Guid="{D446845B-C0EC-4FC6-AA4B-BD92E622CE12}">
+        <File Id="CoreNewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Parsing.dll" />
       </Component>
     </ComponentGroup>
 
@@ -572,6 +592,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="BedrockInstrumentationComponent" Guid="{D6F0A2D6-D8D5-4C61-8056-1C9AA4D07132}">
         <File Id="BedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" />
       </Component>
+      <Component Id="AwsSdkInstrumentationComponent" Guid="{E719FAC8-8D69-41EA-9395-B71868DA7449}">
+        <File Id="AwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -637,6 +660,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAwsLambdaInstrumentationComponent" Guid="{FD3BEB1B-B093-4FF6-A1FA-76E621CF26D6}">
         <File Id="CoreAwsLambdaInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAwsSdkInstrumentationComponent" Guid="{CAB15FAE-EF3F-4998-9376-56DA4E11BAEF}">
+        <File Id="CoreAwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
