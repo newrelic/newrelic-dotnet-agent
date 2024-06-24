@@ -56,27 +56,33 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null. Returning NoOp delegate.");
                 return Delegates.NoOp;
             }
-            dynamic webRequest = requestContext.Request;
 
-            ISegment segment;
-
+            MessageBrokerAction action;
+            var insertDistributedTraceHeaders = false;
             switch (requestType)
             {
                 case "SendMessageRequest":
                 case "SendMessageBatchRequest":
-                    segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, MessageBrokerAction.Produce);
-                    // This needs to happen at the end
-                    //SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
+                    action = MessageBrokerAction.Produce;
+                    insertDistributedTraceHeaders = true;
                     break;
                 case "ReceiveMessageRequest":
-                    segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, MessageBrokerAction.Consume);
+                    action = MessageBrokerAction.Consume;
                     break;
                 case "PurgeQueueRequest":
-                    segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, MessageBrokerAction.Purge);
+                    action = MessageBrokerAction.Purge;
                     break;
                 default:
                     agent.Logger.Debug($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
                     return Delegates.NoOp;
+            }
+
+            ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
+            if (insertDistributedTraceHeaders)
+            {
+                // This needs to happen at the end
+                //dynamic webRequest = requestContext.Request;
+                //SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
             }
 
             return Delegates.GetDelegateFor(segment);
