@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Agent.Extensions.AwsSdk
 {
     public static class SqsHelper
     {
@@ -16,19 +14,35 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private class SqsAttributes
         {
-            public string QueueName;
-            public string CloudId;
-            public string Region;
+            public string QueueName { get; }
+            public string CloudId { get; }
+            public string Region { get; }
 
             // https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue
             public SqsAttributes(string url)
             {
+                if (string.IsNullOrEmpty(url))
+                {
+                    return;
+                }
+
                 var parts = url.Split('/');
-                var subdomain = parts[2].Split('.');
-                // subdomain[0] should always be "sqs"
-                Region = subdomain[1];
+                if (parts.Length < 5)
+                {
+                    return;
+                }
+
                 CloudId = parts[3];
                 QueueName = parts[4];
+
+                var subdomain = parts[2].Split('.');
+                if (subdomain.Length < 2)
+                {
+                    return;
+                }
+
+                // subdomain[0] should always be "sqs"
+                Region = subdomain[1];
             }
         }
         public static ISegment GenerateSegment(ITransaction transaction, MethodCall methodCall, string url, MessageBrokerAction action)

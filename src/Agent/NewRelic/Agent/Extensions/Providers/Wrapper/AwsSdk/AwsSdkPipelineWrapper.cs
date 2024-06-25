@@ -1,9 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Linq;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
@@ -81,8 +80,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             if (insertDistributedTraceHeaders)
             {
                 // This needs to happen at the end
-                //dynamic webRequest = requestContext.Request;
-                //SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
+                if (requestContext.Request == null)
+                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                else
+                {
+                    dynamic webRequest = requestContext.Request;
+                    SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
+                }
             }
 
             return Delegates.GetDelegateFor(segment);
