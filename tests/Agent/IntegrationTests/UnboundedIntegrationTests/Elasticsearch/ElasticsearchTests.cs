@@ -37,22 +37,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         const string SyncMethodSkipReason = "Synchronous methods are deprecated in latest Elastic.Clients.Elasticsearch";
 
 
-        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType) : base(fixture)
+        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType, bool syncMethodsOk = true) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _clientType = clientType;
-
-            // non-async methods are deprecated in the latest Elastic.Clients.Elasticsearch versions
-            if (_clientType != ClientType.ElasticClients ||
-                (_fixture.GetType() != typeof(ConsoleDynamicMethodFixtureCoreLatest) && _fixture.GetType() != typeof(ConsoleDynamicMethodFixtureFWLatest)))
-            {
-                _syncMethodsOk = true;
-            }
-            else
-            {
-                _syncMethodsOk = false;
-            }
+            _syncMethodsOk = syncMethodsOk;
 
             _host = GetHostFromElasticServer(_clientType);
 
@@ -340,7 +330,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk : false)
         {
         }
     }
@@ -358,7 +348,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false)
         {
         }
     }
