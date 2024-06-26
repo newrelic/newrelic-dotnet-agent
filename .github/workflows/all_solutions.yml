@@ -378,20 +378,21 @@ jobs:
       matrix:
         namespace:
           [
-            CosmosDB,
-            Couchbase,
-            Elasticsearch,
-            MongoDB,
-            Msmq,
-            MsSql,
-            MySql,
-            NServiceBus,
-            NServiceBus5,
-            # Disabling Oracle temporarily
-            #Oracle,
-            Postgres,
-            RabbitMq,
-            Redis,
+            AWS.SQS
+            # CosmosDB,
+            # Couchbase,
+            # Elasticsearch,
+            # MongoDB,
+            # Msmq,
+            # MsSql,
+            # MySql,
+            # NServiceBus,
+            # NServiceBus5,
+            # # Disabling Oracle temporarily
+            # #Oracle,
+            # Postgres,
+            # RabbitMq,
+            # Redis,
           ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
@@ -467,6 +468,13 @@ jobs:
           Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
           Start-CosmosDbEmulator
         shell: pwsh
+
+      - name: Start LocalStack for AWS tests
+        if: matrix.namespace == 'AWS.SQS'
+        uses: LocalStack/setup-localstack@v0.2.1
+        with:
+          image-tag: 'stable'
+          configuration: 'SERVICES=sqs'
 
       - name: Run Unbounded Integration Tests
         run: |
