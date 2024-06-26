@@ -12,7 +12,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.AWS
+namespace NewRelic.Agent.UnboundedIntegrationTests.AWS.SQS
 {
     public abstract class SQSTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
