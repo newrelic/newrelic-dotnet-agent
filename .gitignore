@@ -162,3 +162,4 @@ tests/TestResults/*
 /src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll
 /tests/Agent/IntegrationTests/ContainerApplications/.env
 
+/tests/Agent/IntegrationTests/LocalStack/volume

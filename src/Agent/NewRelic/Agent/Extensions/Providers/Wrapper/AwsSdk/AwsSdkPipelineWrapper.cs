@@ -49,13 +49,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             string requestType = request.GetType().Name;
             string requestQueueUrl = request.QueueUrl;
 
-            // Get the web request object (IRequest). This can be used to get the headers
-            if (requestContext.Request == null)
-            {
-                agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null. Returning NoOp delegate.");
-                return Delegates.NoOp;
-            }
-
             MessageBrokerAction action;
             var insertDistributedTraceHeaders = false;
             switch (requestType)
@@ -81,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 // This needs to happen at the end
                 if (requestContext.Request == null)
-                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                    agent.Logger.Finest("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
                 else
                 {
                     dynamic webRequest = requestContext.Request;
