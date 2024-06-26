@@ -469,12 +469,12 @@ jobs:
           Start-CosmosDbEmulator
         shell: pwsh
 
-      - name: Start LocalStack for AWS tests
-        if: matrix.namespace == 'AWS.SQS'
-        uses: LocalStack/setup-localstack@v0.2.1
-        with:
-          image-tag: 'stable'
-          configuration: 'SERVICES=sqs'
+      # - name: Start LocalStack for AWS tests
+      #   if: matrix.namespace == 'AWS.SQS'
+      #   uses: LocalStack/setup-localstack@v0.2.1
+      #   with:
+      #     image-tag: 'stable'
+      #     configuration: 'SERVICES=sqs'
 
       - name: Run Unbounded Integration Tests
         run: |
