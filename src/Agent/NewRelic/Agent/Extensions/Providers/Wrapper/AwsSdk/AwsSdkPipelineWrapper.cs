@@ -58,6 +58,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
             MessageBrokerAction action;
             var insertDistributedTraceHeaders = false;
+            var acceptDistributedTraceHeaders = false;
             switch (requestType)
             {
                 case "SendMessageRequest":
@@ -67,6 +68,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     break;
                 case "ReceiveMessageRequest":
                     action = MessageBrokerAction.Consume;
+                    acceptDistributedTraceHeaders = true;
                     break;
                 case "PurgeQueueRequest":
                     action = MessageBrokerAction.Purge;
@@ -81,11 +83,26 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 // This needs to happen at the end
                 if (requestContext.Request == null)
+                {
                     agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                }
                 else
                 {
                     dynamic webRequest = requestContext.Request;
                     SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
+                }
+            }
+
+            if (acceptDistributedTraceHeaders)
+            {
+                if (requestContext.Request == null)
+                {
+                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                }
+                else
+                {
+                    dynamic webRequest = requestContext.Request;
+                    SqsHelper.AcceptDistributedTraceHeaders(transaction, webRequest);
                 }
             }
 

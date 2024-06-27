@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -67,6 +68,32 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             });
 
             transaction.InsertDistributedTraceHeaders(webRequest, setHeaders);
+
+        }
+        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic webRequest)
+        {
+            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((wr, key) =>
+            {
+                var returnValues = new List<string>();
+                var headers = wr.Headers as IDictionary<string, object>;
+
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                        {
+                            returnValues.Add(headers[key].ToString());
+                        }
+                    }
+                    return returnValues;
+                }
+
+                return null;
+            });
+
+            // Do we want to define a new transport type for SQS?
+            transaction.AcceptDistributedTraceHeaders(webRequest, getHeaders, TransportType.Queue);
 
         }
     }
