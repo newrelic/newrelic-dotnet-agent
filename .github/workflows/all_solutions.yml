@@ -378,7 +378,6 @@ jobs:
       matrix:
         namespace:
           [
-            AwsSdk.SQS,
             CosmosDB,
             Couchbase,
             Elasticsearch,
