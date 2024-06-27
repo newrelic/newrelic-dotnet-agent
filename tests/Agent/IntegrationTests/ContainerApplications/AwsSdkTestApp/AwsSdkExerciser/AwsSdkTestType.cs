@@ -1,10 +1,12 @@
-namespace AwsSdkTestApp.AwsSdkExerciser
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+namespace AwsSdkTestApp.AwsSdkExerciser;
+
+public enum AwsSdkTestType
 {
-    public enum AwsSdkTestType
-    {
-        SQS,
-        SNS,
-        SES,
-        // etc
-    }
+    SQS,
+    SNS,
+    SES,
+    // etc
 }
