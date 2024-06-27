@@ -41,7 +41,7 @@ public class ContainerApplication : RemoteApplication
     }
 
     public ContainerApplication(string distroTag, Architecture containerArchitecture,
-        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml", string serviceName = "LinuxSmoketestApp") : base(applicationType: ApplicationType.Container, isCoreApp: true)
+        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml", string serviceName = "LinuxSmokeTestApp") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
