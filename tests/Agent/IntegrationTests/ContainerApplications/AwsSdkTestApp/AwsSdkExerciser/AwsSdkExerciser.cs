@@ -1,47 +1,49 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
-using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
+namespace AwsSdkTestApp.AwsSdkExerciser
 {
-    [Library]
-    public class AwsSdkExerciser
+    public class AwsSdkExerciser : IDisposable
     {
+        public AwsSdkExerciser(AwsSdkTestType testType)
+        {
+            switch (testType)
+            {
+                case AwsSdkTestType.SQS:
+                    _amazonSqsClient = GetSqsClient();
+                    break;
+                default:
+                    throw new ArgumentException("Invalid test type");
+            }
+        }
         #region SQS
 
-        private static readonly AmazonSQSClient AmazonSqsClient = GetSqsClient();
-        private static string _sqsQueueUrl = null;
+        private readonly AmazonSQSClient _amazonSqsClient;
+        private string _sqsQueueUrl = null;
 
-        private static AmazonSQSClient GetSqsClient()
+        private AmazonSQSClient GetSqsClient()
         {
-            var awsCredentials = new Amazon.Runtime.BasicAWSCredentials(AwsSQSConfiguration.AwsAccessKeyId, AwsSQSConfiguration.AwsSecretAccessKey);
-
-            var config = new AmazonSQSConfig();
-            if (string.IsNullOrEmpty(AwsSQSConfiguration.ServiceUrl)) // serviceUrl is null when going directly to AWS, non-null when using LocalStack
+            // configure the client to use LocalStack
+            var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
+            var config = new AmazonSQSConfig
             {
-                config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(AwsSQSConfiguration.AwsRegion);
-            }
-            else
-            {
-                config.ServiceURL = AwsSQSConfiguration.ServiceUrl;
-                config.AuthenticationRegion = AwsSQSConfiguration.AwsRegion; // **NOT** config.RegionEndpoint here
-            }
+                ServiceURL = "http://localstack-main:4566",
+                AuthenticationRegion = "us-west-2"
+            };
 
             var sqsClient = new AmazonSQSClient(awsCredentials, config);
             return sqsClient;
         }
 
-        private static async Task<string> SQS_CreateQueueAsync(string queueName)
+        private async Task<string> SQS_CreateQueueAsync(string queueName)
         {
-            var response = await AmazonSqsClient.CreateQueueAsync(new CreateQueueRequest
+            var response = await _amazonSqsClient.CreateQueueAsync(new CreateQueueRequest
             {
                 QueueName = queueName,
             });
@@ -51,15 +53,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
             return response.QueueUrl;
         }
 
-        private static async Task SQS_DeleteQueueAsync()
+        private async Task SQS_DeleteQueueAsync()
         {
-            await AmazonSqsClient.DeleteQueueAsync(new DeleteQueueRequest
+            await _amazonSqsClient.DeleteQueueAsync(new DeleteQueueRequest
             {
                 QueueUrl = _sqsQueueUrl
             });
         }
-
-        [LibraryMethod]
         public async Task SQS_Initialize(string queueName)
         {
             if (_sqsQueueUrl != null)
@@ -70,7 +70,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
             _sqsQueueUrl = await SQS_CreateQueueAsync(queueName);
         }
 
-        [LibraryMethod]
         public async Task SQS_Teardown()
         {
             if (_sqsQueueUrl == null)
@@ -79,10 +78,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
             }
 
             await SQS_DeleteQueueAsync();
+            _sqsQueueUrl = null;
         }
 
-        [LibraryMethod]
-        [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task SQS_SendMessage(string message)
         {
@@ -91,11 +89,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
                 throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
             }
 
-            await AmazonSqsClient.SendMessageAsync(_sqsQueueUrl, message);
+            await _amazonSqsClient.SendMessageAsync(_sqsQueueUrl, message);
         }
 
-        [LibraryMethod]
-        [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task SQS_ReceiveMessage()
         {
@@ -104,7 +100,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
                 throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
             }
 
-            var response = await AmazonSqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
+            var response = await _amazonSqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
             {
                 QueueUrl = _sqsQueueUrl,
                 MaxNumberOfMessages = 1
@@ -117,5 +113,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AWS
         }
         #endregion
 
+        public void Dispose()
+        {
+            _amazonSqsClient?.Dispose();
+        }
     }
 }

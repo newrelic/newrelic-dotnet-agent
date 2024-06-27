@@ -17,6 +17,7 @@ public class ContainerApplication : RemoteApplication
 {
     private readonly string _dockerfile;
     private readonly string _dockerComposeFile;
+    private readonly string _serviceName;
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
@@ -40,12 +41,13 @@ public class ContainerApplication : RemoteApplication
     }
 
     public ContainerApplication(string distroTag, Architecture containerArchitecture,
-        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
+        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml", string serviceName = "LinuxSmoketestApp") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
         _dockerComposeFile = dockerComposeFile;
+        _serviceName = serviceName;
 
         _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
 
@@ -83,7 +85,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --build --abort-on-container-exit --remove-orphans --force-recreate LinuxSmokeTestApp";
+        var arguments = $"compose -f {_dockerComposeFile} -p {ContainerName} up --build --abort-on-container-exit --remove-orphans --force-recreate {_serviceName}";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;

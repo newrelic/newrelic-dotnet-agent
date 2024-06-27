@@ -331,17 +331,6 @@
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.35" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
-  <!-- AWS SDK-->
-  <ItemGroup>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net462'"/>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net471'"/>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net481'"/>
-
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net6.0'"/>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.301.23" Condition="'$(TargetFramework)' == 'net8.0'"/>
-  </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />

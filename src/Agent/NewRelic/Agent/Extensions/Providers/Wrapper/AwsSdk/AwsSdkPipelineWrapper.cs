@@ -47,7 +47,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().Name;
-            string requestQueueUrl = request.QueueUrl;
 
             MessageBrokerAction action;
             var insertDistributedTraceHeaders = false;
@@ -69,6 +68,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     return Delegates.NoOp;
             }
 
+            string requestQueueUrl = request.QueueUrl;
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (insertDistributedTraceHeaders)
             {
