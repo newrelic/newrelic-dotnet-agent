@@ -16,7 +16,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
     private readonly AwsSdkContainerSQSTestFixture _fixture;
 
     private readonly string _testQueueName = $"TestQueue-{Guid.NewGuid()}";
-    private readonly string _metricScopeBase = "WebTransaction/MVC/AwsSdk/SQS_SendAndReceive/{queueName}";
+    private readonly string _metricScope = "WebTransaction/MVC/AwsSdk/SQS_SendReceivePurge/{queueName}";
 
     public AwsSdkSQSTest(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -55,20 +55,24 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 1, metricScope = $"{_metricScopeBase}"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 2}, // SendMessage and SendMessageBatch
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 2, metricScope = _metricScope},
 
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = $"{_metricScopeBase}"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = _metricScope},
+
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1, metricScope = _metricScope},
         };
 
-        var sendMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScopeBase);
+        var sendMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope);
 
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_metricScopeBase);
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_metricScope);
         var expectedTransactionTraceSegments = new List<string>
         {
             $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}",
-            $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}"
+            $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}",
+            $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}"
         };
 
         Assertions.MetricsExist(expectedMetrics, metrics);

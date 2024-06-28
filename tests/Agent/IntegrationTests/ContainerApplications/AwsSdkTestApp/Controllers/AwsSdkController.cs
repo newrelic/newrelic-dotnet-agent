@@ -15,9 +15,9 @@ namespace AwsSdkTestApp.Controllers
     {
         private readonly ILogger<AwsSdkController> _logger = logger;
 
-        // GET: /AwsSdk/SQS_SendAndReceive?queueName=MyQueue
-        [HttpGet("SQS_SendAndReceive")]
-        public async Task SQS_SendAndReceive([Required]string queueName)
+        // GET: /AwsSdk/SQS_SendReceivePurge?queueName=MyQueue
+        [HttpGet("SQS_SendReceivePurge")]
+        public async Task SQS_SendReceivePurge([Required]string queueName)
         {
             using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
             
@@ -25,6 +25,8 @@ namespace AwsSdkTestApp.Controllers
 
             await awsSdkExerciser.SQS_SendMessage("Hello World!");
             await awsSdkExerciser.SQS_ReceiveMessage();
+            await awsSdkExerciser.SQS_SendMessageBatch(new[] { "Hello", "World" });
+            await awsSdkExerciser.SQS_PurgeQueue();
 
             await awsSdkExerciser.SQS_Teardown();
         }
