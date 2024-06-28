@@ -37,7 +37,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return Delegates.NoOp;
             }
             dynamic metadata = requestContext.ServiceMetaData;
-            string requestId = metadata.ServiceId; // SQS?
+
+            // check for null first if we decide to use this property
+            // string requestId = metadata.ServiceId; // SQS?
 
             // Get the AmazonWebServiceRequest being invoked. The name will tell us the type of request
             if (requestContext.OriginalRequest == null)
