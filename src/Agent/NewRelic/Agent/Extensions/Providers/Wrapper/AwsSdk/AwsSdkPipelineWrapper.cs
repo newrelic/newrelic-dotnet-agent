@@ -50,6 +50,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().Name;
 
+            agent.Logger.Finest("AwsSdkPipelineWrapper: Request type is " + requestType);
+
             MessageBrokerAction action;
             var insertDistributedTraceHeaders = false;
             switch (requestType)
@@ -66,7 +68,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    agent.Logger.Debug($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
+                    agent.Logger.Finest($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
                     return Delegates.NoOp;
             }
 
