@@ -52,30 +52,31 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             return transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, VendorName, attr.QueueName);
         }
 
-        public static void InsertDistributedTraceHeaders(ITransaction transaction, dynamic webRequest)
+        public static void InsertDistributedTraceHeaders(ITransaction transaction, dynamic sendMessageRequest)
         {
-            var setHeaders = new Action<dynamic, string, string>((wr, key, value) =>
+            var setHeaders = new Action<dynamic, string, string>((smr, key, value) =>
             {
-                var headers = wr.Headers as IDictionary<string, object>;
+                var headers = smr.MessageAttributes as IDictionary<string, object>;
 
                 if (headers == null)
                 {
                     headers = new Dictionary<string, object>();
-                    wr.Headers = headers;
+                    smr.MessageAttributes = headers;
                 }
 
+                // this needs to be set to a MessageAttributeValue (??)
                 headers[key] = value;
             });
 
-            transaction.InsertDistributedTraceHeaders(webRequest, setHeaders);
+            transaction.InsertDistributedTraceHeaders(sendMessageRequest, setHeaders);
 
         }
-        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic webRequest)
+        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic sendMessageRequest)
         {
-            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((wr, key) =>
+            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((smr, key) =>
             {
                 var returnValues = new List<string>();
-                var headers = wr.Headers as IDictionary<string, object>;
+                var headers = smr.MessageAttributes as IDictionary<string, object>;
 
                 if (headers != null)
                 {
@@ -93,7 +94,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             });
 
             // Do we want to define a new transport type for SQS?
-            transaction.AcceptDistributedTraceHeaders(webRequest, getHeaders, TransportType.Queue);
+            transaction.AcceptDistributedTraceHeaders(sendMessageRequest, getHeaders, TransportType.Queue);
 
         }
     }

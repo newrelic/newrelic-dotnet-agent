@@ -79,27 +79,25 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             if (insertDistributedTraceHeaders)
             {
                 // This needs to happen at the end
-                if (requestContext.Request == null)
+                if (request.MessageAttributes == null)
                 {
-                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
                 }
                 else
                 {
-                    dynamic webRequest = requestContext.Request;
-                    SqsHelper.InsertDistributedTraceHeaders(transaction, webRequest);
+                    SqsHelper.InsertDistributedTraceHeaders(transaction, request);
                 }
             }
 
             if (acceptDistributedTraceHeaders)
             {
-                if (requestContext.Request == null)
+                if (request.MessageAttributes == null)
                 {
-                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null, unable to insert distributed trace headers.");
+                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to accept distributed trace headers.");
                 }
                 else
                 {
-                    dynamic webRequest = requestContext.Request;
-                    SqsHelper.AcceptDistributedTraceHeaders(transaction, webRequest);
+                    SqsHelper.AcceptDistributedTraceHeaders(transaction, request);
                 }
             }
 
