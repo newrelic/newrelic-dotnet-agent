@@ -37,7 +37,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return Delegates.NoOp;
             }
             dynamic metadata = requestContext.ServiceMetaData;
-            string requestId = metadata.ServiceId; // SQS?
+
+            // check for null first if we decide to use this property
+            // string requestId = metadata.ServiceId; // SQS?
 
             // Get the AmazonWebServiceRequest being invoked. The name will tell us the type of request
             if (requestContext.OriginalRequest == null)
@@ -47,14 +49,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().Name;
-            string requestQueueUrl = request.QueueUrl;
 
-            // Get the web request object (IRequest). This can be used to get the headers
-            if (requestContext.Request == null)
-            {
-                agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.Request is null. Returning NoOp delegate.");
-                return Delegates.NoOp;
-            }
+            agent.Logger.Finest("AwsSdkPipelineWrapper: Request type is " + requestType);
 
             MessageBrokerAction action;
             var insertDistributedTraceHeaders = false;
@@ -74,10 +70,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    agent.Logger.Debug($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
+                    agent.Logger.Finest($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
                     return Delegates.NoOp;
             }
 
+            string requestQueueUrl = request.QueueUrl;
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (insertDistributedTraceHeaders)
             {
