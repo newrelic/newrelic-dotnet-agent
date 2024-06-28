@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using System.Linq;
 
 namespace AwsSdkTestApp.AwsSdkExerciser
 {
@@ -33,7 +34,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
             var config = new AmazonSQSConfig
             {
-                ServiceURL = "http://localstack-main:4566",
+                ServiceURL = "http://localstack-containertest:4566",
                 AuthenticationRegion = "us-west-2"
             };
 
@@ -109,8 +110,54 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             foreach (var message in response.Messages)
             {
                 Console.WriteLine($"Message: {message.Body}");
+                // delete message
+                await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
+                {
+                    QueueUrl = _sqsQueueUrl,
+                    ReceiptHandle = message.ReceiptHandle
+                });
             }
+
         }
+
+        // send message batch
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task SQS_SendMessageBatch(string[] messages)
+        {
+            if (_sqsQueueUrl == null)
+            {
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+            }
+
+            var request = new SendMessageBatchRequest
+            {
+                QueueUrl = _sqsQueueUrl,
+
+                Entries = messages.Select(m => new SendMessageBatchRequestEntry
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    MessageBody = m
+                }).ToList()
+            };
+
+            await _amazonSqsClient.SendMessageBatchAsync(request);
+        }
+
+        // purge the queue
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task SQS_PurgeQueue()
+        {
+            if (_sqsQueueUrl == null)
+            {
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+            }
+
+            await _amazonSqsClient.PurgeQueueAsync(new PurgeQueueRequest
+            {
+                QueueUrl = _sqsQueueUrl
+            });
+        }
+
         #endregion
 
         public void Dispose()

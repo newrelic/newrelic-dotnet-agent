@@ -22,11 +22,11 @@
 
 services:
   localstack:
-    container_name: "localstack-main"
+    container_name: "localstack-containertest"
     image: localstack/localstack:stable
-    ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    expose: # ports are only available intneral to the service, not external so there's no chance for conflicts
+      - "4566"       # LocalStack Gateway
+      - "4510-4559"  # external services port range
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       - DEBUG=${DEBUG:-0}

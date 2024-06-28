@@ -40,7 +40,7 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
     {
         var address = $"http://localhost:{Port}/awssdk";
 
-        GetAndAssertStatusCode($"{address}/SQS_SendAndReceive?queueName={queueName}", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode($"{address}/SQS_SendReceivePurge?queueName={queueName}", System.Net.HttpStatusCode.OK);
     }
 
 }
