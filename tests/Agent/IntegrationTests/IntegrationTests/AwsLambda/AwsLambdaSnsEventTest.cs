@@ -112,4 +112,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sns
         {
         }
     }
+
+    public class AwsLambdaSnsEventTestNet9 : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureNet9>
+    {
+        public AwsLambdaSnsEventTestNet9(LambdaSnsEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

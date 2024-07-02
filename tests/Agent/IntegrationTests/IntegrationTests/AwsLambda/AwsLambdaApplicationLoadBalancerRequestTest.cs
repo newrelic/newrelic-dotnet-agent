@@ -138,6 +138,15 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
         {
         }
     }
+
+    public class AwsLambdaApplicationLoadBalancerRequestTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureNet9>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestTestNet9(LambdaApplicationLoadBalancerRequestTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandler", false)
+        {
+        }
+    }
+
     public class AwsLambdaApplicationLoadBalancerRequestAsyncTestNet6 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet6>
     {
         public AwsLambdaApplicationLoadBalancerRequestAsyncTestNet6(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet6 fixture, ITestOutputHelper output)
@@ -149,6 +158,14 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestAsyncTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8>
     {
         public AwsLambdaApplicationLoadBalancerRequestAsyncTestNet8(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
+        {
+        }
+    }
+
+    public class AwsLambdaApplicationLoadBalancerRequestAsyncTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestAsyncTestNet9(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
         {
         }
@@ -169,6 +186,15 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
         {
         }
     }
+
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet9(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
+        {
+        }
+    }
+
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet6 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet6(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6 fixture, ITestOutputHelper output)
@@ -180,6 +206,14 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
+        {
+        }
+    }
+
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9>
+    {
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet9(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
         {
         }

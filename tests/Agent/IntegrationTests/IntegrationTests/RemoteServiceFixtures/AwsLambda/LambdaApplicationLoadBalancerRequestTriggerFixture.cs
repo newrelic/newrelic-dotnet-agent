@@ -115,6 +115,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8() : base("net8.0", true, false) { }
     }
 
+    public class LambdaApplicationLoadBalancerRequestTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    {
+        public LambdaApplicationLoadBalancerRequestTriggerFixtureNet9() : base("net9.0", false, false) { }
+    }
+
+    public class AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    {
+        public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9() : base("net9.0", true, false) { }
+    }
+
     public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
         public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", false, true) { }
@@ -133,5 +143,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
         public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", true, true) { }
+    }
+
+    public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    {
+        public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9() : base("net9.0", false, true) { }
+    }
+
+    public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    {
+        public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9() : base("net9.0", true, true) { }
     }
 }

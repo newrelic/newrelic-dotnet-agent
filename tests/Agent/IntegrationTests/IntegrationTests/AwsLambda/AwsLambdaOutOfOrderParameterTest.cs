@@ -91,4 +91,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         {
         }
     }
+
+    public class AwsLambdaOutOfOrderParameterTestNet9 : AwsLambdaOutOfOrderParameterTest<LambdaOutOfOrderParameterFixtureNet9>
+    {
+        public AwsLambdaOutOfOrderParameterTestNet9(LambdaOutOfOrderParameterFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

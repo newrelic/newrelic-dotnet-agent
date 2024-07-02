@@ -119,4 +119,20 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
         {
         }
     }
+
+    public class AwsLambdaS3EventTestNet9 : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureNet9>
+    {
+        public AwsLambdaS3EventTestNet9(LambdaS3EventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/S3Event")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncS3EventTestNet9 : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncS3EventTestNet9(AsyncLambdaS3EventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/S3EventAsync")
+        {
+        }
+    }
 }

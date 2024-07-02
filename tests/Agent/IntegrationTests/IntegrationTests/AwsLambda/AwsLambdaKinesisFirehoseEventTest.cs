@@ -110,4 +110,20 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
         {
         }
     }
+
+    public class AwsLambdaKinesisFirehoseEventTestNet9 : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureNet9>
+    {
+        public AwsLambdaKinesisFirehoseEventTestNet9(LambdaKinesisFirehoseEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEvent")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncKinesisFirehoseEventTestNet9 : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncKinesisFirehoseEventTestNet9(AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEventAsync")
+        {
+        }
+    }
 }

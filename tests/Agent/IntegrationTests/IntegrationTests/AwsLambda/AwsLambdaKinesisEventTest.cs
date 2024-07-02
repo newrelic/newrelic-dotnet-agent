@@ -111,6 +111,22 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
         }
     }
 
+    public class AwsLambdaKinesisEventTestNet9 : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureNet9>
+    {
+        public AwsLambdaKinesisEventTestNet9(LambdaKinesisEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisEvent")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncKinesisEventTestNet9 : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncKinesisEventTestNet9(AsyncLambdaKinesisEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisEventAsync")
+        {
+        }
+    }
+
     public class AwsLambdaKinesisTimeWindowEventTestNet6 : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureNet6>
     {
         public AwsLambdaKinesisTimeWindowEventTestNet6(LambdaKinesisTimeWindowEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
@@ -138,6 +154,22 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaAsyncKinesisTimeWindowEventTestNet8 : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8>
     {
         public AwsLambdaAsyncKinesisTimeWindowEventTestNet8(AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEventAsync")
+        {
+        }
+    }
+
+    public class AwsLambdaKinesisTimeWindowEventTestNet9 : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureNet9>
+    {
+        public AwsLambdaKinesisTimeWindowEventTestNet9(LambdaKinesisTimeWindowEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEvent")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncKinesisTimeWindowEventTestNet9 : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncKinesisTimeWindowEventTestNet9(AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEventAsync")
         {
         }

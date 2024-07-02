@@ -83,4 +83,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         {
         }
     }
+
+    public class AwsLambdaMultipleInvocationsTestNet9 : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureNet9>
+    {
+        public AwsLambdaMultipleInvocationsTestNet9(LambdaCustomEventsTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

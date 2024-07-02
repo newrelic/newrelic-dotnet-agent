@@ -109,4 +109,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sqs
         {
         }
     }
+
+    public class AwsLambdaSqsEventTestNet9 : AwsLambdaSqsEventTest<LambdaSqsEventTriggerFixtureNet9>
+    {
+        public AwsLambdaSqsEventTestNet9(LambdaSqsEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

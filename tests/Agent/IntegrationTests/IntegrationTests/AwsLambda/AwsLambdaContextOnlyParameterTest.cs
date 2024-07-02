@@ -58,4 +58,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         {
         }
     }
+
+    public class AwsLambdaContextOnlyParameterTestNet9 : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureNet9>
+    {
+        public AwsLambdaContextOnlyParameterTestNet9(LambdaContextOnlyParameterFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

@@ -224,4 +224,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     {
         public AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8() : base("net8.0", true) { }
     }
+
+    public class LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet9 : LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureBase
+    {
+        public LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet9() : base("net9.0", false) { }
+    }
+
+    public class AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet9 : LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureBase
+    {
+        public AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet9() : base("net9.0", true) { }
+    }
 }

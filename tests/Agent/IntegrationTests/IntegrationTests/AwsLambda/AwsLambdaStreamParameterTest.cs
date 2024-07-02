@@ -91,4 +91,12 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         {
         }
     }
+
+    public class AwsLambdaStreamParameterTestNet9 : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureNet9>
+    {
+        public AwsLambdaStreamParameterTestNet9(LambdaStreamParameterFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

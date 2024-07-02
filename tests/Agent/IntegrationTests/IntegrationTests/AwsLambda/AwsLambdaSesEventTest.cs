@@ -111,4 +111,20 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
         {
         }
     }
+
+    public class AwsLambdaSesEventTestNet9 : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureNet9>
+    {
+        public AwsLambdaSesEventTestNet9(LambdaSesEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/SesEvent")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncSesEventTestNet9 : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncSesEventTestNet9(AsyncLambdaSesEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/SesEventAsync")
+        {
+        }
+    }
 }

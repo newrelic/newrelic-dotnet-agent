@@ -41,4 +41,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     {
         public LambdaCustomParametersAsyncFixtureNet8() : base("net8.0", true) { }
     }
+
+    public class LambdaCustomParametersFixtureNet9 : LambdaCustomParametersFixtureBase
+    {
+        public LambdaCustomParametersFixtureNet9() : base("net9.0", false) { }
+    }
+
+    public class LambdaCustomParametersAsyncFixtureNet9 : LambdaCustomParametersFixtureBase
+    {
+        public LambdaCustomParametersAsyncFixtureNet9() : base("net9.0", true) { }
+    }
 }

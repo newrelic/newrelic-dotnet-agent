@@ -68,6 +68,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         public AsyncLambdaKinesisEventTriggerFixtureNet8() : base("net8.0", true, false) { }
     }
 
+    public class LambdaKinesisEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    {
+        public LambdaKinesisEventTriggerFixtureNet9() : base("net9.0", false, false) { }
+    }
+
+    public class AsyncLambdaKinesisEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    {
+        public AsyncLambdaKinesisEventTriggerFixtureNet9() : base("net9.0", true, false) { }
+    }
+
     public class LambdaKinesisTimeWindowEventTriggerFixtureNet6 : LambdaKinesisEventTriggerFixtureBase
     {
         public LambdaKinesisTimeWindowEventTriggerFixtureNet6() : base("net6.0", false, true) { }
@@ -86,5 +96,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
     {
         public AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8() : base("net8.0", true, true) { }
+    }
+
+    public class LambdaKinesisTimeWindowEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    {
+        public LambdaKinesisTimeWindowEventTriggerFixtureNet9() : base("net9.0", false, true) { }
+    }
+
+    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    {
+        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9() : base("net9.0", true, true) { }
     }
 }

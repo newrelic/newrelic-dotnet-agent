@@ -125,3 +125,10 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
     {
     }
 }
+
+public class KafkaDotNet9Test : LinuxKafkaTest<KafkaDotNet9TestFixture>
+{
+    public KafkaDotNet9Test(KafkaDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}

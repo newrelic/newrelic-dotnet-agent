@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net462;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net9.0</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.TestUtilities</RootNamespace>
     <AssemblyName>NewRelic.Agent.TestUtilities</AssemblyName>
   </PropertyGroup>

@@ -101,9 +101,25 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
         }
     }
 
+    public class AwsLambdaDynamoDbEventTestNet9 : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureNet9>
+    {
+        public AwsLambdaDynamoDbEventTestNet9(LambdaDynamoDbEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEvent")
+        {
+        }
+    }
+
     public class AwsLambdaAsyncDynamoDbEventTestNet8 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureNet8>
     {
         public AwsLambdaAsyncDynamoDbEventTestNet8(AsyncLambdaDynamoDbEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncDynamoDbEventTestNet9 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncDynamoDbEventTestNet9(AsyncLambdaDynamoDbEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
         {
         }
@@ -133,9 +149,25 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
         }
     }
 
+    public class AwsLambdaDynamoDbTimeWindowEventTestNet9 : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureNet9>
+    {
+        public AwsLambdaDynamoDbTimeWindowEventTestNet9(LambdaDynamoDbTimeWindowEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEvent")
+        {
+        }
+    }
+
     public class AwsLambdaAsyncDynamoDbTimeWindowEventTestNet8 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet8>
     {
         public AwsLambdaAsyncDynamoDbTimeWindowEventTestNet8(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEventAsync")
+        {
+        }
+    }
+
+    public class AwsLambdaAsyncDynamoDbTimeWindowEventTestNet9 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet9>
+    {
+        public AwsLambdaAsyncDynamoDbTimeWindowEventTestNet9(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEventAsync")
         {
         }

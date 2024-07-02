@@ -95,6 +95,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore90 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore90() : base("net9.0")
+        {
+        }
+    }
+
     /// <summary>
     /// Use this fixture to test against the oldest supported .NET version.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
@@ -114,7 +121,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore90
     {
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
@@ -136,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore90
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureCoreLatestCSP()

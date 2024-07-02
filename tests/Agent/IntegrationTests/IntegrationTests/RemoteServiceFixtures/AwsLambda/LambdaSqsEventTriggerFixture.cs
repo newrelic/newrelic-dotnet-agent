@@ -119,4 +119,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     {
         public AsyncLambdaSqsEventTriggerFixtureNet8() : base("net8.0", true, true) { }
     }
+
+    public class LambdaSqsEventTriggerFixtureNet9 : LambdaSqsEventTriggerFixtureBase
+    {
+        public LambdaSqsEventTriggerFixtureNet9() : base("net9.0", false, true) { }
+    }
+
+    public class AsyncLambdaSqsEventTriggerFixtureNet9 : LambdaSqsEventTriggerFixtureBase
+    {
+        public AsyncLambdaSqsEventTriggerFixtureNet9() : base("net9.0", true, true) { }
+    }
 }

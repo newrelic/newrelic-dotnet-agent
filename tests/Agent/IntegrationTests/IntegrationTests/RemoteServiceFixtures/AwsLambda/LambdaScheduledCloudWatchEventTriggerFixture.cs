@@ -53,4 +53,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     {
         public AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet8() : base("net8.0", true) { }
     }
+
+    public class LambdaScheduledCloudWatchEventTriggerFixtureNet9 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    {
+        public LambdaScheduledCloudWatchEventTriggerFixtureNet9() : base("net9.0", false) { }
+    }
+
+    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet9 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    {
+        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet9() : base("net9.0", true) { }
+    }
 }
