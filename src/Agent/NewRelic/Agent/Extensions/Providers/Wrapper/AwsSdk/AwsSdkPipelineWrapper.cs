@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -88,14 +89,29 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
-            return Delegates.GetDelegateFor(onComplete: () =>
+            // modify the request to ask for DT headers in the response message attributes
+            if (acceptDistributedTraceHeaders)
             {
-                if (acceptDistributedTraceHeaders)
+                if (request.MessageAttributeNames == null)
+                    request.MessageAttributeNames = new List<string>();
+
+                request.MessageAttributeNames.Add("traceparent");
+                request.MessageAttributeNames.Add("tracestate");
+                request.MessageAttributeNames.Add("newrelic");
+            }
+
+            return Delegates.GetDelegateFor(
+                onComplete: segment.End,
+                onSuccess: () =>
                 {
-                    SqsHelper.AcceptDistributedTraceHeaders(transaction, requestContext);
+                    if (acceptDistributedTraceHeaders)
+                    {
+                        // accept distributed trace headers from the first message in the response (???)
+                        var respContext = executionContext.ResponseContext;
+                        SqsHelper.AcceptDistributedTraceHeaders(transaction, respContext.Response.Messages[0].MessageAttributes);
+                    }
                 }
-                segment.End();
-            });
+            );
         }
     }
 }

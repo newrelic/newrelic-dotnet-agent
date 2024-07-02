@@ -15,8 +15,6 @@ namespace NewRelic.Agent.Extensions.AwsSdk
     {
         private static Func<object, IDictionary> _getMessageAttributes;
         private static Func<object> _messageAttributeValueTypeFactory;
-        private static Action<string> _dataTypePropertySetter;
-        private static Action<string> _stringValuePropertySetter;
 
         public const string VendorName = "SQS";
 
@@ -79,11 +77,13 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 var messageAttributeValueTypeFactory = _messageAttributeValueTypeFactory ??= VisibilityBypasser.Instance.GenerateTypeFactory(smr.GetType().Assembly.FullName, "Amazon.SQS.Model.MessageAttributeValue");
                 object newMessageAttributeValue = messageAttributeValueTypeFactory.Invoke();
 
-                var dataTypePropertySetter = _dataTypePropertySetter ??= VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "DataType");
+                var dataTypePropertySetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "DataType");
                 dataTypePropertySetter("String");
 
-                var stringValuePropertySetter = _stringValuePropertySetter ??= VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "StringValue");
+                var stringValuePropertySetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "StringValue");
                 stringValuePropertySetter(value);
+
+                messageAttributes.Add(key, newMessageAttributeValue);
 
                 ++headersInserted;
             });
@@ -91,26 +91,26 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             transaction.InsertDistributedTraceHeaders(sendMessageRequest, setHeaders);
 
         }
-        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic requestContext)
+        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic messageAttributes)
         {
-            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((rq, key) =>
+            var getHeaders = new Func<IDictionary, string, IEnumerable<string>>((maDict, key) =>
             {
                 var returnValues = new List<string>();
 
-                var headers = rq.Request.Headers;
-
-                foreach (var item in headers)
+                if (maDict.Contains(key))
                 {
-                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        returnValues.Add(headers[key].ToString());
-                    }
+                    dynamic val = maDict[key];
+                    // val is MessageAttributes; we need to get the value of the StringValue property
+                    returnValues.Add(val.StringValue);
                 }
+
                 return returnValues;
             });
 
+            var maDictionary = (IDictionary)messageAttributes;
+
             // Do we want to define a new transport type for SQS?
-            transaction.AcceptDistributedTraceHeaders(requestContext, getHeaders, TransportType.Queue);
+            transaction.AcceptDistributedTraceHeaders(maDictionary, getHeaders, TransportType.Queue);
 
         }
     }
