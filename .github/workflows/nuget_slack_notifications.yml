@@ -82,6 +82,7 @@ jobs:
                  amazon.lambda.simpleemailevents
                  amazon.lambda.snsevents
                  amazon.lambda.sqsevents
+                 awssdk.sqs
                  elasticsearch.net
                  elastic.clients.elasticsearch
                  log4net
