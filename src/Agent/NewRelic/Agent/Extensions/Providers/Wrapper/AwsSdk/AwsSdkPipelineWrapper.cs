@@ -51,12 +51,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic requestContext = executionContext.RequestContext;
 
-            if (requestContext.ServiceMetaData == null)
-            {
-                agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.ServiceMetaData is null. Returning NoOp delegate.");
-                return Delegates.NoOp;
-            }
-
             // Get the AmazonWebServiceRequest being invoked. The name will tell us the type of request
             if (requestContext.OriginalRequest == null)
             {
