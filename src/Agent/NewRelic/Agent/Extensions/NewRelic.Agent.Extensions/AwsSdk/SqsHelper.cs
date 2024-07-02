@@ -2,15 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Reflection;
 
 namespace NewRelic.Agent.Extensions.AwsSdk
 {
     public static class SqsHelper
     {
+        private static Func<object, IDictionary> _getMessageAttributes;
+        private static Func<object> _messageAttributeValueTypeFactory;
+        private static Action<string> _dataTypePropertySetter;
+        private static Action<string> _stringValuePropertySetter;
+
         public const string VendorName = "SQS";
 
         private class SqsAttributes
@@ -52,49 +59,58 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             return transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, VendorName, attr.QueueName);
         }
 
-        public static void InsertDistributedTraceHeaders(ITransaction transaction, dynamic sendMessageRequest)
+        public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest)
         {
-            var setHeaders = new Action<dynamic, string, string>((smr, key, value) =>
+            var headersInserted = 0;
+
+            var setHeaders = new Action<object, string, string>((smr, key, value) =>
             {
-                var headers = smr.MessageAttributes as IDictionary<string, object>;
+                var getMessageAttributes = _getMessageAttributes ??=
+                    VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(
+                        smr.GetType(), "MessageAttributes");
 
-                if (headers == null)
-                {
-                    headers = new Dictionary<string, object>();
-                    smr.MessageAttributes = headers;
-                }
+                var messageAttributes = getMessageAttributes(smr);
 
-                // this needs to be set to a MessageAttributeValue (??)
-                headers[key] = value;
+                // SQS is limited to no more than 10 attributes; if we can't add up to 3 attributes, don't add any
+                if ((messageAttributes.Count + 3 - headersInserted) > 10)
+                    return;
+
+                // create a new MessageAttributeValue instance
+                var messageAttributeValueTypeFactory = _messageAttributeValueTypeFactory ??= VisibilityBypasser.Instance.GenerateTypeFactory(smr.GetType().Assembly.FullName, "Amazon.SQS.Model.MessageAttributeValue");
+                object newMessageAttributeValue = messageAttributeValueTypeFactory.Invoke();
+
+                var dataTypePropertySetter = _dataTypePropertySetter ??= VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "DataType");
+                dataTypePropertySetter("String");
+
+                var stringValuePropertySetter = _stringValuePropertySetter ??= VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "StringValue");
+                stringValuePropertySetter(value);
+
+                ++headersInserted;
             });
 
             transaction.InsertDistributedTraceHeaders(sendMessageRequest, setHeaders);
 
         }
-        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic sendMessageRequest)
+        public static void AcceptDistributedTraceHeaders(ITransaction transaction, dynamic requestContext)
         {
-            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((smr, key) =>
+            var getHeaders = new Func<dynamic, string, IEnumerable<string>>((rq, key) =>
             {
                 var returnValues = new List<string>();
-                var headers = smr.MessageAttributes as IDictionary<string, object>;
 
-                if (headers != null)
+                var headers = rq.Request.Headers;
+
+                foreach (var item in headers)
                 {
-                    foreach (var item in headers)
+                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                        {
-                            returnValues.Add(headers[key].ToString());
-                        }
+                        returnValues.Add(headers[key].ToString());
                     }
-                    return returnValues;
                 }
-
-                return null;
+                return returnValues;
             });
 
             // Do we want to define a new transport type for SQS?
-            transaction.AcceptDistributedTraceHeaders(sendMessageRequest, getHeaders, TransportType.Queue);
+            transaction.AcceptDistributedTraceHeaders(requestContext, getHeaders, TransportType.Queue);
 
         }
     }

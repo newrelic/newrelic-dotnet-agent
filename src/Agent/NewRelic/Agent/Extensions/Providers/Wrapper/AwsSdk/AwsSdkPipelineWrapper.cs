@@ -78,7 +78,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (insertDistributedTraceHeaders)
             {
-                // This needs to happen at the end
                 if (request.MessageAttributes == null)
                 {
                     agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
@@ -89,19 +88,14 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
-            if (acceptDistributedTraceHeaders)
+            return Delegates.GetDelegateFor(onComplete: () =>
             {
-                if (request.MessageAttributes == null)
+                if (acceptDistributedTraceHeaders)
                 {
-                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to accept distributed trace headers.");
+                    SqsHelper.AcceptDistributedTraceHeaders(transaction, requestContext);
                 }
-                else
-                {
-                    SqsHelper.AcceptDistributedTraceHeaders(transaction, request);
-                }
-            }
-
-            return Delegates.GetDelegateFor(segment);
+                segment.End();
+            });
         }
     }
 }
