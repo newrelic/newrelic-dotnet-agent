@@ -4,8 +4,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -54,7 +54,10 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         public static ISegment GenerateSegment(ITransaction transaction, MethodCall methodCall, string url, MessageBrokerAction action)
         {
             var attr = new SqsAttributes(url);
-            return transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, VendorName, attr.QueueName);
+            var segment = transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, VendorName, attr.QueueName);
+            segment.GetExperimentalApi().MakeLeaf();
+
+            return segment;
         }
 
         public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest)
@@ -95,22 +98,13 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         {
             var getHeaders = new Func<IDictionary, string, IEnumerable<string>>((maDict, key) =>
             {
-                var returnValues = new List<string>();
+                if (!maDict.Contains(key))
+                    return [];
 
-                if (maDict.Contains(key))
-                {
-                    dynamic val = maDict[key];
-                    // val is MessageAttributes; we need to get the value of the StringValue property
-                    returnValues.Add(val.StringValue);
-                }
-
-                return returnValues;
+                return [(string)((dynamic)maDict[key]).StringValue];
             });
 
-            var maDictionary = (IDictionary)messageAttributes;
-
-            // Do we want to define a new transport type for SQS?
-            transaction.AcceptDistributedTraceHeaders(maDictionary, getHeaders, TransportType.Queue);
+            transaction.AcceptDistributedTraceHeaders((IDictionary)messageAttributes, getHeaders, TransportType.Queue);
 
         }
     }
