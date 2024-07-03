@@ -36,11 +36,25 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
 
     public AwsSdkContainerSQSTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 
-    public void ExerciseSQS(string queueName)
+    public void ExerciseSQS_SendReceivePurge(string queueName)
     {
         var address = $"http://localhost:{Port}/awssdk";
 
         GetAndAssertStatusCode($"{address}/SQS_SendReceivePurge?queueName={queueName}", System.Net.HttpStatusCode.OK);
+    }
+
+    public string ExerciseSQS_SendAndReceiveInSeparateTransactions(string queueName)
+    {
+        var address = $"http://localhost:{Port}/awssdk";
+
+        var queueUrl =  GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
+
+        GetAndAssertStatusCode($"{address}/SQS_SendMessageToQueue?message=Hello&messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+        var messagesJson = GetString($"{address}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
+
+        GetAndAssertStatusCode($"{address}/SQS_DeleteQueue?messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        return messagesJson;
     }
 
 }
