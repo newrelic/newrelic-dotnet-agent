@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -13,7 +14,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 {
     public static class SqsHelper
     {
-        private static Func<object, IDictionary> _getMessageAttributes;
+        private static ConcurrentDictionary<Type, Func<object, IDictionary>> _getMessageAttributes = new();
         private static Func<object> _messageAttributeValueTypeFactory;
 
         public const string VendorName = "SQS";
@@ -66,10 +67,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
             var setHeaders = new Action<object, string, string>((smr, key, value) =>
             {
-                var getMessageAttributes = _getMessageAttributes ??=
-                    VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(
-                        smr.GetType(), "MessageAttributes");
-
+                var getMessageAttributes = _getMessageAttributes.GetOrAdd(smr.GetType(), t   => VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(t, "MessageAttributes"));
                 var messageAttributes = getMessageAttributes(smr);
 
                 // SQS is limited to no more than 10 attributes; if we can't add up to 3 attributes, don't add any
