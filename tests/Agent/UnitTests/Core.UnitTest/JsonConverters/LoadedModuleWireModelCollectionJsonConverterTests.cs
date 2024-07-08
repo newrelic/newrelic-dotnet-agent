@@ -38,8 +38,8 @@ namespace NewRelic.Agent.Core.Utilities
             baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
             baseTestAssembly.SetLocation = BaseAssemblyPath;
-            baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
-            baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
 
             var assemblies = new List<Assembly>();
             assemblies.Add(baseTestAssembly);
@@ -63,8 +63,8 @@ namespace NewRelic.Agent.Core.Utilities
             baseTestAssembly.SetAssemblyName = baseAssemblyName;
             baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
-            baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
-            baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(null));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(null));
 
             var assemblies = new List<Assembly> { baseTestAssembly };
 
