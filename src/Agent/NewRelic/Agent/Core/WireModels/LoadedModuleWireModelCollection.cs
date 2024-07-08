@@ -14,6 +14,8 @@ namespace NewRelic.Agent.Core.WireModels
     [JsonConverter(typeof(LoadedModuleWireModelCollectionJsonConverter))]
     public class LoadedModuleWireModelCollection
     {
+        private static Version zeroedVersion = new Version("0.0.0.0");
+
         public List<LoadedModuleWireModel> LoadedModules { get; }
 
         private LoadedModuleWireModelCollection()
@@ -78,7 +80,7 @@ namespace NewRelic.Agent.Core.WireModels
                 {
                     assemblyName = null;
                 }
-                else if (assembly.GetName().Version.ToString() == "0.0.0.0") // skip assemblies that have a version of 0.0.0.0 - these are precompiled assemblies
+                else if (assembly.GetName().Version == zeroedVersion) // skip assemblies that have a version of 0.0.0.0 - these are precompiled assemblies
                 {
                     assemblyName = null;
                 }
