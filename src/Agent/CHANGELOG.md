@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.26.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.1...v10.26.0) (2024-06-26)
+
+
+### Notice
+
+* The .NET Agent now supports instrumenting AWS Lambda functions. See documentation for details: [https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/). ([d96e29f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d96e29fff0f040d148f26f2e5ed81edd7192e17f))
+
+
+### New features
+
+* Add an option to disable the file system watcher. ([#2536](https://github.com/newrelic/newrelic-dotnet-agent/issues/2536)) ([27d0ed0](https://github.com/newrelic/newrelic-dotnet-agent/commit/27d0ed005073b624ba8806aa3acf9ef008102a9d))
+* Add support for capturing container id from AWS ECS. ([#2481](https://github.com/newrelic/newrelic-dotnet-agent/issues/2481)) ([c018b8a](https://github.com/newrelic/newrelic-dotnet-agent/commit/c018b8ac93ae4aaf3144dcc28c3c4924c6259d2d))
+* Add support for using Sitecore.Logging and log4net together ([#2537](https://github.com/newrelic/newrelic-dotnet-agent/issues/2537)) ([332529b](https://github.com/newrelic/newrelic-dotnet-agent/commit/332529b8cd0d48b11e6f4cc8796327db70a56e0b))
+
+
+### Fixes
+
+* Prevent NullReferenceExeption on APIGatewayProxyRequest ([#2529](https://github.com/newrelic/newrelic-dotnet-agent/issues/2529)) ([18d833f](https://github.com/newrelic/newrelic-dotnet-agent/commit/18d833ff6a91e63174ffe7dbd0e534a5493c8151))
+* Refactor to eliminate usage of `.GetAwaiter().GetResult()` in Framework builds. ([#2534](https://github.com/newrelic/newrelic-dotnet-agent/issues/2534)) ([#2535](https://github.com/newrelic/newrelic-dotnet-agent/issues/2535)) ([cfb2c28](https://github.com/newrelic/newrelic-dotnet-agent/commit/cfb2c28975fb16b73341daa92923e387c85a2c3b))
+
 ## [10.25.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.0...v10.25.1) (2024-06-04)
 
 
