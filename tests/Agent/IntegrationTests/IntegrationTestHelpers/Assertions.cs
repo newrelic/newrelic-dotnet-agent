@@ -523,7 +523,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                         if (expectedMetric.callCount.HasValue && matchedMetric.Values.CallCount != expectedMetric.callCount)
                         {
-                            builder.AppendFormat($"Metric named {matchedMetric.MetricSpec.Name} scoped to {matchedMetric.MetricSpec.Scope ?? "nothing"} had an unexpected count of {matchedMetric.Values.CallCount} (Expected {expectedMetric.callCount})");
+                            builder.AppendFormat("Metric named {0} scoped to {1} had an unexpected count of {2} (Expected {3})",
+                                matchedMetric.MetricSpec.Name, matchedMetric.MetricSpec.Scope ?? "nothing",
+                                matchedMetric.Values.CallCount, expectedMetric.callCount);
                             builder.AppendLine();
                             builder.AppendLine();
 

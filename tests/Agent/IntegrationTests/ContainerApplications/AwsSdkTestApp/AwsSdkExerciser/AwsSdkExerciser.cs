@@ -7,6 +7,8 @@ using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace AwsSdkTestApp.AwsSdkExerciser
 {
@@ -61,7 +63,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
                 QueueUrl = _sqsQueueUrl
             });
         }
-        public async Task SQS_Initialize(string queueName)
+        public async Task<string> SQS_Initialize(string queueName)
         {
             if (_sqsQueueUrl != null)
             {
@@ -69,13 +71,15 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             }
 
             _sqsQueueUrl = await SQS_CreateQueueAsync(queueName);
+
+            return _sqsQueueUrl;
         }
 
         public async Task SQS_Teardown()
         {
             if (_sqsQueueUrl == null)
             {
-                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
             await SQS_DeleteQueueAsync();
@@ -87,29 +91,35 @@ namespace AwsSdkTestApp.AwsSdkExerciser
         {
             if (_sqsQueueUrl == null)
             {
-                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
             await _amazonSqsClient.SendMessageAsync(_sqsQueueUrl, message);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SQS_ReceiveMessage()
+        public async Task<IEnumerable<Message>> SQS_ReceiveMessage(int maxMessagesToReceive = 1)
         {
             if (_sqsQueueUrl == null)
             {
-                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
             var response = await _amazonSqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
             {
                 QueueUrl = _sqsQueueUrl,
-                MaxNumberOfMessages = 1
+                MaxNumberOfMessages = maxMessagesToReceive,
+                MessageAttributeNames = ["All"]
             });
 
             foreach (var message in response.Messages)
             {
                 Console.WriteLine($"Message: {message.Body}");
+                foreach (var attr in message.MessageAttributes)
+                {
+                    Console.WriteLine($"MessageAttributes: {attr.Key} = {{ DataType = {attr.Value.DataType}, StringValue = {attr.Value.StringValue}}}");
+                }
+
                 // delete message
                 await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
                 {
@@ -118,6 +128,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
                 });
             }
 
+            return response.Messages;
         }
 
         // send message batch
@@ -126,7 +137,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
         {
             if (_sqsQueueUrl == null)
             {
-                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
             var request = new SendMessageBatchRequest
@@ -149,13 +160,18 @@ namespace AwsSdkTestApp.AwsSdkExerciser
         {
             if (_sqsQueueUrl == null)
             {
-                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize first.");
+                throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
             await _amazonSqsClient.PurgeQueueAsync(new PurgeQueueRequest
             {
                 QueueUrl = _sqsQueueUrl
             });
+        }
+
+        public void SQS_SetQueueUrl(string messageQueueUrl)
+        {
+            _sqsQueueUrl = messageQueueUrl;
         }
 
         #endregion
