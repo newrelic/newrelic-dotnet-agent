@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Core.WireModels
     [TestFixture]
     public class LoadedModuleWireModelCollectionTests
     {
+        private const string BaseAssemblyNamespace = "MyTestAssembly";
         private const string BaseAssemblyName = "MyTestAssembly.dll";
 
         private string BaseAssemblyVersion;
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.Core.WireModels
             BasePublicKey = "7075626C69636B6579746F6B656E";
 
             _baseAssemblyName = new AssemblyName();
-            _baseAssemblyName.Name = BaseAssemblyName;
+            _baseAssemblyName.Name = BaseAssemblyNamespace;
             _baseAssemblyName.Version = new Version(BaseAssemblyVersion);
             _baseAssemblyName.SetPublicKeyToken(Encoding.ASCII.GetBytes(BasePublicKeyToken));
 
@@ -57,8 +58,8 @@ namespace NewRelic.Agent.Core.WireModels
             _baseTestAssembly= null;
         }
 
-        [TestCase(BaseAssemblyName, true, ExpectedResult = 0)]
-        [TestCase(BaseAssemblyName, false, ExpectedResult = 1)]
+        [TestCase(BaseAssemblyNamespace, true, ExpectedResult = 0)]
+        [TestCase(BaseAssemblyNamespace, false, ExpectedResult = 1)]
         [TestCase(null, true, ExpectedResult = 0)]
         [TestCase(null, false, ExpectedResult = 0)]
         public int TryGetAssemblyName_UsingCollectionCount(string assemblyName, bool isDynamic)
@@ -125,7 +126,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
                 Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
                 Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
@@ -185,7 +186,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
             });
             Assert.That(loadedModule.Data.ContainsKey("assemblyHashCode"), Is.False);
             Assert.Multiple(() =>
@@ -234,7 +235,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
                 Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
             });
@@ -291,7 +292,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
             });
             Assert.That(loadedModule.Data.ContainsKey("publicKeyToken"), Is.False);
