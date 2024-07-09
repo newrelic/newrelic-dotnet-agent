@@ -2,13 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using AwsSdkTestApp.SQSBackgroundService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AwsSdkTestApp;
 
@@ -18,9 +22,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
 
+        // Add services to the container.
         builder.Services.AddControllers();
+
+        // add the SQS receiver service and the request and response queues
+        builder.Services.AddHostedService<SQSReceiverService>();
+        builder.Services.AddSingleton<ISQSRequestQueue, SQSRequestQueue>();
+        builder.Services.AddSingleton<ISQSResponseQueue, SQSResponseQueue>();
 
         // listen to any ip on port 80 for http
         IPEndPoint ipEndPointHttp = new IPEndPoint(IPAddress.Any, 80);
@@ -40,6 +51,7 @@ public class Program
 
         await app.WaitForShutdownAsync();
     }
+
     static void CreatePidFile()
     {
         var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEWRELIC_LOG_DIRECTORY"), "containerizedapp.pid");

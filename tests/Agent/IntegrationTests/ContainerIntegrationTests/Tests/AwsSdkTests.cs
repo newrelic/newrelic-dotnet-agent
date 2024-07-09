@@ -33,20 +33,20 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
                 configModifier.EnableDistributedTrace();
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
-                configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(20);
                 configModifier.LogToConsole();
 
             },
             exerciseApplication: () =>
             {
-                _fixture.Delay(15);
+                _fixture.Delay(5);
 
                 _fixture.ExerciseSQS_SendReceivePurge(_testQueueName);
                 _messagesJson = _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName);
 
                 _fixture.Delay(15);
 
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
 
                 // shut down the container and wait for the agent log to see it
                 _fixture.ShutdownRemoteApplication();
@@ -71,7 +71,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 3},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = "WebTransaction/MVC/AwsSdk/SQS_ReceiveMessageFromQueue/{messageQueueUrl}"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSReceiverService/ProcessRequestAsync"},
 
             new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1},
             new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1, metricScope = _metricScope1},
@@ -94,22 +94,23 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
             () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
         );
 
-        // verify that traceparent / tracestate / newrelic attributes were received in the messages
-        var jsonObject = System.Text.Json.JsonDocument.Parse(_messagesJson);
-        var messages = jsonObject.RootElement.EnumerateArray().ToList();
-        foreach (var message in messages)
-        {
-            var messageAttributes = message.GetProperty("messageAttributes").EnumerateObject().ToList();
-            var messageAttributesDict = messageAttributes.ToDictionary(
-                kvp => kvp.Name,
-                kvp => kvp.Value.GetProperty("stringValue").GetString()
-            );
-            NrAssert.Multiple(
-                () => Assert.True(messageAttributesDict.ContainsKey("traceparent"), "messageAttributesDict should contain traceparent"),
-                () => Assert.True(messageAttributesDict.ContainsKey("tracestate"), "messageAttributesDict should contain tracestate"),
-                () => Assert.True(messageAttributesDict.ContainsKey("newrelic"), "messageAttributesDict should contain newrelic")
-            );
-        }
-        
+        // verify that distributed trace worked as expected -- the last produce span should have the same traceId and parentId as the last consume span
+        var queueProduce = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}";
+        var queueConsume = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}";
+
+        var spans = _fixture.AgentLog.GetSpanEvents().ToList();
+        var produceSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueProduce));
+        var consumeSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueConsume));
+
+        NrAssert.Multiple(
+            () => Assert.NotNull(produceSpan),
+            () => Assert.NotNull(consumeSpan),
+            () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.Equal(produceSpan!.IntrinsicAttributes["traceId"], consumeSpan!.IntrinsicAttributes["traceId"]),
+            () => Assert.Equal(produceSpan!.IntrinsicAttributes["parentId"], consumeSpan!.IntrinsicAttributes["parentId"])
+        );
     }
 }
