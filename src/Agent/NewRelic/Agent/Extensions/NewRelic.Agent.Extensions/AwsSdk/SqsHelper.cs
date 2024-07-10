@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -61,9 +62,11 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             return segment;
         }
 
-        public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest)
+        public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest, IEnumerable<string> dtHeaders)
         {
             var headersInserted = 0;
+
+            var requiredHeadroom = dtHeaders.Count();
 
             var setHeaders = new Action<object, string, string>((smr, key, value) =>
             {
@@ -71,7 +74,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 var messageAttributes = getMessageAttributes(smr);
 
                 // SQS is limited to no more than 10 attributes; if we can't add up to 3 attributes, don't add any
-                if ((messageAttributes.Count + 3 - headersInserted) > 10)
+                if ((messageAttributes.Count + requiredHeadroom - headersInserted) > 10)
                     return;
 
                 // create a new MessageAttributeValue instance

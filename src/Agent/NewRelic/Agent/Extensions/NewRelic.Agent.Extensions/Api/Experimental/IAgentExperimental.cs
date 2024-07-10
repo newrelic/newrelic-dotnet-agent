@@ -51,5 +51,7 @@ namespace NewRelic.Agent.Api.Experimental
         ISimpleSchedulingService SimpleSchedulingService { get; }
 
         void RecordLlmEvent(string eventType, IDictionary<string, object> attributes);
+
+        IEnumerable<string> GetConfiguredDTHeaders();
     }
 }

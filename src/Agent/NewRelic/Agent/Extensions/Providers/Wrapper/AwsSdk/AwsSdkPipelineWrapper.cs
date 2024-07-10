@@ -19,11 +19,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
 
-        private const string NEWRELIC_TRACE_HEADER = "newrelic";
-        private const string W3C_TRACEPARENT_HEADER = "traceparent";
-        private const string W3C_TRACESTATE_HEADER = "tracestate";
-
-
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
@@ -84,6 +79,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (action == MessageBrokerAction.Produce)
             {
+                var dtHeaders = agent.GetConfiguredDTHeaders();
+
                 if (requestType == "SendMessageRequest")
                 {
                     if (request.MessageAttributes == null)
@@ -92,7 +89,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     }
                     else
                     {
-                        SqsHelper.InsertDistributedTraceHeaders(transaction, request);
+                        SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders);
                     }
                 }
                 else if (requestType == "SendMessageBatchRequest")
@@ -106,7 +103,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         }
                         else
                         {
-                            SqsHelper.InsertDistributedTraceHeaders(transaction, message);
+                            SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders);
                         }
                     }
                 }
@@ -119,9 +116,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 
-                request.MessageAttributeNames.Add(NEWRELIC_TRACE_HEADER);
-                request.MessageAttributeNames.Add(W3C_TRACESTATE_HEADER);
-                request.MessageAttributeNames.Add(W3C_TRACEPARENT_HEADER);
+                request.MessageAttributeNames.Add(Constants.DistributedTracePayloadKeyAllLower);
+                request.MessageAttributeNames.Add(Constants.TraceParentHeaderKey);
+                request.MessageAttributeNames.Add(Constants.TraceStateHeaderKey);
             }
 
             if (isAsync)
