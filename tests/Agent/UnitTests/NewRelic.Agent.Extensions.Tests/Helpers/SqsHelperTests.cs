@@ -47,7 +47,7 @@ namespace Agent.Extensions.Tests.Helpers
             };
 
             // Act
-            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest);
+            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, ["traceparent", "tracestate"]);
 
             // Assert
             Assert.That(sendMessageRequest.MessageAttributes, Has.Count.EqualTo(3));
@@ -74,7 +74,7 @@ namespace Agent.Extensions.Tests.Helpers
             }
 
             // Act
-            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest);
+            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, ["traceparent", "tracestate"]);
 
             // Assert
             if (dtHeadersShouldBeAdded)
