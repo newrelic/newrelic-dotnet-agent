@@ -15,8 +15,10 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 {
     private readonly AwsSdkContainerSQSTestFixture _fixture;
 
-    private readonly string _testQueueName = $"TestQueue-{Guid.NewGuid()}";
+    private readonly string _testQueueName1 = $"TestQueue1-{Guid.NewGuid()}";
+    private readonly string _testQueueName2 = $"TestQueue2-{Guid.NewGuid()}";
     private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdk/SQS_SendReceivePurge/{queueName}";
+    private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdk/SQS_SendMessageToQueue/{message}/{messageQueueUrl}";
 
     public AwsSdkSQSTest(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -32,7 +34,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
                 configModifier.EnableDistributedTrace();
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
-                configModifier.ConfigureFasterTransactionTracesHarvestCycle(20);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
                 configModifier.LogToConsole();
 
             },
@@ -40,11 +42,10 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
             {
                 _fixture.Delay(5);
 
-                _fixture.ExerciseSQS_SendReceivePurge(_testQueueName);
-                _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName);
+                _fixture.ExerciseSQS_SendReceivePurge(_testQueueName1);
+                _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName2);
 
-                _fixture.Delay(15);
-
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
 
                 // shut down the container and wait for the agent log to see it
@@ -63,53 +64,62 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 3}, // SendMessage and SendMessageBatch
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}", callCount = 1, metricScope = "WebTransaction/MVC/AwsSdk/SQS_SendMessageToQueue/{message}/{messageQueueUrl}"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", callCount = 2}, // SendMessage and SendMessageBatch
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", callCount = 2, metricScope = _metricScope1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", callCount = 2},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", callCount = 2, metricScope = _metricScope1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", callCount = 1, metricScope = _metricScope1},
 
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", callCount = 1, metricScope = _metricScope2},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 3},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
-
-            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1, metricScope = _metricScope1},
         };
 
-        var sendMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope1);
-
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_metricScope1);
-        var expectedTransactionTraceSegments = new List<string>
+        var sendReceivePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope1);
+        var sendReceivePurgeTransactionSample = _fixture.AgentLog.TryGetTransactionSample(_metricScope1);
+        var sendReceivePurgeExpectedTransactionTraceSegments = new List<string>
         {
-            $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}",
-            $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}",
-            $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}"
+            $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}",
+            $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}",
+            $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}"
         };
 
         Assertions.MetricsExist(expectedMetrics, metrics);
         NrAssert.Multiple(
-            () => Assert.True(sendMessageTransactionEvent != null, "sendMessageTransactionEvent should not be null"),
-            () => Assert.True(transactionSample != null, "transactionSample should not be null"),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+            () => Assert.True(sendReceivePurgeTransactionEvent != null, "sendReceivePurgeTransactionEvent should not be null"),
+            () => Assert.True(sendReceivePurgeTransactionSample != null, "sendReceivePurgeTransactionSample should not be null"),
+            () => Assertions.TransactionTraceSegmentsExist(sendReceivePurgeExpectedTransactionTraceSegments, sendReceivePurgeTransactionSample)
+        );
+
+        var sendMessageToQueueTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope2);
+        var receiveMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync");
+        NrAssert.Multiple(
+            () => Assert.True(sendMessageToQueueTransactionEvent != null, "sendMessageToQueueTransactionEvent should not be null"),
+            () => Assert.True(receiveMessageTransactionEvent != null, "receiveMessageTransactionEvent should not be null")
         );
 
         // verify that distributed trace worked as expected -- the last produce span should have the same traceId and parentId as the last consume span
-        var queueProduce = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName}";
-        var queueConsume = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}";
+        var queueProduce = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}";
+        var queueConsume = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}";
 
         var spans = _fixture.AgentLog.GetSpanEvents().ToList();
         var produceSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueProduce));
         var consumeSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueConsume));
+        var processRequestSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"));
 
         NrAssert.Multiple(
-            () => Assert.NotNull(produceSpan),
-            () => Assert.NotNull(consumeSpan),
+            () => Assert.True(produceSpan != null, "produceSpan should not be null"),
+            () => Assert.True(consumeSpan != null, "consumeSpan should not be null"),
+            () => Assert.True(processRequestSpan != null, "processRequestSpan should not be null"),
             () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("guid")),
             () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.True(processRequestSpan!.IntrinsicAttributes.ContainsKey("parentId")),
             () => Assert.Equal(produceSpan!.IntrinsicAttributes["traceId"], consumeSpan!.IntrinsicAttributes["traceId"]),
-            () => Assert.Equal(produceSpan!.IntrinsicAttributes["parentId"], consumeSpan!.IntrinsicAttributes["parentId"])
+            () => Assert.Equal(produceSpan!.IntrinsicAttributes["guid"], processRequestSpan!.IntrinsicAttributes["parentId"])
         );
     }
 }
