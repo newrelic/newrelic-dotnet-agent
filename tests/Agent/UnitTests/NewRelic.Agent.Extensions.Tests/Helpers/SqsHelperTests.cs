@@ -74,7 +74,7 @@ namespace Agent.Extensions.Tests.Helpers
             }
 
             // Act
-            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, ["traceparent", "tracestate"]);
+            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, ["traceparent", "tracestate", "newrelic"]);
 
             // Assert
             if (dtHeadersShouldBeAdded)
