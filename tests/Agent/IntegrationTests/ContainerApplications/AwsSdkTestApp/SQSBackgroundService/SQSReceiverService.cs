@@ -59,7 +59,7 @@ namespace AwsSdkTestApp.SQSBackgroundService
             using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
             awsSdkExerciser.SQS_SetQueueUrl(queueUrl);
             _logger.LogInformation("Receiving a message from {Queue}", queueUrl);
-            var messages = await awsSdkExerciser.SQS_ReceiveMessage();
+            var messages = await awsSdkExerciser.SQS_ReceiveMessageAsync();
             _logger.LogInformation("Received a message from {Queue}; queuing a response", queueUrl);
             await _responseQueue.QueueResponseAsync(messages);
             _logger.LogInformation("Finished processing request for {Queue}", queueUrl);

@@ -115,6 +115,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             // modify the request to ask for DT headers in the response message attributes
             if (action == MessageBrokerAction.Consume)
             {
+                // TODO: update the distributed trace API to give the set of headers to accept based on current configuration
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 

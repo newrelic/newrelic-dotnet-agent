@@ -17,7 +17,6 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 
     private readonly string _testQueueName = $"TestQueue-{Guid.NewGuid()}";
     private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdk/SQS_SendReceivePurge/{queueName}";
-    private string _messagesJson;
 
     public AwsSdkSQSTest(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -42,7 +41,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
                 _fixture.Delay(5);
 
                 _fixture.ExerciseSQS_SendReceivePurge(_testQueueName);
-                _messagesJson = _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName);
+                _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName);
 
                 _fixture.Delay(15);
 
@@ -71,7 +70,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
 
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 3},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSReceiverService/ProcessRequestAsync"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
             new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1},
             new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName}", callCount = 1, metricScope = _metricScope1},
