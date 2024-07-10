@@ -72,7 +72,7 @@ namespace AwsSdkTestApp.Controllers
 
         // GET: /AwsSdk/SQS_SendMessageToQueue?message=Hello&messageQueueUrl=MyQueue
         [HttpGet("SQS_SendMessageToQueue")]
-        public async Task SQS_SendMessageToQueue([Required]string message, [Required]string messageQueueUrl)
+        public async Task SQS_SendMessageToQueueAsync([Required]string message, [Required]string messageQueueUrl)
         {
             _logger.LogInformation("Sending message {Message} to {Queue}", message, messageQueueUrl);
             using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
