@@ -1,0 +1,95 @@
+[
+    {
+        "packageName": "amazon.lambda.apigatewayevents"
+    },
+    {
+        "packageName": "amazon.lambda.applicationloadbalancerevents"
+    },
+    {
+        "packageName": "amazon.lambda.cloudwatchevents"
+    },
+    {
+        "packageName": "amazon.lambda.dynamodbevents"
+    },
+    {
+        "packageName": "amazon.lambda.kinesisevents"
+    },
+    {
+        "packageName": "amazon.lambda.kinesisfirehoseevents"
+    },
+    {
+        "packageName": "amazon.lambda.s3events"
+    },
+    {
+        "packageName": "amazon.lambda.simpleemailevents"
+    },
+    {
+        "packageName": "amazon.lambda.snsevents"
+    },
+    {
+        "packageName": "amazon.lambda.sqsevents"
+    },
+    {
+        "packageName": "elasticsearch.net"
+    },
+    {
+        "packageName": "elastic.clients.elasticsearch",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
+    },
+    {
+        "packageName": "log4net"
+    },
+    {
+        "packageName": "microsoft.extensions.logging"
+    },
+    {
+        "packageName": "microsoft.data.sqlclient"
+    },
+    {
+        "packageName": "microsoft.net.http"
+    },
+    {
+        "packageName": "mongodb.driver"
+    },
+    {
+        "packageName": "mysql.data"
+    },
+    {
+        "packageName": "mysqlconnector"
+    },
+    {
+        "packageName": "nest"
+    },
+    {
+        "packageName": "nlog"
+    },
+    {
+        "packageName": "rabbitmq.client"
+    },
+    {
+        "packageName": "restsharp"
+    },
+    {
+        "packageName": "serilog"
+    },
+    {
+        "packageName": "serilog.extensions.logging"
+    },
+    {
+        "packageName": "serilog.aspnetcore"
+    },
+    {
+        "packageName": "serilog.sinks.file"
+    },
+    {
+        "packageName": "serilog.sinks.console"
+    },
+    {
+        "packageName": "stackexchange.redis"
+    },
+    {
+        "packageName": "system.data.sqlclient"
+    }
+]
