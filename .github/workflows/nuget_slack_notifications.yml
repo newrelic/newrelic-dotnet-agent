@@ -71,35 +71,4 @@ jobs:
             NEW_RELIC_APP_NAME: Dotty
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
-            nugets:
-                 "amazon.lambda.apigatewayevents
-                 amazon.lambda.applicationloadbalancerevents
-                 amazon.lambda.cloudwatchevents
-                 amazon.lambda.dynamodbevents
-                 amazon.lambda.kinesisevents
-                 amazon.lambda.kinesisfirehoseevents
-                 amazon.lambda.s3events
-                 amazon.lambda.simpleemailevents
-                 amazon.lambda.snsevents
-                 amazon.lambda.sqsevents
-                 elasticsearch.net
-                 elastic.clients.elasticsearch
-                 log4net
-                 microsoft.extensions.logging
-                 microsoft.data.sqlclient
-                 microsoft.net.http
-                 mongodb.driver
-                 mysql.data
-                 mysqlconnector
-                 nest
-                 nlog
-                 rabbitmq.client
-                 restsharp
-                 serilog
-                 serilog.extensions.logging
-                 serilog.aspnetcore
-                 serilog.sinks.file
-                 serilog.sinks.console
-                 stackexchange.redis
-                 system.data.sqlclient"
-                 
+        
