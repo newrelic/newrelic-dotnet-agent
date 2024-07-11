@@ -27,6 +27,7 @@ namespace nugetSlackNotifications
         private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
         private static readonly string _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
         private static readonly string _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
+        private const string PackageInfoFilename = "packageInfo.json";
 
 
         static async Task Main()
@@ -39,14 +40,14 @@ namespace nugetSlackNotifications
             var metadataResource = await sourceRepository.GetResourceAsync<PackageMetadataResource>();
             var sourceCacheContext = new SourceCacheContext();
 
-            if (!System.IO.File.Exists("packages.json"))
+            if (!System.IO.File.Exists(PackageInfoFilename))
             {
-                Log.Error("packages.json not found in the current directory. Exiting.");
+                Log.Error($"{PackageInfoFilename} not found in the current directory. Exiting.");
                 return;
             }
 
-            var packagesJson = await System.IO.File.ReadAllTextAsync("packages.json");
-            var packageInfos = JsonSerializer.Deserialize<PackageInfo[]>(packagesJson);
+            var packageInfoJson = await System.IO.File.ReadAllTextAsync(PackageInfoFilename);
+            var packageInfos = JsonSerializer.Deserialize<PackageInfo[]>(packageInfoJson);
 
             foreach (var package in packageInfos)
             {
@@ -163,6 +164,7 @@ namespace nugetSlackNotifications
                     newIssue.Labels.Add("testing");
                     newIssue.Labels.Add("Core Technologies");
                     var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+                    Log.Information($"Created issue #{issue.Id} for {versionData.PackageName} update to {versionData.NewVersion} in newrelic/newrelic-dotnet-agent.");
                 }
             }
             else
