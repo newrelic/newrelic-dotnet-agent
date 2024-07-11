@@ -1,5 +1,5 @@
 using NewRelic.Api.Agent;
-//using Octokit;
+using Octokit;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,15 +14,13 @@ using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
-using Octokit;
 using Repository = NuGet.Protocol.Core.Types.Repository;
 
 namespace nugetSlackNotifications
 {
     public class Program
     {
-        // the semver2 registration endpoint returns gzip encoded json
-        private static readonly HttpClient _client = new(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+        private static readonly HttpClient _client = new();
         private static List<NugetVersionData> _newVersions = new();
 
         private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
@@ -48,9 +46,9 @@ namespace nugetSlackNotifications
             }
 
             var packagesJson = await System.IO.File.ReadAllTextAsync("packages.json");
-            var packages = JsonSerializer.Deserialize<PackageInfo[]>(packagesJson);
+            var packageInfos = JsonSerializer.Deserialize<PackageInfo[]>(packagesJson);
 
-            foreach (var package in packages)
+            foreach (var package in packageInfos)
             {
                 try
                 {
