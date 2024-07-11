@@ -27,12 +27,20 @@ namespace nugetSlackNotifications
         private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
         private static readonly string _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
         private static readonly string _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
+        private static readonly DateTimeOffset _lastRunTimestamp = DateTimeOffset.TryParse(Environment.GetEnvironmentVariable("DOTTY_LAST_RUN_TIMESTAMP"), out var timestamp) ? timestamp : DateTimeOffset.MinValue;
         private const string PackageInfoFilename = "packageInfo.json";
 
 
         static async Task Main()
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+
+            // searchTime is the date to search for package updates from.
+            // If _lastRunTimestamp is not set, search from _daysToSearch days ago.
+            // Otherwise, search from _lastRunTimestamp.
+            var searchTime = _lastRunTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.UtcNow.Date.AddDays(-_daysToSearch) : _lastRunTimestamp;
+
+            Log.Information($"Searching for package updates between {searchTime.ToUniversalTime():s}Z and {DateTimeOffset.UtcNow.ToUniversalTime():s}Z.");
 
             // initialize nuget repo
             var ps = new PackageSource("https://api.nuget.org/v3/index.json");
@@ -53,7 +61,7 @@ namespace nugetSlackNotifications
             {
                 try
                 {
-                    await CheckPackage(package, metadataResource, sourceCacheContext);
+                    await CheckPackage(package, metadataResource, sourceCacheContext, searchTime);
                 }
                 catch (Exception ex)
                 {
@@ -67,7 +75,7 @@ namespace nugetSlackNotifications
         }
 
         [Transaction]
-        static async Task CheckPackage(PackageInfo package, PackageMetadataResource metadataResource, SourceCacheContext sourceCacheContext)
+        static async Task CheckPackage(PackageInfo package, PackageMetadataResource metadataResource,            SourceCacheContext sourceCacheContext, DateTimeOffset searchTime)
         {
             var packageName = package.PackageName;
 
@@ -86,8 +94,8 @@ namespace nugetSlackNotifications
             // get the second most recent version of the package (if there is one)
             var previous = metaData.Skip(1).FirstOrDefault();
 
-            // see if it was published within the last _daysToSearch days
-            if (latest.Published.Value.Date.Date >= DateTime.Today.AddDays(-_daysToSearch))
+            // check publish date
+            if (latest.Published >= searchTime)
             {
                 if (previous != null && (package.IgnorePatch || package.IgnoreMinor))
                 {
@@ -98,7 +106,7 @@ namespace nugetSlackNotifications
                     {
                         if (previousVersion.Major == latestVersion.Major && previousVersion.Minor == latestVersion.Minor)
                         {
-                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor:2}) has not been updated in the past {_daysToSearch} days.");
+                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor:2}) has not been updated since {searchTime.ToUniversalTime():s}Z.");
                             return;
                         }
                     }
@@ -108,7 +116,7 @@ namespace nugetSlackNotifications
 
                         if (previousVersion.Major == latestVersion.Major)
                         {
-                            Log.Information($"Package {packageName} ignores Minor version updates; the Major version ({latestVersion.Major}) has not been updated in the past {_daysToSearch} days.");
+                            Log.Information($"Package {packageName} ignores Minor version updates; the Major version ({latestVersion.Major}) has not been updated since {searchTime.ToUniversalTime():s}Z");
                             return;
                         }
                     }
@@ -116,12 +124,12 @@ namespace nugetSlackNotifications
 
                 var previousVersionDescription = previous?.Identity.Version.ToNormalizedString() ?? "Unknown";
                 var latestVersionDescription = latest.Identity.Version.ToNormalizedString();
-                Log.Information($"Package {packageName} was updated from {previousVersionDescription} to {latestVersionDescription} on {latest.Published.Value.Date.ToShortDateString()}.");
+                Log.Information($"Package {packageName} was updated from {previousVersionDescription} to {latestVersionDescription} at {latest.Published:s}Z.");
                 _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), latest.Published.Value.Date));
             }
             else
             {
-                Log.Information($"Package {packageName} has NOT been updated in the past {_daysToSearch} days.");
+                Log.Information($"Package {packageName} has NOT been updated since {searchTime.ToUniversalTime():s}Z.");
             }
         }
 

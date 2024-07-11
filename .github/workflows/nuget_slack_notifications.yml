@@ -49,7 +49,24 @@ jobs:
           dotnet add nugetSlackNotifications.csproj package NewRelic.Agent
           dotnet publish -o ${{ env.scan-tool-publish-path }}
 
+      - name: Find timestamp of most recent run of this workflow and set as an environment variable
+        run: |
+           echo "LAST_RUN_TIMESTAMP=$(gh run list --workflow nuget_slack_notifications.yml --branch main --status completed --limit 1 --json updatedAt | jq -r '.[0].updatedAt')" >> $GITHUB_ENV
+        shell: bash
+
       - name: Check for updates to core technology packages
+        env:
+          DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+          DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CORECLR_ENABLE_PROFILING: 1
+          CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
+          CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
+          CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
+          NEW_RELIC_APP_NAME: Dotty
+          NEW_RELIC_HOST: staging-collector.newrelic.com
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
+          DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
+
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then
             export DOTTY_DAYS_TO_SEARCH=${{ inputs.daysToSearch }}
@@ -60,15 +77,4 @@ jobs:
           cd ${{ env.scan-tool-publish-path }}
           dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
         shell: bash
-
-        env:
-            DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
-            DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            CORECLR_ENABLE_PROFILING: 1
-            CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
-            CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
-            CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
-            NEW_RELIC_APP_NAME: Dotty
-            NEW_RELIC_HOST: staging-collector.newrelic.com
-            NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
         
