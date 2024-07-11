@@ -54,12 +54,25 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return Delegates.NoOp;
             }
             dynamic request = requestContext.OriginalRequest;
-            string requestType = request.GetType().Name;
+            string requestType = request.GetType().FullName;
+            agent.Logger.Finest($"AwsSdkPipelineWrapper: Request type is {requestType}");
 
-            agent.Logger.Finest("AwsSdkPipelineWrapper: Request type is " + requestType);
+            if (requestType.StartsWith("Amazon.SQS"))
+            {
+                return HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            }
+
+            agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
+            return Delegates.NoOp;
+        }
+
+        private static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
+            ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        {
+            var requestType = request.GetType().Name;
 
             MessageBrokerAction action;
-            switch (requestType)
+            switch (requestType )
             {
                 case "SendMessageRequest":
                 case "SendMessageBatchRequest":
@@ -72,7 +85,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    agent.Logger.Finest($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
+                    agent.Logger.Finest($"AwsSdkPipelineWrapper: SQS Request type {requestType } is not supported. Returning NoOp delegate.");
                     return Delegates.NoOp;
             }
 
@@ -82,7 +95,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (action == MessageBrokerAction.Produce)
             {
-                if (requestType == "SendMessageRequest")
+                if (requestType  == "SendMessageRequest")
                 {
                     if (request.MessageAttributes == null)
                     {
@@ -93,7 +106,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
                     }
                 }
-                else if (requestType == "SendMessageBatchRequest")
+                else if (requestType  == "SendMessageBatchRequest")
                 {
                     // loop through each message in the batch and insert distributed trace headers
                     foreach (var message in request.Entries)
@@ -116,7 +129,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 
-                foreach(var header in dtHeaders)
+                foreach (var header in dtHeaders)
                     request.MessageAttributeNames.Add(header);
             }
 
