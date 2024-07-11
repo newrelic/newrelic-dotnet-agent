@@ -106,7 +106,7 @@ namespace nugetSlackNotifications
                     {
                         if (previousVersion.Major == latestVersion.Major && previousVersion.Minor == latestVersion.Minor)
                         {
-                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor:2}) has not been updated since {searchTime.ToUniversalTime():s}Z.");
+                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor:2}) has not been updated.");
                             return;
                         }
                     }
@@ -116,7 +116,7 @@ namespace nugetSlackNotifications
 
                         if (previousVersion.Major == latestVersion.Major)
                         {
-                            Log.Information($"Package {packageName} ignores Minor version updates; the Major version ({latestVersion.Major}) has not been updated since {searchTime.ToUniversalTime():s}Z");
+                            Log.Information($"Package {packageName} ignores Minor version updates; the Major version ({latestVersion.Major}) has not been updated.");
                             return;
                         }
                     }
@@ -124,12 +124,12 @@ namespace nugetSlackNotifications
 
                 var previousVersionDescription = previous?.Identity.Version.ToNormalizedString() ?? "Unknown";
                 var latestVersionDescription = latest.Identity.Version.ToNormalizedString();
-                Log.Information($"Package {packageName} was updated from {previousVersionDescription} to {latestVersionDescription} at {latest.Published:s}Z.");
+                Log.Information($"Package {packageName} was updated from {previousVersionDescription} to {latestVersionDescription}.");
                 _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), latest.Published.Value.Date));
             }
             else
             {
-                Log.Information($"Package {packageName} has NOT been updated since {searchTime.ToUniversalTime():s}Z.");
+                Log.Information($"Package {packageName} has NOT been updated.");
             }
         }
 
