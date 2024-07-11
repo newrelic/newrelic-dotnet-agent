@@ -27,6 +27,6 @@
     { "packageName": "serilog.aspnetcore", "ignorePatch": false, "ignoreMinor": false },
     { "packageName": "serilog.sinks.file", "ignorePatch": false, "ignoreMinor": false },
     { "packageName": "serilog.sinks.console", "ignorePatch": false, "ignoreMinor": false },
-    { "packageName": "stackexchange.redis", "ignorePatch": false, "ignoreMinor": true },
+    { "packageName": "stackexchange.redis", "ignorePatch": false, "ignoreMinor": false },
     { "packageName": "system.data.sqlclient", "ignorePatch": false, "ignoreMinor": false}
 ]

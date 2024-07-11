@@ -88,7 +88,7 @@ namespace nugetSlackNotifications
             var previous = metaData.Skip(1).FirstOrDefault();
 
             // see if it was published within the last _daysToSearch days
-            if (latest.Published > DateTime.Today.AddDays(-_daysToSearch))
+            if (latest.Published.Value.Date.Date >= DateTime.Today.AddDays(-_daysToSearch))
             {
                 if (previous != null && (package.IgnorePatch || package.IgnoreMinor))
                 {
@@ -135,7 +135,7 @@ namespace nugetSlackNotifications
                 var msg = "Hi team! Dotty here :technologist::pager:\nThere's some new NuGet releases you should know about :arrow_heading_down::sparkles:";
                 foreach (var versionData in _newVersions)
                 {
-                    msg += $"\n\t:package: {char.ToUpper(versionData.PackageName[0]) + versionData.PackageName[1..]} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
+                    msg += $"\n\t:package: {versionData.PackageName} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
                 }
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
@@ -160,7 +160,7 @@ namespace nugetSlackNotifications
                 {
                     var newIssue = new NewIssue($"Dotty: update tests for {versionData.PackageName} from {versionData.OldVersion} to {versionData.NewVersion}")
                     {
-                        Body = versionData.Url
+                        Body = $"Package [{versionData.PackageName}]({versionData.Url}) was updated from {versionData.OldVersion} to {versionData.NewVersion} on {versionData.PublishDate.ToShortDateString()}."
                     };
                     newIssue.Labels.Add("testing");
                     newIssue.Labels.Add("Core Technologies");
