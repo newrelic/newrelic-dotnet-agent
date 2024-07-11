@@ -19,6 +19,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
+        private static HashSet<string> _unsupportedRequestTypes = new();
+        private static HashSet<string> _unsupportedSQSRequestTypes = new();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -54,9 +56,23 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return Delegates.NoOp;
             }
             dynamic request = requestContext.OriginalRequest;
-            string requestType = request.GetType().Name;
+            string requestType = request.GetType().FullName;
 
-            agent.Logger.Finest("AwsSdkPipelineWrapper: Request type is " + requestType);
+            if (requestType.StartsWith("Amazon.SQS"))
+            {
+                return HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            }
+
+            if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type
+                agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
+
+            return Delegates.NoOp;
+        }
+
+        private static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
+            ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        {
+            var requestType = request.GetType().Name;
 
             MessageBrokerAction action;
             switch (requestType)
@@ -72,7 +88,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    agent.Logger.Finest($"AwsSdkPipelineWrapper: Request type {requestType} is not supported. Returning NoOp delegate.");
+                    if (_unsupportedSQSRequestTypes.Add(requestType)) // log once per unsupported request type
+                        agent.Logger.Debug($"AwsSdkPipelineWrapper: SQS Request type {requestType} is not supported. Returning NoOp delegate.");
+
                     return Delegates.NoOp;
             }
 
@@ -116,7 +134,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 
-                foreach(var header in dtHeaders)
+                foreach (var header in dtHeaders)
                     request.MessageAttributeNames.Add(header);
             }
 
