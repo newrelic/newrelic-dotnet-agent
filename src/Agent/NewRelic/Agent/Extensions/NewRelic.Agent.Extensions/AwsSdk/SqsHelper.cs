@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -61,7 +62,10 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             return segment;
         }
 
-        public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest)
+        // SQS allows a maximum of 10 message attributes
+        private const int MaxSQSMessageAttributes = 10;
+
+        public static void InsertDistributedTraceHeaders(ITransaction transaction, object sendMessageRequest, int dtHeaderCount)
         {
             var headersInserted = 0;
 
@@ -70,8 +74,8 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 var getMessageAttributes = _getMessageAttributes.GetOrAdd(smr.GetType(), t   => VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(t, "MessageAttributes"));
                 var messageAttributes = getMessageAttributes(smr);
 
-                // SQS is limited to no more than 10 attributes; if we can't add up to 3 attributes, don't add any
-                if ((messageAttributes.Count + 3 - headersInserted) > 10)
+                // if we can't add all DT headers, don't add any
+                if ((messageAttributes.Count + dtHeaderCount - headersInserted) > MaxSQSMessageAttributes)
                     return;
 
                 // create a new MessageAttributeValue instance

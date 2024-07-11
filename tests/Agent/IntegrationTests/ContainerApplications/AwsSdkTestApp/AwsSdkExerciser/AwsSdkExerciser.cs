@@ -7,7 +7,6 @@ using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace AwsSdkTestApp.AwsSdkExerciser
@@ -63,7 +62,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
                 QueueUrl = _sqsQueueUrl
             });
         }
-        public async Task<string> SQS_Initialize(string queueName)
+        public async Task<string> SQS_InitializeAsync(string queueName)
         {
             if (_sqsQueueUrl != null)
             {
@@ -75,7 +74,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             return _sqsQueueUrl;
         }
 
-        public async Task SQS_Teardown()
+        public async Task SQS_TeardownAsync()
         {
             if (_sqsQueueUrl == null)
             {
@@ -87,7 +86,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SQS_SendMessage(string message)
+        public async Task SQS_SendMessageAsync(string message)
         {
             if (_sqsQueueUrl == null)
             {
@@ -98,7 +97,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<IEnumerable<Message>> SQS_ReceiveMessage(int maxMessagesToReceive = 1)
+        public async Task<IEnumerable<Message>> SQS_ReceiveMessageAsync(int maxMessagesToReceive = 1)
         {
             if (_sqsQueueUrl == null)
             {
@@ -133,7 +132,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
 
         // send message batch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SQS_SendMessageBatch(string[] messages)
+        public async Task SQS_SendMessageBatchAsync(string[] messages)
         {
             if (_sqsQueueUrl == null)
             {
@@ -156,7 +155,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
 
         // purge the queue
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SQS_PurgeQueue()
+        public async Task SQS_PurgeQueueAsync()
         {
             if (_sqsQueueUrl == null)
             {

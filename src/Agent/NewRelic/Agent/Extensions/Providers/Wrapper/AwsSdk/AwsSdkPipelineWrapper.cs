@@ -9,6 +9,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using System.Linq;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -18,11 +19,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
-
-        private const string NEWRELIC_TRACE_HEADER = "newrelic";
-        private const string W3C_TRACEPARENT_HEADER = "traceparent";
-        private const string W3C_TRACESTATE_HEADER = "tracestate";
-
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -80,6 +76,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     return Delegates.NoOp;
             }
 
+            var dtHeaders = agent.GetConfiguredDTHeaders();
+
             string requestQueueUrl = request.QueueUrl;
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (action == MessageBrokerAction.Produce)
@@ -92,7 +90,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     }
                     else
                     {
-                        SqsHelper.InsertDistributedTraceHeaders(transaction, request);
+                        SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
                     }
                 }
                 else if (requestType == "SendMessageBatchRequest")
@@ -106,23 +104,21 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         }
                         else
                         {
-                            SqsHelper.InsertDistributedTraceHeaders(transaction, message);
+                            SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
                         }
                     }
                 }
             }
 
-            // modify the request to ask for DT headers in the response message attributes
+            // modify the request to ask for DT headers in the response message attributes.
             if (action == MessageBrokerAction.Consume)
             {
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 
-                request.MessageAttributeNames.Add(NEWRELIC_TRACE_HEADER);
-                request.MessageAttributeNames.Add(W3C_TRACESTATE_HEADER);
-                request.MessageAttributeNames.Add(W3C_TRACEPARENT_HEADER);
+                foreach(var header in dtHeaders)
+                    request.MessageAttributeNames.Add(header);
             }
-
 
             if (isAsync)
             {

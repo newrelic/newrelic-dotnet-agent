@@ -4,6 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContainerIntegrationTests", "ContainerIntegrationTests\ContainerIntegrationTests.csproj", "{3B33858F-A8CF-44FE-B1A6-9308254C0019}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0EECB18A-4350-4D17-AB0D-F7647B4E3B58} = {0EECB18A-4350-4D17-AB0D-F7647B4E3B58}
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {1F7402D8-E345-480C-BBA6-6313A1DEEB23}
+		{70731828-AFC8-4262-9076-3FB39E224D10} = {70731828-AFC8-4262-9076-3FB39E224D10}
+		{FBA07795-8066-4641-88E5-05DD272D333A} = {FBA07795-8066-4641-88E5-05DD272D333A}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTestHelpers", "IntegrationTestHelpers\IntegrationTestHelpers.csproj", "{1A7589F4-614C-47BA-8163-E42A6863BC13}"
 EndProject
@@ -26,7 +32,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KafkaTestApp", "ContainerAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

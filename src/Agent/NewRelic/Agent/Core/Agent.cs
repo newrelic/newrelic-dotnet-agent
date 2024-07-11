@@ -477,6 +477,23 @@ namespace NewRelic.Agent.Core
             _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
         }
 
+        public List<string> GetConfiguredDTHeaders()
+        {
+            List<string> headers = [];
+            if (_configurationService.Configuration.DistributedTracingEnabled)
+            {
+                headers.Add(Constants.TraceParentHeaderKey);
+                headers.Add(Constants.TraceStateHeaderKey);
+
+                if (!_configurationService.Configuration.ExcludeNewrelicHeader)
+                {
+                    headers.Add(Constants.DistributedTracePayloadKeyAllLower);
+                }
+            }
+
+            return headers;
+        }
+
         public ISimpleSchedulingService SimpleSchedulingService
         {
             get { return _simpleSchedulingService; }
