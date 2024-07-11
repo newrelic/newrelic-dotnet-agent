@@ -116,14 +116,14 @@ jobs:
             token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Archive Build Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: profiler-windows
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
       - name: Archive Code Coverage Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: profiler-code-coverage
           path: |
@@ -175,7 +175,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -247,7 +247,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -277,19 +277,19 @@ jobs:
           fetch-depth: 0
 
       - name: Download Windows Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-windows
           path: ${{ github.workspace }}/_workingDir
       
       - name: Download Linux amd64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/_workingDir
 
       - name: Download Linux arm64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/_workingDir

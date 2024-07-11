@@ -408,7 +408,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                 }
                             ],
                             "agent.disable_file_system_watcher": false,
-                            "agent.ai_monitoring.enabled": true,
+                            "ai_monitoring.enabled": true,
                             "ai_monitoring.streaming.enabled": true,
                             "ai_monitoring.record_content.enabled": true
                         },

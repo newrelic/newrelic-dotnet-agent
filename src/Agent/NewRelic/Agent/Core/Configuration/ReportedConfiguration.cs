@@ -665,7 +665,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.disable_file_system_watcher")]
         public bool DisableFileSystemWatcher => _configuration.DisableFileSystemWatcher;
 
-        [JsonProperty("agent.ai_monitoring.enabled")]
+        // To support account level disable feature, the name cannot include the "agent" prefix.
+        // The account level disable feature looks for this setting and will only reply with the ServerConfiguration setting if it is present.
+        [JsonProperty("ai_monitoring.enabled")]
         public bool AiMonitoringEnabled => _configuration.AiMonitoringEnabled;
 
         [JsonProperty("ai_monitoring.streaming.enabled")]

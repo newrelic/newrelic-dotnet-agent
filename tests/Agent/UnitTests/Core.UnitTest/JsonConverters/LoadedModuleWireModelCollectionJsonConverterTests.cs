@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Utilities
         [Test]
         public void LoadedModuleWireModelCollectionIsJsonSerializable()
         {
-            var expected = @"[""Jars"",[[""MyTestAssembly"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42"",""Implementation-Vendor"":""MyCompany"",""copyright"":""Copyright 2008""}]]]";
+            var expected = @"[""Jars"",[[""MyTestAssembly.dll"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42"",""Implementation-Vendor"":""MyCompany"",""copyright"":""Copyright 2008""}]]]";
 
             var baseAssemblyName = new AssemblyName();
             baseAssemblyName.Name = BaseAssemblyName;
@@ -35,11 +35,10 @@ namespace NewRelic.Agent.Core.Utilities
 
             var baseTestAssembly = new TestAssembly();
             baseTestAssembly.SetAssemblyName = baseAssemblyName;
-            baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
             baseTestAssembly.SetLocation = BaseAssemblyPath;
-            baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
-            baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
 
             var assemblies = new List<Assembly>();
             assemblies.Add(baseTestAssembly);
@@ -52,7 +51,7 @@ namespace NewRelic.Agent.Core.Utilities
         [Test]
         public void LoadedModuleWireModelCollectionHandlesNulls()
         {
-            var expected = @"[""Jars"",[[""MyTestAssembly"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42""}]]]";
+            var expected = @"[""Jars"",[[""MyTestAssembly.dll"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42""}]]]";
 
             var baseAssemblyName = new AssemblyName();
             baseAssemblyName.Name = BaseAssemblyName;
@@ -61,10 +60,10 @@ namespace NewRelic.Agent.Core.Utilities
 
             var baseTestAssembly = new TestAssembly();
             baseTestAssembly.SetAssemblyName = baseAssemblyName;
-            baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
             baseTestAssembly.SetHashCode = BaseHashCode;
-            baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
-            baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
+            baseTestAssembly.SetLocation = BaseAssemblyPath;
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(null));
+            baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(null));
 
             var assemblies = new List<Assembly> { baseTestAssembly };
 

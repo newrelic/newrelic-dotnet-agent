@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
-using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 
 namespace NewRelic.Agent.Core.WireModels
 {
     [TestFixture]
     public class LoadedModuleWireModelCollectionTests
     {
-        private const string BaseAssemblyName = "MyTestAssembly";
+        private const string BaseAssemblyNamespace = "MyTestAssembly";
+        private const string BaseAssemblyName = "MyTestAssembly.dll";
 
         private string BaseAssemblyVersion;
         private string BaseAssemblyPath;
@@ -39,17 +39,17 @@ namespace NewRelic.Agent.Core.WireModels
             BasePublicKey = "7075626C69636B6579746F6B656E";
 
             _baseAssemblyName = new AssemblyName();
-            _baseAssemblyName.Name = BaseAssemblyName;
+            _baseAssemblyName.Name = BaseAssemblyNamespace;
             _baseAssemblyName.Version = new Version(BaseAssemblyVersion);
             _baseAssemblyName.SetPublicKeyToken(Encoding.ASCII.GetBytes(BasePublicKeyToken));
 
             _baseTestAssembly = new TestAssembly();
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
-            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
+            _baseTestAssembly.SetDynamic = false; // dynamic assemblies are not included so this must be false for most tests
             _baseTestAssembly.SetHashCode = BaseHashCode;
             _baseTestAssembly.SetLocation = BaseAssemblyPath;
-            _baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
-            _baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
+            _baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
+            _baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
         }
 
         [TearDown] public void TearDown()
@@ -58,8 +58,8 @@ namespace NewRelic.Agent.Core.WireModels
             _baseTestAssembly= null;
         }
 
-        [TestCase(BaseAssemblyName, true, ExpectedResult = 1)]
-        [TestCase(BaseAssemblyName, false, ExpectedResult = 1)]
+        [TestCase(BaseAssemblyNamespace, true, ExpectedResult = 0)]
+        [TestCase(BaseAssemblyNamespace, false, ExpectedResult = 1)]
         [TestCase(null, true, ExpectedResult = 0)]
         [TestCase(null, false, ExpectedResult = 0)]
         public int TryGetAssemblyName_UsingCollectionCount(string assemblyName, bool isDynamic)
@@ -81,6 +81,36 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         [Test]
+        public void Excludes_ZeroVersioned_Assemblies()
+        {
+            var zeroVersioned = new ZeroVersionAssembly();
+            zeroVersioned.SetAssemblyName = _baseAssemblyName;
+            zeroVersioned.SetHashCode = BaseHashCode;
+            zeroVersioned.SetLocation = BaseAssemblyPath;
+            zeroVersioned.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(BaseCompanyName));
+            zeroVersioned.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(BaseCopyrightValue));
+
+            var assemblies = new List<Assembly>();
+            assemblies.Add(zeroVersioned);
+
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(0));
+        }
+
+        [Test]
+        public void Excludes_Dynamic_Assemblies()
+        {
+            var assemblies = new List<Assembly>();
+            _baseTestAssembly.SetDynamic = true;
+            assemblies.Add(_baseTestAssembly);
+
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(0));
+        }
+
+        [Test]
         public void ValidateAllData()
         {
             var assemblies = new List<Assembly>();
@@ -96,7 +126,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
                 Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
                 Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
@@ -156,7 +186,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
             });
             Assert.That(loadedModule.Data.ContainsKey("assemblyHashCode"), Is.False);
             Assert.Multiple(() =>
@@ -175,7 +205,6 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void ErrorsHandled_TryGetAssemblyName_Location()
         {
-            _baseTestAssembly.SetDynamic = false;
             var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
             evilAssembly.ItemToTest = "Location";
 
@@ -206,7 +235,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
                 Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
             });
@@ -222,15 +251,8 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void ErrorsHandled_GetCustomAttributes_HandlesNulls()
         {
-            _baseTestAssembly = new TestAssembly();
-            _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
-            _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won't have one.
-            _baseTestAssembly.SetHashCode = BaseHashCode;
-
-
-            _baseTestAssembly.AddCustomAttribute(new AssemblyCompanyAttribute(null));
-            _baseTestAssembly.AddCustomAttribute(new AssemblyCopyrightAttribute(null));
-
+            _baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCompanyAttribute(null));
+            _baseTestAssembly.AddOrReplaceCustomAttribute(new AssemblyCopyrightAttribute(null));
 
             var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
             evilAssembly.ItemToTest = "";
@@ -270,7 +292,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
                 Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
-                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyName));
+                Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
                 Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
             });
             Assert.That(loadedModule.Data.ContainsKey("publicKeyToken"), Is.False);
@@ -332,8 +354,19 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         public override string Location => _location;
-        public void AddCustomAttribute(object attribute)
+
+        public void AddOrReplaceCustomAttribute(object attribute)
         {
+            var attributeType = attribute.GetType();
+            for (int i = 0; i < _customAttributes.Count; i++)
+            {
+                if (_customAttributes[i].GetType() == attributeType)
+                {
+                    _customAttributes[i] = attribute;
+                    return;
+                }
+            }
+
             _customAttributes.Add(attribute);
         }
 
@@ -380,7 +413,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 if (ItemToTest != "IsDynamic")
                 {
-                    return _assembly.IsDynamic;
+                    return false;
                 }
 
                 throw new Exception();
@@ -418,6 +451,18 @@ namespace NewRelic.Agent.Core.WireModels
             }
 
             throw new Exception();
+        }
+    }
+
+    public class ZeroVersionAssembly : TestAssembly
+    {
+        public override bool IsDynamic => false;
+
+        public override AssemblyName GetName()
+        {
+            var assemblyName = base.GetName();
+            assemblyName.Version = new Version("0.0.0.0");
+            return assemblyName;
         }
     }
 }
