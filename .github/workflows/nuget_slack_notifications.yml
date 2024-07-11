@@ -50,6 +50,8 @@ jobs:
           dotnet publish -o ${{ env.scan-tool-publish-path }}
 
       - name: Find timestamp of most recent run of this workflow and set as an environment variable
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
            echo "LAST_RUN_TIMESTAMP=$(gh run list --workflow nuget_slack_notifications.yml --branch main --status completed --limit 1 --json updatedAt | jq -r '.[0].updatedAt')" >> $GITHUB_ENV
         shell: bash
