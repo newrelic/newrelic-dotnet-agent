@@ -2,12 +2,12 @@ name: Check for new core technologies
 
 on:
   schedule:
-   - cron:  '0 10 * * *'
+   - cron:  '0 10 * * 1' # Every Monday at 10:00 AM
   workflow_dispatch:
     inputs:
       daysToSearch:
-        description: "Days of NuGet history to search for package updates"
-        default: "1"
+        description: "Days of NuGet history to search for package updates (0 to search since last run of this workflow on main)"
+        default: "0"
         type: string
       testMode:
         description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
@@ -50,6 +50,7 @@ jobs:
           dotnet publish -o ${{ env.scan-tool-publish-path }}
 
       - name: Find timestamp of most recent run of this workflow and set as an environment variable
+        if: inputs.daysToSearch == '0' || github.event_name == 'schedule'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

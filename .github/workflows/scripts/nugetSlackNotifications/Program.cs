@@ -23,7 +23,7 @@ namespace nugetSlackNotifications
         private static readonly HttpClient _client = new();
         private static List<NugetVersionData> _newVersions = new();
 
-        private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
+        private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? int.Max(1, days) : 1; // How many days of package release history to scan for changes
         private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
         private static readonly string _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
         private static readonly string _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
@@ -40,7 +40,7 @@ namespace nugetSlackNotifications
             // Otherwise, search from _lastRunTimestamp.
             var searchTime = _lastRunTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.UtcNow.Date.AddDays(-_daysToSearch) : _lastRunTimestamp;
 
-            Log.Information($"Searching for package updates between {searchTime.ToUniversalTime():s}Z and {DateTimeOffset.UtcNow.ToUniversalTime():s}Z.");
+            Log.Information($"Searching for package updates since {searchTime.ToUniversalTime():s}Z.");
 
             // initialize nuget repo
             var ps = new PackageSource("https://api.nuget.org/v3/index.json");
