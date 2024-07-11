@@ -239,5 +239,7 @@ namespace nugetSlackNotifications
         public bool IgnorePatch { get; set; }
         [JsonPropertyName("ignoreMinor")]
         public bool IgnoreMinor { get; set; }
+        [JsonPropertyName("ignoreReason")]
+        public string IgnoreReason {get; set;}
     }
 }
