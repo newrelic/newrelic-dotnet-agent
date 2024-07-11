@@ -477,7 +477,7 @@ namespace NewRelic.Agent.Core
             _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
         }
 
-        public IEnumerable<string> GetConfiguredDTHeaders()
+        public List<string> GetConfiguredDTHeaders()
         {
             List<string> headers = [];
             if (_configurationService.Configuration.DistributedTracingEnabled)

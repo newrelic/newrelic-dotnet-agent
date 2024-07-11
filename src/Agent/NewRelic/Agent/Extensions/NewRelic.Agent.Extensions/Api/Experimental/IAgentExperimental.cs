@@ -52,6 +52,6 @@ namespace NewRelic.Agent.Api.Experimental
 
         void RecordLlmEvent(string eventType, IDictionary<string, object> attributes);
 
-        IEnumerable<string> GetConfiguredDTHeaders();
+        List<string> GetConfiguredDTHeaders();
     }
 }

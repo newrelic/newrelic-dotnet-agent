@@ -9,6 +9,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using System.Linq;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -75,12 +76,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     return Delegates.NoOp;
             }
 
+            var dtHeaders = agent.GetConfiguredDTHeaders();
+
             string requestQueueUrl = request.QueueUrl;
             ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             if (action == MessageBrokerAction.Produce)
             {
-                var dtHeaders = agent.GetConfiguredDTHeaders();
-
                 if (requestType == "SendMessageRequest")
                 {
                     if (request.MessageAttributes == null)
@@ -89,7 +90,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     }
                     else
                     {
-                        SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders);
+                        SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
                     }
                 }
                 else if (requestType == "SendMessageBatchRequest")
@@ -103,22 +104,20 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         }
                         else
                         {
-                            SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders);
+                            SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
                         }
                     }
                 }
             }
 
             // modify the request to ask for DT headers in the response message attributes.
-            // we can't know which header(s) the message might contain, so we have to ask for all of them
             if (action == MessageBrokerAction.Consume)
             {
                 if (request.MessageAttributeNames == null)
                     request.MessageAttributeNames = new List<string>();
 
-                request.MessageAttributeNames.Add(Constants.DistributedTracePayloadKeyAllLower);
-                request.MessageAttributeNames.Add(Constants.TraceParentHeaderKey);
-                request.MessageAttributeNames.Add(Constants.TraceStateHeaderKey);
+                foreach(var header in dtHeaders)
+                    request.MessageAttributeNames.Add(header);
             }
 
             if (isAsync)

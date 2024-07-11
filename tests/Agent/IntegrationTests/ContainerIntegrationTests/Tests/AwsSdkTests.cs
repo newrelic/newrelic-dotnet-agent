@@ -76,6 +76,7 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
+            new () { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1}, // only one accept should occur (from the SQSReceiverService/ProcessRequestAsync transaction)
         };
 
         var sendReceivePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope1);
