@@ -4,6 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContainerIntegrationTests", "ContainerIntegrationTests\ContainerIntegrationTests.csproj", "{3B33858F-A8CF-44FE-B1A6-9308254C0019}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0EECB18A-4350-4D17-AB0D-F7647B4E3B58} = {0EECB18A-4350-4D17-AB0D-F7647B4E3B58}
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {1F7402D8-E345-480C-BBA6-6313A1DEEB23}
+		{70731828-AFC8-4262-9076-3FB39E224D10} = {70731828-AFC8-4262-9076-3FB39E224D10}
+		{FBA07795-8066-4641-88E5-05DD272D333A} = {FBA07795-8066-4641-88E5-05DD272D333A}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTestHelpers", "IntegrationTestHelpers\IntegrationTestHelpers.csproj", "{1A7589F4-614C-47BA-8163-E42A6863BC13}"
 EndProject
@@ -17,6 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "..\..
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10922F-3CC6-4497-AF53-DF6808380258}"
 	ProjectSection(SolutionItems) = preProject
+		ContainerApplications\docker-compose-awssdk.yml = ContainerApplications\docker-compose-awssdk.yml
 		ContainerApplications\docker-compose-kafka.yml = ContainerApplications\docker-compose-kafka.yml
 		ContainerApplications\docker-compose.yml = ContainerApplications\docker-compose.yml
 	EndProjectSection
@@ -24,6 +31,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KafkaTestApp", "ContainerApplications\KafkaTestApp\KafkaTestApp.csproj", "{1F7402D8-E345-480C-BBA6-6313A1DEEB23}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +68,10 @@ Global
 		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70731828-AFC8-4262-9076-3FB39E224D10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70731828-AFC8-4262-9076-3FB39E224D10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70731828-AFC8-4262-9076-3FB39E224D10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70731828-AFC8-4262-9076-3FB39E224D10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +80,7 @@ Global
 		{FBA07795-8066-4641-88E5-05DD272D333A} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{FB10922F-3CC6-4497-AF53-DF6808380258} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
+		{70731828-AFC8-4262-9076-3FB39E224D10} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB230433-D05D-4A1F-951B-CC14F47BBF42}

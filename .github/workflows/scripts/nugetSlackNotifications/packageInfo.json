@@ -30,6 +30,9 @@
         "packageName": "amazon.lambda.sqsevents"
     },
     {
+        "packageName": "awssdk.sqs"
+    },
+    {
         "packageName": "elasticsearch.net"
     },
     {
