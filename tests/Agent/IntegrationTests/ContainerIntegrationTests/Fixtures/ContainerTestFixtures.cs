@@ -75,23 +75,6 @@ public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase
     public UbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
 
-public class CentosX64ContainerTestFixture : ContainerTestFixtureBase
-{
-    private const string Dockerfile = "SmokeTestApp/Dockerfile.centos";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "centos";
-
-    public CentosX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
-}
-public class CentosArm64ContainerTestFixture : ContainerTestFixtureBase
-{
-    private const string Dockerfile = "SmokeTestApp/Dockerfile.centos";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "centos";
-
-    public CentosArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
-}
-
 public class AmazonX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.amazon";

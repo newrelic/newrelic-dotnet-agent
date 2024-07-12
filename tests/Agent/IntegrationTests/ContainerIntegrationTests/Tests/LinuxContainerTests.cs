@@ -82,20 +82,6 @@ public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerT
     }
 }
 
-public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestFixture>
-{
-    public CentosX64ContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
-
-public class CentosArm64ContainerTest : LinuxContainerTest<CentosArm64ContainerTestFixture>
-{
-    public CentosArm64ContainerTest(CentosArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
-
 public class AmazonX64ContainerTest : LinuxContainerTest<AmazonX64ContainerTestFixture>
 {
     public AmazonX64ContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

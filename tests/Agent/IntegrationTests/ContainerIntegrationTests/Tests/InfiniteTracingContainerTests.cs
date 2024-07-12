@@ -93,12 +93,6 @@ public class DebianArm64InfiniteTracingContainerTest(DebianArm64ContainerTestFix
 //public class UbuntuArm64InfiniteTracingContainerTest(UbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<UbuntuArm64ContainerTestFixture>(fixture, output);
 
-//public class CentosX64InfiniteTracingContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output)
-//    : InfiniteTracingContainerTest<CentosX64ContainerTestFixture>(fixture, output);
-
-//public class CentosArm64InfiniteTracingContainerTest(CentosArm64ContainerTestFixture fixture, ITestOutputHelper output)
-//    : InfiniteTracingContainerTest<CentosArm64ContainerTestFixture>(fixture, output);
-
 public class AmazonX64InfiniteTracingContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<AmazonX64ContainerTestFixture>(fixture, output);
 
