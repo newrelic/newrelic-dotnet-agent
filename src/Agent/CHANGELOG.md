@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.27.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.26.0...v10.27.0) (2024-07-15)
+
+
+### New features
+
+* Add support for disabling LLM monitoring at the account level. ([#2592](https://github.com/newrelic/newrelic-dotnet-agent/issues/2592)) ([c31451a](https://github.com/newrelic/newrelic-dotnet-agent/commit/c31451a962404115d3cbe924347681919627c9e9))
+* Instrumentation for Amazon Simple Queuing Service (AWSSDK.SQS) ([#2620](https://github.com/newrelic/newrelic-dotnet-agent/issues/2620)) ([ac738ba](https://github.com/newrelic/newrelic-dotnet-agent/commit/ac738ba250822b67854f273c4badc8dd45c3602e))
+
 ## [10.26.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.1...v10.26.0) (2024-06-26)
 
 
