@@ -13,6 +13,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     python3 python3-gnupg \
     dos2unix \
     expect \
+    # for extracting the GPG key from the tar.bz2 file
+    dtrx \ 
 # save on final image size
  && rm -rf /var/lib/apt/lists/*
 
