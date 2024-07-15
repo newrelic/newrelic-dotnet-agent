@@ -5,7 +5,7 @@ set -e # Halt the build script on any error
 function sign_rpm {
     rpm_file="$1"
     # unpack the tarball, rename it and set perms
-    dtrx "$GPG_KEYS"
+    dtrx --one here "$GPG_KEYS"
     mv gpg-conf "$HOME/.gnupg"
     chown root:root "$HOME/.gnupg"
     chmod 0700 "$HOME/.gnupg"
