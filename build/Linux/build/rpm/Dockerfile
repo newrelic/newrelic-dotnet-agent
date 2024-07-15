@@ -1,19 +1,12 @@
 
 
-FROM ubuntu:jammy
+FROM ubuntu:noble-20240605@sha256:2e863c44b718727c860746568e1d54afd13b2fa71b160f5cd9058fc436217b30
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-# git + root certificates to checkout builder code
     git ca-certificates \
-# rpm; to build rpm
     rpm \
-# gnupg2; to sign packages
     gnupg2 \
-# python3 and python3-gnupg; to import signing key
-    python3 python3-gnupg \
     dos2unix \
-    expect \
-    # for extracting the GPG key from the tar.bz2 file
     dtrx \ 
 # save on final image size
  && rm -rf /var/lib/apt/lists/*
