@@ -5,7 +5,7 @@ set -e # Halt the build script on any error
 function sign_rpm {
     rpm_file="$1"
     # unpack the tarball, rename it and set perms
-    tar -jxvf "$GPG_KEYS"
+    dtrx --one here "$GPG_KEYS"
     mv gpg-conf "$HOME/.gnupg"
     chown root:root "$HOME/.gnupg"
     chmod 0700 "$HOME/.gnupg"
@@ -18,20 +18,7 @@ function sign_rpm {
 %_gpgbin /usr/bin/gpg
 MACROS
 
-    # create an expect script to run the sign command
-    # this is necessary because the sign tool asks for a passphrase
-    cat << EXPECT | tee sign.expect
-#!/usr/bin/expect -f
-set timeout -1
-spawn rpm --addsign $rpm_file
-expect "Enter pass phrase:"
-send -- "\r"
-expect eof
-EXPECT
-
-    # run the expect script
-    chmod a+x sign.expect
-    ./sign.expect
+    rpm --addsign $rpm_file
 }
 
 PACKAGE_NAME='newrelic-dotnet-agent'
