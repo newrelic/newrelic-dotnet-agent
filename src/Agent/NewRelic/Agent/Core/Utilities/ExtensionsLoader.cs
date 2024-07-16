@@ -81,6 +81,7 @@ namespace NewRelic.Agent.Core.Utilities
                 { "TransportConfigLegacyWrapper",                                                                    Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") },
 
               // Kafka
+                { "KafkaBuilderWrapper",                                                                           Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaSerializerWrapper",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") }

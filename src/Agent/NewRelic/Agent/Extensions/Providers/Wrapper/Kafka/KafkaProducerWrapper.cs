@@ -31,6 +31,12 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
             transaction.InsertDistributedTraceHeaders(messageMetadata, DistributedTraceHeadersSetter);
 
+            // add a supportability metric for the bootstrap servers associated with this producer instance
+            if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
+            {
+                KafkaHelper.RecordKafkaNodeMetrics(agent, topicPartition.Topic, bootstrapServers, true);
+            }
+
             return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);
         }
 
@@ -43,6 +49,5 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 carrier.Headers.Add(key, Encoding.ASCII.GetBytes(value));
             }
         }
-
     }
 }
