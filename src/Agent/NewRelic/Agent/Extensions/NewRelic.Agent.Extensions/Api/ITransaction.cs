@@ -87,9 +87,15 @@ namespace NewRelic.Agent.Api
         /// <param name="operation"></param>
         /// <param name="brokerVendorName">Must not be null.</param>
         /// <param name="destinationName">Can be null.</param>
+        /// <param name="messagingSystemName"></param>
+        /// <param name="cloudAccountId"></param>
+        /// <param name="cloudRegion"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName = null);
+        ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName = null,
+            string messagingSystemName = null, string cloudAccountId = null,
+            string cloudRegion = null);
 
         /// <summary>
         /// Creates a segment for serializing a key or value in a message brokering system..

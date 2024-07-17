@@ -243,7 +243,10 @@ namespace NewRelic.Agent.Core.Transactions
             return new CustomSegmentData(segmentName);
         }
 
-        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
+        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName,
+            string messagingSystemName = null, string cloudAccountId = null,
+            string cloudRegion = null)
         {
             if (Ignored)
                 return Segment.NoOpSegment;
@@ -252,7 +255,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 
             var segment = StartSegmentImpl(methodCall);
-            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName);
+            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion);
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
@@ -281,7 +284,7 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
+        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null)
         {
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
@@ -289,7 +292,7 @@ namespace NewRelic.Agent.Core.Transactions
             var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
             var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
-            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action);
+            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion);
         }
 
         public AbstractSegmentData CreateMessageBrokerSerializationSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
@@ -784,7 +787,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void Release()
         {
-            End(captureResponseTime: false);
+            End(false);
         }
 
         private void SetTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
@@ -1364,7 +1367,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <param name="value">Value for attribute.</param>
         public void AddLambdaAttribute(string name, object value)
         {
-            if(string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
                 return;

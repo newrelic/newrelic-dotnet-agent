@@ -31,6 +31,10 @@ namespace Agent.Extensions.Tests.Helpers
                     setter(carrier, "traceparent", "traceparentvalue");
                     setter(carrier, "tracestate", "tracestatevalue");
                 });
+
+
+            Mock.Arrange(() => _mockTransaction.StartMessageBrokerSegment(Arg.IsAny<MethodCall>(), Arg.IsAny<MessageBrokerDestinationType>(), Arg.IsAny<MessageBrokerAction>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
+                .Returns(new TestSegment());
         }
 
 
@@ -132,6 +136,116 @@ namespace Agent.Extensions.Tests.Helpers
             Assert.That(results, Contains.Key("tracestate").WithValue("congo=t61rcWkgMzE"));
             Assert.That(results, Does.Not.ContainKey("newrelic"));
         }
+
+        [Test]
+        public void GenerateSegment_CreatesSegmentWithCorrectParameters()
+        {
+            // Correct instantiation of Method object
+            var method = new Method(typeof(SqsHelperTests), "MethodName", "ParameterTypeNames");
+            var methodArguments = new object[0]; // Assuming no arguments for this test
+            var isAsync = false; // Assuming the method call is synchronous
+
+            var methodCall = new MethodCall(method, null, methodArguments, isAsync);
+            var url = "https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue";
+            var action = MessageBrokerAction.Produce;
+
+            // Act
+            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action);
+
+            // Assert
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, SqsHelper.VendorName, "MyQueue", SqsHelper.MessagingSystemName, "123456789012", "us-east-2"), Occurs.Once());
+        }
+
+        [Test]
+        public void GenerateSegment_HandlesInvalidUrlGracefully()
+        {
+            // Correct instantiation of Method object
+            var method = new Method(typeof(SqsHelperTests), "MethodName", "ParameterTypeNames");
+            var methodArguments = new object[0];
+            var isAsync = false;
+
+            var methodCall = new MethodCall(method, null, methodArguments, isAsync);
+            var url = "invalid-url";
+            var action = MessageBrokerAction.Produce;
+
+            // Act
+            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action);
+
+            // Assert
+            // Verifies that a segment is still created, but with null or default values for the SQS-specific attributes
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, SqsHelper.VendorName, null, SqsHelper.MessagingSystemName, null, null), Occurs.Once());
+        }
+    }
+
+    public class TestSegment: ISegment, ISegmentExperimental
+    {
+        public ISpan AddCustomAttribute(string key, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISpan SetName(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsValid { get; }
+        public bool DurationShouldBeDeductedFromParent { get; set; }
+        public bool AlwaysDeductChildDuration { get; set; }
+        public bool IsLeaf { get; }
+        public bool IsExternal { get; }
+        public string SpanId { get; }
+        public string SegmentNameOverride { get; set; }
+        public void End()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndStackExchangeRedis()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void End(Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void MakeCombinable()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveSegmentFromCallStack()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetMessageBrokerDestination(string destination)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TimeSpan DurationOrZero { get; }
+        public ISegmentData SegmentData { get; }
+        public ISegmentExperimental SetSegmentData(ISegmentData segmentData)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISegmentExperimental MakeLeaf()
+        {
+            return this;
+        }
+
+        public string UserCodeFunction { get; set; }
+        public string UserCodeNamespace { get; set; }
+        public string GetCategory()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsDone { get; }
     }
 }
 

@@ -133,6 +133,11 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue destination);
 
         AttributeDefinition<bool, bool> LlmTransaction { get; }
+
+        public AttributeDefinition<string, string> CloudAccountId { get; }
+        public AttributeDefinition<string, string> CloudRegion { get; }
+        public AttributeDefinition<string, string> MessagingSystemName { get; }
+        AttributeDefinition<string, string> MessagingDestinationName { get; }
     }
 
 
@@ -177,7 +182,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-        
+
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
 
@@ -1077,6 +1082,34 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<bool, bool> LlmTransaction => _llmTransaction ?? (_llmTransaction =
             AttributeDefinitionBuilder.CreateBool("llm", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _cloudAccountId;
+        public AttributeDefinition<string, string> CloudAccountId => _cloudAccountId ?? (_cloudAccountId =
+            AttributeDefinitionBuilder.CreateString("cloud.account.id", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _cloudRegion;
+        public AttributeDefinition<string, string> CloudRegion => _cloudRegion ?? (_cloudRegion =
+            AttributeDefinitionBuilder.CreateString("cloud.region", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _messagingSystem;
+        public AttributeDefinition<string, string> MessagingSystemName => _messagingSystem ?? (_messagingSystem =
+            AttributeDefinitionBuilder.CreateString("messaging.system", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _messagingDestinationName;
+        public AttributeDefinition<string, string> MessagingDestinationName => _messagingDestinationName ?? (_messagingDestinationName =
+            AttributeDefinitionBuilder.CreateString("messaging.destination.name", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .Build(_attribFilter));
     }

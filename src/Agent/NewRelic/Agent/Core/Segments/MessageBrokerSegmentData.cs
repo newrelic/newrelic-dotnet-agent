@@ -24,14 +24,25 @@ namespace NewRelic.Agent.Core.Segments
 
         public MetricNames.MessageBrokerAction Action { get; set; }
 
+        public string MessagingSystemName {get; set;}
+        public string CloudAccountId {get; set;}
+        public string CloudRegion {get; set;}
 
-        public MessageBrokerSegmentData(string vendor, string destination, MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action)
+
+
+        public MessageBrokerSegmentData(string vendor, string destination, MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action, string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null)
         {
             Vendor = vendor;
             Destination = destination;
             DestinationType = destinationType;
             Action = action;
+
+            // attributes required for entity relationship mapping
+            MessagingSystemName = messagingSystemName;
+            CloudAccountId = cloudAccountId;
+            CloudRegion = cloudRegion;
         }
+
 
         public override bool IsCombinableWith(AbstractSegmentData otherData)
         {
@@ -51,6 +62,15 @@ namespace NewRelic.Agent.Core.Segments
             if (Action != otherTypedSegment.Action)
                 return false;
 
+            if (MessagingSystemName != otherTypedSegment.MessagingSystemName)
+                return false;
+
+            if (CloudAccountId != otherTypedSegment.CloudAccountId)
+                return false;
+
+            if (CloudRegion != otherTypedSegment.CloudRegion)
+                return false;
+
             return true;
         }
 
@@ -65,7 +85,16 @@ namespace NewRelic.Agent.Core.Segments
             var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
 
             MetricBuilder.TryBuildMessageBrokerSegmentMetric(Vendor, Destination, DestinationType, Action, duration, exclusiveDuration, txStats);
+        }
 
+        public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+        {
+            base.SetSpanTypeSpecificAttributes(attribVals);
+
+            AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
+            AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
+            AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);
+            AttribDefs.CloudAccountId.TrySetValue(attribVals, CloudAccountId);
         }
     }
 }
