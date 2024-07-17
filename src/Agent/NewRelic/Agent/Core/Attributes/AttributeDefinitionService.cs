@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> CloudAccountId { get; }
         public AttributeDefinition<string, string> CloudRegion { get; }
         public AttributeDefinition<string, string> MessagingSystemName { get; }
-        AttributeDefinition<string, string> MessagingDesignationName { get; }
+        AttributeDefinition<string, string> MessagingDestinationName { get; }
     }
 
 
@@ -1107,7 +1107,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _messagingDestinationName;
-        public AttributeDefinition<string, string> MessagingDesignationName => _messagingDestinationName ?? (_messagingDestinationName =
+        public AttributeDefinition<string, string> MessagingDestinationName => _messagingDestinationName ?? (_messagingDestinationName =
             AttributeDefinitionBuilder.CreateString("messaging.destination.name", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)

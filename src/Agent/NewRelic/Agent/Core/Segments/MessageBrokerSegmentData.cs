@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.Segments
             base.SetSpanTypeSpecificAttributes(attribVals);
 
             AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
-            AttribDefs.MessagingDesignationName.TrySetValue(attribVals, Destination);
+            AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
             AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);
             AttribDefs.CloudAccountId.TrySetValue(attribVals, CloudAccountId);
         }
