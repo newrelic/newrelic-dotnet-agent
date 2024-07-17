@@ -89,6 +89,8 @@ namespace NewRelic.Agent.Core.Segments
 
         public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
         {
+            base.SetSpanTypeSpecificAttributes(attribVals);
+
             AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
             AttribDefs.MessagingDesignationName.TrySetValue(attribVals, Destination);
             AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);
