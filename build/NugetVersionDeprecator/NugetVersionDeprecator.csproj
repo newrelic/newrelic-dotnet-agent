@@ -23,7 +23,7 @@
     <PackageReference Include="Octokit" Version="13.0.1" />
     <PackageReference Include="RestSharp" Version="111.4.0" />
     <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="111.4.0" />
-    <PackageReference Include="YamlDotNet" Version="15.3.0" />
+    <PackageReference Include="YamlDotNet" Version="16.0.0" />
   </ItemGroup>
 
 </Project>

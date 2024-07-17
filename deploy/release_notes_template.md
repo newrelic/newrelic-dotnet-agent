@@ -24,4 +24,4 @@ This release is supported for one year after its release date. For a full list o
 ### Updating
 
 * Follow standard procedures to [update the .NET agent](https://docs.newrelic.com/docs/apm/agents/net-agent/installation/update-net-agent/).
-* If you're using a particularly old agent, review the list of major changes and procedures for [updating legacy .NET agents](https://docs.newrelic.com/docs/agents/net-agent/troubleshooting/upgrade-legacy-net-agents).
+* If you're using a particularly old agent, review the list of major changes and procedures for [updating legacy .NET agents](https://docs.newrelic.com/docs/apm/agents/net-agent/installation/update-net-agent/#updating_older_net).
