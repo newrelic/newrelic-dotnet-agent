@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public void IsCombinableWith_ReturnsFalse_IfDifferentMessagingSystem()
         {
             var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem1");
-            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Produce, true, "messagingSystem2");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem2");
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public void IsCombinableWith_ReturnsFalse_IfDifferentCloudAccountId()
         {
             var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudAccountId:"cloudAccountId1");
-            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Produce, true, cloudAccountId:"cloudAccountId2");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudAccountId:"cloudAccountId2");
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public void IsCombinableWith_ReturnsFalse_IfDifferentCloudRegion()
         {
             var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudRegion:"cloudRegion1");
-            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Produce, true, cloudRegion:"cloudRegion2");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudRegion:"cloudRegion2");
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
