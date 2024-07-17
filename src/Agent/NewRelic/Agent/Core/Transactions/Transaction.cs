@@ -255,7 +255,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 
             var segment = StartSegmentImpl(methodCall);
-            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion);
+            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion);
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
