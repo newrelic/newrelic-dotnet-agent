@@ -19,6 +19,12 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
 
+        private static Func<object, object> _sessionGetter;
+        private static Func<object, object> _connectionGetter;
+        private static Func<object, object> _endpointGetter;
+        private static Func<object, string> _hostnameGetter;
+        private static Func<object, int> _portGetter;
+
         private static Func<object, object> _getHeadersFunc;
         public static IDictionary<string, object> GetHeaders(object properties)
         {
@@ -51,6 +57,20 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
+        public static ISegment CreateSegmentForBasicGetWrapper(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction)
+        {
+            var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
+            var destType = GetBrokerDestinationType(queue);
+            var destName = ResolveDestinationName(destType, queue);
+
+            return transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType, MessageBrokerAction.Consume,
+                RabbitMqHelper.VendorName, destName,
+                serverAddress: GetServerAddress(instrumentedMethodCall),
+                serverPort: GetServerPort(instrumentedMethodCall));
+        }
+
         public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
@@ -62,7 +82,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = GetBrokerDestinationType(routingKey);
             var destName = ResolveDestinationName(destType, routingKey);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Produce,
+                VendorName,
+                destName,
+                serverAddress: GetServerAddress(instrumentedMethodCall),
+                serverPort: GetServerPort(instrumentedMethodCall));
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -101,7 +128,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = GetBrokerDestinationType(routingKey);
             var destName = ResolveDestinationName(destType, routingKey);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Produce,
+                VendorName,
+                destName,
+                serverAddress: GetServerAddress(instrumentedMethodCall),
+                serverPort: GetServerPort(instrumentedMethodCall));
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -131,6 +165,36 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
 
             return segment;
+        }
+
+        public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall)
+        {
+            _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+            var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+            _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+            var connection = _connectionGetter(session);
+
+            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+            var endpoint = _endpointGetter(connection);
+
+            _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
+            return _hostnameGetter(endpoint);
+        }
+
+        public static int GetServerPort(InstrumentedMethodCall instrumentedMethodCall)
+        {
+            _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+            var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+            _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+            var connection = _connectionGetter(session);
+
+            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+            var endpoint = _endpointGetter(connection);
+
+            _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
+            return _portGetter(endpoint);
         }
     }
 }

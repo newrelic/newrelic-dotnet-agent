@@ -75,6 +75,16 @@ namespace NewRelic.Agent.Core.Attributes
             return Create<long>(name, classification);
         }
 
+        public static AttributeDefinitionBuilder<TInput, int> CreateInt<TInput>(string name, AttributeClassification classification)
+        {
+            return new AttributeDefinitionBuilder<TInput, int>(name, classification);
+        }
+
+        public static AttributeDefinitionBuilder<int, int> CreateInt(string name, AttributeClassification classification)
+        {
+            return Create<int>(name, classification);
+        }
+
         public static AttributeDefinitionBuilder<string, string> CreateDBStatement(string name, AttributeClassification classification)
         {
             const int dbStmtMaxLength = 1999;

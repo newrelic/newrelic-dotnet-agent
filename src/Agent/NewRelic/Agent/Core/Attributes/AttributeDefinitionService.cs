@@ -138,6 +138,8 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> CloudRegion { get; }
         public AttributeDefinition<string, string> MessagingSystemName { get; }
         AttributeDefinition<string, string> MessagingDestinationName { get; }
+        AttributeDefinition<string, string> BrokerServerAddress { get; }
+        AttributeDefinition<int, int> BrokerServerPort { get; }
     }
 
 
@@ -1111,6 +1113,20 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString("messaging.destination.name", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        // new attribute for MessageBrokers - same name as the Externals attribute, but in Agent attributes.
+        // From messaging api spec.
+        private AttributeDefinition<string, string> _brokerServerAddress;
+        public AttributeDefinition<string, string> BrokerServerAddress => _brokerServerAddress ?? (_brokerServerAddress =
+            AttributeDefinitionBuilder.CreateString("server.address", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<int, int> _brokerServerPort;
+        public AttributeDefinition<int, int> BrokerServerPort => _brokerServerPort ?? (_brokerServerPort =
+            AttributeDefinitionBuilder.CreateInt("server.port", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
     }
 }

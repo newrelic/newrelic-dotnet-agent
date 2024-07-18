@@ -27,10 +27,15 @@ namespace NewRelic.Agent.Core.Segments
         public string MessagingSystemName {get; set;}
         public string CloudAccountId {get; set;}
         public string CloudRegion {get; set;}
+        public string ServerAddress {get; set;}
+        public int? ServerPort {get; set;}
 
 
 
-        public MessageBrokerSegmentData(string vendor, string destination, MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action, string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null)
+        public MessageBrokerSegmentData(string vendor, string destination,
+            MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action,
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null)
         {
             Vendor = vendor;
             Destination = destination;
@@ -41,6 +46,8 @@ namespace NewRelic.Agent.Core.Segments
             MessagingSystemName = messagingSystemName;
             CloudAccountId = cloudAccountId;
             CloudRegion = cloudRegion;
+            ServerAddress = serverAddress;
+            ServerPort = serverPort;
         }
 
 
@@ -91,6 +98,26 @@ namespace NewRelic.Agent.Core.Segments
         {
             base.SetSpanTypeSpecificAttributes(attribVals);
 
+            if (Action == MetricNames.MessageBrokerAction.Produce)
+            {
+                AttribDefs.SpanKind.TrySetValue(attribVals, "producer");
+            }
+            else if (Action == MetricNames.MessageBrokerAction.Consume)
+            {
+                AttribDefs.SpanKind.TrySetValue(attribVals, "consumer");
+            }
+            // else purge action - do not set the attribute
+
+            if (!string.IsNullOrWhiteSpace(ServerAddress))
+            {
+                AttribDefs.BrokerServerAddress.TrySetValue(attribVals, ServerAddress);
+            }
+
+            if (ServerPort.HasValue)
+            {
+                AttribDefs.BrokerServerPort.TrySetValue(attribVals, ServerPort.Value);
+            }
+            
             AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
             AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
             AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);

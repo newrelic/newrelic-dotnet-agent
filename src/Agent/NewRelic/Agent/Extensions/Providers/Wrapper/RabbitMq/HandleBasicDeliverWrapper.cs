@@ -41,7 +41,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Consume,
+                RabbitMqHelper.VendorName,
+                destName,
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,
