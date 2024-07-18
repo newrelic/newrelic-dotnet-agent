@@ -20,7 +20,16 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var segment = RabbitMqHelper.CreateSegmentForBasicGetWrapper(instrumentedMethodCall, transaction);
+            var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
+            var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
+            var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
+
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType, MessageBrokerAction.Consume,
+                RabbitMqHelper.VendorName, destName,
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,

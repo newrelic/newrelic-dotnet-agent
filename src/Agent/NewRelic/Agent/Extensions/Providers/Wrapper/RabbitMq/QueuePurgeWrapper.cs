@@ -25,7 +25,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Purge, RabbitMqHelper.VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Purge,
+                RabbitMqHelper.VendorName,
+                destName,
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
             return Delegates.GetDelegateFor(segment);
         }
     }

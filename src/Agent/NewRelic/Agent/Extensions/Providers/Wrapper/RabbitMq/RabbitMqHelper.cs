@@ -57,20 +57,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
-        public static ISegment CreateSegmentForBasicGetWrapper(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction)
-        {
-            var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
-            var destType = GetBrokerDestinationType(queue);
-            var destName = ResolveDestinationName(destType, queue);
-
-            return transaction.StartMessageBrokerSegment(
-                instrumentedMethodCall.MethodCall,
-                destType, MessageBrokerAction.Consume,
-                RabbitMqHelper.VendorName, destName,
-                serverAddress: GetServerAddress(instrumentedMethodCall),
-                serverPort: GetServerPort(instrumentedMethodCall));
-        }
-
         public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
