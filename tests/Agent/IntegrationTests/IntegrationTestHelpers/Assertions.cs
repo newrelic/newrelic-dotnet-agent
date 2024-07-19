@@ -846,11 +846,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var succeeded = true;
             var builder = new StringBuilder();
             var actualAttributes = spanEvent.GetByType(attributeType);
+            var name = spanEvent.GetByType(SpanEventAttributeType.Intrinsic)["name"];
             foreach (var expectedAttribute in expectedAttributes)
             {
                 if (!actualAttributes.ContainsKey(expectedAttribute))
                 {
-                    builder.AppendFormat("Attribute named {0} was not found in the span event.", expectedAttribute);
+                    builder.AppendFormat("{0} Attribute named {1} was not found in the span event named {2}.", attributeType.ToString(), expectedAttribute, name);
                     builder.AppendLine();
                     succeeded = false;
                 }

@@ -75,7 +75,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 VendorName,
                 destName,
                 serverAddress: GetServerAddress(instrumentedMethodCall),
-                serverPort: GetServerPort(instrumentedMethodCall));
+                serverPort: GetServerPort(instrumentedMethodCall),
+                routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -121,7 +122,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 VendorName,
                 destName,
                 serverAddress: GetServerAddress(instrumentedMethodCall),
-                serverPort: GetServerPort(instrumentedMethodCall));
+                serverPort: GetServerPort(instrumentedMethodCall),
+                routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)

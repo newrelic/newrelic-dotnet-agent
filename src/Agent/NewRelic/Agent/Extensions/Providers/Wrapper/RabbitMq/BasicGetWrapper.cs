@@ -26,10 +26,13 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
-                destType, MessageBrokerAction.Consume,
-                RabbitMqHelper.VendorName, destName,
+                destType,
+                MessageBrokerAction.Consume,
+                RabbitMqHelper.VendorName,
+                destName,
                 serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
-                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall),
+                routingKey: queue); // no way to get routing key from BasicGet
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,

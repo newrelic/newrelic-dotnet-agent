@@ -105,7 +105,40 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             var tempProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Produce/Temp");
             var tempConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Consume/Temp");
             var topicProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Topic/Produce/Named/{_sendReceiveTopic}");
-            var expectedServerAttributes = new List<string> { "server.address", "server.port" };
+
+            var expectedProduceAgentAttributes = new List<string>
+            {
+                "server.address",
+                "server.port",
+                "messaging.destination.name",
+                "message.routingKey",
+                "messaging.rabbitmq.destination.routing_key"
+            };
+
+            var expectedTempProduceAgentAttributes = new List<string>
+            {
+                "server.address",
+                "server.port",
+                "message.routingKey",
+                "messaging.rabbitmq.destination.routing_key"
+            };
+
+            var expectedConsumeAgentAttributes = new List<string>
+            {
+                "server.address",
+                "server.port",
+                "messaging.destination.name",
+                "message.queueName",
+                "messaging.destination_publish.name",
+            };
+
+            var expectedTempConsumeAgentAttributes = new List<string>
+            {
+                "server.address",
+                "server.port",
+            };
+
+            var expectedIntrisicAttributes = new List<string> { "span.kind", };
 
             Assertions.MetricsExist(expectedMetrics, metrics);
 
@@ -116,18 +149,36 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
                 () => Assert.True(sendReceiveTopicTransactionEvent != null, "sendReceiveTopicTransactionEvent should not be null"),
                 () => Assert.True(transactionSample != null, "transactionSample should not be null"),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
+
+                () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
                     Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueProduceSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
                     Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvents),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
                     Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, purgeProduceSpanEvents),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, purgeProduceSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedTempProduceAgentAttributes,
                     Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempProduceSpanEvents),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempProduceSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedTempConsumeAgentAttributes,
                     Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempConsumeSpanEvents),
-                () => Assertions.SpanEventHasAttributes(expectedServerAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, topicProduceSpanEvents)
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempConsumeSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, topicProduceSpanEvents),
+                () => Assertions.SpanEventHasAttributes(expectedIntrisicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, topicProduceSpanEvents)
             );
         }
     }

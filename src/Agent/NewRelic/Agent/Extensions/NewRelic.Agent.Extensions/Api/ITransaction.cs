@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Api
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
             MessageBrokerAction operation, string brokerVendorName, string destinationName = null,
             string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-            string serverAddress = null, int? serverPort = null);
+            string serverAddress = null, int? serverPort = null, string routingKey = null);
 
         /// <summary>
         /// Creates a segment for serializing a key or value in a message brokering system..

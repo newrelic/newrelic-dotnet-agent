@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
             MessageBrokerAction operation, string brokerVendorName, string destinationName,
             string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-            string serverAddress = null, int? serverPort = null)
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
 #if DEBUG
             Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");

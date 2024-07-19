@@ -33,6 +33,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 destName,
                 serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
                 serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
+
+            // Routing key is not available for this method.
+            // It only returns uint and invocationTarget does not have the value.
+
             return Delegates.GetDelegateFor(segment);
         }
     }

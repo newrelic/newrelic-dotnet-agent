@@ -48,7 +48,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 RabbitMqHelper.VendorName,
                 destName,
                 serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
-                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall),
+                routingKey: routingKey);
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,
