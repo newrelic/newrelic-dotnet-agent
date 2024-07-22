@@ -7,12 +7,23 @@ using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
     public class HandleBasicDeliverWrapper : IWrapper
     {
         private const string WrapperName = "HandleBasicDeliverWrapper";
+
+        private int? _version;
+
+        private Func<object, object> _modelGetter;
+        private Func<object, object> _sessionGetter;
+        private Func<object, object> _connectionGetter;
+        private Func<object, object> _autorecoveringConnectionGetter;
+        private Func<object, object> _endpointGetter;
+        private Func<object, string> _hostnameGetter;
+        private Func<object, int> _portGetter;
 
         public bool IsTransactionRequired => false;
 
@@ -41,14 +52,52 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
+            _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
+            var model = _modelGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+            object connection = null;
+            if (model.GetType().ToString() == "RabbitMQ.Client.Framing.Impl.Model")
+            {
+                // <= v4
+                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(model.GetType(), "Session");
+                var session = _sessionGetter(model);
+
+                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                connection = _connectionGetter(session);
+            }
+            else if (model.GetType().ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel")
+            {
+                // 5.x is m_connection, 6.x is _connection,
+                _version ??= RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall);
+                if (_version <= 5)
+                {
+                    _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "m_connection");
+                    connection = _autorecoveringConnectionGetter(model);
+                }
+                else if (_version >= 6)
+                {
+                    _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "_connection");
+                    connection = _autorecoveringConnectionGetter(model);
+                }
+            }
+            
+            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+            var endpoint = _endpointGetter(connection);
+
+            _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
+            var hostname = _hostnameGetter(endpoint);
+
+            _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
+            var port = _portGetter(endpoint);
+
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
                 destType,
                 MessageBrokerAction.Consume,
                 RabbitMqHelper.VendorName,
                 destName,
-                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
-                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall),
+                serverAddress: hostname,
+                serverPort: port,
                 routingKey: routingKey);
 
             return Delegates.GetDelegateFor(

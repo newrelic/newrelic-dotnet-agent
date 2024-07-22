@@ -22,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            int rabbitVersion = GetRabbitMQVersion(instrumentedMethodCall);
+            int rabbitVersion = RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall);
             // 3.6.0+ (5.1.0+) (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, IBasicProperties basicProperties, byte[] body)
 
             var segment = (rabbitVersion >= 6) ?
@@ -30,15 +30,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transaction, BasicPropertiesIndex);
 
             return Delegates.GetDelegateFor(segment);
-        }
-
-
-        private int GetRabbitMQVersion(InstrumentedMethodCall methodCall)
-        {
-            var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
-            var versionString = "Version=";
-            var length = versionString.Length;
-            return Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + length, 1));
         }
     }
 }

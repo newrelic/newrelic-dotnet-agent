@@ -155,6 +155,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return segment;
         }
 
+        public static int GetRabbitMQVersion(InstrumentedMethodCall methodCall)
+        {
+            var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
+            var versionString = "Version=";
+            var length = versionString.Length;
+            return Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + length, 1));
+        }
+
         public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall)
         {
             _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
