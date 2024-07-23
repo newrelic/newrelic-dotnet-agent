@@ -172,6 +172,7 @@ SPDX-License-Identifier: Apache-2.0
     <CustomAction Id="SaveDeferredCustomActionData" DllEntry="SaveDeferredCustomActionData" Execute="immediate" Return="check" BinaryRef="CustomActionsDll" />
     <CustomAction Id="MigrateConfiguration" DllEntry="MigrateConfiguration" Execute="deferred" Impersonate="no" Return="check" BinaryRef="CustomActionsDll" />
     <CustomAction Id="SetLicenseKey" DllEntry="SetLicenseKey" Execute="deferred" Impersonate="no" Return="check" BinaryRef="CustomActionsDll" />
+    <CustomAction Id="SetAppName" DllEntry="SetAppName" Execute="deferred" Impersonate="no" Return="check" BinaryRef="CustomActionsDll" />
     <CustomAction Id="CleanupPreviousInstall" DllEntry="CleanupPreviousInstall" Execute="deferred" Impersonate="no" Return="check" BinaryRef="CustomActionsDll" />
     <CustomAction Id="RestartIis" DllEntry="RestartIis" Impersonate="yes" BinaryRef="CustomActionsDll" />
     <CustomAction Id="CloseStatusMonitor" DllEntry="CloseStatusMonitor" Impersonate="yes" BinaryRef="CustomActionsDll" />

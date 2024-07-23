@@ -35,6 +35,7 @@ namespace InstallerActions
             var customActionData = new CustomActionData
             {
                 { "NR_LICENSE_KEY", session["NR_LICENSE_KEY"] },
+                { "NR_APP_NAME", session["NR_APP_NAME"] },
                 { "NETAGENTCOMMONFOLDER", session["NETAGENTCOMMONFOLDER"] },
                 { "LOGSFOLDER", session["LOGSFOLDER"] },
                 { "NETAGENTFOLDER", session["NETAGENTFOLDER"] },
@@ -43,6 +44,7 @@ namespace InstallerActions
 
             session.DoAction("MigrateConfiguration", customActionData);
             session.DoAction("SetLicenseKey", customActionData);
+            session.DoAction("SetAppName", customActionData);
             session.DoAction("CleanupPreviousInstall", customActionData);
 
             return ActionResult.Success;
@@ -106,6 +108,57 @@ namespace InstallerActions
             catch (Exception exception)
             {
                 session.Log("Exception while attempting to set the license key in newrelic.config.\n{0}", exception);
+            }
+
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult SetAppName(Session session)
+        {
+            session.Log("Top of SetAppName");
+            try
+            {
+                var path = session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config";
+                var appName = session.CustomActionData["NR_APP_NAME"];
+
+
+                var document = new XmlDocument();
+                document.Load(path);
+                var namespaceManager = new XmlNamespaceManager(document.NameTable);
+                namespaceManager.AddNamespace("newrelic-config", "urn:newrelic-config");
+
+                var applicationNameNode = document.SelectSingleNode("/newrelic-config:configuration/newrelic-config:application/newrelic-config:name", namespaceManager);
+                if (applicationNameNode == null)
+                {
+                    session.Log("Unable to locate /configuration/application/name node in newrelic.config.  Application name not set.");
+                    return ActionResult.Success;
+                }
+                session.Log("/configuration/application/name node found in newrelic.config");
+
+                //if (applicationNameNode.Attributes == null)
+                //{
+                //    session.Log("No attributes found in /configuration/service node in newrelic.config. License key not set.");
+                //    return ActionResult.Success;
+                //}
+
+                var existingAppName = applicationNameNode.Value;
+                if (existingAppName == null)
+                {
+                    session.Log("Application name value not found on /configuration/application/name node.  Application name not set.");
+                    return ActionResult.Success;
+                }
+                session.Log("Application name value found in /configuration/application/name node.");
+
+                applicationNameNode.Value = appName;
+                session.Log("Application name set to " + appName);
+
+                document.Save(session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config");
+                session.Log("newrelic.config saved with updated application name.");
+            }
+            catch (Exception exception)
+            {
+                session.Log("Exception while attempting to set the application name in newrelic.config.\n{0}", exception);
             }
 
             return ActionResult.Success;
