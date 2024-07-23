@@ -1,0 +1,92 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net481;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net481'" />
+    
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="log4net" Version="2.0.16" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
+
+    <PackageReference Include="log4net" Version="2.0.16" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="MongoDB.Driver" Version="2.27.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.27.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="MySqlConnector" Version="2.3.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MySqlConnector" Version="2.3.6" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="StackExchange.Redis" Version="2.8.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.14.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.14.6" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Serilog" Version="4.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="4.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="RabbitMQ.Client" Version="6.6.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.6.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NServiceBus" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <!-- Requires Serilog 3.1.1+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <!-- Requires Serilog 3.1.1+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="NLog" Version="5.3.2" Condition="'$(TargetFramework)' == 'net481'" />
+
+    <!-- Requires NLog 5.2.4+ -->
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.4" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
+    <PackageReference Include="RestSharp" Version="111.4.0" Condition="'$(TargetFramework)' == 'net481'" />
+
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.35" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.35" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+  </ItemGroup>
+
+</Project>
