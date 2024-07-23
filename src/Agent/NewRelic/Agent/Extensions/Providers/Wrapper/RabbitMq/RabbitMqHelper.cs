@@ -26,6 +26,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         private static Func<object, int> _portGetter;
 
         private static Func<object, object> _getHeadersFunc;
+
+        private static int? _version;
+
         public static IDictionary<string, object> GetHeaders(object properties)
         {
             var func = _getHeadersFunc ?? (_getHeadersFunc = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(properties.GetType(), "Headers"));
@@ -157,10 +160,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
         public static int GetRabbitMQVersion(InstrumentedMethodCall methodCall)
         {
+            if (_version.HasValue)
+            {
+                return _version.Value;
+            }
+
             var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
             var versionString = "Version=";
-            var length = versionString.Length;
-            return Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + length, 1));
+            _version = Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + versionString.Length, 1));
+            return _version.Value;
         }
 
         public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall)

@@ -15,8 +15,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
     {
         private const string WrapperName = "HandleBasicDeliverWrapper";
 
-        private int? _version;
-
         private Func<object, object> _modelGetter;
         private Func<object, object> _sessionGetter;
         private Func<object, object> _connectionGetter;
@@ -68,13 +66,12 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             else if (model.GetType().ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel")
             {
                 // 5.x is m_connection, 6.x is _connection,
-                _version ??= RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall);
-                if (_version <= 5)
+                if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) <= 5)
                 {
                     _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "m_connection");
                     connection = _autorecoveringConnectionGetter(model);
                 }
-                else if (_version >= 6)
+                else if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) >= 6)
                 {
                     _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "_connection");
                     connection = _autorecoveringConnectionGetter(model);
