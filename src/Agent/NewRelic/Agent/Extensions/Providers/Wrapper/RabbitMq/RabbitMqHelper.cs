@@ -28,6 +28,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         private static Func<object, object> _getHeadersFunc;
 
         private static int? _version;
+        private static bool _hasGetServerFailed = false;
 
         public static IDictionary<string, object> GetHeaders(object properties)
         {
@@ -173,32 +174,58 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
         public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall)
         {
-            _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
-            var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+            if (_hasGetServerFailed)
+            {
+                return null;
+            }
 
-            _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
-            var connection = _connectionGetter(session);
+            try
+            {
+                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+                var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
-            var endpoint = _endpointGetter(connection);
+                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                var connection = _connectionGetter(session);
 
-            _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
-            return _hostnameGetter(endpoint);
+                _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+                var endpoint = _endpointGetter(connection);
+
+                _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
+                return _hostnameGetter(endpoint);
+            }
+            catch
+            {
+                _hasGetServerFailed = true;
+                return null;
+            }
         }
 
-        public static int GetServerPort(InstrumentedMethodCall instrumentedMethodCall)
+        public static int? GetServerPort(InstrumentedMethodCall instrumentedMethodCall)
         {
-            _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
-            var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+            if (_hasGetServerFailed)
+            {
+                return null;
+            }
 
-            _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
-            var connection = _connectionGetter(session);
+            try
+            {
+                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+                var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
-            var endpoint = _endpointGetter(connection);
+                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                var connection = _connectionGetter(session);
 
-            _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
-            return _portGetter(endpoint);
+                _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+                var endpoint = _endpointGetter(connection);
+
+                _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
+                return _portGetter(endpoint);
+            }
+            catch
+            {
+                _hasGetServerFailed = true;
+                return null;
+            }
         }
     }
 }

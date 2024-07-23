@@ -23,6 +23,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         private Func<object, string> _hostnameGetter;
         private Func<object, int> _portGetter;
 
+        private bool _hasGetServerFailed = false;
+
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -50,42 +52,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
-            _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
-            var model = _modelGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
-
-            object connection = null;
-            if (model.GetType().ToString() == "RabbitMQ.Client.Framing.Impl.Model")
-            {
-                // <= v4
-                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(model.GetType(), "Session");
-                var session = _sessionGetter(model);
-
-                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
-                connection = _connectionGetter(session);
-            }
-            else if (model.GetType().ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel")
-            {
-                // 5.x is m_connection, 6.x is _connection,
-                if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) <= 5)
-                {
-                    _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "m_connection");
-                    connection = _autorecoveringConnectionGetter(model);
-                }
-                else if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) >= 6)
-                {
-                    _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "_connection");
-                    connection = _autorecoveringConnectionGetter(model);
-                }
-            }
-            
-            _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
-            var endpoint = _endpointGetter(connection);
-
-            _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
-            var hostname = _hostnameGetter(endpoint);
-
-            _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
-            var port = _portGetter(endpoint);
+            GetServerDetails(instrumentedMethodCall, out var hostname, out var port);
 
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
@@ -122,6 +89,61 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 }
 
                 return null;
+            }
+        }
+
+        private void GetServerDetails(InstrumentedMethodCall instrumentedMethodCall, out string hostname, out int? port)
+        {
+            if (_hasGetServerFailed)
+            {
+                hostname = null;
+                port = null;
+            }
+
+            try
+            {
+                _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
+                var model = _modelGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+                object connection = null;
+                if (model.GetType().ToString() == "RabbitMQ.Client.Framing.Impl.Model")
+                {
+                    // <= v4
+                    _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(model.GetType(), "Session");
+                    var session = _sessionGetter(model);
+
+                    _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                    connection = _connectionGetter(session);
+                }
+                else if (model.GetType().ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel")
+                {
+                    // 5.x is m_connection, 6.x is _connection,
+                    if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) <= 5)
+                    {
+                        _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "m_connection");
+                        connection = _autorecoveringConnectionGetter(model);
+                    }
+                    else if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) >= 6)
+                    {
+                        _autorecoveringConnectionGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(model.GetType(), "_connection");
+                        connection = _autorecoveringConnectionGetter(model);
+                    }
+                }
+
+                _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+                var endpoint = _endpointGetter(connection);
+
+                _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
+                hostname = _hostnameGetter(endpoint);
+
+                _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
+                port = _portGetter(endpoint);
+            }
+            catch
+            {
+                _hasGetServerFailed = true;
+                hostname = null;
+                port = null;
             }
         }
     }
