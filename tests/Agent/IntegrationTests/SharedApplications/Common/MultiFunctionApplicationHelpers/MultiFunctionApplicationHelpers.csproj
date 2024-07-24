@@ -173,7 +173,6 @@
     <PackageReference Include="NServiceBus" Version="6.5.10" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NServiceBus" Version="8.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="NServiceBus" Version="[8.0,9.0)" Condition="'$(TargetFramework)' == 'net481'" />
   </ItemGroup>
 
   <ItemGroup>

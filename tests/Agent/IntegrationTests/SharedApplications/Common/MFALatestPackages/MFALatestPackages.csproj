@@ -17,8 +17,9 @@
     <PackageReference Include="log4net" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
 
-    <PackageReference Include="npgsql" Version="*" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="npgsql" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <!-- npgsql is on version 8, but we don't (currently) support it, so use the latest v7 release -->
+    <PackageReference Include="npgsql" Version="7.*" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="npgsql" Version="7.*" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <PackageReference Include="Microsoft.Data.SqlClient" Version="*" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -56,6 +57,8 @@
     <PackageReference Include="RabbitMQ.Client" Version="*" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="RabbitMQ.Client" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
 
+    <!-- NServiceBus v9+ only supports .NET, so constraint FW target to the latest 8.x version -->
+    <PackageReference Include="NServiceBus" Version="8.*" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="*" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="*" Condition="'$(TargetFramework)' == 'net481'" />
