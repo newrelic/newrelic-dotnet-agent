@@ -135,6 +135,7 @@ jobs:
 
     env:
       integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
+      mfaLatestPackages_project_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\SharedApplications\Common\MFALatestPackages\MFALatestPackages.csproj
 
     steps:
       - name: Checkout
@@ -159,12 +160,19 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
+      - name: Get list of NuGet packages used by MFALatestPackages project using dotnet list package
+        run: | 
+          dotnet list ${{ env.mfaLatestPackages_project_path }} package > ${{ github.workspace }}\mfaLatestPackages.txt
+          cat ${{ github.workspace }}\mfaLatestPackages.txt
+        shell: powershell
+
       - name: Archive Artifacts
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: integrationtests
           path: |
             ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+            ${{ github.workspace }}\mfaLatestPackages.txt
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
             ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
             !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
