@@ -160,7 +160,7 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
-      - name: Get list of NuGet packages used by MFALatestPackages project using dotnet list package
+      - name: Get list of NuGet packages used by MFALatestPackages
         run: | 
           dotnet list ${{ env.mfaLatestPackages_project_path }} package > ${{ github.workspace }}\mfaLatestPackages.txt
           cat ${{ github.workspace }}\mfaLatestPackages.txt
