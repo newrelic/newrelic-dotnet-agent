@@ -142,7 +142,7 @@ namespace InstallerActions
                 //    return ActionResult.Success;
                 //}
 
-                var existingAppName = applicationNameNode.Value;
+                var existingAppName = applicationNameNode.InnerText;
                 if (existingAppName == null)
                 {
                     session.Log("Application name value not found on /configuration/application/name node.  Application name not set.");
@@ -150,7 +150,7 @@ namespace InstallerActions
                 }
                 session.Log("Application name value found in /configuration/application/name node.");
 
-                applicationNameNode.Value = appName;
+                applicationNameNode.InnerText = appName;
                 session.Log("Application name set to " + appName);
 
                 document.Save(session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config");
