@@ -15,15 +15,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
     {
         private const string WrapperName = "HandleBasicDeliverWrapper";
 
-        private Func<object, object> _modelGetter;
-        private Func<object, object> _sessionGetter;
-        private Func<object, object> _connectionGetter;
-        private Func<object, object> _autorecoveringConnectionGetter;
-        private Func<object, object> _endpointGetter;
-        private Func<object, string> _hostnameGetter;
-        private Func<object, int> _portGetter;
+        private static Func<object, object> _modelGetter;
+        private static Func<object, object> _sessionGetter;
+        private static Func<object, object> _connectionGetter;
+        private static Func<object, object> _autorecoveringConnectionGetter;
+        private static Func<object, object> _endpointGetter;
+        private static Func<object, string> _hostnameGetter;
+        private static Func<object, int> _portGetter;
 
-        private bool _hasGetServerFailed = false;
+        private static bool _hasGetServerFailed = false;
 
         public bool IsTransactionRequired => false;
 
