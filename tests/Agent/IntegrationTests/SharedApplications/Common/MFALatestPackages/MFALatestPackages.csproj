@@ -58,12 +58,12 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <!-- npgsql is on version 8, but we don't (currently) support it, so use the latest v7 release -->
-    <PackageReference Include="npgsql" Version="7.*" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="npgsql" Version="7.*" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <!-- npgsql is on version 8, but we don't (currently) support it -->
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <!-- NServiceBus v9+ only supports .NET, so constraint FW target to the latest 8.x version -->
-    <PackageReference Include="NServiceBus" Version="8.*" Condition="'$(TargetFramework)' == 'net481'" />
+    <!-- NServiceBus v9+ only supports .NET8+, so constraint FW target to the latest 8.x version -->
+    <PackageReference Include="NServiceBus" Version="8.2.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="9.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
