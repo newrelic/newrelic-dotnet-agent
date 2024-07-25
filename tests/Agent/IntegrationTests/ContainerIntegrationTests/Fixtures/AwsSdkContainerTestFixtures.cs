@@ -41,6 +41,8 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
     {
         var address = $"http://localhost:{Port}/awssdk";
 
+        // The exerciser will return a 500 error if the `RequestMessage.MessageAttributeNames` collection is modified by our instrumentation.
+        // See https://github.com/newrelic/newrelic-dotnet-agent/pull/2646 
         GetAndAssertStatusCode($"{address}/SQS_SendReceivePurge?queueName={queueName}", System.Net.HttpStatusCode.OK);
     }
 
