@@ -104,12 +104,18 @@ namespace AwsSdkTestApp.AwsSdkExerciser
                 throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
             }
 
+            List<string> messageAttributeNames = ["All"];
+
             var response = await _amazonSqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
             {
                 QueueUrl = _sqsQueueUrl,
                 MaxNumberOfMessages = maxMessagesToReceive,
-                MessageAttributeNames = ["All"]
+                MessageAttributeNames = messageAttributeNames
             });
+
+
+            if (messageAttributeNames.Count != 1)
+                throw new Exception("Expected messageAttributeNames to have a single element");
 
             foreach (var message in response.Messages)
             {
