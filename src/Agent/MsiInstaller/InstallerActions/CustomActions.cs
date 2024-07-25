@@ -36,6 +36,7 @@ namespace InstallerActions
             {
                 { "NR_LICENSE_KEY", session["NR_LICENSE_KEY"] },
                 { "NR_APP_NAME", session["NR_APP_NAME"] },
+                { "NR_USE_APP_POOL_NAMING", session["NR_USE_APP_POOL_NAMING"] },
                 { "NETAGENTCOMMONFOLDER", session["NETAGENTCOMMONFOLDER"] },
                 { "LOGSFOLDER", session["LOGSFOLDER"] },
                 { "NETAGENTFOLDER", session["NETAGENTFOLDER"] },
@@ -116,36 +117,72 @@ namespace InstallerActions
         [CustomAction]
         public static ActionResult SetAppName(Session session)
         {
-            session.Log("Top of SetAppName");
             try
             {
                 var path = session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config";
-                var appName = session.CustomActionData["NR_APP_NAME"];
 
+                // appName will be an empty string if the property wasn't set via the command line,
+                // OR if the property was set with an empty string (NR_APP_NAME="")
+                var appName = session.CustomActionData["NR_APP_NAME"];
+                var useAppPoolNaming = session.CustomActionData["NR_USE_APP_POOL_NAMING"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase)
+                    || session.CustomActionData["NR_USE_APP_POOL_NAMING"].Equals("1");
+
+                session.Log($"appName={appName}, useAppPoolNaming={useAppPoolNaming}");
+                if (string.IsNullOrEmpty(appName) && !useAppPoolNaming)
+                {
+                    session.Log("NR_APP_NAME was not set or was set to an empty string, and NR_USE_APP_POOL_NAMING was not set or was not set to true. Application name not modified.");
+                    return ActionResult.Success;
+                }
 
                 var document = new XmlDocument();
                 document.Load(path);
                 var namespaceManager = new XmlNamespaceManager(document.NameTable);
                 namespaceManager.AddNamespace("newrelic-config", "urn:newrelic-config");
 
-                var applicationNameNode = document.SelectSingleNode("/newrelic-config:configuration/newrelic-config:application/newrelic-config:name", namespaceManager);
-                if (applicationNameNode == null)
+                var applicationNode = document.SelectSingleNode("/newrelic-config:configuration/newrelic-config:application", namespaceManager);
+                if (applicationNode == null)
                 {
-                    session.Log("Unable to locate /configuration/application/name node in newrelic.config.  Application name not set.");
+                    session.Log("Unable to locate /configuration/application node in newrelic.config. Application name not set.");
                     return ActionResult.Success;
                 }
-                session.Log("/configuration/application/name node found in newrelic.config");
 
-                //if (applicationNameNode.Attributes == null)
-                //{
-                //    session.Log("No attributes found in /configuration/service node in newrelic.config. License key not set.");
-                //    return ActionResult.Success;
-                //}
+                // NR_USE_APP_POOL_NAMING takes precedence over anything set in NR_APP_NAME
+                if (useAppPoolNaming)
+                {
+                    session.Log("NR_APP_NAME = UseAppPoolNaming, deleting name nodes from application element");
+                    var childNodes = applicationNode.ChildNodes;
+                    foreach (XmlNode childNode in childNodes)
+                    {
+                        session.Log($"found child node with name {childNode.Name}");
+                        if (childNode.Name.Equals("name"))
+                        {
+                            session.Log("Deleting 'name' node");
+                            applicationNode.RemoveChild(childNode);
+                        }
+                    }
+                    document.Save(session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config");
+                    session.Log("newrelic.config saved with application name elements removed.");
+                    return ActionResult.Success;
+                }
+
+                // If we get here, NR_USE_APP_POOL_NAMING was not set or not set to true,
+                // and NR_APP_NAME has a non-empty value. Set the app name to NR_APP_NAME.
+                // If no <name>appName</name> node exists, create it
+                XmlNode applicationNameNode;
+                applicationNameNode = document.SelectSingleNode("/newrelic-config:configuration/newrelic-config:application/newrelic-config:name", namespaceManager);
+                if (applicationNameNode == null)
+                {
+                    session.Log("Unable to locate existing /configuration/application/name node in newrelic.config, creating a new one.");
+                    var newNameNode = document.CreateElement("name");
+                    newNameNode.Attributes.RemoveAll(); // to remove the 'xmlns' attr that was automatically added
+                    applicationNameNode = applicationNode.AppendChild(newNameNode);
+                }
+                session.Log("/configuration/application/name node found or created in newrelic.config");
 
                 var existingAppName = applicationNameNode.InnerText;
                 if (existingAppName == null)
                 {
-                    session.Log("Application name value not found on /configuration/application/name node.  Application name not set.");
+                    session.Log("Application name value not found on /configuration/application/name node. Application name not set.");
                     return ActionResult.Success;
                 }
                 session.Log("Application name value found in /configuration/application/name node.");
