@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
@@ -48,49 +49,50 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             switch (action)
             {
                 case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
-                {
-                    if (request.MessageAttributes == null)
                     {
-                        agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
-                    }
-                    else
-                    {
-                        SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
-                    }
-
-                    break;
-                }
-                case MessageBrokerAction.Produce:
-                {
-                    if (requestType == "SendMessageBatchRequest")
-                    {
-                        // loop through each message in the batch and insert distributed trace headers
-                        foreach (var message in request.Entries)
+                        if (request.MessageAttributes == null)
                         {
-                            if (message.MessageAttributes == null)
+                            agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
+                        }
+                        else
+                        {
+                            SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
+                        }
+
+                        break;
+                    }
+                case MessageBrokerAction.Produce:
+                    {
+                        if (requestType == "SendMessageBatchRequest")
+                        {
+                            // loop through each message in the batch and insert distributed trace headers
+                            foreach (var message in request.Entries)
                             {
-                                agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.Entries.MessageAttributes is null, unable to insert distributed trace headers.");
-                            }
-                            else
-                            {
-                                SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
+                                if (message.MessageAttributes == null)
+                                {
+                                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.Entries.MessageAttributes is null, unable to insert distributed trace headers.");
+                                }
+                                else
+                                {
+                                    SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
+                                }
                             }
                         }
-                    }
 
-                    break;
-                }
+                        break;
+                    }
 
                 // modify the request to ask for DT headers in the response message attributes.
                 case MessageBrokerAction.Consume:
-                {
-                    if (request.MessageAttributeNames == null)
-                        request.MessageAttributeNames = new List<string>();
+                    {
+                        // create a new list or clone the existing one so we don't modify the original list
+                        request.MessageAttributeNames = request.MessageAttributeNames == null ? new List<string>() : new List<string>(request.MessageAttributeNames);
 
-                    foreach (var header in dtHeaders)
-                        request.MessageAttributeNames.Add(header);
-                    break;
-                }
+                        foreach (var header in dtHeaders)
+                            request.MessageAttributeNames.Add(header);
+
+                        break;
+                    }
             }
 
             return isAsync ?
