@@ -92,7 +92,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             }
         }
 
-        private void GetServerDetails(InstrumentedMethodCall instrumentedMethodCall, out string hostname, out int? port)
+        private void GetServerDetails(InstrumentedMethodCall instrumentedMethodCall, out string hostname, out int? port, IAgent agent)
         {
             if (_hasGetServerFailed)
             {
@@ -141,6 +141,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             }
             catch
             {
+                agent.Logger.Warn("Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
                 _hasGetServerFailed = true;
                 hostname = null;
                 port = null;

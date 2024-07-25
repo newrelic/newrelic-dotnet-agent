@@ -61,7 +61,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
             // If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -78,8 +78,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 MessageBrokerAction.Produce,
                 VendorName,
                 destName,
-                serverAddress: GetServerAddress(instrumentedMethodCall),
-                serverPort: GetServerPort(instrumentedMethodCall),
+                serverAddress: GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: GetServerPort(instrumentedMethodCall, agent),
                 routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
@@ -111,7 +111,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return segment;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
         {
             var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
 
@@ -125,8 +125,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 MessageBrokerAction.Produce,
                 VendorName,
                 destName,
-                serverAddress: GetServerAddress(instrumentedMethodCall),
-                serverPort: GetServerPort(instrumentedMethodCall),
+                serverAddress: GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: GetServerPort(instrumentedMethodCall, agent),
                 routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
@@ -172,7 +172,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return _version.Value;
         }
 
-        public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall)
+        public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
         {
             if (_hasGetServerFailed)
             {
@@ -195,12 +195,13 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             }
             catch
             {
+                agent.Logger.Warn("Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
                 _hasGetServerFailed = true;
                 return null;
             }
         }
 
-        public static int? GetServerPort(InstrumentedMethodCall instrumentedMethodCall)
+        public static int? GetServerPort(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
         {
             if (_hasGetServerFailed)
             {
@@ -223,6 +224,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             }
             catch
             {
+                agent.Logger.Warn("Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
                 _hasGetServerFailed = true;
                 return null;
             }
