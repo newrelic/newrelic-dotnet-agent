@@ -127,7 +127,7 @@ namespace InstallerActions
                 var useAppPoolNaming = session.CustomActionData["NR_USE_APP_POOL_NAMING"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase)
                     || session.CustomActionData["NR_USE_APP_POOL_NAMING"].Equals("1");
 
-                session.Log($"appName={appName}, useAppPoolNaming={useAppPoolNaming}");
+                session.Log($"SetAppName: appName={appName}, useAppPoolNaming={useAppPoolNaming}");
                 if (string.IsNullOrEmpty(appName) && !useAppPoolNaming)
                 {
                     session.Log("NR_APP_NAME was not set or was set to an empty string, and NR_USE_APP_POOL_NAMING was not set or was not set to true. Application name not modified.");
@@ -173,19 +173,10 @@ namespace InstallerActions
                 if (applicationNameNode == null)
                 {
                     session.Log("Unable to locate existing /configuration/application/name node in newrelic.config, creating a new one.");
-                    var newNameNode = document.CreateElement("name");
-                    newNameNode.Attributes.RemoveAll(); // to remove the 'xmlns' attr that was automatically added
+                    var newNameNode = document.CreateElement("name", "urn:newrelic-config");
                     applicationNameNode = applicationNode.AppendChild(newNameNode);
                 }
                 session.Log("/configuration/application/name node found or created in newrelic.config");
-
-                var existingAppName = applicationNameNode.InnerText;
-                if (existingAppName == null)
-                {
-                    session.Log("Application name value not found on /configuration/application/name node. Application name not set.");
-                    return ActionResult.Success;
-                }
-                session.Log("Application name value found in /configuration/application/name node.");
 
                 applicationNameNode.InnerText = appName;
                 session.Log("Application name set to " + appName);
