@@ -48,6 +48,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers.Test", "..\Shared\TestSerializationHelpers.Test\TestSerializationHelpers.Test.csproj", "{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MFALatestPackages", "SharedApplications\Common\MFALatestPackages\MFALatestPackages.csproj", "{C544A8F0-A222-42AF-91C8-9F556C293C11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{06DC61C8-F4BF-47C5-8624-1F441E6C2A04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C544A8F0-A222-42AF-91C8-9F556C293C11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C544A8F0-A222-42AF-91C8-9F556C293C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C544A8F0-A222-42AF-91C8-9F556C293C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C544A8F0-A222-42AF-91C8-9F556C293C11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -131,9 +137,10 @@ Global
 		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 		{B64766CA-8731-493F-8417-61A70F783EB7} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
+		{C544A8F0-A222-42AF-91C8-9F556C293C11} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 	EndGlobalSection
 EndGlobal
