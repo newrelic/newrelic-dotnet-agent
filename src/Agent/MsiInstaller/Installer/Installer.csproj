@@ -18,10 +18,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.Iis.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.1" />
+    <PackageReference Include="WixToolset.Iis.wixext" Version="5.0.1" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.1" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.1" />
   </ItemGroup>
   
   <PropertyGroup>
