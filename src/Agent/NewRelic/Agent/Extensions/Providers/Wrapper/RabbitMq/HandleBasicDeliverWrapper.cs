@@ -52,7 +52,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
-            GetServerDetails(instrumentedMethodCall, out var hostname, out var port);
+            GetServerDetails(instrumentedMethodCall, out var hostname, out var port, agent);
 
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,

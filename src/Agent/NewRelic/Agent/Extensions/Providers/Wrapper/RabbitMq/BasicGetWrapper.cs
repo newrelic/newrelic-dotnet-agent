@@ -30,8 +30,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 MessageBrokerAction.Consume,
                 RabbitMqHelper.VendorName,
                 destName,
-                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
-                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall),
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent),
                 routingKey: queue); // no way to get routing key from BasicGet
 
             return Delegates.GetDelegateFor(

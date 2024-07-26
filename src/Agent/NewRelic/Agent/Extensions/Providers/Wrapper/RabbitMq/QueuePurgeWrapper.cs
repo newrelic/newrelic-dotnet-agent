@@ -31,8 +31,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 MessageBrokerAction.Purge,
                 RabbitMqHelper.VendorName,
                 destName,
-                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall),
-                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall));
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent));
 
             // Routing key is not available for this method.
             // It only returns uint and invocationTarget does not have the value.

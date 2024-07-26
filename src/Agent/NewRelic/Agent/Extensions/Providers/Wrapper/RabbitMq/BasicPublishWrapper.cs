@@ -25,8 +25,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             // 3.6.0+ (5.1.0+) (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, IBasicProperties basicProperties, byte[] body)
 
             var segment = (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall) >= 6) ?
-                RabbitMqHelper.CreateSegmentForPublishWrappers6Plus(instrumentedMethodCall, transaction, BasicPropertiesIndex) :
-                RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transaction, BasicPropertiesIndex);
+                RabbitMqHelper.CreateSegmentForPublishWrappers6Plus(instrumentedMethodCall, transaction, BasicPropertiesIndex, agent) :
+                RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transaction, BasicPropertiesIndex, agent);
 
             return Delegates.GetDelegateFor(segment);
         }
