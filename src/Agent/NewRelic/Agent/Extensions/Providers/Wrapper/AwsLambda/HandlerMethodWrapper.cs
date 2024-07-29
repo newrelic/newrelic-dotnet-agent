@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             public AwsLambdaEventType EventType { get; private set; } = AwsLambdaEventType.Unknown;
 
             public bool HasContext() => ContextIdx != -1;
-            public bool HasInputObject() => InputIdx != -1;
+            private bool HasInputObject() => InputIdx != -1;
 
             public void SetContext(object lambdaContext, int contextIdx)
             {
@@ -112,6 +112,41 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
 
             public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
+
+            public bool ValidateWebRequestParameters(InstrumentedMethodCall instrumentedMethodCall)
+            {
+                if (HasInputObject() && IsWebRequest)
+                {
+                    dynamic input = GetInputObject(instrumentedMethodCall);
+
+                    // make sure the request includes Http Method and Path
+                    switch (EventType)
+                    {
+                        case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
+                            {
+                                if (input.RequestContext != null)
+                                {
+                                    dynamic requestContext = input.RequestContext;
+
+                                    return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                                }
+
+                                return false;
+                            }
+                        case AwsLambdaEventType.APIGatewayProxyRequest:
+                        case AwsLambdaEventType.ApplicationLoadBalancerRequest:
+                            {
+                                dynamic webReq = input;
+                                return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
+                            }
+                        default:
+                            return true;
+                    }
+
+                }
+
+                return false;
+            }
         }
 
         private List<string> _webResponseHeaders = ["content-type", "content-length"];
@@ -194,8 +229,19 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
             }
 
+            if (_functionDetails!.IsWebRequest)
+            {
+                if (!_functionDetails.ValidateWebRequestParameters(instrumentedMethodCall))
+                {
+                    agent.Logger.Debug($"Invalid or missing web request parameters. HttpMethod and Path are required for {_functionDetails.EventType}. Not instrumenting this function invocation.");
+                    return Delegates.NoOp;
+                }
+            }
+
+
+
             var isAsync = instrumentedMethodCall.IsAsync;
-            string requestId = _functionDetails!.GetRequestId(instrumentedMethodCall);
+            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
             transaction = agent.CreateTransaction(
@@ -314,7 +360,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             {
                 // copy and lowercase the headers
                 Dictionary<string, string> copiedHeaders = new Dictionary<string, string>();
-                foreach(var kvp in responseHeaders)
+                foreach (var kvp in responseHeaders)
                     copiedHeaders.Add(kvp.Key.ToLower(), kvp.Value);
 
                 foreach (var header in _webResponseHeaders) // only capture specific headers
