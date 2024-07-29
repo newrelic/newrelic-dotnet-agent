@@ -93,6 +93,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                                                """;
             EnqueueLambdaEvent(ApplicationLoadBalancerRequestJson);
         }
+
+        /// <summary>
+        /// An invalid payload to validate the fix for https://github.com/newrelic/newrelic-dotnet-agent/issues/2652
+        /// </summary>
+        public void EnqueueInvalidLoadBalancerRequestyRequest()
+        {
+            var invalidLoadBalancerRequestJson = $$"""
+                                                      {
+                                                        "foo": "bar"
+                                                      }
+                                                      """;
+            EnqueueLambdaEvent(invalidLoadBalancerRequestJson);
+        }
     }
 
     public class LambdaApplicationLoadBalancerRequestTriggerFixtureNet6 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase

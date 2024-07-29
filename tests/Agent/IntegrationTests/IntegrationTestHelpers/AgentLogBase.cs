@@ -76,6 +76,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // Serverless payloads
         public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";
 
+        // Invalid serverless web request
+        public const string InvalidServerlessWebRequestLogLineRegex = DebugLogLinePrefixRegex + @"Invalid or missing web request parameters. (.*)";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;

@@ -35,6 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                     _fixture.EnqueueAPIGatewayHttpApiV2ProxyRequest();
                     _fixture.EnqueueAPIGatewayHttpApiV2ProxyRequestWithDTHeaders(TestTraceId, TestParentSpanId);
                     _fixture.EnqueueMinimalAPIGatewayHttpApiV2ProxyRequest();
+                    _fixture.EnqueueInvalidAPIGatewayHttpApiV2ProxyRequest();
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 3);
                 }
             );
@@ -47,6 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
             var serverlessPayloads = _fixture.AgentLog.GetServerlessPayloads().ToList();
 
             Assert.Multiple(
+                // the fourth exerciser invocation should result in a NoOpDelegate, so there will only be 3 payloads
                 () => Assert.Equal(3, serverlessPayloads.Count),
                 // validate the first 2 payloads separately from the 3rd
                 () => Assert.All(serverlessPayloads.GetRange(0, 2), ValidateServerlessPayload),
@@ -54,6 +56,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                 () => ValidateTraceHasNoParent(serverlessPayloads[0]),
                 () => ValidateTraceHasParent(serverlessPayloads[1])
                 );
+
+            // verify that the invalid request payload generated the expected log line
+            var logLines = _fixture.AgentLog.TryGetLogLines(AgentLogBase.InvalidServerlessWebRequestLogLineRegex);
+            Assert.Single(logLines);
         }
 
         private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
