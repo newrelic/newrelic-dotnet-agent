@@ -134,10 +134,16 @@ namespace NewRelic.Agent.Core.Attributes
 
         AttributeDefinition<bool, bool> LlmTransaction { get; }
 
-        public AttributeDefinition<string, string> CloudAccountId { get; }
-        public AttributeDefinition<string, string> CloudRegion { get; }
-        public AttributeDefinition<string, string> MessagingSystemName { get; }
+        AttributeDefinition<string, string> CloudAccountId { get; }
+        AttributeDefinition<string, string> CloudRegion { get; }
+         AttributeDefinition<string, string> MessagingSystemName { get; }
         AttributeDefinition<string, string> MessagingDestinationName { get; }
+        AttributeDefinition<string, string> BrokerServerAddress { get; }
+        AttributeDefinition<int, int> BrokerServerPort { get; }
+        AttributeDefinition<string, string> MessageQueueName { get; }
+        AttributeDefinition<string, string> MessageRoutingKey { get; }
+        AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
+        AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
     }
 
 
@@ -1111,6 +1117,46 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString("messaging.destination.name", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        // new attribute for MessageBrokers - same name as the Externals attribute, but in Agent attributes.
+        // From messaging api spec.
+        private AttributeDefinition<string, string> _brokerServerAddress;
+        public AttributeDefinition<string, string> BrokerServerAddress => _brokerServerAddress ?? (_brokerServerAddress =
+            AttributeDefinitionBuilder.CreateString("server.address", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<int, int> _brokerServerPort;
+        public AttributeDefinition<int, int> BrokerServerPort => _brokerServerPort ?? (_brokerServerPort =
+            AttributeDefinitionBuilder.CreateInt("server.port", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter));
+        
+        private AttributeDefinition<string, string> _messageQueueName;
+        public AttributeDefinition<string, string> MessageQueueName => _messageQueueName ?? (_messageQueueName =
+            AttributeDefinitionBuilder.CreateString("message.queueName", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.All)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _messageRoutingKey;
+        public AttributeDefinition<string, string> MessageRoutingKey => _messageRoutingKey ?? (_messageRoutingKey =
+            AttributeDefinitionBuilder.CreateString("message.routingKey", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.All)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _messagingRabbitMqDestinationRoutingKey;
+        public AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey => _messagingRabbitMqDestinationRoutingKey ?? (_messagingRabbitMqDestinationRoutingKey =
+            AttributeDefinitionBuilder.CreateString("messaging.rabbitmq.destination.routing_key", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _messagingDestinationPublishName;
+        public AttributeDefinition<string, string> MessagingDestinationPublishName => _messagingDestinationPublishName ?? (_messagingDestinationPublishName =
+            AttributeDefinitionBuilder.CreateString("messaging.destination_publish.name", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
     }
 }

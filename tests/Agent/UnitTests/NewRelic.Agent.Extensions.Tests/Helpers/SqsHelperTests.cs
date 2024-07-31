@@ -33,7 +33,18 @@ namespace Agent.Extensions.Tests.Helpers
                 });
 
 
-            Mock.Arrange(() => _mockTransaction.StartMessageBrokerSegment(Arg.IsAny<MethodCall>(), Arg.IsAny<MessageBrokerDestinationType>(), Arg.IsAny<MessageBrokerAction>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _mockTransaction.StartMessageBrokerSegment(
+                Arg.IsAny<MethodCall>(),
+                Arg.IsAny<MessageBrokerDestinationType>(),
+                Arg.IsAny<MessageBrokerAction>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<string>(),
+                Arg.IsAny<int?>(),
+                Arg.IsAny<string>()))
                 .Returns(new TestSegment());
         }
 
@@ -153,7 +164,18 @@ namespace Agent.Extensions.Tests.Helpers
             var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action);
 
             // Assert
-            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, SqsHelper.VendorName, "MyQueue", SqsHelper.MessagingSystemName, "123456789012", "us-east-2"), Occurs.Once());
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(
+                methodCall,
+                MessageBrokerDestinationType.Queue,
+                action,
+                SqsHelper.VendorName,
+                "MyQueue",
+                SqsHelper.MessagingSystemName,
+                "123456789012",
+                "us-east-2",
+                Arg.IsAny<string>(),
+                Arg.IsAny<int?>(),
+                Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]
@@ -173,7 +195,19 @@ namespace Agent.Extensions.Tests.Helpers
 
             // Assert
             // Verifies that a segment is still created, but with null or default values for the SQS-specific attributes
-            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, SqsHelper.VendorName, null, SqsHelper.MessagingSystemName, null, null), Occurs.Once());
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(
+                methodCall,
+                MessageBrokerDestinationType.Queue,
+                action,
+                SqsHelper.VendorName,
+                null,
+                SqsHelper.
+                MessagingSystemName,
+                null,
+                null,
+                Arg.IsAny<string>(),
+                Arg.IsAny<int?>(),
+                Arg.IsAny<string>()), Occurs.Once());
         }
     }
 

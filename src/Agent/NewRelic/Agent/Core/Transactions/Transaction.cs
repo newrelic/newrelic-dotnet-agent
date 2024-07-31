@@ -245,8 +245,8 @@ namespace NewRelic.Agent.Core.Transactions
 
         public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
             MessageBrokerAction operation, string brokerVendorName, string destinationName,
-            string messagingSystemName = null, string cloudAccountId = null,
-            string cloudRegion = null)
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
             if (Ignored)
                 return Segment.NoOpSegment;
@@ -255,7 +255,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 
             var segment = StartSegmentImpl(methodCall);
-            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion);
+            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
@@ -284,7 +284,10 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null)
+        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName,
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
@@ -292,7 +295,7 @@ namespace NewRelic.Agent.Core.Transactions
             var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
             var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
-            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion);
+            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey);
         }
 
         public AbstractSegmentData CreateMessageBrokerSerializationSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
