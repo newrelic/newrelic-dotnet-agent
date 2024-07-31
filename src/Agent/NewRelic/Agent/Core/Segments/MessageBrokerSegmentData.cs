@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.CloudAccountId.TrySetValue(attribVals, CloudAccountId);
             AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
             AttribDefs.MessageRoutingKey.TrySetValue(attribVals, RoutingKey);
-            AttribDefs.MessagingDestinationRoutingKey.TrySetValue(attribVals, RoutingKey);
+            AttribDefs.MessagingRabbitMqDestinationRoutingKey.TrySetValue(attribVals, RoutingKey);
         }
     }
 }

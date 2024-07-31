@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<int, int> BrokerServerPort { get; }
         AttributeDefinition<string, string> MessageQueueName { get; }
         AttributeDefinition<string, string> MessageRoutingKey { get; }
-        AttributeDefinition<string, string> MessagingDestinationRoutingKey { get; }
+        AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
     }
 
@@ -1147,8 +1147,8 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.All)
                 .Build(_attribFilter));
 
-        private AttributeDefinition<string, string> _messagingDestinationRoutingKey;
-        public AttributeDefinition<string, string> MessagingDestinationRoutingKey => _messagingDestinationRoutingKey ?? (_messagingDestinationRoutingKey =
+        private AttributeDefinition<string, string> _messagingRabbitMqDestinationRoutingKey;
+        public AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey => _messagingRabbitMqDestinationRoutingKey ?? (_messagingRabbitMqDestinationRoutingKey =
             AttributeDefinitionBuilder.CreateString("messaging.rabbitmq.destination.routing_key", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));

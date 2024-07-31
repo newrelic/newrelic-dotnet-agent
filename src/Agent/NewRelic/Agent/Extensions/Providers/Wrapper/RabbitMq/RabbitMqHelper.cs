@@ -8,6 +8,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
@@ -167,6 +168,19 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             }
 
             var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
+            var versionString = "Version=";
+            _version = Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + versionString.Length, 1));
+            return _version.Value;
+        }
+
+        public static int GetRabbitMQVersion(Type type)
+        {
+            if (_version.HasValue)
+            {
+                return _version.Value;
+            }
+
+            var fullName = type.Assembly.ManifestModule.Assembly.FullName;
             var versionString = "Version=";
             _version = Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + versionString.Length, 1));
             return _version.Value;
