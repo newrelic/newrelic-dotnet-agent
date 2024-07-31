@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -11,8 +12,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
 {
     public class KafkaBuilderWrapper : IWrapper
     {
-        private Func<object, IEnumerable> _producerBuilderConfigGetter;
-        private Func<object, IEnumerable> _consumerBuilderConfigGetter;
+        private ConcurrentDictionary<Type, Func<object, IEnumerable>> _builderConfigGetterDictionary = new();
 
         private const string WrapperName = "KafkaBuilderWrapper";
         private const string BootstrapServersKey = "bootstrap.servers";
@@ -27,21 +27,13 @@ namespace NewRelic.Providers.Wrapper.Kafka
         {
             var builder = instrumentedMethodCall.MethodCall.InvocationTarget;
 
-            dynamic configuration = null;
-
-            if (builder.GetType().Name == "ProducerBuilder`2")
+            if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
             {
-                var configGetter = _producerBuilderConfigGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
-                configuration = configGetter(builder) as dynamic;
-            }
-            else if (builder.GetType().Name == "ConsumerBuilder`2")
-            {
-                var configGetter = _consumerBuilderConfigGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
-                configuration = configGetter(builder) as dynamic;
+                configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
+                _builderConfigGetterDictionary[builder.GetType()] = configGetter;
             }
 
-            if (configuration == null)
-                return Delegates.NoOp;
+            dynamic configuration = configGetter(builder);
 
             string bootstrapServers = null;
 
@@ -55,9 +47,9 @@ namespace NewRelic.Providers.Wrapper.Kafka
             }
 
             if (!string.IsNullOrEmpty(bootstrapServers))
-                return Delegates.GetDelegateFor<object>(onSuccess: (producerOrConsumerAsObject) =>
+                return Delegates.GetDelegateFor<object>(onSuccess: (builtObject) =>
                 {
-                    KafkaHelper.AddBootstrapServersToCache(producerOrConsumerAsObject, bootstrapServers);
+                    KafkaHelper.AddBootstrapServersToCache(builtObject, bootstrapServers);
                 });
 
             return Delegates.NoOp;
