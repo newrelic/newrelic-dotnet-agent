@@ -207,9 +207,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
                 return _hostnameGetter(endpoint);
             }
-            catch
+            catch (Exception exception)
             {
-                agent.Logger.Warn("Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
+                agent.Logger.Warn(exception, "Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
                 _hasGetServerFailed = true;
                 return null;
             }
@@ -236,9 +236,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
                 return _portGetter(endpoint);
             }
-            catch
+            catch (Exception exception)
             {
-                agent.Logger.Warn("Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
+                agent.Logger.Warn(exception, "Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
                 _hasGetServerFailed = true;
                 return null;
             }
