@@ -164,8 +164,8 @@ jobs:
       - name: Build Linux Profiler
         run: |
           cd ${{ env.profiler_path }}
-          docker-compose build build
-          docker-compose run build
+          docker compose build build
+          docker compose run build
         shell: bash
 
       - name: Move Profiler to staging folder
