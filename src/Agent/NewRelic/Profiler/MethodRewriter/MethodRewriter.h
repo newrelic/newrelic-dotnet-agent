@@ -54,7 +54,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 
-            for (auto& instrumentationPoint : *instrumentationPoints) {
+            for (auto instrumentationPoint : *instrumentationPoints) {
 
                 _instrumentedAssemblies->emplace(instrumentationPoint->AssemblyName);
                 _instrumentedFunctionNames->emplace(instrumentationPoint->MethodName);
@@ -74,7 +74,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         std::set<Configuration::InstrumentationPointPtr> GetAssemblyInstrumentation(xstring_t assemblyName)
         {
             std::set<Configuration::InstrumentationPointPtr> set;
-            for (auto& instrumentationPoint : *_instrumentationConfiguration->GetInstrumentationPoints().get()) {
+            for (auto instrumentationPoint : *_instrumentationConfiguration->GetInstrumentationPoints().get()) {
                 if (assemblyName == instrumentationPoint->AssemblyName) {
                     set.emplace(instrumentationPoint);
                 }

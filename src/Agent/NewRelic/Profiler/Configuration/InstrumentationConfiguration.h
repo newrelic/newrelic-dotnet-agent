@@ -33,7 +33,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             , _foundServerlessInstrumentationPoint(false)
         {
             // pull instrumentation points from every xml string
-            for (auto& instrumentationXml : *instrumentationXmls)
+            for (auto instrumentationXml : *instrumentationXmls)
             {
                 try
                 {
@@ -64,13 +64,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             , _systemCalls(nullptr)
             , _foundServerlessInstrumentationPoint(false)
         {
-            for (auto& instrumentationPoint : *instrumentationPoints)
+            for (auto instrumentationPoint : *instrumentationPoints)
             {
                 AddInstrumentationPointToCollectionsIfNotIgnored(instrumentationPoint);
             }
         }
 
-        uint16_t GetInvalidFileCount() const
+        uint16_t GetInvalidFileCount()
         {
             return _invalidFileCount;
         }
@@ -100,7 +100,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             // We may have multiple matching instrumentation points that target different assembly versions. See if we can find one that meets
             // the version requirements
             AssemblyVersion foundVersion(function->GetAssemblyProps());
-            for (auto& instPoint : instPoints)
+            for (auto instPoint : instPoints)
             {
                 if ((instPoint->MinVersion != nullptr) && (foundVersion < *instPoint->MinVersion))
                 {
@@ -236,9 +236,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
         void GetInstrumentationPoints(xstring_t instrumentationXml)
         {
-            auto document = std::make_shared<rapidxml::xml_document<xchar_t>>();
-            document->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(instrumentationXml.c_str()));
-            auto extensionNode = document->first_node(_X("extension"), 0, false);
+            rapidxml::xml_document<xchar_t> document;
+            document.parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(instrumentationXml.c_str()));
+            auto extensionNode = document.first_node(_X("extension"), 0, false);
             if (extensionNode == nullptr)
             {
                 LogWarn(L"extension node not found in instrumentation file. Please validate your instrumentation files against extensions/extension.xsd or contact New Relic support.");
@@ -405,7 +405,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             // if the ClassName includes multiple classes, we have to split this into multiple instrumentation points
             auto instrumentationPoints = SplitInstrumentationPointsOnClassNames(instrumentationPoint);
 
-            for (auto& iPoint : instrumentationPoints) {
+            for (auto iPoint : instrumentationPoints) {
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
                 // Note that there may be "duplicated" instrumentation points that target different assembly versions
