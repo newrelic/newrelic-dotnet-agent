@@ -42,7 +42,7 @@ namespace NewRelic { namespace Profiler
 
         xstring_t GetTypeStringsFromTypeSpec(uint32_t typeDefOrRefOrSpecToken)
         {
-            uint8_t* signature = 0;
+            uint8_t* signature;
             ULONG signatureLength;
             _metaDataImport->GetTypeSpecFromToken(typeDefOrRefOrSpecToken, (PCCOR_SIGNATURE*)(&signature), &signatureLength);
             

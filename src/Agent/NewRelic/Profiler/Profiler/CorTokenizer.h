@@ -304,7 +304,7 @@ namespace NewRelic { namespace Profiler
 
         xstring_t ResolveAssemblyForType(xstring_t assemblyName, xstring_t fullQualifiedType)
         {
-            auto& coreAssembly = (*_typeNameToAssembly.get())[fullQualifiedType];
+            auto coreAssembly = (*_typeNameToAssembly.get())[fullQualifiedType];
             return coreAssembly.empty() ? assemblyName : coreAssembly;
         }
     };

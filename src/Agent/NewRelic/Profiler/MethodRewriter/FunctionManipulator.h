@@ -350,7 +350,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
             uint32_t index = 0;
 
-            for (auto& func : elementLoadLambdas)
+            for (auto func : elementLoadLambdas)
             {
                 auto nextIndex = index++;
                 // get an extra copy of the array (it will be popped off the stack each time we add an element to it)

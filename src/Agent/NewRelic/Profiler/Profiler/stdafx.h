@@ -33,10 +33,7 @@
 
 
 // Profiler Header Files:
-#pragma warning(push)
-#pragma warning(disable: 26495) // Uninitialized member variable, even if it's always set before use
 #include <corhlpr.h>
-#pragma warning(pop)
 
 // Windows Header Files:
 #ifndef _WIN32_WINNT
