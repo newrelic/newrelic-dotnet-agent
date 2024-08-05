@@ -559,8 +559,8 @@ jobs:
           fi
 
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build build_rpm
-          docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+          docker compose build build_rpm
+          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
 
       - name: Archive RPM Package Artifacts
@@ -612,8 +612,8 @@ jobs:
           fi
 
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build build_deb
-          docker-compose run -e AGENT_VERSION=$agentVersion build_deb
+          docker compose build build_deb
+          docker compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
 
       - name: Archive Debian Package Artifacts

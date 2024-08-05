@@ -422,12 +422,12 @@ jobs:
           cd ${{ github.workspace }}/deploy/linux/
           find . -name "*.bash" |xargs chmod a+x
           find . -type f |xargs dos2unix
-          docker-compose build
+          docker compose build
           if [ "${{ inputs.deploy }}" == "true" ] ; then
-            docker-compose run deploy_packages
+            docker compose run deploy_packages
           else
             echo "Input:deploy was not true.  The following deploy command was not run:"
-            echo "docker-compose run deploy_packages"
+            echo "docker compose run deploy_packages"
           fi
         shell: bash
 

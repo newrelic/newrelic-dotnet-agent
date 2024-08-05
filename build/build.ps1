@@ -79,16 +79,16 @@ Write-Host "===================================="
 Write-Host "Executing Linux builds in Docker for Agent Version: $agentVersion"
 Push-Location "$rootDirectory\build\Linux"
 # Build the docker images
-docker-compose build
+docker compose build
 # Build the Debian package
-docker-compose run -e AGENT_VERSION=$agentVersion build_deb
+docker compose run -e AGENT_VERSION=$agentVersion build_deb
 # Build the RPM package, signing it if a key was supplied
 if (!($gpgKeyPath -eq "")) {
     New-Item keys -Type Directory -Force
     Copy-Item $gpgKeyPath .\keys\gpg.tar.bz2 -Force
-    docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+    docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
 } else {
-    docker-compose run -e AGENT_VERSION=$agentVersion build_rpm
+    docker compose run -e AGENT_VERSION=$agentVersion build_rpm
 }
 Pop-Location
 Write-Host "===================================="
