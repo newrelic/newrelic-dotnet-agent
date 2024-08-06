@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.28.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.27.0...v10.28.0) (2024-08-05)
+
+
+### New features
+
+* Improve serverless mode detection ([#2661](https://github.com/newrelic/newrelic-dotnet-agent/issues/2661)) ([5f5dda8](https://github.com/newrelic/newrelic-dotnet-agent/commit/5f5dda860a78152574f71f4f1095248707e8c7e3))
+* Set application name via command line with the .msi installer ([#2648](https://github.com/newrelic/newrelic-dotnet-agent/issues/2648)) ([369dcba](https://github.com/newrelic/newrelic-dotnet-agent/commit/369dcbab4f3fa59354f683bae16b711f45be2387))
+
+
+### Fixes
+
+* Better Lambda web request input parameter validation. ([#2653](https://github.com/newrelic/newrelic-dotnet-agent/issues/2653)) ([810d4af](https://github.com/newrelic/newrelic-dotnet-agent/commit/810d4aff20457200b4166daa9744cefe8dfc699b)), closes [#2652](https://github.com/newrelic/newrelic-dotnet-agent/issues/2652)
+* Revert recent Profiler warning fixes to address reported instability ([#2663](https://github.com/newrelic/newrelic-dotnet-agent/issues/2663)) ([b3c9cd1](https://github.com/newrelic/newrelic-dotnet-agent/commit/b3c9cd10c47dbe5c4654a1dcb1f90c3adeabe90f))
+* SQS instrumentation could cause InvalidOperationException ([#2645](https://github.com/newrelic/newrelic-dotnet-agent/issues/2645)) ([#2646](https://github.com/newrelic/newrelic-dotnet-agent/issues/2646)) ([40b6ad5](https://github.com/newrelic/newrelic-dotnet-agent/commit/40b6ad5b899942eff9241da362a653a010cf2e7f))
+
 ## [10.27.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.26.0...v10.27.0) (2024-07-15)
 
 

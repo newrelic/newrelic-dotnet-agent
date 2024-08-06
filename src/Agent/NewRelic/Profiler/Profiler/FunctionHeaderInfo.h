@@ -68,7 +68,7 @@ namespace NewRelic {
                     else if (info->instruction == CEE_SWITCH) {
                         counts.switchCount += 1;
                         const unsigned numberArms = ReadNumber(&bodyBytes[pos + 1], 4) & 0xFFFFFFFF;
-                        const unsigned numberBytesTable = (1 + static_cast<unsigned long long>(numberArms)) * sizeof(DWORD);
+                        const unsigned numberBytesTable = (1 + numberArms) * sizeof(DWORD);
                         const unsigned totalBytesInstruction = 1 + numberBytesTable;
                         pos += totalBytesInstruction;
                     }

@@ -16,21 +16,21 @@ Note: while not a hard requirement, the containers will perform better if you us
 * This folder has Dockerfiles that set up Linux containerized services and can be used with Docker Desktop's WSL2 backend. Developers should use these containers in their system to run unbounded integration tests.
 
 * All commands below should be run from a shell (we've tested Powershell and "git-bash") in the same location as this README.
-* Before Docker containers can be used the first time, they need to be built by executing `docker-compose build`.
+* Before Docker containers can be used the first time, they need to be built by executing `docker compose build`.
 
 ### All
 
 To run all services:
 
-`docker-compose up`
+`docker compose up`
 
 If you don't want to follow the output of the services, you can run them in the background (detached) like this:
 
-`docker-compose up -d`
+`docker compose up -d`
 
 To stop the services:
 
-`docker-compose down`
+`docker compose down`
 
 **Note**: launching all of the services takes a lot of time (as much as 15 minutes in our testing) and a lot of system resources.  Unless you need to run all of the unbounded integration tests (e.g. if you've made a change to a core part of the test framework as opposed to an individual test or piece of instrumentation) it is not recommended to do this.
 
@@ -38,7 +38,7 @@ To stop the services:
 
 It is generally best to only the the service for the tests you happen to be working on at the time (see note above).  To run a single service, execute the following:
 
-`docker-compose up <service>`
+`docker compose up <service>`
 
 See the docker-compose.yml file for the names of the services provided.
 

@@ -262,12 +262,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // shift the original clauses up to the correct
             for (uint32_t i = 0; i < _originalExceptionClauseCount; ++i)
             {
-                auto& clause = _exceptionClauses[i];
+                auto clause = _exceptionClauses[i];
                 clause->ShiftOffsets(userCodeOffset);
             }
 
             // append the clauses
-            for (auto& clause : _exceptionClauses)
+            for (auto clause : _exceptionClauses)
             {
                 auto clauseBytes = clause->GetBytes();
                 bytes->insert(bytes->end(), clauseBytes->begin(), clauseBytes->end());
@@ -276,7 +276,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             return bytes;
         }
 
-        uint32_t GetOriginalExceptionClauseCount() const
+        uint32_t GetOriginalExceptionClauseCount()
         {
             return _originalExceptionClauseCount;
         }

@@ -140,15 +140,15 @@ namespace NewRelic {
                     }
                 }
 
-                OpCodePtr GetOpCode() const
+                OpCodePtr GetOpCode()
                 {
                     return _opcode;
                 }
-                unsigned GetOffset() const
+                unsigned GetOffset()
                 {
                     return _offset;
                 }
-                bool IsValid() const
+                bool IsValid()
                 {
                     return _valid;
                 }
@@ -177,7 +177,7 @@ namespace NewRelic {
                     {
                         auto offsetOfInstructionFollowingSwitch = _offset + _opcode->totalSize;
                         auto offsetOfArm = _offset + _opcode->instructionSize + sizeof(DWORD);
-                        for (auto& target : *_targets) {
+                        for (auto target : *_targets) {
                             auto jumpLength = target->GetOffset() - offsetOfInstructionFollowingSwitch;
                             
                             auto armLocation = instructions->data() + offsetOfArm;
@@ -193,7 +193,7 @@ namespace NewRelic {
                 {
                     // a better person would do this in place but the iter pointer stuff confuses me
                     auto newTargetsList = std::make_shared<std::list<InstructionPtr>>();
-                    for (auto& targetInstruction : *_targets) {
+                    for (auto targetInstruction : *_targets) {
                         if (oldInstruction == targetInstruction)
                         {
                             newTargetsList->push_back(newInstruction);
@@ -232,14 +232,11 @@ namespace NewRelic {
             class BranchInstruction :public Instruction
             {
             public:
-                BranchInstruction(OpCodePtr opCode, unsigned offset) : Instruction(opCode, offset),
-                    _targetInstruction(nullptr),
-                    _targetOffset(0)
+                BranchInstruction(OpCodePtr opCode, unsigned offset) : Instruction(opCode, offset)
                 {
                 }
 
-                BranchInstruction(OpCodePtr opCode, unsigned offset, InstructionPtr target) : Instruction(opCode, offset),
-                    _targetOffset(0)
+                BranchInstruction(OpCodePtr opCode, unsigned offset, InstructionPtr target) : Instruction(opCode, offset)
                 {
                     _targetInstruction = target;
                 }
@@ -387,7 +384,7 @@ namespace NewRelic {
                     }
 
                     // sanity check the final instruction.  If it isn't a RET, we likely mucked up the instruction parsing
-                    auto& lastInstruction = instructions->at(finalInstructionIndex);
+                    auto lastInstruction = instructions->at(finalInstructionIndex);
                     if (lastInstruction->GetOpCode()->instruction != CEE_RET) {
                         LogTrace(L"Expected RET as final instruction but found ", lastInstruction->GetOpCode()->instruction);
                         return nullptr;
@@ -399,7 +396,7 @@ namespace NewRelic {
                     lastInstruction->GetOpCode()->Reset(GetOpCode(CEE_NOP));
 
                     auto branches = std::make_shared<std::list<InstructionPtr>>();
-                    for (auto& instruction : *instructions.get()) 
+                    for (auto instruction : *instructions.get()) 
                     {
                         if (instruction.second->GetOpCode()->instruction == CEE_RET)
                         {
@@ -435,14 +432,14 @@ namespace NewRelic {
 
                     // write the instructions into our bytecode vector.  that'll reset the offsets 
                     // of the instructions so that we can recompute the branch jumps.
-                    for (auto& instruction : *instructions.get()) 
+                    for (auto instruction : *instructions.get()) 
                     {
                         instruction.second->Write(oldCodeBytes, newByteCode);
                     }
 
                     // now all instructions contain their final offset, so we can
                     // write the branch instruction offsets
-                    for (auto& branch : *branches) {
+                    for (auto branch : *branches) {
                         branch->WriteBranches(newByteCode, instructions);
                     }
 
@@ -484,7 +481,7 @@ namespace NewRelic {
 
                 static void NotifyOfInstructionChange(OffsetToInstructionMapPtr instructions, InstructionPtr oldInstruction, InstructionPtr newInstruction)
                 {
-                    for (auto& iter : *instructions)
+                    for (auto iter : *instructions)
                     {
                         iter.second->OnInstructionChange(oldInstruction, newInstruction);
                     }
@@ -492,7 +489,7 @@ namespace NewRelic {
 
                 static bool AllValid(OffsetToInstructionMapPtr instructions)
                 {
-                    for (auto& instruction : *instructions.get())
+                    for (auto instruction : *instructions.get())
                     {
                         if (!instruction.second->IsValid()) {
                             return false;
@@ -530,7 +527,7 @@ namespace NewRelic {
                 static void PrintInstructions(OffsetToInstructionMapPtr instructions)
                 {
 #ifdef DEBUG
-                    for (auto& iter : *instructions.get())
+                    for (auto iter : *instructions.get())
                     {
                         LogInfo(iter.second->ToString());
                     }
@@ -606,23 +603,23 @@ namespace NewRelic {
                     for (unsigned c = 0; c < sehClauseCount; c++) {
                         COR_ILMETHOD_SECT_EH_CLAUSE_FAT* clause = &sehClauses[c];
                         
-                        auto& tryInstruction = instructions->at(clause->TryOffset);
+                        auto tryInstruction = instructions->at(clause->TryOffset);
                         //unsigned newTryLength = _oldPositionToNew[clause->TryOffset + clause->TryLength] - _oldPositionToNew[clause->TryOffset];
-                        auto& tryEndInstruction = instructions->at(clause->TryOffset + clause->TryLength);
+                        auto tryEndInstruction = instructions->at(clause->TryOffset + clause->TryLength);
 
                         auto tryLength = tryEndInstruction->GetOffset() - tryInstruction->GetOffset();
                         clause->SetTryLength(tryLength);
                         clause->SetTryOffset(tryInstruction->GetOffset());
                         
-                        auto& handlerInstruction = instructions->at(clause->HandlerOffset);
-                        auto& handlerEndInstruction = instructions->at(clause->HandlerOffset + clause->HandlerLength);
+                        auto handlerInstruction = instructions->at(clause->HandlerOffset);
+                        auto handlerEndInstruction = instructions->at(clause->HandlerOffset + clause->HandlerLength);
                         
                         auto handlerLength = handlerEndInstruction->GetOffset() - handlerInstruction->GetOffset();
                         clause->SetHandlerLength(handlerLength);
                         clause->SetHandlerOffset(handlerInstruction->GetOffset());
                         
                         if (clause->GetFlags() == static_cast<uint16_t>(COR_ILEXCEPTION_CLAUSE_FILTER)) {
-                            auto& filterInstruction = instructions->at(clause->FilterOffset);
+                            auto filterInstruction = instructions->at(clause->FilterOffset);
                             clause->SetFilterOffset(filterInstruction->GetOffset());
                             
                             // There's no FilterLength to adjust.
@@ -671,7 +668,7 @@ namespace NewRelic {
                     }
 
                     // resolve the target instruction(s) of all branches
-                    for (auto& instruction : *branches)
+                    for (auto instruction : *branches)
                     {
                         instruction->ResolveTargets(methodBody, instructions);
                     }

@@ -16,10 +16,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     public:
         InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) : 
             FunctionManipulator(function), 
-            _instrumentationSettings(instrumentationSettings),
-            _userExceptionLocalIndex(0),
-            _resultLocalIndex(0),
-            _tracerLocalIndex(0)
+            _instrumentationSettings(instrumentationSettings)
         {
             if (_function->Preprocess()) {
                 Initialize();
