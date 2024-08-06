@@ -66,6 +66,8 @@ namespace AspNetCoreWebApiLambdaApplication
 
         private static HandlerWrapper GetHandlerWrapper()
         {
+            var defaultLambdaJsonSerializer = new DefaultLambdaJsonSerializer();
+
             switch (_handlerToInvoke)
             {
                 case "APIGatewayProxyFunctionEntryPoint":
@@ -73,24 +75,24 @@ namespace AspNetCoreWebApiLambdaApplication
                         var entryPoint = new APIGatewayProxyFunctionEntryPoint();
                         Func<APIGatewayProxyRequest, ILambdaContext, Task<APIGatewayProxyResponse>> handlerFunc = entryPoint.FunctionHandlerAsync;
 
-                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, new DefaultLambdaJsonSerializer());
+                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, defaultLambdaJsonSerializer);
                     }
                 case "ApplicationLoadBalancerFunctionEntryPoint":
                     {
                         var entryPoint = new ApplicationLoadBalancerFunctionEntryPoint();
                         Func<ApplicationLoadBalancerRequest, ILambdaContext, Task<ApplicationLoadBalancerResponse>> handlerFunc = entryPoint.FunctionHandlerAsync;
 
-                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, new DefaultLambdaJsonSerializer());
+                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, defaultLambdaJsonSerializer);
                     }
                 case "APIGatewayHttpApiV2ProxyFunctionEntryPoint":
                     {
                         var entryPoint = new APIGatewayHttpApiV2ProxyFunctionEntryPoint();
                         Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handlerFunc = entryPoint.FunctionHandlerAsync;
 
-                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, new DefaultLambdaJsonSerializer());
+                        return HandlerWrapper.GetHandlerWrapper(handlerFunc, defaultLambdaJsonSerializer);
                     }
                 default:
-                    throw new ArgumentException("Handler not found.");
+                    throw new ArgumentException($"Handler not found: {_handlerToInvoke}");
             }
         }
     }

@@ -74,21 +74,41 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
 
         public void EnqueueAPIGatewayHttpApiV2ProxyRequest()
         {
-            var apiGatewayProxyRequestJson = $$"""
+            var apiGatewayHttpApiV2ProxyRequestJson = $$$"""
                                                {
-                                                 "version": "2.0",
-                                                 "routeKey": "$default",
-                                                 "rawPath": "/",
-                                                 "requestContext": {
-                                                   "http": {
-                                                     "method": "GET",
-                                                     "path": "/"
+                                                   "Version": "2.0",
+                                                   "RouteKey": "$default",
+                                                   "RawPath": "/api/values",
+                                                   "Headers": {
+                                                       "Header1": "value1",
+                                                       "Header2": "value1,value2"
+                                                   },
+                                                   "RequestContext": {
+                                                       "AccountId": "123456789012",
+                                                       "ApiId": "api-id",
+                                                       "DomainName": "id.execute-api.us-east-1.amazonaws.com",
+                                                       "DomainPrefix": "id",
+                                                       "Http": {
+                                                           "Method": "GET",
+                                                           "Path": "/api/values",
+                                                           "Protocol": "HTTP/1.1",
+                                                           "SourceIp": "192.168.0.1/32",
+                                                           "UserAgent": "agent"
+                                                       },
+                                                       "RequestId": "id",
+                                                       "RouteKey": "$default",
+                                                       "Stage": "$default",
+                                                       "Time": "12/Mar/2020:19:03:58 +0000",
+                                                       "TimeEpoch": 1583348638390
+                                                   },
+                                                   "StageVariables": {
+                                                       "stageVariable1": "value1",
+                                                       "stageVariable2": "value2"
                                                    }
-                                                 }
                                                }
                                                """;
 
-            EnqueueLambdaEvent(apiGatewayProxyRequestJson);
+            EnqueueLambdaEvent(apiGatewayHttpApiV2ProxyRequestJson);
         }
 
         public void EnqueueApplicationLoadBalancerRequest()

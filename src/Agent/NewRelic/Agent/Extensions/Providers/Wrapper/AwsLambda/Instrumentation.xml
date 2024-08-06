@@ -17,7 +17,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName=".ctor" />
       </match>
     </tracerFactory>
-    <!-- Instrument Amazon.Lambda.AspNetCoreServer::Amazon.Lambda.AspNetCoreServer.AbstractAspNetCoreFunction`2::FunctionHandlerAsync -->
+    <!-- Instrument the function handler for AspNetCore lambdas -->
     <tracerFactory name="NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod">
       <match assemblyName="Amazon.Lambda.AspNetCoreServer" className="Amazon.Lambda.AspNetCoreServer.AbstractAspNetCoreFunction`2">
         <exactMethodMatcher methodName="FunctionHandlerAsync" />

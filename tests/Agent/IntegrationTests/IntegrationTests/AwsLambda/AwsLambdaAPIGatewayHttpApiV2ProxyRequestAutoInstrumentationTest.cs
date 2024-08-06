@@ -65,9 +65,7 @@ public abstract class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentatio
             { "request.headers.header1", "value1" },
             { "request.headers.header2", "value1,value2" },
             { "request.method", "GET" },
-            { "request.uri", "/api.values" },
-            { "request.parameters.parameter1", "value1,value2" },
-            { "request.parameters.parameter2", "value" },
+            { "request.uri", "/api/values" },
             { "http.statusCode", 200 },
             { "response.status", "200" },
         };
@@ -79,7 +77,7 @@ public abstract class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentatio
     }
 }
 
-public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestTestNet8 : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8>
+public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestTestNet8 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8>
 {
     public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestTestNet8(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8 fixture, ITestOutputHelper output)
         : base(fixture, output, "WebTransaction/MVC/Values/Get")
