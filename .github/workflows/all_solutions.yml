@@ -221,6 +221,7 @@ jobs:
           Api, 
           AppDomainCaching, 
           AspNetCore, 
+          AwsLambda.AutoInstrumentation,
           AwsLambda.CloudWatch,
           AwsLambda.Custom,
           AwsLambda.DynamoDb,
