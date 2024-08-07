@@ -128,7 +128,8 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                                 {
                                     dynamic requestContext = input.RequestContext;
 
-                                    return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                                    if (requestContext.Http != null)
+                                        return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
                                 }
 
                                 return false;

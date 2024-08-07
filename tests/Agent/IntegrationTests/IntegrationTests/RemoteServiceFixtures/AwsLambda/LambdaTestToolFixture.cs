@@ -16,7 +16,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         public DotnetTool LambdaTestTool { get; set; }
         public Action AdditionalSetupConfiguration { get; set; }
 
-        public LambdaTestToolFixture(RemoteApplication remoteApplication, string newRelicLambdaHandler, string lambdaHandler, string lambdaName, string lambdaVersion, string lambdaExecutionEnvironment) : base(remoteApplication)
+        public LambdaTestToolFixture(RemoteApplication remoteApplication, string newRelicLambdaHandler,
+            string lambdaHandler, string lambdaName, string lambdaVersion, string lambdaExecutionEnvironment,
+            bool setNewRelicLambdaHandlerEventVar) : base(remoteApplication)
         {
             LambdaTestTool = new DotnetTool("Amazon.Lambda.TestTool-8.0", "lambda-test-tool-8.0", DestinationApplicationDirectoryPath);
 
@@ -33,8 +35,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                     SetAdditionalEnvironmentVariable("NEW_RELIC_ACCOUNT_ID", TestConfiguration.NewRelicAccountId);
                     SetAdditionalEnvironmentVariable("AWS_LAMBDA_RUNTIME_API", $"localhost:{LambdaTestTool.Port}");
 
-                    AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_LAMBDA_HANDLER", newRelicLambdaHandler);
+                    if (setNewRelicLambdaHandlerEventVar)
+                        AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_LAMBDA_HANDLER", newRelicLambdaHandler);
+
                     AddAdditionalEnvironmentVariableIfNotNull("_HANDLER", lambdaHandler);
+
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_LAMBDA_FUNCTION_NAME", lambdaName);
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_LAMBDA_FUNCTION_VERSION", lambdaVersion);
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_EXECUTION_ENV", lambdaExecutionEnvironment);
@@ -82,7 +87,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                     GetString(address);
                     return;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     TestLogger?.WriteLine($"Unable to warm up lambda test tool during attempt {attempt}. Exception: {e}");
                     if (attempt == 3)

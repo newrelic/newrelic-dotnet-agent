@@ -9,63 +9,38 @@ updates:
         patterns:
           - "*"
             
-  # multiple entries are required in order to apply nuget scanning to only a subset of projects.
   # We do not scan anything in the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
   # intentionally reference old versions of the Nuget packages they instrument.
   - package-ecosystem: nuget
-    directory: /src/Agent/NewRelic/Agent/Core
+    directories:
+      - /src/Agent/NewRelic/Agent/Core
+      - /src/Agent/NewRelic.Api.Agent
+      - /build
+      - /src/Agent/MsiInstaller
     schedule:
       interval: weekly
-    groups: # groups currently doesn't work across multiple entries for the same package-ecosystem, but someday it will. See https://github.com/dependabot/dependabot-core/issues/7547
-      nuget:
+    groups: 
+      nuget-agent:
         patterns:
           - "*"
+
+  # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
-    directory: /src/Agent/NewRelic.Api.Agent
+    directories: 
+      - /tests/Agent/IntegrationTests
+      - /
     schedule:
       interval: weekly
     groups:
-      nuget:
-        patterns:
-          - "*"
-  - package-ecosystem: nuget
-    directory: /src/NewRelic.Core
-    schedule:
-      interval: weekly
-    groups:
-      nuget:
-        patterns:
-          - "*"
-  - package-ecosystem: nuget
-    directory: /build
-    schedule:
-      interval: weekly
-    groups:
-      nuget:
-        patterns:
-          - "*"
-  - package-ecosystem: nuget
-    directory: /src/Agent/MsiInstaller
-    schedule:
-      interval: weekly
-    groups:
-      nuget:
-        patterns:
-          - "*"
-  # Update a specific set of packages in the `tests` folder          
-  - package-ecosystem: nuget
-    directory: /tests
-    schedule:
-      interval: weekly
-    groups:
-      nuget:
+      nuget-tests:
         patterns:
           - "*"
     allow:
-      - dependency-name: "xunit*"
-      - dependency-name: "NUnit*"
       - dependency-name: "coverlet.collector"
+      - dependency-name: "JustMock"
       - dependency-name: "Microsoft.NET.Test.Sdk"
       - dependency-name: "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
       - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
+      - dependency-name: "NUnit*"
       - dependency-name: "Selenium*"
+      - dependency-name: "xunit*"

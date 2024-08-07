@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using CommandLine;
@@ -47,7 +47,8 @@ namespace ApplicationLifecycle
             var commandLine = string.Join(" ", args);
             Log($"Joined args: {commandLine}");
 
-            Parser.Default.ParseArguments<Options>(args)
+            new Parser(with => { with.IgnoreUnknownArguments = true;})
+                .ParseArguments<Options>(args)
                 .WithParsed(o =>
                 {
                     portToUse = o.Port ?? DefaultPort;
