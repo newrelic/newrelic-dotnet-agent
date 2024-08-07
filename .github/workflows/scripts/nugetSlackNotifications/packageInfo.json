@@ -30,7 +30,13 @@
         "packageName": "amazon.lambda.sqsevents"
     },
     {
+        "packageName": "awssdk.bedrockruntime"
+    },
+    {
         "packageName": "awssdk.sqs"
+    },
+    {
+        "packageName": "confluent.kafka"
     },
     {
         "packageName": "elasticsearch.net"
@@ -67,6 +73,9 @@
     },
     {
         "packageName": "nlog"
+    },
+    {   
+        "packageName": "nservicebus"
     },
     {
         "packageName": "rabbitmq.client"
