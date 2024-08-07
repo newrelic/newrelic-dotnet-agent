@@ -71,7 +71,7 @@ jobs:
         shell: powershell
           
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: homefolders
           path: |
@@ -115,7 +115,7 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
@@ -160,7 +160,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: integrationtests
           path: |
@@ -198,7 +198,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: unboundedintegrationtests
           path: |
@@ -362,7 +362,7 @@ jobs:
 
       - name: Archive integration test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: integration-test-results-${{ matrix.namespace }}
           path: |
@@ -495,7 +495,7 @@ jobs:
 
       - name: Archive unbounded test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
@@ -565,7 +565,7 @@ jobs:
         shell: bash
 
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -618,7 +618,7 @@ jobs:
         shell: bash
 
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -673,7 +673,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: deploy-artifacts
           path: |
