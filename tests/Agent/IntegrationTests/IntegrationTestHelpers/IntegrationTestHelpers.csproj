@@ -11,8 +11,8 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="xunit" version="2.8.0" />
-    <PackageReference Include="xunit.assert" Version="2.8.0" />
+    <PackageReference Include="xunit" version="2.9.0" />
+    <PackageReference Include="xunit.assert" Version="2.9.0" />
     <PackageReference Include="xunit.core" Version="2.8.0" />
   </ItemGroup>
   <ItemGroup>
