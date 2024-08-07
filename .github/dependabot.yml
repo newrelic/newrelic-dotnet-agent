@@ -52,9 +52,9 @@ updates:
       nuget:
         patterns:
           - "*"
-  # Update a specific set of packages in the `tests` folder          
+  # Update a specific set of packages for integration tests
   - package-ecosystem: nuget
-    directory: /tests
+    directory: /tests/Agent/IntegrationTests
     schedule:
       interval: weekly
     groups:
@@ -62,10 +62,28 @@ updates:
         patterns:
           - "*"
     allow:
-      - dependency-name: "xunit*"
-      - dependency-name: "NUnit*"
       - dependency-name: "coverlet.collector"
       - dependency-name: "Microsoft.NET.Test.Sdk"
       - dependency-name: "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
       - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
+      - dependency-name: "NUnit*"
       - dependency-name: "Selenium*"
+      - dependency-name: "xunit*"
+  # Update a specific set of packages for unit tests (which are referenced in FullAgent.sln)
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns:
+          - "*"
+    allow:
+      - dependency-name: "coverlet.collector"
+      - dependency-name: "JustMock"
+      - dependency-name: "Microsoft.NET.Test.Sdk"
+      - dependency-name: "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
+      - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
+      - dependency-name: "NUnit*"
+      - dependency-name: "Selenium*"
+      - dependency-name: "xunit*"
