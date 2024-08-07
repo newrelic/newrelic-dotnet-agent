@@ -29,14 +29,6 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: nuget
-    directory: /src/NewRelic.Core
-    schedule:
-      interval: weekly
-    groups:
-      nuget:
-        patterns:
-          - "*"
-  - package-ecosystem: nuget
     directory: /build
     schedule:
       interval: weekly
