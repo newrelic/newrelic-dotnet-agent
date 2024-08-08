@@ -20,8 +20,9 @@ namespace NewRelic.Agent.Core.Utilization
     public class VendorInfo
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
-        private const string ContainerIdV1Regex = @".*cpu.*([0-9a-f]{64})";
-        private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
+        private const string StandardDockerIdRegex = "([0-9a-f]{64})";
+        private const string ContainerIdV1Regex = @".*cpu.*" + StandardDockerIdRegex;
+        private const string ContainerIdV2Regex = ".*/docker/containers/" + StandardDockerIdRegex + "/.*";
         private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
         private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
 
@@ -91,13 +92,17 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             }
 
-            // If Docker info is set to be checked, it must be checked for all vendors.
+            // If Docker info is set to be checked, it must be checked for all vendors even disabled ones.
             if (_configuration.UtilizationDetectDocker)
             {
                 var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
                 if (dockerVendorInfo != null)
                 {
                     vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
+                }
+                else
+                {
+                    TrySetAwsEcsDockerId(vendors);
                 }
             }
 
@@ -303,42 +308,6 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             }
 
-            if (vendorModel == null)
-            {
-                try
-                {
-                    var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
-                    if (!string.IsNullOrWhiteSpace(metadataUri))
-                    {
-                        vendorModel = TryGetEcsFargateDockerId(metadataUri);
-                        if (vendorModel == null)
-                            Log.Finest($"Found {AwsEcsMetadataV4EnvVar} but failed to parse Docker container id.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV4EnvVar}.");
-                }
-            }
-
-            if (vendorModel == null)
-            {
-                try
-                {
-                    var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV3EnvVar);
-                    if (!string.IsNullOrWhiteSpace(metadataUri))
-                    {
-                        vendorModel = TryGetEcsFargateDockerId(metadataUri);
-                        if (vendorModel == null)
-                            Log.Finest($"Found {AwsEcsMetadataV3EnvVar} but failed to parse Docker container id.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV3EnvVar}.");
-                }
-            }
-
             return vendorModel;
         }
 
@@ -384,13 +353,76 @@ namespace NewRelic.Agent.Core.Utilization
             return id == null ? null : new DockerVendorModel(id);
         }
 
-        private IVendorModel TryGetEcsFargateDockerId(string metadataUri)
+        // returns an IVendorModel to make testing easier.
+        public IVendorModel TrySetAwsEcsDockerId(IDictionary<string, IVendorModel> vendors)
+        {
+            string dockerId = null;
+            try
+            {
+                var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
+                if (!string.IsNullOrWhiteSpace(metadataUri))
+                {
+                    dockerId = TryGetEcsDockerId(metadataUri);
+                    if (string.IsNullOrWhiteSpace(dockerId))
+                        Log.Finest($"Found {AwsEcsMetadataV4EnvVar} but failed to parse Docker container id.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV4EnvVar}.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dockerId))
+            {
+                try
+                {
+                    var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV3EnvVar);
+                    if (!string.IsNullOrWhiteSpace(metadataUri))
+                    {
+                        dockerId = TryGetEcsDockerId(metadataUri);
+                        if (string.IsNullOrWhiteSpace(dockerId))
+                            Log.Finest($"Found {AwsEcsMetadataV3EnvVar} but failed to parse Docker container id.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV3EnvVar}.");
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(dockerId))
+            {
+                return null;
+            }
+
+            // If we get a standard docker id from ECS metadata, it is not fargate.
+            // Create a DockerVendorModel with the id.
+            if (Regex.IsMatch(dockerId, StandardDockerIdRegex))
+            {
+                var dockerVendorModel = new DockerVendorModel(dockerId);
+                vendors.Add(DockerName, dockerVendorModel);
+                return dockerVendorModel;
+            }
+
+            // Docker is not empty and did not match standard docker format, must be a fargate id.
+            // Is AWS untilization is enabled and there is an AwsVendorModel, we need to add id in the AwsVendorModel.
+            if (_configuration.UtilizationDetectAws
+                && !string.IsNullOrWhiteSpace(dockerId)
+                && vendors.TryGetValue(AwsName, out var awsVendorModel))
+            {
+                ((AwsVendorModel)awsVendorModel).EcsDockerId = dockerId;
+                return awsVendorModel;
+            }
+
+            return null;
+        }
+
+        private string TryGetEcsDockerId(string metadataUri)
         {
             var responseJson = _vendorHttpApiRequestor.CallVendorApi(new Uri(metadataUri), GetMethod, EcsFargateName);
             var jObject = JObject.Parse(responseJson);
             var idToken = jObject.SelectToken("DockerId");
-            var id = NormalizeAndValidateMetadata((string)idToken, "DockerId", EcsFargateName);
-            return id == null ? null : new DockerVendorModel(id);
+            return NormalizeAndValidateMetadata((string)idToken, "DockerId", EcsFargateName);
         }
 
         public IVendorModel GetKubernetesInfo()
