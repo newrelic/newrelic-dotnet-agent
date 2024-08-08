@@ -115,9 +115,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
         {
-            var match = TryGetLogLine(AgentReportingToLogLineRegex);
-            return match.Success ? match.Groups[1].Value : null;
-        }
+            var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
+            return match.Groups[1].Value;        }
 
         public void WaitForConnect(TimeSpan? timeoutOrZero = null)
         {
