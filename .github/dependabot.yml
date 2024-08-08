@@ -43,4 +43,5 @@ updates:
       - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
       - dependency-name: "NUnit*"
       - dependency-name: "Selenium*"
-      - dependency-name: "xunit*"
+# Enable xunit after we fix the v2.9.0 upgrade blocker https://github.com/newrelic/newrelic-dotnet-agent/issues/2684
+#      - dependency-name: "xunit*"
