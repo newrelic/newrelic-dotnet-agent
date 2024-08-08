@@ -115,8 +115,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
         {
-            var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
-            return match.Groups[1].Value;
+            var match = TryGetLogLine(AgentReportingToLogLineRegex);
+            return match.Success ? match.Groups[1].Value : null;
         }
 
         public void WaitForConnect(TimeSpan? timeoutOrZero = null)
@@ -164,7 +164,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds:N0} seconds. Minimum count: {minimumCount}");
+            //_testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds:N0} seconds. Minimum count: {minimumCount}");
 
             var timeTaken = Stopwatch.StartNew();
             do
@@ -172,7 +172,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression} in {timeTaken.Elapsed.TotalSeconds:N1}s.");
+                    //_testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression} in {timeTaken.Elapsed.TotalSeconds:N1}s.");
                     return matches;
                 }
 
@@ -180,7 +180,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             } while (timeTaken.Elapsed < timeout);
 
             var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds:N0} seconds.  Expected line expression: {regularExpression}";
-            _testLogger?.WriteLine(message);
+            //_testLogger?.WriteLine(message);
             throw new Exception(message);
         }
 
