@@ -1,8 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
-using System.Text;
+using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -25,7 +24,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Consume,
+                RabbitMqHelper.VendorName,
+                destName,
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent),
+                routingKey: queue); // no way to get routing key from BasicGet
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,
