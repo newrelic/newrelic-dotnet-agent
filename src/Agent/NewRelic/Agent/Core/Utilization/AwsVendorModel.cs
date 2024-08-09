@@ -28,8 +28,5 @@ namespace NewRelic.Agent.Core.Utilization
 
         [JsonProperty("instanceType", NullValueHandling = NullValueHandling.Ignore)]
         public string InstanceType { get { return _instanceType; } }
-
-        [JsonProperty("ecsDockerId", NullValueHandling = NullValueHandling.Ignore)]
-        public string EcsDockerId { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Utilization
         private const string PcfName = @"pcf";
         private const string DockerName = @"docker";
         private const string KubernetesName = @"kubernetes";
-        private const string EcsFargateName = @"ecs-fargate";
+        private const string EcsName = @"ecs";
 
         private readonly string AwsTokenUri = @"http://169.254.169.254/latest/api/token";
         private readonly string AwsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
@@ -72,13 +72,24 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorMethods = new List<Func<IVendorModel>>();
 
             if (_configuration.UtilizationDetectAws)
+            {
                 vendorMethods.Add(GetAwsVendorInfo);
+
+                // Directly add the ECS vendor info if AWS is enabled and not null.
+                vendors.AddIfNotNull(EcsName, GetEcsVendorInfo());
+            }
             if (_configuration.UtilizationDetectAzure)
+            {
                 vendorMethods.Add(GetAzureVendorInfo);
+            }
             if (_configuration.UtilizationDetectGcp)
+            {
                 vendorMethods.Add(GetGcpVendorInfo);
+            }
             if (_configuration.UtilizationDetectPcf)
+            {
                 vendorMethods.Add(GetPcfVendorInfo);
+            }
 
             foreach (var vendorMethod in vendorMethods)
             {
@@ -93,16 +104,13 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             // If Docker info is set to be checked, it must be checked for all vendors even disabled ones.
-            if (_configuration.UtilizationDetectDocker)
+            // If we get AWS ECS info, we don't need to check Docker.
+            if (_configuration.UtilizationDetectDocker && !vendors.ContainsKey("ecs"))
             {
                 var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
                 if (dockerVendorInfo != null)
                 {
                     vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
-                }
-                else
-                {
-                    TrySetAwsEcsDockerId(vendors);
                 }
             }
 
@@ -353,18 +361,19 @@ namespace NewRelic.Agent.Core.Utilization
             return id == null ? null : new DockerVendorModel(id);
         }
 
-        // returns an IVendorModel to make testing easier.
-        public IVendorModel TrySetAwsEcsDockerId(IDictionary<string, IVendorModel> vendors)
+        public IVendorModel GetEcsVendorInfo()
         {
-            string dockerId = null;
+            IVendorModel ecsVendorModel = null;
             try
             {
                 var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV4EnvVar);
                 if (!string.IsNullOrWhiteSpace(metadataUri))
                 {
-                    dockerId = TryGetEcsDockerId(metadataUri);
-                    if (string.IsNullOrWhiteSpace(dockerId))
+                    ecsVendorModel = TryGetEcsVendorModel(metadataUri);
+                    if (ecsVendorModel == null)
+                    {
                         Log.Finest($"Found {AwsEcsMetadataV4EnvVar} but failed to parse Docker container id.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -372,16 +381,18 @@ namespace NewRelic.Agent.Core.Utilization
                 Log.Finest(ex, $"Failed to parse Docker container id from {AwsEcsMetadataV4EnvVar}.");
             }
 
-            if (string.IsNullOrWhiteSpace(dockerId))
+            if (ecsVendorModel == null)
             {
                 try
                 {
                     var metadataUri = GetProcessEnvironmentVariable(AwsEcsMetadataV3EnvVar);
                     if (!string.IsNullOrWhiteSpace(metadataUri))
                     {
-                        dockerId = TryGetEcsDockerId(metadataUri);
-                        if (string.IsNullOrWhiteSpace(dockerId))
+                        ecsVendorModel = TryGetEcsVendorModel(metadataUri);
+                        if (ecsVendorModel == null)
+                        {
                             Log.Finest($"Found {AwsEcsMetadataV3EnvVar} but failed to parse Docker container id.");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -390,39 +401,15 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(dockerId))
-            {
-                return null;
-            }
-
-            // If we get a standard docker id from ECS metadata, it is not fargate.
-            // Create a DockerVendorModel with the id.
-            if (Regex.IsMatch(dockerId, StandardDockerIdRegex))
-            {
-                var dockerVendorModel = new DockerVendorModel(dockerId);
-                vendors.Add(DockerName, dockerVendorModel);
-                return dockerVendorModel;
-            }
-
-            // Docker is not empty and did not match standard docker format, must be a fargate id.
-            // Is AWS untilization is enabled and there is an AwsVendorModel, we need to add id in the AwsVendorModel.
-            if (_configuration.UtilizationDetectAws
-                && !string.IsNullOrWhiteSpace(dockerId)
-                && vendors.TryGetValue(AwsName, out var awsVendorModel))
-            {
-                ((AwsVendorModel)awsVendorModel).EcsDockerId = dockerId;
-                return awsVendorModel;
-            }
-
-            return null;
+            return ecsVendorModel;
         }
 
-        private string TryGetEcsDockerId(string metadataUri)
+        private IVendorModel TryGetEcsVendorModel(string metadataUri)
         {
-            var responseJson = _vendorHttpApiRequestor.CallVendorApi(new Uri(metadataUri), GetMethod, EcsFargateName);
+            var responseJson = _vendorHttpApiRequestor.CallVendorApi(new Uri(metadataUri), GetMethod, EcsName);
             var jObject = JObject.Parse(responseJson);
             var idToken = jObject.SelectToken("DockerId");
-            return NormalizeAndValidateMetadata((string)idToken, "DockerId", EcsFargateName);
+            return idToken == null ? null : new EcsVendorModel((string)idToken);
         }
 
         public IVendorModel GetKubernetesInfo()
