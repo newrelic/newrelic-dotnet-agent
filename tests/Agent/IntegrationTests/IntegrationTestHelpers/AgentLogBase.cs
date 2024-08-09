@@ -88,9 +88,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public abstract IEnumerable<string> GetFileLines();
 
-        public string GetAccountId(TimeSpan? timeoutOrZero = null)
+        public string GetAccountId()
         {
-            var reportingAppLink = GetReportingAppLink(timeoutOrZero);
+            var reportingAppLink = GetReportingAppLink();
             var reportingAppUri = new Uri(reportingAppLink);
             var accountId = reportingAppUri.Segments[2];
             if (accountId == null)
@@ -98,9 +98,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return accountId.TrimEnd('/');
         }
 
-        public string GetApplicationId(TimeSpan? timeoutOrZero = null)
+        public string GetApplicationId()
         {
-            var reportingAppLink = GetReportingAppLink(timeoutOrZero);
+            var reportingAppLink = GetReportingAppLink();
             var reportingAppUri = new Uri(reportingAppLink);
             var applicationId = reportingAppUri.Segments[4];
             if (applicationId == null)
@@ -108,15 +108,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return applicationId.TrimEnd('/');
         }
 
-        public string GetCrossProcessId(TimeSpan? timeoutOrZero = null)
+        public string GetCrossProcessId()
         {
             return $@"{GetAccountId()}#{GetApplicationId()}";
         }
 
-        public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
+        private string GetReportingAppLink()
         {
-            var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
-            return match.Groups[1].Value;        }
+            var match = TryGetLogLine(AgentReportingToLogLineRegex);
+            if (!match.Success || match.Groups.Count < 2)
+                throw new Exception("Could not find reporting app link in log file.");
+
+            return match.Groups[1].Value;
+        }
 
         public void WaitForConnect(TimeSpan? timeoutOrZero = null)
         {
