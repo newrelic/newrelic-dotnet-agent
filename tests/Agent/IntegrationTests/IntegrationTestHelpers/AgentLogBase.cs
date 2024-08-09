@@ -88,9 +88,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public abstract IEnumerable<string> GetFileLines();
 
-        public string GetAccountId(TimeSpan? timeoutOrZero = null)
+        public string GetAccountId()
         {
-            var reportingAppLink = GetReportingAppLink(timeoutOrZero);
+            var reportingAppLink = GetReportingAppLink();
             var reportingAppUri = new Uri(reportingAppLink);
             var accountId = reportingAppUri.Segments[2];
             if (accountId == null)
@@ -98,9 +98,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return accountId.TrimEnd('/');
         }
 
-        public string GetApplicationId(TimeSpan? timeoutOrZero = null)
+        public string GetApplicationId()
         {
-            var reportingAppLink = GetReportingAppLink(timeoutOrZero);
+            var reportingAppLink = GetReportingAppLink();
             var reportingAppUri = new Uri(reportingAppLink);
             var applicationId = reportingAppUri.Segments[4];
             if (applicationId == null)
@@ -108,14 +108,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return applicationId.TrimEnd('/');
         }
 
-        public string GetCrossProcessId(TimeSpan? timeoutOrZero = null)
+        public string GetCrossProcessId()
         {
             return $@"{GetAccountId()}#{GetApplicationId()}";
         }
 
-        public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
+        private string GetReportingAppLink()
         {
-            var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
+            var match = TryGetLogLine(AgentReportingToLogLineRegex);
+            if (!match.Success || match.Groups.Count < 2)
+                throw new Exception("Could not find reporting app link in log file.");
+
             return match.Groups[1].Value;
         }
 
@@ -164,15 +167,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds:N0} seconds. Minimum count: {minimumCount}");
-
             var timeTaken = Stopwatch.StartNew();
             do
             {
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression} in {timeTaken.Elapsed.TotalSeconds:N1}s.");
                     return matches;
                 }
 
@@ -180,7 +180,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             } while (timeTaken.Elapsed < timeout);
 
             var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds:N0} seconds.  Expected line expression: {regularExpression}";
-            _testLogger?.WriteLine(message);
             throw new Exception(message);
         }
 
