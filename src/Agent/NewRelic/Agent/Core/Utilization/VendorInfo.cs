@@ -76,7 +76,12 @@ namespace NewRelic.Agent.Core.Utilization
                 vendorMethods.Add(GetAwsVendorInfo);
 
                 // Directly add the ECS vendor info if AWS is enabled and not null.
-                vendors.AddIfNotNull(EcsName, GetEcsVendorInfo());
+                var ecsVendorInfo = GetEcsVendorInfo();
+                if (ecsVendorInfo != null)
+                {
+                    vendors.Add(ecsVendorInfo.VendorName, ecsVendorInfo);
+                }
+                
             }
             if (_configuration.UtilizationDetectAzure)
             {
@@ -105,7 +110,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             // If Docker info is set to be checked, it must be checked for all vendors even disabled ones.
             // If we get AWS ECS info, we don't need to check Docker.
-            if (_configuration.UtilizationDetectDocker && !vendors.ContainsKey("ecs"))
+            if (_configuration.UtilizationDetectDocker && !vendors.ContainsKey(EcsName))
             {
                 var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
                 if (dockerVendorInfo != null)

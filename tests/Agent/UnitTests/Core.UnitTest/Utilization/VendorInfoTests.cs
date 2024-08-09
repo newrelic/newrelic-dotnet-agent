@@ -484,7 +484,7 @@ namespace NewRelic.Agent.Core.Utilization
 #endif
 
         [Test]
-        public void GetVendors_GetVendors_CapturesEcs_WhenAwsExists()
+        public void GetVendors_CapturesEcs_WhenAwsExists()
         {
             // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
@@ -569,7 +569,7 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
-        public void GetVendors_GetVendors_CapturesEcs_WhenAwsIsNull()
+        public void GetVendors_CapturesEcs_WhenAwsIsNull()
         {
             Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
 {
@@ -637,7 +637,7 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
-        public void GetVendors_GetVendors_DoesNotCaptureDocker_WhenEcsExists()
+        public void GetVendors_DoesNotCaptureDocker_WhenEcsExists()
         {
             // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
@@ -709,9 +709,9 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
-        public void GetVendors_GetVendors_Vendors_IsEmpty_BadEcsMetadata()
+        public void GetVendors_Vendors_IsEmpty_BadEcsMetadata()
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("awesome");
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
 
             // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
@@ -726,7 +726,7 @@ namespace NewRelic.Agent.Core.Utilization
         [Test]
         public void GetVendors_GetEcsVendorInfo_VarV4()
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
 {
     "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
     "Name": "fargateapp",
@@ -793,7 +793,7 @@ namespace NewRelic.Agent.Core.Utilization
         [Test]
         public void GetVendors_GetEcsVendorInfo_VarV3()
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
 {
     "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
     "Name": "fargateapp",
@@ -838,9 +838,39 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
+        public void GetVendors_GetEcsVendorInfo_Throws_VarV4()
+        {
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+
+            // This docker ID is in the ec2 format
+            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
+            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+
+            var model = vendorInfo.GetEcsVendorInfo();
+            Assert.That(model, Is.Null);
+        }
+
+        [Test]
+        public void GetVendors_GetEcsVendorInfo_Throws_VarV3()
+        {
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+
+            // This docker ID is in the ec2 format
+            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+            SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
+            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+
+            var model = vendorInfo.GetEcsVendorInfo();
+            Assert.That(model, Is.Null);
+        }
+
+        [Test]
         public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV4()
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("awesome");
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
 
             // This docker ID is in the ec2 format
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
@@ -855,7 +885,7 @@ namespace NewRelic.Agent.Core.Utilization
         [Test]
         public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV3()
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("awesome");
+            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
 
             // This docker ID is in the ec2 format
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
