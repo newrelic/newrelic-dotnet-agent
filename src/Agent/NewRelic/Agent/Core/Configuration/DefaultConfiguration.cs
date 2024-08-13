@@ -1882,6 +1882,14 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get { return EnvironmentOverrides(_localConfiguration.utilization.detectKubernetes, "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES"); }
         }
+        public bool UtilizationDetectAzureFunction
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.utilization.detectAzureFunction, "NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION");
+            }
+        }
+
 
         public int? UtilizationLogicalProcessors
         {
@@ -2061,7 +2069,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if(ServerlessModeEnabled || !LoggingEnabled)
+                if (ServerlessModeEnabled || !LoggingEnabled)
                 {
                     return true;
                 }
@@ -2080,7 +2088,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return !HighSecurityModeEnabled && ServerCanDisable(_serverConfiguration.AICollectionEnabled, EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED"));
             }
         }
-        
+
         public bool AiMonitoringStreamingEnabled
         {
             get
@@ -2100,6 +2108,8 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
+
+        public bool AzureFunctionModeEnabled => _bootstrapConfiguration.AzureFunctionModeEnabled;
 
         #endregion
 
@@ -2418,7 +2428,7 @@ namespace NewRelic.Agent.Core.Configuration
             return EnvironmentOverrides(_environment, local, environmentVariableNames);
         }
 
-        public static string EnvironmentOverrides(IEnvironment environment, string local,  params string[] environmentVariableNames)
+        public static string EnvironmentOverrides(IEnvironment environment, string local, params string[] environmentVariableNames)
         {
             var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
                 .Select(environment.GetEnvironmentVariable)

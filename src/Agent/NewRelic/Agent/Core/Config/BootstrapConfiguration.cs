@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.Config
         bool AgentEnabled { get; }
         string AgentEnabledAt { get; }
         ILogConfig LogConfig { get; }
+        bool AzureFunctionModeEnabled { get; }
     }
 
     /// <summary>
@@ -123,6 +124,8 @@ namespace NewRelic.Agent.Core.Config
         }
 
         public ILogConfig LogConfig { get; private set; }
+
+        public bool AzureFunctionModeEnabled => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {

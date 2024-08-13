@@ -533,6 +533,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("utilization.detect_kubernetes_enabled")]
         public bool UtilizationDetectKubernetes => _configuration.UtilizationDetectKubernetes;
 
+        [JsonProperty("utilization.detect_azure_function_enabled")]
+        public bool UtilizationDetectAzureFunction { get; }
+
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
 
@@ -679,6 +682,8 @@ namespace NewRelic.Agent.Core.Configuration
         // Serializing this Func doesn't provide us with more information than the supportability metrics
         [JsonIgnore()]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
+
+        public bool AzureFunctionModeEnabled { get; }
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
