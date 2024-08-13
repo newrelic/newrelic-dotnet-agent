@@ -125,6 +125,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name);
 
         AttributeDefinition<object, object> GetLambdaAttribute(string name);
+        AttributeDefinition<object, object> GetFaasAttribute(string name);
 
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
@@ -188,6 +189,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
 
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
@@ -262,6 +264,22 @@ namespace NewRelic.Agent.Core.Attributes
         {
             return _lambdaAttributes.GetOrAdd(name, CreateLambdaAttribute);
         }
+
+        private AttributeDefinition<object, object> CreateFaasAttribute(string attribName)
+        {
+            return AttributeDefinitionBuilder
+                .Create<object, object>(attribName, AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter);
+        }
+
+        public AttributeDefinition<object, object> GetFaasAttribute(string name)
+        {
+            return _faasAttributes.GetOrAdd(name, CreateFaasAttribute);
+        }
+
 
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
         {
