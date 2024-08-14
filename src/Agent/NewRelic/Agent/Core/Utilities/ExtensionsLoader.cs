@@ -85,9 +85,6 @@ namespace NewRelic.Agent.Core.Utilities
                 { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaSerializerWrapper",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
-
-                //// Azure Functions
-                //{ "AzureFunctionInvokeAsyncWrapper",                                                               Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AzureFunction.dll") },
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();
