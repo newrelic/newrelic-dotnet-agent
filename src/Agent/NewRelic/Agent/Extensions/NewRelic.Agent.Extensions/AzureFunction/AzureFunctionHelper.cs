@@ -9,7 +9,7 @@ namespace NewRelic.Agent.Extensions.AzureFunction
     {
         public static string GetResourceUri(string websiteSiteName)
         {
-            // TODO: WEBSITE_RESOURCE_GROUP doesn't seem to be available. 
+            // TODO: WEBSITE_RESOURCE_GROUP doesn't seem to be available when running in Azure. Defaulting to "unknown" for now, but this will need to be addressed.
             string websiteResourceGroup = Environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP") ?? "unknown";
             string websiteOwnerName = Environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME") ?? string.Empty;
             int idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
