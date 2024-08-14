@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
@@ -16,7 +17,6 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         public bool IsTransactionRequired => false;
 
         private static bool _coldStart = true;
-        private FunctionDetails _functionDetails;
         private static bool IsColdStart => _coldStart && !(_coldStart = false);
 
         private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
@@ -29,22 +29,21 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
             ITransaction transaction)
         {
-
             dynamic functionContext = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
             if (functionContext == null)
             {
-                // TODO: logging here?
+                agent.Logger.Debug($"{WrapperName}: FunctionContext is null, can't instrument this invocation.");
                 return Delegates.NoOp;
             }
 
-            _functionDetails = new FunctionDetails(functionContext);
+            var functionDetails = new FunctionDetails(functionContext);
             // TODO: add validation for FunctionDetails? 
 
             transaction = agent.CreateTransaction(
-                isWeb: _functionDetails.Trigger == "http",
+                isWeb: functionDetails.Trigger == "http",
                 category: "AzureFunction", // TODO: Is this correct?
-                transactionDisplayName: _functionDetails.FunctionName,
+                transactionDisplayName: functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             if (instrumentedMethodCall.IsAsync)
@@ -58,12 +57,12 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 transaction.AddFaasAttribute("faas.coldStart", "true");
             }
 
-            transaction.AddFaasAttribute("cloud.resource_id", AzureFunctionHelper.GetResourceIdWithFunctionName(_functionDetails.FunctionName));
-            transaction.AddFaasAttribute("faas.name", _functionDetails.FunctionName);
-            transaction.AddFaasAttribute("faas.trigger", _functionDetails.Trigger);
-            transaction.AddFaasAttribute("faas.invocation_id", _functionDetails.InvocationId);
+            transaction.AddFaasAttribute("cloud.resource_id", AzureFunctionHelper.GetResourceIdWithFunctionName(functionDetails.FunctionName));
+            transaction.AddFaasAttribute("faas.name", functionDetails.FunctionName);
+            transaction.AddFaasAttribute("faas.trigger", functionDetails.Trigger);
+            transaction.AddFaasAttribute("faas.invocation_id", functionDetails.InvocationId);
 
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
+            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionDetails.FunctionName);
 
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
@@ -78,10 +77,12 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 {
                     if (responseTask.IsFaulted)
                     {
-                        // TODO: add error handling here? 
+                        // TODO: add error handling here
                         //HandleError(segment, functionContext, responseTask, agent);
                         return;
                     }
+
+                    // TODO: Do we need any additional work here?
                 }
                 finally
                 {
@@ -90,14 +91,20 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 }
             }
         }
+    }
 
-        private class FunctionDetails
+    internal class FunctionDetails
+    {
+        private static ConcurrentDictionary<string, string> _functionTriggerCache = new();
+
+        public FunctionDetails(dynamic functionContext)
         {
-            public FunctionDetails(dynamic functionContext)
-            {
-                FunctionName = functionContext.FunctionDefinition.Name;
-                InvocationId = functionContext.InvocationId;
+            FunctionName = functionContext.FunctionDefinition.Name;
+            InvocationId = functionContext.InvocationId;
 
+            // cache the trigger by function name
+            if (!_functionTriggerCache.TryGetValue(FunctionName, out string trigger))
+            {
                 // TODO: Needs null checks, optimization and possible caching of property accessors
                 // functionContext.FunctionDefinition.Parameters is an ImmutableArray<FunctionParameter>
                 var funcAsObj = (object)functionContext;
@@ -115,8 +122,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     {
                         if (propVal.GetType().Name.Contains("Trigger"))
                         {
-                            var trigger = propVal.GetType().Name;
-                            Trigger = trigger.ResolveTriggerType();
+                            var triggerTypeName = propVal.GetType().Name;
+                            Trigger = triggerTypeName.ResolveTriggerType();
                             foundTrigger = true;
                             break;
                         }
@@ -127,14 +134,19 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
                 if (!foundTrigger) // shouldn't happen, as all functions are required to have a trigger
                     Trigger = "other";
+
+                _functionTriggerCache[FunctionName] = Trigger;
             }
-
-            public string FunctionName { get; private set; }
-
-            public string Trigger { get; private set; }
-            public string InvocationId { get; private set; }
-
+            else
+            {
+                Trigger = trigger;
+            }
         }
 
+        public string FunctionName { get; private set; }
+
+        public string Trigger { get; private set; }
+        public string InvocationId { get; private set; }
     }
+
 }
