@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Extensions.AzureFunction;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -293,6 +294,14 @@ namespace NewRelic.Agent.Core.Configuration
                 _applicationNamesSource = "Process Name";
 
                 return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
+            }
+
+            // TODO: This might need a higher priority in this method
+            if (_bootstrapConfiguration.AzureFunctionModeEnabled)
+            {
+                Log.Info("Application name from Azure Function site name.");
+                _applicationNamesSource = "Azure Function";
+                return new List<string> { AzureFunctionHelper.GetServiceName() };
             }
 
             throw new Exception("An application name must be provided");
