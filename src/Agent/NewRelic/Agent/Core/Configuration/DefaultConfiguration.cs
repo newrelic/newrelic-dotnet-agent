@@ -201,6 +201,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ServerlessModeEnabled => _bootstrapConfiguration.ServerlessModeEnabled;
 
+        public string ServerlessFunctionName => _bootstrapConfiguration.ServerlessFunctionName;
+
+        public string ServerlessFunctionVersion => _bootstrapConfiguration.ServerlessFunctionVersion;
+
         private string _agentLicenseKey;
         public virtual string AgentLicenseKey
         {
@@ -272,17 +276,13 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
-            if (ApplicationNameIsBlankOrDefault())
+            if (ServerlessModeEnabled)
             {
-                if (ServerlessModeEnabled)
+                if (!string.IsNullOrEmpty(ServerlessFunctionName))
                 {
-                    string name = _bootstrapConfiguration.ServerlessFunctionName;
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        Log.Info("Application name from Lambda Function Name.");
-                        _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
-                        return new List<string> { name };
-                    }
+                    Log.Info("Application name from Lambda Function Name.");
+                    _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
+                    return new List<string> { ServerlessFunctionName };
                 }
             }
 
@@ -313,9 +313,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             throw new Exception("An application name must be provided");
         }
-
-        private bool ApplicationNameIsBlankOrDefault() => (_localConfiguration.application.name.Count == 0) ||
-            ((_localConfiguration.application.name.Count == 1) && (_localConfiguration.application.name[0] == DefaultAppNameInConfigFile));
 
         private string GetLambdaFunctionName() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
 

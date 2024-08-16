@@ -2113,48 +2113,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesDoesNotUseLambdaFunctionNameIfConfigSet()
-        {
-            _runTimeConfig.ApplicationNames = new List<string>();
-
-            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
-            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
-            //Sets to default return null for all calls unless overriden by later arrange.
-            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
-
-            _localConfig.application.name = new List<string> { "MyOverrideName" };
-
-            NrAssert.Multiple(
-                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
-                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyOverrideName")),
-                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
-            );
-        }
-
-        [Test]
-        public void ApplicationNamesDoesNotUseLambdaFunctionNameIfMultipleNamesSet()
-        {
-            _runTimeConfig.ApplicationNames = new List<string>();
-
-            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
-            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
-            //Sets to default return null for all calls unless overriden by later arrange.
-            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
-
-            _localConfig.application.name = new List<string> { "My Application", "My Other Name" };
-
-            NrAssert.Multiple(
-                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(2)),
-                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My Application")),
-                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
-            );
-        }
-
-        [Test]
         public void ApplicationNamesDoesNotUseLambdaFunctionNameIfEnvVarSet()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
