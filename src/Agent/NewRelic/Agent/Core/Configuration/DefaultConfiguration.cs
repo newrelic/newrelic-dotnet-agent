@@ -41,6 +41,8 @@ namespace NewRelic.Agent.Core.Configuration
         private const int MaxExptectedErrorConfigEntries = 50;
         private const int MaxIgnoreErrorConfigEntries = 50;
 
+        private const string DefaultAppNameInConfigFile = "My Application"; // The name in our default newrelic.config file
+
         private static long _currentConfigurationVersion;
         private readonly IEnvironment _environment = new EnvironmentMock();
         private readonly IProcessStatic _processStatic = new ProcessStatic();
@@ -270,6 +272,20 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
+            if (ApplicationNameIsBlankOrDefault())
+            {
+                if (ServerlessModeEnabled)
+                {
+                    string name = GetLambdaFunctionName();
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        Log.Info("Application name from Lambda Function Name.");
+                        _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
+                        return new List<string> { name };
+                    }
+                }
+            }
+
             if (_localConfiguration.application.name.Count > 0)
             {
                 Log.Info("Application name from newrelic.config.");
@@ -297,6 +313,11 @@ namespace NewRelic.Agent.Core.Configuration
 
             throw new Exception("An application name must be provided");
         }
+
+        private bool ApplicationNameIsBlankOrDefault() => (_localConfiguration.application.name.Count == 0) ||
+            ((_localConfiguration.application.name.Count == 1) && (_localConfiguration.application.name[0] == DefaultAppNameInConfigFile));
+
+        private string GetLambdaFunctionName() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
 
         private string GetAppPoolId()
         {
