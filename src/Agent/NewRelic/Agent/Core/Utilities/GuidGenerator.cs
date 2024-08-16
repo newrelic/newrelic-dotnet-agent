@@ -71,11 +71,17 @@ namespace NewRelic.Agent.Core.Utilities
                 return null;
 
             var current = fieldReadAccessor(null);
+            if (current == null)
+                return null;
+
             // get the Value property
             var valuePropertyAccessor = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(current.GetType(), "Value");
             if (valuePropertyAccessor == null)
                 return null;
+
             var value = valuePropertyAccessor(current);
+            if (value == null)
+                return null;
 
             // get IdFormat property
             var idFormatGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(value.GetType(), "IdFormat");
