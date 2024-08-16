@@ -41,7 +41,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             // TODO: add validation for FunctionDetails? 
 
             transaction = agent.CreateTransaction(
-                isWeb: functionDetails.Trigger == "http",
+                isWeb: functionDetails.IsWebTrigger,
                 category: "AzureFunction", // TODO: Is this correct?
                 transactionDisplayName: functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
@@ -147,6 +147,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
         public string Trigger { get; private set; }
         public string InvocationId { get; private set; }
+        public bool IsWebTrigger => Trigger == "http";
     }
 
 }
