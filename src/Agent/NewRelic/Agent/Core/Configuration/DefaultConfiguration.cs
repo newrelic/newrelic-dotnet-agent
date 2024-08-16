@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (ServerlessModeEnabled)
                 {
-                    string name = GetLambdaFunctionName();
+                    string name = _bootstrapConfiguration.ServerlessFunctionName;
                     if (!string.IsNullOrEmpty(name))
                     {
                         Log.Info("Application name from Lambda Function Name.");

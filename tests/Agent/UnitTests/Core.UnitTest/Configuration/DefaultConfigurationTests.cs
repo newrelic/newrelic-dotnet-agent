@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using Telerik.JustMock.Expectations.Abstraction;
 using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
@@ -2075,9 +2076,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")).Returns("MyFunc");
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
@@ -2096,9 +2097,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")).Returns("MyFunc");
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
@@ -2117,9 +2118,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")).Returns("MyFunc");
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
@@ -2138,9 +2139,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")).Returns("MyFunc");
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
@@ -2159,10 +2160,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns("My App Name");
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")).Returns("MyFunc");
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
 
