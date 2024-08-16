@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NuGet.Protocol" Version="6.10.1" />
+    <PackageReference Include="NuGet.Protocol" Version="6.11.0" />
     <PackageReference Include="Octokit" Version="13.0.1" />
     <PackageReference Include="RestSharp" Version="111.4.1" />
     <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="111.4.1" />
