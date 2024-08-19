@@ -312,8 +312,6 @@ namespace NewRelic.Agent.Core.Configuration
             throw new Exception("An application name must be provided");
         }
 
-        private string GetLambdaFunctionName() => _environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME");
-
         private string GetAppPoolId()
         {
             var appPoolId = _environment.GetEnvironmentVariable("APP_POOL_ID");

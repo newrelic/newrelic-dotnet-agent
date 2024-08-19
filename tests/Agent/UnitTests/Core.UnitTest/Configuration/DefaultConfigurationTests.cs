@@ -2077,6 +2077,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionVersion).Returns("2");
             //Sets to default return null for all calls unless overriden by later arrange.
             Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
@@ -2087,6 +2088,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
                 () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyFunc")),
+                () => Assert.That(_defaultConfig.ServerlessFunctionVersion, Is.EqualTo("2")),
                 () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Environment Variable (AWS_LAMBDA_FUNCTION_NAME)"))
             );
         }
