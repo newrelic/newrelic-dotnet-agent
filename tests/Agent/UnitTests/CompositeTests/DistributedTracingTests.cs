@@ -290,6 +290,8 @@ namespace CompositeTests
         {
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
+            _compositeTestAgent.UninitializeGuidGenerator();
+
             _compositeTestAgent.StartActivity();
 
             var transaction = _agent.CreateTransaction(

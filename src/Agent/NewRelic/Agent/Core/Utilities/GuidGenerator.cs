@@ -42,10 +42,16 @@ namespace NewRelic.Agent.Core.Utilities
             var retVal = _traceGeneratorFunc();
             if (retVal == null)
             {
-                // Fall back to using our standard method of generating traceIds.
-                Log.Info($"Trace IDs will be generated using the standard generator");
-                Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
-                return _traceGeneratorFunc();
+                if (!_hasDiagnosticSourceReference)
+                {
+                    // Fall back to using our standard method of generating traceIds if the application doesn't reference DiagnosticSource
+                    Log.Info($"Trace IDs will be generated using the standard generator");
+                    Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
+                    return _traceGeneratorFunc();
+                }
+
+                // couldn't get a traceId from the current activity (maybe there wasn't one), so fallback to the standard generator for this request only
+                return GenerateTraceId();
             }
 
             return retVal;
@@ -111,6 +117,17 @@ namespace NewRelic.Agent.Core.Utilities
             // get TraceId property
             _traceIdGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(value.GetType(), "TraceId");
             return _traceIdGetter(value).ToString();
+        }
+
+        /// <summary>
+        /// FOR USE IN TESTS ONLY!!
+        /// </summary>
+        public static void Uninitialize()
+        {
+            _initialized = false;
+            _hasDiagnosticSourceReference = false;
+            _traceGeneratorFunc = GetTraceIdFromCurrentActivity;
+            _traceIdGetter = null;
         }
     }
 }
