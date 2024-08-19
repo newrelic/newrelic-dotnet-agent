@@ -37,7 +37,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
+using System.Diagnostics;
 
 namespace CompositeTests
 {
@@ -111,6 +111,10 @@ namespace CompositeTests
         private readonly bool _shouldAllowThreads;
         private MemoryStream _serverlessPayloadMemoryStream;
         private readonly IBootstrapConfiguration _originalBootstrapConfig;
+
+        private ActivitySource _activitySource;
+        private ActivityListener _listener;
+        private Activity _activity;
 
         public IContainer Container => _container;
 
@@ -317,6 +321,8 @@ namespace CompositeTests
             if (_originalBootstrapConfig != null)
                 ConfigurationLoader.UseBootstrapConfigurationForTesting(_originalBootstrapConfig);
 
+            StopActivity(); // just in case
+
             _container.Dispose();
         }
 
@@ -403,6 +409,40 @@ namespace CompositeTests
         public void SetEventListenerSamplersEnabled(bool enable)
         {
             CurrentConfiguration.EventListenerSamplersEnabled = enable;
+        }
+
+        public void StartActivity()
+        {
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+            _activitySource = new ActivitySource("CompositeTestAgent");
+            _listener = new ActivityListener();
+            _listener.ShouldListenTo = x => x.Name == "CompositeTestAgent";
+            _listener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData;
+            ActivitySource.AddActivityListener(_listener);
+
+            _activity = _activitySource.CreateActivity("CompositeTestAgent", ActivityKind.Server);
+            _activity.Start();
+        }
+
+        public void StopActivity()
+        {
+            if (_activity != null)
+            {
+                _activity.Stop();
+                _activity.Dispose();
+
+                _listener.Dispose();
+                _activitySource.Dispose();
+
+                _activity = null;
+                _listener = null;
+                _activitySource = null;
+            }
+        }
+
+        public string GetActivityTraceId()
+        {
+            return _activity?.RootId;
         }
 
         private void EnableAggregators()

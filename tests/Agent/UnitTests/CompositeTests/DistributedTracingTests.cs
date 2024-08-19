@@ -285,6 +285,52 @@ namespace CompositeTests
             });
         }
 
+        [Test]
+        public void Transaction_Inside_DiagnosticSourceActivity_GeneratesExpectedTraceId()
+        {
+            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+            _compositeTestAgent.StartActivity();
+
+            var transaction = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: false);
+
+
+            var segment = _agent.StartTransactionSegmentOrThrow("segment");
+            segment.End();
+            transaction.End();
+
+            _compositeTestAgent.Harvest();
+
+            foreach (var span in _compositeTestAgent.SpanEvents)
+            {
+                var intrinsicAttributes = span.IntrinsicAttributes();
+                Assert.Multiple(() =>
+                {
+                    Assert.That(IsLowerCase(intrinsicAttributes["traceId"].ToString()), Is.True);
+                    Assert.That(IsLowerCase(intrinsicAttributes["transactionId"].ToString()), Is.True);
+
+                    Assert.That(intrinsicAttributes["traceId"].ToString(), Is.EqualTo(_compositeTestAgent.GetActivityTraceId()));
+                });
+            }
+
+            foreach (TransactionEventWireModel tx in _compositeTestAgent.TransactionEvents)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(IsLowerCase(tx.IntrinsicAttributes()["guid"].ToString()), Is.True);
+                    Assert.That(IsLowerCase(tx.IntrinsicAttributes()["traceId"].ToString()), Is.True);
+
+                    Assert.That(tx.IntrinsicAttributes()["traceId"].ToString(), Is.EqualTo(_compositeTestAgent.GetActivityTraceId()));
+                });
+            }
+
+            _compositeTestAgent.StopActivity();
+        }
+
         private static Dictionary<string, string> NewRelicHeaders
         {
             get
