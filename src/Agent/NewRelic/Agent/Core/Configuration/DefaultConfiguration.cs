@@ -41,8 +41,6 @@ namespace NewRelic.Agent.Core.Configuration
         private const int MaxExptectedErrorConfigEntries = 50;
         private const int MaxIgnoreErrorConfigEntries = 50;
 
-        private const string DefaultAppNameInConfigFile = "My Application"; // The name in our default newrelic.config file
-
         private static long _currentConfigurationVersion;
         private readonly IEnvironment _environment = new EnvironmentMock();
         private readonly IProcessStatic _processStatic = new ProcessStatic();
