@@ -604,11 +604,44 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             if (IsW3wpProcess(processPath, parentProcessPath)) {
-                return ShouldInstrumentApplicationPool(appPoolId);
+                return
+                (IsAzureFunction() && ShouldInstrumentAzureFunction(appPoolId, commandLine))
+                    || ShouldInstrumentApplicationPool(appPoolId);
             }
 
             return true;
         }
+
+        bool IsAzureFunction() const
+        {
+            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
+            auto functionsWorkerRuntime = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
+            return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
+        }
+
+        bool ShouldInstrumentAzureFunction(xstring_t const& appPoolId, xstring_t const& commandLine)
+        {
+            LogInfo(L"Azure function detected. Determining whether to instrument " + commandLine);
+
+            bool isAzureWebJobsScriptWebHost = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
+            if (isAzureWebJobsScriptWebHost)
+            {
+                LogInfo(L"Appears to be Azure WebJobs Script WebHost based on commandLine. Not instrumenting this process.");
+                return false;
+            }
+
+            // AzureFunctionsNetHost.exe is the typical startup command for Azure Functions
+            bool isAzureFunctionsNetHost = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("FunctionsNetHost.exe"));
+            if (isAzureFunctionsNetHost)
+            {
+                LogInfo(L"FunctionNetHost.exe is a valid Azure function command. This process will be instrumented.");
+                return true;
+            }
+
+            LogInfo("Couldn't determine whether this Azure Function process should be instrumented based on commandLine. Falling back to checking application pool");
+            return false;
+        }
+
 
         // Test to see if we should instrument this .NET Framework application at all
         bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
