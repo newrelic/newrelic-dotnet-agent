@@ -355,6 +355,8 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.AgentEnabledAt, Is.Not.Null);
                 Assert.That(agentSettings.ServerlessModeEnabled, Is.False);
                 Assert.That(agentSettings.LoggingLevel, Is.Not.Null);
+                Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
+                Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
                 Assert.That(json, Is.EqualTo(expectedJson.Condense()));
             });
         }

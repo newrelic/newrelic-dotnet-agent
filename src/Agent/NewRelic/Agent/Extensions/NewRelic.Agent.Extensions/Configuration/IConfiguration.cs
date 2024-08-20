@@ -15,6 +15,8 @@ namespace NewRelic.Agent.Configuration
         string AgentEnabledAt { get; }
 
         bool ServerlessModeEnabled { get; }
+        string ServerlessFunctionName { get; }
+        string ServerlessFunctionVersion { get; }
 
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }

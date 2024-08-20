@@ -18,6 +18,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ServerlessModeEnabled  => false;
 
+        public string ServerlessFunctionName => null;
+
+        public string ServerlessFunctionVersion => null;
+
         public string AgentLicenseKey => "AgentLicenseKey";
 
         public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
