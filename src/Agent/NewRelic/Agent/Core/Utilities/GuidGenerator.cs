@@ -40,22 +40,31 @@ namespace NewRelic.Agent.Core.Utilities
 
         public static string GenerateNewRelicTraceId()
         {
-            var retVal = _traceGeneratorFunc();
-            if (retVal == null)
+            try
             {
-                if (!_hasDiagnosticSourceReference)
+                var retVal = _traceGeneratorFunc();
+                if (retVal == null)
                 {
-                    // Fall back to using our standard method of generating traceIds if the application doesn't reference DiagnosticSource
-                    Log.Info($"Trace IDs will be generated using the standard generator");
-                    Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
-                    return _traceGeneratorFunc();
+                    if (!_hasDiagnosticSourceReference)
+                    {
+                        // Fall back to using our standard method of generating traceIds if the application doesn't reference DiagnosticSource
+                        Log.Info("No reference to DiagnosticSource; trace IDs will be generated using the standard generator");
+                        Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
+                        return _traceGeneratorFunc();
+                    }
+
+                    // couldn't get a traceId from the current activity (maybe there wasn't one), so fallback to the standard generator for this request only
+                    return GenerateTraceId();
                 }
 
-                // couldn't get a traceId from the current activity (maybe there wasn't one), so fallback to the standard generator for this request only
-                return GenerateTraceId();
+                return retVal;
             }
-
-            return retVal;
+            catch (Exception e)
+            {
+                Log.Info(e, "Unexpected exception generating traceId using the current activity. Falling back to the standard generator");
+                Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
+                return _traceGeneratorFunc();
+            }
         }
 
         private static string GenerateTraceId()
