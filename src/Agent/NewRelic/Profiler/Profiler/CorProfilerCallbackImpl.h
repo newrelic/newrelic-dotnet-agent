@@ -1103,6 +1103,14 @@ namespace NewRelic { namespace Profiler {
             return timer;
         }
 
+        // TODO: This should probably be implemented somewhere else (maybe in systemCalls?)
+        bool IsAzureFunctionMode() const
+        {
+            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
+            auto azureFunctionMode = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
+            return azureFunctionMode != nullptr && azureFunctionMode->length() > 0;
+        }
+
         static uint64_t GetHighResolutionTimeInMilliseconds()
         {
             static auto frequency = GetFrequency();
@@ -1144,6 +1152,7 @@ namespace NewRelic { namespace Profiler {
             auto configuration = std::make_shared<Configuration::Configuration>(globalNewRelicConfigurationXml, localNewRelicConfigurationXml, applicationConfigurationXml, _systemCalls);
             nrlog::StdLog.SetLevel(configuration->GetLoggingLevel());
             nrlog::StdLog.SetConsoleLogging(_systemCalls->GetConsoleLoggingEnabled(configuration->GetConsoleLogging()));
+            nrlog::StdLog.SetAzureFunctionMode(IsAzureFunctionMode());
             nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
             nrlog::StdLog.SetInitalized();
 
