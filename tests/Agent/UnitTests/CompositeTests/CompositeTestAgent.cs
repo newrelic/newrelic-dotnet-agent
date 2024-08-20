@@ -112,11 +112,6 @@ namespace CompositeTests
         private MemoryStream _serverlessPayloadMemoryStream;
         private readonly IBootstrapConfiguration _originalBootstrapConfig;
 
-        private ActivitySource _activitySource;
-        private ActivityListener _listener;
-        private Activity _activity;
-        private ActivityIdFormat _defaultActivityIdFormat;
-
         public IContainer Container => _container;
 
         public void ResetHarvestData()
@@ -322,8 +317,6 @@ namespace CompositeTests
             if (_originalBootstrapConfig != null)
                 ConfigurationLoader.UseBootstrapConfigurationForTesting(_originalBootstrapConfig);
 
-            StopActivity(); // just in case
-
             _container.Dispose();
         }
 
@@ -412,45 +405,6 @@ namespace CompositeTests
             CurrentConfiguration.EventListenerSamplersEnabled = enable;
         }
 
-        public void StartActivity()
-        {
-            _defaultActivityIdFormat = Activity.DefaultIdFormat;
-            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-            _activitySource = new ActivitySource("CompositeTestAgent");
-            _listener = new ActivityListener();
-            _listener.ShouldListenTo = x => x.Name == "CompositeTestAgent";
-            _listener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllData;
-            ActivitySource.AddActivityListener(_listener);
-
-            _activity = _activitySource.CreateActivity("CompositeTestAgent", ActivityKind.Server);
-            if (_activity == null)
-                throw new Exception("Failed to create an activity");
-            _activity.Start();
-        }
-
-        public void StopActivity()
-        {
-            if (_activity != null)
-            {
-                _activity.Stop();
-                _activity.Dispose();
-
-                _listener.Dispose();
-                _activitySource.Dispose();
-
-                _activity = null;
-                _listener = null;
-                _activitySource = null;
-
-                Activity.DefaultIdFormat = _defaultActivityIdFormat;
-            }
-        }
-
-        public string GetActivityTraceId()
-        {
-            return _activity?.RootId;
-        }
-
         private void EnableAggregators()
         {
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
@@ -483,11 +437,6 @@ namespace CompositeTests
         private static SecurityPoliciesConfiguration GetDefaultSecurityPoliciesConfiguration()
         {
             return new SecurityPoliciesConfiguration();
-        }
-
-        public void UninitializeGuidGenerator()
-        {
-            GuidGenerator.Uninitialize();
         }
     }
 }

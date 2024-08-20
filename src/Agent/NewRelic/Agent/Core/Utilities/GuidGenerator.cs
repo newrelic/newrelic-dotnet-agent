@@ -9,6 +9,7 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core.Utilities
 {
+    [NrExcludeFromCodeCoverage]
     public static class GuidGenerator
     {
         /// Our testing shows that RngCryptoServiceProvider library is threadsafe and is more performant
@@ -117,17 +118,6 @@ namespace NewRelic.Agent.Core.Utilities
             // get TraceId property
             _traceIdGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(value.GetType(), "TraceId");
             return _traceIdGetter(value).ToString();
-        }
-
-        /// <summary>
-        /// FOR USE IN TESTS ONLY!!
-        /// </summary>
-        public static void Uninitialize()
-        {
-            _initialized = false;
-            _hasDiagnosticSourceReference = false;
-            _traceGeneratorFunc = GetTraceIdFromCurrentActivity;
-            _traceIdGetter = null;
         }
     }
 }
