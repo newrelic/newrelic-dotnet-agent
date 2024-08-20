@@ -266,6 +266,13 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
+            if (AzureFunctionModeEnabled)
+            {
+                Log.Info("Application name from Azure Function site name.");
+                _applicationNamesSource = "Azure Function";
+                return new List<string> { AzureFunctionHelper.GetServiceName() };
+            }
+
             appName = _environment.GetEnvironmentVariable("RoleName");
             if (appName != null)
             {
@@ -308,14 +315,6 @@ namespace NewRelic.Agent.Core.Configuration
                 _applicationNamesSource = "Process Name";
 
                 return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
-            }
-
-            // TODO: This might need a higher priority in this method
-            if (_bootstrapConfiguration.AzureFunctionModeEnabled)
-            {
-                Log.Info("Application name from Azure Function site name.");
-                _applicationNamesSource = "Azure Function";
-                return new List<string> { AzureFunctionHelper.GetServiceName() };
             }
 
             throw new Exception("An application name must be provided");
