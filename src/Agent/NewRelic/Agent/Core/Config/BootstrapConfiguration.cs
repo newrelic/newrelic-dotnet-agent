@@ -18,6 +18,8 @@ namespace NewRelic.Agent.Core.Config
         bool AgentEnabled { get; }
         string AgentEnabledAt { get; }
         ILogConfig LogConfig { get; }
+        string ServerlessFunctionName { get; }
+        string ServerlessFunctionVersion { get; }
     }
 
     /// <summary>
@@ -88,6 +90,10 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public bool ServerlessModeEnabled { get; private set; }
 
+        public string ServerlessFunctionName { get; private set; }
+
+        public string ServerlessFunctionVersion { get; private set; }
+
         /// <summary>
         /// Gets the debug startup delay in seconds. This is used primarily for debugging of AWS Lambda functions.
         /// </summary>
@@ -126,17 +132,19 @@ namespace NewRelic.Agent.Core.Config
 
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {
+            // We may need these later even if we don't use it now.
+            ServerlessFunctionName = ConfigLoaderHelpers.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
+            ServerlessFunctionVersion = ConfigLoaderHelpers.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_VERSION");
+
             // according to the spec, environment variable takes precedence over config file
             var serverlessModeEnvVariable = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_SERVERLESS_MODE_ENABLED");
-
             if (serverlessModeEnvVariable.TryToBoolean(out var enabledViaEnvVariable))
             {
                 return enabledViaEnvVariable;
             }
 
             // env variable is not set, check for function name
-            var awsLambdaFunctionName = ConfigLoaderHelpers.GetEnvironmentVar("AWS_LAMBDA_FUNCTION_NAME");
-            if (!string.IsNullOrEmpty(awsLambdaFunctionName))
+            if (!string.IsNullOrEmpty(ServerlessFunctionName))
                 return true;
 
             // fall back to config file
