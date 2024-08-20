@@ -4,7 +4,6 @@
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Reflection;
 using System;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography;
 using System.Threading;
 
