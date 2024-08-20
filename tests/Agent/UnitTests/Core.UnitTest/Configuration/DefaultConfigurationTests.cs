@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using Telerik.JustMock.Expectations.Abstraction;
 using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
@@ -2069,7 +2070,92 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             );
         }
 
+        [Test]
+        public void ApplicationNamesUsesLambdaFunctionNameIfBlank()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
 
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionVersion).Returns("2");
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string>();
+
+            NrAssert.Multiple(
+                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyFunc")),
+                () => Assert.That(_defaultConfig.ServerlessFunctionVersion, Is.EqualTo("2")),
+                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Environment Variable (AWS_LAMBDA_FUNCTION_NAME)"))
+            );
+        }
+
+        [Test]
+        public void ApplicationNamesUsesLambdaFunctionNameIfDefault()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyFunc")),
+                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Environment Variable (AWS_LAMBDA_FUNCTION_NAME)"))
+            );
+        }
+
+        [Test]
+        public void ApplicationNamesDoesNotUseLambdaFunctionNameIfEnvVarSet()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("MyFunc");
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns("My App Name");
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My App Name")),
+                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Environment Variable (NEW_RELIC_APP_NAME)"))
+            );
+        }
+
+        [Test]
+        public void ApplicationNamesDoesNotUseLambdaFunctionNameIfBlank()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
+            Mock.Arrange(() => _bootstrapConfiguration.ServerlessFunctionName).Returns("");
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My Application")),
+                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+            );
+        }
         #endregion ApplicationNames
 
 

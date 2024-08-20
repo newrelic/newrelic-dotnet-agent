@@ -199,6 +199,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ServerlessModeEnabled => _bootstrapConfiguration.ServerlessModeEnabled;
 
+        public string ServerlessFunctionName => _bootstrapConfiguration.ServerlessFunctionName;
+
+        public string ServerlessFunctionVersion => _bootstrapConfiguration.ServerlessFunctionVersion;
+
         private string _agentLicenseKey;
         public virtual string AgentLicenseKey
         {
@@ -268,6 +272,16 @@ namespace NewRelic.Agent.Core.Configuration
                 _applicationNamesSource = "Environment Variable (RoleName)";
 
                 return appName.Split(StringSeparators.Comma);
+            }
+
+            if (ServerlessModeEnabled)
+            {
+                if (!string.IsNullOrEmpty(ServerlessFunctionName))
+                {
+                    Log.Info("Application name from Lambda Function Name.");
+                    _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
+                    return new List<string> { ServerlessFunctionName };
+                }
             }
 
             if (_localConfiguration.application.name.Count > 0)
