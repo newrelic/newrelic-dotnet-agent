@@ -198,7 +198,6 @@
   <ItemGroup>
     <!-- Versions below 4.5 did not support netstandard 2.0 -->
     <PackageReference Include="NLog" Version="4.5.9" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="NLog" Version="5.3.2" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <PackageReference Include="NLog" Version="4.3.11" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="NLog" Version="4.1.2" Condition="'$(TargetFramework)' == 'net471'" />
