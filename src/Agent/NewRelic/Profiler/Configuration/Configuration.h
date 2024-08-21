@@ -621,7 +621,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool ShouldInstrumentAzureFunction(xstring_t const& appPoolId, xstring_t const& commandLine)
         {
-            LogInfo(L"Azure function detected. Determining whether to instrument " + commandLine);
+            LogInfo(_X("Azure function detected. Determining whether to instrument ") + commandLine);
 
             bool isAzureWebJobsScriptWebHost = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
             if (isAzureWebJobsScriptWebHost)
