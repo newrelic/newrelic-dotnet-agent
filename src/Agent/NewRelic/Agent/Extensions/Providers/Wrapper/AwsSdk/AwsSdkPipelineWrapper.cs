@@ -54,6 +54,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
+            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            {
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            }
 
             if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
