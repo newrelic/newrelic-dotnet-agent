@@ -239,10 +239,8 @@ namespace NewRelic.Agent.Extensions.Parsing
                     }
                 }
 
-                // couldn't parse, return a default parsed statement
-                var parsedSqlStatement = _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
-                // but copy and override the model name if one was found
-                return !string.IsNullOrEmpty(explicitModel) ? parsedSqlStatement.CloneWithNewModel(explicitModel) : parsedSqlStatement;
+                // return a null statement with the model name if found, otherwise cache and return a null statement with no model name
+                return !string.IsNullOrEmpty(explicitModel) ? new ParsedSqlStatement(datastoreVendor, explicitModel, null) : _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
             };
         }
 

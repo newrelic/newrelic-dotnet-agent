@@ -53,10 +53,5 @@ namespace NewRelic.Agent.Extensions.Parsing
         {
             return _asString;
         }
-
-        public ParsedSqlStatement CloneWithNewModel(string model)
-        {
-            return new ParsedSqlStatement(DatastoreVendor, model, Operation);
-        }
     }
 }
