@@ -239,7 +239,10 @@ namespace NewRelic.Agent.Extensions.Parsing
                     }
                 }
 
-                return _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
+                // couldn't parse, return a default parsed statement
+                var parsedSqlStatement = _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
+                // but copy and override the model name if one was found
+                return !string.IsNullOrEmpty(explicitModel) ? parsedSqlStatement.CloneWithNewModel(explicitModel) : parsedSqlStatement;
             };
         }
 
@@ -295,7 +298,7 @@ namespace NewRelic.Agent.Extensions.Parsing
                         model = "ParseError";
                     }
                 }
-                
+
                 return CreateParsedDatabaseStatement(vendor, GetFullModel(model, explicitModel));
             }
 
@@ -323,7 +326,7 @@ namespace NewRelic.Agent.Extensions.Parsing
                     string model = FromMatcher.Match(statement).Success
                         ? "(subquery)"
                         : "VARIABLE";
-                    
+
                     return new ParsedSqlStatement(vendor, GetFullModel(model, explicitModel), "select");
                 }
                 return null;
@@ -414,7 +417,7 @@ namespace NewRelic.Agent.Extensions.Parsing
                     Log.Debug("Not executing explain plan since DbType is Object.");
                     return false;
                 }
-                
+
                 // Parameter names can be supplied with the prefix @ or without
                 // if is supplied, remove the @ to the beginning of the param name
                 // This is to deal with regex issues, see below
