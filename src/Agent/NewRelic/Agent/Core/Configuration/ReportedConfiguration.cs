@@ -689,7 +689,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore()]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
 
-        public bool AzureFunctionModeEnabled { get; }
+        [JsonIgnore]
+        public bool AzureFunctionModeEnabled => _configuration.AzureFunctionModeEnabled;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
