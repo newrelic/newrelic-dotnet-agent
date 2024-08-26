@@ -540,7 +540,7 @@ namespace NewRelic.Agent.Core.Configuration
         public bool UtilizationDetectKubernetes => _configuration.UtilizationDetectKubernetes;
 
         [JsonProperty("utilization.detect_azure_function_enabled")]
-        public bool UtilizationDetectAzureFunction { get; }
+        public bool UtilizationDetectAzureFunction => _configuration.UtilizationDetectAzureFunction;
 
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
