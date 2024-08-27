@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.AzureFunction;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -27,6 +28,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         private const string AwsName = @"aws";
         private const string AzureName = @"azure";
+        private const string AzureFunctionAppName = @"azurefunction";
         private const string GcpName = @"gcp";
         private const string PcfName = @"pcf";
         private const string DockerName = @"docker";
@@ -78,6 +80,8 @@ namespace NewRelic.Agent.Core.Utilization
                 vendorMethods.Add(GetGcpVendorInfo);
             if (_configuration.UtilizationDetectPcf)
                 vendorMethods.Add(GetPcfVendorInfo);
+            if (_configuration.UtilizationDetectAzureFunction)
+                vendorMethods.Add(GetAzureFunctionVendorInfo);
 
             foreach (var vendorMethod in vendorMethods)
             {
@@ -111,6 +115,22 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return vendors;
+        }
+
+        private IVendorModel GetAzureFunctionVendorInfo()
+        {
+            if (!_configuration.AzureFunctionModeEnabled)
+                return null;
+
+            var appName = AzureFunctionHelper.GetResourceId();
+            var cloudRegion = AzureFunctionHelper.GetRegion();
+
+            if (appName == null || cloudRegion == null)
+            {
+                return null;
+            }
+
+            return new AzureFunctionVendorModel(appName, cloudRegion);
         }
 
         private IVendorModel GetAwsVendorInfo()

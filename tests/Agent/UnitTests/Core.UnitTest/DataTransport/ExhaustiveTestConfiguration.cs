@@ -377,6 +377,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool UtilizationDetectKubernetes => true;
 
+        public bool UtilizationDetectAzureFunction => true;
+
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -480,6 +482,8 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool AiMonitoringRecordContentEnabled => true;
 
         public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
+
+        public bool AzureFunctionModeEnabled => true;
 
         public string LoggingLevel => "info";
     }

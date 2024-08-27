@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Extensions.AzureFunction;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -263,6 +264,13 @@ namespace NewRelic.Agent.Core.Configuration
                 _applicationNamesSource = "Environment Variable (NEW_RELIC_APP_NAME)";
 
                 return appName.Split(StringSeparators.Comma);
+            }
+
+            if (AzureFunctionModeEnabled)
+            {
+                Log.Info("Application name from Azure Function site name.");
+                _applicationNamesSource = "Azure Function";
+                return new List<string> { AzureFunctionHelper.GetServiceName() };
             }
 
             appName = _environment.GetEnvironmentVariable("RoleName");
@@ -1896,6 +1904,14 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get { return EnvironmentOverrides(_localConfiguration.utilization.detectKubernetes, "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES"); }
         }
+        public bool UtilizationDetectAzureFunction
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.utilization.detectAzureFunction, "NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION");
+            }
+        }
+
 
         public int? UtilizationLogicalProcessors
         {
@@ -2075,7 +2091,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if(ServerlessModeEnabled || !LoggingEnabled)
+                if (ServerlessModeEnabled || !LoggingEnabled)
                 {
                     return true;
                 }
@@ -2094,7 +2110,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return !HighSecurityModeEnabled && ServerCanDisable(_serverConfiguration.AICollectionEnabled, EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED"));
             }
         }
-        
+
         public bool AiMonitoringStreamingEnabled
         {
             get
@@ -2114,6 +2130,8 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
+
+        public bool AzureFunctionModeEnabled => _bootstrapConfiguration.AzureFunctionModeEnabled;
 
         #endregion
 
@@ -2432,7 +2450,7 @@ namespace NewRelic.Agent.Core.Configuration
             return EnvironmentOverrides(_environment, local, environmentVariableNames);
         }
 
-        public static string EnvironmentOverrides(IEnvironment environment, string local,  params string[] environmentVariableNames)
+        public static string EnvironmentOverrides(IEnvironment environment, string local, params string[] environmentVariableNames)
         {
             var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
                 .Select(environment.GetEnvironmentVariable)

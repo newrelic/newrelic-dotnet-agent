@@ -604,11 +604,55 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             if (IsW3wpProcess(processPath, parentProcessPath)) {
+                if (IsAzureFunction()) {
+                    auto retVal = ShouldInstrumentAzureFunction(appPoolId, commandLine);
+                    if (retVal == 0) {
+                        return false;
+                    }
+                    if (retVal == 1) {
+                        return true;
+                    }
+                }
+
                 return ShouldInstrumentApplicationPool(appPoolId);
             }
 
             return true;
         }
+
+        bool IsAzureFunction() const
+        {
+            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
+            auto functionsWorkerRuntime = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
+            return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
+        }
+
+        /// <summary>
+        /// Returns 0 if the process should not be instrumented, 1 if it should be instrumented, and -1 if it is indeterminate.
+        /// </summary>
+        int ShouldInstrumentAzureFunction(xstring_t const& appPoolId, xstring_t const& commandLine)
+        {
+            LogInfo(_X("Azure function detected. Determining whether to instrument ") + commandLine);
+
+            bool isAzureWebJobsScriptWebHost = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
+            if (isAzureWebJobsScriptWebHost)
+            {
+                LogInfo(L"Appears to be Azure WebJobs Script WebHost based on commandLine. Not instrumenting this process.");
+                return 0;
+            }
+
+            // AzureFunctionsNetHost.exe is the typical startup command for Azure Functions
+            bool isAzureFunctionsNetHost = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("FunctionsNetHost.exe"));
+            if (isAzureFunctionsNetHost)
+            {
+                LogInfo(L"FunctionNetHost.exe is a valid Azure function command. This process will be instrumented.");
+                return 1;
+            }
+
+            LogInfo("Couldn't determine whether this Azure Function process should be instrumented based on commandLine. Falling back to checking application pool");
+            return -1; // indeterminate
+        }
+
 
         // Test to see if we should instrument this .NET Framework application at all
         bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
