@@ -70,13 +70,22 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
-      <!-- Oracle vendor driver for ManagedDataAccess -->
-      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand">
+      <!-- "Legacy" Oracle vendor driver for ManagedDataAccess - covers both Oracle.ManagedDataAccess and Oracle.ManagedDataAccess.Core Nuget packages -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" maxVersion="23.0.0">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
+      
+      <!-- "Modern" Oracle vendor driver for ManagedDataAccess - covers both Oracle.ManagedDataAccess and Oracle.ManagedDataAccess.Core Nuget packages -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" minVersion="23.0.0">
+        <exactMethodMatcher methodName="ExecuteReaderInternal" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior,System.Boolean" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+      
 
       <!-- Oracle Devart driver -->
       <match assemblyName="Devart.Data.Oracle" className="Devart.Data.Oracle.OracleCommand">
