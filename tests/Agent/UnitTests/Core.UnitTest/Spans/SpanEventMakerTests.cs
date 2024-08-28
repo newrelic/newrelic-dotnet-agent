@@ -177,7 +177,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _childGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
             // Datastore Segments
-            _connectionInfo = new ConnectionInfo(DatastoreVendor.MSSQL.ToKnownName(), "localhost", 1234, "default", "maininstance");
+            _connectionInfo = new ConnectionInfo("localhost", 1234, "default", "maininstance");
             _parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, System.Data.CommandType.Text, ShortQuery);
 
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
@@ -648,7 +648,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
                 parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
-                connectionInfo: new ConnectionInfo("none", "localhost", "1234", "default", "maininstance")));
+                connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
 
             // ARRANGE
             var segments = new List<Segment>()

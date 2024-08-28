@@ -128,7 +128,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
             var databaseName = GetDatabaseNameFromCollectionNamespace(collectionNamespace);
 
-            return new ConnectionInfo(DatastoreVendor.MongoDB.ToKnownName(), host, port, databaseName);
+            return new ConnectionInfo(host, port, databaseName);
         }
 
         public static ConnectionInfo GetConnectionInfoFromDatabase(object database, string utilizationHostName)
@@ -146,7 +146,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
                 host = ConnectionStringParserHelper.NormalizeHostname(rawHost, utilizationHostName);
             }
 
-            return new ConnectionInfo(DatastoreVendor.MongoDB.ToKnownName(), host, port, databaseName);
+            return new ConnectionInfo(host, port, databaseName);
         }
 
         private static IList GetServersFromDatabase(object database)
