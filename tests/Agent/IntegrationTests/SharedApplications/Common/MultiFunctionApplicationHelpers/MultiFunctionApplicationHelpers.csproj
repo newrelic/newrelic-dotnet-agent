@@ -80,6 +80,13 @@
     <!-- MySqlConnector .NET/Core references -->
     <PackageReference Include="MySqlConnector" Version="1.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
+    <!-- Oracle.ManagedDataAccess references -->
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="21.15.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <!-- oracle 23.x+ only supports net472+ and net6.0+ -->
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.4.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.4.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+
     <!-- StackExchange.Redis framework references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
