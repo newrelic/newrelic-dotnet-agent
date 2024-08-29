@@ -1000,14 +1000,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", new[] { "405" }, null, ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0], null, ExpectedResult = new string[0])]
-        [TestCase("401", null, null, ExpectedResult = new[] { "401" })]
-        [TestCase(null, null, "401", ExpectedResult = new[] { "401" })]
-        [TestCase(null, new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0], "401", ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0], "401, 503", ExpectedResult = new[] { "401", "503" })]
-        [TestCase("402", new string[0], "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
+        [TestCase("401", new[] { "405" }, null,           ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0],   null,           ExpectedResult = new string[0])]
+        [TestCase("401", null,            null,           ExpectedResult = new[] { "401" })]
+        [TestCase(null,  null,            "401",          ExpectedResult = new[] { "401" })]
+        [TestCase(null,  new[] { "405" }, "401",          ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0],   "401",          ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0],   "401, 503",     ExpectedResult = new[] { "401", "503" })]
+        [TestCase("402", new string[0],   "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
         public string[] ExpectedStatusCodesSetFromLocalServerAndEnvironmentOverrides(string local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
@@ -1019,14 +1019,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
-        [TestCase(new[] { 401f }, new[] { "405" }, null, ExpectedResult = new[] { "405" })]
-        [TestCase(new[] { 401f }, new string[0], null, ExpectedResult = new string[0])]
-        [TestCase(new[] { 401f }, null, null, ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401.5f }, null, null, ExpectedResult = new[] { "401.5" })]
-        [TestCase(new float[0], null, "401", ExpectedResult = new[] { "401" })]
-        [TestCase(new float[0], new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401f }, new string[0], "402", ExpectedResult = new[] { "402" })]
-        [TestCase(new[] { 401f }, new string[0], "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
+        [TestCase(new[] { 401f },   new[] { "405" }, null,         ExpectedResult = new[] { "405" })]
+        [TestCase(new[] { 401f },   new string[0],   null,         ExpectedResult = new string[0])]
+        [TestCase(new[] { 401f },   null,            null,         ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401.5f }, null,            null,         ExpectedResult = new[] { "401.5" })]
+        [TestCase(new float[0],     null,            "401",        ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0],     new[] { "405" }, "401",        ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f },   new string[0],   "402",        ExpectedResult = new[] { "402" })]
+        [TestCase(new[] { 401f },   new string[0],   "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
         public string[] IgnoredStatusCodesSetFromLocalServerAndEnvironmentOverrides(float[] local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;

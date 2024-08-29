@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             {
                 if (!_loggedDisabledMessage)
                 {
-                    agent.Logger.Debug("Azure Function mode is not enabled; not instrumenting Azure Functions.");
+                    agent.Logger.Info("Azure Function mode is not enabled; Azure Functions will not be instrumented.");
                     _loggedDisabledMessage = true;
                 }
 
