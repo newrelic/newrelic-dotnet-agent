@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,12 +15,12 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 {
     public class InvokeFunctionAsyncWrapper : IWrapper
     {
-        public bool IsTransactionRequired => false;
+        private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
 
         private static bool _coldStart = true;
         private static bool IsColdStart => _coldStart && !(_coldStart = false);
 
-        private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
+        public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -37,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 return Delegates.NoOp;
             }
 
-            var functionDetails = new FunctionDetails(functionContext);
+            var functionDetails = new FunctionDetails(functionContext, agent);
             // TODO: add validation for FunctionDetails? 
 
             transaction = agent.CreateTransaction(
@@ -96,8 +97,11 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
     internal class FunctionDetails
     {
         private static ConcurrentDictionary<string, string> _functionTriggerCache = new();
+        private static Func<object, object> _functionDefinitionGetter;
+        private static Func<object, object> _parametersGetter;
+        private static Func<object, IReadOnlyDictionary<string, object>> _propertiesGetter;
 
-        public FunctionDetails(dynamic functionContext)
+        public FunctionDetails(dynamic functionContext, IAgent agent)
         {
             FunctionName = functionContext.FunctionDefinition.Name;
             InvocationId = functionContext.InvocationId;
@@ -108,16 +112,24 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 // TODO: Needs null checks, optimization and possible caching of property accessors
                 // functionContext.FunctionDefinition.Parameters is an ImmutableArray<FunctionParameter>
                 var funcAsObj = (object)functionContext;
-                var functionDefinitionGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(funcAsObj.GetType(), "FunctionDefinition");
-                var functionDefinition = functionDefinitionGetter(funcAsObj);
-                var parametersGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionDefinition.GetType(), "Parameters");
-                var parameters = parametersGetter(functionDefinition) as IEnumerable;
-                bool foundTrigger = false;
+                _functionDefinitionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(funcAsObj.GetType(), "FunctionDefinition");
+                var functionDefinition = _functionDefinitionGetter(funcAsObj);
+
+                _parametersGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionDefinition.GetType(), "Parameters");
+                var parameters = _parametersGetter(functionDefinition) as IEnumerable;
+
+                var foundTrigger = false;
                 foreach (var parameter in parameters)
                 {
                     // Properties is an IReadOnlyDictionary<string, object>
-                    var propertiesGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IReadOnlyDictionary<string, object>>(parameter.GetType(), "Properties");
-                    var properties = propertiesGetter(parameter);
+                    _propertiesGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IReadOnlyDictionary<string, object>>(parameter.GetType(), "Properties");
+                    var properties = _propertiesGetter(parameter);
+
+                    //foreach (var pair in properties)
+                    //{
+                    //    agent.Logger.Info($"{pair.Key}:{pair.Value.GetType().Name}");
+                    //}
+
                     foreach (var propVal in properties.Values)
                     {
                         if (propVal.GetType().Name.Contains("Trigger"))
@@ -129,11 +141,17 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                         }
                     }
                     if (foundTrigger)
+                    {
                         break;
+                    }
                 }
 
-                if (!foundTrigger) // shouldn't happen, as all functions are required to have a trigger
+                // shouldn't happen, as all functions are required to have a trigger
+                if (!foundTrigger)
+                {
+                    agent.Logger.Debug($"Function {FunctionName} does not have a trigger, defaulting to 'other'");
                     Trigger = "other";
+                }
 
                 _functionTriggerCache[FunctionName] = Trigger;
             }

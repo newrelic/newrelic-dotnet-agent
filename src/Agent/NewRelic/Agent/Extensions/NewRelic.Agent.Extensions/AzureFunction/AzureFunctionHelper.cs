@@ -9,11 +9,8 @@ namespace NewRelic.Agent.Extensions.AzureFunction
     {
         public static string GetResourceUri(string websiteSiteName)
         {
-            // TODO: WEBSITE_RESOURCE_GROUP doesn't seem to be available when running in Azure. Defaulting to "unknown" for now, but this will need to be addressed.
-            string websiteResourceGroup = Environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP") ?? "unknown";
-            string websiteOwnerName = Environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME") ?? string.Empty;
-            int idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
-            string subscriptionId = idx > 0 ? websiteOwnerName.Substring(0, idx) : websiteOwnerName;
+            var websiteResourceGroup = GetResourceGroupName();
+            var subscriptionId = GetSubscriptionId();
 
             if (string.IsNullOrEmpty(websiteResourceGroup) || string.IsNullOrEmpty(subscriptionId))
             {
@@ -21,6 +18,44 @@ namespace NewRelic.Agent.Extensions.AzureFunction
             }
 
             return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{websiteSiteName}";
+        }
+
+        public static string GetResourceGroupName()
+        {
+            // WEBSITE_RESOURCE_GROUP doesn't seem to always be available for Linux.
+            var websiteResourceGroup = Environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP");
+            if (!string.IsNullOrEmpty(websiteResourceGroup))
+            {
+                return websiteResourceGroup; // Must be Windows function
+            }
+
+            // The WEBSITE_OWNER_NAME variable also has the resource group name, but we need to parse it out.
+            // Must be a Linux function.
+            var websiteOwnerName = Environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME");
+            if (string.IsNullOrEmpty(websiteOwnerName))
+            {
+                return websiteOwnerName; // This should not happen, but just in case.
+            }
+
+            var idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
+            if (idx <= 0)
+            {
+                return websiteOwnerName; // This means that the format of the WEBSITE_OWNER_NAME is not as expected (subscription+resourcegroup-region-Linux).
+            }
+
+            // We should have a WEBSITE_OWNER_NAME in the expected format here.
+            idx += 1; // move past the "+"
+            var resourceData = websiteOwnerName.Substring(idx, websiteOwnerName.Length - idx - 6); // -6 to remove the "-Linux" suffix.
+
+            // Remove the region from the resourceData.
+            return resourceData.Substring(0, resourceData.LastIndexOf("-", StringComparison.Ordinal));
+        }
+
+        public static string GetSubscriptionId()
+        {
+            var websiteOwnerName = Environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME") ?? string.Empty;
+            var idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
+            return idx > 0 ? websiteOwnerName.Substring(0, idx) : websiteOwnerName;
         }
 
         public static string GetResourceId()

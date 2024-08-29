@@ -12,9 +12,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             // triggerTypeName is a short typename; we want everything to the left of "TriggerAttribute"
             var trigger = triggerTypeName.Substring(0, triggerTypeName.IndexOf("TriggerAttribute", StringComparison.Ordinal));
 
-            // TODO: this logic may need some tweaking, as some trigger types may not be correctly categorized.
             // The return values are based on https://opentelemetry.io/docs/specs/semconv/attributes-registry/faas/ (scroll to the bottom)
-            // TODO: There are many more trigger types that need to be included here. See https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=isolated-process%2Cpython-v2&pivots=programming-language-csharp
+            // 08/27/2024 - All trigger types added from https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=isolated-process%2Cpython-v2&pivots=programming-language-csharp
 
             string resolvedTriggerType;
 
@@ -27,7 +26,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 case "Sql":
                 case "Blob":
                 case "CosmosDB":
-                case "Queue": // Azure Queue storage
+                case "Queue": // Azure Queue storage - group with other "Storage" triggers
+                case "DaprBinding": // "events to and from external source such as databases, queues, file systems, etc." - fits datasource best
                     resolvedTriggerType = "datasource";
                     break;
 
@@ -41,6 +41,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 case "RedisList":
                 case "RedisStream":
                 case "WebPubSub":
+                case "DaprTopic": //subscription to a Dapr topic - grouping with other "PubSub" triggers
                     resolvedTriggerType = "pubsub";
                     break;
 
@@ -48,6 +49,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     resolvedTriggerType = "http";
                     break;
 
+                case "DaprServiceInvocation": // RPC call to another Dapr service - no groupm so other.
                 default:
                     resolvedTriggerType = "other";
                     break;
