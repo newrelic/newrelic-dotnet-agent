@@ -483,7 +483,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
 
+        public bool AzureFunctionModeDetected => true;
         public bool AzureFunctionModeEnabled => true;
+        public string AzureFunctionResourceUri => "AzureFunctionResourceUri";
+        public string AzureFunctionResourceId => "AzureFunctionResourceId";
+        public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
+        public string AzureFunctionRegion => "AzureFunctionRegion";
+        public string AzureFunctionSubscriptionId => "AzureFunctionSubscriptionId";
+        public string AzureFunctionServiceName => "AzureFunctionServiceName";
+        public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
     }

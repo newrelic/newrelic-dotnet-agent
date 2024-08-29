@@ -1000,14 +1000,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", new[] { "405" }, null,           ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0],   null,           ExpectedResult = new string[0])]
-        [TestCase("401", null,            null,           ExpectedResult = new[] { "401" })]
-        [TestCase(null,  null,            "401",          ExpectedResult = new[] { "401" })]
-        [TestCase(null,  new[] { "405" }, "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401, 503",     ExpectedResult = new[] { "401", "503" })]
-        [TestCase("402", new string[0],   "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
+        [TestCase("401", new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0], null, ExpectedResult = new string[0])]
+        [TestCase("401", null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(null, null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(null, new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401, 503", ExpectedResult = new[] { "401", "503" })]
+        [TestCase("402", new string[0], "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
         public string[] ExpectedStatusCodesSetFromLocalServerAndEnvironmentOverrides(string local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
@@ -1019,14 +1019,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
-        [TestCase(new[] { 401f },   new[] { "405" }, null,         ExpectedResult = new[] { "405" })]
-        [TestCase(new[] { 401f },   new string[0],   null,         ExpectedResult = new string[0])]
-        [TestCase(new[] { 401f },   null,            null,         ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401.5f }, null,            null,         ExpectedResult = new[] { "401.5" })]
-        [TestCase(new float[0],     null,            "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new float[0],     new[] { "405" }, "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401f },   new string[0],   "402",        ExpectedResult = new[] { "402" })]
-        [TestCase(new[] { 401f },   new string[0],   "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
+        [TestCase(new[] { 401f }, new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase(new[] { 401f }, new string[0], null, ExpectedResult = new string[0])]
+        [TestCase(new[] { 401f }, null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401.5f }, null, null, ExpectedResult = new[] { "401.5" })]
+        [TestCase(new float[0], null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0], new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f }, new string[0], "402", ExpectedResult = new[] { "402" })]
+        [TestCase(new[] { 401f }, new string[0], "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
         public string[] IgnoredStatusCodesSetFromLocalServerAndEnvironmentOverrides(float[] local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
@@ -2156,6 +2156,34 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
             );
         }
+
+        [Test]
+        [TestCase(false, "My Application", "NewRelic Config")]
+        [TestCase(true, "MyAzureFunc", "Azure Function")]
+        public void ApplicationNamesUsesAzureFunctionName_IfAzureFunctionMode_IsEnabled(bool functionModeEnabled, string expectedFunctionName, string expectedApplicationNameSource)
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = functionModeEnabled.ToString() });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(functionModeEnabled);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("MyAzureFunc");
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo(expectedFunctionName)),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo(expectedApplicationNameSource))
+            );
+        }
+
         #endregion ApplicationNames
 
 
@@ -3974,7 +4002,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.aiMonitoring.enabled = true;
             Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
         }
-        
+
         [Test]
         public void AiMonitoringStreamingDisabledByLocalConfig()
         {
@@ -4044,7 +4072,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("False", true, ExpectedResult = false)]
         public bool LoggingEnabledTests(string environmentValue, bool localConfigValue)
         {
-            Mock.Arrange(() =>_environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
             _localConfig.log.enabled = localConfigValue;
 
             return _defaultConfig.LoggingEnabled;

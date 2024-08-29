@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Config
         ILogConfig LogConfig { get; }
         string ServerlessFunctionName { get; }
         string ServerlessFunctionVersion { get; }
-        bool AzureFunctionModeEnabled { get; }
+        bool AzureFunctionModeDetected { get; }
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Config
         public ILogConfig LogConfig { get; private set; }
 
         // TODO: Should we also verify the value of the environment variable is `dotnet-isolated` and complain if it's something else?
-        public bool AzureFunctionModeEnabled => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
+        public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {

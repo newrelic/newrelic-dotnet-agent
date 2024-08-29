@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Extensions.AzureFunction;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -266,11 +265,11 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
-            if (AzureFunctionModeEnabled)
+            if (AzureFunctionModeDetected && AzureFunctionModeEnabled)
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
-                return new List<string> { AzureFunctionHelper.GetServiceName() };
+                return new List<string> { AzureFunctionServiceName };
             }
 
             appName = _environment.GetEnvironmentVariable("RoleName");
@@ -1904,11 +1903,12 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get { return EnvironmentOverrides(_localConfiguration.utilization.detectKubernetes, "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES"); }
         }
+
         public bool UtilizationDetectAzureFunction
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.utilization.detectAzureFunction, "NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION");
+                return AzureFunctionModeEnabled && EnvironmentOverrides(_localConfiguration.utilization.detectAzureFunction, "NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION");
             }
         }
 
@@ -2131,7 +2131,81 @@ namespace NewRelic.Agent.Core.Configuration
 
         public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
 
-        public bool AzureFunctionModeEnabled => _bootstrapConfiguration.AzureFunctionModeEnabled;
+        #region Azure function support
+
+        public bool AzureFunctionModeDetected => _bootstrapConfiguration.AzureFunctionModeDetected;
+
+        private bool? _azureFunctionModeEnabled;
+        public bool AzureFunctionModeEnabled =>
+            _azureFunctionModeEnabled ??
+            (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", false), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
+
+        public string AzureFunctionResourceUri
+        {
+            get
+            {
+                var websiteResourceGroup = AzureFunctionResourceGroupName;
+                var subscriptionId = AzureFunctionSubscriptionId;
+
+                if (string.IsNullOrEmpty(websiteResourceGroup) || string.IsNullOrEmpty(subscriptionId))
+                {
+                    return string.Empty;
+                }
+
+                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{AzureFunctionServiceName}";
+            }
+        }
+
+        public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"{AzureFunctionResourceId}/functions/{functionName}";
+        public string AzureFunctionResourceId => AzureFunctionResourceIdWithFunctionName(AzureFunctionServiceName);
+        public string AzureFunctionResourceGroupName
+        {
+            get
+            {
+                // WEBSITE_RESOURCE_GROUP doesn't seem to always be available for Linux.
+                var websiteResourceGroup = _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP");
+                if (!string.IsNullOrEmpty(websiteResourceGroup))
+                {
+                    return websiteResourceGroup; // Must be Windows function
+                }
+
+                // The WEBSITE_OWNER_NAME variable also has the resource group name, but we need to parse it out.
+                // Must be a Linux function.
+                var websiteOwnerName = _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME");
+                if (string.IsNullOrEmpty(websiteOwnerName))
+                {
+                    return websiteOwnerName; // This should not happen, but just in case.
+                }
+
+                var idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
+                if (idx <= 0)
+                {
+                    return websiteOwnerName; // This means that the format of the WEBSITE_OWNER_NAME is not as expected (subscription+resourcegroup-region-Linux).
+                }
+
+                // We should have a WEBSITE_OWNER_NAME in the expected format here.
+                idx += 1; // move past the "+"
+                var resourceData = websiteOwnerName.Substring(idx, websiteOwnerName.Length - idx - 6); // -6 to remove the "-Linux" suffix.
+
+                // Remove the region from the resourceData.
+                return resourceData.Substring(0, resourceData.LastIndexOf("-", StringComparison.Ordinal));
+            }
+        }
+
+        public string AzureFunctionRegion => _environment.GetEnvironmentVariable("REGION_NAME");
+
+        public string AzureFunctionSubscriptionId
+        {
+            get
+            {
+                var websiteOwnerName = _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME") ?? string.Empty;
+                var idx = websiteOwnerName.IndexOf("+", StringComparison.Ordinal);
+                return idx > 0 ? websiteOwnerName.Substring(0, idx) : websiteOwnerName;
+            }
+        }
+
+        public string AzureFunctionServiceName => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+        #endregion
 
         #endregion
 
