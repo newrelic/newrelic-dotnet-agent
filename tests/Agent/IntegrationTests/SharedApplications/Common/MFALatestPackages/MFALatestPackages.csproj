@@ -66,6 +66,11 @@
     <!-- NServiceBus v9+ only supports .NET8+, so constraint FW target to the latest 8.x version -->
     <PackageReference Include="NServiceBus" Version="8.2.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="9.1.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    
+    <!-- modern oracle only supports net472+ and net6.0+ -->
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.5.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net8.0'" />
