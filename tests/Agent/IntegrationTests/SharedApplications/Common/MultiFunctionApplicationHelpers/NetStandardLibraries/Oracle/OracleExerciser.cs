@@ -24,7 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle
         private const string InsertHotelOracleSql = "INSERT INTO {0} (HOTEL_ID, BOOKING_DATE) VALUES (1, SYSDATE)";
         private const string DeleteHotelOracleSql = "DELETE FROM {0} WHERE HOTEL_ID = 1";
         private const string CountHotelOracleSql = "SELECT COUNT(*) FROM {0}";
-        private const string SelectDegreeFromUserTablesWhereRownum = "SELECT DEGREE FROM user_tables WHERE ROWNUM <= 1";
+        private const string SelectFromUserTablesOracleSql = "SELECT DEGREE FROM user_tables WHERE ROWNUM <= 1";
 
 
         private string _tableName;
@@ -57,7 +57,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle
             using var connection = new OracleConnection(connectionString);
             connection.Open();
 
-            using (var command = new OracleCommand(SelectDegreeFromUserTablesWhereRownum, connection))
+            using (var command = new OracleCommand(SelectFromUserTablesOracleSql, connection))
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -99,7 +99,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle
             using var connection = new OracleConnection(connectionString);
             await connection.OpenAsync();
 
-            using (var command = new OracleCommand(SelectDegreeFromUserTablesWhereRownum, connection))
+            using (var command = new OracleCommand(SelectFromUserTablesOracleSql, connection))
             using (var reader = await command.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
