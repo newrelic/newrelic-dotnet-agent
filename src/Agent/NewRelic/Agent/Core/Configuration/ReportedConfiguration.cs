@@ -695,8 +695,6 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AzureFunctionModeEnabled => _configuration.AzureFunctionModeEnabled;
 
         [JsonIgnore]
-        public string AzureFunctionResourceUri => _configuration.AzureFunctionResourceUri;
-        [JsonIgnore]
         public string AzureFunctionResourceId => _configuration.AzureFunctionResourceId;
 
         [JsonIgnore]

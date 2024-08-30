@@ -485,7 +485,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool AzureFunctionModeDetected => true;
         public bool AzureFunctionModeEnabled => true;
-        public string AzureFunctionResourceUri => "AzureFunctionResourceUri";
         public string AzureFunctionResourceId => "AzureFunctionResourceId";
         public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
         public string AzureFunctionRegion => "AzureFunctionRegion";

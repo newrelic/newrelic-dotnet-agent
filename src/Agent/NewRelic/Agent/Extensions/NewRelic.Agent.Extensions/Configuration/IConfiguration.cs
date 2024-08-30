@@ -223,7 +223,6 @@ namespace NewRelic.Agent.Configuration
         bool AzureFunctionModeEnabled { get; }
 
         // Azure function helpers
-        string AzureFunctionResourceUri { get; }
         string AzureFunctionResourceId {get;}
         string AzureFunctionResourceGroupName { get; }
         string AzureFunctionRegion { get; }
