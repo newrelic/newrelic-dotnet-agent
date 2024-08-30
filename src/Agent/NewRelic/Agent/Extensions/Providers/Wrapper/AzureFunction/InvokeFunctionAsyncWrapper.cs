@@ -39,11 +39,15 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             }
 
             var functionDetails = new FunctionDetails(functionContext, agent);
-            // TODO: add validation for FunctionDetails? 
+            if (!functionDetails.IsValid())
+            {
+                agent.Logger.Debug($"{WrapperName}: FunctionDetails are invalid, can't instrument this invocation.");
+                return Delegates.NoOp;
+            }
 
             transaction = agent.CreateTransaction(
                 isWeb: functionDetails.IsWebTrigger,
-                category: "AzureFunction", // TODO: Is this correct?
+                category: "AzureFunction",
                 transactionDisplayName: functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
@@ -78,12 +82,9 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 {
                     if (responseTask.IsFaulted)
                     {
-                        // TODO: add error handling here
-                        //HandleError(segment, functionContext, responseTask, agent);
+                        transaction.NoticeError(responseTask.Exception);
                         return;
                     }
-
-                    // TODO: Do we need any additional work here?
                 }
                 finally
                 {
@@ -103,62 +104,80 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
         public FunctionDetails(dynamic functionContext, IAgent agent)
         {
-            FunctionName = functionContext.FunctionDefinition.Name;
-            InvocationId = functionContext.InvocationId;
-
-            // cache the trigger by function name
-            if (!_functionTriggerCache.TryGetValue(FunctionName, out string trigger))
+            try
             {
-                // TODO: Needs null checks, optimization and possible caching of property accessors
-                // functionContext.FunctionDefinition.Parameters is an ImmutableArray<FunctionParameter>
-                var funcAsObj = (object)functionContext;
-                _functionDefinitionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(funcAsObj.GetType(), "FunctionDefinition");
-                var functionDefinition = _functionDefinitionGetter(funcAsObj);
+                FunctionName = functionContext.FunctionDefinition.Name;
+                InvocationId = functionContext.InvocationId;
 
-                _parametersGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionDefinition.GetType(), "Parameters");
-                var parameters = _parametersGetter(functionDefinition) as IEnumerable;
-
-                var foundTrigger = false;
-                foreach (var parameter in parameters)
+                // cache the trigger by function name
+                if (!_functionTriggerCache.TryGetValue(FunctionName, out string trigger))
                 {
-                    // Properties is an IReadOnlyDictionary<string, object>
-                    _propertiesGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IReadOnlyDictionary<string, object>>(parameter.GetType(), "Properties");
-                    var properties = _propertiesGetter(parameter);
+                    // functionContext.FunctionDefinition.Parameters is an ImmutableArray<FunctionParameter>
+                    var funcAsObj = (object)functionContext;
+                    _functionDefinitionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(funcAsObj.GetType(), "FunctionDefinition");
+                    var functionDefinition = _functionDefinitionGetter(funcAsObj);
 
-                    //foreach (var pair in properties)
-                    //{
-                    //    agent.Logger.Info($"{pair.Key}:{pair.Value.GetType().Name}");
-                    //}
+                    _parametersGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionDefinition.GetType(), "Parameters");
+                    var parameters = _parametersGetter(functionDefinition) as IEnumerable;
 
-                    foreach (var propVal in properties.Values)
+                    // Trigger is normally the first parameter, but we'll check all parameters to be sure.
+                    var foundTrigger = false;
+                    foreach (var parameter in parameters)
                     {
-                        if (propVal.GetType().Name.Contains("Trigger"))
+                        // Properties is an IReadOnlyDictionary<string, object>
+                        _propertiesGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IReadOnlyDictionary<string, object>>(parameter.GetType(), "Properties");
+                        var properties = _propertiesGetter(parameter);
+                        if (properties == null || properties.Count == 0)
                         {
-                            var triggerTypeName = propVal.GetType().Name;
-                            Trigger = triggerTypeName.ResolveTriggerType();
-                            foundTrigger = true;
-                            break;
+                            continue;
                         }
-                    }
-                    if (foundTrigger)
-                    {
+
+                        if (!properties.TryGetValue("bindingAttribute", out var triggerAttribute))
+                        {
+                            foreach (var propVal in properties.Values)
+                            {
+                                if (propVal.GetType().Name.Contains("Trigger"))
+                                {
+                                    triggerAttribute = propVal;
+                                    break;
+                                }
+                            }
+
+                            if (triggerAttribute == null)
+                            {
+                                continue;
+                            }
+                        }
+
+                        var triggerTypeName = triggerAttribute.GetType().Name;
+                        Trigger = triggerTypeName.ResolveTriggerType();
+                        foundTrigger = true;
                         break;
                     }
-                }
 
-                // shouldn't happen, as all functions are required to have a trigger
-                if (!foundTrigger)
+                    // shouldn't happen, as all functions are required to have a trigger
+                    if (!foundTrigger)
+                    {
+                        agent.Logger.Debug($"Function {FunctionName} does not have a trigger, defaulting to 'other'");
+                        Trigger = "other";
+                    }
+
+                    _functionTriggerCache[FunctionName] = Trigger;
+                }
+                else
                 {
-                    agent.Logger.Debug($"Function {FunctionName} does not have a trigger, defaulting to 'other'");
-                    Trigger = "other";
+                    Trigger = trigger;
                 }
-
-                _functionTriggerCache[FunctionName] = Trigger;
             }
-            else
+            catch(Exception ex)
             {
-                Trigger = trigger;
+                agent.Logger.Error(ex, "Error getting Azure Function details.");
             }
+        }
+
+        public bool IsValid()
+        {
+            return !string.IsNullOrEmpty(FunctionName) && !string.IsNullOrEmpty(Trigger) && !string.IsNullOrEmpty(InvocationId);
         }
 
         public string FunctionName { get; private set; }
