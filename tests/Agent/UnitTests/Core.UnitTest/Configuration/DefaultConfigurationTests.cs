@@ -4246,6 +4246,23 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void AzureFunctionResourceId_ShouldReturnUnknownServiceName_WhenAzureFunctionServiceNameIsNull()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+            //Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/unknown";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+
+        [Test]
         public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenResourceIdIsEmpty()
         {
             // Arrange
@@ -4258,7 +4275,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.That(result, Is.Empty);
         }
-
 
         [Test]
         public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenFunctionNameIsEmpty()

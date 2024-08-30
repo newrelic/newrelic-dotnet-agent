@@ -2152,7 +2152,7 @@ namespace NewRelic.Agent.Core.Configuration
                     return string.Empty;
                 }
 
-                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{AzureFunctionServiceName ?? "unknown"}";
+                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionServiceName) ? "unknown" : AzureFunctionServiceName)}";
             }
         }
 
