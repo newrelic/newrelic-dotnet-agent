@@ -4251,7 +4251,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
-            //Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
 
             // Act
             var result = _defaultConfig.AzureFunctionResourceId;
