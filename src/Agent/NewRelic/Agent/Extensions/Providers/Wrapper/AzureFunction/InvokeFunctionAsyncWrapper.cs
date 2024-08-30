@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.AzureFunction;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -15,6 +14,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 {
     public class InvokeFunctionAsyncWrapper : IWrapper
     {
+        private static bool _loggedDisabledMessage;
         private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
 
         private static bool _coldStart = true;
@@ -30,6 +30,17 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
             ITransaction transaction)
         {
+            if (!agent.Configuration.AzureFunctionModeEnabled) // bail early if azure function mode isn't enabled
+            {
+                if (!_loggedDisabledMessage)
+                {
+                    agent.Logger.Info("Azure Function mode is not enabled; Azure Functions will not be instrumented.");
+                    _loggedDisabledMessage = true;
+                }
+
+                return Delegates.NoOp;
+            }
+
             dynamic functionContext = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
             if (functionContext == null)
@@ -58,7 +69,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 transaction.AddFaasAttribute("faas.coldStart", "true");
             }
 
-            transaction.AddFaasAttribute("cloud.resource_id", AzureFunctionHelper.GetResourceIdWithFunctionName(functionDetails.FunctionName));
+            transaction.AddFaasAttribute("cloud.resource_id", agent.Configuration.AzureFunctionResourceIdWithFunctionName(functionDetails.FunctionName));
             transaction.AddFaasAttribute("faas.name", functionDetails.FunctionName);
             transaction.AddFaasAttribute("faas.trigger", functionDetails.Trigger);
             transaction.AddFaasAttribute("faas.invocation_id", functionDetails.InvocationId);

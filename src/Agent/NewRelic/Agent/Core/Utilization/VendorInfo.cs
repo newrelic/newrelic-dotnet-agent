@@ -14,7 +14,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
-using NewRelic.Agent.Extensions.AzureFunction;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -117,13 +116,13 @@ namespace NewRelic.Agent.Core.Utilization
             return vendors;
         }
 
-        private IVendorModel GetAzureFunctionVendorInfo()
+        public IVendorModel GetAzureFunctionVendorInfo()
         {
-            if (!_configuration.AzureFunctionModeEnabled)
+            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
                 return null;
 
-            var appName = AzureFunctionHelper.GetResourceId();
-            var cloudRegion = AzureFunctionHelper.GetRegion();
+            var appName = _configuration.AzureFunctionResourceId;
+            var cloudRegion = _configuration.AzureFunctionRegion;
 
             if (appName == null || cloudRegion == null)
             {
