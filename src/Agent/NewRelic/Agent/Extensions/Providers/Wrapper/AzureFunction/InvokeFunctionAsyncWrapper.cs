@@ -46,14 +46,14 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             if (functionContext == null)
             {
                 agent.Logger.Debug($"{WrapperName}: FunctionContext is null, can't instrument this invocation.");
-                return Delegates.NoOp;
+                throw new ArgumentNullException("functionContext");
             }
 
             var functionDetails = new FunctionDetails(functionContext, agent);
             if (!functionDetails.IsValid())
             {
                 agent.Logger.Debug($"{WrapperName}: FunctionDetails are invalid, can't instrument this invocation.");
-                return Delegates.NoOp;
+                throw new Exception("FunctionDetails are missing some require information.");
             }
 
             transaction = agent.CreateTransaction(
@@ -183,6 +183,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             catch(Exception ex)
             {
                 agent.Logger.Error(ex, "Error getting Azure Function details.");
+                throw;
             }
         }
 
