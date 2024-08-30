@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// </summary>
         private static string[] _autoReflectedAssemblies;
 
+        [NrExcludeFromCodeCoverage]
         public static void Initialize(string installPathExtensionsDirectory)
         {
             _installPathExtensionsDirectory = installPathExtensionsDirectory;

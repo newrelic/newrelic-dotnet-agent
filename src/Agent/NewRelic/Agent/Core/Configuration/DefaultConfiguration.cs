@@ -2152,11 +2152,18 @@ namespace NewRelic.Agent.Core.Configuration
                     return string.Empty;
                 }
 
-                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{AzureFunctionServiceName}";
+                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionServiceName) ? "unknown" : AzureFunctionServiceName)}";
             }
         }
 
-        public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"{AzureFunctionResourceId}/functions/{functionName}";
+        public string AzureFunctionResourceIdWithFunctionName(string functionName)
+        {
+            if (string.IsNullOrEmpty(AzureFunctionResourceId) || string.IsNullOrEmpty(functionName))
+            {
+                return string.Empty;
+            }
+
+            return $"{AzureFunctionResourceId}/functions/{functionName}";        }
 
         public string AzureFunctionResourceGroupName
         {
