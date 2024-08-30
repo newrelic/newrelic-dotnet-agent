@@ -149,6 +149,27 @@ namespace NewRelic {
                         Assert::AreEqual(Level::LEVEL_INFO, priorLevel);
                     }
 
+                    TEST_METHOD(logger_azure_function_limited_to_info_level)
+                    {
+                        ResetStdLog();
+                        StdLog.SetAzureFunctionMode(true);
+
+                        LogError(L"error message here");
+                        LogWarn(L"warning message here");
+                        LogInfo(L"info message here");
+                        LogDebug(L"debug message here");
+                        LogTrace(L"trace message here");
+
+                        AssertMessageCount(3); // debug and trace shouldn't be logged
+                        auto messages = GetMessages();
+                        // verify there are no debug or trace messages
+                        for (auto message : messages)
+                        {
+                            Assert::IsFalse(Strings::Contains(message, L"debug"));
+                            Assert::IsFalse(Strings::Contains(message, L"trace"));
+                        }
+                    }
+
                     TEST_METHOD(logger_test_stream_logger)
                     {
                         ResetStdLog();
