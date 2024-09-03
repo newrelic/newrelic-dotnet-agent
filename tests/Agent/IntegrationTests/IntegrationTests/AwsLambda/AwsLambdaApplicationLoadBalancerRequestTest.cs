@@ -35,6 +35,9 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                     _fixture.EnqueueApplicationLoadBalancerRequest();
                     _fixture.EnqueueApplicationLoadBalancerRequestWithDTHeaders(TestTraceId, TestParentSpanId);
                     _fixture.EnqueueInvalidLoadBalancerRequestyRequest();
+
+                    // wait for the invalid request log line
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.InvalidServerlessWebRequestLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 2);
                 }
             );

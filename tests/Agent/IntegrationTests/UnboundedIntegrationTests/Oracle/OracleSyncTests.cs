@@ -13,20 +13,20 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
-    public abstract class OracleAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly string _tableName;
 
-        protected OracleAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected OracleSyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _tableName = GenerateTableName();
 
             _fixture.AddCommand($"OracleExerciser InitializeTable {_tableName}"); // creates a new table. The table gets dropped automatically when the exerciser goes out of scope
-            _fixture.AddCommand($"OracleExerciser ExerciseAsync");
+            _fixture.AddCommand($"OracleExerciser ExerciseSync");
 
             _fixture.AddActions
             (
@@ -74,18 +74,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 new() { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", callCount = expectedDatastoreCallCount},
                 new() { metricName = @"Datastore/operation/Oracle/select", callCount = 2 },
                 new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
-                new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
                 new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1 },
-                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
                 new() { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
                 new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1 },
-                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
                 new() { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
                 new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1 },
-                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
 
                 new() { metricName = @"DotNet/DatabaseResult/Iterate" , callCount = expectedIterateCallCount },
-                new() { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"}
+                new() { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -94,9 +94,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 new() { metricName = @"Datastore/Oracle/allWeb"},
 
                 // The operation metric should not be scoped because the statement metric is scoped instead
-                new() { metricName = @"Datastore/operation/Oracle/select", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" },
-                new() { metricName = @"Datastore/operation/Oracle/insert", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" },
-                new() { metricName = @"Datastore/operation/Oracle/delete", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" }
+                new() { metricName = @"Datastore/operation/Oracle/select", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync" },
+                new() { metricName = @"Datastore/operation/Oracle/insert", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync" },
+                new() { metricName = @"Datastore/operation/Oracle/delete", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync" }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -111,14 +111,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
             {
                 new()
                 {
-                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync",
                     Sql = "SELECT DEGREE FROM user_tables WHERE ROWNUM <= ?",
                     DatastoreMetricName = "Datastore/statement/Oracle/user_tables/select",
                     HasExplainPlan = false
                 },
                 new()
                 {
-                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync",
                     Sql = $"SELECT COUNT(*) FROM {_tableName}",
                     DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/select",
 
@@ -126,7 +126,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 },
                 new()
                 {
-                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync",
                     Sql = $"INSERT INTO {_tableName} (HOTEL_ID, BOOKING_DATE) VALUES (?, SYSDATE)",
                     DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/insert",
 
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 },
                 new()
                 {
-                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync",
                     Sql = $"DELETE FROM {_tableName} WHERE HOTEL_ID = ?",
                     DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/delete",
 
@@ -143,8 +143,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync");
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             Assert.Multiple(
@@ -171,33 +171,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
     }
 
     [NetFrameworkTest]
-    public class OracleAsyncTestsFramework462 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public OracleAsyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public OracleSyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class OracleAsyncTestsFramework471 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public OracleAsyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        public OracleSyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class OracleAsyncTestsFrameworkLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class OracleSyncTestsFrameworkLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public OracleAsyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public OracleSyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class OracleAsyncTestsCoreLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class OracleSyncTestsCoreLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public OracleAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public OracleSyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
