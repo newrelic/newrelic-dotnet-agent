@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.401.7" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.401.7" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -29,8 +29,8 @@
     <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -76,7 +76,7 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
-    <PackageReference Include="RestSharp" Version="111.4.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RestSharp" Version="112.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     
     <PackageReference Include="Serilog" Version="4.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog" Version="4.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
