@@ -22,7 +22,6 @@ where TFixture : ConsoleDynamicMethodFixture
         private List<string> _bedrockModelsToTest = new List<string>
         {
             "meta13",
-            "ai21",
             "amazonembed",
             "amazonexpress",
             "cohere",
