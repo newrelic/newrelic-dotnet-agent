@@ -232,6 +232,7 @@ jobs:
           AwsLambda.Sns,
           AwsLambda.Sqs,
           AwsLambda.WebRequest,
+          AzureFunction,
           BasicInstrumentation, 
           CatInbound, 
           CatOutbound, 
@@ -328,6 +329,12 @@ jobs:
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
           pip install aiohttp
+        shell: powershell
+
+      - name: Install Azure Functions Core Tools
+        if: matrix.namespace == 'AzureFunction'
+        run: |
+          npm i -g azure-functions-core-tools@4 --unsafe-perm true
         shell: powershell
 
       - name: Run Integration Tests
