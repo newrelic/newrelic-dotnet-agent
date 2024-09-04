@@ -334,7 +334,8 @@ jobs:
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
         run: |
-          npm i -g azure-functions-core-tools@4 --unsafe-perm true
+          choco install azure-functions-core-tools -y
+          
         shell: powershell
 
       - name: Run Integration Tests
