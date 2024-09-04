@@ -649,6 +649,14 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 1;
             }
 
+            // func.exe is the local test tool and should not be instrumented
+            bool isFuncExe = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("Func.exe"));
+            if (isFuncExe)
+            {
+                LogInfo(L"Func.exe is a tool for testing Azure functions locally. Not instrumenting this process.");
+                return 1;
+            }
+
             LogInfo("Couldn't determine whether this Azure Function process should be instrumented based on commandLine. Falling back to checking application pool");
             return -1; // indeterminate
         }
