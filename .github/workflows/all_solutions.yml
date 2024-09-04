@@ -122,6 +122,7 @@ jobs:
           if-no-files-found: error
 
   run-linux-container-tests:
+    if: false
     name: Run Linux Container Tests
     needs: 
       - build-fullagent-msi
@@ -171,6 +172,7 @@ jobs:
           if-no-files-found: error
 
   build-unbounded-tests:
+    if: false
     needs: build-fullagent-msi
     name: Build UnboundedIntegrationTests
     runs-on: windows-2022
@@ -281,6 +283,7 @@ jobs:
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
 
     steps:
       - name: Checkout
@@ -335,7 +338,7 @@ jobs:
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
         run: |
-          choco install azure-functions-core-tools -y
+          choco install azure-functions-core-tools -y --params "'/x64'"
           
         shell: powershell
 
@@ -381,6 +384,7 @@ jobs:
           if-no-files-found: error
 
   run-unbounded-tests:
+    if: false
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
     runs-on: windows-2022

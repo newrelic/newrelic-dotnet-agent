@@ -25,10 +25,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
             var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
 
+            // github workflow will provide the path to func.exe in azure_func_exe_path, use that if found else default to just func.exe
+            var funcExePath = Environment.GetEnvironmentVariable("azure_func_exe_path") ?? "func.exe";
+
             var startInfo = new ProcessStartInfo
             {
                 Arguments = arguments,
-                FileName = "func",
+                FileName = funcExePath,
                 UseShellExecute = false,
                 WorkingDirectory = DestinationApplicationDirectoryPath,
                 RedirectStandardOutput = captureStandardOutput,
