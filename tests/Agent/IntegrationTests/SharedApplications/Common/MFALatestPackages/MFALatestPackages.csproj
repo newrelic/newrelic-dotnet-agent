@@ -29,8 +29,8 @@
     <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
