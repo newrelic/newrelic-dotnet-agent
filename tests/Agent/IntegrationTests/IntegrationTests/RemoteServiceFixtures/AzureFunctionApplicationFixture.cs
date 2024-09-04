@@ -13,6 +13,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, true, true))
         {
             CommandLineArguments = $"start --no-build --language-worker dotnet-isolated --dotnet-isolated --functions {functionName} ";
+
+#if DEBUG
+            // set a long timeout if you're going to debug into the function
+            CommandLineArguments += "--timeout 600 ";
+#endif
         }
 
 

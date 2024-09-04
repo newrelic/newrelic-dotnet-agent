@@ -90,7 +90,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             // TODO: remove when azure func instrumentation is enabled by default
             startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", "true");
 
+            // environment variables needed by azure function instrumentation
             startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated");
+            startInfo.Environment.Add("WEBSITE_RESOURCE_GROUP", "my_resource_group");
+            startInfo.Environment.Add("REGION_NAME", "my_azure_region");
+            startInfo.Environment.Add("WEBSITE_SITE_NAME", AppName); // really should be the azure function app name, but for testing, this is preferred
+            startInfo.Environment.Add("WEBSITE_OWNER_NAME", "subscription_id+my_resource_group-my_azure_region-Linux");
 
             //  set a custom environment variable so the azure func app can build the correct eventWaitHandle name
             startInfo.Environment.Add("AZURE_FUNCTION_APP_EVENT_HANDLE_PORT", Port.ToString());
