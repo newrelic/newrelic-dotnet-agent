@@ -122,7 +122,6 @@ jobs:
           if-no-files-found: error
 
   run-linux-container-tests:
-    if: false
     name: Run Linux Container Tests
     needs: 
       - build-fullagent-msi
@@ -172,7 +171,6 @@ jobs:
           if-no-files-found: error
 
   build-unbounded-tests:
-    if: false
     needs: build-fullagent-msi
     name: Build UnboundedIntegrationTests
     runs-on: windows-2022
@@ -217,64 +215,63 @@ jobs:
     strategy:
       matrix:
         namespace: [ 
-          # AgentFeatures
-          # AgentLogs, 
-          # AgentMetrics, 
-          # Api, 
-          # AppDomainCaching, 
-          # AspNetCore, 
-          # AwsLambda.AutoInstrumentation,
-          # AwsLambda.CloudWatch,
-          # AwsLambda.Custom,
-          # AwsLambda.DynamoDb,
-          # AwsLambda.General,
-          # AwsLambda.Kinesis,
-          # AwsLambda.S3,
-          # AwsLambda.Ses,
-          # AwsLambda.Sns,
-          # AwsLambda.Sqs,
-          # AwsLambda.WebRequest,
-          AzureFunction
-          # BasicInstrumentation, 
-          # CatInbound, 
-          # CatOutbound, 
-          # CodeLevelMetrics, 
-          # Configuration, 
-          # CSP, 
-          # CustomAttributes, 
-          # CustomInstrumentation, 
-          # DataTransmission, 
-          # DistributedTracing, 
-          # Errors, 
-          # HttpClientInstrumentation, 
-          # InfiniteTracing,
-          # LLM,
-          # Logging.AuditLog,
-          # Logging.ContextData, 
-          # Logging.HsmAndCsp, 
-          # Logging.LocalDecoration, 
-          # Logging.LogLevelDetection, 
-          # Logging.MaxSamplesStored, 
-          # Logging.MetricsAndForwarding, 
-          # Logging.ZeroMaxSamplesStored,
-          # Owin,
-          # MassTransit, 
-          # ReJit.NetCore, 
-          # ReJit.NetFramework, 
-          # RequestHandling, 
-          # RequestHeadersCapture.AspNet, 
-          # RequestHeadersCapture.AspNetCore, 
-          # RequestHeadersCapture.EnvironmentVariables, 
-          # RequestHeadersCapture.Owin, 
-          # RequestHeadersCapture.WCF, 
-          # RestSharp, 
-          # WCF.Client.IIS.ASPDisabled, 
-          # WCF.Client.IIS.ASPEnabled, 
-          # WCF.Client.Self, 
-          # WCF.Service.IIS.ASPDisabled, 
-          # WCF.Service.IIS.ASPEnabled, 
-          # WCF.Service.Self
-          ] # maintain alphabetical order, please!
+          AgentFeatures
+          AgentLogs, 
+          AgentMetrics, 
+          Api, 
+          AppDomainCaching, 
+          AspNetCore, 
+          AwsLambda.AutoInstrumentation,
+          AwsLambda.CloudWatch,
+          AwsLambda.Custom,
+          AwsLambda.DynamoDb,
+          AwsLambda.General,
+          AwsLambda.Kinesis,
+          AwsLambda.S3,
+          AwsLambda.Ses,
+          AwsLambda.Sns,
+          AwsLambda.Sqs,
+          AwsLambda.WebRequest,
+          AzureFunction,
+          BasicInstrumentation, 
+          CatInbound, 
+          CatOutbound, 
+          CodeLevelMetrics, 
+          Configuration, 
+          CSP, 
+          CustomAttributes, 
+          CustomInstrumentation, 
+          DataTransmission, 
+          DistributedTracing, 
+          Errors, 
+          HttpClientInstrumentation, 
+          InfiniteTracing,
+          LLM,
+          Logging.AuditLog,
+          Logging.ContextData, 
+          Logging.HsmAndCsp, 
+          Logging.LocalDecoration, 
+          Logging.LogLevelDetection, 
+          Logging.MaxSamplesStored, 
+          Logging.MetricsAndForwarding, 
+          Logging.ZeroMaxSamplesStored,
+          Owin,
+          MassTransit, 
+          ReJit.NetCore, 
+          ReJit.NetFramework, 
+          RequestHandling, 
+          RequestHeadersCapture.AspNet, 
+          RequestHeadersCapture.AspNetCore, 
+          RequestHeadersCapture.EnvironmentVariables, 
+          RequestHeadersCapture.Owin, 
+          RequestHeadersCapture.WCF, 
+          RestSharp, 
+          WCF.Client.IIS.ASPDisabled, 
+          WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, 
+          WCF.Service.IIS.ASPDisabled, 
+          WCF.Service.IIS.ASPEnabled, 
+          WCF.Service.Self] # maintain alphabetical order, please!
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -384,7 +381,6 @@ jobs:
           if-no-files-found: error
 
   run-unbounded-tests:
-    if: false
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
     runs-on: windows-2022
