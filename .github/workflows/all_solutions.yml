@@ -215,7 +215,7 @@ jobs:
     strategy:
       matrix:
         namespace: [ 
-          AgentFeatures
+          AgentFeatures,
           AgentLogs, 
           AgentMetrics, 
           Api, 
@@ -336,7 +336,6 @@ jobs:
         if: matrix.namespace == 'AzureFunction'
         run: |
           choco install azure-functions-core-tools -y --params "'/x64'"
-          
         shell: powershell
 
       - name: Run Integration Tests
