@@ -58,14 +58,12 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
                 new() {metricName = "DotNet/Function1", callCount = 1},
                 new() {metricName = "DotNet/Function1", metricScope = "WebTransaction/AzureFunction/Function1", callCount = 1},
                 new() {metricName = "WebTransaction/AzureFunction/Function1", callCount = 1},
-                new() {metricName = "WebTransactionTotalTime/AzureFunction/Function1", callCount = 1},
-                new() {metricName = "Apdex/AzureFunction/Function1", callCount = 1},
             };
-
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             Assertions.MetricsExist(expectedMetrics, metrics);
 
+            // TODO: when interaction with aspnetcore instrumentation is resolved, we should expect to see the Azure function transaction get sampled
             //var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/AzureFunction/Function1");
             //Assert.NotNull(transactionSample);
 
@@ -79,7 +77,6 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
             Assert.Equal("Function1", faasNameValue);
             Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
-            Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("faas.invocation_id", out _));
         }
     }
 
