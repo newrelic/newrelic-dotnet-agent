@@ -94,6 +94,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
         }
 
+        virtual bool IsAzureFunctionLogLevelOverrideEnabled() {
+            return GetEnvironmentBool(_X("NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE"), false);
+        }
+
 
 
     private:
