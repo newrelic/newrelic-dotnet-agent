@@ -91,7 +91,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         {
             // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
             auto functionsWorkerRuntime = TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
-            return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
+            return functionsWorkerRuntime != nullptr && !functionsWorkerRuntime->empty();
         }
 
         virtual bool IsAzureFunctionLogLevelOverrideEnabled() {
