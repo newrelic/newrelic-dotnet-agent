@@ -73,23 +73,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(configuration.ShouldInstrument(L"foo.exe", L"", L"", L"", false));
         }
 
-        TEST_METHOD(should_instrument_azure_function_functionsnethost_commandline)
-        {
-            std::wstring configurationXml(L"\
-    <?xml version=\"1.0\"?>\
-    <configuration>\
-        <log level=\"deBug\"/>\
-    </configuration>\
-    ");
-
-            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
-            systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-
-            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
-
-            Assert::IsTrue(configuration.ShouldInstrument(L"w3wp.exe", L"", L"foo", L"FunctionsNetHost.exe blah blah blah", true));
-        }
-
         TEST_METHOD(should_not_instrument_azure_function_app_pool_id_in_commandline)
         {
             std::wstring configurationXml(L"\
@@ -122,6 +105,40 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
             Assert::IsTrue(configuration.ShouldInstrument(L"w3wp.exe", L"", L"foo", L"", true));
+        }
+
+        TEST_METHOD(should_not_instrument_azure_function_func_exe_process_path)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+    ");
+
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
+
+            Assert::IsFalse(configuration.ShouldInstrument(L"func.exe", L"", L"FooBarBaz", L"blah blah blah FooBarBaz blah blah blah", true));
+        }
+
+        TEST_METHOD(should_instrument_azure_function_functionsnethost_exe_process_path)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+    ");
+
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
+
+            Assert::IsFalse(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"FooBarBaz", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
         TEST_METHOD(instrument_process)
@@ -457,7 +474,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"bar", L"", true));
         }
 
@@ -472,7 +490,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
@@ -487,7 +506,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
@@ -502,7 +522,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
@@ -517,7 +538,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
@@ -536,7 +558,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", true));
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", true));
             Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", true));
@@ -560,7 +583,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     </configuration>\
     ");
 
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", true));
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", true));
             Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", true));

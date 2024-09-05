@@ -85,7 +85,7 @@ namespace NewRelic {
 
                 Level GetLevel() const noexcept
                 {
-                    if (!_console && !_azureFunctionModeEnabled)
+                    if (!_console && (!_azureFunctionModeEnabled || _azureFunctionLogLevelOverride))
                     {
                         return _level;
                     }
@@ -100,6 +100,10 @@ namespace NewRelic {
                 void SetAzureFunctionMode(bool isAzureFunctionMode)
                 {
                     _azureFunctionModeEnabled = isAzureFunctionMode;
+                }
+
+                void SetAzureFunctionLogLevelOverride(bool overrideLogLevelRestriction) {
+                    _azureFunctionLogLevelOverride = overrideLogLevelRestriction;
                 }
 
                 void SetConsoleLogging(bool enabled)
@@ -142,6 +146,7 @@ namespace NewRelic {
                 bool _enabled;
                 bool _initialized;
                 bool _azureFunctionModeEnabled;
+                bool _azureFunctionLogLevelOverride;
             };
 
             using FileLogger = Logger<std::wofstream>;

@@ -1145,6 +1145,7 @@ namespace NewRelic { namespace Profiler {
             nrlog::StdLog.SetLevel(configuration->GetLoggingLevel());
             nrlog::StdLog.SetConsoleLogging(_systemCalls->GetConsoleLoggingEnabled(configuration->GetConsoleLogging()));
             nrlog::StdLog.SetAzureFunctionMode(_systemCalls->IsAzureFunction());
+            nrlog::StdLog.SetAzureFunctionLogLevelOverride(_systemCalls->IsAzureFunctionLogLevelOverrideEnabled());
             nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
             nrlog::StdLog.SetInitalized();
 
