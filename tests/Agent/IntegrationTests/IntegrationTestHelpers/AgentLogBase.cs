@@ -79,6 +79,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // Invalid serverless web request
         public const string InvalidServerlessWebRequestLogLineRegex = DebugLogLinePrefixRegex + @"Invalid or missing web request parameters. (.*)";
 
+        // azure function mode disabled
+        public const string AzureFunctionModeDisabledLogLineRegex = InfoLogLinePrefixRegex + "Azure Function mode is not enabled; Azure Functions will not be instrumented.(.*)";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;

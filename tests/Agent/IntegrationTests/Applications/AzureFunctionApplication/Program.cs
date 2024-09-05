@@ -36,7 +36,7 @@ internal class Program
         AppLifecycleManager.CreatePidFile();
         AppLifecycleManager.WaitForTestCompletion(port);
 
-        await cts.CancelAsync();
+        cts.Cancel();
         await task;
     }
 }
