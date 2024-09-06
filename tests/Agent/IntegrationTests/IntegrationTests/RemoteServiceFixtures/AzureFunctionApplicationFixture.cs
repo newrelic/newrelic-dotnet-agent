@@ -9,10 +9,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AzureFunctionApplication";
 
-        protected AzureFunctionApplicationFixture(string functionName, string targetFramework, bool enableAzureFunctionMode)
+        protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode)
             : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, true, true, enableAzureFunctionMode))
         {
-            CommandLineArguments = $"start --no-build --language-worker dotnet-isolated --dotnet-isolated --functions {functionName} ";
+            CommandLineArguments = $"start --no-build --language-worker dotnet-isolated --dotnet-isolated --functions {functionNames} ";
 
 #if DEBUG
             // set a long timeout if you're going to debug into the function
@@ -35,19 +35,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
     public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctionApplicationFixture
     {
-        public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunction", "net6.0", true)
+        public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net6.0", true)
         {
         }
     }
     public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
     {
-        public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunction", "net8.0", true)
+        public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net8.0", true)
         {
         }
     }
     public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
     {
-        public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunction", "net8.0", false)
+        public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net8.0", false)
         {
         }
     }

@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using ApplicationLifecycle;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 
 internal class Program
 {
@@ -24,11 +21,6 @@ internal class Program
 
         var host = new HostBuilder()
             .ConfigureFunctionsWebApplication()
-            .ConfigureServices(services =>
-            {
-                services.AddApplicationInsightsTelemetryWorkerService();
-                services.ConfigureFunctionsApplicationInsights();
-            })
             .Build();
 
         var task = host.RunAsync(cts.Token);

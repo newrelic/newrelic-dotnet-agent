@@ -8,19 +8,20 @@ using Microsoft.Extensions.Logging;
 
 namespace AzureFunctionApplication
 {
-    public class HttpTriggerFunction
+    public class HttpTriggerFunctionUsingAspNetCorePipeline
     {
-        private readonly ILogger<HttpTriggerFunction> _logger;
+        private readonly ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> _logger;
 
-        public HttpTriggerFunction(ILogger<HttpTriggerFunction> logger)
+        public HttpTriggerFunctionUsingAspNetCorePipeline(ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> logger)
         {
             _logger = logger;
         }
 
-        [Function("HttpTriggerFunction")]
+        [Function("HttpTriggerFunctionUsingAspNetCorePipeline")]
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation("HttpTriggerFunctionUsingAspNetCorePipeline processed a request.");
+
             return new OkObjectResult("Welcome to Azure Functions!");
         }
     }
