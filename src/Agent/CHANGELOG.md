@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.29.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.28.0...v10.29.0) (2024-08-20)
+
+
+### New features
+
+* Additional metrics and attributes for some instrumented libraries ([#2675](https://github.com/newrelic/newrelic-dotnet-agent/issues/2675)) ([a033b81](https://github.com/newrelic/newrelic-dotnet-agent/commit/a033b81b19ba65b7336762c89a974160cc2e5491))
+* Auto-instrument ASP.NET Core Lambda functions ([#2662](https://github.com/newrelic/newrelic-dotnet-agent/issues/2662)) ([#2674](https://github.com/newrelic/newrelic-dotnet-agent/issues/2674)) ([ceaefc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/ceaefc51bd15c3baaa05f4d0306645852aea1392))
+* Use Lambda function name if application name is not set ([#2695](https://github.com/newrelic/newrelic-dotnet-agent/issues/2695)) ([3dcf3af](https://github.com/newrelic/newrelic-dotnet-agent/commit/3dcf3af535ad14b39cb27d9de2704b41780f89b4))
+
 ## [10.28.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.27.0...v10.28.0) (2024-08-05)
 
 

@@ -25,7 +25,18 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Purge, RabbitMqHelper.VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Purge,
+                RabbitMqHelper.VendorName,
+                destName,
+                serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent));
+
+            // Routing key is not available for this method.
+            // It only returns uint and invocationTarget does not have the value.
+
             return Delegates.GetDelegateFor(segment);
         }
     }

@@ -66,6 +66,11 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     segment.SetMessageBrokerDestination(topic);
                     transaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
+                    if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
+                    {
+                        KafkaHelper.RecordKafkaNodeMetrics(agent, topic, bootstrapServers, false);
+                    }
+
                     // get the Message.Headers property and process distributed trace headers
                     var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
                     var messageAsObject = messageAccessor(resultAsObject);

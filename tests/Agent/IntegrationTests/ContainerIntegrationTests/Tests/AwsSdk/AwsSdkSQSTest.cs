@@ -9,7 +9,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
+namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixture>
 {
@@ -120,7 +120,16 @@ public class AwsSdkSQSTest : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixtu
             () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(processRequestSpan!.IntrinsicAttributes.ContainsKey("parentId")),
             () => Assert.Equal(produceSpan!.IntrinsicAttributes["traceId"], consumeSpan!.IntrinsicAttributes["traceId"]),
-            () => Assert.Equal(produceSpan!.IntrinsicAttributes["guid"], processRequestSpan!.IntrinsicAttributes["parentId"])
+            () => Assert.Equal(produceSpan!.IntrinsicAttributes["guid"], processRequestSpan!.IntrinsicAttributes["parentId"]),
+            // entity relationship attributes
+            () => Assert.Equal(produceSpan!.AgentAttributes["messaging.system"], "aws_sqs"),
+            () => Assert.Equal(produceSpan!.AgentAttributes["messaging.destination.name"], _testQueueName2),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["cloud.account.id"], "000000000000"),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["cloud.region"], "us-west-2"),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["messaging.system"], "aws_sqs"),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["messaging.destination.name"], _testQueueName2),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["cloud.account.id"], "000000000000"),
+            () => Assert.Equal(consumeSpan!.AgentAttributes["cloud.region"], "us-west-2")
         );
     }
 }

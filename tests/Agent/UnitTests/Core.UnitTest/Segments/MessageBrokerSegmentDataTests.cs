@@ -21,8 +21,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void IsCombinableWith_ReturnsTrue_ForIdenticalSegments()
         {
-            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
-            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem", "cloudAccountId", "cloudRegion", "localhost", 1234, "routingKey");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem", "cloudAccountId", "cloudRegion", "localhost", 1234, "routingKey");
 
             Assert.That(segment1.IsCombinableWith(segment2), Is.True);
         }
@@ -110,6 +110,60 @@ namespace NewRelic.Agent.Core.Segments.Tests
             Assert.That(segment1.IsCombinableWith(segment2), Is.False);
         }
 
+        [Test]
+        public void IsCombinableWith_ReturnsFalse_IfDifferentMessagingSystem()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem1");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, "messagingSystem2");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
+        }
+
+        [Test]
+        public void IsCombinableWith_ReturnsFalse_IfDifferentCloudAccountId()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudAccountId:"cloudAccountId1");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudAccountId:"cloudAccountId2");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
+        }
+
+        [Test]
+        public void IsCombinableWith_ReturnsFalse_IfDifferentCloudRegion()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudRegion:"cloudRegion1");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, cloudRegion:"cloudRegion2");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
+        }
+
+        [Test]
+        public void IsCombinableWith_ReturnsFalse_IfDifferentServerAddress()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "localhost", serverPort: 1234, routingKey: "routingKey");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "remotehost", serverPort: 1234, routingKey: "routingKey");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
+        }
+
+        [Test]
+        public void IsCombinableWith_ReturnsFalse_IfDifferentServerPort()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "localhost", serverPort: 1234, routingKey: "routingKey");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "localhost", serverPort: 5678, routingKey: "routingKey");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.False);
+        }
+
+        [Test]
+        public void IsCombinableWith_ReturnsTrue_IfDifferentRoutingKey()
+        {
+            var segment1 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "localhost", serverPort: 1234, routingKey: "routingKey1");
+            var segment2 = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true, serverAddress: "localhost", serverPort: 1234, routingKey: "routingKey2");
+
+            Assert.That(segment1.IsCombinableWith(segment2), Is.True);
+        }
+
         #endregion IsCombinableWith
 
         #region CreateSimilar
@@ -120,7 +174,18 @@ namespace NewRelic.Agent.Core.Segments.Tests
             var oldStartTime = DateTime.Now;
             var oldDuration = TimeSpan.FromSeconds(2);
             var oldParameters = new Dictionary<string, object> { { "flim", "flam" } };
-            var oldSegment = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(new TimeSpan(), oldDuration, 2, 1, new MethodCallData("type", "method", 1), oldParameters, "vendor1", "queueA", MetricNames.MessageBrokerDestinationType.Queue, MetricNames.MessageBrokerAction.Consume, true);
+            var oldSegment = MessageBrokerSegmentDataTestHelpers.CreateMessageBrokerSegmentBuilder(
+                new TimeSpan(),
+                oldDuration,
+                2,
+                1,
+                new MethodCallData("type", "method", 1),
+                oldParameters,
+                "vendor1",
+                "queueA",
+                MetricNames.MessageBrokerDestinationType.Queue,
+                MetricNames.MessageBrokerAction.Consume,
+                true);
 
             var newStartTime = TimeSpan.FromSeconds(5);
             var newDuration = TimeSpan.FromSeconds(5);
@@ -152,13 +217,41 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
     public static class MessageBrokerSegmentDataTestHelpers
     {
-        public static Segment CreateMessageBrokerSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string vendor, string queue, MetricNames.MessageBrokerDestinationType type, MetricNames.MessageBrokerAction action, bool combinable)
+        public static Segment CreateMessageBrokerSegmentBuilder(
+            TimeSpan start,
+            TimeSpan duration,
+            int uniqueId,
+            int? parentId,
+            MethodCallData methodCallData,
+            IEnumerable<KeyValuePair<string, object>> parameters,
+            string vendor,
+            string destination,
+            MetricNames.MessageBrokerDestinationType destinationType,
+            MetricNames.MessageBrokerAction action,
+            bool combinable,
+            string messagingSystemName = null,
+            string cloudAccountId = null,
+            string cloudRegion = null,
+            string serverAddress = null,
+            int? serverPort = null,
+            string routingKey = null)
         {
             var segment = new Segment(SimpleSegmentDataTestHelpers.CreateTransactionSegmentState(uniqueId, parentId), methodCallData);
-            segment.SetSegmentData(new MessageBrokerSegmentData(vendor, queue, type, action));
+            var messageBrokerSegmentData = new MessageBrokerSegmentData(
+                vendor,
+                destination,
+                destinationType,
+                action,
+                messagingSystemName,
+                cloudAccountId,
+                cloudRegion,
+                serverAddress,
+                serverPort,
+                routingKey);
+            segment.SetSegmentData(messageBrokerSegmentData);
             segment.Combinable = combinable;
 
-            return new Segment(start, duration, segment, null);
+            return new Segment(start, duration, segment, parameters);
         }
     }
 }

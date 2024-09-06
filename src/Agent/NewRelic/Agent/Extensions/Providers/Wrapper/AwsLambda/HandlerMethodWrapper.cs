@@ -48,10 +48,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return false;
             }
 
-            public void Validate(string fallbackName)
+            public void Validate(string fallbackName1, string fallbackName2, string versionFallback)
             {
-                ValidateName(fallbackName);
-                ValidateVersion();
+                ValidateName(fallbackName1, fallbackName2);
+                ValidateVersion(versionFallback);
             }
 
             private void SetName(object lambdaContext)
@@ -60,11 +60,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 FunctionName = functionNameGetter(lambdaContext);
             }
 
-            private void ValidateName(string fallbackName)
+            private void ValidateName(string fallback1, string fallback2)
             {
                 if (string.IsNullOrEmpty(_functionDetails.FunctionName))
                 {
-                    FunctionName = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") ?? fallbackName;
+                    FunctionName = fallback1 ?? fallback2;
                 }
             }
 
@@ -74,11 +74,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 FunctionVersion = functionVersionGetter(lambdaContext);
             }
 
-            private void ValidateVersion()
+            private void ValidateVersion(string fallback)
             {
                 if (string.IsNullOrEmpty(FunctionVersion))
                 {
-                    FunctionVersion = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ?? "$LATEST";
+                    FunctionVersion = fallback ?? "$LATEST";
                 }
             }
 
@@ -200,7 +200,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
             }
 
-            _functionDetails.Validate(instrumentedMethodCall.MethodCall.Method.MethodName);
+            _functionDetails.Validate(agent.Configuration.ServerlessFunctionName, instrumentedMethodCall.MethodCall.Method.MethodName, agent.Configuration.ServerlessFunctionVersion);
 
             if (!_functionDetails.HasContext())
             {
