@@ -46,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
         [Fact]
         public void Test()
         {
-            var firstTransactionExpectedTransactionEventAttributes = new List<string>
+            var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "faas.coldStart",
                 "faas.invocation_id",
@@ -55,17 +55,31 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
                 "cloud.resource_id"
             };
 
-            var secondTransactionUnexpectedTransactionEventAttributes = new List<string>
+            var secondTransactionUnexpectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "faas.coldStart"
             };
 
-            var simpleTransactionExpectedTransactionEventAttributes = new List<string>
+            var simpleTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "faas.invocation_id",
                 "faas.name",
                 "faas.trigger",
                 "cloud.resource_id"
+            };
+
+            var expectedAgentAttributes = new Dictionary<string, string>
+            {
+                { "request.uri", "/Unknown"}
+            };
+
+            var transactionTraceExpectedAttributes = new Dictionary<string, string>()
+            {
+                { "faas.coldStart", "true"},
+                //new("faas.invocation_id", "test_invocation_id"), This one is a random guid, not something we can specifically look for
+                { "faas.name", "HttpTriggerFunctionUsingAspNetCorePipeline" },
+                { "faas.trigger", "http" },
+                { "cloud.resource_id", "/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingAspNetCorePipeline" }
             };
 
             var pipelineTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionUsingAspNetCorePipeline";
@@ -84,21 +98,9 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
                 new() {metricName = simpleTransactionName, callCount = 1},
             };
 
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(pipelineTransactionName);
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-            if (_fixture.AzureFunctionModeEnabled)  // if instrumentation is disabled, no metrics should exist
-            {
-                Assertions.MetricsExist(pipelineExpectedMetrics, metrics);
-                Assertions.MetricsExist(simpleExpectedMetrics, metrics);
-            }
-            else
-            {
-                Assertions.MetricsDoNotExist(pipelineExpectedMetrics, metrics);
-                Assertions.MetricsDoNotExist(simpleExpectedMetrics, metrics);
-            }
-
-            //var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/AzureFunction/HttpTriggerFunctionUsingAspNetCorePipeline");
-            //Assert.NotNull(transactionSample);
 
             var pipelineTransactionEvents = _fixture.AgentLog.GetTransactionEvents()
                 .Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == pipelineTransactionName)
@@ -112,14 +114,23 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
 
             if (_fixture.AzureFunctionModeEnabled)
             {
+                Assertions.MetricsExist(pipelineExpectedMetrics, metrics);
+                Assertions.MetricsExist(simpleExpectedMetrics, metrics);
+
+                Assert.NotNull(transactionSample);
                 Assert.NotNull(firstTransaction);
                 Assert.NotNull(secondTransaction);
                 Assert.NotNull(simpleTransaction);
 
-                Assertions.TransactionEventHasAttributes(firstTransactionExpectedTransactionEventAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, firstTransaction);
-                Assertions.TransactionEventDoesNotHaveAttributes(secondTransactionUnexpectedTransactionEventAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, secondTransaction);
+                Assertions.TransactionTraceHasAttributes(firstTransactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Intrinsic, transactionSample);
+                Assertions.TransactionTraceHasAttributes(expectedAgentAttributes, Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Agent, transactionSample);
 
-                Assertions.TransactionEventHasAttributes(simpleTransactionExpectedTransactionEventAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, simpleTransaction);
+                Assertions.TransactionEventHasAttributes(firstTransactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, firstTransaction);
+                Assertions.TransactionEventHasAttributes(expectedAgentAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Agent, firstTransaction);
+
+                Assertions.TransactionEventDoesNotHaveAttributes(secondTransactionUnexpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, secondTransaction);
+
+                Assertions.TransactionEventHasAttributes(simpleTransactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, simpleTransaction);
 
                 Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
                 Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingAspNetCorePipeline", cloudResourceIdValue);
@@ -130,6 +141,10 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
             }
             else
             {
+                Assertions.MetricsDoNotExist(pipelineExpectedMetrics, metrics);
+                Assertions.MetricsDoNotExist(simpleExpectedMetrics, metrics);
+                Assert.Null(transactionSample);
+
                 Assert.Empty(pipelineTransactionEvents); // there should be no transactions when azure function mode is disabled
                 Assert.Null(simpleTransaction);
             }
