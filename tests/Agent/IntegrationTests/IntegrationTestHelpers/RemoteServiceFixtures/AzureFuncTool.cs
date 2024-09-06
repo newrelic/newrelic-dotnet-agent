@@ -10,9 +10,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class AzureFuncTool : RemoteService
     {
-        public AzureFuncTool(string applicationDirectoryName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false)
+        private readonly bool _enableAzureFunctionMode;
+
+        public AzureFuncTool(string applicationDirectoryName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true)
             : base(applicationDirectoryName, "AzureFunctionApplication.exe", targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
         {
+            _enableAzureFunctionMode = enableAzureFunctionMode;
         }
 
         public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
@@ -90,8 +93,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
-            // TODO: remove when azure func instrumentation is enabled by default
-            startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", "true");
+            startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", _enableAzureFunctionMode.ToString());
 
             // environment variables needed by azure function instrumentation
             startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated");
