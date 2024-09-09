@@ -18,6 +18,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             _enableAzureFunctionMode = enableAzureFunctionMode;
         }
 
+        public override void CopyToRemote()
+        {
+            base.CopyToRemote();
+
+            // copy local.settings.json from the AzureFunctionApplication project to destination app folder
+            var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName, "local.settings.json");
+            var localSettingsPath = Path.Combine(SourceApplicationDirectoryPath, "local.settings.json");
+
+            File.Copy(localSettingsPath, deployPath, true);
+        }
+
         public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
             var arguments = UsesSpecificPort

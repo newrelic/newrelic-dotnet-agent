@@ -30,6 +30,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return GetString(address);
         }
 
+        public void PostToAzureFuncTool(string triggerName, string payload)
+        {
+            var address = $"http://{DestinationServerName}:{Port}/admin/functions/{triggerName}";
+
+            PostString(address, payload);
+        }
+
         public bool AzureFunctionModeEnabled { get; }
     }
 
@@ -48,6 +55,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
     {
         public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net8.0", false)
+        {
+        }
+    }
+
+    public class AzureFunctionApplicationFixtureQueueTriggerCoreOldest : AzureFunctionApplicationFixture
+    {
+        public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", "net6.0", true)
+        {
+        }
+    }
+    public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFunctionApplicationFixture
+    {
+        public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net8.0", true)
         {
         }
     }

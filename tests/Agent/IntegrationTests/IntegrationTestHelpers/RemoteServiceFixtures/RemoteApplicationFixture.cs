@@ -564,6 +564,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
         }
+
+        protected void PostString(string address, string payload)
+        {
+            var inputPayload = $$"""{"input":"{{payload}}"}""";
+            var content = new StringContent(inputPayload);
+
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccessStatusCode);
+        }
+
     }
 
 

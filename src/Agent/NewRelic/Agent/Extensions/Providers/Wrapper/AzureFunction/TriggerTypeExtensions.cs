@@ -49,7 +49,9 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     resolvedTriggerType = "http";
                     break;
 
-                case "DaprServiceInvocation": // RPC call to another Dapr service - no groupm so other.
+                case "DaprServiceInvocation": // RPC call to another Dapr service - no group so other.
+                    resolvedTriggerType = "other";
+                    break;
                 default:
                     resolvedTriggerType = "other";
                     break;
