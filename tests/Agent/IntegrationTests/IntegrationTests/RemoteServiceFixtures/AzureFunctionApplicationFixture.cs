@@ -34,7 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/admin/functions/{triggerName}";
 
-            PostString(address, payload);
+            var inputPayload = $$"""{"input":"{{payload}}"}""";
+            PostJson(address, inputPayload);
         }
 
         public bool AzureFunctionModeEnabled { get; }

@@ -565,10 +565,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected void PostString(string address, string payload)
+        protected void PostJson(string address, string payload)
         {
-            var inputPayload = $$"""{"input":"{{payload}}"}""";
-            var content = new StringContent(inputPayload);
+            var content = new StringContent(payload);
 
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
