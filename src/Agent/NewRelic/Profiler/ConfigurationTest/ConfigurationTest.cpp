@@ -121,7 +121,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
-            Assert::IsFalse(configuration.ShouldInstrument(L"func.exe", L"", L"FooBarBaz", L"blah blah blah FooBarBaz blah blah blah", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"func.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
         TEST_METHOD(should_instrument_azure_function_functionsnethost_exe_process_path)
@@ -138,7 +138,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
-            Assert::IsFalse(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"FooBarBaz", L"blah blah blah FooBarBaz blah blah blah", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
         TEST_METHOD(instrument_process)
