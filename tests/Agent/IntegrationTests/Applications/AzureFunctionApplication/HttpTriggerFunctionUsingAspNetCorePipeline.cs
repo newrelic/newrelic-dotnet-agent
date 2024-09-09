@@ -10,6 +10,7 @@ namespace AzureFunctionApplication
 {
     public class HttpTriggerFunctionUsingAspNetCorePipeline
     {
+        private static bool _firstTime = true;
         private readonly ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> _logger;
 
         public HttpTriggerFunctionUsingAspNetCorePipeline(ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> logger)
@@ -18,9 +19,16 @@ namespace AzureFunctionApplication
         }
 
         [Function("HttpTriggerFunctionUsingAspNetCorePipeline")]
-        public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
             _logger.LogInformation("HttpTriggerFunctionUsingAspNetCorePipeline processed a request.");
+
+            if (_firstTime)
+            {
+                await Task.Delay(500); // to ensure that the first invocation gets sampled
+                _firstTime = false;
+            }
+
 
             return new OkObjectResult("Welcome to Azure Functions!");
         }
