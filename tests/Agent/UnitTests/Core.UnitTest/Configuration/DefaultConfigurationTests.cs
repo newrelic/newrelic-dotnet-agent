@@ -2182,6 +2182,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             );
         }
 
+        [Test]
+        public void ApplicationNameDoesNotUserAzureFunctionName_IfAzureModeIsEnabled_ButAzureFunctionName_IsNullOrEmpty()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = "true" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(true);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My Application")),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+            );
+
+        }
+
         #endregion ApplicationNames
 
 

@@ -265,7 +265,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
-            if (AzureFunctionModeDetected && AzureFunctionModeEnabled)
+            if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionServiceName))
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
