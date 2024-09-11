@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "stdafx.h"
+#include "../Logging/Logger.h"
 #include "../Configuration/Configuration.h"
+#include "../LoggingTest/DefaultFileLogLocationTest.cpp"
 #include "CppUnitTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -13,7 +15,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         TEST_METHOD(netCore_dotnet_exe_invocations_not_instrumented) {
             auto processPath = _X("processPath");
             auto appPoolId = _X("appPoolId");
-            Configuration configuration(true);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+
+            Configuration configuration(true, Logger::Level::LEVEL_INFO, ProcessesPtr(new Processes()),ApplicationPoolsPtr(new ApplicationPools()),ApplicationPoolsPtr(new ApplicationPools()), true, false, false, systemCalls);
 
             auto isCoreClr = true;
 

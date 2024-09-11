@@ -1379,5 +1379,17 @@ namespace NewRelic.Agent.Core.Transactions
             var lambdaAttrib = _attribDefs.GetLambdaAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(lambdaAttrib, value);
         }
+
+        public void AddFaasAttribute(string name, object value)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Log.Debug($"AddFaasAttribute - Unable to set FaaS value on transaction because the key is null/empty");
+                return;
+            }
+
+            var faasAttrib = _attribDefs.GetFaasAttribute(name);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
+        }
     }
 }

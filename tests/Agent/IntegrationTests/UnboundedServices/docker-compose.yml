@@ -21,6 +21,7 @@ services:
         build: ./rabbitmq
         ports:
             - "5671-5672:5671-5672"
+            - "15671-15672:15671-15672"
         hostname: my-rabbit
         environment:
             - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-RabbitUser}

@@ -27,6 +27,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         private const string AwsName = @"aws";
         private const string AzureName = @"azure";
+        private const string AzureFunctionAppName = @"azurefunction";
         private const string GcpName = @"gcp";
         private const string PcfName = @"pcf";
         private const string DockerName = @"docker";
@@ -78,6 +79,8 @@ namespace NewRelic.Agent.Core.Utilization
                 vendorMethods.Add(GetGcpVendorInfo);
             if (_configuration.UtilizationDetectPcf)
                 vendorMethods.Add(GetPcfVendorInfo);
+            if (_configuration.UtilizationDetectAzureFunction)
+                vendorMethods.Add(GetAzureFunctionVendorInfo);
 
             foreach (var vendorMethod in vendorMethods)
             {
@@ -111,6 +114,22 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return vendors;
+        }
+
+        public IVendorModel GetAzureFunctionVendorInfo()
+        {
+            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
+                return null;
+
+            var appName = _configuration.AzureFunctionResourceId;
+            var cloudRegion = _configuration.AzureFunctionRegion;
+
+            if (appName == null || cloudRegion == null)
+            {
+                return null;
+            }
+
+            return new AzureFunctionVendorModel(appName, cloudRegion);
         }
 
         private IVendorModel GetAwsVendorInfo()
