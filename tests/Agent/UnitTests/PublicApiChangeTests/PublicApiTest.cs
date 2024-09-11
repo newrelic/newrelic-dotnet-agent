@@ -19,7 +19,7 @@ public class PublicApiTest
         // Get the assembly for the library we want to document
         Assembly assembly = typeof(NewRelic.Api.Agent.IAgent).Assembly;
 
-        // Retreive the public API for all types in the assembly
+        // Retrieve the public API for all types in the assembly
         string publicApi = assembly.GeneratePublicApi();
 
         // Run a snapshot test on the returned string
