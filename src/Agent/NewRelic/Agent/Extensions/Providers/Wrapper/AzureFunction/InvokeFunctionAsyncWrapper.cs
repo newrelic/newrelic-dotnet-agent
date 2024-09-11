@@ -70,7 +70,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
             if (IsColdStart) // only report this attribute if it's a cold start
             {
-                transaction.AddFaasAttribute("faas.coldStart", "true");
+                transaction.AddFaasAttribute("faas.coldStart", true);
             }
 
             transaction.AddFaasAttribute("cloud.resource_id", agent.Configuration.AzureFunctionResourceIdWithFunctionName(functionDetails.FunctionName));
