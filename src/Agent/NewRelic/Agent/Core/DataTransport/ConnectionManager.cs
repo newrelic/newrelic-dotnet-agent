@@ -10,7 +10,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+#if !NETFRAMEWORK
 using System.Net.Http;
+#endif
 using System.Net.Sockets;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -107,12 +109,14 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 HandleHttpErrorResponse(ex);
             }
+#if !NETFRAMEWORK // Only available in System.Net.Http
             // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
             // issue such as network connectivity, DNS failure, server certificate validation or timeout.
             catch (HttpRequestException)
             {
                 ScheduleRestart();
             }
+#endif
             // Occurs when the agent connects to APM but the connection gets aborted by the collector
             catch (SocketException)
             {
@@ -168,7 +172,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        #endregion Synchronized methods
+#endregion Synchronized methods
 
         #region Helper methods
 
