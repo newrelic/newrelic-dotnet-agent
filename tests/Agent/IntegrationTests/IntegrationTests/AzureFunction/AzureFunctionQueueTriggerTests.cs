@@ -54,9 +54,9 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
                 "cloud.resource_id"
             };
 
-            var transactionTraceExpectedAttributes = new Dictionary<string, string>()
+            var transactionTraceExpectedAttributes = new Dictionary<string, object>()
             {
-                { "faas.coldStart", "true"},
+                { "faas.coldStart", true},
                 //new("faas.invocation_id", "test_invocation_id"), This one is a random guid, not something we can specifically look for
                 { "faas.name", "QueueTriggerFunction" },
                 { "faas.trigger", "datasource" },
