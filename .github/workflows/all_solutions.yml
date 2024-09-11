@@ -327,11 +327,11 @@ jobs:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
 
-      - name: Install dependencies
-        run: |
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-          pip install aiohttp
-        shell: powershell
+      # - name: Install dependencies
+      #   run: |
+      #     Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+      #     pip install aiohttp
+      #   shell: powershell
 
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
@@ -445,8 +445,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          Write-Host "Installing HostableWebCore Feature"
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+          # Write-Host "Installing HostableWebCore Feature"
+          # Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
           
           if ("${{ matrix.namespace }}" -eq "Msmq") {
             Write-Host "Installing Msmq Features"
