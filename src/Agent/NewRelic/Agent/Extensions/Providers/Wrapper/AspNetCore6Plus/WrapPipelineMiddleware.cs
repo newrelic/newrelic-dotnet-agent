@@ -22,6 +22,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         private readonly RequestDelegate _next;
         private readonly IAgent _agent;
         private volatile bool _inspectingHttpContextForErrorsIsEnabled = true;
+        private static bool _loggedDisabledMessage;
 
         public WrapPipelineMiddleware(RequestDelegate next, IAgent agent)
         {
@@ -31,6 +32,19 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public async Task Invoke(HttpContext context)
         {
+            // if we're in Azure function mode, we don't want to do execute this wrapper
+            if (_agent.Configuration.AzureFunctionModeEnabled)
+            {
+                if (!_loggedDisabledMessage)
+                {
+                    _agent.Logger.Info("Azure Function mode is enabled; not instrumenting AspNetCore middleware pipeline.");
+                    _loggedDisabledMessage = true;
+                }
+
+                await _next(context);
+                return;
+            }
+
             ITransaction transaction = null;
             ISegment segment = null;
 

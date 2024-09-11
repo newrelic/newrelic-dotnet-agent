@@ -398,6 +398,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AwsSdkWrapperComponent" Guid="{00D58C03-D517-41CA-BBAD-DAC605EADD3E}">
         <File Id="AwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
       </Component>
+      <Component Id="AzureFunctionWrapperComponent" Guid="{949893C5-0212-447A-88A3-DDE3638DDC6E}">
+        <File Id="AzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -470,7 +473,10 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreAwsSdkWrapperComponent" Guid="{7C5E31CB-BA85-4E00-BA1B-99FA0B42E414}">
         <File Id="CoreAwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
       </Component>
-    </ComponentGroup>
+      <Component Id="CoreAzureFunctionWrapperComponent" Guid="{6DC23A07-4063-462E-B43A-532D6F810AFE}">
+        <File Id="CoreAzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
+      </Component>
+   </ComponentGroup>
 
     <!-- Wrapper Instrumentation Files-->
     <ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="FrameworkExtensionsFolder">
@@ -582,7 +588,10 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AwsSdkInstrumentationComponent" Guid="{E719FAC8-8D69-41EA-9395-B71868DA7449}">
         <File Id="AwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" />
       </Component>
-    </ComponentGroup>
+      <Component Id="AzureFunctionInstrumentationComponent" Guid="{0D802289-3B47-4D94-8907-285FFD2779AB}">
+        <File Id="AzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" />
+      </Component>
+   </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
       <Component Id="CoreAspNetCoreInstrumentationComponent" Guid="{E69FA7D5-DC09-4146-A77E-6EE697EF2910}">
@@ -650,6 +659,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAwsSdkInstrumentationComponent" Guid="{CAB15FAE-EF3F-4998-9376-56DA4E11BAEF}">
         <File Id="CoreAwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAzureFunctionInstrumentationComponent" Guid="{BF3BEE66-A563-4A59-ADEC-65C3381C582E}">
+        <File Id="CoreAzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

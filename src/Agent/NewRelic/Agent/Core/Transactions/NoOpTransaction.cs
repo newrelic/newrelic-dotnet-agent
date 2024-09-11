@@ -325,5 +325,10 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return;
         }
+
+        public void AddFaasAttribute(string name, object value)
+        {
+            return;
+        }
     }
 }

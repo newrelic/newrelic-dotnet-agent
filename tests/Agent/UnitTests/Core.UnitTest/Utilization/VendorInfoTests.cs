@@ -47,6 +47,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => _configuration.UtilizationDetectGcp).Returns(true);
             Mock.Arrange(() => _configuration.UtilizationDetectPcf).Returns(true);
             Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(true);
 
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
             var vendors = vendorInfo.GetVendors();
@@ -604,6 +605,88 @@ namespace NewRelic.Agent.Core.Utilization
             Assert.That(model, Is.Null);
         }
 #endif
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetVendors_DoesNotIncludeAzureFunction_IfUtilizationDetectAzureFunction_IsDisabled(bool enableAzureFunctionUtilization)
+        {
+            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(enableAzureFunctionUtilization);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var vendors = vendorInfo.GetVendors();
+
+            if (enableAzureFunctionUtilization)
+            {
+                Assert.That(vendors, Contains.Key("azurefunction"));
+                Assert.That(vendors["azurefunction"], Is.Not.Null);
+            }
+            else
+            {
+                Assert.That(vendors, Does.Not.ContainKey("azurefunction"));
+            }
+        }
+
+        [Test]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        public void GetAzureFunctionVendorInfo_ReturnsAzureFunctionModel_WhenAzureMode_IsEnabled(bool azureFunctionModeEnabled, bool expectNull)
+        {
+            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(azureFunctionModeEnabled);
+            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(azureFunctionModeEnabled);
+
+            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
+            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+            if (expectNull)
+            {
+                Assert.That(model, Is.Null);
+            }
+            else
+            {
+                Assert.That(model, Is.Not.Null);
+                Assert.That(model.AppName, Is.EqualTo("AzureResourceId"));
+                Assert.That(model.CloudRegion, Is.EqualTo("North Central US"));
+            }
+        }
+
+        [Test]
+        public void GetAzureFunctionVendorInfo_ReturnsNull_WhenRegionIsNotAvailable()
+        {
+            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns((string)null);
+            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+            Assert.That(model, Is.Null);
+        }
+        [Test]
+        public void GetAzureFunctionVendorInfo_ReturnsNull_WhenResourceIdIsNotAvailable()
+        {
+            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
+            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns((string)null);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+            Assert.That(model, Is.Null);
+        }
+
+
+
         private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName, environmentVariableTarget)).Returns(value);

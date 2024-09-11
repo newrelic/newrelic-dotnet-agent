@@ -96,9 +96,17 @@ namespace ApplicationLifecycle
             }
             else
             {
-                using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
+                try
                 {
-                    eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait));
+                    using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
+                    {
+                        if (!eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait)))
+                            Log("Timed out waiting for shutdown event handle to be signaled.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log("WaitForTestCompletion: exception: " + e.Message);
                 }
             }
         }
