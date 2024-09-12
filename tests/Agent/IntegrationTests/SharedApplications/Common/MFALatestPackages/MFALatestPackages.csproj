@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.4" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -92,8 +92,8 @@
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="StackExchange.Redis" Version="2.8.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" Condition="'$(TargetFramework)' == 'net8.0'" />
 
   </ItemGroup>
 </Project>
