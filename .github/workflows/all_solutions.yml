@@ -334,17 +334,19 @@ jobs:
           matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
           matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HttpClientInstrumentation' ||
           matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
-          matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables'
-
+          matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
+          matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
+          matrix.namespace == 'WCF.Client.IIS.ASPEnabled' || matrix.namespace == 'WCF.Service.IIS.ASPDisabled' ||
+          matrix.namespace == 'WCF.Service.IIS.ASPEnabled'
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
         shell: powershell
-        
-      # - name: Install dependencies
-      #   run: |
-      #     Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-      #     pip install aiohttp
-      #   shell: powershell
+
+      - name: Install aiohttp
+        if: matrix.namespace == 'DistributedTracing'
+        run: |
+          pip install aiohttp
+        shell: powershell
 
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
@@ -456,23 +458,28 @@ jobs:
           New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
         shell: powershell
 
-      - name: Install dependencies
+      - name: Install HostableWebCore Feature
+        if: | # only install for the required namespaces
+          matrix.namespace == 'Couchbase' || matrix.namespace == 'MongoDB' || matrix.namespace == 'MsSql' || matrix.namespace == 'Oracle'
         run: |
-          # Write-Host "Installing HostableWebCore Feature"
-          # Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-          
-          if ("${{ matrix.namespace }}" -eq "Msmq") {
-            Write-Host "Installing Msmq Features"
-            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
-            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
-            Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
-          }
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        shell: powershell
 
-          if ("${{ matrix.namespace }}" -eq "MsSql") {
-            Write-Host "Installing MSSQL CLI"
-            msiexec /i "${{ github.workspace }}\build\Tools\sqlncli.msi" IACCEPTSQLNCLILICENSETERMS=YES /quiet /qn /norestart
-            Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
-          }
+      - name: Install MSMQ dependencies
+        if: matrix.namespace == 'Msmq'
+        run: |
+          Write-Host "Installing Msmq Features"
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
+        shell: powershell
+
+      - name: Install MsSql dependencies
+        if: matrix.namespace == 'MsSql'
+        run: |
+          Write-Host "Installing MSSQL CLI"
+          msiexec /i "${{ github.workspace }}\build\Tools\sqlncli.msi" IACCEPTSQLNCLILICENSETERMS=YES /quiet /qn /norestart
+          Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
         shell: powershell
 
       - name: Set up secrets
