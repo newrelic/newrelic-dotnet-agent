@@ -26,9 +26,9 @@ updates:
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
-    directories: 
-      - /tests/Agent/IntegrationTests
-      - /
+    directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
+      - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions
+      - / # will pick up FullAgent.sln which contains the unit tests
     schedule:
       interval: weekly
     groups:
@@ -37,10 +37,12 @@ updates:
           - "*"
     allow:
       - dependency-name: "coverlet.collector"
-      - dependency-name: "JustMock"
+      - dependency-name: "JustMock" # until we upgrade unit tests to target 4.8.1, we can' upgrade to the 20204 JustMock release
       - dependency-name: "Microsoft.NET.Test.Sdk"
       - dependency-name: "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
       - dependency-name: "Microsoft.VisualStudio.Threading.Analyzers"
       - dependency-name: "NUnit*"
       - dependency-name: "Selenium*"
       - dependency-name: "xunit*"
+      - dependency-name: "PublicApiGenerator"
+      - dependency-name: "Verify.NUnit"
