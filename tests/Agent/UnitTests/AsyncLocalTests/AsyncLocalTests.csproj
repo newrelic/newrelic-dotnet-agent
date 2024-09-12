@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net481</TargetFrameworks>
     <RootNamespace>NewRelic.Providers.CallStack.AsyncLocalTests</RootNamespace>
     <AssemblyName>NewRelic.Providers.CallStack.AsyncLocalTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>

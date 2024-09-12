@@ -81,7 +81,6 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-
         [Test]
         [TestCase("ForceRestartException")]
         [TestCase("HttpException")]
