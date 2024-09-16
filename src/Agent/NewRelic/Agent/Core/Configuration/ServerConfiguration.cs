@@ -42,6 +42,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("collect_traces")]
         public bool? TraceCollectionEnabled { get; set; }
 
+        [JsonProperty("collect_ai")]
+        public bool? AICollectionEnabled { get; set; }
+
         [JsonProperty("data_report_period")]
         public long? DataReportPeriod { get; set; }
 

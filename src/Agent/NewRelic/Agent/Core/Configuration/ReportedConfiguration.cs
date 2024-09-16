@@ -39,6 +39,12 @@ namespace NewRelic.Agent.Core.Configuration
         public bool ServerlessModeEnabled => _configuration.ServerlessModeEnabled;
 
         [JsonIgnore]
+        public string ServerlessFunctionName => _configuration.ServerlessFunctionName;
+
+        [JsonIgnore]
+        public string ServerlessFunctionVersion => _configuration.ServerlessFunctionVersion;
+
+        [JsonIgnore]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
         [JsonProperty("agent.license_key.configured")]
@@ -533,6 +539,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("utilization.detect_kubernetes_enabled")]
         public bool UtilizationDetectKubernetes => _configuration.UtilizationDetectKubernetes;
 
+        [JsonProperty("utilization.detect_azure_function_enabled")]
+        public bool UtilizationDetectAzureFunction => _configuration.UtilizationDetectAzureFunction;
+
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
 
@@ -665,7 +674,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.disable_file_system_watcher")]
         public bool DisableFileSystemWatcher => _configuration.DisableFileSystemWatcher;
 
-        [JsonProperty("agent.ai_monitoring.enabled")]
+        // To support account level disable feature, the name cannot include the "agent" prefix.
+        // The account level disable feature looks for this setting and will only reply with the ServerConfiguration setting if it is present.
+        [JsonProperty("ai_monitoring.enabled")]
         public bool AiMonitoringEnabled => _configuration.AiMonitoringEnabled;
 
         [JsonProperty("ai_monitoring.streaming.enabled")]
@@ -677,6 +688,29 @@ namespace NewRelic.Agent.Core.Configuration
         // Serializing this Func doesn't provide us with more information than the supportability metrics
         [JsonIgnore()]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
+
+        [JsonIgnore]
+        public bool AzureFunctionModeDetected => _configuration.AzureFunctionModeDetected;
+        [JsonIgnore]
+        public bool AzureFunctionModeEnabled => _configuration.AzureFunctionModeEnabled;
+
+        [JsonIgnore]
+        public string AzureFunctionResourceId => _configuration.AzureFunctionResourceId;
+
+        [JsonIgnore]
+        public string AzureFunctionResourceGroupName =>_configuration.AzureFunctionResourceGroupName;
+
+        [JsonIgnore]
+        public string AzureFunctionRegion => _configuration.AzureFunctionRegion;
+
+        [JsonIgnore]
+        public string AzureFunctionSubscriptionId => _configuration.AzureFunctionSubscriptionId;
+
+        [JsonIgnore]
+        public string AzureFunctionServiceName => _configuration.AzureFunctionServiceName;
+
+        public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
+
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

@@ -1,28 +1,32 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Testing.Assertions;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
-    [NetFrameworkTest]
-    public class OracleAsyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
+    public abstract class OracleAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly string _tableName;
 
-        public OracleAsyncTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        protected OracleAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _tableName = GenerateTableName();
+
+            _fixture.AddCommand($"OracleExerciser InitializeTable {_tableName}"); // creates a new table. The table gets dropped automatically when the exerciser goes out of scope
+            _fixture.AddCommand($"OracleExerciser ExerciseAsync");
 
             _fixture.AddActions
             (
@@ -37,17 +41,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                     configModifier.ForceTransactionTraces();
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                       instrumentationFilePath,
-                        "", "enabled", "true");
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetOracleAsync();
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
@@ -57,39 +59,45 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         [Fact]
         public void Test()
         {
-            var expectedDatastoreCallCount = 4; // SELECT, INSERT, SELECT COUNT, DELETE from the endpoint exercised by GetOracleAsync()
+            var expectedDatastoreCallCount = 4; // SELECT, INSERT, COUNT, and DELETE from GetOracle() above
+
+            //This value is dictated by the query that is being run as part of this test. In this case, we're running a query that returns a single row.
+            //This results in two calls to read. Therefore the call count for the Iterate metric should be 2.
+            var expectedIterateCallCount = 2;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allWeb", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", callCount = expectedDatastoreCallCount},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/OracleAsync"},
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/OracleAsync"},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/OracleAsync"},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/OracleAsync"}
+                new() { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
+                new() { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
+                new() { metricName = @"Datastore/Oracle/all", callCount = expectedDatastoreCallCount },
+                new() { metricName = @"Datastore/Oracle/allOther", callCount = expectedDatastoreCallCount },
+                new() { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", callCount = expectedDatastoreCallCount},
+                new() { metricName = @"Datastore/operation/Oracle/select", callCount = 2 },
+                new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
+                new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1 },
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1 },
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+                new() { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1 },
+                new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"},
+
+                new() { metricName = @"DotNet/DatabaseResult/Iterate" , callCount = expectedIterateCallCount },
+                new() { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync"}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther" },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allOther" },
+                // The datastore operation happened inside a non-web transaction so there should be no allWeb metrics
+                new() { metricName = @"Datastore/allWeb" },
+                new() { metricName = @"Datastore/Oracle/allWeb"},
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", metricScope = "WebTransaction/MVC/OracleController/OracleAsync" },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", metricScope = "WebTransaction/MVC/OracleController/OracleAsync" },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", metricScope = "WebTransaction/MVC/OracleController/OracleAsync" }
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new() { metricName = @"Datastore/operation/Oracle/select", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" },
+                new() { metricName = @"Datastore/operation/Oracle/insert", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" },
+                new() { metricName = @"Datastore/operation/Oracle/delete", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync" }
             };
-
             var expectedTransactionTraceSegments = new List<string>
             {
                 "Datastore/statement/Oracle/user_tables/select"
@@ -99,66 +107,98 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
             {
                 "databaseDuration"
             };
-
-            var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
-            {
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/Oracle/user_tables/select", parameterName = "sql", parameterValue = "SELECT DEGREE FROM user_tables WHERE ROWNUM <= ?"}
-            };
-
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
-                new Assertions.ExpectedSqlTrace
+                new()
                 {
-                    TransactionName = "WebTransaction/MVC/OracleController/OracleAsync",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
                     Sql = "SELECT DEGREE FROM user_tables WHERE ROWNUM <= ?",
                     DatastoreMetricName = "Datastore/statement/Oracle/user_tables/select",
                     HasExplainPlan = false
                 },
-                new Assertions.ExpectedSqlTrace
+                new()
                 {
-                    TransactionName = "WebTransaction/MVC/OracleController/OracleAsync",
-                    Sql = $"SELECT COUNT(*) FROM {_fixture.TableName}",
-                    DatastoreMetricName = $"Datastore/statement/Oracle/{_fixture.TableName}/select",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    Sql = $"SELECT COUNT(*) FROM {_tableName}",
+                    DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/select",
 
                     HasExplainPlan = false
                 },
-                new Assertions.ExpectedSqlTrace
+                new()
                 {
-                    TransactionName = "WebTransaction/MVC/OracleController/OracleAsync",
-                    Sql = $"INSERT INTO {_fixture.TableName} (HOTEL_ID, BOOKING_DATE) VALUES (?, SYSDATE)",
-                    DatastoreMetricName = $"Datastore/statement/Oracle/{_fixture.TableName}/insert",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    Sql = $"INSERT INTO {_tableName} (HOTEL_ID, BOOKING_DATE) VALUES (?, SYSDATE)",
+                    DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/insert",
 
                     HasExplainPlan = false
                 },
-                new Assertions.ExpectedSqlTrace
+                new()
                 {
-                    TransactionName = "WebTransaction/MVC/OracleController/OracleAsync",
-                    Sql = $"DELETE FROM {_fixture.TableName} WHERE HOTEL_ID = ?",
-                    DatastoreMetricName = $"Datastore/statement/Oracle/{_fixture.TableName}/delete",
+                    TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync",
+                    Sql = $"DELETE FROM {_tableName} WHERE HOTEL_ID = ?",
+                    DatastoreMetricName = $"Datastore/statement/Oracle/{_tableName}/delete",
 
                     HasExplainPlan = false
                 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/OracleController/OracleAsync");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/OracleController/OracleAsync");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseAsync");
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
-            NrAssert.Multiple(
+            Assert.Multiple(
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
                 );
 
-            NrAssert.Multiple
+            Assert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
-                () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
-                () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample)
+                () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
+        }
+
+        private static string GenerateTableName()
+        {
+            //Oracle tables must start w/ character and be <= 30 length. Table name = H{tableId}
+            var tableId = Guid.NewGuid().ToString("N").Substring(2, 29).ToLower();
+            return $"h{tableId}";
+        }
+    }
+
+    [NetFrameworkTest]
+    public class OracleAsyncTestsFramework462 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public OracleAsyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class OracleAsyncTestsFramework471 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public OracleAsyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class OracleAsyncTestsFrameworkLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public OracleAsyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class OracleAsyncTestsCoreLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public OracleAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
         }
     }
 }

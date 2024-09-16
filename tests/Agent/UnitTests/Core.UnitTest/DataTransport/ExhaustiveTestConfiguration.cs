@@ -18,6 +18,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ServerlessModeEnabled  => false;
 
+        public string ServerlessFunctionName => null;
+
+        public string ServerlessFunctionVersion => null;
+
         public string AgentLicenseKey => "AgentLicenseKey";
 
         public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
@@ -373,6 +377,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool UtilizationDetectKubernetes => true;
 
+        public bool UtilizationDetectAzureFunction => true;
+
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -476,6 +482,15 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool AiMonitoringRecordContentEnabled => true;
 
         public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
+
+        public bool AzureFunctionModeDetected => true;
+        public bool AzureFunctionModeEnabled => true;
+        public string AzureFunctionResourceId => "AzureFunctionResourceId";
+        public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
+        public string AzureFunctionRegion => "AzureFunctionRegion";
+        public string AzureFunctionSubscriptionId => "AzureFunctionSubscriptionId";
+        public string AzureFunctionServiceName => "AzureFunctionServiceName";
+        public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
     }

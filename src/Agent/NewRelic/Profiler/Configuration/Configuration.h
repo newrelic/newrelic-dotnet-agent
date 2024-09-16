@@ -47,10 +47,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             , _ignoreList(new IgnoreInstrumentationList())
         {
             try {
-                auto globalNewRelicConfigurationDocument = std::make_shared<rapidxml::xml_document<xchar_t>>();
-                globalNewRelicConfigurationDocument->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(globalNewRelicConfiguration.c_str()));
+                rapidxml::xml_document<xchar_t> globalNewRelicConfigurationDocument;
+                globalNewRelicConfigurationDocument.parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(globalNewRelicConfiguration.c_str()));
 
-                auto globalNewRelicConfigurationNode = GetConfigurationNode(globalNewRelicConfigurationDocument);
+                auto globalNewRelicConfigurationNode  = GetConfigurationNode(globalNewRelicConfigurationDocument);
                 if (globalNewRelicConfigurationNode == nullptr) 
                 {
                     LogError(L"Unable to locate configuration node in the global newrelic.config file.");
@@ -58,13 +58,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 }
 
                 auto appliedNewRelicConfigurationNode = globalNewRelicConfigurationNode;
-                auto localNewRelicConfigurationDocument = std::make_shared<rapidxml::xml_document<xchar_t>>();
 
                 if (localNewRelicConfiguration.second)
                 {
                     try
                     {
-                        localNewRelicConfigurationDocument->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(localNewRelicConfiguration.first.c_str()));
+                        rapidxml::xml_document<xchar_t> localNewRelicConfigurationDocument;
+                        localNewRelicConfigurationDocument.parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(localNewRelicConfiguration.first.c_str()));
 
                         auto localNewRelicConfigurationNode = GetConfigurationNode(localNewRelicConfigurationDocument);
                         if (localNewRelicConfigurationNode == nullptr)
@@ -92,7 +92,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 SetLogLevel(appliedNewRelicConfigurationNode);
                 SetInstrumentationData(appliedNewRelicConfigurationNode);
                 SetApplicationPools(appliedNewRelicConfigurationNode);
-                
+
             } catch (const rapidxml::parse_error& exception) {
                 // We log two separate error messages here because sometimes the logging macros hang when
                 // logging the "where" contents
@@ -120,7 +120,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             ApplicationPoolsPtr blackList = ApplicationPoolsPtr(new ApplicationPools()),
             bool poolsEnabledByDefault = true,
             bool agentEnabledSetInApplicationConfiguration = false,
-            bool agentEnabledViaApplicationConfiguration = false)
+            bool agentEnabledViaApplicationConfiguration = false,
+            std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr)
             : _agentEnabled(agentEnabled)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(logLevel)
@@ -132,6 +133,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             , _applicationPoolsAreEnabledByDefault(poolsEnabledByDefault)
             , _agentEnabledSetInApplicationConfiguration(agentEnabledSetInApplicationConfiguration)
             , _agentEnabledViaApplicationConfiguration(agentEnabledViaApplicationConfiguration)
+            , _systemCalls(systemCalls)
         {
         }
 
@@ -196,15 +198,15 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return _logLevel;
         }
 
-        bool GetConsoleLogging() const
+        bool GetConsoleLogging()
         {
             return _consoleLogging;
         }
-        bool GetLoggingEnabled() const
+        bool GetLoggingEnabled()
         {
             return _loggingEnabled;
         }
-        IgnoreInstrumentationListPtr GetIgnoreInstrumentationList() const
+        IgnoreInstrumentationListPtr GetIgnoreInstrumentationList()
         {
             return _ignoreList;
         }
@@ -224,9 +226,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
         IgnoreInstrumentationListPtr _ignoreList;
 
-        rapidxml::xml_node<xchar_t>* GetConfigurationNode(const std::shared_ptr<rapidxml::xml_document<xchar_t>> document)
+        rapidxml::xml_node<xchar_t>* GetConfigurationNode(const rapidxml::xml_document<xchar_t>& document)
         {
-            auto configurationNode = document->first_node(_X("configuration"), 0, false);
+            auto configurationNode = document.first_node(_X("configuration"), 0, false);
             if (configurationNode == nullptr) {
                 return nullptr;
             }
@@ -294,7 +296,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             _logLevel = TryParseLogLevel(level);
         }
 
-        Logger::Level TryParseLogLevel(const xstring_t& logText) const
+        Logger::Level TryParseLogLevel(const xstring_t& logText)
         {
             if (Strings::AreEqualCaseInsensitive(logText, _X("off"))) {
                 return Logger::Level::LEVEL_ERROR;
@@ -423,8 +425,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             if (applicationConfiguration.empty())
                 return;
 
-            auto document = std::make_shared<rapidxml::xml_document<xchar_t>>();
-            document->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(applicationConfiguration.c_str()));
+            rapidxml::xml_document<xchar_t> document;
+            document.parse<rapidxml::parse_trim_whitespace | rapidxml::parse_normalize_whitespace>(const_cast<xchar_t*>(applicationConfiguration.c_str()));
             auto configurationNode = GetConfigurationNode(document);
 
             auto appSettingsNode = configurationNode->first_node(_X("appSettings"), 0, false);
@@ -468,7 +470,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         static bool IsProcessInProcessList(const ProcessesPtr& processes, const xstring_t& processName)
         {
             // check the processes loaded from configuration
-            for (auto& validProcessName : *processes) {
+            for (auto validProcessName : *processes) {
                 if (Strings::EndsWith(processName, validProcessName)) {
                     return true;
                 }
@@ -498,7 +500,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return isIis;
         }
 
-        bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId) const
+        bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId)
         {
             if (ApplicationPoolIsOnBlackList(appPoolId, _applicationPoolsBlackList)) {
                 LogInfo(_X("This application pool (") + appPoolId + _X(") is explicitly configured to NOT be instrumented."));
@@ -603,12 +605,65 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return false;
             }
 
+            if (IsAzureFunction()) {
+                auto retVal = ShouldInstrumentAzureFunction(processPath, appPoolId, commandLine);
+                if (retVal == 0) {
+                    return false;
+                }
+                if (retVal == 1) {
+                    return true;
+                }
+            }
+
             if (IsW3wpProcess(processPath, parentProcessPath)) {
                 return ShouldInstrumentApplicationPool(appPoolId);
             }
 
             return true;
         }
+
+        bool IsAzureFunction() const
+        {
+            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
+            auto functionsWorkerRuntime = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
+            return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
+        }
+
+        /// <summary>
+        /// Returns 0 if the process should not be instrumented, 1 if it should be instrumented, and -1 if it is indeterminate.
+        /// </summary>
+        int ShouldInstrumentAzureFunction(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
+        {
+            LogInfo(_X("Azure function detected. Determining whether to instrument ") + commandLine);
+
+            bool isAzureWebJobsScriptWebHost = appPoolId.length() > 0  && NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
+            if (isAzureWebJobsScriptWebHost)
+            {
+                LogInfo(L"Appears to be Azure WebJobs Script WebHost based on commandLine. Not instrumenting this process.");
+                return 0;
+            }
+
+            // AzureFunctionsNetHost.exe is the typical startup command for Azure Functions
+             
+            bool isAzureFunctionsNetHost = Strings::EndsWith(processPath, _X("FUNCTIONSNETHOST.EXE"));
+            if (isAzureFunctionsNetHost)
+            {
+                LogInfo(L"FunctionNetHost.exe is a valid Azure function command. This process will be instrumented.");
+                return 1;
+            }
+
+            // func.exe is the local test tool and should not be instrumented
+            bool isFuncExe = Strings::EndsWith(processPath, _X("FUNC.EXE"));
+            if (isFuncExe)
+            {
+                LogInfo(L"Func.exe is a tool for testing Azure functions locally. Not instrumenting this process.");
+                return 0;
+            }
+
+            LogInfo("Couldn't determine whether this Azure Function process should be instrumented based on commandLine. Falling back to checking application pool");
+            return -1; // indeterminate
+        }
+
 
         // Test to see if we should instrument this .NET Framework application at all
         bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)

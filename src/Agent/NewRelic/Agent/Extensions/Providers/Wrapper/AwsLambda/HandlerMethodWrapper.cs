@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             public AwsLambdaEventType EventType { get; private set; } = AwsLambdaEventType.Unknown;
 
             public bool HasContext() => ContextIdx != -1;
-            public bool HasInputObject() => InputIdx != -1;
+            private bool HasInputObject() => InputIdx != -1;
 
             public void SetContext(object lambdaContext, int contextIdx)
             {
@@ -48,10 +48,10 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 return false;
             }
 
-            public void Validate(string fallbackName)
+            public void Validate(string fallbackName1, string fallbackName2, string versionFallback)
             {
-                ValidateName(fallbackName);
-                ValidateVersion();
+                ValidateName(fallbackName1, fallbackName2);
+                ValidateVersion(versionFallback);
             }
 
             private void SetName(object lambdaContext)
@@ -60,11 +60,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 FunctionName = functionNameGetter(lambdaContext);
             }
 
-            private void ValidateName(string fallbackName)
+            private void ValidateName(string fallback1, string fallback2)
             {
                 if (string.IsNullOrEmpty(_functionDetails.FunctionName))
                 {
-                    FunctionName = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME") ?? fallbackName;
+                    FunctionName = fallback1 ?? fallback2;
                 }
             }
 
@@ -74,11 +74,11 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 FunctionVersion = functionVersionGetter(lambdaContext);
             }
 
-            private void ValidateVersion()
+            private void ValidateVersion(string fallback)
             {
                 if (string.IsNullOrEmpty(FunctionVersion))
                 {
-                    FunctionVersion = System.Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_VERSION") ?? "$LATEST";
+                    FunctionVersion = fallback ?? "$LATEST";
                 }
             }
 
@@ -112,6 +112,42 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             }
 
             public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
+
+            public bool ValidateWebRequestParameters(InstrumentedMethodCall instrumentedMethodCall)
+            {
+                if (HasInputObject() && IsWebRequest)
+                {
+                    dynamic input = GetInputObject(instrumentedMethodCall);
+
+                    // make sure the request includes Http Method and Path
+                    switch (EventType)
+                    {
+                        case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
+                            {
+                                if (input.RequestContext != null)
+                                {
+                                    dynamic requestContext = input.RequestContext;
+
+                                    if (requestContext.Http != null)
+                                        return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                                }
+
+                                return false;
+                            }
+                        case AwsLambdaEventType.APIGatewayProxyRequest:
+                        case AwsLambdaEventType.ApplicationLoadBalancerRequest:
+                            {
+                                dynamic webReq = input;
+                                return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
+                            }
+                        default:
+                            return true;
+                    }
+
+                }
+
+                return false;
+            }
         }
 
         private List<string> _webResponseHeaders = ["content-type", "content-length"];
@@ -164,7 +200,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
             }
 
-            _functionDetails.Validate(instrumentedMethodCall.MethodCall.Method.MethodName);
+            _functionDetails.Validate(agent.Configuration.ServerlessFunctionName, instrumentedMethodCall.MethodCall.Method.MethodName, agent.Configuration.ServerlessFunctionVersion);
 
             if (!_functionDetails.HasContext())
             {
@@ -194,8 +230,19 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 }
             }
 
+            if (_functionDetails!.IsWebRequest)
+            {
+                if (!_functionDetails.ValidateWebRequestParameters(instrumentedMethodCall))
+                {
+                    agent.Logger.Debug($"Invalid or missing web request parameters. HttpMethod and Path are required for {_functionDetails.EventType}. Not instrumenting this function invocation.");
+                    return Delegates.NoOp;
+                }
+            }
+
+
+
             var isAsync = instrumentedMethodCall.IsAsync;
-            string requestId = _functionDetails!.GetRequestId(instrumentedMethodCall);
+            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
             transaction = agent.CreateTransaction(
@@ -314,7 +361,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             {
                 // copy and lowercase the headers
                 Dictionary<string, string> copiedHeaders = new Dictionary<string, string>();
-                foreach(var kvp in responseHeaders)
+                foreach (var kvp in responseHeaders)
                     copiedHeaders.Add(kvp.Key.ToLower(), kvp.Value);
 
                 foreach (var header in _webResponseHeaders) // only capture specific headers

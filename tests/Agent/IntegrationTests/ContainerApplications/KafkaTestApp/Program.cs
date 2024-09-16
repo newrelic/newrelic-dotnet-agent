@@ -50,13 +50,18 @@ namespace KafkaTestApp
             await app.WaitForShutdownAsync();
         }
 
+        public static string GetBootstrapServer()
+        {
+            var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_BROKER_NAME");
+            return $"{broker}:9092";
+        }
+
         public static void SetupKafka(ILogger logger)
         {
             Thread.Sleep(15 * 1000); // Waiting for Kafka to get ready
 
-            var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_BROKER_NAME");
             var kafkaConfig = new ConfigurationBuilder().AddInMemoryCollection().Build();
-            kafkaConfig["bootstrap.servers"] = $"{broker}:9092";
+            kafkaConfig["bootstrap.servers"] = GetBootstrapServer();
             kafkaConfig["group.id"] = "kafka-dotnet-getting-started";
             kafkaConfig["auto.offset.reset"] = "earliest";
             kafkaConfig["dotnet.cancellation.delay.max.ms"] = "10000";

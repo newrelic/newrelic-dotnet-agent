@@ -91,6 +91,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private TimeSpan? _harvestCycle;
 
         private const string DistributedTraceHeaderName = "newrelic";
+        private const string DistributedTraceStateHeaderName = "tracestate";
+        private const string DistributedTraceParentHeaderName = "traceparent";
+
         private const string ReferrerTripId = "referrerTripId";
         private const string ReferrerPathHash = "referrerPathHash";
         private const string ReferrerTransactionGuid = "referrerTransactionGuid";
@@ -1063,6 +1066,49 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 Assert.That(traceMetadata.IsSampled, Is.EqualTo(testIsSampled));
             });
         }
+
+        [Test]
+        public void GetConfiguredDTHeaders_ShouldReturnEmptyDictionary_IfDTConfigIsFalse()
+        {
+            SetupTransaction();
+
+            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
+
+            var headers = _agent.GetConfiguredDTHeaders();
+
+            Assert.That(headers, Is.Empty);
+        }
+        [Test]
+        public void GetConfiguredDTHeaders_ShouldReturnOnlyW3CHeaders_IfExcludeNewrelicHeaderIsTrue()
+        {
+            SetupTransaction();
+
+            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.ExcludeNewrelicHeader).Returns(true);
+
+            var headers = _agent.GetConfiguredDTHeaders().ToList();
+
+            Assert.That(headers, Has.Count.EqualTo(2));
+            Assert.That(headers, Does.Contain(DistributedTraceParentHeaderName));
+            Assert.That(headers, Does.Contain(DistributedTraceStateHeaderName));
+            Assert.That(headers, Does.Not.Contain(DistributedTraceHeaderName));
+        }
+        [Test]
+        public void GetConfiguredDTHeaders_ShouldReturnAllHeaders_IfExcludeNewrelicHeaderIsFalse()
+        {
+            SetupTransaction();
+
+            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.ExcludeNewrelicHeader).Returns(false);
+
+            var headers = _agent.GetConfiguredDTHeaders().ToList();
+
+            Assert.That(headers, Has.Count.EqualTo(3));
+            Assert.That(headers, Does.Contain(DistributedTraceParentHeaderName));
+            Assert.That(headers, Does.Contain(DistributedTraceStateHeaderName));
+            Assert.That(headers, Does.Contain(DistributedTraceHeaderName));
+        }
+
 
         #endregion Distributed Trace
 

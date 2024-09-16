@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.30.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.29.0...v10.30.0) (2024-09-11)
+
+
+### New features
+
+* Oracle instrumentation now supports latest version ([#2721](https://github.com/newrelic/newrelic-dotnet-agent/issues/2721)) ([50cb663](https://github.com/newrelic/newrelic-dotnet-agent/commit/50cb663957ccfcfd55d104a7f54755100bfa46cc))
+* Preview support for instrumentation of "isolated" model Azure Functions. Instrumentation is disabled by default. Please reach out to your account team if you would like to try this new feature. ([d8a79e5](https://github.com/newrelic/newrelic-dotnet-agent/commit/d8a79e51683225e9b574efc8d1b154b2a4b9eadc))
+
+
+### Fixes
+
+* Preserve custom query name even if statement can't be parsed. ([#2708](https://github.com/newrelic/newrelic-dotnet-agent/issues/2708)) ([#2709](https://github.com/newrelic/newrelic-dotnet-agent/issues/2709)) ([3ab0cb4](https://github.com/newrelic/newrelic-dotnet-agent/commit/3ab0cb4f36d3f5fa07d4003b930917e533c7cba2))
+
+## [10.29.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.28.0...v10.29.0) (2024-08-20)
+
+
+### New features
+
+* Additional metrics and attributes for some instrumented libraries ([#2675](https://github.com/newrelic/newrelic-dotnet-agent/issues/2675)) ([a033b81](https://github.com/newrelic/newrelic-dotnet-agent/commit/a033b81b19ba65b7336762c89a974160cc2e5491))
+* Auto-instrument ASP.NET Core Lambda functions ([#2662](https://github.com/newrelic/newrelic-dotnet-agent/issues/2662)) ([#2674](https://github.com/newrelic/newrelic-dotnet-agent/issues/2674)) ([ceaefc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/ceaefc51bd15c3baaa05f4d0306645852aea1392))
+* Use Lambda function name if application name is not set ([#2695](https://github.com/newrelic/newrelic-dotnet-agent/issues/2695)) ([3dcf3af](https://github.com/newrelic/newrelic-dotnet-agent/commit/3dcf3af535ad14b39cb27d9de2704b41780f89b4))
+
+## [10.28.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.27.0...v10.28.0) (2024-08-05)
+
+
+### New features
+
+* Improve serverless mode detection ([#2661](https://github.com/newrelic/newrelic-dotnet-agent/issues/2661)) ([5f5dda8](https://github.com/newrelic/newrelic-dotnet-agent/commit/5f5dda860a78152574f71f4f1095248707e8c7e3))
+* Set application name via command line with the .msi installer ([#2648](https://github.com/newrelic/newrelic-dotnet-agent/issues/2648)) ([369dcba](https://github.com/newrelic/newrelic-dotnet-agent/commit/369dcbab4f3fa59354f683bae16b711f45be2387))
+
+
+### Fixes
+
+* Better Lambda web request input parameter validation. ([#2653](https://github.com/newrelic/newrelic-dotnet-agent/issues/2653)) ([810d4af](https://github.com/newrelic/newrelic-dotnet-agent/commit/810d4aff20457200b4166daa9744cefe8dfc699b)), closes [#2652](https://github.com/newrelic/newrelic-dotnet-agent/issues/2652)
+* Revert recent Profiler warning fixes to address reported instability ([#2663](https://github.com/newrelic/newrelic-dotnet-agent/issues/2663)) ([b3c9cd1](https://github.com/newrelic/newrelic-dotnet-agent/commit/b3c9cd10c47dbe5c4654a1dcb1f90c3adeabe90f))
+* SQS instrumentation could cause InvalidOperationException ([#2645](https://github.com/newrelic/newrelic-dotnet-agent/issues/2645)) ([#2646](https://github.com/newrelic/newrelic-dotnet-agent/issues/2646)) ([40b6ad5](https://github.com/newrelic/newrelic-dotnet-agent/commit/40b6ad5b899942eff9241da362a653a010cf2e7f))
+
+## [10.27.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.26.0...v10.27.0) (2024-07-15)
+
+
+### New features
+
+* Add support for disabling LLM monitoring at the account level. ([#2592](https://github.com/newrelic/newrelic-dotnet-agent/issues/2592)) ([c31451a](https://github.com/newrelic/newrelic-dotnet-agent/commit/c31451a962404115d3cbe924347681919627c9e9))
+* Instrumentation for Amazon Simple Queuing Service (AWSSDK.SQS) ([#2620](https://github.com/newrelic/newrelic-dotnet-agent/issues/2620)) ([ac738ba](https://github.com/newrelic/newrelic-dotnet-agent/commit/ac738ba250822b67854f273c4badc8dd45c3602e))
+
 ## [10.26.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.25.1...v10.26.0) (2024-06-26)
 
 

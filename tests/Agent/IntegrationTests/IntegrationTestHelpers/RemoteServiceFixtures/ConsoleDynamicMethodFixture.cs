@@ -16,6 +16,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
+    /// <summary>
+    /// Use this fixture for AIM Account level disabled tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureFWLatestAIM : ConsoleDynamicMethodFixtureFW481
+    {
+        public override string TestSettingCategory { get { return "AIM"; } }
+        public ConsoleDynamicMethodFixtureFWLatestAIM()
+        {
+        }
+    }
 
     /// <summary>
     /// Use this fixture for High Security Mode tests
@@ -126,6 +136,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
         }
+    }
+
+    /// <summary>
+    /// Use this fixture for AIM Account level disabled tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreLatestAIM : ConsoleDynamicMethodFixtureCore80
+    {
+        public override string TestSettingCategory { get { return "AIM"; } }
+        public ConsoleDynamicMethodFixtureCoreLatestAIM()
+        {
+        }
+
     }
 
     /// <summary>

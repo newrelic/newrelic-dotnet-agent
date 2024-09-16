@@ -34,6 +34,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                 {
                     _fixture.EnqueueApplicationLoadBalancerRequest();
                     _fixture.EnqueueApplicationLoadBalancerRequestWithDTHeaders(TestTraceId, TestParentSpanId);
+                    _fixture.EnqueueInvalidLoadBalancerRequestyRequest();
+
+                    // wait for the invalid request log line
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.InvalidServerlessWebRequestLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 2);
                 }
             );
@@ -46,11 +50,16 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
             var serverlessPayloads = _fixture.AgentLog.GetServerlessPayloads().ToList();
 
             Assert.Multiple(
+                // the third exerciser invocation should result in a NoOpDelegate, so there will only be 2 payloads
                 () => Assert.Equal(2, serverlessPayloads.Count),
                 () => Assert.All(serverlessPayloads, ValidateServerlessPayload),
                 () => ValidateTraceHasNoParent(serverlessPayloads[0]),
                 () => ValidateTraceHasParent(serverlessPayloads[1])
                 );
+
+            // verify that the invalid request payload generated the expected log line
+            var logLines = _fixture.AgentLog.TryGetLogLines(AgentLogBase.InvalidServerlessWebRequestLogLineRegex);
+            Assert.Single(logLines);
         }
 
         private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)

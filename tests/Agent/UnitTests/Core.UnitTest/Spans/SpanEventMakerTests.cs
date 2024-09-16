@@ -56,6 +56,15 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private const string TransactionName = "WebTransaction/foo/bar";
 
+        private const string MessageBrokerVendor = "RabbitMQ";
+        private const string MessageBrokerQueue = "MyQueue";
+        private const string ServerAddress = "localhost";
+        private const int ServerPort = 5672;
+        private const string MessageBrokerCloudAccountId = "1234";
+        private const string MessageBrokerCloudRegion = "us-west-2";
+        private const string MessageBrokerRoutingKey = "myroutingkey";
+
+
         private SpanEventMaker _spanEventMaker;
         private IDatabaseService _databaseService;
         private ITransactionEventMaker _transactionEventMaker;
@@ -66,6 +75,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private Segment _childGenericSegment;
         private Segment _baseDatastoreSegment;
         private Segment _baseHttpSegment;
+        private Segment _baseMessageBrokerConsumeSegment;
+        private Segment _baseMessageBrokerProduceSegment;
 
         private string _obfuscatedSql;
         private ParsedSqlStatement _parsedSqlStatement;
@@ -176,6 +187,35 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // Http Segments
             _baseHttpSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _baseHttpSegment.SetSegmentData(new ExternalSegmentData(new Uri(HttpUri), HttpMethod));
+
+            // MessageBroker Segments
+            _baseMessageBrokerConsumeSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+            _baseMessageBrokerConsumeSegment.SetSegmentData(
+                new MessageBrokerSegmentData(
+                    vendor: MessageBrokerVendor,
+                    destination: MessageBrokerQueue,
+                    destinationType: MetricNames.MessageBrokerDestinationType.Queue,
+                    action: MetricNames.MessageBrokerAction.Consume,
+                    messagingSystemName: MessageBrokerVendor,
+                    cloudAccountId: MessageBrokerCloudAccountId,
+                    cloudRegion: MessageBrokerCloudRegion,
+                    serverAddress: ServerAddress,
+                    serverPort: ServerPort,
+                    routingKey: MessageBrokerRoutingKey));
+
+            _baseMessageBrokerProduceSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+            _baseMessageBrokerProduceSegment.SetSegmentData(
+                new MessageBrokerSegmentData(
+                    vendor: MessageBrokerVendor,
+                    destination: MessageBrokerQueue,
+                    destinationType: MetricNames.MessageBrokerDestinationType.Queue,
+                    action: MetricNames.MessageBrokerAction.Produce,
+                    messagingSystemName: MessageBrokerVendor,
+                    cloudAccountId: MessageBrokerCloudAccountId,
+                    cloudRegion: MessageBrokerCloudRegion,
+                    serverAddress: ServerAddress,
+                    serverPort: ServerPort,
+                    routingKey: MessageBrokerRoutingKey));
         }
 
         [TearDown]
@@ -434,6 +474,131 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         #endregion
 
+        #region MessageBroker
+
+        [Test]
+        public void GetSpanEvent_ReturnsSpanEventPerSegment_ValidateMessageBrokerValues()
+        {
+            // ARRANGE
+            var segments = new List<Segment>()
+            {
+                _baseMessageBrokerConsumeSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+                _baseMessageBrokerProduceSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+            };
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+
+
+            var consumeSpanEvent = spanEvents.ToList()[1];
+            var consumeSpanEventIntrinsicAttributes = consumeSpanEvent.IntrinsicAttributes();
+            var consumeSpanEventAgentAttributes = consumeSpanEvent.AgentAttributes();
+
+            var produceSpanEvent = spanEvents.ToList()[2];
+            var produceSpanEventIntrinsicAttributes = produceSpanEvent.IntrinsicAttributes();
+            var produceSpanEventAgentAttributes = produceSpanEvent.AgentAttributes();
+
+            // ASSERT
+            NrAssert.Multiple
+            (
+                // Consume
+                () => Assert.That((string)consumeSpanEventIntrinsicAttributes["span.kind"], Is.EqualTo("consumer")),
+                () => Assert.That((string)consumeSpanEventAgentAttributes["server.address"], Is.EqualTo(ServerAddress)),
+                () => Assert.That(consumeSpanEventAgentAttributes["server.port"], Is.EqualTo(ServerPort)),
+                () => Assert.That((string)consumeSpanEventAgentAttributes["messaging.destination.name"], Is.EqualTo(MessageBrokerQueue)),
+                () => Assert.That((string)consumeSpanEventAgentAttributes["message.queueName"], Is.EqualTo(MessageBrokerQueue)),
+                () => Assert.That((string)consumeSpanEventAgentAttributes["messaging.destination_publish.name"], Is.EqualTo(MessageBrokerQueue)),
+
+                // Produce
+                () => Assert.That((string)produceSpanEventIntrinsicAttributes["span.kind"], Is.EqualTo("producer")),
+                () => Assert.That((string)produceSpanEventAgentAttributes["server.address"], Is.EqualTo(ServerAddress)),
+                () => Assert.That(produceSpanEventAgentAttributes["server.port"], Is.EqualTo(ServerPort)),
+                () => Assert.That((string)produceSpanEventAgentAttributes["messaging.destination.name"], Is.EqualTo(MessageBrokerQueue)),
+                () => Assert.That((string)produceSpanEventAgentAttributes["message.routingKey"], Is.EqualTo(MessageBrokerRoutingKey)),
+                () => Assert.That((string)produceSpanEventAgentAttributes["messaging.rabbitmq.destination.routing_key"], Is.EqualTo(MessageBrokerRoutingKey))
+            );
+        }
+
+        [Test]
+        public void Do_Not_Generate_MessageBroker_Attributes_When_Data_IsNull()
+        {
+            var consumeSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+            consumeSegment.SetSegmentData(
+                new MessageBrokerSegmentData(
+                    vendor: MessageBrokerVendor,
+                    destination: MessageBrokerQueue,
+                    destinationType: MetricNames.MessageBrokerDestinationType.Queue,
+                    action: MetricNames.MessageBrokerAction.Consume,
+                    messagingSystemName: null,
+                    cloudAccountId: null,
+                    cloudRegion: null,
+                    serverAddress: null,
+                    serverPort: null,
+                    routingKey: null));
+
+            var produceSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+            produceSegment.SetSegmentData(
+                new MessageBrokerSegmentData(
+                    vendor: MessageBrokerVendor,
+                    destination: MessageBrokerQueue,
+                    destinationType: MetricNames.MessageBrokerDestinationType.Queue,
+                    action: MetricNames.MessageBrokerAction.Produce,
+                    messagingSystemName: null,
+                    cloudAccountId: null,
+                    cloudRegion: null,
+                    serverAddress: null,
+                    serverPort: null,
+                    routingKey: null));
+
+            // ARRANGE
+            var segments = new List<Segment>()
+            {
+                consumeSegment,
+                produceSegment
+            };
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var consumeSpanEvent = spanEvents.ToList()[1];
+            var consumeSpanEventIntrinsicAttributes = consumeSpanEvent.IntrinsicAttributes();
+            var consumeSpanEventAgentAttributes = consumeSpanEvent.AgentAttributes();
+
+            var produceSpanEvent = spanEvents.ToList()[2];
+            var produceSpanEventIntrinsicAttributes = produceSpanEvent.IntrinsicAttributes();
+            var produceSpanEventAgentAttributes = produceSpanEvent.AgentAttributes();
+
+            // ASSERT
+
+            NrAssert.Multiple
+            (
+                // consume
+                () => Assert.That((string)consumeSpanEventIntrinsicAttributes["span.kind"], Is.EqualTo("consumer")),
+                () => Assert.That(!consumeSpanEventAgentAttributes.ContainsKey("server.address"), Is.True),
+                () => Assert.That(!consumeSpanEventAgentAttributes.ContainsKey("server.port"), Is.True),
+
+                // produce
+                () => Assert.That((string)produceSpanEventIntrinsicAttributes["span.kind"], Is.EqualTo("producer")),
+                () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("server.address"), Is.True),
+                () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("server.port"), Is.True),
+                () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("message.routingKey"), Is.True),
+                () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("messaging.rabbitmq.destination.routing_key"), Is.True)
+            );
+        }
+
+        #endregion
+
         #region Datastore
 
         [Test]
@@ -565,6 +730,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         #endregion
 
+        #region Root Span
+
         [Test]
         public void RootSpanAttribFiltering_SpanFiltersIndependentOfTransactionFilters()
         {
@@ -657,6 +824,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
             _attribDefs.GetLambdaAttribute("lambdaAttributeKey").TrySetValue(allAttribValues, "lambdaAttributeValue");
+            _attribDefs.GetFaasAttribute("faasAttributeKey").TrySetValue(allAttribValues, "faasAttributeValue");
             _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
 
             // ACT
@@ -694,8 +862,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             NrAssert.Multiple(assertions.ToArray());
         }
 
-
-
+        #endregion
 
         #region Http (Externals)
 

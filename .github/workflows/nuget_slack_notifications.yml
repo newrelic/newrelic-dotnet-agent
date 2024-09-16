@@ -2,12 +2,12 @@ name: Check for new core technologies
 
 on:
   schedule:
-   - cron:  '0 10 * * *'
+   - cron:  '0 10 * * 1' # Every Monday at 10:00 AM
   workflow_dispatch:
     inputs:
       daysToSearch:
-        description: "Days of NuGet history to search for package updates"
-        default: "1"
+        description: "Days of NuGet history to search for package updates (0 to search since last run of this workflow on main)"
+        default: "0"
         type: string
       testMode:
         description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit # Leave it audit mode
 
@@ -49,7 +49,27 @@ jobs:
           dotnet add nugetSlackNotifications.csproj package NewRelic.Agent
           dotnet publish -o ${{ env.scan-tool-publish-path }}
 
+      - name: Find timestamp of most recent run of this workflow and set as an environment variable
+        if: inputs.daysToSearch == '0' || github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+           echo "LAST_RUN_TIMESTAMP=$(gh run list --workflow nuget_slack_notifications.yml --branch main --status completed --limit 1 --json updatedAt | jq -r '.[0].updatedAt')" >> $GITHUB_ENV
+        shell: bash
+
       - name: Check for updates to core technology packages
+        env:
+          DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+          DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CORECLR_ENABLE_PROFILING: 1
+          CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
+          CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
+          CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
+          NEW_RELIC_APP_NAME: Dotty
+          NEW_RELIC_HOST: staging-collector.newrelic.com
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
+          DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
+
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then
             export DOTTY_DAYS_TO_SEARCH=${{ inputs.daysToSearch }}
@@ -60,46 +80,4 @@ jobs:
           cd ${{ env.scan-tool-publish-path }}
           dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
         shell: bash
-
-        env:
-            DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
-            DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            CORECLR_ENABLE_PROFILING: 1
-            CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
-            CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
-            CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
-            NEW_RELIC_APP_NAME: Dotty
-            NEW_RELIC_HOST: staging-collector.newrelic.com
-            NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
-            nugets:
-                 "amazon.lambda.apigatewayevents
-                 amazon.lambda.applicationloadbalancerevents
-                 amazon.lambda.cloudwatchevents
-                 amazon.lambda.dynamodbevents
-                 amazon.lambda.kinesisevents
-                 amazon.lambda.kinesisfirehoseevents
-                 amazon.lambda.s3events
-                 amazon.lambda.simpleemailevents
-                 amazon.lambda.snsevents
-                 amazon.lambda.sqsevents
-                 elasticsearch.net
-                 elastic.clients.elasticsearch
-                 log4net
-                 microsoft.extensions.logging
-                 microsoft.data.sqlclient
-                 microsoft.net.http
-                 mongodb.driver
-                 mysql.data
-                 mysqlconnector
-                 nest
-                 nlog
-                 rabbitmq.client
-                 restsharp
-                 serilog
-                 serilog.extensions.logging
-                 serilog.aspnetcore
-                 serilog.sinks.file
-                 serilog.sinks.console
-                 stackexchange.redis
-                 system.data.sqlclient"
-                 
+        

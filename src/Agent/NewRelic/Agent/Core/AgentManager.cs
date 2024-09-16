@@ -284,7 +284,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD",
                     "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
-                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS"
+                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
+                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {

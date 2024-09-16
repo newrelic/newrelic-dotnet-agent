@@ -96,16 +96,6 @@ namespace NewRelic {
             unsigned controlFlow;
             xstring_t name;
 
-            OpCode() :
-                instruction(0),
-                instructionSize(0),
-                arrayOffset(0),
-                operandSize(0),
-                totalSize(0),
-                controlFlow(0)
-                {}
-                
-
             void Reset(std::shared_ptr<OpCode> newOpCode)
             {
                 instruction = newOpCode->instruction;

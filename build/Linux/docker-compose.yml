@@ -1,4 +1,3 @@
-version: "3.8"
 services:
     build_deb: 
         build: ./build/deb 

@@ -8,6 +8,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
@@ -19,7 +20,17 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
 
+        private static Func<object, object> _sessionGetter;
+        private static Func<object, object> _connectionGetter;
+        private static Func<object, object> _endpointGetter;
+        private static Func<object, string> _hostnameGetter;
+        private static Func<object, int> _portGetter;
+
         private static Func<object, object> _getHeadersFunc;
+
+        private static int? _version;
+        private static bool _hasGetServerFailed = false;
+
         public static IDictionary<string, object> GetHeaders(object properties)
         {
             var func = _getHeadersFunc ?? (_getHeadersFunc = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(properties.GetType(), "Headers"));
@@ -51,7 +62,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
             // If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -62,7 +73,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = GetBrokerDestinationType(routingKey);
             var destName = ResolveDestinationName(destType, routingKey);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Produce,
+                VendorName,
+                destName,
+                serverAddress: GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: GetServerPort(instrumentedMethodCall, agent),
+                routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -93,7 +112,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return segment;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
         {
             var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
 
@@ -101,7 +120,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var destType = GetBrokerDestinationType(routingKey);
             var destName = ResolveDestinationName(destType, routingKey);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destType,
+                MessageBrokerAction.Produce,
+                VendorName,
+                destName,
+                serverAddress: GetServerAddress(instrumentedMethodCall, agent),
+                serverPort: GetServerPort(instrumentedMethodCall, agent),
+                routingKey: routingKey);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -131,6 +158,90 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
 
             return segment;
+        }
+
+        public static int GetRabbitMQVersion(InstrumentedMethodCall methodCall)
+        {
+            if (_version.HasValue)
+            {
+                return _version.Value;
+            }
+
+            var fullName = methodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName;
+            var versionString = "Version=";
+            _version = Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + versionString.Length, 1));
+            return _version.Value;
+        }
+
+        public static int GetRabbitMQVersion(Type type)
+        {
+            if (_version.HasValue)
+            {
+                return _version.Value;
+            }
+
+            var fullName = type.Assembly.ManifestModule.Assembly.FullName;
+            var versionString = "Version=";
+            _version = Int32.Parse(fullName.Substring(fullName.IndexOf(versionString) + versionString.Length, 1));
+            return _version.Value;
+        }
+
+        public static string GetServerAddress(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
+        {
+            if (_hasGetServerFailed)
+            {
+                return null;
+            }
+
+            try
+            {
+                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+                var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                var connection = _connectionGetter(session);
+
+                _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+                var endpoint = _endpointGetter(connection);
+
+                _hostnameGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(endpoint.GetType(), "HostName");
+                return _hostnameGetter(endpoint);
+            }
+            catch (Exception exception)
+            {
+                agent.Logger.Warn(exception, "Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
+                _hasGetServerFailed = true;
+                return null;
+            }
+        }
+
+        public static int? GetServerPort(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
+        {
+            if (_hasGetServerFailed)
+            {
+                return null;
+            }
+
+            try
+            {
+                _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+                var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+                _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+                var connection = _connectionGetter(session);
+
+                _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(connection.GetType(), "Endpoint");
+                var endpoint = _endpointGetter(connection);
+
+                _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpoint.GetType(), "Port");
+                return _portGetter(endpoint);
+            }
+            catch (Exception exception)
+            {
+                agent.Logger.Warn(exception, "Unable to get RabbitMQ server address/port due to differences in the expected types. Server address/port attributes will not be available.");
+                _hasGetServerFailed = true;
+                return null;
+            }
         }
     }
 }

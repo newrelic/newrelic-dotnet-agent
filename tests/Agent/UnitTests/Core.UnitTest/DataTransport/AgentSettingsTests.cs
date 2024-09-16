@@ -284,6 +284,7 @@ namespace NewRelic.Agent.Core.Configuration
                     "utilization.detect_pcf_enabled": true,
                     "utilization.detect_docker_enabled": true,
                     "utilization.detect_kubernetes_enabled": true,
+                    "utilization.detect_azure_function_enabled": true,
                     "utilization.logical_processors": 22,
                     "utilization.total_ram_mib": 33,
                     "utilization.billing_host": "UtilizationBillingHost",
@@ -338,7 +339,7 @@ namespace NewRelic.Agent.Core.Configuration
                         }
                     ],
                     "agent.disable_file_system_watcher": false,
-                    "agent.ai_monitoring.enabled": true,
+                    "ai_monitoring.enabled": true,
                     "ai_monitoring.streaming.enabled": true,
                     "ai_monitoring.record_content.enabled": true
                 }
@@ -355,6 +356,8 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.AgentEnabledAt, Is.Not.Null);
                 Assert.That(agentSettings.ServerlessModeEnabled, Is.False);
                 Assert.That(agentSettings.LoggingLevel, Is.Not.Null);
+                Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
+                Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
                 Assert.That(json, Is.EqualTo(expectedJson.Condense()));
             });
         }

@@ -254,6 +254,41 @@ namespace ParsingTests
                 Assert.That(parsedDatabaseStatement.ToString(), Is.EqualTo("dude - [dudeservice|getalldudes]/select"));
             });
         }
+
+        [Test]
+        public void SqlParserTest_PullNameFromComment_IfStatementCannotBeParsed()
+        {
+            var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text,
+                """
+                /* NewRelicQueryName: MyCustomQueryName */
+                
+                -- This is a full-line comment
+                SELECT
+                    (
+                        SELECT COUNT(*)
+                        FROM
+                            SomeTable
+                        WHERE
+                            SomeColumn = @SomeValue
+                    ) +
+                    (
+                        SELECT COUNT(*)
+                        FROM
+                            SomeOtherTable
+                        WHERE
+                            SomeOtherColumn = @SomeOtherValue
+                    );
+                """);
+
+            Assert.That(parsedDatabaseStatement, Is.Not.Null);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsedDatabaseStatement.Model, Is.EqualTo("MyCustomQueryName"));
+
+                Assert.That(parsedDatabaseStatement.ToString(), Is.EqualTo("MyCustomQueryName/other"));
+            });
+        }
                 
 
         [Test]
