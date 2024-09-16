@@ -49,13 +49,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                     MockNewRelicApplication.CopyToRemote();
                     MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);
 
+#if !NET9_0_OR_GREATER
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     ServicePointManager.ServerCertificateValidationCallback = delegate
                     {
                         //force trust on all certificates for simplicity
                         return true;
                     };
-
+#endif
                     //Core apps need the collector warmed up before the core app is started so we cannot
                     //wait until exerciseApplication is called to call these methods
                     WarmUpCollector();
