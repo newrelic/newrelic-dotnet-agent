@@ -57,6 +57,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 9 Preview
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
+        with:
+          dotnet-version: '9.0.0-rc.1'
+
       - name: Build FullAgent.sln
         run: |
           Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
@@ -147,6 +152,11 @@ jobs:
         with:
           vs-prerelease: true
 
+      - name: Setup .NET 9 Preview
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
+        with:
+          dotnet-version: '9.0.0-rc.1'
+
       - name: List SDKS
         run: dotnet --list-sdks
         shell: powershell
@@ -188,6 +198,11 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         with:
           vs-prerelease: true
+
+      - name: Setup .NET 9 Preview
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
+        with:
+          dotnet-version: '9.0.0-rc.1'
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
