@@ -34,6 +34,7 @@ namespace NewRelic.Agent.Core.Utilities
         net6,
         net7,
         net8,
+        net9,
         Other
     }
 
@@ -102,6 +103,11 @@ namespace NewRelic.Agent.Core.Utilities
                 return DotnetCoreVersion.netcoreapp31;
             }
 
+            if (envVer.Major == 9)
+            {
+                return DotnetCoreVersion.net9;
+            }
+
             if (envVer.Major == 8)
             {
                 return DotnetCoreVersion.net8;
@@ -136,7 +142,7 @@ namespace NewRelic.Agent.Core.Utilities
             // Newer versions of .net will be flagged as Other until we update our version checking logic.
             // So we can either check against a supported list, or an unsupported list, but the supported list
             // is smaller.
-            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net6, DotnetCoreVersion.net8, DotnetCoreVersion.Other };
+            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net6, DotnetCoreVersion.net8, DotnetCoreVersion.net9, DotnetCoreVersion.Other };
             return !supportedDotnetCoreVersions.Contains(version);
         }
 
