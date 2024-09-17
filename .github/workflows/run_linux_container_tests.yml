@@ -84,4 +84,4 @@ jobs:
           dotnet-quality: 'preview'
 
       - name: Build & Run Linux Container Integration Tests
-        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net8.0
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0
