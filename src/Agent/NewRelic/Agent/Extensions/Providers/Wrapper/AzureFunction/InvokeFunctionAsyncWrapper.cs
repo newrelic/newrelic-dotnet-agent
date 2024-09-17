@@ -72,7 +72,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
             if (IsColdStart) // only report this attribute if it's a cold start
             {
-                transaction.AddFaasAttribute("faas.coldStart", "true");
+                transaction.AddFaasAttribute("faas.coldStart", true);
             }
 
             transaction.AddFaasAttribute("cloud.resource_id", agent.Configuration.AzureFunctionResourceIdWithFunctionName(functionDetails.FunctionName));
@@ -126,7 +126,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                         {
                             agent.Logger.Debug($"Unexpected Azure Function invocationResult.Value type '{resultTypeName ?? "(null)"}' - unable to set http response status code.");
                         }
-                    }
+                }
 
                 }
                 catch (Exception ex)
@@ -313,4 +313,5 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         public string RequestMethod { get; private set; }
         public string RequestPath { get; private set; }
     }
+
 }

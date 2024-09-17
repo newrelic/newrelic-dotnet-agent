@@ -18,7 +18,7 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Microsoft.Extensions.Hosting" className="Microsoft.Extensions.Hosting.HostBuilder">
         <exactMethodMatcher methodName="Build" />
       </match>
-    </tracerFactory>
+    </tracerFactory>    
 
     <tracerFactory name="FunctionsHttpProxyingMiddlewareWrapper">
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">
