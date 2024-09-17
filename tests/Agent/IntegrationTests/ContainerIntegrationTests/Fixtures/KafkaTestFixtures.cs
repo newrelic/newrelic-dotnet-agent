@@ -68,7 +68,7 @@ public class KafkaDotNet9TestFixture : KafkaTestFixtureBase
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "bookworm-slim";
-    private const string DotnetVersion = "9.0-preview";
+    private const string DotnetVersion = "9.0";
 
     public KafkaDotNet9TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

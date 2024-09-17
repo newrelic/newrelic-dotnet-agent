@@ -10,7 +10,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 {
-    private const string DotnetVersion = "9.0-preview";
+    private const string DotnetVersion = "9.0";
 
     protected override int MaxTries => 1;
 
