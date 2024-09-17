@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}</ProjectGuid>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net481</TargetFramework>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <AssemblyTitle>NewRelic.Testing.Assertions.UnitTests</AssemblyTitle>
     <Product>NewRelic.Testing.Assertions.UnitTests</Product>

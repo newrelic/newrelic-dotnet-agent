@@ -13,8 +13,6 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Expectations.Abstraction;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
@@ -1000,14 +998,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", new[] { "405" }, null,           ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0],   null,           ExpectedResult = new string[0])]
-        [TestCase("401", null,            null,           ExpectedResult = new[] { "401" })]
-        [TestCase(null,  null,            "401",          ExpectedResult = new[] { "401" })]
-        [TestCase(null,  new[] { "405" }, "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401, 503",     ExpectedResult = new[] { "401", "503" })]
-        [TestCase("402", new string[0],   "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
+        [TestCase("401", new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0], null, ExpectedResult = new string[0])]
+        [TestCase("401", null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(null, null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(null, new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401, 503", ExpectedResult = new[] { "401", "503" })]
+        [TestCase("402", new string[0], "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
         public string[] ExpectedStatusCodesSetFromLocalServerAndEnvironmentOverrides(string local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
@@ -1019,14 +1017,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
-        [TestCase(new[] { 401f },   new[] { "405" }, null,         ExpectedResult = new[] { "405" })]
-        [TestCase(new[] { 401f },   new string[0],   null,         ExpectedResult = new string[0])]
-        [TestCase(new[] { 401f },   null,            null,         ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401.5f }, null,            null,         ExpectedResult = new[] { "401.5" })]
-        [TestCase(new float[0],     null,            "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new float[0],     new[] { "405" }, "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401f },   new string[0],   "402",        ExpectedResult = new[] { "402" })]
-        [TestCase(new[] { 401f },   new string[0],   "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
+        [TestCase(new[] { 401f }, new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase(new[] { 401f }, new string[0], null, ExpectedResult = new string[0])]
+        [TestCase(new[] { 401f }, null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401.5f }, null, null, ExpectedResult = new[] { "401.5" })]
+        [TestCase(new float[0], null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0], new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f }, new string[0], "402", ExpectedResult = new[] { "402" })]
+        [TestCase(new[] { 401f }, new string[0], "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
         public string[] IgnoredStatusCodesSetFromLocalServerAndEnvironmentOverrides(float[] local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
@@ -2156,6 +2154,59 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
             );
         }
+
+        [Test]
+        [TestCase(false, "My Application", "NewRelic Config")]
+        [TestCase(true, "MyAzureFunc", "Azure Function")]
+        public void ApplicationNamesUsesAzureFunctionName_IfAzureFunctionMode_IsEnabled(bool functionModeEnabled, string expectedFunctionName, string expectedApplicationNameSource)
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = functionModeEnabled.ToString() });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(functionModeEnabled);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("MyAzureFunc");
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo(expectedFunctionName)),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo(expectedApplicationNameSource))
+            );
+        }
+
+        [Test]
+        public void ApplicationNameDoesNotUserAzureFunctionName_IfAzureModeIsEnabled_ButAzureFunctionName_IsNullOrEmpty()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = "true" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(true);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My Application")),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+            );
+
+        }
+
         #endregion ApplicationNames
 
 
@@ -2961,6 +3012,44 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.UtilizationDetectDocker;
         }
 
+
+        [TestCase("true", true, true, ExpectedResult = true)]
+        [TestCase("true", false, true, ExpectedResult = true)]
+        [TestCase("true", null, true, ExpectedResult = true)]
+        [TestCase("false", true, true, ExpectedResult = false)]
+        [TestCase("false", false, true, ExpectedResult = false)]
+        [TestCase("false", null, true, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, true, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, true, ExpectedResult = true)]
+        [TestCase(null, true, true, ExpectedResult = true)]
+        [TestCase(null, false, true, ExpectedResult = false)]
+        [TestCase(null, null, true, ExpectedResult = true)] // true by default test
+
+        [TestCase("true", true, false, ExpectedResult = false)]
+        [TestCase("true", false, false, ExpectedResult = false)]
+        [TestCase("true", null, false, ExpectedResult = false)]
+        [TestCase("false", true, false, ExpectedResult = false)]
+        [TestCase("false", false, false, ExpectedResult = false)]
+        [TestCase("false", null, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", false, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, false, ExpectedResult = false)]
+        [TestCase(null, true, false, ExpectedResult = false)]
+        [TestCase(null, false, false, ExpectedResult = false)]
+        [TestCase(null, null, false, ExpectedResult = false)] // true by default test
+        public bool UtilizationDetectAzureFunctionConfigurationWorksProperly(string environmentSetting, bool? localSetting, bool azureFunctionModeEnabled)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Returns(azureFunctionModeEnabled.ToString());
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAzureFunction = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAzureFunction;
+        }
         #endregion
 
         #region Log Metrics and Events
@@ -3974,7 +4063,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.aiMonitoring.enabled = true;
             Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
         }
-        
+
         [Test]
         public void AiMonitoringStreamingDisabledByLocalConfig()
         {
@@ -4044,7 +4133,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("False", true, ExpectedResult = false)]
         public bool LoggingEnabledTests(string environmentValue, bool localConfigValue)
         {
-            Mock.Arrange(() =>_environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
             _localConfig.log.enabled = localConfigValue;
 
             return _defaultConfig.LoggingEnabled;
@@ -4143,6 +4232,225 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // test
             return _defaultConfig.DisableFileSystemWatcher;
         }
+
+        #region Azure Function config tests
+        [Test]
+        [TestCase(null, "some-subscription-id+resourcegroup-region-Linux", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase("", "some-subscription-id+resourcegroup-region-Linux", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase(null, "website-owner", false)] // resource id cannot be parsed from WEBSITE_OWNER_NAME
+        [TestCase("", "website-owner", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase("resourceGroup", null, true)]
+        [TestCase("resourceGroup", "", true)]
+        public void AzureFunctionResourceId_ShouldReturnEmpty_WhenResourceGroupOrSubscriptionIdIsNullOrEmpty(string resourceGroup, string websiteOwner, bool expectEmpty)
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(resourceGroup);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(websiteOwner);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            Assert.That(result, expectEmpty ? Is.Empty : Is.Not.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceId_ShouldReturnCorrectResourceId_WhenResourceGroupAndSubscriptionIdAreNotEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/some-service-name";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AzureFunctionResourceId_ShouldReturnUnknownServiceName_WhenAzureFunctionServiceNameIsNull()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/unknown";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenResourceIdIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns((string)null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns((string)null);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName("some-function");
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenFunctionNameIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName(null);
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnCorrectResourceIdWithFunctionName_WhenResourceIdIsNotEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName("some-function");
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/some-service-name/functions/some-function";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnWebsiteResourceGroup_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-resource-group"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnParsedResourceGroup_WhenWebsiteOwnerNameIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("subscription+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("resourcegroup"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnWebsiteOwnerName_WhenFormatIsUnexpected()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("unexpected-format");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("unexpected-format"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnEmptyString_WhenWebsiteOwnerNameIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(string.Empty);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(string.Empty));
+        }
+
+        [Test]
+        public void AzureFunctionRegion_ShouldReturnRegionName_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("REGION_NAME")).Returns("some-region");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionRegion;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-region"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnSubscriptionId_WhenWebsiteOwnerNameIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("subscription+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("subscription"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnWebsiteOwnerName_WhenFormatIsUnexpected()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("unexpected-format");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("unexpected-format"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnEmptyString_WhenWebsiteOwnerNameIsNotSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(string.Empty);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(string.Empty));
+        }
+
+        [Test]
+        public void AzureFunctionServiceName_ShouldReturnServiceName_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionServiceName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-service-name"));
+        }
+
+        #endregion
 
         private void CreateDefaultConfiguration()
         {

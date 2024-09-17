@@ -81,14 +81,15 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-
         [Test]
         [TestCase("ForceRestartException")]
         [TestCase("HttpException")]
-        [TestCase("HttpRequestException")]
         [TestCase("SocketException")]
         [TestCase("IOException")]
         [TestCase("OperationCanceledException")]
+#if !NETFRAMEWORK
+        [TestCase("HttpRequestException")]
+#endif
         public void AttemptAutoStart_SchedulesReconnect_IfCertainExceptionOccurs(string execeptionType)
         {
             Exception ex = null;

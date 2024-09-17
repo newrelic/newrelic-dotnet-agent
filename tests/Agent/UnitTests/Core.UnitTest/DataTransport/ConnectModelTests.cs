@@ -32,7 +32,8 @@ namespace NewRelic.Agent.Core.DataTransport
                     { "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize") },
                     { "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
                     { "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
-                    { "kubernetes", new KubernetesVendorModel("10.96.0.1") }
+                    { "kubernetes", new KubernetesVendorModel("10.96.0.1") },
+                    { "azurefunction", new AzureFunctionVendorModel("myAppName", "myCloudRegion") }
                 };
 
                 var fullyPopulatedTestConfiguration = new ExhaustiveTestConfiguration();
@@ -354,6 +355,7 @@ namespace NewRelic.Agent.Core.DataTransport
                             "utilization.detect_pcf_enabled": true,
                             "utilization.detect_docker_enabled": true,
                             "utilization.detect_kubernetes_enabled": true,
+                            "utilization.detect_azure_function_enabled": true,
                             "utilization.logical_processors": 22,
                             "utilization.total_ram_mib": 33,
                             "utilization.billing_host": "UtilizationBillingHost",
@@ -452,6 +454,10 @@ namespace NewRelic.Agent.Core.DataTransport
                                 },
                                 "kubernetes": {
                                     "kubernetes_service_host": "10.96.0.1"
+                                },
+                                "azurefunction": {
+                                    "faas.app_name": "myAppName",
+                                    "cloud.region": "myCloudRegion"
                                 }
                             }
                         },

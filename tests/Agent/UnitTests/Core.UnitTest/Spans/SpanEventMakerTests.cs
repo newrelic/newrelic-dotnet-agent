@@ -824,6 +824,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
             _attribDefs.GetLambdaAttribute("lambdaAttributeKey").TrySetValue(allAttribValues, "lambdaAttributeValue");
+            _attribDefs.GetFaasAttribute("faasAttributeKey").TrySetValue(allAttribValues, "faasAttributeValue");
             _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
 
             // ACT

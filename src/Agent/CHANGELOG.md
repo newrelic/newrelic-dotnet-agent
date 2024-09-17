@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.30.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.29.0...v10.30.0) (2024-09-11)
+
+
+### New features
+
+* Oracle instrumentation now supports latest version ([#2721](https://github.com/newrelic/newrelic-dotnet-agent/issues/2721)) ([50cb663](https://github.com/newrelic/newrelic-dotnet-agent/commit/50cb663957ccfcfd55d104a7f54755100bfa46cc))
+* Preview support for instrumentation of "isolated" model Azure Functions. Instrumentation is disabled by default. Please reach out to your account team if you would like to try this new feature. ([d8a79e5](https://github.com/newrelic/newrelic-dotnet-agent/commit/d8a79e51683225e9b574efc8d1b154b2a4b9eadc))
+
+
+### Fixes
+
+* Preserve custom query name even if statement can't be parsed. ([#2708](https://github.com/newrelic/newrelic-dotnet-agent/issues/2708)) ([#2709](https://github.com/newrelic/newrelic-dotnet-agent/issues/2709)) ([3ab0cb4](https://github.com/newrelic/newrelic-dotnet-agent/commit/3ab0cb4f36d3f5fa07d4003b930917e533c7cba2))
+
 ## [10.29.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.28.0...v10.29.0) (2024-08-20)
 
 
