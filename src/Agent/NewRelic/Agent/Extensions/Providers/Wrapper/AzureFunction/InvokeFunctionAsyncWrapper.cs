@@ -16,6 +16,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 {
     public class InvokeFunctionAsyncWrapper : IWrapper
     {
+        private static MethodInfo _getInvocationResultMethod;
         private static bool _loggedDisabledMessage;
         private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
 
@@ -105,33 +106,30 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                         return;
                     }
 
-                    if (functionDetails.IsWebTrigger)
+                    // only pull response status code here if it's a web trigger and the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is not loaded.
+                    if (functionDetails.IsWebTrigger && functionDetails.HasAspNetCoreExtensionReference != null && !functionDetails.HasAspNetCoreExtensionReference.Value)
                     {
-                        // GetInvocationResult is a static extension method
-                        // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
-                        Type type = functionContext.GetType().Assembly.GetType("Microsoft.Azure.Functions.Worker.FunctionContextBindingFeatureExtensions");
-                        var getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
+                        if (_getInvocationResultMethod == null)
+                        {
+                            // GetInvocationResult is a static extension method
+                            // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
+                            Type type = functionContext.GetType().Assembly.GetType("Microsoft.Azure.Functions.Worker.FunctionContextBindingFeatureExtensions");
+                            _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
+                        }
 
-                        dynamic invocationResult = getInvocationResultMethod.Invoke(null, new[] { functionContext });
+                        dynamic invocationResult = _getInvocationResultMethod.Invoke(null, new[] { functionContext });
                         var result = invocationResult?.Value;
 
-                        // the result always seems to be of this type regardless of whether the app
-                        // uses the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore package or not
-                        var resultTypeName = result?.GetType().Name;
-                        if (resultTypeName == "GrpcHttpResponseData")
+                        if (result != null && result.StatusCode != null) 
                         {
-                            transaction.SetHttpResponseStatusCode((int)result.StatusCode);
+                            var statusCode = result.StatusCode;
+                            transaction.SetHttpResponseStatusCode((int)statusCode);
                         }
-                        else
-                        {
-                            agent.Logger.Debug($"Unexpected Azure Function invocationResult.Value type '{resultTypeName ?? "(null)"}' - unable to set http response status code.");
-                        }
-                }
-
+                    }
                 }
                 catch (Exception ex)
                 {
-                    agent.Logger.Error(ex, "Error processing Azure Function response.");
+                    agent.Logger.Warn(ex, "Error processing Azure Function response.");
                     throw;
                 }
                 finally
@@ -223,7 +221,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
                 if (IsWebTrigger)
                 {
-                    ParseRequestParameters(agent, functionContext);
+                    ParseHttpTriggerParameters(agent, functionContext);
                 }
             }
             catch (Exception ex)
@@ -233,17 +231,18 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             }
         }
 
-        private void ParseRequestParameters(IAgent agent, dynamic functionContext)
+        private void ParseHttpTriggerParameters(IAgent agent, dynamic functionContext)
         {
             if (!_hasAspNetCoreExtensionsReference.HasValue)
             {
                 // see if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is in the list of loaded assemblies
                 var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
                 var assembly = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore");
+
                 _hasAspNetCoreExtensionsReference = assembly != null;
 
                 if (_hasAspNetCoreExtensionsReference.Value)
-                    agent.Logger.Debug("Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded; not parsing request parameters in InvokeFunctionAsyncWrapper.");
+                    agent.Logger.Debug("Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded; InvokeFunctionAsyncWrapper will defer HttpTrigger parameter parsing to FunctionsHttpProxyingMiddlewareWrapper.");
             }
 
             // don't parse request parameters here if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded.
@@ -285,17 +284,23 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             if (_genericFunctionInputBindingFeatureGetter != null)
             {
                 // Get the input binding feature and bind the input from the function context
-                var inputBindingFeature = _genericFunctionInputBindingFeatureGetter.Invoke(features, new object[] { });
-                dynamic valueTask = _bindFunctionInputAsync.Invoke(inputBindingFeature, new object[] { functionContext });
-                valueTask.AsTask().Wait();
-                var inputArguments = valueTask.Result.Values;
-                var reqData = inputArguments[0];
+                var inputBindingFeature = _genericFunctionInputBindingFeatureGetter.Invoke(features, []);
+                dynamic valueTask = _bindFunctionInputAsync.Invoke(inputBindingFeature, [functionContext]);
 
-                if (reqData != null && reqData.GetType().Name == "GrpcHttpRequestData" && !string.IsNullOrEmpty(reqData.Method))
+                valueTask.AsTask().Wait(); // BindFunctionInputAsync returns a ValueTask, so we need to convert it to a Task to wait on it
+
+                object[] inputArguments = valueTask.Result.Values;
+
+                if (inputArguments is { Length: > 0 })
                 {
-                    RequestMethod = reqData.Method;
-                    Uri uri = reqData.Url;
-                    RequestPath = uri.GetComponents(UriComponents.Path, UriFormat.Unescaped);
+                    var reqData = (dynamic)inputArguments[0];
+
+                    if (reqData != null && reqData.GetType().Name == "GrpcHttpRequestData" && !string.IsNullOrEmpty(reqData.Method))
+                    {
+                        RequestMethod = reqData.Method;
+                        Uri uri = reqData.Url;
+                        RequestPath = $"/{uri.GetComponents(UriComponents.Path, UriFormat.Unescaped)}"; // has to start with a slash
+                    }
                 }
             }
         }
@@ -312,6 +317,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         public bool IsWebTrigger => Trigger == "http";
         public string RequestMethod { get; private set; }
         public string RequestPath { get; private set; }
+
+        public bool? HasAspNetCoreExtensionReference => _hasAspNetCoreExtensionsReference;
     }
 
 }

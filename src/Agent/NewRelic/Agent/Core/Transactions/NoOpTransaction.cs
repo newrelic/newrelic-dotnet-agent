@@ -23,6 +23,7 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsValid => false;
         public bool IsFinished => false;
         public ISegment CurrentSegment => Segment.NoOpSegment;
+        public bool HasHttpResponseStatusCode => false;
 
         public DateTime StartTime => DateTime.UtcNow;
 

@@ -32,18 +32,24 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
                     agent.CurrentTransaction.SetRequestMethod(httpContext.Request.Method);
                     agent.CurrentTransaction.SetUri(httpContext.Request.Path);
                     break;
-                // not needed at present for getting status code, but keep in case we need to get more from httpContext - also update instrumentation.xml
-                //case "TryHandleHttpResult":
-                //    object result = instrumentedMethodCall.MethodCall.MethodArguments[0];
-                //    httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
-                //    bool isInvocationResult = (bool)instrumentedMethodCall.MethodCall.MethodArguments[3];
+                case "TryHandleHttpResult":
+                    if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
+                    {
+                        object result = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-                //    agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
-                //    break;
-                //case "TryHandleOutputBindingsHttpResult":
-                //    httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[1];
-                //    agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
-                //    break;
+                        httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
+                        bool isInvocationResult = (bool)instrumentedMethodCall.MethodCall.MethodArguments[3];
+
+                        agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
+                    }
+                    break;
+                case "TryHandleOutputBindingsHttpResult":
+                    if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
+                    {
+                        httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[1];
+                        agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
+                    }
+                    break;
             }
         }
 
