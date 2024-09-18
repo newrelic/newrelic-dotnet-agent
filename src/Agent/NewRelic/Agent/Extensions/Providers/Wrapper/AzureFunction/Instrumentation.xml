@@ -24,12 +24,14 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">
         <exactMethodMatcher methodName="AddHttpContextToFunctionContext" />
       </match>
+      <!-- save in case we need these later
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">
         <exactMethodMatcher methodName="TryHandleHttpResult" />
       </match>
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">
         <exactMethodMatcher methodName="TryHandleOutputBindingsHttpResult" />
       </match>
+      -->
     </tracerFactory>
   </instrumentation>
 </extension>

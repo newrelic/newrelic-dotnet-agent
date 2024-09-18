@@ -246,8 +246,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     agent.Logger.Debug("Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded; not parsing request parameters in InvokeFunctionAsyncWrapper.");
             }
 
-            // don't parse request parameters here if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded
-            // parsing occurs over in FunctionsHttpProxyingMiddlewareWrapper in that case
+            // don't parse request parameters here if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded.
+            // If it is loaded, parsing occurs over in FunctionsHttpProxyingMiddlewareWrapper
             if (_hasAspNetCoreExtensionsReference.Value)
             {
                 return;

@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction
 
             var expectedAgentAttributes = new Dictionary<string, string>
             {
-                { "request.uri", "/Unknown"}
+                { "request.uri", "/api/httpTriggerFunctionUsingAspNetCorePipeline"}
             };
 
             var transactionTraceExpectedAttributes = new Dictionary<string, object>()

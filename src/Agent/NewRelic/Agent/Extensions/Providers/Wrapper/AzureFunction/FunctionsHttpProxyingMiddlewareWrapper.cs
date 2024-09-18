@@ -32,7 +32,7 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
                     agent.CurrentTransaction.SetRequestMethod(httpContext.Request.Method);
                     agent.CurrentTransaction.SetUri(httpContext.Request.Path);
                     break;
-                // not needed at present for getting status code, but keep in case we need to get more from httpContext 
+                // not needed at present for getting status code, but keep in case we need to get more from httpContext - also update instrumentation.xml
                 //case "TryHandleHttpResult":
                 //    object result = instrumentedMethodCall.MethodCall.MethodArguments[0];
                 //    httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
