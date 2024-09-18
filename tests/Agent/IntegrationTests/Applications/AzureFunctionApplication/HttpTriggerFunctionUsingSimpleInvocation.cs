@@ -13,6 +13,7 @@ namespace AzureFunctionApplication
     /// </summary>
     public class HttpTriggerFunctionUsingSimpleInvocation
     {
+        private static bool _firstTime = true;
         private readonly ILogger<HttpTriggerFunctionUsingSimpleInvocation> _logger;
 
         public HttpTriggerFunctionUsingSimpleInvocation(ILogger<HttpTriggerFunctionUsingSimpleInvocation> logger)
@@ -24,6 +25,12 @@ namespace AzureFunctionApplication
         public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData reqData)
         {
             _logger.LogInformation("HttpTriggerFunctionUsingSimpleInvocation processed a request.");
+
+            if (_firstTime)
+            {
+                await Task.Delay(250); // to ensure that the first invocation gets sampled
+                _firstTime = false;
+            }
 
             var response = reqData.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");

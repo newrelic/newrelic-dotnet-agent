@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -19,7 +20,7 @@ namespace AzureFunctionApplication
         }
 
         [Function("HttpTriggerFunctionUsingAspNetCorePipeline")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] [FromQuery, Required] string someParam)
         {
             _logger.LogInformation("HttpTriggerFunctionUsingAspNetCorePipeline processed a request.");
 
@@ -28,7 +29,6 @@ namespace AzureFunctionApplication
                 await Task.Delay(500); // to ensure that the first invocation gets sampled
                 _firstTime = false;
             }
-
 
             return new OkObjectResult("Welcome to Azure Functions!");
         }

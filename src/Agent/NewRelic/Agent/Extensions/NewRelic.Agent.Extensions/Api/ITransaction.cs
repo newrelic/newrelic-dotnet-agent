@@ -33,6 +33,8 @@ namespace NewRelic.Agent.Api
         /// </summary>
         ISegment CurrentSegment { get; }
 
+        bool HasHttpResponseStatusCode { get; }
+
         /// <summary>
         /// End this transaction.
         /// </summary>
