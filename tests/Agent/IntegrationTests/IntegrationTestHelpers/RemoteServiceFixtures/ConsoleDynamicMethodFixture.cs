@@ -118,7 +118,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore60
+    public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore80
     {
         public ConsoleDynamicMethodFixtureCoreOldest()
         {
