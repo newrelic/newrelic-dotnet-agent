@@ -78,6 +78,6 @@ jobs:
             export DOTTY_TEST_MODE="True"
           fi
           cd ${{ env.scan-tool-publish-path }}
-          dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
+          dotnet ./nugetSlackNotifications.dll
         shell: bash
         
