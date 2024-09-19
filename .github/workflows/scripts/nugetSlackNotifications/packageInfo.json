@@ -30,10 +30,16 @@
         "packageName": "amazon.lambda.sqsevents"
     },
     {
-        "packageName": "awssdk.bedrockruntime"
+        "packageName": "awssdk.bedrockruntime",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
-        "packageName": "awssdk.sqs"
+        "packageName": "awssdk.sqs",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
         "packageName": "confluent.kafka"
@@ -99,7 +105,10 @@
         "packageName": "serilog.sinks.console"
     },
     {
-        "packageName": "stackexchange.redis"
+        "packageName": "stackexchange.redis",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
         "packageName": "system.data.sqlclient"
