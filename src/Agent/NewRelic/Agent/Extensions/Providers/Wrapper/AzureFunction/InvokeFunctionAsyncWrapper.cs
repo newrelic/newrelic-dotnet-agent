@@ -25,6 +25,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
 
         public bool IsTransactionRequired => false;
 
+        private const string FunctionContextBindingFeatureExtensionsTypeName = "Microsoft.Azure.Functions.Worker.FunctionContextBindingFeatureExtensions";
+
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
@@ -113,7 +115,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                         {
                             // GetInvocationResult is a static extension method
                             // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
-                            Type type = functionContext.GetType().Assembly.GetType("Microsoft.Azure.Functions.Worker.FunctionContextBindingFeatureExtensions");
+                            Type type = functionContext.GetType().Assembly.GetType(FunctionContextBindingFeatureExtensionsTypeName);
                             _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
                         }
 
@@ -151,6 +153,9 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
         private static Func<object, object> _functionDefinitionGetter;
         private static Func<object, object> _parametersGetter;
         private static Func<object, IReadOnlyDictionary<string, object>> _propertiesGetter;
+
+        private const string AspNetCoreExtensionsAssemblyName = "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore";
+        private const string IFunctionInputBindingFeatureTypeName = "Microsoft.Azure.Functions.Worker.Context.Features.IFunctionInputBindingFeature";
 
         public FunctionDetails(dynamic functionContext, IAgent agent)
         {
@@ -237,12 +242,12 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             {
                 // see if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is in the list of loaded assemblies
                 var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-                var assembly = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore");
+                var assembly = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == AspNetCoreExtensionsAssemblyName);
 
                 _hasAspNetCoreExtensionsReference = assembly != null;
 
                 if (_hasAspNetCoreExtensionsReference.Value)
-                    agent.Logger.Debug("Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded; InvokeFunctionAsyncWrapper will defer HttpTrigger parameter parsing to FunctionsHttpProxyingMiddlewareWrapper.");
+                    agent.Logger.Debug($"{AspNetCoreExtensionsAssemblyName} assembly is loaded; InvokeFunctionAsyncWrapper will defer HttpTrigger parameter parsing to FunctionsHttpProxyingMiddlewareWrapper.");
             }
 
             // don't parse request parameters here if the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is loaded.
@@ -259,7 +264,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                 var get = features.GetType().GetMethod("Get");
                 if (get != null)
                 {
-                    _genericFunctionInputBindingFeatureGetter = get.MakeGenericMethod(features.GetType().Assembly.GetType("Microsoft.Azure.Functions.Worker.Context.Features.IFunctionInputBindingFeature"));
+                    _genericFunctionInputBindingFeatureGetter = get.MakeGenericMethod(features.GetType().Assembly.GetType(IFunctionInputBindingFeatureTypeName));
                 }
                 else
                 {
@@ -267,7 +272,7 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     return;
                 }
 
-                var bindFunctionInputType = features.GetType().Assembly.GetType("Microsoft.Azure.Functions.Worker.Context.Features.IFunctionInputBindingFeature");
+                var bindFunctionInputType = features.GetType().Assembly.GetType(IFunctionInputBindingFeatureTypeName);
                 if (bindFunctionInputType == null)
                 {
                     agent.Logger.Debug("Unable to find IFunctionInputBindingFeature type; unable to parse request parameters.");
