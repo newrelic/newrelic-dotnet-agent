@@ -2,7 +2,7 @@ name: Check for new core technologies
 
 on:
   schedule:
-   - cron:  '0 10 * * 1' # Every Monday at 10:00 AM
+   - cron:  '0 10 1,15 * *' # On the 1st and 15th of every month at 10:00 AM UTC
   workflow_dispatch:
     inputs:
       daysToSearch:

@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       github-actions:
         patterns:
@@ -30,7 +30,7 @@ updates:
       - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions
       - / # will pick up FullAgent.sln which contains the unit tests
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       nuget-tests:
         patterns:
