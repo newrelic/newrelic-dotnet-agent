@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Utilities
             // Newer versions of .net will be flagged as Other until we update our version checking logic.
             // So we can either check against a supported list, or an unsupported list, but the supported list
             // is smaller.
-            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net6, DotnetCoreVersion.net8, DotnetCoreVersion.net9, DotnetCoreVersion.Other };
+            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net8, DotnetCoreVersion.net9, DotnetCoreVersion.Other };
             return !supportedDotnetCoreVersions.Contains(version);
         }
 
