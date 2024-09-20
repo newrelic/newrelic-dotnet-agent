@@ -167,7 +167,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<long> MultiSearchAsync()
         {
-#if NET8_0_OR_GREATER || NET481_OR_GREATER
+#if NET9_0_OR_GREATER || NET481_OR_GREATER
             var req = new MultiSearchRequest
             {
                 Searches =
