@@ -1,9 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+
+namespace NewRelic.Providers.Wrapper.AzureFunction;
 
 public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 {
@@ -24,10 +25,11 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
     {
         if (agent.Configuration.AzureFunctionModeEnabled)
         {
+            dynamic httpContext;
             switch (instrumentedMethodCall.MethodCall.Method.MethodName)
             {
                 case "AddHttpContextToFunctionContext":
-                    var httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[1];
+                    httpContext = instrumentedMethodCall.MethodCall.MethodArguments[1];
 
                     agent.CurrentTransaction.SetRequestMethod(httpContext.Request.Method);
                     agent.CurrentTransaction.SetUri(httpContext.Request.Path);
@@ -35,18 +37,14 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
                 case "TryHandleHttpResult":
                     if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
                     {
-                        object result = instrumentedMethodCall.MethodCall.MethodArguments[0];
-
-                        httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
-                        bool isInvocationResult = (bool)instrumentedMethodCall.MethodCall.MethodArguments[3];
-
+                        httpContext = instrumentedMethodCall.MethodCall.MethodArguments[2];
                         agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
                     }
                     break;
                 case "TryHandleOutputBindingsHttpResult":
                     if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
                     {
-                        httpContext = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[1];
+                        httpContext = instrumentedMethodCall.MethodCall.MethodArguments[1];
                         agent.CurrentTransaction.SetHttpResponseStatusCode(httpContext.Response.StatusCode);
                     }
                     break;

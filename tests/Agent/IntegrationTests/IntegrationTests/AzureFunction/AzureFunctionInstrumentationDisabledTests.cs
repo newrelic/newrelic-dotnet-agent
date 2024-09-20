@@ -5,14 +5,13 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AzureFunction
+namespace NewRelic.Agent.IntegrationTests.AzureFunction;
+
+[NetCoreTest]
+public class AzureFunctionInstrumentationDisabledTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest>
 {
-    [NetCoreTest]
-    public class AzureFunctionInstrumentationDisabledTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest>
+    public AzureFunctionInstrumentationDisabledTestsCoreLatest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, AzureFunctionHttpTriggerTestMode.AspNetCorePipeline) // test mode doesn't really matter here
     {
-        public AzureFunctionInstrumentationDisabledTestsCoreLatest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, AzureFunctionHttpTriggerTestMode.AspNetCorePipeline) // test mode doesn't really matter here
-        {
-        }
     }
 }
