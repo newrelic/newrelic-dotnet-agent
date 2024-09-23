@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
                 transaction.AttachToAsync();
             }
 
-            // Internally, the key is used to determine what server to read from, in a multi-server environment.
+            // Internally, the key is used to determine what server to read from in a multi-server environment.
             // Without a key, we can't determine the server, so we can't determine the connection info.
 
             ParsedSqlStatement parsedStatement;
@@ -79,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
                 agent);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, isLeaf: true);
-            segment.AddCustomAttribute("key", key); // node also stores the key - not required!
+            segment.AddCustomAttribute("key", key); // Storing the key is optional, but could be useful and we already have it.
 
             if (instrumentedMethodCall.IsAsync)
             {

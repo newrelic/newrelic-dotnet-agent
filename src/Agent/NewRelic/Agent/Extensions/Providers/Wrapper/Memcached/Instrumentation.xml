@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
 
+    <!--Supports all MemcachedClient and "DistributedCache" methods, except MultiX methods.-->
     <tracerFactory name="EnyimMemcachedCoreWrapper">
 
       <!--MemcachedClient<T> calls into MemcachedClient-->

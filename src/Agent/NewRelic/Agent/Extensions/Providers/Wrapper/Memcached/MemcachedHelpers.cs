@@ -21,6 +21,8 @@ namespace NewRelic.Providers.Wrapper.Memcached
         private static Func<object, object> _addressGetter;
         private static Func<object, int> _portGetter;
 
+        // To get the ConnectionInfo we need to call the same Transform method that the library calls to get the node.
+        // This is deterministic based reviewing the code at different versions.
         public static ConnectionInfo GetConnectionInfo(string key, object target, IAgent agent)
         {
             if (_hasGetServerFailed)
@@ -47,7 +49,19 @@ namespace NewRelic.Providers.Wrapper.Memcached
                 var endpoint = _endpointGetter(node);
 
                 var endpointType = endpoint.GetType();
-                _addressGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(endpointType, "Address");
+                if (endpointType.Name == "DnsEndPoint") // v2.X
+                {
+                    _addressGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(endpointType, "Host");
+                }
+                else if (endpointType.Name == "IPEndPoint")  // v3.X
+                {
+                    _addressGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(endpointType, "Address");
+                }
+                else
+                {
+                    throw new Exception("EndPoint type, "+ endpointType.Name + ", did not match supported types.");
+                }
+
                 var address = _addressGetter(endpoint).ToString();
 
                 _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpointType, "Port");
