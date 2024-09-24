@@ -13,16 +13,13 @@ namespace NewRelic.Providers.Wrapper.Memcached
     public class EnyimMemcachedCoreWrapper : IWrapper
     {
         private const string ModelName = "cache";
-
-        public string[] WrapperNames = new string[] { "EnyimMemcachedCoreWrapper" };
+        private const string WrapperName = "EnyimMemcachedCoreWrapper";
 
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var canWrap = WrapperNames.Contains(methodInfo.RequestedWrapperName, StringComparer.OrdinalIgnoreCase);
-
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
