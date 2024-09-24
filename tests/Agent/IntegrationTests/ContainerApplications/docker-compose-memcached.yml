@@ -22,7 +22,7 @@
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
 
 services:
-    LinuxSmokeTestApp:
+    MemcachedTestApp:
         container_name: ${CONTAINER_NAME}
         image: ${CONTAINER_NAME}
         platform: ${PLATFORM}

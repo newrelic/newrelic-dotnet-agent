@@ -19,7 +19,7 @@ public abstract class MemcachedTestFixtureBase : RemoteApplicationFixture
         string dockerfile,
         string dotnetVersion,
         string dockerComposeFile = "docker-compose-memcached.yml") :
-        base(new ContainerApplication(distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile))
+        base(new ContainerApplication(distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile, "MemcachedTestApp"))
     {
         DotnetVer = dotnetVersion;
     }

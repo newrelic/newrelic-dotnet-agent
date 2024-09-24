@@ -1,8 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Enyim.Caching;
 using Microsoft.AspNetCore.Mvc;
@@ -61,12 +61,12 @@ namespace MemcachedTestApp.Controllers
             var posts = await _memcachedClient.GetValueOrCreateAsync(
                 cacheKey,
                 cacheSeconds,
-                async () => await _blogPostService.GetRecent(2));
+                async () => await Task.FromResult(_blogPostService.GetRecent(2)));
         }
 
         private void Get()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("Get", value, 600);
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -76,7 +76,7 @@ namespace MemcachedTestApp.Controllers
 
         private void GetGen()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("GetGen", value, 600);
 
             var posts = _memcachedClient.Get<object>("GetGen");
@@ -105,7 +105,7 @@ namespace MemcachedTestApp.Controllers
 
         private void Increment()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("Increment", value, 600);
 
             var posts = _memcachedClient.Increment("Increment", 1, 1, 1);
@@ -113,7 +113,7 @@ namespace MemcachedTestApp.Controllers
 
         private void Decrement()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("Decrement", value, 600);
 
             var posts = _memcachedClient.Decrement("Decrement", 1, 1, 1);
@@ -122,7 +122,7 @@ namespace MemcachedTestApp.Controllers
 #if NET8_0
         private async Task TouchAsync()
         {
-            var value = await _blogPostService.GetRecent(2);
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("TouchAsync", value, 600);
 
             var posts = await _memcachedClient.TouchAsync("TouchAsync", DateTime.Now.AddDays(5));
@@ -131,7 +131,7 @@ namespace MemcachedTestApp.Controllers
         // This is not instrumented
         private void GetMany()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("GetMany", value, 600);
 
             var keys = new List<string> { "GetMany" };
@@ -141,7 +141,7 @@ namespace MemcachedTestApp.Controllers
         // This is not instrumented
         private async Task GetManyAsync()
         {
-            var value = await _blogPostService.GetRecent(2);
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("GetManyAsync", value, 600);
 
             var keys = new List<string> { "GetManyAsync" };
@@ -150,7 +150,7 @@ namespace MemcachedTestApp.Controllers
 
         private void Remove()
         {
-            var value = _blogPostService.GetRecent(2).GetAwaiter().GetResult();
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("Remove", value, 600);
 
             var posts = _memcachedClient.Remove("Remove");
@@ -158,7 +158,7 @@ namespace MemcachedTestApp.Controllers
 
         private async Task RemoveAsync()
         {
-            var value = await _blogPostService.GetRecent(2);
+            var value = _blogPostService.GetRecent(2);
             _memcachedClient.Add("RemoveAsync", value, 600);
 
             var posts = await _memcachedClient.RemoveAsync("RemoveAsync");
