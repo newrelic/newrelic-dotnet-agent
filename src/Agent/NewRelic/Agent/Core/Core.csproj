@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.28.1" />
+    <PackageReference Include="Google.Protobuf" Version="3.28.2" />
     <PackageReference Include="Grpc.Tools" Version="2.66.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
