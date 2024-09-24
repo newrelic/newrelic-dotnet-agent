@@ -12,6 +12,8 @@ namespace NewRelic.Providers.Wrapper.Memcached
 {
     public class EnyimMemcachedCoreWrapper : IWrapper
     {
+        private const string ModelName = "cache";
+
         public string[] WrapperNames = new string[] { "EnyimMemcachedCoreWrapper" };
 
         public bool IsTransactionRequired => true;
@@ -45,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
             {
                 key = instrumentedMethodCall.MethodCall.MethodArguments[1].ToString();
                 parsedStatement = new ParsedSqlStatement(DatastoreVendor.Memcached,
-                    key,
+                    ModelName,
                     instrumentedMethodCall.MethodCall.MethodArguments[0].ToString());
             }
             // Operation is always Get, Key is the first argument
@@ -55,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
             {
                 key = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
                 parsedStatement = new ParsedSqlStatement(DatastoreVendor.Memcached,
-                    key,
+                    ModelName,
                     "Get");
             }
             // Operation is always Remove, Key is the first argument
@@ -64,7 +66,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
             {
                 key = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
                 parsedStatement = new ParsedSqlStatement(DatastoreVendor.Memcached,
-                    key,
+                    ModelName,
                     "Remove");
             }
             // Should not happen
@@ -79,7 +81,6 @@ namespace NewRelic.Providers.Wrapper.Memcached
                 agent);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, isLeaf: true);
-            segment.AddCustomAttribute("key", key); // Storing the key is optional, but could be useful and we already have it.
 
             if (instrumentedMethodCall.IsAsync)
             {

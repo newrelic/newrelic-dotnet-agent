@@ -33,7 +33,7 @@ SPDX-License-Identifier: Apache-2.0
         <!--TouchAsync-->
         <exactMethodMatcher methodName="PerformMutateAsync" />
 
-        <!--Append, Prepend(-->
+        <!--Append, Prepend-->
         <exactMethodMatcher methodName="PerformConcatenate" />
         
         <exactMethodMatcher methodName="Remove" />

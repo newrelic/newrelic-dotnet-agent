@@ -62,26 +62,12 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
             var datastoreOperationMemcachedTouch = "Datastore/operation/Memcached/Touch";
             var datastoreOperationMemcachedRemove = "Datastore/operation/Memcached/Remove";
 
-            var datastoreStatementMemcachedGetValueOrCreateAsyncGet = "Datastore/statement/Memcached/GetValueOrCreateAsync/Get";
-            var datastoreStatementMemcachedGetValueOrCreateAsyncAdd = "Datastore/statement/Memcached/GetValueOrCreateAsync/Add";
-            var datastoreStatementMemcachedGetAdd = "Datastore/statement/Memcached/Get/Add";
-            var datastoreStatementMemcachedGetGet = "Datastore/statement/Memcached/Get/Get";
-            var datastoreStatementMemcachedGetGenAdd = "Datastore/statement/Memcached/GetGen/Add";
-            var datastoreStatementMemcachedGetGenGet = "Datastore/statement/Memcached/GetGen/Get";
-            var datastoreStatementMemcachedGetAsyncAdd = "Datastore/statement/Memcached/GetAsync/Add";
-            var datastoreStatementMemcachedGetAsyncGet = "Datastore/statement/Memcached/GetAsync/Get";
-            var datastoreStatementMemcachedGetAsyncGenAdd = "Datastore/statement/Memcached/GetAsyncGen/Add";
-            var datastoreStatementMemcachedGetAsyncGenGet = "Datastore/statement/Memcached/GetAsyncGen/Get";
-            var datastoreStatementMemcachedIncrementAdd = "Datastore/statement/Memcached/Increment/Add";
-            var datastoreStatementMemcachedIncrementIncrement = "Datastore/statement/Memcached/Increment/Increment";
-            var datastoreStatementMemcachedDecrementAdd = "Datastore/statement/Memcached/Decrement/Add";
-            var datastoreStatementMemcachedDecrementDecrement = "Datastore/statement/Memcached/Decrement/Decrement";
-            var datastoreStatementMemcachedTouchAsyncAdd = "Datastore/statement/Memcached/TouchAsync/Add";
-            var datastoreStatementMemcachedTouchAsyncTouch = "Datastore/statement/Memcached/TouchAsync/Touch";
-            var datastoreStatementMemcachedRemoveAdd = "Datastore/statement/Memcached/Remove/Add";
-            var datastoreStatementMemcachedRemoveRemove = "Datastore/statement/Memcached/Remove/Remove";
-            var datastoreStatementMemcachedRemoveAsyncAdd = "Datastore/statement/Memcached/RemoveAsync/Add";
-            var datastoreStatementMemcachedRemoveAsyncRemove = "Datastore/statement/Memcached/RemoveAsync/Remove";
+            var datastoreStatementMemcachedGet = "Datastore/statement/Memcached/cache/Get";
+            var datastoreStatementMemcachedAdd = "Datastore/statement/Memcached/cache/Add";
+            var datastoreStatementMemcachedIncrement = "Datastore/statement/Memcached/cache/Increment";
+            var datastoreStatementMemcachedDecrement = "Datastore/statement/Memcached/cache/Decrement";
+            var datastoreStatementMemcachedTouch = "Datastore/statement/Memcached/cache/Touch";
+            var datastoreStatementMemcachedRemove = "Datastore/statement/Memcached/cache/Remove";
 
             var transactionName = "WebTransaction/MVC/Memcached/TestAllMethods";
 
@@ -94,43 +80,15 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                 new() { metricName = datastoreOperationMemcachedDecrement, callCount = 1 },
                 new() { metricName = datastoreOperationMemcachedRemove, callCount = 2 },
 
-                new() { metricName = datastoreStatementMemcachedGetValueOrCreateAsyncGet, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetValueOrCreateAsyncAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetGet, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetGenAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetGenGet, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetAsyncAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGet, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGenAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGenGet, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedIncrementAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedIncrementIncrement, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedDecrementAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedDecrementDecrement, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedRemoveAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedRemoveRemove, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedRemoveAsyncAdd, callCount = 1 },
-                new() { metricName = datastoreStatementMemcachedRemoveAsyncRemove, callCount = 1 },
-
-                new() { metricName = datastoreStatementMemcachedGetValueOrCreateAsyncGet, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetValueOrCreateAsyncAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetGet, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetGenAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetGenGet, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetAsyncAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGet, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGenAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedGetAsyncGenGet, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedIncrementAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedIncrementIncrement, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedDecrementAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedDecrementDecrement, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedRemoveAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedRemoveRemove, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedRemoveAsyncAdd, callCount = 1, metricScope = transactionName },
-                new() { metricName = datastoreStatementMemcachedRemoveAsyncRemove, callCount = 1, metricScope = transactionName },
+                new() { metricName = datastoreStatementMemcachedGet, callCount = 5 },
+                new() { metricName = datastoreStatementMemcachedIncrement, callCount = 1 },
+                new() { metricName = datastoreStatementMemcachedDecrement, callCount = 1 },
+                new() { metricName = datastoreStatementMemcachedRemove, callCount = 2 },
+                
+                new() { metricName = datastoreStatementMemcachedGet, callCount = 5, metricScope = transactionName },
+                new() { metricName = datastoreStatementMemcachedIncrement, callCount = 1, metricScope = transactionName },
+                new() { metricName = datastoreStatementMemcachedDecrement, callCount = 1, metricScope = transactionName },
+                new() { metricName = datastoreStatementMemcachedRemove, callCount = 2, metricScope = transactionName },
             };
 
             if (_fixture.DotnetVer == "6.0")
@@ -140,6 +98,8 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                 expectedMetrics.Add(new() { metricName = datastoreMemcachedAll, callCount = 20 });
                 expectedMetrics.Add(new() { metricName = datastoreMemcachedAllOther, callCount = 20 });
                 expectedMetrics.Add(new() { metricName = datastoreOperationMemcachedAdd, callCount = 11 });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 11 });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 11, metricScope = transactionName });
             }
             else if (_fixture.DotnetVer == "8.0")
             {
@@ -149,10 +109,10 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                 expectedMetrics.Add(new() { metricName = datastoreMemcachedAllOther, callCount = 22 });
                 expectedMetrics.Add(new() { metricName = datastoreOperationMemcachedAdd, callCount = 12 });
                 expectedMetrics.Add(new() { metricName = datastoreOperationMemcachedTouch, callCount = 1 });
-                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouchAsyncAdd, callCount = 1 });
-                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouchAsyncTouch, callCount = 1 });
-                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouchAsyncAdd, callCount = 1, metricScope = transactionName });
-                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouchAsyncTouch, metricScope = transactionName });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 12 });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 12, metricScope = transactionName });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouch, callCount = 1 });
+                expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedTouch, callCount = 1, metricScope = transactionName });
             }
             else
             {
