@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.31.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.30.0...v10.31.0) (2024-09-25)
+
+
+### New features
+
+* Add support for the EnyimMemcachedCore client. ([#2781](https://github.com/newrelic/newrelic-dotnet-agent/issues/2781)) ([52bdc11](https://github.com/newrelic/newrelic-dotnet-agent/commit/52bdc11a5194074afb2e6f806ab764c8aca39051))
+* Allow container linking for AWS ECS applications. ([#2683](https://github.com/newrelic/newrelic-dotnet-agent/issues/2683)) ([d55567f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d55567fb4674ea64443ac4a96e7d3f7f81dc3c97))
+* Parse Azure Function HttpTrigger parameters ([#2776](https://github.com/newrelic/newrelic-dotnet-agent/issues/2776)) ([7e8c28b](https://github.com/newrelic/newrelic-dotnet-agent/commit/7e8c28bbbcb97c62d0da0db6e1affcae2ff445b1))
+
+
+### Fixes
+
+* Prevent FileNotFoundException when handling connection issues while instrumenting .NET Framework apps. ([#2750](https://github.com/newrelic/newrelic-dotnet-agent/issues/2750)) ([#2751](https://github.com/newrelic/newrelic-dotnet-agent/issues/2751)) ([cebd287](https://github.com/newrelic/newrelic-dotnet-agent/commit/cebd28703224afed1fda24cb984657eb86f4b51d))
+
 ## [10.30.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.29.0...v10.30.0) (2024-09-11)
 
 
