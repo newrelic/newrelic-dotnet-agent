@@ -1,7 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -17,6 +19,23 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        }
+
+        private string GetRegion(IAgent agent, dynamic requestContext)
+        {
+            try
+            {
+                var clientconfig = requestContext.ClientConfig;
+                var regionEndpoint = clientconfig.RegionEndpoint;
+                var systemName = regionEndpoint.SystemName;
+                return systemName;
+            }
+            catch (Exception e)
+            {
+                agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get region from requestContext.");
+            }
+
+            return "";
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -53,6 +72,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             if (requestType.StartsWith("Amazon.SQS"))
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            }
+            else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
+            {
+                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, GetRegion(agent, requestContext));
             }
 
             if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type
