@@ -180,7 +180,7 @@ jobs:
     needs: [get-release-info, get-external-artifacts]
     if: ${{ inputs.downloadsite }}
     name: Deploy MSI to Download Site
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - name: Download Deploy Artifacts
@@ -256,7 +256,7 @@ jobs:
     needs: get-external-artifacts
     if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       nuget_source: https://www.nuget.org
