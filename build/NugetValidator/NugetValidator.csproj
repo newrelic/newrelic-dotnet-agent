@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="NuGet.Protocol" Version="6.11.0" />
-    <PackageReference Include="YamlDotNet" Version="16.1.2" />
+    <PackageReference Include="YamlDotNet" Version="16.1.3" />
   </ItemGroup>
 
 </Project>
