@@ -26,13 +26,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static byte[] Compress(byte[] bytes, string compressionType)
         {
-            using var stream = new MemoryStream(bytes.Length);
-            using (var outputStream = GetCompressionOutputStream(stream, compressionType))
+            using (var compressedStream = new MemoryStream())
             {
-                outputStream.Write(bytes, 0, bytes.Length);
+                using (var compressor = GetCompressionOutputStream(compressedStream, compressionType))
+                {
+                    compressor.Write(bytes, 0, bytes.Length);
+                }
+                return compressedStream.ToArray();
             }
-
-            return stream.ToArray();
         }
 
         private static Stream GetCompressionOutputStream(Stream stream, string requestedCompression)
@@ -41,9 +42,9 @@ namespace NewRelic.Agent.Core.DataTransport
             switch (compressionType)
             {
                 case DeflateCompression:
-                    return new DeflateStream(stream, CompressionLevel.Optimal);
+                    return new DeflateStream(stream, CompressionLevel.Optimal, true);
                 case GzipCompression:
-                    return new GZipStream(stream, CompressionLevel.Optimal);
+                    return new GZipStream(stream, CompressionLevel.Optimal, true);
                 default:
                     throw new ArgumentException($"compressionType is not one of the valid options: {compressionType}");
             }
@@ -53,9 +54,9 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             using var compressedStream = new MemoryStream(compressedBytes);
             using var decompressedStream = new MemoryStream();
-            using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
+            using (var decompressor = new DeflateStream(compressedStream, CompressionMode.Decompress))
             {
-                deflateStream.CopyTo(decompressedStream);
+                decompressor.CopyTo(decompressedStream);
             }
             return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
