@@ -3,9 +3,8 @@
 
 
 using System.IO;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using System.IO.Compression;
+using System.Text;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -13,28 +12,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         public static string DeflateDecompress(byte[] bytes)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))
-            using (var streamReader = new StreamReader(inflaterStream))
+            using var compressedStream = new MemoryStream(bytes);
+            using var decompressedStream = new MemoryStream();
+            using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
             {
-                memoryStream.Write(bytes, 0, bytes.Length);
-                memoryStream.Flush();
-                memoryStream.Position = 0;
-                return streamReader.ReadToEnd();
+                deflateStream.CopyTo(decompressedStream);
             }
+            return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
 
         public static string GzipDecompress(byte[] bytes)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var inflaterStream = new GZipInputStream(memoryStream))
-            using (var streamReader = new StreamReader(inflaterStream))
+            using var compressedStream = new MemoryStream(bytes);
+            using var decompressedStream = new MemoryStream();
+            using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
             {
-                memoryStream.Write(bytes, 0, bytes.Length);
-                memoryStream.Flush();
-                memoryStream.Position = 0;
-                return streamReader.ReadToEnd();
+                gzipStream.CopyTo(decompressedStream);
             }
+            return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
     }
 }
