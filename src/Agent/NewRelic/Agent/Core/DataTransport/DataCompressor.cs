@@ -3,10 +3,8 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -28,25 +26,24 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static byte[] Compress(byte[] bytes, string compressionType)
         {
-            using (var stream = new MemoryStream(bytes.Length))
+            using var stream = new MemoryStream(bytes.Length);
             using (var outputStream = GetCompressionOutputStream(stream, compressionType))
             {
                 outputStream.Write(bytes, 0, bytes.Length);
-                outputStream.Flush();
-                outputStream.Finish();
-                return stream.ToArray();
             }
+
+            return stream.ToArray();
         }
 
-        private static DeflaterOutputStream GetCompressionOutputStream(Stream stream, string requestedCompression)
+        private static Stream GetCompressionOutputStream(Stream stream, string requestedCompression)
         {
             var compressionType = requestedCompression.ToLower();
             switch (compressionType)
             {
                 case DeflateCompression:
-                    return new DeflaterOutputStream(stream, new Deflater(Deflater.DEFAULT_COMPRESSION));
+                    return new DeflateStream(stream, CompressionLevel.Optimal);
                 case GzipCompression:
-                    return new GZipOutputStream(stream);
+                    return new GZipStream(stream, CompressionLevel.Optimal);
                 default:
                     throw new ArgumentException($"compressionType is not one of the valid options: {compressionType}");
             }
@@ -54,15 +51,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static string Decompress(byte[] compressedBytes)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))
-            using (var streamReader = new StreamReader(inflaterStream, Encoding.UTF8))
+            using var compressedStream = new MemoryStream(compressedBytes);
+            using var decompressedStream = new MemoryStream();
+            using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
             {
-                memoryStream.Write(compressedBytes, 0, compressedBytes.Length);
-                memoryStream.Flush();
-                memoryStream.Position = 0;
-                return streamReader.ReadToEnd();
+                deflateStream.CopyTo(decompressedStream);
             }
+            return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
     }
 }

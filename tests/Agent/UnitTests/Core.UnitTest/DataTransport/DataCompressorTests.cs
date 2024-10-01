@@ -3,8 +3,8 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
-using ICSharpCode.SharpZipLib.GZip;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -64,15 +64,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static string DecompressGzip(byte[] compressedBytes)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var inflaterStream = new GZipInputStream(memoryStream))
-            using (var streamReader = new StreamReader(inflaterStream, Encoding.UTF8))
+            using var compressedStream = new MemoryStream(compressedBytes);
+            using var decompressedStream = new MemoryStream();
+            using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
             {
-                memoryStream.Write(compressedBytes, 0, compressedBytes.Length);
-                memoryStream.Flush();
-                memoryStream.Position = 0;
-                return streamReader.ReadToEnd();
+                gzipStream.CopyTo(decompressedStream);
             }
+            return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
     }
 }

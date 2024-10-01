@@ -1,5 +1,7 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
+#if !NETFRAMEWORK
 
 using System;
 using System.Net.Http;
@@ -14,3 +16,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
         TimeSpan Timeout { get; set; }
     }
 }
+#endif

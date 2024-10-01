@@ -6,9 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -80,7 +79,7 @@ namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
                 var bytes = Convert.FromBase64String(compressedTraceData);
 
                 using (var memoryStream = new MemoryStream())
-                using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))
+                using (var inflaterStream = new DeflateStream(memoryStream, CompressionMode.Decompress))
                 using (var streamReader = new StreamReader(inflaterStream))
                 {
                     memoryStream.Write(bytes, 0, bytes.Length);
