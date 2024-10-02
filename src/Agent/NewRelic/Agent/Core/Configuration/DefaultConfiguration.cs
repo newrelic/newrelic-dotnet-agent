@@ -1497,7 +1497,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return _localConfiguration.dataTransmission.compressedContentEncoding.ToString();
+                return "gzip";
             }
         }
 
