@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         [Test]
-        public async Task GetContentAsync_ShouldReturnValidResponse_WhenResponseStreamIsNotNullAndNotGzipped()
+        public void GetContent_ShouldReturnValidResponse_WhenResponseStreamIsNotNullAndNotGzipped()
         {
             // Arrange
             var fakeStream = new MemoryStream(Encoding.UTF8.GetBytes("Test Response"));
@@ -41,28 +41,28 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act
-            var content = await webRequestClientResponse.GetContentAsync();
+            var content = webRequestClientResponse.GetContent();
 
             // Assert
             Assert.That(content, Is.EqualTo("Test Response"));
         }
 
         [Test]
-        public async Task GetContentAsync_ShouldReturnEmpty_WhenResponseStreamIsNull()
+        public void GetContent_ShouldReturnEmpty_WhenResponseStreamIsNull()
         {
             // Arrange
             Mock.Arrange(() => _response.GetResponseStream()).Returns(() => null);
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act
-            var content = await webRequestClientResponse.GetContentAsync();
+            var content = webRequestClientResponse.GetContent();
 
             // Assert
             Assert.That(content, Is.EqualTo(Constants.EmptyResponseBody));
         }
 
         [Test]
-        public async Task GetContentAsync_ShouldReturnEmpty_WhenResponseHasException()
+        public void GetContent_ShouldReturnEmpty_WhenResponseHasException()
         {
             // Arrange
             var fakeStream = new ExceptionThrowingStream();
@@ -70,13 +70,13 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act
-            var content = await webRequestClientResponse.GetContentAsync();
+            var content = webRequestClientResponse.GetContent();
 
             // Assert
             Assert.That(content, Is.EqualTo(Constants.EmptyResponseBody));
         }
         [Test]
-        public async Task GetContentAsync_ShouldReturnEmpty_WhenResponseHeadersIsNull()
+        public void GetContent_ShouldReturnEmpty_WhenResponseHeadersIsNull()
         {
             // Arrange
             Mock.Arrange(() => _response.GetResponseStream()).Returns(new MemoryStream()); // Any dummy stream
@@ -84,14 +84,14 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act
-            var content = await webRequestClientResponse.GetContentAsync();
+            var content = webRequestClientResponse.GetContent();
 
             // Assert
             Assert.That(content, Is.EqualTo(Constants.EmptyResponseBody));
         }
 
         [Test]
-        public async Task GetContentAsync_ShouldReturnDecompressedResponse_WhenResponseIsGzipped()
+        public void GetContent_ShouldReturnDecompressedResponse_WhenResponseIsGzipped()
         {
             // Arrange
             var originalText = "Test GZIP Response";
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
 
             // Act
-            var content = await webRequestClientResponse.GetContentAsync();
+            var content = webRequestClientResponse.GetContent();
 
             // Assert
             Assert.That(content, Is.EqualTo(originalText));

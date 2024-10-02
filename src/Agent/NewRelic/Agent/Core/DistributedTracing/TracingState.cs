@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core;
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -7,7 +7,7 @@
     <authors>New Relic</authors>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</projectUrl>
-    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Go to New Relic to sign up and get your license key at https://newrelic.com or you can get a license key through the Windows Azure management portal via Add-On store.</description>

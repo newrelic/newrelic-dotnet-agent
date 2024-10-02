@@ -5,8 +5,7 @@ using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Core.Logging;
-
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Transformers
 {

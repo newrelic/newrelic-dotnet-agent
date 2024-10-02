@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System;
 using System.Collections.ObjectModel;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System.Linq;
 using System.Threading;
 

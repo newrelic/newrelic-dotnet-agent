@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Threading;
-using NewRelic.Core.CodeAttributes;
+using NewRelic.Agent.Core.Utilities;
 using Serilog.Core;
 using Serilog.Events;
 

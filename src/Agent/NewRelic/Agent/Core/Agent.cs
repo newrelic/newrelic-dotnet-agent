@@ -22,9 +22,8 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -476,6 +475,23 @@ namespace NewRelic.Agent.Core
             }
 
             _customEventTransformer.Transform(eventType, attributes, transaction.Priority);
+        }
+
+        public List<string> GetConfiguredDTHeaders()
+        {
+            List<string> headers = [];
+            if (_configurationService.Configuration.DistributedTracingEnabled)
+            {
+                headers.Add(Constants.TraceParentHeaderKey);
+                headers.Add(Constants.TraceStateHeaderKey);
+
+                if (!_configurationService.Configuration.ExcludeNewrelicHeader)
+                {
+                    headers.Add(Constants.DistributedTracePayloadKeyAllLower);
+                }
+            }
+
+            return headers;
         }
 
         public ISimpleSchedulingService SimpleSchedulingService

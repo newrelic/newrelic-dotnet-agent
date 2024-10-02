@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -14,6 +14,8 @@ namespace NewRelic.Agent.Core.WireModels
     [JsonConverter(typeof(LoadedModuleWireModelCollectionJsonConverter))]
     public class LoadedModuleWireModelCollection
     {
+        private static Version zeroedVersion = new Version("0.0.0.0");
+
         public List<LoadedModuleWireModel> LoadedModules { get; }
 
         private LoadedModuleWireModelCollection()
@@ -28,8 +30,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 if (!TryGetAssemblyName(assembly, out var assemblyName))
                 {
-                    // no way to properly track this assembly
-                    continue;
+                    continue; // we don't want to report this assembly
                 }
 
                 var assemblyDetails = assembly.GetName();
@@ -71,11 +72,17 @@ namespace NewRelic.Agent.Core.WireModels
 
         private static bool TryGetAssemblyName(Assembly assembly, out string assemblyName)
         {
+            // We skip any assemblies that cannot be linked to a nuget package.
+
             try
             {
-                if (assembly.IsDynamic)
+                if (assembly.IsDynamic) // skip dynamic assemblies
                 {
-                    assemblyName = assembly.GetName().Name;
+                    assemblyName = null;
+                }
+                else if (assembly.GetName().Version == zeroedVersion) // skip assemblies that have a version of 0.0.0.0 - these are precompiled assemblies
+                {
+                    assemblyName = null;
                 }
                 else
                 {

@@ -16,7 +16,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;

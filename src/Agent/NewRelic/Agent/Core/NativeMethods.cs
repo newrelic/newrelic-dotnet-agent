@@ -3,7 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core
 {

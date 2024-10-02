@@ -29,6 +29,14 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK);
     }
 
+    public string GetBootstrapServer()
+    {
+        var address = $"http://localhost:{Port}/kafka/bootstrap_server";
+        var response = GetString(address);
+
+        return response;
+    }
+
     public void Delay(int seconds)
     {
         Task.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter().GetResult();

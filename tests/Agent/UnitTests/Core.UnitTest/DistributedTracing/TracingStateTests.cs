@@ -4,9 +4,9 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

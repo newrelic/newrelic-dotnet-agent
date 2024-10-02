@@ -523,7 +523,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                         if (expectedMetric.callCount.HasValue && matchedMetric.Values.CallCount != expectedMetric.callCount)
                         {
-                            builder.AppendFormat($"Metric named {matchedMetric.MetricSpec.Name} scoped to {matchedMetric.MetricSpec.Scope ?? "nothing"} had an unexpected count of {matchedMetric.Values.CallCount} (Expected {expectedMetric.callCount})");
+                            builder.AppendFormat("Metric named {0} scoped to {1} had an unexpected count of {2} (Expected {3})",
+                                matchedMetric.MetricSpec.Name, matchedMetric.MetricSpec.Scope ?? "nothing",
+                                matchedMetric.Values.CallCount, expectedMetric.callCount);
                             builder.AppendLine();
                             builder.AppendLine();
 
@@ -844,11 +846,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var succeeded = true;
             var builder = new StringBuilder();
             var actualAttributes = spanEvent.GetByType(attributeType);
+            var name = spanEvent.GetByType(SpanEventAttributeType.Intrinsic)["name"];
             foreach (var expectedAttribute in expectedAttributes)
             {
                 if (!actualAttributes.ContainsKey(expectedAttribute))
                 {
-                    builder.AppendFormat("Attribute named {0} was not found in the span event.", expectedAttribute);
+                    builder.AppendFormat("{0} Attribute named {1} was not found in the span event named {2}.", attributeType.ToString(), expectedAttribute, name);
                     builder.AppendLine();
                     succeeded = false;
                 }

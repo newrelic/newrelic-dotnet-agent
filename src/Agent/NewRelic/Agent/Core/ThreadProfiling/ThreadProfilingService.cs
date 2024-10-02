@@ -4,15 +4,15 @@
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using DictionaryExtensions = NewRelic.SystemExtensions.Collections.Generic.DictionaryExtensions;
+using DictionaryExtensions = NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic.DictionaryExtensions;
 
 #pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NET build.
 

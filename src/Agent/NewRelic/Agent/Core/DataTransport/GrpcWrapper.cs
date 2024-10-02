@@ -5,7 +5,7 @@ using System;
 using Grpc.Core;
 using System.Threading;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System.Collections.Generic;
 
 #if LEGACY_GRPC

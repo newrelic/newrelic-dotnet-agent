@@ -223,6 +223,14 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="disableFileSystemWatcher" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If disableFileSystemWatcher is set to true, then newrelic.config and instrumentation XML file changes, additions, or deletions will not be detected and applied after the application has been started.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
@@ -1216,7 +1224,7 @@
                         <xs:attribute name="excludeNewrelicHeader" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Set this to true to disable adding of the newrelic header to outgoing requests.  It is disabled by default.
+                                    Set this to true to exclude the newrelic header from outgoing requests.  It is included by default.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
@@ -1954,6 +1962,13 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="detectAzureFunction" type="xs:boolean" default="true"  use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    This attribute controls whether to look for Azure Function environment variables (optional). The default is true.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                         <xs:attribute name="logicalProcessors" type="xs:int" use="optional">
                             <xs:annotation>
                                 <xs:documentation>

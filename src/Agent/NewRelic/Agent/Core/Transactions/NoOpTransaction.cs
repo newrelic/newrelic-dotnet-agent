@@ -8,8 +8,8 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.CodeAttributes;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,6 +23,7 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsValid => false;
         public bool IsFinished => false;
         public ISegment CurrentSegment => Segment.NoOpSegment;
+        public bool HasHttpResponseStatusCode => false;
 
         public DateTime StartTime => DateTime.UtcNow;
 
@@ -73,7 +74,10 @@ namespace NewRelic.Agent.Core.Transactions
             return Segment.NoOpSegment;
         }
 
-        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
+        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName,
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
 #if DEBUG
             Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");
@@ -319,6 +323,11 @@ namespace NewRelic.Agent.Core.Transactions
         }
 
         public void AddLambdaAttribute(string name, object value)
+        {
+            return;
+        }
+
+        public void AddFaasAttribute(string name, object value)
         {
             return;
         }

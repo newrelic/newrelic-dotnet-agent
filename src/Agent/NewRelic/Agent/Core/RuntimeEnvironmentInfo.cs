@@ -3,8 +3,7 @@
 
 using System;
 using System.IO;
-using NewRelic.Core.CodeAttributes;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core
 {

@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace CompositeTests
 {

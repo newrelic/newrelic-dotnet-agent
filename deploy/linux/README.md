@@ -32,11 +32,11 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 10.0
 
 5. Build the Docker container:
 
-        docker-compose build
+        docker compose build
 
 6. Run the deploy (or rollback) process:
 
-        docker-compose run deploy_packages
+        docker compose run deploy_packages
 
 Note that the scripts in ./deploy_scripts came from the PHP agent team and have a lot of logic in them to support their particular build/test/release processes, 
 not all of which we are using.  However, since we are sharing the same public package sources with the PHP agent, anything this script does needs to be cautious 

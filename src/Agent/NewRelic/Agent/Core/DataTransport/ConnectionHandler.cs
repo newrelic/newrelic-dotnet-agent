@@ -9,16 +9,16 @@ using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
-using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
-using DictionaryExtensions = NewRelic.SystemExtensions.Collections.Generic.DictionaryExtensions;
+using DictionaryExtensions = NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic.DictionaryExtensions;
 
 namespace NewRelic.Agent.Core.DataTransport
 {

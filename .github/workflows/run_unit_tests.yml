@@ -43,7 +43,7 @@ jobs:
       test_results_path: tests\TestResults
 
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -54,14 +54,14 @@ jobs:
         run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c # v4.4.1
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
         with:
             flags: Agent
             directory: ${{ env.test_results_path }}
             token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage report artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
             name: UnitTestResults # Artifact name        
             path: ${{ env.test_results_path }} # Directory containing files to upload

@@ -8,7 +8,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests

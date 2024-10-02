@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 

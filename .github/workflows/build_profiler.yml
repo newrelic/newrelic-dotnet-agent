@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -109,21 +109,21 @@ jobs:
             mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c # v4.4.1
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
         with:
             flags: Profiler
             files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
             token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Archive Build Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: profiler-windows
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
       - name: Archive Code Coverage Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: profiler-code-coverage
           path: |
@@ -139,6 +139,7 @@ jobs:
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEWRELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
 
     steps:
       # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
@@ -148,7 +149,7 @@ jobs:
       #     egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -164,8 +165,8 @@ jobs:
       - name: Build Linux Profiler
         run: |
           cd ${{ env.profiler_path }}
-          docker-compose build build
-          docker-compose run build
+          docker compose build build
+          docker compose run build
         shell: bash
 
       - name: Move Profiler to staging folder
@@ -175,7 +176,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -193,12 +194,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -247,7 +248,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -272,24 +273,24 @@ jobs:
   
     steps:
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
       - name: Download Windows Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-windows
           path: ${{ github.workspace }}/_workingDir
       
       - name: Download Linux amd64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/_workingDir
 
       - name: Download Linux arm64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/_workingDir
@@ -347,7 +348,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
@@ -356,7 +357,7 @@ jobs:
           sudo apt-get install -y xmlstarlet
 
       - name: Checkout
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -370,7 +371,7 @@ jobs:
           rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@6d6857d36972b65feb161a90e484f2984215f83e # v6.0.5
+        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
         with:
             commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
             title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"

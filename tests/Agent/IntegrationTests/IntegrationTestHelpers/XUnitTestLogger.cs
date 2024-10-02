@@ -23,12 +23,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public void WriteLine(string message)
         {
-            _xunitOutput?.WriteLine(message);
+            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}");
         }
 
         public void WriteLine(string format, params object[] args)
         {
-            _xunitOutput?.WriteLine(format, args);
+            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
         }
     }
 }

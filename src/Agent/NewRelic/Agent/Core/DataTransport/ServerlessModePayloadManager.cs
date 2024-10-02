@@ -8,8 +8,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.DataTransport

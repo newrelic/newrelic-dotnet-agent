@@ -13,7 +13,7 @@
     
     <!-- 2.0.0 is from March 2020 -->
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- 2.0.0 is from April 2020 -->
     <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
@@ -53,7 +53,7 @@
 
     <!-- Non-event libraries -->
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.10.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.1" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

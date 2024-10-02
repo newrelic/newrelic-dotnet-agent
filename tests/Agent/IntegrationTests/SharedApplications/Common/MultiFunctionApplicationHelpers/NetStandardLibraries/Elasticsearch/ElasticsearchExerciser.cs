@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -27,7 +27,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         /// Sets the library to use for further actions
         /// </summary>
         /// <param name="client">ElasticsearchNet, NEST, or ElasticClients</param>
-        public void SetClient(string clientType)
+        public async Task SetClient(string clientType)
         {
             if (Enum.TryParse(clientType, out ClientType client))
             {
@@ -44,7 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                         _client = new ElasticsearchElasticClient();
                         break;
                 }
-                _client.Connect();
+                await _client.ConnectAsync();
             }
             else
             {
@@ -94,6 +94,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void GenerateError() => _client.GenerateError();
+        public async Task GenerateErrorAsync() => await _client.GenerateErrorAsync();
     }
 }

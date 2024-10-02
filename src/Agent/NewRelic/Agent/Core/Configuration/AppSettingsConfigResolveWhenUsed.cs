@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using NewRelic.Core;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static string GetDotnetEnvironment()
         {
-            var env = new SystemInterfaces.Environment();
+            var env = new SharedInterfaces.Environment();
             // Determine the environment (e.g. Production, Development, Staging, etc.) by considering the following env vars in order
             // "DOTNET_ENVIRONMENT" takes precedence over "ASPNETCORE_ENVIRONMENT", even for ASP.NET Core applications
             // EnvironmentName is proprietary to our agent and the behavior as of version 10.20 is to not take precedence over the .NET builtins

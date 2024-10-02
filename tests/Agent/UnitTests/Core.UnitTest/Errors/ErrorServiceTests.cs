@@ -9,8 +9,8 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.SystemInterfaces;
-using NewRelic.SystemInterfaces.Web;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NUnit.Framework;
 using Telerik.JustMock;
 

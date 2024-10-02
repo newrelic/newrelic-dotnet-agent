@@ -11,8 +11,8 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System.Net;
 using System.IO;
-using NewRelic.Core.JsonConverters;
-using NewRelic.Core.JsonConverters.BedrockPayloads;
+using NewRelic.Agent.Extensions.JsonConverters;
+using NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {

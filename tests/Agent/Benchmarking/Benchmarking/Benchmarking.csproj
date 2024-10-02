@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net481</TargetFrameworks>
     <AssemblyName>Benchmarking</AssemblyName>
     <RootNamespace>Benchmarking</RootNamespace>
     <Description></Description>

@@ -10,8 +10,8 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
-using NewRelic.Parsing.ConnectionString;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using StackExchange.Redis.Profiling;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus

@@ -4,14 +4,12 @@
 #if !NETFRAMEWORK
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.IO;
 using System.IO.Compression;
 using Telerik.JustMock;
 using NUnit.Framework;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using Telerik.JustMock.Helpers;
 
@@ -40,30 +38,30 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         [Test]
-        public async Task GetContentAsync_ReturnsEmptyResponseBody_WhenContentIsNull()
+        public void GetContent_ReturnsEmptyResponseBody_WhenContentIsNull()
         {
             _mockHttpResponseMessage.Arrange(message => message.Content).Returns((IHttpContentWrapper)null);
 
-            var result = await _httpResponse.GetContentAsync();
+            var result = _httpResponse.GetContent();
 
             Assert.That(result, Is.EqualTo(Constants.EmptyResponseBody));
         }
 
         [Test]
-        public async Task GetContentAsync_ReturnsContent_WhenContentIsNotNull()
+        public void GetContent_ReturnsContent_WhenContentIsNotNull()
         {
             var mockContent = Mock.Create<IHttpContentWrapper>();
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(TestResponseBody));
             _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
-            mockContent.Arrange(content => content.ReadAsStreamAsync()).ReturnsAsync((Stream)stream);
+            mockContent.Arrange(content => content.ReadAsStream()).Returns(stream);
 
-            var result = await _httpResponse.GetContentAsync();
+            var result = _httpResponse.GetContent();
 
             Assert.That(result, Is.EqualTo(TestResponseBody));
         }
 
         [Test]
-        public async Task GetContentAsync_HandlesGzipDecompression_WhenContentEncodingIsGzip()
+        public void GetContent_HandlesGzipDecompression_WhenContentEncodingIsGzip()
         {
             var compressedStream = new MemoryStream();
             using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, true))
@@ -79,9 +77,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             var mockHeaders = Mock.Create<IHttpContentHeadersWrapper>();
             mockContent.Arrange(content => content.Headers).Returns(mockHeaders);
             mockHeaders.Arrange(headers => headers.ContentEncoding).Returns(new List<string> { "gzip" });
-            mockContent.Arrange(content => content.ReadAsStreamAsync()).ReturnsAsync((Stream)compressedStream);
+            mockContent.Arrange(content => content.ReadAsStream()).Returns(compressedStream);
 
-            var result = await _httpResponse.GetContentAsync();
+            var result = _httpResponse.GetContent();
 
             Assert.That(result, Is.EqualTo(TestResponseBody));
         }

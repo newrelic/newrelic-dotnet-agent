@@ -9,9 +9,8 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Helpers;
-using NewRelic.SystemExtensions;
-using NewRelic.SystemExtensions.Collections.Generic;
-using IEnumerableExtensions = NewRelic.SystemExtensions.Collections.Generic.IEnumerableExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {

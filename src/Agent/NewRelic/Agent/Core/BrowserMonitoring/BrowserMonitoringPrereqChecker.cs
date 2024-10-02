@@ -8,7 +8,7 @@ using System.Net.Mime;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

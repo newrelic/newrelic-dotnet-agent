@@ -13,7 +13,6 @@
     <Reference Include="System.ServiceModel.Web" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
   <ItemGroup>

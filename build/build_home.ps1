@@ -59,6 +59,10 @@ foreach ($wrapperDir in $wrapperDirs) {
     if ($netFrameworkPath = Resolve-Path "$wrapperDirPath\bin\$Configuration\net4*") {
         $dllObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
         $xmlObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter Instrumentation.xml
+        Write-Host "netFrameworkPath: $netFrameworkPath"
+        Write-Host "wrapperName: $wrapperName"
+        Write-Host "dllObject: $dllObject"
+        Write-Host "xmlObject: $xmlObject"
         $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
     }
 

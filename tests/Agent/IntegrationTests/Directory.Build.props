@@ -1,0 +1,12 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>
+      VSTHRD200, <!-- Use `Async` suffix for async methods -->
+      VSTHRD105, <!-- Avoid method overloads that assume `TaskScheduler.Current` -->
+      VSTHRD002 <!-- Avoid problematic synchronous waits -->
+    </NoWarn>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+</Project>

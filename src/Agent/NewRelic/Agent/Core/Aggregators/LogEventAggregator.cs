@@ -10,9 +10,9 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Collections;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {

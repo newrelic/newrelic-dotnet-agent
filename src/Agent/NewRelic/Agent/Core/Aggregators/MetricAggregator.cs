@@ -9,8 +9,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
 {

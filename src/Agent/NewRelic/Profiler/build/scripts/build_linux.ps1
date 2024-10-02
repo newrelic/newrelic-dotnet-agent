@@ -11,11 +11,11 @@ Write-Host "********"
 $baseProfilerPath = (Get-Item (Split-Path $script:MyInvocation.MyCommand.Path)).parent.parent.FullName
 Push-Location "$baseProfilerPath"
 
-Write-Host "docker-compose build build"
-docker-compose build build
+Write-Host "docker compose build build"
+docker compose build build
 
-Write-Host "docker-compose run build"
-docker-compose run build
+Write-Host "docker compose run build"
+docker compose run build
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode

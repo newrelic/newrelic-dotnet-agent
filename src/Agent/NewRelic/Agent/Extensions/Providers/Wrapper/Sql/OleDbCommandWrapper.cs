@@ -6,7 +6,7 @@ using System;
 using System.Data.OleDb;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {

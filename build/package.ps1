@@ -18,7 +18,6 @@ $packagesToBuild = @(
     "dotnet run --project '$artifactBuilderCsproj' NugetAzureWebSites $configuration x64",
     "dotnet run --project '$artifactBuilderCsproj' NugetAzureWebSites $configuration x86",
     "dotnet run --project '$artifactBuilderCsproj' NugetAgentApi $configuration",
-    "dotnet run --project '$artifactBuilderCsproj' NugetAgentExtensions $configuration",
     "dotnet run --project '$artifactBuilderCsproj' NugetAzureCloudServices $configuration",
     "dotnet run --project '$artifactBuilderCsproj' NugetAgent $configuration",
     "dotnet run --project '$artifactBuilderCsproj' ZipArchives $configuration",

@@ -799,6 +799,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool forceNewTransactionOnNewThreadField;
         
+        private bool disableFileSystemWatcherField;
+        
         /// <summary>
         /// configurationService class constructor
         /// </summary>
@@ -812,6 +814,7 @@ namespace NewRelic.Agent.Core.Config
             this.sendDataOnExitThresholdField = ((float)(60000F));
             this.completeTransactionsOnThreadField = false;
             this.forceNewTransactionOnNewThreadField = false;
+            this.disableFileSystemWatcherField = false;
         }
         
         public string obscuringKey
@@ -1031,6 +1034,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.forceNewTransactionOnNewThreadField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool disableFileSystemWatcher
+        {
+            get
+            {
+                return this.disableFileSystemWatcherField;
+            }
+            set
+            {
+                this.disableFileSystemWatcherField = value;
             }
         }
         
@@ -5707,6 +5724,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool detectKubernetesField;
         
+        private bool detectAzureFunctionField;
+        
         private System.Nullable<int> logicalProcessorsField;
         
         private System.Nullable<int> totalRamMibField;
@@ -5724,6 +5743,7 @@ namespace NewRelic.Agent.Core.Config
             this.detectPcfField = true;
             this.detectDockerField = true;
             this.detectKubernetesField = true;
+            this.detectAzureFunctionField = true;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -5807,6 +5827,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.detectKubernetesField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool detectAzureFunction
+        {
+            get
+            {
+                return this.detectAzureFunctionField;
+            }
+            set
+            {
+                this.detectAzureFunctionField = value;
             }
         }
         

@@ -8,7 +8,7 @@ using NewRelic.Agent.Core.Attributes;
 using Google.Protobuf.Collections;
 using Newtonsoft.Json;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.WireModels;
 

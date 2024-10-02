@@ -18,11 +18,7 @@ namespace ArtifactBuilder
 
         protected override void CreateAgentComponents()
         {
-            var agentDllsForExtensionDirectory = new List<string>()
-            {
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.dll"
-            };
+            var agentDllsForExtensionDirectory = new List<string>();
 
             var storageProviders = new List<string>()
             {
@@ -68,6 +64,9 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.dll",
             };
 
             var wrapperXmls = new[]
@@ -107,6 +106,9 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml",
             };
 
             ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";

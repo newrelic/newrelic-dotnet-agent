@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _proxy = proxy;
         }
 
-        public abstract Task<IHttpResponse> SendAsync(IHttpRequest request);
+        public abstract IHttpResponse Send(IHttpRequest request);
 
         public virtual void Dispose()
         {

@@ -1,11 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using Newtonsoft.Json;
 using NewRelic.Agent.Core.Attributes;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {

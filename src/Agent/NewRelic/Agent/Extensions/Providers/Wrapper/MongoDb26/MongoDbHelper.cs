@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing.ConnectionString;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.MongoDb26

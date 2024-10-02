@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing;
 using NUnit.Framework;
 using System.Collections.Generic;
 

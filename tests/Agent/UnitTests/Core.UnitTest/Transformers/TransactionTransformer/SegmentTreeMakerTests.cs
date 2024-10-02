@@ -7,7 +7,7 @@ using System.Linq;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 

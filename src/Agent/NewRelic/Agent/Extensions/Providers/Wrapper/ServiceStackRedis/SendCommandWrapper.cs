@@ -3,8 +3,8 @@
 
 using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions;
-using NewRelic.Parsing.ConnectionString;
+using NewRelic.Agent.Extensions.SystemExtensions;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api;

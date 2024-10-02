@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var dataTransportService = Mock.Create<DataTransport.IDataTransportService>();
             var scheduler = Mock.Create<Time.IScheduler>();
-            var processStatic = Mock.Create<SystemInterfaces.IProcessStatic>();
+            var processStatic = Mock.Create<SharedInterfaces.IProcessStatic>();
             var agentHealthReporter = Mock.Create<AgentHealth.IAgentHealthReporter>();
             _sqlTraceAggregator = new SqlTraceAggregator(dataTransportService, scheduler, processStatic, agentHealthReporter);
 

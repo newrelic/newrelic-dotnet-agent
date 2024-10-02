@@ -181,8 +181,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
                 //There shouldn't be any OtherTransactions because no instrumentation has been applied instructing
                 //the agent to create another transaction.
-                () => Assert.Empty(metrics.Where(x => x.MetricSpec.Name.StartsWith("OtherTransaction", StringComparison.OrdinalIgnoreCase))),
-
+                () => Assert.DoesNotContain(metrics, x => x.MetricSpec.Name.StartsWith("OtherTransaction", StringComparison.OrdinalIgnoreCase)),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );

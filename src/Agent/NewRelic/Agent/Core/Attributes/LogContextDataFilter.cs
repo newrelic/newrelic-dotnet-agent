@@ -8,7 +8,7 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Attributes
 {

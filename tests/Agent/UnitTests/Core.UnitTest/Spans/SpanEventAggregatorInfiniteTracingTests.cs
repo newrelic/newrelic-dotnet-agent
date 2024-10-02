@@ -14,7 +14,7 @@ using System.Linq;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Core.Time;
 
 namespace NewRelic.Agent.Core.Spans.Tests

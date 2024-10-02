@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <!--Supports all MemcachedClient and "DistributedCache" methods, except MultiX methods.-->
+    <tracerFactory name="EnyimMemcachedCoreWrapper">
+
+      <!--MemcachedClient<T> calls into MemcachedClient-->
+      <!--DistributedCache is just MemcachedClient, not a separate class-->
+      <match assemblyName="EnyimMemcachedCore" className="Enyim.Caching.MemcachedClient">
+        <!--Add/Async, Set/Async, Replace/Async, Store/Async, Cas-->
+        <exactMethodMatcher methodName="PerformStore" parameters="Enyim.Caching.Memcached.StoreMode,System.String,System.Object,System.UInt32,System.UInt64&amp;,System.Int32&amp;" />
+        <exactMethodMatcher methodName="PerformStoreAsync" />
+
+        <!--Get > TryGet > PerformTryGet-->
+        <!--GetWithCas > TryGetWithCas > PerformTryGet-->
+        <!--GetWithCas<T> > TryGetWithCas > PerformTryGet-->
+        <exactMethodMatcher methodName="PerformTryGet" />
+
+        <!--Get<T>-->
+        <exactMethodMatcher methodName="PerformGet" />
+
+        <!--GetValueAsync-->
+        <exactMethodMatcher methodName="GetAsync" parameters="System.String" />
+
+        <!--Increment, Decrement, CasMutate-->
+        <exactMethodMatcher methodName="PerformMutate" parameters="Enyim.Caching.Memcached.MutationMode,System.String,System.UInt64,System.UInt64,System.UInt32,System.UInt64&amp;" />
+
+        <!--TouchAsync-->
+        <exactMethodMatcher methodName="PerformMutateAsync" />
+
+        <!--Append, Prepend-->
+        <exactMethodMatcher methodName="PerformConcatenate" />
+        
+        <exactMethodMatcher methodName="Remove" />
+        <exactMethodMatcher methodName="RemoveAsync" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

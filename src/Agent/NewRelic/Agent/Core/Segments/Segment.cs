@@ -7,7 +7,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
 using System.Threading;
-using NewRelic.Core;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Spans;

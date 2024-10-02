@@ -3,10 +3,5 @@
     <LangVersion>default</LangVersion>
     <RootProjectDirectory>$(MSBuildThisFileDirectory)</RootProjectDirectory>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>
-      VSTHRD200, <!-- Use `Async` suffix for async methods -->
-      VSTHRD105, <!-- Avoid method overloads that assume `TaskScheduler.Current` -->
-      VSTHRD002 <!-- Avoid problematic synchronous waits -->
-    </NoWarn>
   </PropertyGroup>
 </Project>

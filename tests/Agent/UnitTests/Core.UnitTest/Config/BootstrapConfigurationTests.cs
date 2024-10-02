@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -33,6 +33,8 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.AgentEnabledAt, Is.EqualTo("Default value"));
                 Assert.That(config.DebugStartupDelaySeconds, Is.EqualTo(0));
                 Assert.That(config.ServerlessModeEnabled, Is.False);
+                Assert.That(config.ServerlessFunctionName, Is.Null);
+                Assert.That(config.ServerlessFunctionVersion, Is.Null);
             });
         }
 

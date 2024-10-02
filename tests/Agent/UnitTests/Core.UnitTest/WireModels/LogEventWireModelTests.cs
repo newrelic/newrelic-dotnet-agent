@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using NUnit.Framework;
 using Telerik.JustMock;
 

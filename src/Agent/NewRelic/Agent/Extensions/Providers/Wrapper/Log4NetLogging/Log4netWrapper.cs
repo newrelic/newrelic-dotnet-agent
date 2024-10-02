@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -21,11 +21,6 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
         private static Func<object, IDictionary> _getProperties; // getter for Properties property
-
-        private static Func<object, object> _getLegacyProperties; // getter for legacy Properties property
-        private static Func<object, Hashtable> _getLegacyHashtable; // getter for Properties hashtable property
-
-        private static bool _legacyVersion = false;
 
         public bool IsTransactionRequired => false;
 
@@ -59,17 +54,7 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            if (_getLogException == null)
-            {
-                if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject", out _getLogException))
-                {
-                    // Legacy property, mainly used by Sitecore
-                    if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "m_thrownException", out _getLogException))
-                    {
-                        _getLogException = (x) => null;
-                    }
-                }
-            }
+            _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
@@ -102,36 +87,9 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-
-            if (_getGetProperties == null && !VisibilityBypasser.Instance.TryGenerateParameterlessMethodCaller(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties", out _getGetProperties))
-            {
-                // Legacy property, mainly used by Sitecore
-                if (VisibilityBypasser.Instance.TryGeneratePropertyAccessor(logEventType, "MappedContext", out _getGetProperties))
-                    _legacyVersion = true;
-                else
-                    _getGetProperties = (x) => null;
-            }
+            _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
 
             var contextData = new Dictionary<string, object>();
-            // In older versions of log4net, there may be additional properties
-            if (_legacyVersion)
-            {
-                // Properties is a "PropertiesCollection", an internal type
-                var getLegacyProperties = _getLegacyProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Properties");
-                var legacyProperties = getLegacyProperties(logEvent);
-
-                // PropertyCollection has an internal hashtable that stores the data. The only public method for
-                // retrieving the data is the indexer [] which is more of a pain to get via reflection.
-                var propertyCollectionType = legacyProperties.GetType();
-                var getHashtable = _getLegacyHashtable ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Hashtable>(propertyCollectionType.Assembly.ToString(), propertyCollectionType.FullName, "m_ht");
-
-                var hashtable = getHashtable(legacyProperties);
-
-                foreach (var key in hashtable.Keys)
-                {
-                    contextData.Add(key.ToString(), hashtable[key]);
-                }
-            }
 
             var propertiesDictionary = _getGetProperties(logEvent);
 

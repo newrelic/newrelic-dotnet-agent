@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -41,6 +41,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("collect_traces")]
         public bool? TraceCollectionEnabled { get; set; }
+
+        [JsonProperty("collect_ai")]
+        public bool? AICollectionEnabled { get; set; }
 
         [JsonProperty("data_report_period")]
         public long? DataReportPeriod { get; set; }

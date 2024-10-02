@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading;
@@ -25,6 +25,12 @@ namespace NewRelic.Agent.Core.Config
 
         public ConfigurationTracker(IConfigurationService configurationService, INativeMethods nativeMethods)
         {
+            if (configurationService.Configuration.DisableFileSystemWatcher)
+            {
+                Log.Debug("Live updates to newrelic.config will not be applied because they have been disabled by local configuration.");
+                return;
+            }
+
             _nativeMethods = nativeMethods;
             var fileName = configurationService.Configuration.NewRelicConfigFilePath;
             if (fileName == null)

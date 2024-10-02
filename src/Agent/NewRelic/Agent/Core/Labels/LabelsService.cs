@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
-using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Labels
 {

@@ -33,5 +33,12 @@ namespace KafkaTestApp.Controllers
             await Program.Producer.ProduceAsync();
             return "Complete";
         }
+
+        [HttpGet("bootstrap_server")]
+        public string GetBootstrapServer()
+        {
+            return Program.GetBootstrapServer();
+        }
+
     }
 }

@@ -33,12 +33,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         const string IndexName = "flights";
 
+        protected readonly bool _syncMethodsOk;
+        const string SyncMethodSkipReason = "Synchronous methods are deprecated in latest Elastic.Clients.Elasticsearch";
 
-        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType) : base(fixture)
+
+        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType, bool syncMethodsOk = true) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _clientType = clientType;
+            _syncMethodsOk = syncMethodsOk;
 
             _host = GetHostFromElasticServer(_clientType);
 
@@ -51,13 +55,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser SearchAsync");
             _fixture.AddCommand($"ElasticsearchExerciser IndexManyAsync");
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
+            _fixture.AddCommand($"ElasticsearchExerciser GenerateErrorAsync");
 
             // Sync operations
-            _fixture.AddCommand($"ElasticsearchExerciser Index");
-            _fixture.AddCommand($"ElasticsearchExerciser Search");
-            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
-            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
-            _fixture.AddCommand($"ElasticsearchExerciser GenerateError");
+            if (_syncMethodsOk )
+            {
+                _fixture.AddCommand($"ElasticsearchExerciser Index");
+                _fixture.AddCommand($"ElasticsearchExerciser Search");
+                _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
+                _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
+
+            }
 
             _fixture.AddActions
             (
@@ -82,27 +90,31 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.Initialize();
         }
 
-        [Fact]
+        [SkippableFact]
         public void Index()
         {
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Index");
         }
 
-        [Fact]
+        [SkippableFact]
         public void Search()
         {
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Search");
         }
 
-        [Fact]
+        [SkippableFact]
         public void IndexMany()
         {
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("IndexMany");
         }
 
-        [Fact]
+        [SkippableFact]
         public void MultiSearch()
         {
+            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("MultiSearch");
         }
 
@@ -131,9 +143,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
 
         [Fact]
-        public void Error()
+        public void ErrorAsync()
         {
-            ValidateError("GenerateError");
+            ValidateError("GenerateErrorAsync");
         }
 
         private void ValidateError(string operationName)
@@ -318,7 +330,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk : false)
         {
         }
     }
@@ -336,7 +348,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false)
         {
         }
     }

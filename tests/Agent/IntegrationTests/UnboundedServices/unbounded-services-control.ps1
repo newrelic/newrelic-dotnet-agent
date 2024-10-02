@@ -20,7 +20,7 @@ Param(
 Function StartUnboundedServices([string] $scriptPath) {
     Push-Location "$scriptPath"
     Write-Host "Launching docker services"
-    docker-compose up -d
+    docker compose up -d
     Write-Host "Waiting $StartDelaySeconds seconds for services to be ready"
     Start-Sleep $StartDelaySeconds #TODO: something smarter than this
     Pop-Location
@@ -28,7 +28,7 @@ Function StartUnboundedServices([string] $scriptPath) {
 
 Function StopUnboundedServices([string] $scriptPath) {
     Push-Location "$scriptPath"
-    docker-compose down
+    docker compose down
     Pop-Location
 }
 

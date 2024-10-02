@@ -9,9 +9,9 @@ using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data;
-using NewRelic.Core;
-using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Parsing;
 using System.Threading;
+using NewRelic.Agent.Core.Utilities;
 
 namespace BenchmarkingTests.Tests
 {

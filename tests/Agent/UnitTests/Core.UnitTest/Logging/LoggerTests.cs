@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void SetUp()
         {
             _serilogLogger = Mock.Create<Serilog.ILogger>();
-            Log.Logger = _serilogLogger;
+            Serilog.Log.Logger = _serilogLogger;
             _logger = new Logger();
 
             _testMessage = "Test message";

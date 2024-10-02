@@ -7,7 +7,7 @@
     <authors>New Relic</authors>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api</projectUrl>
-    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The New Relic .NET Agent API supports custom error and metric reporting, and custom transaction parameters. If the agent is not installed or is disabled, method invocations of this API will have no effect. You can find more information about the NewRelic.Agent.Api at https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api.</description>

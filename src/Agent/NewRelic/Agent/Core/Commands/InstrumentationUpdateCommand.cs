@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Instrumentation;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.Core.Commands

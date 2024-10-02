@@ -7,7 +7,6 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Core;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;

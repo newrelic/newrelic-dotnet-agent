@@ -10,9 +10,9 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.TransactionTraces;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
 {

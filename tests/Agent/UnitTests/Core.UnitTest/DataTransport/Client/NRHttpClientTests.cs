@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _mockHttpClientWrapper.Dispose();
         }
         [Test]
-        public async Task SendAsync_ReturnsResponse_WhenSendAsyncSucceeds()
+        public void Send_ReturnsResponse_WhenSendAsyncSucceeds()
         {
             // Arrange
             var request = CreateHttpRequest();
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = _client.Send(request);
 
             // Assert
             Assert.That(response, Is.Not.Null);
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .Throws<HttpRequestException>();
 
             // Act & Assert
-            Assert.ThrowsAsync<HttpRequestException>(() => _client.SendAsync(request));
+            Assert.Throws<HttpRequestException>(() => _client.Send(request));
         }
 
         private IHttpRequest CreateHttpRequest()

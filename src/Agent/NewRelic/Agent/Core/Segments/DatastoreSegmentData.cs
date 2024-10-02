@@ -13,7 +13,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;

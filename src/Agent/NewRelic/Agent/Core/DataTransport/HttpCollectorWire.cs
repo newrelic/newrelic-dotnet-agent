@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -62,9 +62,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 foreach (var header in _requestHeadersMap)
                     request.Headers.Add(header.Key, header.Value);
 
-                using var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
+                using var response = httpClient.Send(request);
 
-                var responseContent = response.GetContentAsync().GetAwaiter().GetResult();
+                var responseContent = response.GetContent();
 
                 if (!response.IsSuccessStatusCode)
                 {

@@ -348,7 +348,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         throw new Exception(message);
                     }
                 }
-
+                catch (Exception ex)
+                {
+                    TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
+                    throw;
+                }
                 finally
                 {
                     if (AgentLogExpected)
@@ -560,6 +564,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
         }
+
+        protected void PostJson(string address, string payload)
+        {
+            var content = new StringContent(payload);
+
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+            var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccessStatusCode);
+        }
+
     }
 
 

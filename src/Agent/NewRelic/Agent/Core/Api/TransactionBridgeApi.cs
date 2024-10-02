@@ -8,7 +8,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Api
 {

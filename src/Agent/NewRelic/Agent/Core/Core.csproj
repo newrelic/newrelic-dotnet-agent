@@ -24,9 +24,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="NewRelic.Core.BuildTimestamp">
+    <AssemblyAttribute Include="NewRelic.Agent.Core.Utilities.BuildTimestamp">
       <!--
-          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Core.BuildTimestamp("637213171838522390")]
+          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Agent.Core.Utilities.BuildTimestamp("637213171838522390")]
           Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
           https://github.com/microsoft/msbuild/issues/2281
       -->
@@ -35,24 +35,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.27.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.64.0">
+    <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.28.2" />
+    <PackageReference Include="Grpc.Tools" Version="2.66.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Serilog" Version="[3.0.1]" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="[4.1.0]" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="ILRepack" Version="2.0.33">
+    <PackageReference Include="ILRepack" Version="2.0.34">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,7 +63,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Autofac" Version="4.5.0" />
     <!-- .NET Framework needs to use the legacy gRPC library -->
     <PackageReference Include="Grpc" Version="2.46.6" />
     <PackageReference Include="Grpc.Core" Version="2.46.6" />
@@ -71,7 +72,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="Autofac" Version="7.1.0" />
     <!-- .NET Core can use the modern gRPC library -->
     <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
@@ -81,8 +81,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
-    <ProjectReference Include="..\Parsing\Parsing.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
@@ -105,8 +103,6 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Google.Protobuf'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core.Api'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'ICSharpCode.SharpZipLib'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Core'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.Async'" />
@@ -114,6 +110,9 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.Debug'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.EventLog'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Serilog.Sinks.File'" />
+      <!-- System.Diagnostics.DiagnosticSource and System.Threading.Channels are a dependency of Serilog -->
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Diagnostics.DiagnosticSource'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Threading.Channels'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
@@ -145,7 +144,7 @@
 
     <PropertyGroup>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">20</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net8.0'">23</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net8.0'">21</ILRepackIncludeCount>
     </PropertyGroup>
 
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />

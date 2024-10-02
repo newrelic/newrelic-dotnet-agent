@@ -85,13 +85,25 @@ namespace NewRelic {
 
                 Level GetLevel() const noexcept
                 {
-                    if (!_console)
+                    if (!_console && (!_azureFunctionModeEnabled || _azureFunctionLogLevelOverride))
                     {
                         return _level;
                     }
+
                     // Console logging at debug or trace level incurs a very large
                     // performance hit. Clamp the log level to INFO in that case.
+                    // In Azure function mode, TRACE level debugging causes a crash, so limit to INFO or higher for now
                     return (_level < Level::LEVEL_INFO) ? Level::LEVEL_INFO : _level;
+                }
+
+
+                void SetAzureFunctionMode(bool isAzureFunctionMode)
+                {
+                    _azureFunctionModeEnabled = isAzureFunctionMode;
+                }
+
+                void SetAzureFunctionLogLevelOverride(bool overrideLogLevelRestriction) {
+                    _azureFunctionLogLevelOverride = overrideLogLevelRestriction;
                 }
 
                 void SetConsoleLogging(bool enabled)
@@ -124,6 +136,8 @@ namespace NewRelic {
                 {
                     return _mutex;
                 }
+
+
             private:
                 _Ostr _destination;
                 Level _level;
@@ -131,6 +145,8 @@ namespace NewRelic {
                 bool _console;
                 bool _enabled;
                 bool _initialized;
+                bool _azureFunctionModeEnabled;
+                bool _azureFunctionLogLevelOverride;
             };
 
             using FileLogger = Logger<std::wofstream>;

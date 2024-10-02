@@ -8,7 +8,7 @@ using System.Text;
 using NewRelic.Agent.Core.Logging;
 using Serilog.Events;
 using Serilog;
-using Log = NewRelic.Core.Logging.Log;
+using Log = NewRelic.Agent.Extensions.Logging.Log;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 
 namespace NewRelic.Agent.TestUtilities

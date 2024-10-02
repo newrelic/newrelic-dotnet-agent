@@ -5,4 +5,4 @@
 # the repo. Unless a later match takes precedence,
 # the users listed below will be requested for
 # review when someone opens a pull request.
-*       @newrelic/dotnet-code-reviewers
+*       @newrelic/DOTNET

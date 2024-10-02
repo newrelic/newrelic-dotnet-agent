@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Collections;
 using Newtonsoft.Json;
 using System;
 

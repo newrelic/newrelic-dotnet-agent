@@ -21,11 +21,9 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
-using NewRelic.Core;
-using NewRelic.Core.Logging;
-using NewRelic.Parsing;
-using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -73,6 +71,8 @@ namespace NewRelic.Agent.Core.Transactions
                 return Segment.NoOpSegment;
             }
         }
+
+        public bool HasHttpResponseStatusCode => TransactionMetadata.HttpResponseStatusCode.HasValue;
 
         public ITracingState TracingState { get; private set; }
 
@@ -245,7 +245,10 @@ namespace NewRelic.Agent.Core.Transactions
             return new CustomSegmentData(segmentName);
         }
 
-        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
+        public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName,
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
             if (Ignored)
                 return Segment.NoOpSegment;
@@ -254,7 +257,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 
             var segment = StartSegmentImpl(methodCall);
-            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName);
+            var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
@@ -283,7 +286,10 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
+        public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType,
+            MessageBrokerAction operation, string brokerVendorName, string destinationName,
+            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+            string serverAddress = null, int? serverPort = null, string routingKey = null)
         {
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
@@ -291,7 +297,7 @@ namespace NewRelic.Agent.Core.Transactions
             var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
             var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
-            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action);
+            return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey);
         }
 
         public AbstractSegmentData CreateMessageBrokerSerializationSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
@@ -786,7 +792,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void Release()
         {
-            End(captureResponseTime: false);
+            End(false);
         }
 
         private void SetTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
@@ -1366,7 +1372,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <param name="value">Value for attribute.</param>
         public void AddLambdaAttribute(string name, object value)
         {
-            if(string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
                 return;
@@ -1374,6 +1380,18 @@ namespace NewRelic.Agent.Core.Transactions
 
             var lambdaAttrib = _attribDefs.GetLambdaAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(lambdaAttrib, value);
+        }
+
+        public void AddFaasAttribute(string name, object value)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Log.Debug($"AddFaasAttribute - Unable to set FaaS value on transaction because the key is null/empty");
+                return;
+            }
+
+            var faasAttrib = _attribDefs.GetFaasAttribute(name);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
         }
     }
 }
