@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public void DeflateCompressedDataShouldDecompressToSameValue(string input)
         {
             var compressed = DataCompressor.Compress(input);
-            var decompressed = DataCompressor.Decompress(compressed);
+            var decompressed = DataCompressor.Decompress(compressed, DataCompressor.DeflateCompression);
 
             Assert.That(decompressed, Is.EqualTo(input));
         }
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public void GZipCompressedDataShouldDecompressToSameValue(string input)
         {
             var compressed = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.GzipCompression);
-            var decompressed = DecompressGzip(compressed);
+            var decompressed = DataCompressor.Decompress(compressed, DataCompressor.GzipCompression);
             Assert.That(decompressed, Is.EqualTo(input));
         }
 
@@ -60,17 +60,6 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             const string input = "input";
             Assert.DoesNotThrow(() => DataCompressor.Compress(new UTF8Encoding().GetBytes(input), compressionType));
-        }
-
-        private static string DecompressGzip(byte[] compressedBytes)
-        {
-            using var compressedStream = new MemoryStream(compressedBytes);
-            using var decompressedStream = new MemoryStream();
-            using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-            {
-                gzipStream.CopyTo(decompressedStream);
-            }
-            return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
     }
 }

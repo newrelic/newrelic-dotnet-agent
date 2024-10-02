@@ -26,14 +26,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public static byte[] Compress(byte[] bytes, string compressionType)
         {
-            using (var compressedStream = new MemoryStream())
+            using var compressedStream = new MemoryStream();
+
+            using (var compressor = GetCompressionOutputStream(compressedStream, compressionType))
             {
-                using (var compressor = GetCompressionOutputStream(compressedStream, compressionType))
-                {
-                    compressor.Write(bytes, 0, bytes.Length);
-                }
-                return compressedStream.ToArray();
+                compressor.Write(bytes, 0, bytes.Length);
             }
+
+            return compressedStream.ToArray();
         }
 
         private static Stream GetCompressionOutputStream(Stream stream, string requestedCompression)
@@ -42,21 +42,42 @@ namespace NewRelic.Agent.Core.DataTransport
             switch (compressionType)
             {
                 case DeflateCompression:
-                    return new DeflateStream(stream, CompressionLevel.Optimal, true);
+                    return new DeflateStream(stream, CompressionMode.Compress, true);
                 case GzipCompression:
-                    return new GZipStream(stream, CompressionLevel.Optimal, true);
+                    return new GZipStream(stream, CompressionMode.Compress, true);
                 default:
                     throw new ArgumentException($"compressionType is not one of the valid options: {compressionType}");
             }
         }
 
-        public static string Decompress(byte[] compressedBytes)
+        public static string Decompress(byte[] compressedBytes, string compressionType)
+        {
+            return compressionType.ToLower() switch
+            {
+                DeflateCompression => DecompressDeflate(compressedBytes),
+                GzipCompression => DecompressGZip(compressedBytes),
+                _ => throw new ArgumentException($"compressionType is not one of the valid options: {compressionType}")
+            };
+        }
+
+        public static string DecompressDeflate(byte[] compressedBytes)
         {
             using var compressedStream = new MemoryStream(compressedBytes);
             using var decompressedStream = new MemoryStream();
             using (var decompressor = new DeflateStream(compressedStream, CompressionMode.Decompress))
             {
                 decompressor.CopyTo(decompressedStream);
+            }
+            return Encoding.UTF8.GetString(decompressedStream.ToArray());
+        }
+
+        public static string DecompressGZip(byte[] bytes)
+        {
+            using var compressedStream = new MemoryStream(bytes);
+            using var decompressedStream = new MemoryStream();
+            using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            {
+                gzipStream.CopyTo(decompressedStream);
             }
             return Encoding.UTF8.GetString(decompressedStream.ToArray());
         }
