@@ -174,10 +174,10 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
 
                 //Cannot determine async-fire and forget because it will probably throw an error, but can determine what it starts with
-                () => Assert.NotEmpty(metrics.Where(x => x.MetricSpec.Name.StartsWith("WebTransaction/FireAndForgetTests/AF-", StringComparison.OrdinalIgnoreCase))),
+                () => Assert.True(metrics.Where(x => x.MetricSpec.Name.StartsWith("WebTransaction/FireAndForgetTests/AF-", StringComparison.OrdinalIgnoreCase)).Count() > 0),
 
                 //Cannot determine sync-fire and forget because it will probably throw an error, but can determine what it starts with
-                () => Assert.NotEmpty(metrics.Where(x => x.MetricSpec.Name.StartsWith("WebTransaction/FireAndForgetTests/SF-", StringComparison.OrdinalIgnoreCase))),
+                () => Assert.True(metrics.Where(x => x.MetricSpec.Name.StartsWith("WebTransaction/FireAndForgetTests/SF-", StringComparison.OrdinalIgnoreCase)).Count() > 0),
 
                 //There shouldn't be any OtherTransactions because no instrumentation has been applied instructing
                 //the agent to create another transaction.
