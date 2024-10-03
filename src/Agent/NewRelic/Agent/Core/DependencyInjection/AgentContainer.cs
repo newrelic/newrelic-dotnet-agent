@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         // use the scope instead of the container to resolve instances. This allows us to replace registrations in a new scope for unit testing
         private ILifetimeScope _scope;
-        private bool _disposedValue;
+        private bool _disposed;
         private readonly Dictionary<Type, object> _registrationsToReplace = new Dictionary<Type, object>();
 
         public AgentContainer()
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposedValue)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
                     _container = null;
                 }
 
-                _disposedValue = true;
+                _disposed = true;
             }
         }
 
