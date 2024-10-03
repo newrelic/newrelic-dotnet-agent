@@ -3,8 +3,9 @@
 
 using System;
 using System.Net;
+#if !NETFRAMEWORK
 using System.Net.Http;
-using System.Threading.Tasks;
+#endif
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
 
