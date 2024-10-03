@@ -139,6 +139,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(_metricBuilder.TryBuildLibraryVersionMetric(assemblyName, assemblyVersion));
         }
 
+        public void ReportCustomInstrumentation(string assemblyName, string className, string method)
+        {
+            TrySend(_metricBuilder.TryBuildCustomInstrumentationMetric(assemblyName, className, method));
+        }
+
         #region TransactionEvents
 
         public void ReportTransactionEventReservoirResized(int newSize)

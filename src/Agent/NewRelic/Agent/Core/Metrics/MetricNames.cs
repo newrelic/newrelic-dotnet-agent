@@ -628,6 +628,12 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityLibraryVersionPs + assemblyName + PathSeparator + assemblyVersion;
         }
 
+        private const string SupportabilityCustomInstrumentationPs = SupportabilityPs + "CustomInst" + PathSeparator;
+        public static string GetSupportabilityCustomInstrumentation(string assemblyName, string className, string method)
+        {
+            return SupportabilityCustomInstrumentationPs + assemblyName + PathSeparator + className + PathSeparator + method;
+        }
+
         // Utilization
         private const string SupportabilityUtilizationPs = SupportabilityPs + "utilization" + PathSeparator;
         private const string SupportabilityUtilizationBootIdError = SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
