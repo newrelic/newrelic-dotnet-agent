@@ -68,7 +68,7 @@ namespace nugetSlackNotifications
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Caught exception while checking {package.PackageName} for updates.");
-                    //await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
+                    await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
                 }
             }
 
@@ -103,7 +103,7 @@ namespace nugetSlackNotifications
             await AlertOnNewVersions(prUrl);
 
             // Currently don'y want to create issues, but may in the future
-            // IF/When we do, this shuold be moved above the PR creation so we can link issues to the PR
+            // If/When we do, this shuold be moved above the PR creation so we can link issues to the PR
             //await CreateGithubIssuesForNewVersions();
         }
 
