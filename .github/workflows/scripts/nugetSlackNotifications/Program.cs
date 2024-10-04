@@ -179,7 +179,7 @@ namespace nugetSlackNotifications
                     msg += $"\n\t:package: {versionData.PackageName} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
                 }
 
-                msg += $"\n\nI did the work so you won't have too!";
+                msg += $"\n\nI did the work so you won't have to!";
                 msg += $"\n" + prUrl + "\n";
 
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";

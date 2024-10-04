@@ -19,7 +19,7 @@ namespace nugetSlackNotifications
             var packages = Parse(csprojLines);
             if (packages.Count == 0)
             {
-                Log.Warning("No packages found in csproj file");
+                Log.Warning("No packages found in csproj file " + csprojPath);
                 return updateLog;
             }
 
