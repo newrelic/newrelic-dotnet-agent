@@ -231,40 +231,28 @@ namespace nugetSlackNotifications
                 var tokenAuth = new Credentials(_githubToken);
                 ghClient.Credentials = tokenAuth;
 
-                // Get the reference of the main branch
                 var masterReference = await ghClient.Git.Reference.Get(Owner, Repo, "heads/main");
-
-                // Create a new branch
                 var branchName = $"dotty/test-updates-{DateTime.Now.ToString("yyyy-MMM-dd")}";
                 var newBranch = new NewReference($"refs/heads/{branchName}", masterReference.Object.Sha);
                 await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
-
-                // Get the latest commit of the new branch
                 var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, masterReference.Object.Sha);
-
-                // Create a new tree
                 var nt = new NewTree { BaseTree = latestCommit.Tree.Sha };
-
                 foreach (var projectInfo in projectInfos)
                 {
-                    // Add files to the tree
+                    // string.Join with \n seems to allow github to see the changed lines and not the entire file as "changed"
                     nt.Tree.Add(new NewTreeItem
                     {
                         Path = projectInfo.ProjectFile,
                         Mode = "100644",
                         Type = TreeType.Blob,
-                        Content = await File.ReadAllTextAsync(Path.Combine(_searchRootPath, projectInfo.ProjectFile) + ".test")
+                        Content = string.Join('\n', await File.ReadAllLinesAsync(Path.Combine(_searchRootPath, projectInfo.ProjectFile)))
                     });
                 }
 
                 var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
-
-                // Create a new commit
                 var commitMessage = "test:Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
                 var newCommit = new NewCommit(commitMessage, newTree.Sha, masterReference.Object.Sha);
                 var commit = await ghClient.Git.Commit.Create(Owner, Repo, newCommit);
-
-                // Update the reference of the new branch to point to the new commit
                 var branchref = await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
                 Log.Information($"Successfully created {branchName} branch.");
 
