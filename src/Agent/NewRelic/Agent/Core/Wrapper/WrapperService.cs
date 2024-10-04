@@ -242,22 +242,6 @@ namespace NewRelic.Agent.Core.Wrapper
             }
         }
 
-        private void GenerateLibraryVersionSupportabilityMetric(InstrumentedMethodInfo instrumentedMethodInfo)
-        {
-            try
-            {
-                var reflectionAssemblyName = instrumentedMethodInfo.Method.Type.Assembly.GetName();
-                var assemblyName = reflectionAssemblyName.Name;
-                var assemblyVersion = reflectionAssemblyName.Version.ToString();
-
-                _agentHealthReporter.ReportLibraryVersion(assemblyName, assemblyVersion);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Failed to generate Library version Supportability Metric for {instrumentedMethodInfo.ToString()} : exception: {ex}");
-            }
-        }
-
         private void GenerateSupportabilityMetrics(InstrumentedMethodInfo instrumentedMethodInfo, bool isCustom)
         {
             try
@@ -276,7 +260,7 @@ namespace NewRelic.Agent.Core.Wrapper
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to generate Library version Supportability Metric for {instrumentedMethodInfo.ToString()} : exception: {ex}");
+                Log.Error($"Failed to generate Supportability Metrics for {instrumentedMethodInfo.ToString()} : exception: {ex}");
             }
         }
     }
