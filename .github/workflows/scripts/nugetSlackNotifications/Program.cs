@@ -72,9 +72,6 @@ namespace nugetSlackNotifications
                 }
             }
 
-
-
-
             if (!File.Exists(ProjectsJsonFilename))
             {
                 Log.Error($"{ProjectsJsonFilename} not found in the current directory. Exiting.");
@@ -103,13 +100,10 @@ namespace nugetSlackNotifications
             }
 
             var prUrl = await CreateGithubPullRequestForNewVersions(projectInfos, string.Join('\n', updateLog));
+            await AlertOnNewVersions(prUrl);
 
-
-
-
-
-
-            //await AlertOnNewVersions(prUrl);
+            // Currently don'y want to create issues, but may in the future
+            // IF/When we do, this shuold be moved above the PR creation so we can link issues to the PR
             //await CreateGithubIssuesForNewVersions();
         }
 
@@ -184,6 +178,10 @@ namespace nugetSlackNotifications
                 {
                     msg += $"\n\t:package: {versionData.PackageName} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
                 }
+
+                msg += $"\n\nI did the work so you won't have too!";
+                msg += $"\n" + prUrl + "\n";
+
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
                 await SendSlackNotification(msg);
