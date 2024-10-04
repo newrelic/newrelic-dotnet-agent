@@ -45,11 +45,6 @@ namespace NewRelic.Agent.Core.Aggregators
         protected override TimeSpan HarvestCycle => _configuration.LogEventsHarvestCycle;
         protected override bool IsEnabled => _configuration.LogEventCollectorEnabled;
 
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
-
         public override void Collect(LogEventWireModel loggingEventWireModel)
         {
             _agentHealthReporter.ReportLoggingEventCollected();
