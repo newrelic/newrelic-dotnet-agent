@@ -284,7 +284,6 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetNewRelicLogDirectory()
             {
-                // TODO: remove legacy env var name in v11
                 var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", "NEWRELIC_LOG_DIRECTORY");
                 if (newRelicLogDirectory != null && _checkDirectoryExists(newRelicLogDirectory)) return _getFullPath(newRelicLogDirectory);
 

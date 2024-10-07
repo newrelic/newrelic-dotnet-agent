@@ -1455,7 +1455,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string local)
         {
             _localConfig.service.licenseKey = local;
-            // TODO: remove legacy name in v11
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY")).Returns(newEnvironmentName);
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns(appSettingEnvironmentName);
 
@@ -4153,7 +4152,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("info", "finest", ExpectedResult = "INFO")]
         public string LoggingLevelTests(string environmentValue, string localConfigValue)
         {
-            // TODO: remove legacy name in v11
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns(environmentValue);
             _localConfig.log.level = localConfigValue;
 

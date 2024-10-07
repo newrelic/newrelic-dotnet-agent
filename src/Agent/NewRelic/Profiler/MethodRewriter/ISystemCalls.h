@@ -20,7 +20,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _isCoreClr = IsCore;
         }
 
-        // TODO: remove in v11
         virtual xstring_t GetLegacyNewRelicHomePathVariable()
         {
             return _isCoreClr
@@ -35,7 +34,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
                 : _X("NEW_RELIC_HOME");
         }
 
-        // TODO: remove in v11
         virtual xstring_t GetLegacyNewRelicInstallPathVariable()
         {
             return _X("NEWRELIC_INSTALL_PATH");
@@ -50,7 +48,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         {
             auto homePath = TryGetEnvironmentVariable(GetNewRelicHomePathVariable());
 
-            // TODO: remove in v11
             if (homePath == nullptr)
             {
                 homePath = TryGetEnvironmentVariable(GetLegacyNewRelicHomePathVariable());
@@ -61,7 +58,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         virtual std::unique_ptr<xstring_t> GetNewRelicInstallPath()
         {
             auto installPath = TryGetEnvironmentVariable(GetNewRelicInstallPathVariable());
-            // TODO: remove in v11
             if (installPath == nullptr)
             {
                 installPath = TryGetEnvironmentVariable(GetLegacyNewRelicInstallPathVariable());
@@ -72,7 +68,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         virtual bool GetForceProfiling()
         {
             return TryGetEnvironmentVariable(_X("NEW_RELIC_FORCE_PROFILING")) != nullptr
-                // TODO: remove in v11
                 || TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
@@ -86,7 +81,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"));
             return modernValue != nullptr
                 ? std::move(modernValue)
-                // TODO: remove in v11
                 : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
         }
 
@@ -95,7 +89,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"));
             return modernValue != nullptr
                 ? std::move(modernValue)
-                // TODO: remove in v11
                 : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
         }
 
@@ -104,7 +97,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_DIRECTORY"));
             return modernValue != nullptr
                 ? std::move(modernValue)
-                // TODO: remove in v11
                 :TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
         }
 
@@ -113,7 +105,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_LEVEL"));
             return modernValue != nullptr
                 ? std::move(modernValue)
-                // TODO: remove in v11
                 : TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
         }
 

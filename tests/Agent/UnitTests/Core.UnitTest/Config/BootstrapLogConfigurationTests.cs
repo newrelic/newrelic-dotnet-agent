@@ -162,7 +162,6 @@ namespace NewRelic.Agent.Core.Config
             return config.LogLevel;
         }
 
-        //TODO: remove in v11
         [TestCase(null, "info", ExpectedResult = "INFO")]
         [TestCase(null, "debug", ExpectedResult = "DEBUG")]
         [TestCase("error", "info", ExpectedResult = "ERROR")]

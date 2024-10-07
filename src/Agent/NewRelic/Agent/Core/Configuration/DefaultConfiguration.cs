@@ -211,7 +211,6 @@ namespace NewRelic.Agent.Core.Configuration
                 if (_agentLicenseKey != null)
                     return _agentLicenseKey;
 
-                // TODO: remove legacy env var name in v11
                 _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
                                    ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
 
@@ -2990,7 +2989,6 @@ namespace NewRelic.Agent.Core.Configuration
             var logLevel = "off";
             if (isLoggingEnabled)
             {
-                // TODO: remove legacy env var name in v11
                 logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL").ToUpper();
             }
 

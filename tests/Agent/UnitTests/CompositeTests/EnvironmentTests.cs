@@ -26,7 +26,6 @@ namespace CompositeTests
             System.Environment.SetEnvironmentVariable("NEW_RELIC_HOME", null);
         }
 
-        // TODO: remove in v11
         [Test]
         public void GetEnvironmentVariable_Supports_LegacyNaming()
         {
@@ -37,7 +36,6 @@ namespace CompositeTests
             Assert.That(result, Is.EqualTo("legacy"));
         }
 
-        // TODO: remove in v11
         [Test]
         public void GetEnvironmentVariable_Prefers_ModernNaming_IfBothAreSpecified()
         {

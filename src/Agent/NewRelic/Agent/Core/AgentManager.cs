@@ -286,7 +286,6 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
                     "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
-                    // TODO: remove in v11
                     "CORECLR_NEWRELIC_HOME",
                     "NEWRELIC_HOME",
                     "NEWRELIC_INSTALL_PATH",
@@ -296,9 +295,7 @@ namespace NewRelic.Agent.Core
 
                 List<string> environmentVariablesSensitive = new List<string> {
                     "NEW_RELIC_LICENSE_KEY",
-                    // TODO: remove in v11
                     "NEWRELIC_LICENSEKEY",
-
                     "NEW_RELIC_SECURITY_POLICIES_TOKEN",
                     "NEW_RELIC_PROXY_USER",
                     "NEW_RELIC_PROXY_PASS",

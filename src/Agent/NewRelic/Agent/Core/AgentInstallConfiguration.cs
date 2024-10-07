@@ -25,15 +25,12 @@ namespace NewRelic.Agent.Core
         public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
 #if NETSTANDARD2_0
-        // TODO: remove legacy env var name in v11
         private static readonly string[] NewRelicHomeEnvironmentVariables = ["CORECLR_NEW_RELIC_HOME", "CORECLR_NEWRELIC_HOME"];
         private const string RuntimeDirectoryName = "netcore";
 #else
-        // TODO: remove legacy env var name in v11
         private static readonly string[] NewRelicHomeEnvironmentVariables = ["NEW_RELIC_HOME", "NEWRELIC_HOME"];
         private const string RuntimeDirectoryName = "netframework";
 #endif
-        // TODO: remove legacy env var name in v11
         private static readonly string[] NewRelicInstallPathEnvironmentVariables = ["NEW_RELIC_INSTALL_PATH", "NEWRELIC_INSTALL_PATH"];
 
         public static bool IsWindows { get; }
