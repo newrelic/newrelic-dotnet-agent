@@ -75,7 +75,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("COR_PROFILER");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");

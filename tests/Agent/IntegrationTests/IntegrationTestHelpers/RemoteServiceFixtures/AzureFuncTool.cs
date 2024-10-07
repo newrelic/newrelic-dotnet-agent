@@ -62,7 +62,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
