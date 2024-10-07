@@ -69,6 +69,7 @@ jobs:
           NEW_RELIC_HOST: staging-collector.newrelic.com
           NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
           DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
+          DOTTY_SEARCH_ROOT_PATH: ${{ github.workspace }}
 
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then

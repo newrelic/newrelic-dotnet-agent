@@ -8,13 +8,13 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using Repository = NuGet.Protocol.Core.Types.Repository;
+using System.IO;
 
 namespace nugetSlackNotifications
 {
@@ -28,8 +28,11 @@ namespace nugetSlackNotifications
         private static readonly string _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
         private static readonly string _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
         private static readonly DateTimeOffset _lastRunTimestamp = DateTimeOffset.TryParse(Environment.GetEnvironmentVariable("DOTTY_LAST_RUN_TIMESTAMP"), out var timestamp) ? timestamp : DateTimeOffset.MinValue;
+        private static readonly string _searchRootPath = Environment.GetEnvironmentVariable("DOTTY_SEARCH_ROOT_PATH") ?? ".";
         private const string PackageInfoFilename = "packageInfo.json";
-
+        private const string ProjectsJsonFilename = "projectInfo.json";
+        private const string Owner = "newrelic";
+        private const string Repo = "newrelic-dotnet-agent";
 
         static async Task Main()
         {
@@ -48,15 +51,14 @@ namespace nugetSlackNotifications
             var metadataResource = await sourceRepository.GetResourceAsync<PackageMetadataResource>();
             var sourceCacheContext = new SourceCacheContext();
 
-            if (!System.IO.File.Exists(PackageInfoFilename))
+            if (!File.Exists(PackageInfoFilename))
             {
                 Log.Error($"{PackageInfoFilename} not found in the current directory. Exiting.");
                 return;
             }
 
-            var packageInfoJson = await System.IO.File.ReadAllTextAsync(PackageInfoFilename);
+            var packageInfoJson = await File.ReadAllTextAsync(PackageInfoFilename);
             var packageInfos = JsonSerializer.Deserialize<PackageInfo[]>(packageInfoJson);
-
             foreach (var package in packageInfos)
             {
                 try
@@ -70,12 +72,44 @@ namespace nugetSlackNotifications
                 }
             }
 
-            await AlertOnNewVersions();
-            await CreateGithubIssuesForNewVersions();
+            if (!File.Exists(ProjectsJsonFilename))
+            {
+                Log.Error($"{ProjectsJsonFilename} not found in the current directory. Exiting.");
+                return;
+            }
+
+            var updateLog = new List<string>();
+            var projectInfoJson = await File.ReadAllTextAsync(ProjectsJsonFilename);
+            var projectInfos = JsonSerializer.Deserialize<ProjectInfo[]>(projectInfoJson);
+            foreach (var projectInfo in projectInfos)
+            {
+                var projectFile = Path.Combine(_searchRootPath, projectInfo.ProjectFile);
+                if (!File.Exists(projectFile))
+                {
+                    Log.Warning($"Could not find {projectFile}, make sure projectFile path is relative.");
+                    continue;
+                }
+
+                var projectLog = await CsprojHandler.UpdatePackageReferences(projectFile, _newVersions);
+                if (projectLog.Count > 0)
+                {
+                    updateLog.Add($"**{projectInfo.ProjectFile}**");
+                    updateLog.AddRange(projectLog);
+                }
+                
+            }
+
+            var prUrl = await CreateGithubPullRequestForNewVersions(projectInfos, string.Join('\n', updateLog));
+            await AlertOnNewVersions(prUrl);
+
+            // Currently don'y want to create issues, but may in the future
+            // If/When we do, this shuold be moved above the PR creation so we can link issues to the PR
+            //await CreateGithubIssuesForNewVersions();
         }
 
         [Transaction]
-        static async Task CheckPackage(PackageInfo package, PackageMetadataResource metadataResource,            SourceCacheContext sourceCacheContext, DateTimeOffset searchTime)
+        static async Task CheckPackage(PackageInfo package, PackageMetadataResource metadataResource,
+            SourceCacheContext sourceCacheContext, DateTimeOffset searchTime)
         {
             var packageName = package.PackageName;
 
@@ -106,7 +140,7 @@ namespace nugetSlackNotifications
                     {
                         if (previousVersion.Major == latestVersion.Major && previousVersion.Minor == latestVersion.Minor)
                         {
-                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor:2}) has not been updated.");
+                            Log.Information($"Package {packageName} ignores Patch version updates; the Minor version ({latestVersion.Major}.{latestVersion.Minor}) has not been updated.");
                             return;
                         }
                     }
@@ -134,7 +168,7 @@ namespace nugetSlackNotifications
         }
 
         [Transaction]
-        static async Task AlertOnNewVersions()
+        static async Task AlertOnNewVersions(string prUrl)
         {
 
             if (_newVersions.Count > 0 && _webhook != null && !_testMode) // only message channel if there's package updates to report AND we have a webhook from the environment AND we're not in test mode
@@ -144,6 +178,10 @@ namespace nugetSlackNotifications
                 {
                     msg += $"\n\t:package: {versionData.PackageName} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
                 }
+
+                msg += $"\n\nI did the work so you won't have to!";
+                msg += $"\n" + prUrl + "\n";
+
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
                 await SendSlackNotification(msg);
@@ -171,13 +209,62 @@ namespace nugetSlackNotifications
                     };
                     newIssue.Labels.Add("testing");
                     newIssue.Labels.Add("Core Technologies");
-                    var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+                    var issue = await ghClient.Issue.Create(Owner, Repo, newIssue);
                     Log.Information($"Created issue #{issue.Id} for {versionData.PackageName} update to {versionData.NewVersion} in newrelic/newrelic-dotnet-agent.");
                 }
             }
             else
             {
                 Log.Information($"Issues will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
+            }
+        }
+
+        [Transaction]
+        static async Task<string> CreateGithubPullRequestForNewVersions(IEnumerable<ProjectInfo> projectInfos, string updateLog)
+        {
+
+            if (_newVersions.Count > 0 && _githubToken != null && !_testMode) // only message channel if there's package updates to report AND we have a GH token from the environment AND we're not in test mode
+            {
+                var ghClient = new GitHubClient(new ProductHeaderValue("Dotty-Robot"));
+                var tokenAuth = new Credentials(_githubToken);
+                ghClient.Credentials = tokenAuth;
+
+                var masterReference = await ghClient.Git.Reference.Get(Owner, Repo, "heads/main");
+                var branchName = $"dotty/test-updates-{DateTime.Now.ToString("yyyy-MMM-dd")}";
+                var newBranch = new NewReference($"refs/heads/{branchName}", masterReference.Object.Sha);
+                await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
+                var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, masterReference.Object.Sha);
+                var nt = new NewTree { BaseTree = latestCommit.Tree.Sha };
+                foreach (var projectInfo in projectInfos)
+                {
+                    // string.Join with \n seems to allow github to see the changed lines and not the entire file as "changed"
+                    nt.Tree.Add(new NewTreeItem
+                    {
+                        Path = projectInfo.ProjectFile,
+                        Mode = "100644",
+                        Type = TreeType.Blob,
+                        Content = string.Join('\n', await File.ReadAllLinesAsync(Path.Combine(_searchRootPath, projectInfo.ProjectFile)))
+                    });
+                }
+
+                var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
+                var commitMessage = "test:Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
+                var newCommit = new NewCommit(commitMessage, newTree.Sha, masterReference.Object.Sha);
+                var commit = await ghClient.Git.Commit.Create(Owner, Repo, newCommit);
+                var branchref = await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
+                Log.Information($"Successfully created {branchName} branch.");
+
+                var newPr = new NewPullRequest(commitMessage, branchName, "main");
+                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog;
+                var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
+                Log.Information($"Successfully created PR for {branchName} at {pullRequest.HtmlUrl}");
+
+                return pullRequest.HtmlUrl;
+            }
+            else
+            {
+                Log.Information($"Pull request will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
+                return "";
             }
         }
 
@@ -211,35 +298,5 @@ namespace nugetSlackNotifications
                 Log.Error($"SendSlackNotification called but _webhook is null.  msg={msg}");
             }
         }
-    }
-
-    public class NugetVersionData
-    {
-        public string PackageName { get; set; }
-        public string OldVersion { get; set; }
-        public string NewVersion { get; set; }
-        public string Url { get; set; }
-        public DateTime PublishDate { get; set; }
-
-        public NugetVersionData(string packageName, string oldVersion, string newVersion, string url, DateTime publishDate)
-        {
-            PackageName = packageName;
-            OldVersion = oldVersion;
-            NewVersion = newVersion;
-            Url = url;
-            PublishDate = publishDate;
-        }
-    }
-
-    public class PackageInfo
-    {
-        [JsonPropertyName("packageName")]
-        public string PackageName { get; set; }
-        [JsonPropertyName("ignorePatch")]
-        public bool IgnorePatch { get; set; }
-        [JsonPropertyName("ignoreMinor")]
-        public bool IgnoreMinor { get; set; }
-        [JsonPropertyName("ignoreReason")]
-        public string IgnoreReason {get; set;}
     }
 }

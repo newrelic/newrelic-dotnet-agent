@@ -39,8 +39,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public override void Dispose()
         {
-            base.Dispose();
             _readerWriterLock.Dispose();
+            base.Dispose();
         }
 
         protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;

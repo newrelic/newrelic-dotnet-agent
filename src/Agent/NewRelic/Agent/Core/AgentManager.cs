@@ -401,7 +401,7 @@ namespace NewRelic.Agent.Core
 
             try
             {
-                Log.Debug("Starting the shutdown process for the .NET Agent.");
+                Log.Info("Starting the shutdown process for the .NET Agent.");
 
                 AgentInitializer.OnExit -= ProcessExit;
 
@@ -414,15 +414,17 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
-                Log.Info("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             }
             catch (Exception e)
             {
-                Log.Debug(e, "Shutdown error");
+                Log.Info(e, "Unexpected exception during agent shutdown");
             }
             finally
             {
+                Log.Debug("Shutting down internal agent services...");
                 Dispose();
+
+                Log.Info("The New Relic .NET Agent v{Version} has shutdown (pid {pid}) on app domain '{appDomain}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
                 Serilog.Log.CloseAndFlush();
             }
         }
