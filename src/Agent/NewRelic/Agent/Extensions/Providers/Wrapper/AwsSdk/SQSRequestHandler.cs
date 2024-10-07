@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
@@ -122,7 +123,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 dynamic receiveMessageResponse = taskResultGetter(responseTask);
 
                 // accept distributed trace headers from the first message in the response
-                SqsHelper.AcceptDistributedTraceHeaders(transaction, receiveMessageResponse.Messages[0].MessageAttributes);
+                if (receiveMessageResponse.Messages is IEnumerable<object> validList && validList.Any())
+                {
+                    SqsHelper.AcceptDistributedTraceHeaders(transaction, receiveMessageResponse.Messages[0].MessageAttributes);
+                }
             }
         }
 
