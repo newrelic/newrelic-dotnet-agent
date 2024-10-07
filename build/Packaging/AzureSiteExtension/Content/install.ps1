@@ -304,9 +304,9 @@ try
 	}
 
 
-	if ($env:NEW_RELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
+	if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
 	{
-		WriteToInstallLog "The environment variable NEW_RELIC_LICENSEKEY or NEW_RELIC_LICENSE_KEY must be set. Please make sure to add one."
+		WriteToInstallLog "The environment variable NEW_RELIC_LICENSE_KEY must be set. Please make sure to add it."
 	}
 
 	RemoveNewRelicInstallArtifacts "."

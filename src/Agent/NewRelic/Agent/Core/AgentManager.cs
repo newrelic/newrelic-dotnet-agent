@@ -296,7 +296,9 @@ namespace NewRelic.Agent.Core
 
                 List<string> environmentVariablesSensitive = new List<string> {
                     "NEW_RELIC_LICENSE_KEY",
+                    // TODO: remove in v11
                     "NEWRELIC_LICENSEKEY",
+
                     "NEW_RELIC_SECURITY_POLICIES_TOKEN",
                     "NEW_RELIC_PROXY_USER",
                     "NEW_RELIC_PROXY_PASS",
