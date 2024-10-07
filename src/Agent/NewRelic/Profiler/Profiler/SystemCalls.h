@@ -37,7 +37,17 @@ namespace NewRelic { namespace Profiler
 
             // get the environment variable
             auto result = GetEnvironmentVariable(variableName.c_str(), value.get(), size);
-            if (result == 0) return nullptr;
+
+            if (result == 0) return nullptr; // not found
+
+            // TODO: remove in v11
+            // if variableName starts with NEWRELIC_, log a message indicating that the variable will be deprecated in the next major revision
+            if (variableName.find(_X("NEWRELIC_")) == 0)
+            {
+                // create a new variable, replacing NEWRELIC_ with NEW_RELIC_
+                xstring_t newVariableName = _X("NEW_RELIC_") + variableName.substr(8);
+                LogWarn(_X("The environment variable '"), variableName, _X("' is deprecated and will be removed in version 11. Please use "), newVariableName, _X(" instead."));
+            }
 
             return std::unique_ptr<xstring_t>(new xstring_t(value.get()));
         }

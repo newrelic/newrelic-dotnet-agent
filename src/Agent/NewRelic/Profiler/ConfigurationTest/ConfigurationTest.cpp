@@ -250,7 +250,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_LOG_LEVEL"] = L"FiNeSt";
+            systemCalls->environmentVariables[L"NEW_RELIC_LOG_LEVEL"] = L"FiNeSt";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
             Assert::AreEqual(Logger::Level::LEVEL_TRACE, configuration.GetLoggingLevel());

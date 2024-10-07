@@ -20,31 +20,60 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _isCoreClr = IsCore;
         }
 
-        virtual xstring_t GetNewRelicHomePathVariable()
+        // TODO: remove in v11
+        virtual xstring_t GetLegacyNewRelicHomePathVariable()
         {
             return _isCoreClr
                 ? _X("CORECLR_NEWRELIC_HOME")
                 : _X("NEWRELIC_HOME");
         }
 
-        virtual xstring_t GetNewRelicInstallPathVariable()
+        virtual xstring_t GetNewRelicHomePathVariable()
+        {
+            return _isCoreClr
+                ? _X("CORECLR_NEW_RELIC_HOME")
+                : _X("NEW_RELIC_HOME");
+        }
+
+        // TODO: remove in v11
+        virtual xstring_t GetLegacyNewRelicInstallPathVariable()
         {
             return _X("NEWRELIC_INSTALL_PATH");
         }
 
+        virtual xstring_t GetNewRelicInstallPathVariable()
+        {
+            return _X("NEW_RELIC_INSTALL_PATH");
+        }
+
         virtual std::unique_ptr<xstring_t> GetNewRelicHomePath()
         {
-            return TryGetEnvironmentVariable(GetNewRelicHomePathVariable());
+            auto homePath = TryGetEnvironmentVariable(GetNewRelicHomePathVariable());
+
+            // TODO: remove in v11
+            if (homePath == nullptr)
+            {
+                homePath = TryGetEnvironmentVariable(GetLegacyNewRelicHomePathVariable());
+            }
+            return homePath;
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicInstallPath()
         {
-            return TryGetEnvironmentVariable(GetNewRelicInstallPathVariable());
+            auto installPath = TryGetEnvironmentVariable(GetNewRelicInstallPathVariable());
+            // TODO: remove in v11
+            if (installPath == nullptr)
+            {
+                installPath = TryGetEnvironmentVariable(GetLegacyNewRelicInstallPathVariable());
+            }
+            return installPath;
         }
 
         virtual bool GetForceProfiling()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+            return TryGetEnvironmentVariable(_X("NEW_RELIC_FORCE_PROFILING")) != nullptr
+                // TODO: remove in v11
+                || TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
         virtual bool GetIsAppDomainCachingDisabled()
@@ -54,22 +83,38 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
+            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"));
+            return modernValue != nullptr
+                ? std::move(modernValue)
+                // TODO: remove in v11
+                : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
+            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"));
+            return modernValue != nullptr
+                ? std::move(modernValue)
+                // TODO: remove in v11
+                : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
+            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_DIRECTORY"));
+            return modernValue != nullptr
+                ? std::move(modernValue)
+                // TODO: remove in v11
+                :TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
+            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_LEVEL"));
+            return modernValue != nullptr
+                ? std::move(modernValue)
+                // TODO: remove in v11
+                : TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
         }
 
         virtual std::unique_ptr<xstring_t> GetAppPoolId()
