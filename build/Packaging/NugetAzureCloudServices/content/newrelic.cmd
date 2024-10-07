@@ -23,7 +23,7 @@ IF EXIST "%RoleRoot%\nr-%NR_INSTALLID%.log" (
 	)
 )
 
-CALL:INSTALL_NEWRELIC_AGENT
+CALL:INSTALL_NEW_RELIC_AGENT
 
 IF %NR_ERROR_LEVEL% EQU 0 (
 	EXIT /B 0
@@ -34,7 +34,7 @@ IF %NR_ERROR_LEVEL% EQU 0 (
 :: --------------
 :: Functions
 :: --------------
-:INSTALL_NEWRELIC_AGENT
+:INSTALL_NEW_RELIC_AGENT
 	ECHO %ldt% : Begin installing the New Relic .NET Agent. >> "%RoleRoot%\nr-%NR_INSTALLID%.log" 2>&1
 
 	:: Current version of the installer

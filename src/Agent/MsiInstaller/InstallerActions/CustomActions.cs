@@ -444,7 +444,7 @@ namespace InstallerActions
             DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Asp35.dll");
 
 
-            String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
+            String newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
             if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
 
             return ActionResult.Success;
@@ -512,7 +512,7 @@ namespace InstallerActions
             String[] folderPaths =
             {
                 session["NETAGENTCOMMONFOLDER"],
-                Environment.GetEnvironmentVariable("NEWRELIC_HOME"),
+                Environment.GetEnvironmentVariable("NEW_RELIC_HOME"),
                 @"C:\Program Files\New Relic .NET Agent",
                 @"C:\Program Files (x86)\New Relic .NET Agent"
             };
@@ -650,7 +650,7 @@ namespace InstallerActions
                 return;
             }
 
-            String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
+            String newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
             var newrelicHomeXml = null as String;
             if (newrelicHomePath != null) newrelicHomeXml = newrelicHomePath + @"\newrelic.xml";
             var existingXml = session.CustomActionData["NETAGENTCOMMONFOLDER"] + "newrelic.xml";
@@ -690,7 +690,7 @@ namespace InstallerActions
             session.Log("Attempting to migrate logs from previous installation.");
             String destinationPath = session.CustomActionData["LOGSFOLDER"];
 
-            String homeLogPath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
+            String homeLogPath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
             if (homeLogPath != null) homeLogPath += @"\Logs\";
 
             // Check each of a number of locations for a logs folder to migrate.
@@ -715,7 +715,7 @@ namespace InstallerActions
             session.Log("Attempting to migrate previous instrumentation.");
             String destinationPath = session.CustomActionData["AppDataExtensionsFolder"];
 
-            String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
+            String newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
             if (newrelicHomePath != null) newrelicHomePath += @"\Extensions\";
 
             // Check each of a number of locations for instrumentation files to migrate.

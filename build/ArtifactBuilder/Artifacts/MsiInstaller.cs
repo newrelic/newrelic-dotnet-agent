@@ -17,7 +17,7 @@ namespace ArtifactBuilder.Artifacts
         private readonly string[] _coreIISRegistryValues = new string[] {
                     "CORECLR_ENABLE_PROFILING=1",
                     "CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}",
-                    "CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" };
+                    "CORECLR_NEW_RELIC_HOME=[NETAGENTCOMMONFOLDER]" };
 
         private readonly AgentComponents _frameworkAgentComponents;
         private readonly AgentComponents _coreAgentComponents;

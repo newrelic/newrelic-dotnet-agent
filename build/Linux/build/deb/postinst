@@ -2,15 +2,15 @@
 
 PACKAGE_NAME='newrelic-dotnet-agent'
 OBSOLETE_PACKAGE_NAME='newrelic-netcore20-agent'
-NEWRELIC_HOME=/usr/local/${PACKAGE_NAME}
-OBSOLETE_NEWRELIC_HOME=/usr/local/${OBSOLETE_PACKAGE_NAME}
+NEWR_ELIC_HOME=/usr/local/${PACKAGE_NAME}
+OBSOLETE_NEW_RELIC_HOME=/usr/local/${OBSOLETE_PACKAGE_NAME}
 
 # create logs dir
-mkdir -p $NEWRELIC_HOME/logs 2> /dev/null
+mkdir -p $NEW_RELIC_HOME/logs 2> /dev/null
 
 # create symlink to logs dir in /var/log/newrelic
 mkdir -p /var/log/newrelic 2> /dev/null
-ln -sTf $NEWRELIC_HOME/logs /var/log/newrelic/dotnet 2> /dev/null
+ln -sTf $NEW_RELIC_HOME/logs /var/log/newrelic/dotnet 2> /dev/null
 
 # remove old profile.d file if it exists
 oldHomeDirFile="/etc/profile.d/${OBSOLETE_PACKAGE_NAME}-path.sh"
@@ -20,37 +20,37 @@ if [ -e $oldHomeDirFile ]; then
 fi
 
 # migrate data from obsoleted package, if applicable
-if [ -d $OBSOLETE_NEWRELIC_HOME ]; then
+if [ -d $OBSOLETE_NEW_RELIC_HOME ]; then
 
   # migrate config file, backing up original first
-  if [ -e $OBSOLETE_NEWRELIC_HOME/newrelic.config ]; then
-    echo "Migrating newrelic.config from $OBSOLETE_NEWRELIC_HOME"
+  if [ -e $OBSOLETE_NEW_RELIC_HOME/newrelic.config ]; then
+    echo "Migrating newrelic.config from $OBSOLETE_NEW_RELIC_HOME"
     # Move the existing config file in the new package directory out of the way
-    mv $NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config.original
+    mv $NEW_RELIC_HOME/newrelic.config $NEW_RELIC_HOME/newrelic.config.original
     # Copy the config file from the old package directory to the new package directory
-    cp -v $OBSOLETE_NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config
+    cp -v $OBSOLETE_NEW_RELIC_HOME/newrelic.config $NEW_RELIC_HOME/newrelic.config
     # Rename the config file in the old package directory so it won't get migrated again
-    mv $OBSOLETE_NEWRELIC_HOME/newrelic.config $OBSOLETE_NEWRELIC_HOME/newrelic.config.migrated
+    mv $OBSOLETE_NEW_RELIC_HOME/newrelic.config $OBSOLETE_NEW_RELIC_HOME/newrelic.config.migrated
   fi
 
   # migrate any custom instrumentation
-  if [ -d $OBSOLETE_NEWRELIC_HOME/extensions ]; then
+  if [ -d $OBSOLETE_NEW_RELIC_HOME/extensions ]; then
     # This is safe to run multiple times because of the -n option, which means "don't overwrite an existing file"
     # This also means that only custom instrumentation XML files (not our default auto-instrumentation ones) will be migrated the first time
-    cp -nv $OBSOLETE_NEWRELIC_HOME/extensions/*.xml $NEWRELIC_HOME/extensions
+    cp -nv $OBSOLETE_NEW_RELIC_HOME/extensions/*.xml $NEW_RELIC_HOME/extensions
   fi
 fi
 
 # Deprecated instrumentation files to remove post install
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
+rm -f $NEW_RELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
+rm -f $NEW_RELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
-echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
+echo "export CORECLR_NEW_RELIC_HOME=${NEW_RELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
 source /etc/profile.d/${PACKAGE_NAME}-path.sh
 
-chmod o+w $NEWRELIC_HOME/logs
-chmod +x $NEWRELIC_HOME/*.sh 2> /dev/null
+chmod o+w $NEW_RELIC_HOME/logs
+chmod +x $NEW_RELIC_HOME/*.sh 2> /dev/null
 
 printf "Initialize the New Relic .NET Agent environment variables by running:\n"
 printf "\t\033[1msource /etc/profile.d/${PACKAGE_NAME}-path.sh\033[0m\n"
-printf "\t\033[1msource $CORECLR_NEWRELIC_HOME/setenv.sh\033[0m\n"
+printf "\t\033[1msource $CORECLR_NEW_RELIC_HOME/setenv.sh\033[0m\n"
