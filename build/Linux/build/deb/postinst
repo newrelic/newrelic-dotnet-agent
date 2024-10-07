@@ -2,7 +2,7 @@
 
 PACKAGE_NAME='newrelic-dotnet-agent'
 OBSOLETE_PACKAGE_NAME='newrelic-netcore20-agent'
-NEWR_ELIC_HOME=/usr/local/${PACKAGE_NAME}
+NEW_RELIC_HOME=/usr/local/${PACKAGE_NAME}
 OBSOLETE_NEW_RELIC_HOME=/usr/local/${OBSOLETE_PACKAGE_NAME}
 
 # create logs dir

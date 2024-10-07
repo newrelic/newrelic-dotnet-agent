@@ -83,6 +83,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
 
+            // TODO: Remove in v11
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
+
+
             // configure env vars as needed for testing environment overrides
             foreach (var envVar in environmentVariables)
             {
