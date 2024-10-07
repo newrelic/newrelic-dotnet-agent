@@ -74,14 +74,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
 
             // configure env vars as needed for testing environment overrides
             foreach (var envVar in environmentVariables)
@@ -98,8 +98,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 startInfo.EnvironmentVariables.Add("COR_ENABLE_PROFILING", "1");
                 startInfo.EnvironmentVariables.Add("COR_PROFILER", "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
                 startInfo.EnvironmentVariables.Add("COR_PROFILER_PATH", profilerFilePath);
-                startInfo.EnvironmentVariables.Add("NEWRELIC_HOME", newRelicHomeDirectoryPath);
-                startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
+                startInfo.EnvironmentVariables.Add("NEW_RELIC_HOME", newRelicHomeDirectoryPath);
+                startInfo.EnvironmentVariables.Add("NEW_RELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
             }
 
             if (AdditionalEnvironmentVariables != null)

@@ -35,7 +35,9 @@ namespace NewRelic.Agent.Core.Config
             // together.
             var environmentMock = Mock.Create<IEnvironment>();
             Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+            Mock.Arrange(() => environmentMock.GetEnvironmentVariableFromList(Arg.IsAny<string[]>())).Returns(MockGetEnvironmentVarFromList);
             ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+            AgentInstallConfiguration.EnvironmentVariableProxy = environmentMock;
 
             ClearEnvironmentVars();
             _directoryToFullPathMapping.Clear();
@@ -152,6 +154,21 @@ namespace NewRelic.Agent.Core.Config
         [TestCase("warn", "debug", ExpectedResult = "WARN")]
         public string TestLogLevelValue(string environmentValue, string localConfigValue)
         {
+            SetEnvironmentVar("NEW_RELIC_LOG_LEVEL", environmentValue);
+            _localConfiguration.log.level = localConfigValue;
+
+            var config = CreateLogConfig();
+
+            return config.LogLevel;
+        }
+
+        //TODO: remove in v11
+        [TestCase(null, "info", ExpectedResult = "INFO")]
+        [TestCase(null, "debug", ExpectedResult = "DEBUG")]
+        [TestCase("error", "info", ExpectedResult = "ERROR")]
+        [TestCase("warn", "debug", ExpectedResult = "WARN")]
+        public string TestLogLevelValue_UsingLegacyEnvVarName(string environmentValue, string localConfigValue)
+        {
             SetEnvironmentVar("NEWRELIC_LOG_LEVEL", environmentValue);
             _localConfiguration.log.level = localConfigValue;
 
@@ -209,7 +226,7 @@ namespace NewRelic.Agent.Core.Config
         [TestCase("env", "local", "env")]
         public void LogFileNameUsesExpectedPath(string environmentValue, string localConfigValue, string expectedPath)
         {
-            SetEnvironmentVar("NEWRELIC_LOG_DIRECTORY", environmentValue);
+            SetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", environmentValue);
             _localConfiguration.log.directory = localConfigValue;
 
             var config = CreateLogConfig();
@@ -227,7 +244,7 @@ namespace NewRelic.Agent.Core.Config
         [Test]
         public void LogFileFromEnvironmentShouldUseFullPathIfExists()
         {
-            SetEnvironmentVar("NEWRELIC_LOG_DIRECTORY", "env");
+            SetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", "env");
             _localConfiguration.log.directory = "local";
             _directoryToFullPathMapping["env"] = "fullpathenv";
 
@@ -360,6 +377,15 @@ namespace NewRelic.Agent.Core.Config
         private string MockGetEnvironmentVar(string name)
         {
             if (_envVars.TryGetValue(name, out var value)) return value;
+            return null;
+        }
+
+        private string MockGetEnvironmentVarFromList(string[] names)
+        {
+            foreach (var name in names)
+            {
+                if (_envVars.TryGetValue(name, out var value)) return value;
+            }
             return null;
         }
 

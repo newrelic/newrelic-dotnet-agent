@@ -4,6 +4,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.SharedInterfaces
 {
@@ -19,9 +21,32 @@ namespace NewRelic.Agent.Core.SharedInterfaces
             return System.Environment.GetEnvironmentVariable(variable);
         }
 
+        public string GetEnvironmentVariableFromList(params string[] variables)
+        {
+            var envValue = (variables ?? Enumerable.Empty<string>())
+                .Select(v => GetEnvironmentVariableInternal(v))
+                .FirstOrDefault(value => value != null);
+
+            return envValue == string.Empty ? null : envValue;
+        }
+
         public string GetEnvironmentVariable(string variable, EnvironmentVariableTarget environmentVariableTarget)
         {
             return System.Environment.GetEnvironmentVariable(variable, environmentVariableTarget);
+        }
+
+        private string GetEnvironmentVariableInternal(string variable, EnvironmentVariableTarget environmentVariableTarget = EnvironmentVariableTarget.Process)
+        {
+            var value = System.Environment.GetEnvironmentVariable(variable, environmentVariableTarget);
+
+            // TODO: remove in v11
+            if (value != null && variable.StartsWith("NEWRELIC_", StringComparison.OrdinalIgnoreCase))
+            {
+                var preferredVariableName = variable.ToUpper().Replace("NEWRELIC_", "NEW_RELIC_");
+                Log.Warn($"The environment variable {variable} is deprecated and will be removed in version 11. Please use {preferredVariableName} instead.");
+            }
+
+            return value;
         }
 
         public Dictionary<string, string> GetEnvironmentVariablesWithPrefix(string prefix)

@@ -20,14 +20,21 @@ namespace NewRelic.Agent.Core
 {
     public static partial class AgentInstallConfiguration
     {
+        // This field exists only for testing purposes. It allows bootstrap logic and regular
+        // configuration logic to use the same environment variable logic.
+        public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
+
 #if NETSTANDARD2_0
-        private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
+        // TODO: remove legacy env var name in v11
+        private static readonly string[] NewRelicHomeEnvironmentVariables = ["CORECLR_NEW_RELIC_HOME", "CORECLR_NEWRELIC_HOME"];
         private const string RuntimeDirectoryName = "netcore";
 #else
-        private const string NewRelicHomeEnvironmentVariable = "NEWRELIC_HOME";
+        // TODO: remove legacy env var name in v11
+        private static readonly string[] NewRelicHomeEnvironmentVariables = ["NEW_RELIC_HOME", "NEWRELIC_HOME"];
         private const string RuntimeDirectoryName = "netframework";
 #endif
-        private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
+        // TODO: remove legacy env var name in v11
+        private static readonly string[] NewRelicInstallPathEnvironmentVariables = ["NEW_RELIC_INSTALL_PATH", "NEWRELIC_INSTALL_PATH"];
 
         public static bool IsWindows { get; }
 #if NETFRAMEWORK
@@ -158,7 +165,7 @@ namespace NewRelic.Agent.Core
 
         private static string GetNewRelicHome()
         {
-            var newRelicHome = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
+            var newRelicHome = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
             if (newRelicHome != null && Directory.Exists(newRelicHome)) return Path.GetFullPath(newRelicHome);
 #if NETFRAMEWORK
 			var key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
@@ -169,14 +176,14 @@ namespace NewRelic.Agent.Core
 
         private static string GetNewRelicInstallPath()
         {
-            var newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicInstallPathEnvironmentVariable);
+            var newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicInstallPathEnvironmentVariables);
             if (newRelicInstallPath != null)
             {
                 newRelicInstallPath = Path.Combine(newRelicInstallPath, RuntimeDirectoryName);
                 if (Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
             }
 
-            newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
+            newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
             return newRelicInstallPath;
         }
 

@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core
                 List<string> environmentVariables = new List<string> {
                     "CORECLR_ENABLE_PROFILING",
                     "CORECLR_PROFILER",
-                    "CORECLR_NEWRELIC_HOME",
+                    "CORECLR_NEW_RELIC_HOME",
                     "CORECLR_PROFILER_PATH",
                     "CORECLR_PROFILER_PATH_32",
                     "CORECLR_PROFILER_PATH_64",
@@ -226,8 +226,8 @@ namespace NewRelic.Agent.Core
                     "COR_PROFILER_PATH",
                     "COR_PROFILER_PATH_32",
                     "COR_PROFILER_PATH_64",
-                    "NEWRELIC_HOME",
-                    "NEWRELIC_INSTALL_PATH",
+                    "NEW_RELIC_HOME",
+                    "NEW_RELIC_INSTALL_PATH",
                     "NEW_RELIC_APP_NAME",
                     "RoleName",
                     "IISEXPRESS_SITENAME",
@@ -246,8 +246,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME",
                     "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG",
                     "NEW_RELIC_LOG",
-                    "NEWRELIC_PROFILER_LOG_DIRECTORY",
-                    "NEWRELIC_LOG_LEVEL",
+                    "NEW_RELIC_PROFILER_LOG_DIRECTORY",
+                    "NEW_RELIC_LOG_LEVEL",
                     "NEW_RELIC_LOG_ENABLED",
                     "NEW_RELIC_LOG_CONSOLE",
                     "NEW_RELIC_LABELS",
@@ -285,7 +285,13 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
                     "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
-                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"
+                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
+                    // TODO: remove in v11
+                    "CORECLR_NEWRELIC_HOME",
+                    "NEWRELIC_HOME",
+                    "NEWRELIC_INSTALL_PATH",
+                    "NEWRELIC_PROFILER_LOG_DIRECTORY",
+                    "NEWRELIC_LOG_LEVEL",
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {

@@ -211,8 +211,9 @@ namespace NewRelic.Agent.Core.Configuration
                 if (_agentLicenseKey != null)
                     return _agentLicenseKey;
 
+                // TODO: remove legacy env var name in v11
                 _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
-                    ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
+                                   ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
 
                 if (_agentLicenseKey != null)
                     _agentLicenseKey = _agentLicenseKey.Trim();
@@ -2509,10 +2510,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> EnvironmentOverrides(IEnumerable<string> local, params string[] environmentVariableNames)
         {
-            var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
-                .Select(_environment.GetEnvironmentVariable)
-                .Where(value => value != null)
-                .FirstOrDefault();
+            var envValue = _environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             // took this approach to eliminate a null object issue when combining the different calls together. Also a bit easier to read.
             if (string.IsNullOrWhiteSpace(envValue))
@@ -2533,10 +2531,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public static string EnvironmentOverrides(IEnvironment environment, string local, params string[] environmentVariableNames)
         {
-            var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
-                .Select(environment.GetEnvironmentVariable)
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .FirstOrDefault(); // returns null if no env var found or if enumerable<string> is empty
+            var envValue = environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             // if we get a null, we use local - should not get whitespace
             if (string.IsNullOrWhiteSpace(envValue))
@@ -2549,9 +2544,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private uint? EnvironmentOverrides(uint? local, params string[] environmentVariableNames)
         {
-            var env = environmentVariableNames
-                .Select(_environment.GetEnvironmentVariable)
-                .FirstOrDefault(value => value != null);
+            var env = _environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             return uint.TryParse(env, out uint parsedValue) ? parsedValue : local;
         }
@@ -2563,18 +2556,14 @@ namespace NewRelic.Agent.Core.Configuration
 
         public static int? EnvironmentOverrides(IEnvironment environment, int? local, params string[] environmentVariableNames)
         {
-            var env = environmentVariableNames
-                .Select(environment.GetEnvironmentVariable)
-                .FirstOrDefault(value => value != null);
+            var env = environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             return int.TryParse(env, out int parsedValue) ? parsedValue : local;
         }
 
         private double? EnvironmentOverrides(double? local, params string[] environmentVariableNames)
         {
-            var env = environmentVariableNames
-                .Select(_environment.GetEnvironmentVariable)
-                .FirstOrDefault(value => value != null);
+            var env = _environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             return double.TryParse(env, out double parsedValue) ? parsedValue : local;
         }
@@ -2586,9 +2575,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public static bool EnvironmentOverrides(IEnvironment environment, bool local, params string[] environmentVariableNames)
         {
-            var env = environmentVariableNames
-                .Select(environment.GetEnvironmentVariable)
-                .FirstOrDefault(value => value != null);
+            var env = environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
             if (env != null)
             {
@@ -3003,7 +2990,8 @@ namespace NewRelic.Agent.Core.Configuration
             var logLevel = "off";
             if (isLoggingEnabled)
             {
-                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEWRELIC_LOG_LEVEL").ToUpper();
+                // TODO: remove legacy env var name in v11
+                logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL").ToUpper();
             }
 
             return logLevel;
