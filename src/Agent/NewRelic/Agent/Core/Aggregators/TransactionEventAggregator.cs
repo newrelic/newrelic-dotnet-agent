@@ -49,8 +49,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public override void Dispose()
         {
-            base.Dispose();
             _readerWriterLock.Dispose();
+            base.Dispose();
         }
 
         public override void Collect(TransactionEventWireModel transactionEventWireModel)

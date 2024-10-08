@@ -32,8 +32,8 @@ namespace NewRelic.Agent.Core.Samplers
 
         public override void Dispose()
         {
-            base.Dispose();
             Stop();
+            base.Dispose();
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

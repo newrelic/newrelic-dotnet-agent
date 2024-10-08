@@ -57,8 +57,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public override void Dispose()
         {
-            base.Dispose();
             _scheduler.StopExecuting(LogPeriodicReport);
+            base.Dispose();
         }
 
         private void LogPeriodicReport()
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 }
             }
             var message = events.Count > 0 ? string.Join(", ", events) : "No events";
-            Log.Info($"In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
+            Log.Info($"AgentHealthReporter: In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
         }
 
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
