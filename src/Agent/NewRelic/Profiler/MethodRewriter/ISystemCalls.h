@@ -148,11 +148,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             auto variableValue = TryGetEnvironmentVariable(newVariable);
             if (variableValue == nullptr)
             {
-                variableValue = TryGetEnvironmentVariable(oldVariable);
-                if (variableValue != nullptr)
-                {
-                    LogWarn(_X("The environment variable '"), oldVariable, _X("' is deprecated and may be removed in a future major version. Please use '"), newVariable, _X("' instead."));
-                }
+                variableValue = TryGetEnvironmentVariable(oldVariable); // no need to log deprecation message; that's handled in the managed agent
             }
             return variableValue;
         }

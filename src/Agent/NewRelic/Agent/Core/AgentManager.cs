@@ -290,21 +290,6 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
                 };
 
-                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
-                {
-                    ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
-                    ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
-                    ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
-                    ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
-                    ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
-                    ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTOR"),
-                };
-
-                // so we can report the values as expected
-                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1)); 
-                // so we can report deprecated name but not log the value
-                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
-
                 List<string> environmentVariablesSensitive = new List<string> {
                     "NEW_RELIC_LICENSE_KEY",
                     "NEWRELIC_LICENSEKEY",
@@ -314,6 +299,24 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
                     "NEW_RELIC_PROXY_PASS_OBFUSCATED"
                 };
+
+                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
+                {
+                    ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
+                    ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
+                    ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
+                    ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
+                    ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
+                    ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTORY"),
+                    ("NEWRELIC_FORCE_PROFILING", "NEW_RELIC_FORCE_PROFILING"),
+                    ("NEWRELIC_AGENT_VERSION_OVERRIDE", "NEW_RELIC_AGENT_VERSION_OVERRIDE")
+                };
+
+                // so we can report the values as usual
+                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
+
+                // Add this one separately so we can report the deprecated name but not log the value
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
 
                 foreach (var ev in environmentVariables)
                 {

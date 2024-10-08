@@ -40,14 +40,6 @@ namespace NewRelic { namespace Profiler
 
             if (result == 0) return nullptr; // not found
 
-            // if variableName starts with NEWRELIC_, log a message indicating that the variable may be deprecated in a future major revision
-            if (variableName.find(_X("NEWRELIC_")) == 0)
-            {
-                // create a new variable, replacing NEWRELIC_ with NEW_RELIC_
-                xstring_t newVariableName = _X("NEW_RELIC_") + variableName.substr(8);
-                LogWarn(_X("The environment variable '"), variableName, _X("' is deprecated and may be removed in a future major version. Please use "), newVariableName, _X(" instead."));
-            }
-
             return std::unique_ptr<xstring_t>(new xstring_t(value.get()));
         }
 
