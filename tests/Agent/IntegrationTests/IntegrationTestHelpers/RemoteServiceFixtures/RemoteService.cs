@@ -228,7 +228,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
             startInfo.EnvironmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
 
-            // TODO: Remove in v11
             startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
