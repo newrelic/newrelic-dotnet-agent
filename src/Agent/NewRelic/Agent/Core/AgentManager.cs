@@ -19,6 +19,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -246,6 +247,7 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME",
                     "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG",
                     "NEW_RELIC_LOG",
+                    "NEW_RELIC_LOG_DIRECTORY",
                     "NEW_RELIC_PROFILER_LOG_DIRECTORY",
                     "NEW_RELIC_LOG_LEVEL",
                     "NEW_RELIC_LOG_ENABLED",
@@ -286,12 +288,22 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
                     "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
-                    "CORECLR_NEWRELIC_HOME",
-                    "NEWRELIC_HOME",
-                    "NEWRELIC_INSTALL_PATH",
-                    "NEWRELIC_PROFILER_LOG_DIRECTORY",
-                    "NEWRELIC_LOG_LEVEL",
                 };
+
+                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
+                {
+                    ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
+                    ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
+                    ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
+                    ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
+                    ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
+                    ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTOR"),
+                };
+
+                // so we can report the values as expected
+                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1)); 
+                // so we can report deprecated name but not log the value
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
 
                 List<string> environmentVariablesSensitive = new List<string> {
                     "NEW_RELIC_LICENSE_KEY",
@@ -318,6 +330,15 @@ namespace NewRelic.Agent.Core
                         Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
                 }
+
+                foreach (var ev in environmentVariablesDeprecated)
+                {
+                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev.Item1)))
+                    {
+                        Log.Warn("Environment Variable {OldName} is deprecated and may be removed in a future major version. Please use {NewName} instead.", ev.Item1, ev.Item2);
+                    }
+                }
+
 
                 Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
