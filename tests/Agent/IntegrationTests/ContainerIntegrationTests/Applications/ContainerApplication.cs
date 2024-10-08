@@ -122,7 +122,6 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
         startInfo.EnvironmentVariables.Remove("NETWORK_NAME");
 
-        // TODO: Remove in v11
         startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
