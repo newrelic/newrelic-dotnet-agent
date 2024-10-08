@@ -27,8 +27,6 @@ namespace NewRelic.Agent.Extensions.Helpers
         // 4. Function name
         // 5. Alias or version
         // Only the function name is required, the reset are all optional. e.g. you could have region and function name and nothing else
-
-        // Note that this will not catch functions where the name also looks like a region or account ID
         public static string ConstructArn(IAgent agent, string invocationName, string region, string accountId)
         {
             if (invocationName.StartsWith("arn:"))
@@ -38,16 +36,33 @@ namespace NewRelic.Agent.Extensions.Helpers
             var segments = invocationName.Split(':');
             string functionName = null;
             string alias = null;
+            string fallback = null;
 
             foreach (var segment in segments)
             {
-                if (LooksLikeARegion(segment) && string.IsNullOrEmpty(region))
+                if (LooksLikeARegion(segment))
                 {
-                    region = segment;
+                    if (string.IsNullOrEmpty(region))
+                    {
+                        region = segment;
+                    }
+                    else
+                    {
+                        fallback = segment;
+                    }
+                    continue;
                 }
-                else if (LooksLikeAnAccountId(segment) && string.IsNullOrEmpty(accountId))
+                else if (LooksLikeAnAccountId(segment))
                 {
-                    accountId = segment;
+                    if (string.IsNullOrEmpty(accountId))
+                    {
+                        accountId = segment;
+                    }
+                    else
+                    {
+                        fallback = segment;
+                    }
+                    continue;
                 }
                 else if (segment == "function")
                 {
@@ -60,6 +75,22 @@ namespace NewRelic.Agent.Extensions.Helpers
                 else if (alias == null)
                 {
                     alias = segment;
+                }
+                else
+                {
+                    if (BadInvocations.Add(invocationName))
+                    {
+                        agent?.Logger.Debug($"Unable to parse function name '{invocationName}'");
+                    }
+                    return null;
+                }
+            }
+
+            if (string.IsNullOrEmpty(functionName))
+            {
+                if (!string.IsNullOrEmpty(fallback))
+                {
+                    functionName = fallback;
                 }
                 else
                 {
