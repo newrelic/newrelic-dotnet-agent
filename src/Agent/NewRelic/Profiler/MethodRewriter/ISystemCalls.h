@@ -46,29 +46,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual std::unique_ptr<xstring_t> GetNewRelicHomePath()
         {
-            auto homePath = TryGetEnvironmentVariable(GetNewRelicHomePathVariable());
-
-            if (homePath == nullptr)
-            {
-                homePath = TryGetEnvironmentVariable(GetLegacyNewRelicHomePathVariable());
-            }
-            return homePath;
+            return GetEnvironmentVariableWithFallback(GetNewRelicHomePathVariable(), GetLegacyNewRelicHomePathVariable());
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicInstallPath()
         {
-            auto installPath = TryGetEnvironmentVariable(GetNewRelicInstallPathVariable());
-            if (installPath == nullptr)
-            {
-                installPath = TryGetEnvironmentVariable(GetLegacyNewRelicInstallPathVariable());
-            }
-            return installPath;
+            return GetEnvironmentVariableWithFallback(GetNewRelicInstallPathVariable(), GetLegacyNewRelicInstallPathVariable());
         }
 
         virtual bool GetForceProfiling()
         {
-            return TryGetEnvironmentVariable(_X("NEW_RELIC_FORCE_PROFILING")) != nullptr
-                || TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_FORCE_PROFILING"), _X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
         virtual bool GetIsAppDomainCachingDisabled()
@@ -78,34 +66,22 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
         {
-            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"));
-            return modernValue != nullptr
-                ? std::move(modernValue)
-                : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"), _X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory()
         {
-            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"));
-            return modernValue != nullptr
-                ? std::move(modernValue)
-                : TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"), _X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory()
         {
-            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_DIRECTORY"));
-            return modernValue != nullptr
-                ? std::move(modernValue)
-                :TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_DIRECTORY"), _X("NEWRELIC_LOG_DIRECTORY"));
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel()
         {
-            auto modernValue = TryGetEnvironmentVariable(_X("NEW_RELIC_LOG_LEVEL"));
-            return modernValue != nullptr
-                ? std::move(modernValue)
-                : TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_LEVEL"), _X("NEWRELIC_LOG_LEVEL"));
         }
 
         virtual std::unique_ptr<xstring_t> GetAppPoolId()
@@ -165,6 +141,20 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             }
 
             return fallback;
+        }
+
+        std::unique_ptr<xstring_t> GetEnvironmentVariableWithFallback(const xstring_t& newVariable, const xstring_t& oldVariable)
+        {
+            auto variableValue = TryGetEnvironmentVariable(newVariable);
+            if (variableValue == nullptr)
+            {
+                variableValue = TryGetEnvironmentVariable(oldVariable);
+                if (variableValue != nullptr)
+                {
+                    LogWarn(_X("The environment variable '"), oldVariable, _X("' is deprecated and may be removed in a future major version. Please use '"), newVariable, _X("' instead."));
+                }
+            }
+            return variableValue;
         }
     };
     typedef std::shared_ptr<ISystemCalls> ISystemCallsPtr;
