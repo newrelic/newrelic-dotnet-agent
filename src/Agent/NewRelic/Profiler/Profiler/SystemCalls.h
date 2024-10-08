@@ -40,7 +40,7 @@ namespace NewRelic { namespace Profiler
 
             if (result == 0) return nullptr; // not found
 
-            // if variableName starts with NEWRELIC_, log a message indicating that the variable will be deprecated in the next major revision
+            // if variableName starts with NEWRELIC_, log a message indicating that the variable may be deprecated in a future major revision
             if (variableName.find(_X("NEWRELIC_")) == 0)
             {
                 // create a new variable, replacing NEWRELIC_ with NEW_RELIC_
