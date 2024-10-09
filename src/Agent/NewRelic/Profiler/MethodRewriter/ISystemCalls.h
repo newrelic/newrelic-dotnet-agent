@@ -12,7 +12,7 @@
 namespace NewRelic { namespace Profiler { namespace MethodRewriter {
     struct ISystemCalls : Logger::IFileDestinationSystemCalls
     {
-        virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) = 0;
+        std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override = 0;
         virtual bool FileExists(const xstring_t& filePath) = 0;
 
         virtual void SetCoreAgent(bool IsCore = false)
@@ -44,7 +44,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return _X("NEW_RELIC_INSTALL_PATH");
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicHomePath()
+        std::unique_ptr<xstring_t> GetNewRelicHomePath() override
         {
             return GetEnvironmentVariableWithFallback(GetNewRelicHomePathVariable(), GetLegacyNewRelicHomePathVariable());
         }
@@ -69,17 +69,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"), _X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory()
+        std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override
         {
             return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"), _X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory()
+        std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override
         {
             return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_DIRECTORY"), _X("NEWRELIC_LOG_DIRECTORY"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel()
+        std::unique_ptr<xstring_t> GetNewRelicLogLevel() override
         {
             return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_LEVEL"), _X("NEWRELIC_LOG_LEVEL"));
         }
