@@ -44,6 +44,36 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(_systemCalls.GetForceProfiling());
         }
 
+        TEST_METHOD(GetNewRelicHomePath_UsesNewOverOldEnvironmentVariable_WhenIsCoreClr_IsSet)
+        {
+            _systemCalls.ResetEnvironmentVariables();
+            _systemCalls.SetCoreAgent(true);
+            _systemCalls.environmentVariables[L"CORECLR_NEW_RELIC_HOME"] = L"C:\\NewRelic";
+            _systemCalls.environmentVariables[L"CORECLR_NEWRELIC_HOME"] = L"C:\\OldRelic";
+
+            std::unique_ptr<xstring_t> basicString = _systemCalls.GetNewRelicHomePath();
+            Assert::AreEqual(L"C:\\NewRelic", basicString->c_str());
+        }
+
+        TEST_METHOD(GetNewRelicHomePath_UsesOldEnvironmentVariable_WhenIsCoreClr_IsSet)
+        {
+            _systemCalls.ResetEnvironmentVariables();
+            _systemCalls.SetCoreAgent(true);
+            _systemCalls.environmentVariables[L"CORECLR_NEWRELIC_HOME"] = L"C:\\NewRelic";
+
+            std::unique_ptr<xstring_t> basicString = _systemCalls.GetNewRelicHomePath();
+            Assert::AreEqual(L"C:\\NewRelic", basicString->c_str());
+        }
+
+        TEST_METHOD(GetNewRelicHomePath_UsesNewEnvironmentVariable_WhenIsCoreClr_IsSet)
+        {
+            _systemCalls.ResetEnvironmentVariables();
+            _systemCalls.SetCoreAgent(true);
+            _systemCalls.environmentVariables[L"CORECLR_NEW_RELIC_HOME"] = L"C:\\NewRelic";
+
+            std::unique_ptr<xstring_t> basicString = _systemCalls.GetNewRelicHomePath();
+            Assert::AreEqual(L"C:\\NewRelic", basicString->c_str());
+        }
 
         TEST_METHOD(GetNewRelicHomePath_UsesNewEnvironmentVariable)
         {
@@ -211,6 +241,53 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             auto logLevel = _systemCalls.GetNewRelicLogLevel();
             Assert::IsNotNull(logLevel.get());
             Assert::AreEqual(L"info", logLevel->c_str());
+        }
+
+        TEST_METHOD(GetAppPoolId_ReturnsExpectedValue)
+        {
+            _systemCalls.environmentVariables[_X("APP_POOL_ID")] = _X("MyAppPool");
+
+            auto appPoolId = _systemCalls.GetAppPoolId();
+            Assert::IsNotNull(appPoolId.get());
+            Assert::AreEqual(L"MyAppPool", appPoolId->c_str());
+        }
+
+        TEST_METHOD(IsAzureFunction_ReturnsTrue_WhenEnvironmentVariableIsNotEmpty)
+        {
+            _systemCalls.environmentVariables[_X("FUNCTIONS_WORKER_RUNTIME")] = _X("1234");
+
+            Assert::IsTrue(_systemCalls.IsAzureFunction());
+        }
+
+        TEST_METHOD(IsAzureFunction_ReturnsFalse_WhenEnvironmentVariableIsEmpty)
+        {
+            _systemCalls.environmentVariables[_X("FUNCTIONS_WORKER_RUNTIME")] = _X("");
+
+            Assert::IsFalse(_systemCalls.IsAzureFunction());
+        }
+
+        TEST_METHOD(IsAzureFunction_ReturnsFalse_WhenEnvironmentVariableIsNotSet)
+        {
+            Assert::IsFalse(_systemCalls.IsAzureFunction());
+        }
+
+        TEST_METHOD(IsAzureFuncdtionLogLevelOverrideEnabled_ReturnsTrue_WhenEnvironmentVariableIsTrue)
+        {
+            _systemCalls.environmentVariables[_X("NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE")] = _X("true");
+
+            Assert::IsTrue(_systemCalls.IsAzureFunctionLogLevelOverrideEnabled());
+        }
+
+        TEST_METHOD(IsAzureFuncdtionLogLevelOverrideEnabled_ReturnsFalse_WhenEnvironmentVariableIsFalse)
+        {
+            _systemCalls.environmentVariables[_X("NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE")] = _X("false");
+
+            Assert::IsFalse(_systemCalls.IsAzureFunctionLogLevelOverrideEnabled());
+        }
+
+        TEST_METHOD(IsAzureFuncdtionLogLevelOverrideEnabled_ReturnsFalse_WhenEnvironmentVariableIsNotSet)
+        {
+            Assert::IsFalse(_systemCalls.IsAzureFunctionLogLevelOverrideEnabled());
         }
 
     private:
