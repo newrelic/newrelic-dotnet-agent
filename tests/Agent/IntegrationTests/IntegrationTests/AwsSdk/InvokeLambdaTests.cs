@@ -41,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(20), 2);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(20),2);
                 }
             );
 
@@ -53,9 +53,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
             else
             {
                 _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaSync {_function} \"fakepayload\"");
-            }
-            _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaSync fakefunction fakepayload");
+                // This will fail without an ARN because there's no account ID
+                _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaSync fakefunction fakepayload");
 
+            }
             _fixture.Initialize();
         }
 
@@ -66,26 +67,39 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
+                new Assertions.ExpectedMetric {metricName = @"DotNet/InvokeRequest", CallCountAllHarvests = 2},
             };
-
             Assertions.MetricsExist(expectedMetrics, metrics);
 
             var transactions = _fixture.AgentLog.GetTransactionEvents();
+            Assert.Equal(2, transactions.Count());
 
-            Assert.NotNull(transactions);
-
-            var spans = _fixture.AgentLog.GetSpanEvents()
-                .Where(e => e.AgentAttributes.ContainsKey("cloud.resource_id"))
-                .ToList();
-
-            Assert.Equal(_isAsync ? 2 : 1, spans.Count);
-
-            foreach (var span in spans)
+            foreach (var transaction in transactions)
             {
-                Assert.Equal(_arn, span.AgentAttributes["cloud.resource_id"]);
+                Assert.StartsWith("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk.InvokeLambdaExerciser/InvokeLambda", transaction.IntrinsicAttributes["name"].ToString());
+            }
+
+            var allSpans = _fixture.AgentLog.GetSpanEvents()
+                .Where(e => e.AgentAttributes.ContainsKey("cloud.platform"))
+                .ToList();
+            Assert.Equal(2, allSpans.Count);
+
+            foreach (var span in allSpans)
+            {
                 Assert.Equal("aws_lambda", span.AgentAttributes["cloud.platform"]);
                 Assert.Equal("InvokeRequest", span.AgentAttributes["aws.operation"]);
                 Assert.Equal("us-west-2", span.AgentAttributes["aws.region"]);
+            }
+
+            // There should be one fewer span in this list, because there's one where there wasn't
+            // enough info to create an ARN
+            var spansWithArn = _fixture.AgentLog.GetSpanEvents()
+                .Where(e => e.AgentAttributes.ContainsKey("cloud.resource_id"))
+                .ToList();
+            Assert.Equal(_isAsync ? 2 : 1, spansWithArn.Count);
+            foreach (var span in spansWithArn)
+            {
+                Assert.Equal(_arn, span.AgentAttributes["cloud.resource_id"]);
             }
         }
     }

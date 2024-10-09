@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.IO;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
@@ -34,6 +35,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
             catch
             {
             }
+#else
+            throw new Exception($"Synchronous calls are only supported on .NET Framework!");
 #endif
         }
 
