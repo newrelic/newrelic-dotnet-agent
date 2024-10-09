@@ -605,12 +605,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return false;
             }
 
-            // returns -1 if env var isn't specified at all
-            auto isAzureFunctionModeEnabled = IsAzureFunctionModeEnabled();
-
             if (IsAzureFunction())
             {
-                if (isAzureFunctionModeEnabled == 1) {
+                if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
+                {
                     auto retVal = ShouldInstrumentAzureFunction(processPath, appPoolId, commandLine);
                     if (retVal == 0) {
                         return false;
@@ -618,10 +616,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                     if (retVal == 1) {
                         return true;
                     }
-                }
-                else if (isAzureFunctionModeEnabled == 0)
-                {
-                    return false;
                 }
             }
 
@@ -632,12 +626,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return true;
         }
 
-        int IsAzureFunctionModeEnabled() const
+        bool IsAzureFunctionModeEnabled() const
         {
             auto azureFunctionModeEnabled = _systemCalls->TryGetEnvironmentVariable(_X("AZURE_FUNCTION_MODE_ENABLED"));
 
             if (azureFunctionModeEnabled == nullptr || azureFunctionModeEnabled->length() == 0) {
-                return -1;
+                return false;
             }
 
             return Strings::AreEqualCaseInsensitive(*azureFunctionModeEnabled, _X("true")) || Strings::AreEqualCaseInsensitive(*azureFunctionModeEnabled, _X("1"));

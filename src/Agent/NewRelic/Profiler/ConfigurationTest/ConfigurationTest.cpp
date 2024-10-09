@@ -74,10 +74,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         }
 
         // tests to verify that "legacy" behavior (before azure function support) is retained.
-        // If AZURE_FUNCTION_MODE_ENABLED environment variable is not set, we should behave as if
-        // no azure function support has been added.
-        // This can be removed when azure function support is enabled by default.
-        TEST_METHOD(should_instrument_azure_function_if_environment_variable_not_specified)
+        // If AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
+        // we should behave as if no azure function support has been added.
+        TEST_METHOD(azure_function_should_behave_as_legacy_if_azure_function_mode_not_specified)
         {
             std::wstring configurationXml(L"\
     <?xml version=\"1.0\"?>\
@@ -94,7 +93,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
-        TEST_METHOD(should_not_instrument_azure_function_if_azure_function_mode_is_disabled)
+        // tests to verify that "legacy" behavior (before azure function support) is retained.
+        // If AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
+        // we should behave as if no azure function support has been added.
+        TEST_METHOD(azure_function_should_behave_as_legacy_if_azure_function_mode_disabled)
         {
             std::wstring configurationXml(L"\
     <?xml version=\"1.0\"?>\
@@ -109,7 +111,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
-            Assert::IsFalse(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
         TEST_METHOD(should_not_instrument_azure_function_app_pool_id_in_commandline)
