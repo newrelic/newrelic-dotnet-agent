@@ -1393,5 +1393,17 @@ namespace NewRelic.Agent.Core.Transactions
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
         }
+
+        public void AddCloudSdkAttribute(string name, object value)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Log.Debug($"AddCloudSdkAttribute - Unable to set Cloud value on transaction because the key is null/empty");
+                return;
+            }
+
+            var cloudAttrib = _attribDefs.GetCloudSdkAttribute(name);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(cloudAttrib, value);
+        }
     }
 }

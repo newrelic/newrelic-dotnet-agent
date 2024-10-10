@@ -311,5 +311,7 @@ namespace NewRelic.Agent.Api
         void AddLambdaAttribute(string name, object value);
 
         void AddFaasAttribute(string name, object value);
+
+        void AddCloudSdkAttribute(string name, object value);
     }
 }
