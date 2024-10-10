@@ -43,5 +43,11 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         /// <exception cref="SecurityException">The caller does not have the required permission to perform this operation.</exception>
         Dictionary<string, string> GetEnvironmentVariablesWithPrefix(string prefix);
 
+        /// <summary>
+        /// Retrieves the value of an environment variable, searching the provided list of variables in order. The first variable found is returned.
+        /// </summary>
+        /// <param name="variables">A list of one or more environment variable names to search, in order of preference</param>
+        /// <returns>The value of the first matching environment variable, if found, otherwise <c>null</c></returns>
+        string GetEnvironmentVariableFromList(params string[] variables);
     }
 }

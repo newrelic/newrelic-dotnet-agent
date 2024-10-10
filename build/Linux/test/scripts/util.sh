@@ -71,8 +71,8 @@ function install_tarball {
     IS "$latest_tarball" =~ tar
     tar xvfz "$latest_tarball"
     popd
-    export CORECLR_NEWRELIC_HOME="${install_path}/${PACKAGE_NAME}"
-    echo "install_tarball CORECLR_NEWRELIC_HOME=${CORECLR_NEWRELIC_HOME}"
+    export CORECLR_NEW_RELIC_HOME="${install_path}/${PACKAGE_NAME}"
+    echo "install_tarball CORECLR_NEW_RELIC_HOME=${CORECLR_NEW_RELIC_HOME}"
     source "${install_path}/${PACKAGE_NAME}/setenv.sh"
 }
 
@@ -129,7 +129,7 @@ function bad {
 }
 
 function verify_no_logs {
-    log_dir="${CORECLR_NEWRELIC_HOME}/logs"
+    log_dir="${CORECLR_NEW_RELIC_HOME}/logs"
     log_file_count=$(ls -A1 "$log_dir" |wc -l)
     IS "$log_file_count" == 0
     if [[ "$log_file_count" -gt 0 ]]; then
@@ -140,7 +140,7 @@ function verify_no_logs {
 }
 
 function verify_logs_exist {
-    log_dir="${CORECLR_NEWRELIC_HOME}/logs"
+    log_dir="${CORECLR_NEW_RELIC_HOME}/logs"
     log_file_count=$(ls -A1 "$log_dir" |wc -l)
     IS "$log_file_count" != 0
     if [[ "$log_file_count" -gt 0 ]]; then
@@ -152,7 +152,7 @@ function verify_logs_exist {
 
 function verify_agent_log_exists {
     app_name="$1"
-    logfile_name="$CORECLR_NEWRELIC_HOME/logs/newrelic_agent_${app_name}.log"
+    logfile_name="$CORECLR_NEW_RELIC_HOME/logs/newrelic_agent_${app_name}.log"
     OK -e "$logfile_name"
     if [[ -e "$logfile_name" ]]; then
         good "Verified agent log file $logfile_name was created"
@@ -162,7 +162,7 @@ function verify_agent_log_exists {
 }
 
 function verify_agent_log_grep {
-    count=$(grep "$1" ${CORECLR_NEWRELIC_HOME}/logs/* |wc -l)
+    count=$(grep "$1" ${CORECLR_NEW_RELIC_HOME}/logs/* |wc -l)
     IS "$count" != 0
     if [[ "$count" -gt 0 ]]; then
         good "$1 was in the log files"

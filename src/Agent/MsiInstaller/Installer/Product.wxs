@@ -761,7 +761,8 @@ SPDX-License-Identifier: Apache-2.0
     <!-- Global environment variables -->
     <ComponentGroup Id="EnvironmentVariableComponents" Directory="TARGETDIR">
       <Component Guid="{A54E9E06-E477-4D0F-8063-9BEDD6BC0B7B}">
-        <Environment Id="NewRelicInstallPathEnvironment" System="yes" Name="NEWRELIC_INSTALL_PATH" Value="[NETAGENTFOLDER]" Action="set" />
+        <Environment Id="OldNewRelicInstallPathEnvironment" System="yes" Name="NEWRELIC_INSTALL_PATH" Action="remove" />
+        <Environment Id="NewRelicInstallPathEnvironment" System="yes" Name="NEW_RELIC_INSTALL_PATH" Value="[NETAGENTFOLDER]" Action="set" />
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Agent" Name="NewRelicInstallPathEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
@@ -796,7 +797,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrProfilerPathEnvironmentRemoved" Type="integer" Value="1" KeyPath="yes" />
       </Component>
       <Component Guid="{B63A32D5-33CC-4334-844C-B3B9E265B191}">
-        <Environment Id="CoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Value="[NETAGENTCOMMONFOLDER]" Action="set" />
+        <Environment Id="OldCoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Action="remove" />
+        <Environment Id="CoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEW_RELIC_HOME" Value="[NETAGENTCOMMONFOLDER]" Action="set" />
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrNewRelicHomeEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
@@ -807,7 +809,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\W3SVC" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="COR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -817,7 +819,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\WAS" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="COR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -830,8 +832,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\W3SVC" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="CORECLR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}" />
-          <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="CORECLR_NEW_RELIC_HOME=[NETAGENTCOMMONFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -841,8 +843,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\WAS" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="CORECLR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}" />
-          <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="CORECLR_NEW_RELIC_HOME=[NETAGENTCOMMONFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>

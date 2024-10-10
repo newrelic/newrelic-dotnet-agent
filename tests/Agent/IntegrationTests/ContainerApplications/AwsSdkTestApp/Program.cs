@@ -52,7 +52,7 @@ public class Program
 
     static void CreatePidFile()
     {
-        var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEWRELIC_LOG_DIRECTORY"), "containerizedapp.pid");
+        var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEW_RELIC_LOG_DIRECTORY"), "containerizedapp.pid");
         var pid = Environment.ProcessId;
         using var file = File.CreateText(pidFileNameAndPath);
         file.WriteLine(pid);

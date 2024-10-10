@@ -139,7 +139,7 @@ jobs:
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      CORECLR_NEWRELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
 
     steps:
       # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step

@@ -76,22 +76,20 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 
             if (envKey != null)
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY")).Returns(envKey);
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LICENSEKEY")).Returns(envKey);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY")).Returns(envKey);
             }
             else
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY")).Returns<string>(null);
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LICENSEKEY")).Returns<string>(null);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY")).Returns<string>(null);
             }
 
             if (envOverrideHost != null)
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HOST")).Returns(envOverrideHost);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HOST")).Returns(envOverrideHost);
             }
             else
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HOST")).Returns<string>(null);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HOST")).Returns<string>(null);
             }
 
             if (configFileKey != null)
