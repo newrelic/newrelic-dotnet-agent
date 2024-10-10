@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.8" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.403.8" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.404.5" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.404.5" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -26,23 +26,23 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="MassTransit" Version="8.2.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MassTransit" Version="8.2.5" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="8.2.5" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="8.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -56,8 +56,8 @@
     <PackageReference Include="NLog" Version="5.3.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NLog" Version="5.3.4" Condition="'$(TargetFramework)' == 'net8.0'" />
 
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- npgsql is on version 8, but we don't (currently) support it -->
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
@@ -69,17 +69,17 @@
 
     
     <!-- modern oracle only supports net472+ and net6.0+ -->
-    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.5.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.6.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
-    <PackageReference Include="RestSharp" Version="112.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RestSharp" Version="112.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     
-    <PackageReference Include="Serilog" Version="4.0.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog" Version="4.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Serilog" Version="4.0.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="4.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
