@@ -31,12 +31,26 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         _fixture.AddActions(
             setupConfiguration: () =>
             {
-                new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier
                     .ForceTransactionTraces()
                     .ConfigureFasterTransactionTracesHarvestCycle(20)
                     .ConfigureFasterMetricsHarvestCycle(15)
                     .ConfigureFasterSpanEventsHarvestCycle(15)
                     .SetLogLevel("finest");
+
+                // This is a bit of a kludge. When azure function instrumentation is disabled,
+                // the agent instruments *two* processes: the azure function host (func.exe) and the actual function app.
+                // Both processes use the same config files, so explicitly setting the log file name forces both
+                // processes to log to the same file, which makes it easier to verify that the
+                // actual function app is not being instrumented when the Invoke() method gets hit.
+                //
+                // Ideally, we'd prefer to look for the specific log file for the azure function app, but that's less trivial
+                // and not worth the effort for this one test.
+                if (!_fixture.AzureFunctionModeEnabled)
+                {
+                    configModifier.SetLogFileName("azure_function_instrumentation_disabled.log");
+                }
             },
             exerciseApplication: () =>
             {
@@ -138,8 +152,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (!_fixture.AzureFunctionModeEnabled) // look for a specific log line that indicates azure function mode is disabled
         {
-            var disabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.AzureFunctionModeDisabledLogLineRegex);
-            Assert.NotNull(disabledLogLine);
+            var disabledLogLines = _fixture.AgentLog.TryGetLogLines(AgentLogBase.AzureFunctionModeDisabledLogLineRegex);
+            Assert.Single(disabledLogLines);
         }
     }
 
