@@ -74,7 +74,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         }
 
         // tests to verify that "legacy" behavior (before azure function support) is retained.
-        // If AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
+        // If NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
         // we should behave as if no azure function support has been added.
         TEST_METHOD(azure_function_should_behave_as_legacy_if_azure_function_mode_not_specified)
         {
@@ -94,7 +94,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         }
 
         // tests to verify that "legacy" behavior (before azure function support) is retained.
-        // If AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
+        // If NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
         // we should behave as if no azure function support has been added.
         TEST_METHOD(azure_function_should_behave_as_legacy_if_azure_function_mode_disabled)
         {
@@ -107,7 +107,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
             systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-            systemCalls->environmentVariables[L"AZURE_FUNCTION_MODE_ENABLED"] = L"0";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"0";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
@@ -125,7 +125,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
             systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-            systemCalls->environmentVariables[L"AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
@@ -143,7 +143,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
             systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-            systemCalls->environmentVariables[L"AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
@@ -161,7 +161,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
             systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-            systemCalls->environmentVariables[L"AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
@@ -179,7 +179,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
             systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
-            systemCalls->environmentVariables[L"AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
