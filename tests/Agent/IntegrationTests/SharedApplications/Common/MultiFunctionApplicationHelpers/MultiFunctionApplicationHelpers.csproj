@@ -183,7 +183,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <ItemGroup>
