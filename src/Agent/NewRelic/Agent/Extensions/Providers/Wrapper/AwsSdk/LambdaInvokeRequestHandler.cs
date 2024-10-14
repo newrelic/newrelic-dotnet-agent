@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Helpers;
@@ -50,6 +51,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             string arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
+            segment.GetExperimentalApi().MakeLeaf();
 
             transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
             transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
