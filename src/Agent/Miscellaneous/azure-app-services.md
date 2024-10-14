@@ -29,7 +29,7 @@ An example of this configuration inside a `.csproj` file looks something like:
 CORECLR_ENABLE_PROFILING=1
 CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
 CORECLR_PROFILER_PATH=D:\Home\site\wwwroot\newrelic\NewRelic.Profiler.dll
-CORECLR_NEWRELIC_HOME=D:\Home\site\wwwroot\newrelic
+CORECLR_NEW_RELIC_HOME=D:\Home\site\wwwroot\newrelic
 ```
 Note: environment variables for Azure App Services are set in the `Application settings` configuration page for your app, under `App settings`.  You can verify the environment variables for your app by browsing to the `Environment` tab of your app's Kudu diagnostic console and then jumping to the `Environment Variables` section, e.g. `https://myappname.scm.azurewebsites.net/Env.cshtml#envVariables`
 

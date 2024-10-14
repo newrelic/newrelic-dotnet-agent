@@ -284,7 +284,7 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetNewRelicLogDirectory()
             {
-                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEWRELIC_LOG_DIRECTORY");
+                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", "NEWRELIC_LOG_DIRECTORY");
                 if (newRelicLogDirectory != null && _checkDirectoryExists(newRelicLogDirectory)) return _getFullPath(newRelicLogDirectory);
 
                 return newRelicLogDirectory;

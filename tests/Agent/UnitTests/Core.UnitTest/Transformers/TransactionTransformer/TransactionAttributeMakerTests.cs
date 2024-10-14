@@ -1674,7 +1674,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
             Mock.Arrange(() => dnsStatic.GetHostName()).Returns("coconut");
-            Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
+            Mock.Arrange(() => environment.GetEnvironmentVariableFromList("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
             localConfig.processHost.displayName = localConfigurationValue;
 
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Unknown));

@@ -108,20 +108,27 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
         startInfo.EnvironmentVariables.Remove("COR_PROFILER");
         startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_APP_NAME");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
+        startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
+        startInfo.EnvironmentVariables.Remove("CORECLR_ENABLE_PROFILING");
+        startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
+        startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
+        startInfo.EnvironmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
+        startInfo.EnvironmentVariables.Remove("NETWORK_NAME");
+
         startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
-        startInfo.EnvironmentVariables.Remove("NEW_RELIC_APP_NAME");
-        startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
-        startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
         startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
-        startInfo.EnvironmentVariables.Remove("CORECLR_ENABLE_PROFILING");
-        startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
-        startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
         startInfo.EnvironmentVariables.Remove("CORECLR_NEWRELIC_HOME");
-        startInfo.EnvironmentVariables.Remove("NETWORK_NAME");
 
         // Docker compose settings
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
