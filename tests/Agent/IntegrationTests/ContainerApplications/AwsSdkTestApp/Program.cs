@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Amazon;
 using AwsSdkTestApp.SQSBackgroundService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,6 +23,10 @@ public class Program
 
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
+
+        var initCollections = GetBoolFromEnvVar("AWSSDK_INITCOLLECTIONS", true);
+
+        AWSConfigs.InitializeCollections = initCollections;
 
         // Add services to the container.
         builder.Services.AddControllers();
@@ -56,5 +61,28 @@ public class Program
         var pid = Environment.ProcessId;
         using var file = File.CreateText(pidFileNameAndPath);
         file.WriteLine(pid);
+    }
+
+    static bool GetBoolFromEnvVar(string name, bool defaultValue)
+    {
+        bool returnVal = defaultValue;
+        var envVarVal = Environment.GetEnvironmentVariable(name);
+        if (envVarVal != null)
+        {
+            Console.WriteLine($"Value of env var {name}={envVarVal}");
+            if (bool.TryParse(envVarVal, out returnVal))
+            {
+                Console.WriteLine($"Parsed bool from env var: {returnVal}");
+            }
+            else
+            {
+                Console.WriteLine("Could not parse bool from env var val: " + envVarVal);
+            }
+        }
+        else
+        {
+            Console.WriteLine($"{name} is not set in the environment");
+        }
+        return returnVal;
     }
 }

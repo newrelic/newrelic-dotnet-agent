@@ -32,7 +32,6 @@ namespace AwsSdkTestApp.AwsSdkExerciser
 
         private AmazonSQSClient GetSqsClient()
         {
-            AWSConfigs.InitializeCollections = false;
             // configure the client to use LocalStack
             var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
             var config = new AmazonSQSConfig

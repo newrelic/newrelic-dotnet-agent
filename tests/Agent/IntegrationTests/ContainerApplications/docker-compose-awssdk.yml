@@ -24,7 +24,7 @@ services:
   localstack:
     container_name: "localstack-containertest"
     image: localstack/localstack:stable
-    expose: # ports are only available intneral to the service, not external so there's no chance for conflicts
+    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "4566"       # LocalStack Gateway
       - "4510-4559"  # external services port range
     environment:
@@ -52,6 +52,7 @@ services:
         NEW_RELIC_HOST: ${NEW_RELIC_HOST}
         DOTNET_VERSION: ${DOTNET_VERSION}
         APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
+        AWSSDK_INITCOLLECTIONS: ${AWSSDK_INITCOLLECTIONS}
     ports:
       - "${PORT}:80"
     volumes:

@@ -13,7 +13,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
         string distroTag,
         ContainerApplication.Architecture containerArchitecture,
         string dockerfile,
-        string dockerComposeFile = "docker-compose-awssdk.yml")
+        string dockerComposeFile = "docker-compose-awssdk.yml") 
         : RemoteApplicationFixture(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile,
             dockerComposeFile, "awssdktestapp"))
     {
