@@ -8,6 +8,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -569,9 +570,14 @@ namespace NewRelic.Agent.Core.Config
         // configuration logic to use the same environment variable logic.
         public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
-        public static string GetEnvironmentVar(string name)
+        public static string GetEnvironmentVar(params string[] environmentVariableNames)
         {
-            return EnvironmentVariableProxy.GetEnvironmentVariable(name);
+            var result = (environmentVariableNames ?? Enumerable.Empty<string>())
+                .Select(EnvironmentVariableProxy.GetEnvironmentVariable)
+                .FirstOrDefault(value => value != null);
+
+            // needs to return null instead of empty string
+            return result == string.Empty ? null : result;
         }
 
         public static string GetOverride(string name, string fallback)

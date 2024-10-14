@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10
 	ProjectSection(SolutionItems) = preProject
 		ContainerApplications\docker-compose-awssdk.yml = ContainerApplications\docker-compose-awssdk.yml
 		ContainerApplications\docker-compose-kafka.yml = ContainerApplications\docker-compose-kafka.yml
+		ContainerApplications\docker-compose-memcached.yml = ContainerApplications\docker-compose-memcached.yml
 		ContainerApplications\docker-compose.yml = ContainerApplications\docker-compose.yml
 	EndProjectSection
 EndProject
@@ -33,6 +34,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemcachedTestApp", "ContainerApplications\MemcachedTestApp\MemcachedTestApp.csproj", "{3D46F286-A19A-4942-8E3F-8999E953A6F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +75,10 @@ Global
 		{70731828-AFC8-4262-9076-3FB39E224D10}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70731828-AFC8-4262-9076-3FB39E224D10}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70731828-AFC8-4262-9076-3FB39E224D10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,6 +88,7 @@ Global
 		{FB10922F-3CC6-4497-AF53-DF6808380258} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{70731828-AFC8-4262-9076-3FB39E224D10} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB230433-D05D-4A1F-951B-CC14F47BBF42}

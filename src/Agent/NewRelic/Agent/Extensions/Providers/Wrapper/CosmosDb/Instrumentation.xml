@@ -15,5 +15,10 @@ SPDX-License-Identifier: Apache-2.0
 			<exactMethodMatcher methodName="ExecuteItemQueryAsync" parameters="System.String,Microsoft.Azure.Documents.ResourceType,Microsoft.Azure.Documents.OperationType,System.Guid,Microsoft.Azure.Cosmos.FeedRange,Microsoft.Azure.Cosmos.QueryRequestOptions,Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec,System.String,System.Boolean,System.Int32,Microsoft.Azure.Cosmos.Tracing.ITrace,System.Threading.CancellationToken" />
 			</match>
 		</tracerFactory>
+    <tracerFactory name="ExecuteItemQueryAsyncWrapper">
+      <match assemblyName="Microsoft.Azure.Cosmos.Client" className="Microsoft.Azure.Cosmos.CosmosQueryClientCore">
+        <exactMethodMatcher methodName="ExecuteItemQueryAsync" parameters="System.String,Microsoft.Azure.Documents.ResourceType,Microsoft.Azure.Documents.OperationType,Microsoft.Azure.Cosmos.FeedRange,Microsoft.Azure.Cosmos.QueryRequestOptions,Microsoft.Azure.Cosmos.Query.Core.AdditionalRequestHeaders,Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec,System.String,System.Int32,Microsoft.Azure.Cosmos.Tracing.ITrace,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
 	</instrumentation>
 </extension>

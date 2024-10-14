@@ -22,7 +22,7 @@ jobs:
 
   deploy-nuget:
     name: Deploy to NuGet
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       nuget_source: https://www.nuget.org

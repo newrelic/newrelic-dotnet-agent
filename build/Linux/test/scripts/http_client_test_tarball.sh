@@ -8,7 +8,7 @@ install_tarball "/custom/install/path"
 
 verify_no_logs
 
-$CORECLR_NEWRELIC_HOME/run.sh dotnet run
+$CORECLR_NEW_RELIC_HOME/run.sh dotnet run
 
 verify_logs_exist
 

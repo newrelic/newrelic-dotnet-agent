@@ -12,7 +12,7 @@
 namespace NewRelic { namespace Profiler { namespace MethodRewriter {
     struct ISystemCalls : Logger::IFileDestinationSystemCalls
     {
-        virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) = 0;
+        std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override = 0;
         virtual bool FileExists(const xstring_t& filePath) = 0;
 
         virtual void SetCoreAgent(bool IsCore = false)
@@ -20,31 +20,43 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _isCoreClr = IsCore;
         }
 
-        virtual xstring_t GetNewRelicHomePathVariable()
+        virtual xstring_t GetLegacyNewRelicHomePathVariable()
         {
             return _isCoreClr
                 ? _X("CORECLR_NEWRELIC_HOME")
                 : _X("NEWRELIC_HOME");
         }
 
-        virtual xstring_t GetNewRelicInstallPathVariable()
+        virtual xstring_t GetNewRelicHomePathVariable()
+        {
+            return _isCoreClr
+                ? _X("CORECLR_NEW_RELIC_HOME")
+                : _X("NEW_RELIC_HOME");
+        }
+
+        virtual xstring_t GetLegacyNewRelicInstallPathVariable()
         {
             return _X("NEWRELIC_INSTALL_PATH");
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicHomePath()
+        virtual xstring_t GetNewRelicInstallPathVariable()
         {
-            return TryGetEnvironmentVariable(GetNewRelicHomePathVariable());
+            return _X("NEW_RELIC_INSTALL_PATH");
+        }
+
+        std::unique_ptr<xstring_t> GetNewRelicHomePath() override
+        {
+            return GetEnvironmentVariableWithFallback(GetNewRelicHomePathVariable(), GetLegacyNewRelicHomePathVariable());
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicInstallPath()
         {
-            return TryGetEnvironmentVariable(GetNewRelicInstallPathVariable());
+            return GetEnvironmentVariableWithFallback(GetNewRelicInstallPathVariable(), GetLegacyNewRelicInstallPathVariable());
         }
 
         virtual bool GetForceProfiling()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_FORCE_PROFILING"), _X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
         virtual bool GetIsAppDomainCachingDisabled()
@@ -54,22 +66,22 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_DELAY_IN_SEC"), _X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory()
+        std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_PROFILER_LOG_DIRECTORY"), _X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory()
+        std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_DIRECTORY"), _X("NEWRELIC_LOG_DIRECTORY"));
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel()
+        std::unique_ptr<xstring_t> GetNewRelicLogLevel() override
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
+            return GetEnvironmentVariableWithFallback(_X("NEW_RELIC_LOG_LEVEL"), _X("NEWRELIC_LOG_LEVEL"));
         }
 
         virtual std::unique_ptr<xstring_t> GetAppPoolId()
@@ -129,6 +141,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             }
 
             return fallback;
+        }
+
+        std::unique_ptr<xstring_t> GetEnvironmentVariableWithFallback(const xstring_t& newVariable, const xstring_t& oldVariable)
+        {
+            auto variableValue = TryGetEnvironmentVariable(newVariable);
+            if (variableValue == nullptr)
+            {
+                variableValue = TryGetEnvironmentVariable(oldVariable); // no need to log deprecation message; that's handled in the managed agent
+            }
+            return variableValue;
         }
     };
     typedef std::shared_ptr<ISystemCalls> ISystemCallsPtr;

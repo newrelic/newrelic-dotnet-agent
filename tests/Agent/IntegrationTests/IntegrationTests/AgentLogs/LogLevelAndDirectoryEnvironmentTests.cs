@@ -34,9 +34,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
                     _fixture.RemoteApplication.NewRelicConfig.SetLogLevel(_configLogLevel);
                     _fixture.RemoteApplication.NewRelicConfig.SetLogDirectory(_configLogDirectory);
 
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_LOG_LEVEL", _envLogLevel);
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_LOG_DIRECTORY", _generalEnvLogDirectory);
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_PROFILER_LOG_DIRECTORY", _profilerEnvLogDirectory);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_LEVEL", _envLogLevel);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_DIRECTORY", _generalEnvLogDirectory);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_PROFILER_LOG_DIRECTORY", _profilerEnvLogDirectory);
 
                     _fixture.AddCommand("HttpClientDriver Get");
                 }

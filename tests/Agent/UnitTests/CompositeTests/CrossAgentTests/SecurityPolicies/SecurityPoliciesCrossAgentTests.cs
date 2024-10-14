@@ -50,7 +50,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
-            Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");
+            Mock.Arrange(() => environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");
 
             _connectRawData = string.Empty;
             _receivedSecurityPoliciesException = false;
