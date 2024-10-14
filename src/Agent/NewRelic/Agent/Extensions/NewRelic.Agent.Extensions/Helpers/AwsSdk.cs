@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Extensions.Helpers
         // 3. 'function' (fixed string)
         // 4. Function name
         // 5. Alias or version
-        // Only the function name is required, the reset are all optional. e.g. you could have region and function name and nothing else
+        // Only the function name is required, the rest are all optional. e.g. you could have region and function name and nothing else
         public static string ConstructArn(IAgent agent, string invocationName, string region, string accountId)
         {
             if (invocationName.StartsWith("arn:"))

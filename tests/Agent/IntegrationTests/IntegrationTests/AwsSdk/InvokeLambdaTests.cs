@@ -21,15 +21,15 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
         private readonly string _arn;
         private readonly bool _isAsync;
 
-        public InvokeLambdaTestBase(TFixture fixture, ITestOutputHelper output, bool async, string function, string qualifier, string arn) : base(fixture)
+        public InvokeLambdaTestBase(TFixture fixture, ITestOutputHelper output, bool useAsync, string function, string qualifier, string arn) : base(fixture)
         {
             _function = function;
             _qualifier = qualifier;
             _arn = arn;
-            _isAsync = async;
+            _isAsync = useAsync;
 
             _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(20));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             _fixture.TestLogger = output;
             _fixture.AddActions(
@@ -41,11 +41,11 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(20),2);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2),2);
                 }
             );
 
-            if (async)
+            if (useAsync)
             {
                 _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaAsync {_function}:{_qualifier} \"fakepayload\"");
                 _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaAsyncWithQualifier {_function} {_qualifier} \"fakepayload\"");
