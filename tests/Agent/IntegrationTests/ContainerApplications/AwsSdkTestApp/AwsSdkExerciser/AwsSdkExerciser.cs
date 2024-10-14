@@ -8,6 +8,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using System.Linq;
 using System.Collections.Generic;
+using Amazon;
 
 namespace AwsSdkTestApp.AwsSdkExerciser
 {
@@ -31,6 +32,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
 
         private AmazonSQSClient GetSqsClient()
         {
+            AWSConfigs.InitializeCollections = false;
             // configure the client to use LocalStack
             var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
             var config = new AmazonSQSConfig
@@ -117,20 +119,30 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             if (messageAttributeNames.Count != 1)
                 throw new Exception("Expected messageAttributeNames to have a single element");
 
-            foreach (var message in response.Messages)
+            try
             {
-                Console.WriteLine($"Message: {message.Body}");
-                foreach (var attr in message.MessageAttributes)
+                foreach (var message in response.Messages)
                 {
-                    Console.WriteLine($"MessageAttributes: {attr.Key} = {{ DataType = {attr.Value.DataType}, StringValue = {attr.Value.StringValue}}}");
-                }
+                    Console.WriteLine($"Message: {message.Body}");
+                    if (message.MessageAttributes != null)
+                    {
+                        foreach (var attr in message.MessageAttributes)
+                        {
+                            Console.WriteLine($"MessageAttributes: {attr.Key} = {{ DataType = {attr.Value.DataType}, StringValue = {attr.Value.StringValue}}}");
+                        }
+                    }
 
-                // delete message
-                await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
-                {
-                    QueueUrl = _sqsQueueUrl,
-                    ReceiptHandle = message.ReceiptHandle
-                });
+                    // delete message
+                    await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
+                    {
+                        QueueUrl = _sqsQueueUrl,
+                        ReceiptHandle = message.ReceiptHandle
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Caught exception processing response messages: {ex.Message}");
             }
 
             return response.Messages;

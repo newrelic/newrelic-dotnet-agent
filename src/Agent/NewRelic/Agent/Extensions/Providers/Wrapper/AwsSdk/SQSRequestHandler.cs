@@ -107,7 +107,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         var ec = executionContext;
                         var response = ec.ResponseContext.Response; // response is a ReceiveMessageResponse
 
-                        if (response.Messages != null && response.Messages.Count > 0)
+                        if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
                         {
                             // accept distributed trace headers from the first message in the response
                             SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
@@ -124,7 +124,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 var taskResultGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
                 dynamic response = taskResultGetter(responseTask);
 
-                if (response.Messages != null && response.Messages.Count > 0)
+                if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
                 {
                     // accept distributed trace headers from the first message in the response
                     SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);

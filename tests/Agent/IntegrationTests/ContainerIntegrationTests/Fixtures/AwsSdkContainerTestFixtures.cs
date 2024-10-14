@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
