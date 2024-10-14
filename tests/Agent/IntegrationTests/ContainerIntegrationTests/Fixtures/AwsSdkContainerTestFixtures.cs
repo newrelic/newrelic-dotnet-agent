@@ -49,9 +49,22 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
     {
         var address = $"http://localhost:{Port}/awssdk";
 
-        var queueUrl =  GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
+        var queueUrl = GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
 
         GetAndAssertStatusCode($"{address}/SQS_SendMessageToQueue?message=Hello&messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        var messagesJson = GetString($"{address}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
+
+        GetAndAssertStatusCode($"{address}/SQS_DeleteQueue?messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        return messagesJson;
+    }
+
+    public string ExerciseSQS_ReceiveEmptyMessage(string queueName)
+    {
+        var address = $"http://localhost:{Port}/awssdk";
+
+        var queueUrl = GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
 
         var messagesJson = GetString($"{address}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
 

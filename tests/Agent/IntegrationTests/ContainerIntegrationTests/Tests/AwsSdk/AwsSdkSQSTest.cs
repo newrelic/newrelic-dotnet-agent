@@ -17,6 +17,7 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
 
     private readonly string _testQueueName1 = $"TestQueue1-{Guid.NewGuid()}";
     private readonly string _testQueueName2 = $"TestQueue2-{Guid.NewGuid()}";
+    private readonly string _testQueueName3 = $"TestQueue3-{Guid.NewGuid()}";
     private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdk/SQS_SendReceivePurge/{queueName}";
     private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdk/SQS_SendMessageToQueue/{message}/{messageQueueUrl}";
     private bool _initCollections;
@@ -48,6 +49,7 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
 
                 _fixture.ExerciseSQS_SendReceivePurge(_testQueueName1);
                 _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName2);
+                _fixture.ExerciseSQS_ReceiveEmptyMessage(_testQueueName3);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -64,6 +66,12 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
     [Fact]
     public void Test()
     {
+        // Making sure there are no application errors or wrapper exceptions
+        // See https://github.com/newrelic/newrelic-dotnet-agent/issues/2811
+
+        Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount());
+        Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount());
+
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -79,6 +87,11 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
             new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", callCount = 1, metricScope = _metricScope2},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
+
+            // Only consume metrics for queue 3
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
+
         };
 
         // If the AWS SDK is configured to NOT initialize empty collections, trace headers will not be accepted
@@ -116,12 +129,10 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
         var spans = _fixture.AgentLog.GetSpanEvents().ToList();
         var produceSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueProduce));
         var consumeSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueConsume));
-        var processRequestSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"));
 
         NrAssert.Multiple(
             () => Assert.True(produceSpan != null, "produceSpan should not be null"),
             () => Assert.True(consumeSpan != null, "consumeSpan should not be null"),
-            () => Assert.True(processRequestSpan != null, "processRequestSpan should not be null"),
             () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(produceSpan!.IntrinsicAttributes.ContainsKey("guid")),
             () => Assert.True(consumeSpan!.IntrinsicAttributes.ContainsKey("traceId"))
@@ -130,8 +141,10 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
         if (_initCollections)
         {
             // verify that distributed trace worked as expected -- the last produce span should have the same traceId and parentId as the last consume span
+            var processRequestSpan = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync") && s.IntrinsicAttributes.ContainsKey("parentId"));
+
             NrAssert.Multiple(
-                () => Assert.True(processRequestSpan!.IntrinsicAttributes.ContainsKey("parentId")),
+                () => Assert.True(processRequestSpan != null, "processRequestSpan should not be null"),
                 () => Assert.Equal(produceSpan!.IntrinsicAttributes["traceId"], consumeSpan!.IntrinsicAttributes["traceId"]),
                 () => Assert.Equal(produceSpan!.IntrinsicAttributes["guid"], processRequestSpan!.IntrinsicAttributes["parentId"])
             );
