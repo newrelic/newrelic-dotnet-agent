@@ -96,6 +96,23 @@ namespace Agent.Extensions.Tests.Collections
             tasks.ForEach(task => task.Wait());
         }
 
+        [Test]
+        [TestCase(new[] { 1, 2, 3 }, new[] { true, true, true })]
+        [TestCase(new[] { 1, 2, 2, 3 }, new[] { true, true, false, true })]
+        [TestCase(new[] { 4, 4, 4, 4 }, new[] { true, false, false, false })]
+        [TestCase(new[] { 5, 6, 7, 8, 9 }, new[] { true, true, true, true, true })]
+        [TestCase(new[] { 10, 10, 11, 11, 12 }, new[] { true, false, true, false, true })]
+        public void ConcurrentHashSet_TryAdd(int[] values, bool[] results)
+        {
+            for (var i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+                var result = results[i];
+
+                Assert.That(_concurrentHashSet.TryAdd(value), Is.EqualTo(result));
+            }
+        }
+
         private static void ExerciseFullApi(ConcurrentHashSet<int> hashSet, int[] numbersToAdd)
         {
             dynamic _;

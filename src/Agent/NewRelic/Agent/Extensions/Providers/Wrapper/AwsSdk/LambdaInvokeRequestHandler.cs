@@ -14,8 +14,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 {
     internal static class LambdaInvokeRequestHandler
     {
-        private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
+        private static Func<object, object> _getResultFromGenericTask;
         private static ConcurrentDictionary<string, string> _arnCache = new ConcurrentDictionary<string, string>();
+        private static bool _reportMissingRequestId = true;
 
         private static object GetTaskResult(object task)
         {
@@ -24,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return null;
             }
 
-            var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+            var getResponse = _getResultFromGenericTask ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(task.GetType(), "Result");
             return getResponse(task);
         }
 
@@ -38,7 +39,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             catch (Exception e)
             {
-                agent.Logger.Debug(e, "Unable to get RequestId from response metadata.");
+                if (_reportMissingRequestId)
+                {
+                    agent.Logger.Debug(e, "Unable to get RequestId from response metadata.");
+                    _reportMissingRequestId = false;
+                }
             }
         }
 
@@ -51,10 +56,18 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 functionName = $"{functionName}:{qualifier}";
             }
             string arn;
-            if (!_arnCache.TryGetValue(functionName, out arn))
+            if (functionName.StartsWith("arn:"))
             {
-                arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
-                _arnCache.TryAdd(functionName, arn);
+                arn = functionName;
+            }
+            else
+            {
+                string key = $"{region}:{functionName}";
+                if (!_arnCache.TryGetValue(key, out arn))
+                {
+                    arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
+                    _arnCache.TryAdd(key, arn);
+                }
             }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
             segment.GetExperimentalApi().MakeLeaf();

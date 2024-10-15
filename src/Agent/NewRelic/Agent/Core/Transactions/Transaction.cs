@@ -1374,7 +1374,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
+                Log.Debug($"AddLambdaAttribute - Name cannot be null/empty");
                 return;
             }
 
@@ -1386,7 +1386,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddFaasAttribute - Unable to set FaaS value on transaction because the key is null/empty");
+                Log.Debug($"AddFaasAttribute - Name cannot be null/empty");
                 return;
             }
 
@@ -1398,7 +1398,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddCloudSdkAttribute - Unable to set Cloud value on transaction because the key is null/empty");
+                Log.Debug($"AddCloudSdkAttribute - Name cannot be null/empty");
                 return;
             }
 
