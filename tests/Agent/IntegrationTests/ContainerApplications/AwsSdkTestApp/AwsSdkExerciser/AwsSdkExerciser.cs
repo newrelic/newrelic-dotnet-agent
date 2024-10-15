@@ -35,7 +35,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
             var config = new AmazonSQSConfig
             {
-                ServiceURL = "http://localstack-containertest:4566",
+                ServiceURL = "http://localstack:4566",
                 AuthenticationRegion = "us-west-2"
             };
 

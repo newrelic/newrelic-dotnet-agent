@@ -22,7 +22,6 @@
 
 services:
   localstack:
-    container_name: "localstack-containertest"
     image: localstack/localstack:stable
     expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "4566"       # LocalStack Gateway
