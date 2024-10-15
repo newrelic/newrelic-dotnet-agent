@@ -5457,6 +5457,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationLoggingForwardingContextData contextDataField;
         
+        private configurationApplicationLoggingForwardingIncludeLabels includeLabelsField;
+        
         private bool enabledField;
         
         private int maxSamplesStoredField;
@@ -5468,6 +5470,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingForwarding()
         {
+            this.includeLabelsField = new configurationApplicationLoggingForwardingIncludeLabels();
             this.contextDataField = new configurationApplicationLoggingForwardingContextData();
             this.enabledField = true;
             this.maxSamplesStoredField = 10000;
@@ -5482,6 +5485,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.contextDataField = value;
+            }
+        }
+        
+        public configurationApplicationLoggingForwardingIncludeLabels includeLabels
+        {
+            get
+            {
+                return this.includeLabelsField;
+            }
+            set
+            {
+                this.includeLabelsField = value;
             }
         }
         
@@ -5609,6 +5624,65 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationLoggingForwardingContextData Clone()
         {
             return ((configurationApplicationLoggingForwardingContextData)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingForwardingIncludeLabels
+    {
+        
+        private bool enabledField;
+        
+        private string excludeField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingForwardingIncludeLabels class constructor
+        /// </summary>
+        public configurationApplicationLoggingForwardingIncludeLabels()
+        {
+            this.enabledField = false;
+            this.excludeField = "";
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingForwardingIncludeLabels object
+        /// </summary>
+        public virtual configurationApplicationLoggingForwardingIncludeLabels Clone()
+        {
+            return ((configurationApplicationLoggingForwardingIncludeLabels)(this.MemberwiseClone()));
         }
         #endregion
     }

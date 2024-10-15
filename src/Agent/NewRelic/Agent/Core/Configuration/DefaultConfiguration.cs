@@ -2063,6 +2063,30 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool IncludeLabelsEnabled
+        {
+            get
+            {
+                return LogEventCollectorEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.includeLabels.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_INCLUDE_LABELS_ENABLED");
+            }
+        }
+
+        private HashSet<string> _includeLabelsExclude;
+        public virtual IEnumerable<string> IncludeLabelsExclude
+        {
+            get
+            {
+                _includeLabelsExclude = new HashSet<string>(
+                        EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.includeLabels.exclude,
+                                "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_INCLUDE_LABELS_EXCLUDE")
+                            ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        ?? Enumerable.Empty<string>());
+
+                return _includeLabelsExclude;
+            }
+        }
+
         #endregion
 
         private IEnumerable<IDictionary<string, string>> _ignoredInstrumentation;

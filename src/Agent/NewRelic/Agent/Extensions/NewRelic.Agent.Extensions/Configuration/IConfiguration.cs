@@ -198,8 +198,10 @@ namespace NewRelic.Agent.Configuration
         bool LogDecoratorEnabled { get; }
         HashSet<string> LogLevelDenyList { get; }
         bool ContextDataEnabled { get; }
+        bool IncludeLabelsEnabled { get; }
         IEnumerable<string> ContextDataInclude { get; }
         IEnumerable<string> ContextDataExclude { get; }
+        IEnumerable<string> IncludeLabelsExclude { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled { get; }

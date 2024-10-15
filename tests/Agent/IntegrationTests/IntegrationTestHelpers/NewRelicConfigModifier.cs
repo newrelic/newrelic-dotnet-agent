@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -501,6 +502,31 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier SetDisableFileSystemWatcher(bool enabled = true)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableApplicationLoggingForwardIncludeLabels(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "includeLabels" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier SetApplicationLoggingForwardIncludeLabelsExcludes(string excludes)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "includeLabels" }, "exclude", excludes);
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLabels(string labels)
+        {
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "labels", labels);
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLabels(Dictionary<string, string> labels)
+        {
+            var labelsString = string.Join(";", labels.Select(x => x.Key + ":" + x.Value).ToArray());
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "labels", labelsString);
             return this;
         }
     }
