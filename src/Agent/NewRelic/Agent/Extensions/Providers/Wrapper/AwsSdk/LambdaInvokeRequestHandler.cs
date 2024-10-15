@@ -15,6 +15,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     internal static class LambdaInvokeRequestHandler
     {
         private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
+        private static ConcurrentDictionary<string, string> _arnCache = new ConcurrentDictionary<string, string>();
 
         private static object GetTaskResult(object task)
         {
@@ -49,7 +50,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 functionName = $"{functionName}:{qualifier}";
             }
-            string arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
+            string arn;
+            if (!_arnCache.TryGetValue(functionName, out arn))
+            {
+                arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
+                _arnCache.TryAdd(functionName, arn);
+            }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
             segment.GetExperimentalApi().MakeLeaf();
 
