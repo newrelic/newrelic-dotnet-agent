@@ -251,11 +251,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         }
     }
 
+    [NetFrameworkTest]
+    public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public CosmosDBTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 
     [NetFrameworkTest]
-    public class CosmosDBTestsFW : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class CosmosDBTestsFWLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public CosmosDBTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public CosmosDBTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -263,12 +271,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
 
     [NetCoreTest]
-    public class CosmosDBTestsCore : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    public class CosmosDBTestsCoreOldest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public CosmosDBTestsCore(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        public CosmosDBTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
+    [NetCoreTest]
+    public class CosmosDBTestsCoreLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public CosmosDBTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 }

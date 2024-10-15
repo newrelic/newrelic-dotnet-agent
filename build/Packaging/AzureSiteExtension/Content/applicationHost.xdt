@@ -8,12 +8,12 @@
         <add name="COR_PROFILER_PATH" value="%HOME%\NewRelicAgent\Framework\NewRelic.Profiler.dll" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="COR_PROFILER_PATH_32" value="%HOME%\NewRelicAgent\Framework\x86\NewRelic.Profiler.dll" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="COR_PROFILER_PATH_64" value="%HOME%\NewRelicAgent\Framework\NewRelic.Profiler.dll" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
-        <add name="NEWRELIC_HOME" value="%HOME%\NewRelicAgent\Framework" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
+        <add name="NEW_RELIC_HOME" value="%HOME%\NewRelicAgent\Framework" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="CORECLR_ENABLE_PROFILING" value="1" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="CORECLR_PROFILER" value="{36032161-FFC0-4B61-B559-F6C5D41BAE5A}" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="CORECLR_PROFILER_PATH_32" value="%HOME%\NewRelicAgent\Core\x86\NewRelic.Profiler.dll" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="CORECLR_PROFILER_PATH_64" value="%HOME%\NewRelicAgent\Core\NewRelic.Profiler.dll" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
-        <add name="CORECLR_NEWRELIC_HOME" value="%HOME%\NewRelicAgent\Core" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
+        <add name="CORECLR_NEW_RELIC_HOME" value="%HOME%\NewRelicAgent\Core" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
         <add name="NEW_RELIC_METADATA_AZURE_APP_SERVICE_NAME" value="%WEBSITE_SITE_NAME%" xdt:Locator="Match(name)" xdt:Transform="InsertIfMissing"/>
       </environmentVariables>
     </runtime>

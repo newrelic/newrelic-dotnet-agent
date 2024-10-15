@@ -78,22 +78,22 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
         virtual std::unique_ptr<xstring_t> GetNewRelicHomePath() override
         {
-            return TryGetEnvironmentVariable(L"NEWRELIC_HOME");
+            return TryGetEnvironmentVariable(L"NEW_RELIC_HOME");
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override
         {
-            return TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_LOG_DIRECTORY");
+            return TryGetEnvironmentVariable(L"NEW_RELIC_PROFILER_LOG_DIRECTORY");
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override
         {
-            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_DIRECTORY");
+            return TryGetEnvironmentVariable(L"NEW_RELIC_LOG_DIRECTORY");
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel() override
         {
-            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_LEVEL");
+            return TryGetEnvironmentVariable(L"NEW_RELIC_LOG_LEVEL");
         }
     };
 
@@ -124,7 +124,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
@@ -140,7 +140,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\";
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\\\NewRelic.Profiler.1234.log"), fileName);
@@ -150,9 +150,9 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo\\Home";
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\Profiler";
-            systemCalls->environmentVariables[L"NEWRELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo\\Home";
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\Profiler";
+            systemCalls->environmentVariables[L"NEW_RELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\Profiler\\NewRelic.Profiler.1234.log"), fileName);
@@ -162,8 +162,8 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo\\Home";
-            systemCalls->environmentVariables[L"NEWRELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo\\Home";
+            systemCalls->environmentVariables[L"NEW_RELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\General\\NewRelic.Profiler.1234.log"), fileName);
@@ -182,7 +182,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
             systemCalls->environmentVariables[L"ALLUSERSPROFILE"] = L"D:\\Foo\\ProgramData\\Bar";
             systemCalls->environmentVariables[L"HOME"] = L"C:\\DWASFiles\\Sites\\MySite\\";
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";;
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";;
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\NewRelic.Profiler.1234.log"), fileName);
@@ -257,7 +257,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         TEST_METHOD(newrelic_home_environment_variable)
         {
             auto systemCalls = std::make_shared<SystemCalls>();
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\Logs\\NewRelic.Profiler.1234.log"), fileName);
@@ -267,7 +267,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\Logs\\NewRelic.Profiler.1234.log"), fileName);
@@ -313,7 +313,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
@@ -328,7 +328,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\";
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\";
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
@@ -358,7 +358,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
             systemCalls->environmentVariables[L"ALLUSERSPROFILE"] = L"D:\\Foo\\ProgramData\\Bar";
             systemCalls->environmentVariables[L"HOME"] = L"C:\\DWASFiles\\Sites\\MySite\\";
-            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";;
+            systemCalls->environmentVariables[L"NEW_RELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo";;
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
@@ -430,7 +430,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo";
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
@@ -445,7 +445,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo";
+            systemCalls->environmentVariables[L"NEW_RELIC_HOME"] = L"C:\\Foo";
 
             systemCalls->OpenFileHandler = [](std::wstring fileName, std::ios_base::openmode)
             {
