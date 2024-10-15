@@ -8,7 +8,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using System.Linq;
 using System.Collections.Generic;
-using Amazon;
 
 namespace AwsSdkTestApp.AwsSdkExerciser
 {
