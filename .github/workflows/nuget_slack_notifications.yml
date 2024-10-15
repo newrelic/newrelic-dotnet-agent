@@ -25,7 +25,8 @@ jobs:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: write
+      pull-requests: write
     continue-on-error: false
     
     env:
