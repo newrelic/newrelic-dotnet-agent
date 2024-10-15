@@ -117,7 +117,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             if (messageAttributeNames.Count != 1)
                 throw new Exception("Expected messageAttributeNames to have a single element");
 
-            try
+            if (response.Messages != null)
             {
                 foreach (var message in response.Messages)
                 {
@@ -137,13 +137,14 @@ namespace AwsSdkTestApp.AwsSdkExerciser
                         ReceiptHandle = message.ReceiptHandle
                     });
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Caught exception processing response messages: {ex.Message}");
-            }
 
-            return response.Messages;
+                return response.Messages;
+            }
+            else
+            {
+                // received an empty response, so return an empty list of messages
+                return new List<Message>();
+            }
         }
 
         // send message batch
