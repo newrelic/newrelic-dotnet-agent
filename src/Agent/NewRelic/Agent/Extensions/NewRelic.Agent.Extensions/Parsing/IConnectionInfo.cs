@@ -5,9 +5,8 @@ namespace NewRelic.Agent.Extensions.Parsing
 {
     public class ConnectionInfo
     {
-        public ConnectionInfo(string vendor, string host, int port, string databaseName, string instanceName = null)
+        public ConnectionInfo(string host, int port, string databaseName, string instanceName = null)
         {
-            Vendor = vendor;
             Host = ValueOrUnknown(host);
             if (port >= 0)
             {
@@ -18,9 +17,8 @@ namespace NewRelic.Agent.Extensions.Parsing
             InstanceName = instanceName;
         }
 
-        public ConnectionInfo(string vendor, string host, string pathOrId, string databaseName, string instanceName = null)
+        public ConnectionInfo(string host, string pathOrId, string databaseName, string instanceName = null)
         {
-            Vendor = vendor;
             Host = ValueOrUnknown(host);
             Port = null;
             PathOrId = ValueOrUnknown(pathOrId);
@@ -33,7 +31,6 @@ namespace NewRelic.Agent.Extensions.Parsing
             return string.IsNullOrEmpty(value) ? "unknown" : value;
         }
 
-        public string Vendor { get; private set; }
         public string Host { get; private set; }
         public string PortPathOrId { get => (Port != null) ? Port.ToString() : PathOrId; }
         public int? Port { get; private set; } = null;
