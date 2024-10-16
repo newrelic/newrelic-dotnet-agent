@@ -104,12 +104,13 @@ namespace Agent.Extensions.Tests.Collections
         [TestCase(new[] { 10, 10, 11, 11, 12 }, new[] { true, false, true, false, true })]
         public void ConcurrentHashSet_TryAdd(int[] values, bool[] results)
         {
+            ConcurrentHashSet<int> set = new();
             for (var i = 0; i < values.Length; i++)
             {
                 var value = values[i];
                 var result = results[i];
 
-                Assert.That(_concurrentHashSet.TryAdd(value), Is.EqualTo(result));
+                Assert.That(set.TryAdd(value), Is.EqualTo(result));
             }
         }
 
