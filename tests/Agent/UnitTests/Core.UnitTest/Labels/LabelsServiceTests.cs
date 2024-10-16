@@ -65,6 +65,23 @@ namespace NewRelic.Agent.Core.Labels.Tests
             Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo(remainingLabelType));
         }
 
+        [Test]
+        public void GetFilteredLabels_WithNullFilter_Success()
+        {
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+
+            // act
+            var labelsService = new LabelsService(configurationService);
+            var filteredLabels = labelsService.GetFilteredLabels(null);
+
+            // assert
+            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+            Assert.That(filteredLabels.Count, Is.EqualTo(2));
+            Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo("test1"));
+        }
+
         public class TestCase
         {
             [JsonProperty(PropertyName = "name")]

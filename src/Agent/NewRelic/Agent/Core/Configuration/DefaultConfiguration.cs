@@ -2077,11 +2077,14 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                _includeLabelsExclude = new HashSet<string>(
+                if (_includeLabelsExclude == null)
+                {
+                    _includeLabelsExclude = new HashSet<string>(
                         EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.includeLabels.exclude,
                                 "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_INCLUDE_LABELS_EXCLUDE")
                             ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
                         ?? Enumerable.Empty<string>());
+                }
 
                 return _includeLabelsExclude;
             }
