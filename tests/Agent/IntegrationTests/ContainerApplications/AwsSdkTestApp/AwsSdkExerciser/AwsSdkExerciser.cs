@@ -35,7 +35,7 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
             var config = new AmazonSQSConfig
             {
-                ServiceURL = "http://localstack-containertest:4566",
+                ServiceURL = "http://localstack:4566",
                 AuthenticationRegion = "us-west-2"
             };
 
@@ -117,23 +117,34 @@ namespace AwsSdkTestApp.AwsSdkExerciser
             if (messageAttributeNames.Count != 1)
                 throw new Exception("Expected messageAttributeNames to have a single element");
 
-            foreach (var message in response.Messages)
+            if (response.Messages != null)
             {
-                Console.WriteLine($"Message: {message.Body}");
-                foreach (var attr in message.MessageAttributes)
+                foreach (var message in response.Messages)
                 {
-                    Console.WriteLine($"MessageAttributes: {attr.Key} = {{ DataType = {attr.Value.DataType}, StringValue = {attr.Value.StringValue}}}");
+                    Console.WriteLine($"Message: {message.Body}");
+                    if (message.MessageAttributes != null)
+                    {
+                        foreach (var attr in message.MessageAttributes)
+                        {
+                            Console.WriteLine($"MessageAttributes: {attr.Key} = {{ DataType = {attr.Value.DataType}, StringValue = {attr.Value.StringValue}}}");
+                        }
+                    }
+
+                    // delete message
+                    await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
+                    {
+                        QueueUrl = _sqsQueueUrl,
+                        ReceiptHandle = message.ReceiptHandle
+                    });
                 }
 
-                // delete message
-                await _amazonSqsClient.DeleteMessageAsync(new DeleteMessageRequest
-                {
-                    QueueUrl = _sqsQueueUrl,
-                    ReceiptHandle = message.ReceiptHandle
-                });
+                return response.Messages;
             }
-
-            return response.Messages;
+            else
+            {
+                // received an empty response, so return an empty list of messages
+                return new List<Message>();
+            }
         }
 
         // send message batch

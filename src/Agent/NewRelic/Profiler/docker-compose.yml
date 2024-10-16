@@ -17,7 +17,7 @@ services:
         privileged: true
         volumes: 
             - .:/profiler
-            - $CORECLR_NEWRELIC_HOME:/agent
+            - $CORECLR_NEW_RELIC_HOME:/agent
         working_dir: /profiler/linux/
     build_arm64:
         platform: linux/arm64/v8

@@ -214,11 +214,11 @@ function Set-SystemEnvironment {
         [Environment]::SetEnvironmentVariable("COR_PROFILER", "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}", "Machine")
         if($Architecture -like "All" -or $Architecture -like "x64") {
             [Environment]::SetEnvironmentVariable("COR_PROFILER_PATH", "$HomePath\newrelichome_x64\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
+            [Environment]::SetEnvironmentVariable("NEW_RELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
         }
         else {
             [Environment]::SetEnvironmentVariable("COR_PROFILER_PATH", "$HomePath\newrelichome_x86\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
+            [Environment]::SetEnvironmentVariable("NEW_RELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
         }
     }
 
@@ -227,11 +227,11 @@ function Set-SystemEnvironment {
         [Environment]::SetEnvironmentVariable("CORECLR_PROFILER", "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}", "Machine")
         if($Architecture -like "All" -or $Architecture -like "x64") {
             [Environment]::SetEnvironmentVariable("CORECLR_PROFILER_PATH", "$HomePath\newrelichome_x64_coreclr\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
+            [Environment]::SetEnvironmentVariable("NEW_RELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
         }
         else {
             [Environment]::SetEnvironmentVariable("CORECLR_PROFILER_PATH", "$HomePath\newrelichome_x86_coreclr\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
+            [Environment]::SetEnvironmentVariable("NEW_RELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
         }
     }
 }
@@ -251,11 +251,11 @@ function Set-SessionEnvironment {
         $env:COR_PROFILER =  "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}"
         if($Architecture -like "All" -or $Architecture -like "x64") {
             $env:COR_PROFILER_PATH = "$HomePath\newrelichome_x64\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x64"
+            $env:NEW_RELIC_HOME = "$HomePath\newrelichome_x64"
         }
         else {
             $env:COR_PROFILER_PATH = "$HomePath\newrelichome_x86\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x86"
+            $env:NEW_RELIC_HOME = "$HomePath\newrelichome_x86"
         }
     }
 
@@ -264,11 +264,11 @@ function Set-SessionEnvironment {
         $env:CORECLR_PROFILER = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
         if($Architecture -like "All" -or $Architecture -like "x64") {
             $env:CORECLR_PROFILER_PATH = "$HomePath\newrelichome_x64_coreclr\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x64"
+            $env:NEW_RELIC_HOME = "$HomePath\newrelichome_x64"
         }
         else {
             $env:CORECLR_PROFILER_PATH = "$HomePath\newrelichome_x86_coreclr\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x86"
+            $env:NEW_RELIC_HOME = "$HomePath\newrelichome_x86"
         }
     }
 }

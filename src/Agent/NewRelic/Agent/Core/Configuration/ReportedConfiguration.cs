@@ -539,6 +539,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("utilization.detect_kubernetes_enabled")]
         public bool UtilizationDetectKubernetes => _configuration.UtilizationDetectKubernetes;
 
+        [JsonProperty("utilization.detect_azure_function_enabled")]
+        public bool UtilizationDetectAzureFunction => _configuration.UtilizationDetectAzureFunction;
+
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
 
@@ -685,6 +688,29 @@ namespace NewRelic.Agent.Core.Configuration
         // Serializing this Func doesn't provide us with more information than the supportability metrics
         [JsonIgnore()]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
+
+        [JsonIgnore]
+        public bool AzureFunctionModeDetected => _configuration.AzureFunctionModeDetected;
+        [JsonIgnore]
+        public bool AzureFunctionModeEnabled => _configuration.AzureFunctionModeEnabled;
+
+        [JsonIgnore]
+        public string AzureFunctionResourceId => _configuration.AzureFunctionResourceId;
+
+        [JsonIgnore]
+        public string AzureFunctionResourceGroupName =>_configuration.AzureFunctionResourceGroupName;
+
+        [JsonIgnore]
+        public string AzureFunctionRegion => _configuration.AzureFunctionRegion;
+
+        [JsonIgnore]
+        public string AzureFunctionSubscriptionId => _configuration.AzureFunctionSubscriptionId;
+
+        [JsonIgnore]
+        public string AzureFunctionServiceName => _configuration.AzureFunctionServiceName;
+
+        public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
+
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

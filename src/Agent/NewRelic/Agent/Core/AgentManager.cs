@@ -19,6 +19,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -217,7 +218,7 @@ namespace NewRelic.Agent.Core
                 List<string> environmentVariables = new List<string> {
                     "CORECLR_ENABLE_PROFILING",
                     "CORECLR_PROFILER",
-                    "CORECLR_NEWRELIC_HOME",
+                    "CORECLR_NEW_RELIC_HOME",
                     "CORECLR_PROFILER_PATH",
                     "CORECLR_PROFILER_PATH_32",
                     "CORECLR_PROFILER_PATH_64",
@@ -226,8 +227,8 @@ namespace NewRelic.Agent.Core
                     "COR_PROFILER_PATH",
                     "COR_PROFILER_PATH_32",
                     "COR_PROFILER_PATH_64",
-                    "NEWRELIC_HOME",
-                    "NEWRELIC_INSTALL_PATH",
+                    "NEW_RELIC_HOME",
+                    "NEW_RELIC_INSTALL_PATH",
                     "NEW_RELIC_APP_NAME",
                     "RoleName",
                     "IISEXPRESS_SITENAME",
@@ -246,8 +247,9 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME",
                     "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG",
                     "NEW_RELIC_LOG",
-                    "NEWRELIC_PROFILER_LOG_DIRECTORY",
-                    "NEWRELIC_LOG_LEVEL",
+                    "NEW_RELIC_LOG_DIRECTORY",
+                    "NEW_RELIC_PROFILER_LOG_DIRECTORY",
+                    "NEW_RELIC_LOG_LEVEL",
                     "NEW_RELIC_LOG_ENABLED",
                     "NEW_RELIC_LOG_CONSOLE",
                     "NEW_RELIC_LABELS",
@@ -284,7 +286,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD",
                     "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
-                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS"
+                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
+                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {
@@ -296,6 +299,24 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
                     "NEW_RELIC_PROXY_PASS_OBFUSCATED"
                 };
+
+                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
+                {
+                    ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
+                    ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
+                    ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
+                    ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
+                    ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
+                    ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTORY"),
+                    ("NEWRELIC_FORCE_PROFILING", "NEW_RELIC_FORCE_PROFILING"),
+                    ("NEWRELIC_AGENT_VERSION_OVERRIDE", "NEW_RELIC_AGENT_VERSION_OVERRIDE")
+                };
+
+                // so we can report the values as usual
+                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
+
+                // Add this one separately so we can report the deprecated name but not log the value
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
 
                 foreach (var ev in environmentVariables)
                 {
@@ -312,6 +333,15 @@ namespace NewRelic.Agent.Core
                         Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
                 }
+
+                foreach (var ev in environmentVariablesDeprecated)
+                {
+                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev.Item1)))
+                    {
+                        Log.Warn("Environment Variable {OldName} is deprecated and may be removed in a future major version. Please use {NewName} instead.", ev.Item1, ev.Item2);
+                    }
+                }
+
 
                 Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
@@ -394,7 +424,7 @@ namespace NewRelic.Agent.Core
 
             try
             {
-                Log.Debug("Starting the shutdown process for the .NET Agent.");
+                Log.Info("Starting the shutdown process for the .NET Agent.");
 
                 AgentInitializer.OnExit -= ProcessExit;
 
@@ -407,15 +437,17 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
-                Log.Info("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             }
             catch (Exception e)
             {
-                Log.Debug(e, "Shutdown error");
+                Log.Info(e, "Unexpected exception during agent shutdown");
             }
             finally
             {
+                Log.Debug("Shutting down internal agent services...");
                 Dispose();
+
+                Log.Info("The New Relic .NET Agent v{Version} has shutdown (pid {pid}) on app domain '{appDomain}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
                 Serilog.Log.CloseAndFlush();
             }
         }

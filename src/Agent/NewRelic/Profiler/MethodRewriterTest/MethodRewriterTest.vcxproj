@@ -182,6 +182,7 @@
   <ItemGroup>
     <ClInclude Include="MockFunction.h" />
     <ClInclude Include="MockFunctionHeaderInfo.h" />
+    <ClInclude Include="MockSystemCalls.h" />
     <ClInclude Include="MockTokenizer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TestTemplates.h" />
@@ -200,6 +201,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FunctionManipulatorTest.cpp" />
+    <ClCompile Include="SystemCallsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -13,8 +13,6 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Expectations.Abstraction;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
@@ -216,7 +214,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, null, ExpectedResult = 10000)]
         public int TransactionEventsMaxSamplesStoredOverriddenByEnvironment(string environmentSetting, int? localSetting, int? serverSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("MAX_TRANSACTION_SAMPLES_STORED")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("MAX_TRANSACTION_SAMPLES_STORED")).Returns(environmentSetting);
 
             if (localSetting != null)
             {
@@ -265,7 +263,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", ExpectedResult = false)]
         public bool DisableServerConfigSetFromEnvironment(string environment)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG")).Returns(environment);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG")).Returns(environment);
             return _defaultConfig.IgnoreServerSideConfiguration;
         }
 
@@ -370,7 +368,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, false, ExpectedResult = false)]
         public bool SendDataOnExitIsOverriddenByEnvironment(string environmentSetting, bool localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SEND_DATA_ON_EXIT")).Returns(environmentSetting);
             _localConfig.service.sendDataOnExit = localSetting;
             return _defaultConfig.CollectorSendDataOnExit;
         }
@@ -380,7 +378,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, 500f, ExpectedResult = 500f)]
         public float SendDataOnExitThresholdIsOverriddenByEnvironment(string environmentSetting, float localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS")).Returns(environmentSetting);
             _localConfig.service.sendDataOnExitThreshold = localSetting;
             return _defaultConfig.CollectorSendDataOnExitThreshold;
         }
@@ -699,7 +697,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = false)]
         public bool HighSecuritySetFromEnvironmentOverridesLocal(bool? localConfigValue, string envConfigValue)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HIGH_SECURITY")).Returns(envConfigValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HIGH_SECURITY")).Returns(envConfigValue);
 
             if (localConfigValue.HasValue)
             {
@@ -837,7 +835,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApdexT_SetFromEnvironmentVariable_WhenInServerlessMode()
         {
             // set NEW_RELIC_APDEX_T environment variable
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APDEX_T")).Returns("1.234");
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APDEX_T")).Returns("1.234");
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
@@ -1000,38 +998,38 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", new[] { "405" }, null,           ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0],   null,           ExpectedResult = new string[0])]
-        [TestCase("401", null,            null,           ExpectedResult = new[] { "401" })]
-        [TestCase(null,  null,            "401",          ExpectedResult = new[] { "401" })]
-        [TestCase(null,  new[] { "405" }, "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401",          ExpectedResult = new[] { "401" })]
-        [TestCase("402", new string[0],   "401, 503",     ExpectedResult = new[] { "401", "503" })]
-        [TestCase("402", new string[0],   "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
+        [TestCase("401", new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0], null, ExpectedResult = new string[0])]
+        [TestCase("401", null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(null, null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(null, new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401", ExpectedResult = new[] { "401" })]
+        [TestCase("402", new string[0], "401, 503", ExpectedResult = new[] { "401", "503" })]
+        [TestCase("402", new string[0], "401, 500-505", ExpectedResult = new[] { "401", "500-505" })]
         public string[] ExpectedStatusCodesSetFromLocalServerAndEnvironmentOverrides(string local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes = (local);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES")).Returns(env);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES")).Returns(env);
 
             CreateDefaultConfiguration();
 
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings.ToArray();
         }
 
-        [TestCase(new[] { 401f },   new[] { "405" }, null,         ExpectedResult = new[] { "405" })]
-        [TestCase(new[] { 401f },   new string[0],   null,         ExpectedResult = new string[0])]
-        [TestCase(new[] { 401f },   null,            null,         ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401.5f }, null,            null,         ExpectedResult = new[] { "401.5" })]
-        [TestCase(new float[0],     null,            "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new float[0],     new[] { "405" }, "401",        ExpectedResult = new[] { "401" })]
-        [TestCase(new[] { 401f },   new string[0],   "402",        ExpectedResult = new[] { "402" })]
-        [TestCase(new[] { 401f },   new string[0],   "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
+        [TestCase(new[] { 401f }, new[] { "405" }, null, ExpectedResult = new[] { "405" })]
+        [TestCase(new[] { 401f }, new string[0], null, ExpectedResult = new string[0])]
+        [TestCase(new[] { 401f }, null, null, ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401.5f }, null, null, ExpectedResult = new[] { "401.5" })]
+        [TestCase(new float[0], null, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new float[0], new[] { "405" }, "401", ExpectedResult = new[] { "401" })]
+        [TestCase(new[] { 401f }, new string[0], "402", ExpectedResult = new[] { "402" })]
+        [TestCase(new[] { 401f }, new string[0], "401.5, 503", ExpectedResult = new[] { "401.5", "503" })]
         public string[] IgnoredStatusCodesSetFromLocalServerAndEnvironmentOverrides(float[] local, string[] server, string env)
         {
             _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
             _localConfig.errorCollector.ignoreStatusCodes.code = (local.ToList());
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES")).Returns(env);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES")).Returns(env);
 
             CreateDefaultConfiguration();
 
@@ -1107,7 +1105,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("ABCD", "bGxs", "   ", null, ExpectedResult = "ABCD")]
         public string Encrypting_Decrypting_ProxyPassword_Tests(string password, string passwordObfuscated, string localConfigObscuringKey, string envObscuringKey)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CONFIG_OBSCURING_KEY")).Returns(envObscuringKey);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONFIG_OBSCURING_KEY")).Returns(envObscuringKey);
 
             _localConfig.service.proxy.password = password;
             _localConfig.service.obscuringKey = localConfigObscuringKey;
@@ -1126,7 +1124,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("", "", ExpectedResult = "")]
         public string ProxyHost_Tests(string localProxyHost, string envProxyHost)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_HOST")).Returns(envProxyHost);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_HOST")).Returns(envProxyHost);
 
             _localConfig.service.proxy.host = localProxyHost;
 
@@ -1143,7 +1141,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("", "", ExpectedResult = "")]
         public string ProxyUriPath_Tests(string localProxyUriPath, string envProxyUriPath)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_URI_PATH")).Returns(envProxyUriPath);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_URI_PATH")).Returns(envProxyUriPath);
 
             _localConfig.service.proxy.uriPath = localProxyUriPath;
 
@@ -1157,7 +1155,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(1234, "bob", ExpectedResult = 1234)]
         public int ProxyPort_Tests(int localProxyPort, string envProxyPort)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_PORT")).Returns(envProxyPort);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_PORT")).Returns(envProxyPort);
 
             _localConfig.service.proxy.port = localProxyPort;
 
@@ -1174,7 +1172,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("", "", ExpectedResult = "")]
         public string ProxyUsername_Tests(string localProxyUser, string envProxyUser)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_USER")).Returns(envProxyUser);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_USER")).Returns(envProxyUser);
 
             _localConfig.service.proxy.user = localProxyUser;
 
@@ -1191,7 +1189,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("", "", ExpectedResult = "")]
         public string ProxyPassword_Tests(string localProxyPassword, string envProxyPassword)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_PASS")).Returns(envProxyPassword);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_PASS")).Returns(envProxyPassword);
 
             _localConfig.service.proxy.password = localProxyPassword;
 
@@ -1208,7 +1206,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("", "", ExpectedResult = "")]
         public string ProxyDomain_Tests(string localProxyDomain, string envProxyDomain)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_DOMAIN")).Returns(envProxyDomain);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROXY_DOMAIN")).Returns(envProxyDomain);
 
             _localConfig.service.proxy.domain = localProxyDomain;
 
@@ -1420,7 +1418,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.labels = local;
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels)).Returns(appConfigValue);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS")).Returns(environment);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LABELS")).Returns(environment);
 
             // call Labels accessor multiple times to verify caching behavior
             string result = _defaultConfig.Labels;
@@ -1443,32 +1441,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public string CustomHostEnvironmentOverridesLocal(string environment, string local)
         {
             _localConfig.service.host = local;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HOST")).Returns(environment);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HOST")).Returns(environment);
 
             return _defaultConfig.CollectorHost;
         }
 
-        [TestCase(null, null, null, null, ExpectedResult = null)]
-        [TestCase(null, null, null, "foo", ExpectedResult = "foo")]
-        [TestCase(null, null, "foo", null, ExpectedResult = "foo")]
-        [TestCase(null, "foo", null, null, ExpectedResult = "foo")]
-        [TestCase(null, null, "foo", "bar", ExpectedResult = "foo")]
-        [TestCase(null, "foo", null, "bar", ExpectedResult = "foo")]
-        [TestCase(null, "foo", "bar", null, ExpectedResult = "foo")]
-        [TestCase(null, "foo", "bar", "baz", ExpectedResult = "foo")]
-        [TestCase("foo", null, null, null, ExpectedResult = "foo")]
-        [TestCase("foo", null, null, "foo", ExpectedResult = "foo")]
-        [TestCase("foo", null, "foo", null, ExpectedResult = "foo")]
-        [TestCase("foo", "foo", null, null, ExpectedResult = "foo")]
-        [TestCase("foo", null, "foo", "bar", ExpectedResult = "foo")]
-        [TestCase("foo", "foo", null, "bar", ExpectedResult = "foo")]
-        [TestCase("foo", "foo", "bar", null, ExpectedResult = "foo")]
-        [TestCase("foo", "foo", "bar", "baz", ExpectedResult = "foo")]
-        public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string legacyEnvironmentName, string local)
+        [TestCase(null, null, null, ExpectedResult = null)]
+        [TestCase(null, "foo", null, ExpectedResult = "foo")]
+        [TestCase("foo", null, null, ExpectedResult = "foo")]
+        [TestCase("foo", null, "foo", ExpectedResult = "foo")]
+        [TestCase("foo", "foo", null, ExpectedResult = "foo")]
+        [TestCase("foo", "foo", "bar", ExpectedResult = "foo")]
+        public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string local)
         {
             _localConfig.service.licenseKey = local;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY")).Returns(newEnvironmentName);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LICENSEKEY")).Returns(legacyEnvironmentName);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY")).Returns(newEnvironmentName);
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)).Returns(appSettingEnvironmentName);
 
             return _defaultConfig.AgentLicenseKey;
@@ -1484,7 +1471,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.spanEvents.enabled = localSpanEvents;
             _localConfig.distributedTracing.enabled = true;
 
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SPAN_EVENTS_ENABLED")).Returns(environmentSpanEvents);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SPAN_EVENTS_ENABLED")).Returns(environmentSpanEvents);
 
             return _defaultConfig.SpanEventsEnabled;
         }
@@ -1498,7 +1485,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.distributedTracing.enabled = localDistributedTracing;
 
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED")).Returns(environmentDistributedTracing);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED")).Returns(environmentDistributedTracing);
 
             return _defaultConfig.DistributedTracingEnabled;
         }
@@ -1513,7 +1500,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("true", ExpectedResult = true)]
         public bool AppDomainCachingDisabledWorksAsExpected(string environmentAppDomainCachingDisabled)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_APPDOMAIN_CACHING")).Returns(environmentAppDomainCachingDisabled);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISABLE_APPDOMAIN_CACHING")).Returns(environmentAppDomainCachingDisabled);
 
             return _defaultConfig.AppDomainCachingDisabled;
         }
@@ -1527,7 +1514,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.application.disableSamplers = localDisableSamplers;
 
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_SAMPLERS")).Returns(environmentDisableSamplers);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISABLE_SAMPLERS")).Returns(environmentDisableSamplers);
 
             return _defaultConfig.DisableSamplers;
         }
@@ -1782,7 +1769,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "vietnameseCoconut", ExpectedResult = "vietnameseCoconut")]
         public string ProcessHostDisplayNameIsSetFromLocalConfigurationAndEnvironmentVariable(string localConfigurationValue, string environmentVariableValue)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
             Mock.Arrange(() => _dnsStatic.GetHostName()).Returns("coconut");
 
             _localConfig.processHost.displayName = localConfigurationValue;
@@ -2156,6 +2143,59 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
             );
         }
+
+        [Test]
+        [TestCase(false, "My Application", "NewRelic Config")]
+        [TestCase(true, "MyAzureFunc", "Azure Function")]
+        public void ApplicationNamesUsesAzureFunctionName_IfAzureFunctionMode_IsEnabled(bool functionModeEnabled, string expectedFunctionName, string expectedApplicationNameSource)
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = functionModeEnabled.ToString() });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(functionModeEnabled);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("MyAzureFunc");
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo(expectedFunctionName)),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo(expectedApplicationNameSource))
+            );
+        }
+
+        [Test]
+        public void ApplicationNameDoesNotUserAzureFunctionName_IfAzureModeIsEnabled_ButAzureFunctionName_IsNullOrEmpty()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = "true" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(true);
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+
+            _localConfig.application.name = new List<string> { "My Application" };
+
+            NrAssert.Multiple(
+                () => Assert.That(defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("My Application")),
+                () => Assert.That(defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+            );
+
+        }
+
         #endregion ApplicationNames
 
 
@@ -2387,7 +2427,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             // Arrange
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PRIMARY_APPLICATION_ID")).Returns("PrimaryApplicationIdValue");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PRIMARY_APPLICATION_ID")).Returns("PrimaryApplicationIdValue");
 
             // Act
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
@@ -2400,7 +2440,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             // Arrange
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_TRUSTED_ACCOUNT_KEY")).Returns("TrustedAccountKeyValue");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_TRUSTED_ACCOUNT_KEY")).Returns("TrustedAccountKeyValue");
 
             // Act
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
@@ -2413,7 +2453,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             // Arrange
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ACCOUNT_ID")).Returns("AccountIdValue");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ACCOUNT_ID")).Returns("AccountIdValue");
 
             // Act
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
@@ -2580,7 +2620,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, -623, ExpectedResult = -623)]
         public int InfiniteTracing_SpanQueueSize(string envConfigValue, int? localConfigValue)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE")).Returns(envConfigValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE")).Returns(envConfigValue);
 
             if (localConfigValue.HasValue)
             {
@@ -2655,7 +2695,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public int InfiniteTracing_TimeoutData(string envConfigVal, string appSettingsValue)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutSend", value = appSettingsValue });
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Returns(envConfigVal);
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -2673,7 +2713,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public int InfiniteTracing_TimeoutConnect(string envConfigVal, string appSettingsValue)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutConnect", value = appSettingsValue });
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Returns(envConfigVal);
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -2718,7 +2758,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public int InfiniteTracing_SpanBatchSize(string envConfigVal, string appSettingVal)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsBatchSize", value = appSettingVal });
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE")).Returns(envConfigVal);
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -2741,7 +2781,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public int InfiniteTracing_SpanPartitionCount(string envConfigVal, string appSettingVal)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsPartitionCount", value = appSettingVal });
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT")).Returns(envConfigVal);
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -2785,7 +2825,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             }
 
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsStreamsCount", value = appSettingsValue });
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).Returns(envConfigVal);
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -2799,7 +2839,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)]
         public bool InfiniteTracing_Compression(string envConfigVal, bool? localConfigVal)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_COMPRESSION")).Returns(envConfigVal);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_COMPRESSION")).Returns(envConfigVal);
 
             if (localConfigVal.HasValue)
             {
@@ -2831,7 +2871,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectKubernetesConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_KUBERNETES")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_KUBERNETES")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2855,7 +2895,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectAwsConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_AWS")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_AWS")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2879,7 +2919,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectAzureConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_AZURE")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_AZURE")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2903,7 +2943,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectPcfConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_PCF")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_PCF")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2927,7 +2967,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectGcpConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_GCP")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_GCP")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2951,7 +2991,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)] // true by default test
         public bool UtilizationDetectDockerConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_DOCKER")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_DOCKER")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -2961,6 +3001,44 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.UtilizationDetectDocker;
         }
 
+
+        [TestCase("true", true, true, ExpectedResult = true)]
+        [TestCase("true", false, true, ExpectedResult = true)]
+        [TestCase("true", null, true, ExpectedResult = true)]
+        [TestCase("false", true, true, ExpectedResult = false)]
+        [TestCase("false", false, true, ExpectedResult = false)]
+        [TestCase("false", null, true, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, true, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, true, ExpectedResult = true)]
+        [TestCase(null, true, true, ExpectedResult = true)]
+        [TestCase(null, false, true, ExpectedResult = false)]
+        [TestCase(null, null, true, ExpectedResult = true)] // true by default test
+
+        [TestCase("true", true, false, ExpectedResult = false)]
+        [TestCase("true", false, false, ExpectedResult = false)]
+        [TestCase("true", null, false, ExpectedResult = false)]
+        [TestCase("false", true, false, ExpectedResult = false)]
+        [TestCase("false", false, false, ExpectedResult = false)]
+        [TestCase("false", null, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", false, false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, false, ExpectedResult = false)]
+        [TestCase(null, true, false, ExpectedResult = false)]
+        [TestCase(null, false, false, ExpectedResult = false)]
+        [TestCase(null, null, false, ExpectedResult = false)] // true by default test
+        public bool UtilizationDetectAzureFunctionConfigurationWorksProperly(string environmentSetting, bool? localSetting, bool azureFunctionModeEnabled)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Returns(azureFunctionModeEnabled.ToString());
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAzureFunction = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAzureFunction;
+        }
         #endregion
 
         #region Log Metrics and Events
@@ -3099,7 +3177,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             if (environment != null)
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")).Returns(environment);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")).Returns(environment);
             }
 
             return _defaultConfig.ContextDataInclude;
@@ -3119,7 +3197,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             if (environment != null)
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")).Returns(environment);
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")).Returns(environment);
             }
 
             return _defaultConfig.ContextDataExclude;
@@ -3404,7 +3482,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, null, ExpectedResult = 30000)]
         public int CustomEventsMaxSamplesStoredOverriddenByEnvironment(string environmentSetting, int? localSetting, int? serverSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("MAX_EVENT_SAMPLES_STORED")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("MAX_EVENT_SAMPLES_STORED")).Returns(environmentSetting);
 
             if (localSetting != null)
             {
@@ -3459,7 +3537,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public string SecurityPoliciesTokenReturned(string environmentValue, string localConfigValue)
         {
             _localConfig.securityPoliciesToken = localConfigValue;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
                 .Returns(environmentValue);
             return _defaultConfig.SecurityPoliciesToken;
         }
@@ -3474,7 +3552,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public bool SecurityPoliciesTokenExists(string environmentValue, string localConfigValue)
         {
             _localConfig.securityPoliciesToken = localConfigValue;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
                 .Returns(environmentValue);
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -3521,7 +3599,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = false)] // false by default test
         public bool GloballyForceNewTransactionConfigurationTests(string environmentSetting, bool? localSetting)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD")).Returns(environmentSetting);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD")).Returns(environmentSetting);
 
             if (localSetting.HasValue)
             {
@@ -3557,7 +3635,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, ExpectedResult = true)]
         public bool ShouldCodeLevelMetricsBeEnabled(bool? localConfigValue, string envConfigValue)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
 
             if (localConfigValue.HasValue)
             {
@@ -3964,7 +4042,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void AiMonitoringEnabledByEnvironmentVariable()
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
             Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
         }
         [Test]
@@ -3974,7 +4052,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.aiMonitoring.enabled = true;
             Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
         }
-        
+
         [Test]
         public void AiMonitoringStreamingDisabledByLocalConfig()
         {
@@ -3992,7 +4070,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void AiMonitoringStreamingDisabledByEnvironmentVariableWhenAiMonitoringEnabled()
         {
             _localConfig.aiMonitoring.enabled = true;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_STREAMING_ENABLED")).Returns("false");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_STREAMING_ENABLED")).Returns("false");
             Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
         }
 
@@ -4013,7 +4091,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void AiMonitoringRecordContentDisabledByEnvironmentVariable()
         {
             _localConfig.aiMonitoring.enabled = true;
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED")).Returns("false");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED")).Returns("false");
             Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
         }
         [Test]
@@ -4044,7 +4122,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("False", true, ExpectedResult = false)]
         public bool LoggingEnabledTests(string environmentValue, bool localConfigValue)
         {
-            Mock.Arrange(() =>_environment.GetEnvironmentVariable("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_ENABLED")).Returns(environmentValue);
             _localConfig.log.enabled = localConfigValue;
 
             return _defaultConfig.LoggingEnabled;
@@ -4074,7 +4152,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("info", "finest", ExpectedResult = "INFO")]
         public string LoggingLevelTests(string environmentValue, string localConfigValue)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEWRELIC_LOG_LEVEL")).Returns(environmentValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns(environmentValue);
             _localConfig.log.level = localConfigValue;
 
             return _defaultConfig.LoggingLevel;
@@ -4134,7 +4212,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             if (envWatcherDisabled.HasValue)
             {
-                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_FILE_SYSTEM_WATCHER")).Returns(envWatcherDisabled.ToString().ToLower());
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISABLE_FILE_SYSTEM_WATCHER")).Returns(envWatcherDisabled.ToString().ToLower());
             }
 
             _localConfig.log.enabled = loggingEnabled;
@@ -4143,6 +4221,225 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // test
             return _defaultConfig.DisableFileSystemWatcher;
         }
+
+        #region Azure Function config tests
+        [Test]
+        [TestCase(null, "some-subscription-id+resourcegroup-region-Linux", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase("", "some-subscription-id+resourcegroup-region-Linux", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase(null, "website-owner", false)] // resource id cannot be parsed from WEBSITE_OWNER_NAME
+        [TestCase("", "website-owner", false)] // resource id can be parsed from WEBSITE_OWNER_NAME
+        [TestCase("resourceGroup", null, true)]
+        [TestCase("resourceGroup", "", true)]
+        public void AzureFunctionResourceId_ShouldReturnEmpty_WhenResourceGroupOrSubscriptionIdIsNullOrEmpty(string resourceGroup, string websiteOwner, bool expectEmpty)
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(resourceGroup);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(websiteOwner);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            Assert.That(result, expectEmpty ? Is.Empty : Is.Not.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceId_ShouldReturnCorrectResourceId_WhenResourceGroupAndSubscriptionIdAreNotEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/some-service-name";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AzureFunctionResourceId_ShouldReturnUnknownServiceName_WhenAzureFunctionServiceNameIsNull()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceId;
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/unknown";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenResourceIdIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns((string)null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns((string)null);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName("some-function");
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnEmpty_WhenFunctionNameIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName(null);
+
+            // Assert
+            Assert.That(result, Is.Empty);
+        }
+
+        [Test]
+        public void AzureFunctionResourceIdWithFunctionName_ShouldReturnCorrectResourceIdWithFunctionName_WhenResourceIdIsNotEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("some-subscription-id+resourcegroup-region-Linux");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceIdWithFunctionName("some-function");
+
+            // Assert
+            var expected = "/subscriptions/some-subscription-id/resourceGroups/some-resource-group/providers/Microsoft.Web/sites/some-service-name/functions/some-function";
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnWebsiteResourceGroup_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns("some-resource-group");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-resource-group"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnParsedResourceGroup_WhenWebsiteOwnerNameIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("subscription+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("resourcegroup"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnWebsiteOwnerName_WhenFormatIsUnexpected()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("unexpected-format");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("unexpected-format"));
+        }
+
+        [Test]
+        public void AzureFunctionResourceGroupName_ShouldReturnEmptyString_WhenWebsiteOwnerNameIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_RESOURCE_GROUP")).Returns(string.Empty);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(string.Empty);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionResourceGroupName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(string.Empty));
+        }
+
+        [Test]
+        public void AzureFunctionRegion_ShouldReturnRegionName_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("REGION_NAME")).Returns("some-region");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionRegion;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-region"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnSubscriptionId_WhenWebsiteOwnerNameIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("subscription+resourcegroup-region-Linux");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("subscription"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnWebsiteOwnerName_WhenFormatIsUnexpected()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns("unexpected-format");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("unexpected-format"));
+        }
+
+        [Test]
+        public void AzureFunctionSubscriptionId_ShouldReturnEmptyString_WhenWebsiteOwnerNameIsNotSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_OWNER_NAME")).Returns(string.Empty);
+
+            // Act
+            var result = _defaultConfig.AzureFunctionSubscriptionId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(string.Empty));
+        }
+
+        [Test]
+        public void AzureFunctionServiceName_ShouldReturnServiceName_WhenEnvironmentVariableIsSet()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
+
+            // Act
+            var result = _defaultConfig.AzureFunctionServiceName;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("some-service-name"));
+        }
+
+        #endregion
 
         private void CreateDefaultConfiguration()
         {

@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.31.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.30.0...v10.31.0) (2024-09-25)
+
+
+### New features
+
+* Add support for the EnyimMemcachedCore client. ([#2781](https://github.com/newrelic/newrelic-dotnet-agent/issues/2781)) ([52bdc11](https://github.com/newrelic/newrelic-dotnet-agent/commit/52bdc11a5194074afb2e6f806ab764c8aca39051))
+* Allow container linking for AWS ECS applications. ([#2683](https://github.com/newrelic/newrelic-dotnet-agent/issues/2683)) ([d55567f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d55567fb4674ea64443ac4a96e7d3f7f81dc3c97))
+* Parse Azure Function HttpTrigger parameters ([#2776](https://github.com/newrelic/newrelic-dotnet-agent/issues/2776)) ([7e8c28b](https://github.com/newrelic/newrelic-dotnet-agent/commit/7e8c28bbbcb97c62d0da0db6e1affcae2ff445b1))
+
+
+### Fixes
+
+* Prevent FileNotFoundException when handling connection issues while instrumenting .NET Framework apps. ([#2750](https://github.com/newrelic/newrelic-dotnet-agent/issues/2750)) ([#2751](https://github.com/newrelic/newrelic-dotnet-agent/issues/2751)) ([cebd287](https://github.com/newrelic/newrelic-dotnet-agent/commit/cebd28703224afed1fda24cb984657eb86f4b51d))
+
+## [10.30.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.29.0...v10.30.0) (2024-09-11)
+
+
+### New features
+
+* Oracle instrumentation now supports latest version ([#2721](https://github.com/newrelic/newrelic-dotnet-agent/issues/2721)) ([50cb663](https://github.com/newrelic/newrelic-dotnet-agent/commit/50cb663957ccfcfd55d104a7f54755100bfa46cc))
+* Preview support for instrumentation of "isolated" model Azure Functions. Instrumentation is disabled by default. Please reach out to your account team if you would like to try this new feature. ([d8a79e5](https://github.com/newrelic/newrelic-dotnet-agent/commit/d8a79e51683225e9b574efc8d1b154b2a4b9eadc))
+
+
+### Fixes
+
+* Preserve custom query name even if statement can't be parsed. ([#2708](https://github.com/newrelic/newrelic-dotnet-agent/issues/2708)) ([#2709](https://github.com/newrelic/newrelic-dotnet-agent/issues/2709)) ([3ab0cb4](https://github.com/newrelic/newrelic-dotnet-agent/commit/3ab0cb4f36d3f5fa07d4003b930917e533c7cba2))
+
+## [10.29.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.28.0...v10.29.0) (2024-08-20)
+
+
+### New features
+
+* Additional metrics and attributes for some instrumented libraries ([#2675](https://github.com/newrelic/newrelic-dotnet-agent/issues/2675)) ([a033b81](https://github.com/newrelic/newrelic-dotnet-agent/commit/a033b81b19ba65b7336762c89a974160cc2e5491))
+* Auto-instrument ASP.NET Core Lambda functions ([#2662](https://github.com/newrelic/newrelic-dotnet-agent/issues/2662)) ([#2674](https://github.com/newrelic/newrelic-dotnet-agent/issues/2674)) ([ceaefc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/ceaefc51bd15c3baaa05f4d0306645852aea1392))
+* Use Lambda function name if application name is not set ([#2695](https://github.com/newrelic/newrelic-dotnet-agent/issues/2695)) ([3dcf3af](https://github.com/newrelic/newrelic-dotnet-agent/commit/3dcf3af535ad14b39cb27d9de2704b41780f89b4))
+
 ## [10.28.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.27.0...v10.28.0) (2024-08-05)
 
 

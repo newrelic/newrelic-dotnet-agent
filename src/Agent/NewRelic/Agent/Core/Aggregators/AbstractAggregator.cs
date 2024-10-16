@@ -82,8 +82,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public override void Dispose()
         {
-            base.Dispose();
             _scheduler.StopExecuting(Harvest);
+            base.Dispose();
         }
 
     }

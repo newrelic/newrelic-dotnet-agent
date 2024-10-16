@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// </summary>
         private static string[] _autoReflectedAssemblies;
 
+        [NrExcludeFromCodeCoverage]
         public static void Initialize(string installPathExtensionsDirectory)
         {
             _installPathExtensionsDirectory = installPathExtensionsDirectory;
@@ -80,11 +81,11 @@ namespace NewRelic.Agent.Core.Utilities
                 { "TransportConfigWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransit.dll") },
                 { "TransportConfigLegacyWrapper",                                                                    Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") },
 
-              // Kafka
+                // Kafka
                 { "KafkaBuilderWrapper",                                                                           Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
                 { "KafkaSerializerWrapper",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
-                { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") }
+                { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();

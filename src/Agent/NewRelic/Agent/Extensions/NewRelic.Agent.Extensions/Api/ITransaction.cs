@@ -33,6 +33,8 @@ namespace NewRelic.Agent.Api
         /// </summary>
         ISegment CurrentSegment { get; }
 
+        bool HasHttpResponseStatusCode { get; }
+
         /// <summary>
         /// End this transaction.
         /// </summary>
@@ -307,5 +309,7 @@ namespace NewRelic.Agent.Api
         void SetLlmTransaction(bool isLlmTransaction);
 
         void AddLambdaAttribute(string name, object value);
+
+        void AddFaasAttribute(string name, object value);
     }
 }

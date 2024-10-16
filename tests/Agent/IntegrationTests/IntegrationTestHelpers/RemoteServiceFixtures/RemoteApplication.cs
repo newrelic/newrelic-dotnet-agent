@@ -373,7 +373,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                     //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
                     var remoteAppEvent = EventWaitHandle.OpenExisting(shutdownChannelName);
-                    remoteAppEvent.Set();
+                    if (!remoteAppEvent.Set())
+                    {
+                        throw new Exception($"Failed to signal the remote application to shut down. Channel name: {shutdownChannelName}");
+                    }
                 }
                 catch (Exception ex)
                 {

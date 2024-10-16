@@ -70,9 +70,25 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
-      <!-- Oracle vendor driver for ManagedDataAccess -->
-      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand">
+      <!-- Oracle vendor driver for ManagedDataAccess packages targeting net462 -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" maxVersion="4.122.23">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess.Core packages targeting net6.0 and later (yes, they use the same assembly name for core and fw) -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" minVersion="23.0.0">
+        <exactMethodMatcher methodName="ExecuteReaderInternal" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior,System.Boolean" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess packages targeting net472+ -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" minVersion="4.122.23">
+        <exactMethodMatcher methodName="ExecuteReaderInternal" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior,System.Boolean" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader" />
@@ -196,6 +212,32 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1">
         <exactMethodMatcher methodName="ExecuteReaderAsync"/>
       </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess.Core packages targeting net6.0 and later (yes, they use the same assembly name for core and fw) -->
+      <!-- We have to instrument every overload because they all call a "helper" method that returns a ValueTask -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" minVersion="23.0.0">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync"  parameters="System.Threading.CancellationToken"/>
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess packages targeting net472+ -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand" minVersion="4.122.23">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync"  parameters="System.Threading.CancellationToken"/>
+      </match>
+
     </tracerFactory>
 
     <!-- DataReader methods. DISABLED by default due to possible performance impact. Set enabled to "true" (or omit completely) to enable this instrumentation. -->
@@ -329,6 +371,19 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
+      
+      <!-- Oracle vendor driver for ManagedDataAccess.Core packages targeting net6.0 and later -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleDataReader" minVersion="23.0.0">
+        <exactMethodMatcher methodName="ReadAsync" parameters="System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Threading.CancellationToken"/>
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess packages targeting net472+ -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleDataReader" minVersion="4.122.23">
+        <exactMethodMatcher methodName="ReadAsync" parameters="System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Threading.CancellationToken"/>
+      </match>
+     
     </tracerFactory>
 
 
@@ -359,9 +414,10 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Open"/>
       </match>
 
-      <!-- Oracle vendor driver for ManagedDataAccess -->
+      <!-- Oracle vendor driver for ManagedDataAccess, all versions (though some don't have OpenAsync) -->
       <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleConnection">
         <exactMethodMatcher methodName="Open"/>
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
       </match>
 
       <!-- MySql (official) driver -->

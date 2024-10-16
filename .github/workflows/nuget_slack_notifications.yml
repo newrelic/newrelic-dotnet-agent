@@ -2,7 +2,7 @@ name: Check for new core technologies
 
 on:
   schedule:
-   - cron:  '0 10 * * 1' # Every Monday at 10:00 AM
+   - cron:  '0 10 1,15 * *' # On the 1st and 15th of every month at 10:00 AM UTC
   workflow_dispatch:
     inputs:
       daysToSearch:
@@ -25,7 +25,8 @@ jobs:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: write
+      pull-requests: write
     continue-on-error: false
     
     env:
@@ -34,12 +35,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit # Leave it audit mode
 
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
         with:
           fetch-depth: 0
 
@@ -62,13 +63,14 @@ jobs:
           DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
           DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CORECLR_ENABLE_PROFILING: 1
-          CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
+          CORECLR_NEW_RELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
           CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
           CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
           NEW_RELIC_APP_NAME: Dotty
           NEW_RELIC_HOST: staging-collector.newrelic.com
           NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
           DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
+          DOTTY_SEARCH_ROOT_PATH: ${{ github.workspace }}
 
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then
@@ -78,6 +80,6 @@ jobs:
             export DOTTY_TEST_MODE="True"
           fi
           cd ${{ env.scan-tool-publish-path }}
-          dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
+          dotnet ./nugetSlackNotifications.dll
         shell: bash
         

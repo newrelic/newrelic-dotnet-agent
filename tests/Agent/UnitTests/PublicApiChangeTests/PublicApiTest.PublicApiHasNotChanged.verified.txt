@@ -1,0 +1,100 @@
+﻿[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/newrelic/dotnet-agent")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
+namespace NewRelic.Api.Agent
+{
+    public static class Constants
+    {
+        public const string DistributedTracePayloadKey = "Newrelic";
+    }
+    public interface IAgent
+    {
+        NewRelic.Api.Agent.ISpan CurrentSpan { get; }
+        NewRelic.Api.Agent.ITransaction CurrentTransaction { get; }
+        NewRelic.Api.Agent.ITraceMetadata TraceMetadata { get; }
+        System.Collections.Generic.Dictionary<string, string> GetLinkingMetadata();
+    }
+    public interface IDistributedTracePayload
+    {
+        string HttpSafe();
+        bool IsEmpty();
+        string Text();
+    }
+    public interface ISpan
+    {
+        NewRelic.Api.Agent.ISpan AddCustomAttribute(string key, object value);
+        NewRelic.Api.Agent.ISpan SetName(string name);
+    }
+    public interface ITraceMetadata
+    {
+        bool IsSampled { get; }
+        string SpanId { get; }
+        string TraceId { get; }
+    }
+    public interface ITransaction
+    {
+        NewRelic.Api.Agent.ISpan CurrentSpan { get; }
+        void AcceptDistributedTraceHeaders<T>(T carrier, System.Func<T, string, System.Collections.Generic.IEnumerable<string>> getter, NewRelic.Api.Agent.TransportType transportType);
+        NewRelic.Api.Agent.ITransaction AddCustomAttribute(string key, object value);
+        void InsertDistributedTraceHeaders<T>(T carrier, System.Action<T, string, string> setter);
+        NewRelic.Api.Agent.SegmentWrapper? RecordDatastoreSegment(string vendor, string model, string operation, string? commandText = null, string? host = null, string? portPathOrID = null, string? databaseName = null);
+        void SetUserId(string userid);
+    }
+    public static class NewRelic
+    {
+        public static void DisableBrowserMonitoring(bool overrideManual = false) { }
+        public static NewRelic.Api.Agent.IAgent GetAgent() { }
+        public static string GetBrowserTimingHeader() { }
+        public static string GetBrowserTimingHeader(string nonce) { }
+        public static System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> GetRequestMetadata() { }
+        public static System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> GetResponseMetadata() { }
+        public static void IgnoreApdex() { }
+        public static void IgnoreTransaction() { }
+        public static void IncrementCounter(string name) { }
+        public static void NoticeError(System.Exception exception) { }
+        public static void NoticeError(System.Exception exception, System.Collections.Generic.IDictionary<string, object>? parameters) { }
+        public static void NoticeError(System.Exception exception, System.Collections.Generic.IDictionary<string, string>? parameters) { }
+        public static void NoticeError(string message, System.Collections.Generic.IDictionary<string, object>? parameters) { }
+        public static void NoticeError(string message, System.Collections.Generic.IDictionary<string, string>? parameters) { }
+        public static void NoticeError(string message, System.Collections.Generic.IDictionary<string, object>? parameters, bool isExpected) { }
+        public static void NoticeError(string message, System.Collections.Generic.IDictionary<string, string>? parameters, bool isExpected) { }
+        public static void RecordCustomEvent(string eventType, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, object>> attributes) { }
+        public static void RecordLlmFeedbackEvent(string traceId, object rating, string category = "", string message = "", System.Collections.Generic.IDictionary<string, object>? metadata = null) { }
+        public static void RecordMetric(string name, float value) { }
+        public static void RecordResponseTimeMetric(string name, long millis) { }
+        public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null) { }
+        public static void SetErrorGroupCallback(System.Func<System.Collections.Generic.IReadOnlyDictionary<string, object>, string> callback) { }
+        public static void SetLlmTokenCountingCallback(System.Func<string, string, int> callback) { }
+        public static void SetTransactionName(string? category, string name) { }
+        public static void SetTransactionUri(System.Uri uri) { }
+        public static void SetUserParameters(string? userName, string? accountName, string? productName) { }
+        public static void StartAgent() { }
+    }
+    public class SegmentWrapper : System.IDisposable
+    {
+        public void Dispose() { }
+        public static NewRelic.Api.Agent.SegmentWrapper GetDatastoreWrapper([System.Runtime.CompilerServices.Dynamic] object transaction, string vendor, string model, string operation, string? commandText, string? host, string? portPathOrID, string? databaseName) { }
+    }
+    [System.AttributeUsage(System.AttributeTargets.Method)]
+    public class TraceAttribute : System.Attribute
+    {
+        public TraceAttribute() { }
+    }
+    [System.AttributeUsage(System.AttributeTargets.Method)]
+    public class TransactionAttribute : NewRelic.Api.Agent.TraceAttribute
+    {
+        public TransactionAttribute() { }
+        public bool Web { get; set; }
+    }
+    public enum TransportType
+    {
+        Unknown = 0,
+        HTTP = 1,
+        HTTPS = 2,
+        Kafka = 3,
+        JMS = 4,
+        IronMQ = 5,
+        AMQP = 6,
+        Queue = 7,
+        Other = 8,
+    }
+}

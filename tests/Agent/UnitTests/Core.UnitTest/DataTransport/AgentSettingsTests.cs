@@ -284,6 +284,7 @@ namespace NewRelic.Agent.Core.Configuration
                     "utilization.detect_pcf_enabled": true,
                     "utilization.detect_docker_enabled": true,
                     "utilization.detect_kubernetes_enabled": true,
+                    "utilization.detect_azure_function_enabled": true,
                     "utilization.logical_processors": 22,
                     "utilization.total_ram_mib": 33,
                     "utilization.billing_host": "UtilizationBillingHost",

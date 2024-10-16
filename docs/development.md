@@ -34,7 +34,7 @@ You need to configure the following environment variables for the agent to attac
 #### Environment variables for .NET Framework
 ```bash
 NEW_RELIC_LICENSE_KEY=<your New Relic license key>
-NEWRELIC_HOME=path\to\home\directory
+NEW_RELIC_HOME=path\to\home\directory
 COR_ENABLE_PROFILING=1
 COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}
 COR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
@@ -43,7 +43,7 @@ COR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
 #### Environment variables for .NET Core
 ```bash
 NEW_RELIC_LICENSE_KEY=<your New Relic license key>
-CORECLR_NEWRELIC_HOME=path\to\home\directory
+CORECLR_NEW_RELIC_HOME=path\to\home\directory
 CORECLR_ENABLE_PROFILING=1
 CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
 CORECLR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll

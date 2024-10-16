@@ -36,6 +36,9 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
                     _fixture.EnqueueAPIGatewayProxyRequestWithDTHeaders(TestTraceId, TestParentSpanId);
                     _fixture.EnqueueMinimalAPIGatewayProxyRequest();
                     _fixture.EnqueueInvalidAPIGatewayProxyRequest();
+
+                    // wait for the invalid request log line
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.InvalidServerlessWebRequestLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 3);
                 }
             );

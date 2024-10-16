@@ -398,6 +398,12 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AwsSdkWrapperComponent" Guid="{00D58C03-D517-41CA-BBAD-DAC605EADD3E}">
         <File Id="AwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
       </Component>
+      <Component Id="AzureFunctionWrapperComponent" Guid="{949893C5-0212-447A-88A3-DDE3638DDC6E}">
+        <File Id="AzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
+      </Component>
+      <Component Id="MemcachedWrapperComponent" Guid="{2FF15179-BBEB-460C-A145-10F20C0CAD07}">
+        <File Id="MemcachednWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -470,7 +476,13 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreAwsSdkWrapperComponent" Guid="{7C5E31CB-BA85-4E00-BA1B-99FA0B42E414}">
         <File Id="CoreAwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
       </Component>
-    </ComponentGroup>
+      <Component Id="CoreAzureFunctionWrapperComponent" Guid="{6DC23A07-4063-462E-B43A-532D6F810AFE}">
+        <File Id="CoreAzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
+      </Component>
+      <Component Id="CoreMemcachedWrapperComponent" Guid="{1D7D04A1-24D5-4716-B7CB-EACB21D66D7D}">
+        <File Id="CoreMemcachedWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
+      </Component>
+   </ComponentGroup>
 
     <!-- Wrapper Instrumentation Files-->
     <ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="FrameworkExtensionsFolder">
@@ -582,7 +594,13 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AwsSdkInstrumentationComponent" Guid="{E719FAC8-8D69-41EA-9395-B71868DA7449}">
         <File Id="AwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" />
       </Component>
-    </ComponentGroup>
+      <Component Id="AzureFunctionInstrumentationComponent" Guid="{0D802289-3B47-4D94-8907-285FFD2779AB}">
+        <File Id="AzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" />
+      </Component>
+      <Component Id="MemcachedInstrumentationComponent" Guid="{065F899F-4942-43C6-9589-538C432E3E4D}">
+        <File Id="MemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" />
+      </Component>
+   </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
       <Component Id="CoreAspNetCoreInstrumentationComponent" Guid="{E69FA7D5-DC09-4146-A77E-6EE697EF2910}">
@@ -650,6 +668,12 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAwsSdkInstrumentationComponent" Guid="{CAB15FAE-EF3F-4998-9376-56DA4E11BAEF}">
         <File Id="CoreAwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAzureFunctionInstrumentationComponent" Guid="{BF3BEE66-A563-4A59-ADEC-65C3381C582E}">
+        <File Id="CoreAzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreMemcachedInstrumentationComponent" Guid="{5A78488A-837C-4CA5-BD20-4A1ED734C085}">
+        <File Id="CoreMemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
@@ -737,7 +761,8 @@ SPDX-License-Identifier: Apache-2.0
     <!-- Global environment variables -->
     <ComponentGroup Id="EnvironmentVariableComponents" Directory="TARGETDIR">
       <Component Guid="{A54E9E06-E477-4D0F-8063-9BEDD6BC0B7B}">
-        <Environment Id="NewRelicInstallPathEnvironment" System="yes" Name="NEWRELIC_INSTALL_PATH" Value="[NETAGENTFOLDER]" Action="set" />
+        <Environment Id="OldNewRelicInstallPathEnvironment" System="yes" Name="NEWRELIC_INSTALL_PATH" Action="remove" />
+        <Environment Id="NewRelicInstallPathEnvironment" System="yes" Name="NEW_RELIC_INSTALL_PATH" Value="[NETAGENTFOLDER]" Action="set" />
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Agent" Name="NewRelicInstallPathEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
@@ -772,7 +797,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrProfilerPathEnvironmentRemoved" Type="integer" Value="1" KeyPath="yes" />
       </Component>
       <Component Guid="{B63A32D5-33CC-4334-844C-B3B9E265B191}">
-        <Environment Id="CoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Value="[NETAGENTCOMMONFOLDER]" Action="set" />
+        <Environment Id="OldCoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Action="remove" />
+        <Environment Id="CoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEW_RELIC_HOME" Value="[NETAGENTCOMMONFOLDER]" Action="set" />
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrNewRelicHomeEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
@@ -783,7 +809,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\W3SVC" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="COR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -793,7 +819,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\WAS" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="COR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -806,8 +832,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\W3SVC" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="CORECLR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}" />
-          <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="CORECLR_NEW_RELIC_HOME=[NETAGENTCOMMONFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
@@ -817,8 +843,8 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="System\CurrentControlSet\Services\WAS" Name="Environment" Type="multiString" Action="append" KeyPath="yes">
           <MultiStringValue Value="CORECLR_ENABLE_PROFILING=1" />
           <MultiStringValue Value="CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}" />
-          <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
-          <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
+          <MultiStringValue Value="CORECLR_NEW_RELIC_HOME=[NETAGENTCOMMONFOLDER]" />
+          <MultiStringValue Value="NEW_RELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
             <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>

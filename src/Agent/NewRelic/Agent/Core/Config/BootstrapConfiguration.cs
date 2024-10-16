@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Core.Config
         ILogConfig LogConfig { get; }
         string ServerlessFunctionName { get; }
         string ServerlessFunctionVersion { get; }
+        bool AzureFunctionModeDetected { get; }
     }
 
     /// <summary>
@@ -129,6 +130,8 @@ namespace NewRelic.Agent.Core.Config
         }
 
         public ILogConfig LogConfig { get; private set; }
+
+        public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {
@@ -281,7 +284,7 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetNewRelicLogDirectory()
             {
-                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEWRELIC_LOG_DIRECTORY");
+                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", "NEWRELIC_LOG_DIRECTORY");
                 if (newRelicLogDirectory != null && _checkDirectoryExists(newRelicLogDirectory)) return _getFullPath(newRelicLogDirectory);
 
                 return newRelicLogDirectory;

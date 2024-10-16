@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       github-actions:
         patterns:
@@ -26,11 +26,11 @@ updates:
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
-    directories: 
-      - /tests/Agent/IntegrationTests
-      - /
+    directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
+      - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions
+      - / # will pick up FullAgent.sln which contains the unit tests
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       nuget-tests:
         patterns:
@@ -44,3 +44,5 @@ updates:
       - dependency-name: "NUnit*"
       - dependency-name: "Selenium*"
       - dependency-name: "xunit*"
+      - dependency-name: "PublicApiGenerator"
+      - dependency-name: "Verify.NUnit"
