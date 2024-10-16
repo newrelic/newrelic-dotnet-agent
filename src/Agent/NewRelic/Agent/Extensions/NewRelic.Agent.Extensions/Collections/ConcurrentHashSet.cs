@@ -47,7 +47,13 @@ namespace NewRelic.Agent.Extensions.Collections
                 _hashSet.Add(item);
             }
         }
-
+        public bool TryAdd(T item)
+        {
+            using (_writeLock())
+            {
+                return _hashSet.Add(item);
+            }
+        }
         public void Clear()
         {
             using (_writeLock())
