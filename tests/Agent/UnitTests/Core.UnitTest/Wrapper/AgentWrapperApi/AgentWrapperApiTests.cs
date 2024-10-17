@@ -40,6 +40,7 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -86,7 +87,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private ILogContextDataFilter _logContextDataFilter;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
-
+        private ILabelsService _labelsService;
         private Action _harvestAction;
         private TimeSpan? _harvestCycle;
 
@@ -147,11 +148,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
             _errorService = new ErrorService(_configurationService);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _labelsService = Mock.Create<ILabelsService>();
 
             var scheduler = Mock.Create<IScheduler>();
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter);
+            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter, _labelsService);
             _logContextDataFilter = new LogContextDataFilter(_configurationService);
 
             _customEventTransformer = Mock.Create<ICustomEventTransformer>();
@@ -166,6 +168,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _logEventAggregator.Dispose();
             _logContextDataFilter.Dispose();
             _attribDefSvc.Dispose();
+            _labelsService.Dispose();
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory

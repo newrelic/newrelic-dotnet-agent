@@ -32,19 +32,7 @@ namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
     public partial class LogEventDataCommon
     {
         [JsonProperty("attributes")]
-        public LogEventDataCommonAttributes Attributes { get; set; }
-    }
-
-    public class LogEventDataCommonAttributes
-    {
-        [JsonProperty("entity.name")]
-        public string EntityName { get; set; }
-
-        [JsonProperty("entity.guid")]
-        public string EntityGuid { get; set; }
-
-        [JsonProperty("hostname")]
-        public string Hostname { get; set; }
+        public Dictionary<string, object> Attributes { get; set; }
     }
 
     public class LogLine

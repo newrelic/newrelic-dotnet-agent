@@ -446,6 +446,10 @@ namespace NewRelic.Agent.Core.DataTransport
             new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
         };
 
+        public bool IncludeLabelsEnabled => true;
+
+        public IEnumerable<string> IncludeLabelsExclude => new[] { "label1", "label2" };
+
         public bool DisableFileSystemWatcher => false;
 
         public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
