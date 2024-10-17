@@ -1912,7 +1912,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-
         public int? UtilizationLogicalProcessors
         {
             get
@@ -2163,7 +2162,8 @@ namespace NewRelic.Agent.Core.Configuration
                 return string.Empty;
             }
 
-            return $"{AzureFunctionResourceId}/functions/{functionName}";        }
+            return $"{AzureFunctionResourceId}/functions/{functionName}";
+        }
 
         public string AzureFunctionResourceGroupName
         {
@@ -2465,6 +2465,8 @@ namespace NewRelic.Agent.Core.Configuration
                 return DefaultHarvestCycle;
             }
         }
+
+        public bool ModernGCSamplerEnabled => _bootstrapConfiguration.ModernGCSamplerEnabled;
 
         #endregion
 

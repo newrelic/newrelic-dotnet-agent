@@ -27,7 +27,19 @@ namespace NewRelic.Agent.Core.Samplers
         PercentTimeInGc,
         Gen0CollectionCount,
         Gen1CollectionCount,
-        Gen2CollectionCount
+        Gen2CollectionCount,
+        // modern sampler only
+        POHSize,
+        LOHCollectionCount,
+        POHCollectionCount,
+        TotalHeapMemory,
+        TotalCommittedMemory,
+        TotalAllocatedMemory,
+        Gen0FragmentationSize,
+        Gen1FragmentationSize,
+        Gen2FragmentationSize,
+        LOHFragmentationSize,
+        POHFragmentationSize,
     }
 
 #if NETFRAMEWORK

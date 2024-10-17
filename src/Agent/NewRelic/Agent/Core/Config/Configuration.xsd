@@ -2104,6 +2104,14 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:attribute>
+
+            <xs:attribute name="modernGCSamplerEnabled" type="xs:boolean" default="false">
+                <xs:annotation>
+                    <xs:documentation>
+                        Turns on/off the "modern" garbage collection sampler. Available only for .NET applications.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 </xs:schema>
