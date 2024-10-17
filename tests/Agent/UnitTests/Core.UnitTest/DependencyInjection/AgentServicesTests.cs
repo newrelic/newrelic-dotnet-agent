@@ -1,6 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NET
+using System;
+using System.Collections.Generic;
+using NewRelic.Agent.Core.Samplers;
+using NewRelic.Agent.Core.Transformers;
+#endif
+
 using Autofac.Core.Registration;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
@@ -26,7 +33,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container, false);
+                AgentServices.RegisterServices(container, false, false);
                 Assert.DoesNotThrow(() => container.Resolve<IConfigurationService>());
             }
         }
@@ -44,7 +51,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container, false);
+                AgentServices.RegisterServices(container, false, false);
 
                 container.ReplaceInstanceRegistration(configurationService);
 #if NET
@@ -52,7 +59,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 #endif
 
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false));
+                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, false));
             }
         }
 
@@ -72,7 +79,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container, serverlessModeEnabled);
+                AgentServices.RegisterServices(container, serverlessModeEnabled, false);
 
                 container.ReplaceInstanceRegistration(configurationService);
 #if NET
@@ -80,7 +87,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 #endif
                 // Assert
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container, true));
+                Assert.DoesNotThrow(() => AgentServices.StartServices(container, true, false));
 
                 // ensure dependent services are registered
                 if (serverlessModeEnabled)
@@ -112,5 +119,53 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 }
             }
         }
+
+#if NET
+        [TestCase(true)]
+        [TestCase(false)]
+        public void CorrectServicesAreRegistered_BasedOnModernGCSamplerEnabledMode(bool modernGCSamplerEnabled)
+        {
+            // Arrange
+            var configuration = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
+            Mock.Arrange(() => configuration.NewRelicConfigFilePath).Returns("c:\\");
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+
+            // Act
+            using (new ConfigurationAutoResponder(configuration))
+            using (var container = AgentServices.GetContainer())
+            {
+                AgentServices.RegisterServices(container, false, modernGCSamplerEnabled);
+
+                container.ReplaceInstanceRegistration(configurationService);
+                container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
+                // Assert
+                Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
+                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, modernGCSamplerEnabled));
+
+                // ensure dependent services are registered
+                if (modernGCSamplerEnabled)
+                {
+                    Assert.DoesNotThrow(() => container.Resolve<IGCSampleTransformerModern>());
+                    Assert.DoesNotThrow(() => container.Resolve<GCSamplerModern>());
+
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>());
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>());
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<GCSamplerNetCore>());
+
+                }
+                else
+                {
+                    Assert.DoesNotThrow(() => container.Resolve<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>());
+                    Assert.DoesNotThrow(() => container.Resolve<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>());
+                    Assert.DoesNotThrow(() => container.Resolve<GCSamplerNetCore>());
+
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IGCSampleTransformerModern>());
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<GCSamplerModern>());
+                }
+            }
+        }
+#endif
     }
 }

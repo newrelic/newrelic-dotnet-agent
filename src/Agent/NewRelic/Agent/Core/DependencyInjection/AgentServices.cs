@@ -58,7 +58,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// </summary>
         /// <param name="container"></param>
         /// <param name="serverlessModeEnabled"></param>
-        public static void RegisterServices(IContainer container, bool serverlessModeEnabled)
+        /// <param name="modernGCSamplerEnabled"></param>
+        public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool modernGCSamplerEnabled)
         {
             // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
             container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -91,9 +92,17 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
             container.Register<GcSampler, GcSampler>();
 #else
-            container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
-            container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
-            container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+            if (!modernGCSamplerEnabled)
+            {
+                container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
+                container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
+                container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+            }
+            else
+            {
+                container.Register<IGCSampleTransformerModern, GCSampleTransformerModern>();
+                container.Register<GCSamplerModern, GCSamplerModern>();
+            }
 #endif
 
             container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
@@ -225,7 +234,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// <summary>
         /// Starts all of the services needed by resolving them.
         /// </summary>
-        public static void StartServices(IContainer container, bool serverlessModeEnabled)
+        public static void StartServices(IContainer container, bool serverlessModeEnabled, bool modernGCSamplerEnabled)
         {
             if (!serverlessModeEnabled)
                 container.Resolve<AssemblyResolutionService>();
@@ -242,7 +251,12 @@ namespace NewRelic.Agent.Core.DependencyInjection
             samplerStartThread.Start();
 #else
             if (!serverlessModeEnabled)
-                container.Resolve<GCSamplerNetCore>().Start();
+            {
+                if (!modernGCSamplerEnabled)
+                    container.Resolve<GCSamplerNetCore>().Start();
+                else
+                    container.Resolve<GCSamplerModern>().Start();
+            }
 #endif
             if (!serverlessModeEnabled)
             {

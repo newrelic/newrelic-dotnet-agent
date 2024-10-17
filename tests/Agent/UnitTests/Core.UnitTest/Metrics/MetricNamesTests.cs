@@ -328,6 +328,20 @@ namespace NewRelic.Agent.Core.Metrics
 
                 { GCSampleType.LOHSize, "GC/LOH/Size" },
                 { GCSampleType.LOHSurvived, "GC/LOH/Survived" },
+
+                { GCSampleType.LOHCollectionCount, "GC/LOH/Collections" },
+                { GCSampleType.POHCollectionCount, "GC/POH/Collections" },
+
+                { GCSampleType.TotalHeapMemory, "GC/Heap/Total" },
+                { GCSampleType.TotalCommittedMemory, "GC/Heap/Committed" },
+                { GCSampleType.TotalAllocatedMemory, "GC/Heap/Allocated" },
+
+                { GCSampleType.Gen0FragmentationSize, "GC/Gen0/Fragmentation" },
+                { GCSampleType.Gen1FragmentationSize, "GC/Gen1/Fragmentation" },
+                { GCSampleType.Gen2FragmentationSize, "GC/Gen2/Fragmentation" },
+                { GCSampleType.LOHFragmentationSize, "GC/LOH/Fragmentation" },
+                { GCSampleType.POHFragmentationSize, "GC/POH/Fragmentation" },
+                { GCSampleType.POHSize, "GC/POH/Size" }
             };
 
             //Ensure that we have covered all sample types with our tests
