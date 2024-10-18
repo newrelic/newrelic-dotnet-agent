@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
+using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -35,6 +37,7 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.ServerlessModeEnabled, Is.False);
                 Assert.That(config.ServerlessFunctionName, Is.Null);
                 Assert.That(config.ServerlessFunctionVersion, Is.Null);
+                Assert.That(config.ModernGCSamplerEnabled, Is.False);
             });
         }
 
@@ -152,6 +155,54 @@ namespace NewRelic.Agent.Core.Config
             Assert.That(config.AgentEnabled, Is.True);
         }
 
+        [Test]
+        public void ModernGCSamplerEnabledDisabledByDefault()
+        {
+            var config = CreateBootstrapConfiguration();
+
+            Assert.That(config.ModernGCSamplerEnabled, Is.False);
+        }
+        [Test]
+        public void ModernGCSamplerEnabledViaLocalConfig()
+        {
+            _localConfiguration.modernGCSamplerEnabled = true;
+
+            var config = CreateBootstrapConfiguration();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(config.ModernGCSamplerEnabled, Is.True);
+            });
+        }
+        [Test]
+        public void ModernGCSamplerEnabledViaEnvironmentVariable()
+        {
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            try
+            {
+
+                var environmentMock = Mock.Create<IEnvironment>();
+                Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+                ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
+                _localConfiguration.modernGCSamplerEnabled = false;
+
+                SetEnvironmentVar("NEW_RELIC_MODERN_GC_SAMPLER_ENABLED", "1");
+
+                var config = CreateBootstrapConfiguration();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(config.ModernGCSamplerEnabled, Is.True);
+                });
+
+            }
+            finally
+            {
+                ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            }
+        }
+
         private BootstrapConfiguration CreateBootstrapConfiguration()
         {
             return new BootstrapConfiguration(_localConfiguration, TestFileName, _ => _webConfigValueWithProvenance, _configurationManagerStatic, new ProcessStatic(), Directory.Exists, Path.GetFullPath);
@@ -163,5 +214,21 @@ namespace NewRelic.Agent.Core.Config
         private IConfigurationManagerStatic _configurationManagerStatic;
         private const string TestWebConfigProvenance = "web.config";
         private const string TestAppSettingProvenance = "app setting";
+
+        private IEnvironment _originalEnvironment;
+        private Dictionary<string, string> _envVars = new Dictionary<string, string>();
+        private void SetEnvironmentVar(string name, string value)
+        {
+            _envVars[name] = value;
+        }
+
+        private void ClearEnvironmentVars() => _envVars.Clear();
+
+        private string MockGetEnvironmentVar(string name)
+        {
+            if (_envVars.TryGetValue(name, out var value)) return value;
+            return null;
+        }
+
     }
 }

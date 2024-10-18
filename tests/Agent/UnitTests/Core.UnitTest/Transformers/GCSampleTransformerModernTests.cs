@@ -85,6 +85,7 @@ namespace NewRelic.Agent.Core.Transformers
                 MetricTestHelpers.CompareCountMetric(generatedMetrics, MetricNames.GetGCMetricName(GCSampleType.POHCollectionCount), sample.GCCollectionCounts[4]);
             });
         }
+
         [Test]
         public void Transform_ShouldRecordZeroMetric_WhenCurrentValueIsLessThanPreviousValue()
         {
@@ -144,5 +145,44 @@ namespace NewRelic.Agent.Core.Transformers
             );
         }
 
+        [Test]
+        public void Transform_ShouldRecordZeroMetric_WhenCurrentAllocatedMemoryIsLessThanPreviousAllocatedMemory()
+        {
+            // Arrange
+            var previousSample = CreateSampleWithAllocatedBytes(2048L);
+            var currentSample = CreateSampleWithAllocatedBytes(1024L);
+
+            var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>())).DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
+
+            // Act
+            _transformer.Transform(previousSample);
+
+            generatedMetrics.Clear();
+
+            _transformer.Transform(currentSample);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(generatedMetrics, Has.Count.EqualTo(18));
+                MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetGCMetricName(GCSampleType.TotalAllocatedMemory), 0);
+            });
+        }
+
+        private ImmutableGCSample CreateSampleWithAllocatedBytes(long allocatedBytes)
+        {
+            return new ImmutableGCSample(
+                lastSampleTime: System.DateTime.UtcNow.AddMinutes(-1),
+                currentSampleTime: System.DateTime.UtcNow,
+                totalMemoryBytes: 1024L,
+                totalAllocatedBytes: allocatedBytes,
+                totalCommittedBytes: 4096L,
+                heapSizesBytes: [100, 200, 300, 400, 500],
+                rawCollectionCounts: [5, 4, 3, 2, 1],
+                fragmentationSizesBytes: [10, 20, 30, 40, 50]
+            );
+        }
     }
 }
