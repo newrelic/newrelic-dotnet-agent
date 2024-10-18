@@ -503,5 +503,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier EnableModernGCSampler(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "modernGCSamplerEnabled", enabled.ToString().ToLower());
+            return this;
+        }
     }
 }

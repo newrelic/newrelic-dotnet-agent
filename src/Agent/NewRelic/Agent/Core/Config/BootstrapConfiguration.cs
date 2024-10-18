@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.Config
         string ServerlessFunctionName { get; }
         string ServerlessFunctionVersion { get; }
         bool AzureFunctionModeDetected { get; }
+        bool ModernGCSamplerEnabled { get; }
     }
 
     /// <summary>
@@ -64,6 +65,7 @@ namespace NewRelic.Agent.Core.Config
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName, Func<string, ValueWithProvenance<string>> getWebConfigSettingWithProvenance, IConfigurationManagerStatic configurationManagerStatic, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
         {
             ServerlessModeEnabled = CheckServerlessModeEnabled(localConfiguration);
+            ModernGCSamplerEnabled = CheckModernGCSamplerEnabled(localConfiguration.modernGCSamplerEnabled);
             DebugStartupDelaySeconds = localConfiguration.debugStartupDelaySeconds;
             ConfigurationFileName = configurationFileName;
             LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath);
@@ -133,6 +135,8 @@ namespace NewRelic.Agent.Core.Config
 
         public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
+        public bool ModernGCSamplerEnabled { get; private set;}
+
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {
             // We may need these later even if we don't use it now.
@@ -153,6 +157,13 @@ namespace NewRelic.Agent.Core.Config
             // fall back to config file
             return localConfiguration.serverlessModeEnabled;
         }
+
+        private bool CheckModernGCSamplerEnabled(bool localConfigurationModernGcSamplerEnabled)
+        {
+            return localConfigurationModernGcSamplerEnabled || (ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_MODERN_GC_SAMPLER_ENABLED").TryToBoolean(out var enabledViaEnvVariable) && enabledViaEnvVariable);
+        }
+
+
 
         private void SetAgentEnabledValues()
         {
