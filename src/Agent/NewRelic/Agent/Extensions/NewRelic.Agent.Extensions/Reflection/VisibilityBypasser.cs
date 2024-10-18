@@ -297,14 +297,10 @@ namespace NewRelic.Reflection
             return GenerateMethodCallerInternal(resultType, methodInfo);
         }
 
-        public bool TryGenerateOneParameterStaticMethodCaller(string assemblyName, string typeName, string methodName, string parameterTypeName, string returnTypeName, out Func<object, object> accessor)
+        public bool TryGenerateOneParameterStaticMethodCaller(Type ownerType, string methodName, Type paramType, Type returnType, out Func<object, object> accessor)
         {
             try
             {
-                var ownerType = GetType(assemblyName, typeName);
-                var paramType = GetType(assemblyName, parameterTypeName);
-                var returnType = GetType(assemblyName, returnTypeName);
-
                 var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static, null, new Type[] { paramType }, null);
                 if (methodInfo == null)
                 {
@@ -682,10 +678,8 @@ namespace NewRelic.Reflection
             return (Func<TResult>)methodInfo.CreateDelegate(typeof(Func<TResult>));
         }
 
-        public bool TryGenerateParameterlessStaticMethodCaller<TResult>(string assemblyName, string typeName, string methodName, out Func<TResult> accessor)
+        public bool TryGenerateParameterlessStaticMethodCaller<TResult>(Type ownerType, string methodName, out Func<TResult> accessor)
         {
-            var ownerType = GetType(assemblyName, typeName);
-
             var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             if (methodInfo == null)
             {

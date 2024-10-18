@@ -100,6 +100,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             }
             else
             {
+                container.Register<IGCSamplerModernReflectionHelper, GCSamplerModernReflectionHelper>();
                 container.Register<IGCSampleTransformerModern, GCSampleTransformerModern>();
                 container.Register<GCSamplerModern, GCSamplerModern>();
             }
