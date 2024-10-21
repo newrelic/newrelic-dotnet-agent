@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
             // PutItemRequest => put_item,
             // CreateTableRequest => create_table, etc.
-            operation = _operationNameCache.GetOrAdd(requestType, GetOperationNameFromRequestType(requestType));
+            operation = _operationNameCache.GetOrAdd(requestType, GetOperationNameFromRequestType);
 
             // Even though there is no common interface they all implement, every Request type I checked
             // has a TableName property
