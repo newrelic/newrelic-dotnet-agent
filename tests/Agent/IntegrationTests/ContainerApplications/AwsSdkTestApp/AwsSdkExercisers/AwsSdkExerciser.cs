@@ -9,7 +9,7 @@ using Amazon.SQS.Model;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace AwsSdkTestApp.AwsSdkExerciser
+namespace AwsSdkTestApp.AwsSdkExercisers
 {
     public class AwsSdkExerciser : IDisposable
     {
