@@ -78,7 +78,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/0", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/1", callCount = 1 },
                 // From the second 2 calls to TestAddNode after the instrumentations are enabled
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
                 // Supportability metric indicating that the managed code successfully parsed the ignored instrumentation settings
                 // This is only sent on the first metric harvest
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Dotnet/IgnoredInstrumentation", callCount = 1 }

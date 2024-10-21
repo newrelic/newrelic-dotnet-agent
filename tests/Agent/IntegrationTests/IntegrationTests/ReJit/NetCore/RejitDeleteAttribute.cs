@@ -67,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", CallCountAllHarvests = 2 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },

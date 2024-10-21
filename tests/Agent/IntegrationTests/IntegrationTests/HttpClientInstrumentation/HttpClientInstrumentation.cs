@@ -55,8 +55,8 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"External/all", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"External/allOther", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"External/all", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"External/allOther", CallCountAllHarvests = 3 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Get", callCount = 1 },
