@@ -39,8 +39,10 @@ namespace NewRelic.Agent.Core.Samplers
             GCHeapSizesBytes = heapSizesBytes;
             GCFragmentationSizesBytes = fragmentationSizesBytes;
 
-            // TODO: verify length is 5 as expected
-            GCCollectionCounts = new int[rawCollectionCounts.Length];
+            // should always be 5, but handle smaller just in case
+            var collectionLength = rawCollectionCounts.Length;
+            GCCollectionCounts = new int[5]; // we always report 5 samples
+
             // Gen 1
             GCCollectionCounts[0] = rawCollectionCounts[0] - rawCollectionCounts[1];
             // Gen 2
@@ -49,9 +51,12 @@ namespace NewRelic.Agent.Core.Samplers
             GCCollectionCounts[2] = rawCollectionCounts[2];
 
             // LOH
-            GCCollectionCounts[3] = rawCollectionCounts[3]; // or does this need to be [3] - [4]??
+            if (collectionLength > 3)
+                GCCollectionCounts[3] = rawCollectionCounts[3]; // or does this need to be [3] - [4]??
+
             // POH
-            GCCollectionCounts[4] = rawCollectionCounts[4]; //??
+            if (collectionLength > 4)
+                GCCollectionCounts[4] = rawCollectionCounts[4]; //??
         }
     }
 }

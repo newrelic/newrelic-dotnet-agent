@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Threading;
+#endif
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -92,17 +94,17 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
             container.Register<GcSampler, GcSampler>();
 #else
-            if (!modernGCSamplerEnabled)
-            {
-                container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
-                container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
-                container.Register<GCSamplerNetCore, GCSamplerNetCore>();
-            }
-            else
+            if (modernGCSamplerEnabled)
             {
                 container.Register<IGCSamplerModernReflectionHelper, GCSamplerModernReflectionHelper>();
                 container.Register<IGCSampleTransformerModern, GCSampleTransformerModern>();
                 container.Register<GCSamplerModern, GCSamplerModern>();
+            }
+            else
+            {
+                container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
+                container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
+                container.Register<GCSamplerNetCore, GCSamplerNetCore>();
             }
 #endif
 

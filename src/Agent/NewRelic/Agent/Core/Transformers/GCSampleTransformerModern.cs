@@ -44,28 +44,28 @@ namespace NewRelic.Agent.Core.Transformers
             {
                 CreateMetric_ByteData(GCSampleType.Gen0Size, CurrentSample.GCHeapSizesBytes[0]),
                 CreateMetric_Count(GCSampleType.Gen0CollectionCount, PreviousSample.GCCollectionCounts[0], CurrentSample.GCCollectionCounts[0]),
+                CreateMetric_ByteData(GCSampleType.Gen0FragmentationSize, CurrentSample.GCFragmentationSizesBytes[0]),
 
                 CreateMetric_ByteData(GCSampleType.Gen1Size, CurrentSample.GCHeapSizesBytes[1]),
                 CreateMetric_Count(GCSampleType.Gen1CollectionCount, PreviousSample.GCCollectionCounts[1], CurrentSample.GCCollectionCounts[1]),
+                CreateMetric_ByteData(GCSampleType.Gen1FragmentationSize, CurrentSample.GCFragmentationSizesBytes[1]),
 
                 CreateMetric_ByteData(GCSampleType.Gen2Size, CurrentSample.GCHeapSizesBytes[2]),
                 CreateMetric_Count(GCSampleType.Gen2CollectionCount, PreviousSample.GCCollectionCounts[2], CurrentSample.GCCollectionCounts[2]),
+                CreateMetric_ByteData(GCSampleType.Gen2FragmentationSize, CurrentSample.GCFragmentationSizesBytes[2]),
 
                 CreateMetric_ByteData(GCSampleType.LOHSize, CurrentSample.GCHeapSizesBytes[3]),
+                CreateMetric_Count(GCSampleType.LOHCollectionCount, PreviousSample.GCCollectionCounts[3], CurrentSample.GCCollectionCounts[3]),
+                CreateMetric_ByteData(GCSampleType.LOHFragmentationSize, CurrentSample.GCFragmentationSizesBytes[3]),
+
                 CreateMetric_ByteData(GCSampleType.POHSize, CurrentSample.GCHeapSizesBytes[4]),
+                CreateMetric_Count(GCSampleType.POHCollectionCount, PreviousSample.GCCollectionCounts[4], CurrentSample.GCCollectionCounts[4]),
+                CreateMetric_ByteData(GCSampleType.POHFragmentationSize, CurrentSample.GCFragmentationSizesBytes[4]),
 
                 CreateMetric_ByteData(GCSampleType.TotalHeapMemory, CurrentSample.TotalMemoryBytes),
-                CreateMetric_ByteDataDelta(GCSampleType.TotalAllocatedMemory, PreviousSample.TotalAllocatedBytes, CurrentSample.TotalAllocatedBytes),
                 CreateMetric_ByteData(GCSampleType.TotalCommittedMemory, CurrentSample.TotalCommittedBytes),
 
-                CreateMetric_Count(GCSampleType.LOHCollectionCount, PreviousSample.GCCollectionCounts[3], CurrentSample.GCCollectionCounts[3]),
-                CreateMetric_Count(GCSampleType.POHCollectionCount, PreviousSample.GCCollectionCounts[4], CurrentSample.GCCollectionCounts[4]),
-
-                CreateMetric_ByteData(GCSampleType.Gen0FragmentationSize, CurrentSample.GCFragmentationSizesBytes[0]),
-                CreateMetric_ByteData(GCSampleType.Gen1FragmentationSize, CurrentSample.GCFragmentationSizesBytes[1]),
-                CreateMetric_ByteData(GCSampleType.Gen2FragmentationSize, CurrentSample.GCFragmentationSizesBytes[2]),
-                CreateMetric_ByteData(GCSampleType.LOHFragmentationSize, CurrentSample.GCFragmentationSizesBytes[3]),
-                CreateMetric_ByteData(GCSampleType.POHFragmentationSize, CurrentSample.GCFragmentationSizesBytes[4])
+                CreateMetric_ByteDataDelta(GCSampleType.TotalAllocatedMemory, PreviousSample.TotalAllocatedBytes, CurrentSample.TotalAllocatedBytes),
             };
 
             return metrics;

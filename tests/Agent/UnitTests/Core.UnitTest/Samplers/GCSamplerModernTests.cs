@@ -1,5 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+#if NET
 
 using System;
 using NewRelic.Agent.Core.Time;
@@ -86,3 +87,4 @@ namespace NewRelic.Agent.Core.Samplers
         }
     }
 }
+#endif

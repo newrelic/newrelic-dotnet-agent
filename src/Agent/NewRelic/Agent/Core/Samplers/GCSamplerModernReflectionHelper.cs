@@ -4,6 +4,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Reflection;
 
 namespace NewRelic.Agent.Core.Samplers
@@ -26,32 +27,40 @@ namespace NewRelic.Agent.Core.Samplers
 
         public GCSamplerModernReflectionHelper()
         {
-            var assembly = Assembly.Load("System.Runtime");
-            var gcType = assembly.GetType("System.GC");
-            var paramType = assembly.GetType("System.GCKind");
-            var returnType = assembly.GetType("System.GCMemoryInfo");
-
-            if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetGCMemoryInfo", paramType, returnType, out var accessor))
+            try
             {
-                ReflectionFailed = true;
-            }
-            else
-                GCGetMemoryInfo_Invoker = accessor;
+                var assembly = Assembly.Load("System.Runtime");
+                var gcType = assembly.GetType("System.GC");
+                var paramType = assembly.GetType("System.GCKind");
+                var returnType = assembly.GetType("System.GCMemoryInfo");
 
-            if (!ReflectionFailed)
-            {
-                paramType = assembly.GetType("System.Boolean");
-                returnType = assembly.GetType("System.Int64");
-                if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetTotalAllocatedBytes", paramType, returnType, out var accessor1))
+                if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetGCMemoryInfo", paramType, returnType, out var accessor))
                 {
                     ReflectionFailed = true;
                 }
                 else
-                    GCGetTotalAllocatedBytes_Invoker = accessor1;
-            }
+                    GCGetMemoryInfo_Invoker = accessor;
 
-            if (!ReflectionFailed)
-                GetGenerationInfo = GCMemoryInfoHelper.GenerateGetMemoryInfoMethod();
+                if (!ReflectionFailed)
+                {
+                    paramType = assembly.GetType("System.Boolean");
+                    returnType = assembly.GetType("System.Int64");
+                    if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetTotalAllocatedBytes", paramType, returnType, out var accessor1))
+                    {
+                        ReflectionFailed = true;
+                    }
+                    else
+                        GCGetTotalAllocatedBytes_Invoker = accessor1;
+                }
+
+                if (!ReflectionFailed)
+                    GetGenerationInfo = GCMemoryInfoHelper.GenerateGetMemoryInfoMethod();
+            }
+            catch (Exception e)
+            {
+                Log.Warn(e, $"Failed to initialize GCSamplerModernReflectionHelper.");
+                ReflectionFailed = true;
+            }
         }
     }
 
@@ -60,6 +69,9 @@ namespace NewRelic.Agent.Core.Samplers
         /// <summary>
         /// Generate a function that takes a GCMemoryInfo instance as an input parameter and 
         /// returns an array of GCGenerationInfo instances.
+        ///
+        /// Essentially builds the equivalent of
+        ///    object Foo(object input) => ((GCMemoryInfo)input).GenerationInfo.ToArray();
         /// </summary>
         public static Func<object, object> GenerateGetMemoryInfoMethod()
         {
