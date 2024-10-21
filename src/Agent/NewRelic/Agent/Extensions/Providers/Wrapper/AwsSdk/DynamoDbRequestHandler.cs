@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     internal static class DynamoDbRequestHandler
     {
 
-        private static Dictionary<string,string> _operationNameCache = new Dictionary<string,string>();
+        private static ConcurrentDictionary<string,string> _operationNameCache = new ConcurrentDictionary<string,string>();
 
         public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
         {
@@ -43,8 +43,14 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return _operationNameCache[requestType];
             }
             var operationName = requestType.Replace("Request", string.Empty).ToSnakeCase();
-            _operationNameCache.Add(requestType, operationName);
-            return operationName;
+            if (_operationNameCache.TryAdd(requestType, operationName))
+            {
+                return operationName;
+            }
+            else
+            {
+                return _operationNameCache[requestType];
+            }
         }
     }
 }
