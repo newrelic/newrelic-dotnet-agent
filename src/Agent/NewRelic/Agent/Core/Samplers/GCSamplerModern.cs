@@ -12,7 +12,6 @@ namespace NewRelic.Agent.Core.Samplers
     {
         private readonly IGCSampleTransformerModern _transformer;
         private DateTime _lastSampleTime;
-        private bool _hasGCOccurred;
 
         private IGCSamplerModernReflectionHelper _gCSamplerModernReflectionHelper;
 
@@ -24,7 +23,6 @@ namespace NewRelic.Agent.Core.Samplers
             _transformer = transformer;
             _gCSamplerModernReflectionHelper = gCSamplerModernReflectionHelper;
             _lastSampleTime = DateTime.UtcNow;
-            _hasGCOccurred = false;
         }
 
         public override void Sample()
@@ -33,41 +31,36 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 Stop();
                 Log.Error($"Unable to get GC sample due to reflection error. No GC metrics will be reported.");
+                return;
             }
 
-            _hasGCOccurred |= _gCSamplerModernReflectionHelper.HasGCOccurred;
+            dynamic gcMemoryInfo = _gCSamplerModernReflectionHelper.GCGetMemoryInfo_Invoker(0); // GCKind.Any
+            dynamic generationInfo = _gCSamplerModernReflectionHelper.GetGenerationInfo(gcMemoryInfo);
 
-            if (_hasGCOccurred) // don't do anything until at least one GC has completed
+            var genInfoLength = generationInfo.Length;
+            var heapSizesBytes = new long[genInfoLength];
+            var fragmentationSizesBytes = new long[genInfoLength];
+            var collectionCounts = new int[genInfoLength];
+
+            var index = 0;
+            foreach (var generation in generationInfo)
             {
+                var generationIndex = index++;
+                heapSizesBytes[generationIndex] = generation.SizeAfterBytes;
+                fragmentationSizesBytes[generationIndex] = generation.FragmentationAfterBytes;
 
-                dynamic gcMemoryInfo = _gCSamplerModernReflectionHelper.GCGetMemoryInfo_Invoker(0); // GCKind.Any
-                dynamic generationInfo = _gCSamplerModernReflectionHelper.GetGenerationInfo(gcMemoryInfo);
-
-                var genInfoLength = generationInfo.Length;
-                var heapSizesBytes = new long[genInfoLength];
-                var fragmentationSizesBytes = new long[genInfoLength];
-                var collectionCounts = new int[genInfoLength];
-
-                var index = 0;
-                foreach (var generation in generationInfo)
-                {
-                    var generationIndex = index++;
-                    heapSizesBytes[generationIndex] = generation.SizeAfterBytes;
-                    fragmentationSizesBytes[generationIndex] = generation.FragmentationAfterBytes;
-
-                    collectionCounts[generationIndex] = GC.CollectionCount(generationIndex);
-                }
-
-                var totalMemoryBytes = GC.GetTotalMemory(false);
-                var totalAllocatedBytes = (long)_gCSamplerModernReflectionHelper.GCGetTotalAllocatedBytes_Invoker(false);
-                var totalCommittedBytes = gcMemoryInfo.TotalCommittedBytes;
-
-                var currentSampleTime = DateTime.UtcNow;
-
-                var sample = new ImmutableGCSample(currentSampleTime, _lastSampleTime, totalMemoryBytes, totalAllocatedBytes, totalCommittedBytes, heapSizesBytes, collectionCounts, fragmentationSizesBytes);
-                _transformer.Transform(sample);
-                _lastSampleTime = currentSampleTime;
+                collectionCounts[generationIndex] = GC.CollectionCount(generationIndex);
             }
+
+            var totalMemoryBytes = GC.GetTotalMemory(false);
+            var totalAllocatedBytes = (long)_gCSamplerModernReflectionHelper.GCGetTotalAllocatedBytes_Invoker(false);
+            var totalCommittedBytes = gcMemoryInfo.TotalCommittedBytes;
+
+            var currentSampleTime = DateTime.UtcNow;
+
+            var sample = new ImmutableGCSample(currentSampleTime, _lastSampleTime, totalMemoryBytes, totalAllocatedBytes, totalCommittedBytes, heapSizesBytes, collectionCounts, fragmentationSizesBytes);
+            _transformer.Transform(sample);
+            _lastSampleTime = currentSampleTime;
         }
     }
 }

@@ -15,11 +15,9 @@ namespace NewRelic.Agent.Core.Samplers
         bool ReflectionFailed { get; }
         Func<object, object> GCGetMemoryInfo_Invoker { get; }
         Func<object, object> GCGetTotalAllocatedBytes_Invoker { get; }
-
-        bool HasGCOccurred {get;}
     }
 
-    public class GCSamplerModernReflectionHelper : IGCSamplerModernReflectionHelper 
+    public class GCSamplerModernReflectionHelper : IGCSamplerModernReflectionHelper
     {
         public Func<object, object> GetGenerationInfo { get; private set; }
         public bool ReflectionFailed { get; private set; }
@@ -33,7 +31,7 @@ namespace NewRelic.Agent.Core.Samplers
             var paramType = assembly.GetType("System.GCKind");
             var returnType = assembly.GetType("System.GCMemoryInfo");
 
-            if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType,  "GetGCMemoryInfo", paramType, returnType, out var accessor))
+            if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetGCMemoryInfo", paramType, returnType, out var accessor))
             {
                 ReflectionFailed = true;
             }
@@ -55,8 +53,6 @@ namespace NewRelic.Agent.Core.Samplers
             if (!ReflectionFailed)
                 GetGenerationInfo = GCMemoryInfoHelper.GenerateGetMemoryInfoMethod();
         }
-
-        public bool HasGCOccurred => GC.CollectionCount(0) > 0;
     }
 
     internal static class GCMemoryInfoHelper
