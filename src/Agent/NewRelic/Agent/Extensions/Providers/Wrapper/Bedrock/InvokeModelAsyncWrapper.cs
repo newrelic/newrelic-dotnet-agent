@@ -40,7 +40,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
