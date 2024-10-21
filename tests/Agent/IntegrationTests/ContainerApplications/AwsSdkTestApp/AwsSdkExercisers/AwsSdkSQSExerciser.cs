@@ -11,23 +11,16 @@ using System.Collections.Generic;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {
-    public class AwsSdkExerciser : IDisposable
+    public class AwsSdkSQSExerciser : IDisposable
     {
-        public AwsSdkExerciser(AwsSdkTestType testType)
-        {
-            switch (testType)
-            {
-                case AwsSdkTestType.SQS:
-                    _amazonSqsClient = GetSqsClient();
-                    break;
-                default:
-                    throw new ArgumentException("Invalid test type");
-            }
-        }
-        #region SQS
-
         private readonly AmazonSQSClient _amazonSqsClient;
         private string _sqsQueueUrl = null;
+
+        public AwsSdkSQSExerciser()
+        {
+            _amazonSqsClient = GetSqsClient();
+        }
+        
 
         private AmazonSQSClient GetSqsClient()
         {
@@ -189,8 +182,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         {
             _sqsQueueUrl = messageQueueUrl;
         }
-
-        #endregion
 
         public void Dispose()
         {
