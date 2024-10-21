@@ -56,7 +56,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             ;
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "External/all", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = "External/all", CallCountAllHarvests = 4 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },

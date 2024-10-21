@@ -101,9 +101,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         var simpleTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionUsingSimpleInvocation";
         var simpleExpectedMetrics = new List<Assertions.ExpectedMetric>()
         {
-            new() {metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", callCount = 2},
-            new() {metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", metricScope = simpleTransactionName, callCount = 2},
-            new() {metricName = simpleTransactionName, callCount = 2},
+            new() {metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", CallCountAllHarvests = 2},
+            new() {metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", metricScope = simpleTransactionName, CallCountAllHarvests = 2},
+            new() {metricName = simpleTransactionName, CallCountAllHarvests = 2},
         };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(simpleTransactionName);
@@ -195,9 +195,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         var pipelineTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionUsingAspNetCorePipeline";
         var pipelineExpectedMetrics = new List<Assertions.ExpectedMetric>()
         {
-            new() {metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", callCount = 2},
-            new() {metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", metricScope = pipelineTransactionName, callCount = 2},
-            new() {metricName = pipelineTransactionName, callCount = 2},
+            new() {metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", CallCountAllHarvests = 2},
+            new() {metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", metricScope = pipelineTransactionName, CallCountAllHarvests = 2},
+            new() {metricName = pipelineTransactionName, CallCountAllHarvests = 2},
         };
 
         var simpleTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionUsingSimpleInvocation";

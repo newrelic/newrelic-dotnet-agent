@@ -42,11 +42,11 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException", callCount = 2 },
-                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData", callCount = 2 /*Begin/End + Event Based Async*/  },
-                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException", callCount = 4 /*Begin/End + Event Based Async*/ },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData", CallCountAllHarvests = 2 /*Begin/End + Event Based Async*/  },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException", CallCountAllHarvests = 4 /*Begin/End + Event Based Async*/ },
                 new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData" , callCount = 1 },
-                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException", callCount = 2  },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException", CallCountAllHarvests = 2  },
                 new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData", callCount = 1  },
 
                 new Assertions.ExpectedMetric(){ metricName = "DotNet/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException",

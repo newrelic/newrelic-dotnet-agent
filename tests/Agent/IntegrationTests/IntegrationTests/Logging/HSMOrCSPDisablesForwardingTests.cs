@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
             // Making sure logging metrics aren't disabled
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 5 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();

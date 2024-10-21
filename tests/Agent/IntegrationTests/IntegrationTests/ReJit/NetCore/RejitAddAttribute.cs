@@ -69,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddAfterMetricName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddAttribute", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddAttribute", CallCountAllHarvests = 2 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
