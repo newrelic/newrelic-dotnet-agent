@@ -1816,7 +1816,7 @@
                                                 </xs:attribute>
                                             </xs:complexType>
                                         </xs:element>
-                                        <xs:element name="includeLabels" minOccurs="0" maxOccurs="1">
+                                        <xs:element name="labels" minOccurs="0" maxOccurs="1">
                                             <xs:annotation>
                                                 <xs:documentation>
                                                     Include configured labels with log records.

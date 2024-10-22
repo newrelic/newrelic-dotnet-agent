@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
             Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
             Mock.Arrange(() => configuration.LogEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
-            Mock.Arrange(() => configuration.IncludeLabelsEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             _dataTransportService = Mock.Create<IDataTransportService>();
@@ -488,7 +488,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var sentEvents = null as LogEventWireModelCollection;
             Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
-            Mock.Arrange(() => _configurationAutoResponder.Configuration.IncludeLabelsEnabled).Returns(false);
+            Mock.Arrange(() => _configurationAutoResponder.Configuration.LabelsEnabled).Returns(false);
 
             var logEvents = new List<LogEventWireModel>
             {

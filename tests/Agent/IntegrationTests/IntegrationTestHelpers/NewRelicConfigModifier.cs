@@ -505,15 +505,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableApplicationLoggingForwardIncludeLabels(bool enabled = true)
+        public NewRelicConfigModifier EnableApplicationLoggingForwardLabels(bool enabled = true)
         {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "includeLabels" }, "enabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "labels" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
-        public NewRelicConfigModifier SetApplicationLoggingForwardIncludeLabelsExcludes(string excludes)
+        public NewRelicConfigModifier SetApplicationLoggingForwardLabelsExcludes(string excludes)
         {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "includeLabels" }, "exclude", excludes);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "labels" }, "exclude", excludes);
             return this;
         }
 

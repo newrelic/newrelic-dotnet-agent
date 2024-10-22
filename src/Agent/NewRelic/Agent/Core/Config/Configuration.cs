@@ -5457,7 +5457,7 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationLoggingForwardingContextData contextDataField;
         
-        private configurationApplicationLoggingForwardingIncludeLabels includeLabelsField;
+        private configurationApplicationLoggingForwardingLabels labelsField;
         
         private bool enabledField;
         
@@ -5470,7 +5470,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingForwarding()
         {
-            this.includeLabelsField = new configurationApplicationLoggingForwardingIncludeLabels();
+            this.labelsField = new configurationApplicationLoggingForwardingLabels();
             this.contextDataField = new configurationApplicationLoggingForwardingContextData();
             this.enabledField = true;
             this.maxSamplesStoredField = 10000;
@@ -5488,15 +5488,15 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public configurationApplicationLoggingForwardingIncludeLabels includeLabels
+        public configurationApplicationLoggingForwardingLabels labels
         {
             get
             {
-                return this.includeLabelsField;
+                return this.labelsField;
             }
             set
             {
-                this.includeLabelsField = value;
+                this.labelsField = value;
             }
         }
         
@@ -5632,7 +5632,7 @@ namespace NewRelic.Agent.Core.Config
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationApplicationLoggingForwardingIncludeLabels
+    public partial class configurationApplicationLoggingForwardingLabels
     {
         
         private bool enabledField;
@@ -5640,9 +5640,9 @@ namespace NewRelic.Agent.Core.Config
         private string excludeField;
         
         /// <summary>
-        /// configurationApplicationLoggingForwardingIncludeLabels class constructor
+        /// configurationApplicationLoggingForwardingLabels class constructor
         /// </summary>
-        public configurationApplicationLoggingForwardingIncludeLabels()
+        public configurationApplicationLoggingForwardingLabels()
         {
             this.enabledField = false;
             this.excludeField = "";
@@ -5678,11 +5678,11 @@ namespace NewRelic.Agent.Core.Config
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this configurationApplicationLoggingForwardingIncludeLabels object
+        /// Create a clone of this configurationApplicationLoggingForwardingLabels object
         /// </summary>
-        public virtual configurationApplicationLoggingForwardingIncludeLabels Clone()
+        public virtual configurationApplicationLoggingForwardingLabels Clone()
         {
-            return ((configurationApplicationLoggingForwardingIncludeLabels)(this.MemberwiseClone()));
+            return ((configurationApplicationLoggingForwardingLabels)(this.MemberwiseClone()));
         }
         #endregion
     }

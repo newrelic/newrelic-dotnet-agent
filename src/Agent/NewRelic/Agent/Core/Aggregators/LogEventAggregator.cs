@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 _configuration.ApplicationNames.ElementAt(0),
                 _configuration.EntityGuid,
                 hostname,
-                _configuration.IncludeLabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.IncludeLabelsExclude) : [],
+                _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
                 aggregatedEvents);
 
             var responseStatus = DataTransportService.Send(modelsCollection, transactionId);

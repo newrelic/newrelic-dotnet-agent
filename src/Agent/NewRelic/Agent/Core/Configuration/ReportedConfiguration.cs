@@ -638,11 +638,11 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.context_data.exclude")]
         public IEnumerable<string> ContextDataExclude => _configuration.ContextDataExclude;
 
-        [JsonProperty("application_logging.forwarding.include_labels.enabled")]
-        public bool IncludeLabelsEnabled => _configuration.IncludeLabelsEnabled;
+        [JsonProperty("application_logging.forwarding.labels.enabled")]
+        public bool LabelsEnabled => _configuration.LabelsEnabled;
 
-        [JsonProperty("application_logging.forwarding.include_labels.exclude")]
-        public IEnumerable<string> IncludeLabelsExclude => _configuration.IncludeLabelsExclude;
+        [JsonProperty("application_logging.forwarding.labels.exclude")]
+        public IEnumerable<string> LabelsExclude => _configuration.LabelsExclude;
 
         [JsonProperty("metrics.harvest_cycle")]
         public TimeSpan MetricsHarvestCycle => _configuration.MetricsHarvestCycle;
