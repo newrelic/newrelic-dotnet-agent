@@ -88,8 +88,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NetStandardTestLibrary.NetStandardTestLibUtil/Test", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/NetStandardTestLibrary.NetStandardTestLibUtil/Test", callCount = COUNT_ITERATIONS + 1 },
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NetStandardTestLibrary.NetStandardTestLibUtil/Test", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/NetStandardTestLibrary.NetStandardTestLibUtil/Test", CallCountAllHarvests = COUNT_ITERATIONS + 1 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics().ToList();
