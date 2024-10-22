@@ -504,9 +504,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableModernGCSampler(bool enabled)
+        public NewRelicConfigModifier EnableGCSamplerV2(bool enabled)
         {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "modernGCSamplerEnabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "GCSamplerV2Enabled");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enabled}");
             return this;
         }
     }
