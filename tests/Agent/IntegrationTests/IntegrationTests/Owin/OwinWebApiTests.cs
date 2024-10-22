@@ -56,12 +56,12 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", callCount = 5},
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction", callCount = 5},
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get", callCount = 3},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = 5},
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction", CallCountAllHarvests = 5},
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get", CallCountAllHarvests = 3},
                 new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Post", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get404", callCount = 1},
-                new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get", callCount = 3},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get", CallCountAllHarvests = 3},
                 new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Post", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get404", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"External/all", callCount = 1},
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all", callCount = 5},
+                new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all", CallCountAllHarvests = 5},
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

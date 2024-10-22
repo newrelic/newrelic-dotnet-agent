@@ -30,7 +30,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             if (isAsync)
             {
                 transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
             // Get the IRequestContext

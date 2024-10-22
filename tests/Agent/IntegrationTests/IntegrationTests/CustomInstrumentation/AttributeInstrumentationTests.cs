@@ -78,12 +78,12 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = $"WebTransaction", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = $"OtherTransaction/all", callCount = 4},
+                new Assertions.ExpectedMetric {metricName = $"WebTransaction", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = $"OtherTransaction/all", CallCountAllHarvests = 4},
 
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", callCount = 3},
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", callCount = 2},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", CallCountAllHarvests = 2},
 
                 new Assertions.ExpectedMetric {metricName = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", callCount = 1},
