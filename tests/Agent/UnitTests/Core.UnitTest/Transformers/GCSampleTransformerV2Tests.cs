@@ -12,11 +12,11 @@ using Telerik.JustMock;
 namespace NewRelic.Agent.Core.Transformers
 {
     [TestFixture]
-    public class GCSampleTransformerModernTests
+    public class GCSampleTransformerV2Tests
     {
         private IMetricBuilder _metricBuilder;
         private IMetricAggregator _metricAggregator;
-        private GCSampleTransformerModern _transformer;
+        private GCSampleTransformerV2 _transformer;
 
         [SetUp]
         public void SetUp()
@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             _metricAggregator = Mock.Create<IMetricAggregator>();
 
-            _transformer = new GCSampleTransformerModern(_metricBuilder, _metricAggregator);
+            _transformer = new GCSampleTransformerV2(_metricBuilder, _metricAggregator);
         }
 
         [Test]

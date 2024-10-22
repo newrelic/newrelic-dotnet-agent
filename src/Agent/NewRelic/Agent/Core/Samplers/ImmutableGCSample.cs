@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.Samplers
 
         public readonly long[] GCHeapSizesBytes; // heap sizes as of current GC
         public readonly int[] GCCollectionCounts; // number of collections since last sample
-        public readonly long[] GCFragmentationSizesBytes; // heap fragmentation as of current GC
+        public readonly long[] GCFragmentationSizesBytes; // heap fragmentation size as of current GC
 
         public ImmutableGCSample()
         {
@@ -43,20 +43,25 @@ namespace NewRelic.Agent.Core.Samplers
             var collectionLength = rawCollectionCounts.Length;
             GCCollectionCounts = new int[5]; // we always report 5 samples
 
-            // Gen 1
+            // Gen 0
             GCCollectionCounts[0] = rawCollectionCounts[0] - rawCollectionCounts[1];
-            // Gen 2
+            // Gen 1
             GCCollectionCounts[1] = rawCollectionCounts[1] - rawCollectionCounts[2];
-            // Gen 3
-            GCCollectionCounts[2] = rawCollectionCounts[2];
 
-            // LOH
+            // Gen 2
             if (collectionLength > 3)
-                GCCollectionCounts[3] = rawCollectionCounts[3]; // or does this need to be [3] - [4]??
+                GCCollectionCounts[2] = rawCollectionCounts[2] - rawCollectionCounts[3];
+            else
+                GCCollectionCounts[2] = rawCollectionCounts[2];
 
-            // POH
+            // LOH & POH
+            if (collectionLength == 4)
+                GCCollectionCounts[3] = rawCollectionCounts[3];
             if (collectionLength > 4)
-                GCCollectionCounts[4] = rawCollectionCounts[4]; //??
+            {
+                GCCollectionCounts[3] = rawCollectionCounts[3] - rawCollectionCounts[4];
+                GCCollectionCounts[4] = rawCollectionCounts[4];
+            }
         }
     }
 }

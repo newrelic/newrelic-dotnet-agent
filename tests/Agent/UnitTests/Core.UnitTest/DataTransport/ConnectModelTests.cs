@@ -413,7 +413,7 @@ namespace NewRelic.Agent.Core.DataTransport
                             "ai_monitoring.enabled": true,
                             "ai_monitoring.streaming.enabled": true,
                             "ai_monitoring.record_content.enabled": true,
-                            "modern_gc_sampler.enabled": true
+                            "gc_sampler_v2.enabled": true
                         },
                         "metadata": {
                             "hello": "there"

@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Tests.Samplers
             var totalAllocatedBytes = 2048L;
             var totalCommittedBytes = 4096L;
             var heapSizesBytes = new long[] { 100, 200, 300, 400, 500 };
-            var rawCollectionCounts = new int[] { 3, 2, 1, 4, 5 };
+            var rawCollectionCounts = new int[] { 4, 3, 2, 1, 0 };
             var fragmentationSizesBytes = new long[] { 10, 20, 30, 40, 50 };
 
             // Act
@@ -59,8 +59,8 @@ namespace NewRelic.Agent.Core.Tests.Samplers
                 Assert.That(sample.GCCollectionCounts[0], Is.EqualTo(1)); // Gen 1
                 Assert.That(sample.GCCollectionCounts[1], Is.EqualTo(1)); // Gen 2
                 Assert.That(sample.GCCollectionCounts[2], Is.EqualTo(1)); // Gen 3
-                Assert.That(sample.GCCollectionCounts[3], Is.EqualTo(4)); // LOH
-                Assert.That(sample.GCCollectionCounts[4], Is.EqualTo(5)); // POH
+                Assert.That(sample.GCCollectionCounts[3], Is.EqualTo(1)); // LOH
+                Assert.That(sample.GCCollectionCounts[4], Is.EqualTo(0)); // POH
             });
         }
     }

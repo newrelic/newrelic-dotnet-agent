@@ -2466,7 +2466,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public bool ModernGCSamplerEnabled => _bootstrapConfiguration.ModernGCSamplerEnabled;
+        public bool GCSamplerV2Enabled => _bootstrapConfiguration.GCSamplerV2Enabled;
 
         #endregion
 

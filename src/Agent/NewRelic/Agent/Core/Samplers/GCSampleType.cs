@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Samplers
         /// </summary>
         Gen2CollectionCount,
 
-        // the following are supported by GCSamplerModern only
+        // the following are supported by GCSamplerV2 only
         /// <summary>
         /// Pinned object heap size
         /// </summary>

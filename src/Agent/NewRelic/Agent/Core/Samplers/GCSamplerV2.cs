@@ -10,34 +10,34 @@ using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Samplers
 {
-    public class GCSamplerModern : AbstractSampler
+    public class GCSamplerV2 : AbstractSampler
     {
-        private readonly IGCSampleTransformerModern _transformer;
+        private readonly IGCSampleTransformerV2 _transformer;
         private DateTime _lastSampleTime;
 
-        private IGCSamplerModernReflectionHelper _gCSamplerModernReflectionHelper;
+        private IGCSamplerV2ReflectionHelper _gCSamplerV2ReflectionHelper;
 
-        private const int GCSamplerModernIntervalSeconds = 60;
+        private const int GCSamplerV2IntervalSeconds = 60;
 
-        public GCSamplerModern(IScheduler scheduler, IGCSampleTransformerModern transformer, IGCSamplerModernReflectionHelper gCSamplerModernReflectionHelper)
-            : base(scheduler, TimeSpan.FromSeconds(GCSamplerModernIntervalSeconds))
+        public GCSamplerV2(IScheduler scheduler, IGCSampleTransformerV2 transformer, IGCSamplerV2ReflectionHelper gCSamplerV2ReflectionHelper)
+            : base(scheduler, TimeSpan.FromSeconds(GCSamplerV2IntervalSeconds))
         {
             _transformer = transformer;
-            _gCSamplerModernReflectionHelper = gCSamplerModernReflectionHelper;
+            _gCSamplerV2ReflectionHelper = gCSamplerV2ReflectionHelper;
             _lastSampleTime = DateTime.UtcNow;
         }
 
         public override void Sample()
         {
-            if (_gCSamplerModernReflectionHelper.ReflectionFailed)
+            if (_gCSamplerV2ReflectionHelper.ReflectionFailed)
             {
                 Stop();
                 Log.Error($"Unable to get GC sample due to reflection error. No GC metrics will be reported.");
                 return;
             }
 
-            dynamic gcMemoryInfo = _gCSamplerModernReflectionHelper.GCGetMemoryInfo_Invoker(0); // GCKind.Any
-            dynamic generationInfo = _gCSamplerModernReflectionHelper.GetGenerationInfo(gcMemoryInfo);
+            dynamic gcMemoryInfo = _gCSamplerV2ReflectionHelper.GCGetMemoryInfo_Invoker(0); // GCKind.Any
+            dynamic generationInfo = _gCSamplerV2ReflectionHelper.GetGenerationInfo(gcMemoryInfo);
 
             var genInfoLength = generationInfo.Length;
             var heapSizesBytes = new long[genInfoLength];
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             var totalMemoryBytes = GC.GetTotalMemory(false);
-            var totalAllocatedBytes = (long)_gCSamplerModernReflectionHelper.GCGetTotalAllocatedBytes_Invoker(false);
+            var totalAllocatedBytes = (long)_gCSamplerV2ReflectionHelper.GCGetTotalAllocatedBytes_Invoker(false);
             var totalCommittedBytes = gcMemoryInfo.TotalCommittedBytes;
 
             var currentSampleTime = DateTime.UtcNow;

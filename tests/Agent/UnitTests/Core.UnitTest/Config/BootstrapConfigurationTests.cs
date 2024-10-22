@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.ServerlessModeEnabled, Is.False);
                 Assert.That(config.ServerlessFunctionName, Is.Null);
                 Assert.That(config.ServerlessFunctionVersion, Is.Null);
-                Assert.That(config.ModernGCSamplerEnabled, Is.False);
+                Assert.That(config.GCSamplerV2Enabled, Is.False);
             });
         }
 
@@ -156,26 +156,26 @@ namespace NewRelic.Agent.Core.Config
         }
 
         [Test]
-        public void ModernGCSamplerEnabledDisabledByDefault()
+        public void GCSamplerV2_DisabledByDefault()
         {
             var config = CreateBootstrapConfiguration();
 
-            Assert.That(config.ModernGCSamplerEnabled, Is.False);
+            Assert.That(config.GCSamplerV2Enabled, Is.False);
         }
         [Test]
-        public void ModernGCSamplerEnabledViaLocalConfig()
+        public void GCSamplerV2_EnabledViaLocalConfig()
         {
-            _localConfiguration.modernGCSamplerEnabled = true;
+            _localConfiguration.appSettings.Add(new configurationAdd { key = "GCSamplerV2Enabled", value = "true" });
 
             var config = CreateBootstrapConfiguration();
 
             Assert.Multiple(() =>
             {
-                Assert.That(config.ModernGCSamplerEnabled, Is.True);
+                Assert.That(config.GCSamplerV2Enabled, Is.True);
             });
         }
         [Test]
-        public void ModernGCSamplerEnabledViaEnvironmentVariable()
+        public void GCSamplerV2_EnabledViaEnvironmentVariable()
         {
             _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
             try
@@ -185,15 +185,15 @@ namespace NewRelic.Agent.Core.Config
                 Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
                 ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
 
-                _localConfiguration.modernGCSamplerEnabled = false;
+                _localConfiguration.appSettings.Add(new configurationAdd { key = "GCSamplerV2Enabled", value = "false" });
 
-                SetEnvironmentVar("NEW_RELIC_MODERN_GC_SAMPLER_ENABLED", "1");
+                SetEnvironmentVar("NEW_RELIC_GC_SAMPLER_V2_ENABLED", "1");
 
                 var config = CreateBootstrapConfiguration();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That(config.ModernGCSamplerEnabled, Is.True);
+                    Assert.That(config.GCSamplerV2Enabled, Is.True);
                 });
 
             }

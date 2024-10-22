@@ -116,8 +116,6 @@ namespace NewRelic.Agent.Core.Config
         
         private bool serverlessModeEnabledField;
         
-        private bool modernGCSamplerEnabledField;
-        
         /// <summary>
         /// configuration class constructor
         /// </summary>
@@ -166,7 +164,6 @@ namespace NewRelic.Agent.Core.Config
             this.crossApplicationTracingEnabledField = true;
             this.timingPrecisionField = configurationTimingPrecision.low;
             this.serverlessModeEnabledField = false;
-            this.modernGCSamplerEnabledField = false;
         }
         
         public configurationService service
@@ -753,23 +750,6 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.serverlessModeEnabledField = value;
-            }
-        }
-        
-        /// <summary>
-        /// Turns on/off the "modern" garbage collection sampler. Available only for .NET applications.
-        /// </summary>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
-        public bool modernGCSamplerEnabled
-        {
-            get
-            {
-                return this.modernGCSamplerEnabledField;
-            }
-            set
-            {
-                this.modernGCSamplerEnabledField = value;
             }
         }
         

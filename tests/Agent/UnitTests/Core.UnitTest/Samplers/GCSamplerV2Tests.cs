@@ -11,27 +11,27 @@ using Telerik.JustMock;
 namespace NewRelic.Agent.Core.Samplers
 {
     [TestFixture]
-    public class GCSamplerModernTests
+    public class GCSamplerV2Tests
     {
         private IScheduler _scheduler;
-        private IGCSampleTransformerModern _transformer;
-        private IGCSamplerModernReflectionHelper _reflectionHelper;
-        private GCSamplerModern _gcSamplerModern;
+        private IGCSampleTransformerV2 _transformer;
+        private IGCSamplerV2ReflectionHelper _reflectionHelper;
+        private GCSamplerV2 _gcSamplerV2;
 
         [SetUp]
         public void SetUp()
         {
             _scheduler = Mock.Create<IScheduler>();
-            _transformer = Mock.Create<IGCSampleTransformerModern>();
-            _reflectionHelper = Mock.Create<IGCSamplerModernReflectionHelper>();
+            _transformer = Mock.Create<IGCSampleTransformerV2>();
+            _reflectionHelper = Mock.Create<IGCSamplerV2ReflectionHelper>();
 
-            _gcSamplerModern = new GCSamplerModern(_scheduler, _transformer, _reflectionHelper);
+            _gcSamplerV2 = new GCSamplerV2(_scheduler, _transformer, _reflectionHelper);
         }
 
         [TearDown]
         public void TearDown()
         {
-            _gcSamplerModern.Dispose();
+            _gcSamplerV2.Dispose();
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => _reflectionHelper.ReflectionFailed).Returns(true);
 
             // Act
-            _gcSamplerModern.Sample();
+            _gcSamplerV2.Sample();
 
             // Assert
             Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => _reflectionHelper.GCGetTotalAllocatedBytes_Invoker(Arg.IsAny<object>())).Returns(2048L);
 
             // Act
-            _gcSamplerModern.Sample();
+            _gcSamplerV2.Sample();
 
             // Assert
             Mock.Assert(() => _transformer.Transform(Arg.IsAny<ImmutableGCSample>()), Occurs.Once());

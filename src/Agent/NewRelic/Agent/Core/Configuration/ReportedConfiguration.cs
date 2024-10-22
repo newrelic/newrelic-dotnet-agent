@@ -711,8 +711,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
 
-        [JsonProperty("modern_gc_sampler.enabled")]
-        public bool ModernGCSamplerEnabled => _configuration.ModernGCSamplerEnabled;
+        [JsonProperty("gc_sampler_v2.enabled")]
+        public bool GCSamplerV2Enabled => _configuration.GCSamplerV2Enabled;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

@@ -232,6 +232,6 @@ namespace NewRelic.Agent.Configuration
 
         bool UtilizationDetectAzureFunction { get; }
 
-        bool ModernGCSamplerEnabled { get; }
+        bool GCSamplerV2Enabled { get; }
     }
 }

@@ -10,7 +10,7 @@ using NewRelic.Reflection;
 namespace NewRelic.Agent.Core.Samplers
 {
     // to allow for unit testing
-    public interface IGCSamplerModernReflectionHelper
+    public interface IGCSamplerV2ReflectionHelper
     {
         Func<object, object> GetGenerationInfo { get; }
         bool ReflectionFailed { get; }
@@ -18,14 +18,14 @@ namespace NewRelic.Agent.Core.Samplers
         Func<object, object> GCGetTotalAllocatedBytes_Invoker { get; }
     }
 
-    public class GCSamplerModernReflectionHelper : IGCSamplerModernReflectionHelper
+    public class GCSamplerV2ReflectionHelper : IGCSamplerV2ReflectionHelper
     {
         public Func<object, object> GetGenerationInfo { get; private set; }
         public bool ReflectionFailed { get; private set; }
         public Func<object, object> GCGetMemoryInfo_Invoker { get; private set; }
         public Func<object, object> GCGetTotalAllocatedBytes_Invoker { get; private set; }
 
-        public GCSamplerModernReflectionHelper()
+        public GCSamplerV2ReflectionHelper()
         {
             try
             {
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception e)
             {
-                Log.Warn(e, $"Failed to initialize GCSamplerModernReflectionHelper.");
+                Log.Warn(e, $"Failed to initialize GCSamplerV2ReflectionHelper.");
                 ReflectionFailed = true;
             }
         }

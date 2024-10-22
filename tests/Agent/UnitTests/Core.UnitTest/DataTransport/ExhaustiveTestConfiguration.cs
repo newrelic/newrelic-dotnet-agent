@@ -493,7 +493,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string LoggingLevel => "info";
 
-        public bool ModernGCSamplerEnabled => true;
+        public bool GCSamplerV2Enabled => true;
 
     }
 }

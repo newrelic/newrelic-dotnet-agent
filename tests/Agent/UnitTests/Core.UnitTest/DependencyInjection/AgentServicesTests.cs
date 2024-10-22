@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 #if NET
         [TestCase(true)]
         [TestCase(false)]
-        public void CorrectServicesAreRegistered_BasedOnModernGCSamplerEnabledMode(bool modernGCSamplerEnabled)
+        public void CorrectServicesAreRegistered_BasedOnGCSamplerV2EnabledMode(bool gcSamplerV2Enabled)
         {
             // Arrange
             var configuration = Mock.Create<IConfiguration>();
@@ -136,19 +136,19 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (new ConfigurationAutoResponder(configuration))
             using (var container = AgentServices.GetContainer())
             {
-                AgentServices.RegisterServices(container, false, modernGCSamplerEnabled);
+                AgentServices.RegisterServices(container, false, gcSamplerV2Enabled);
 
                 container.ReplaceInstanceRegistration(configurationService);
                 container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
                 // Assert
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, modernGCSamplerEnabled));
+                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, gcSamplerV2Enabled));
 
                 // ensure dependent services are registered
-                if (modernGCSamplerEnabled)
+                if (gcSamplerV2Enabled)
                 {
-                    Assert.DoesNotThrow(() => container.Resolve<IGCSampleTransformerModern>());
-                    Assert.DoesNotThrow(() => container.Resolve<GCSamplerModern>());
+                    Assert.DoesNotThrow(() => container.Resolve<IGCSampleTransformerV2>());
+                    Assert.DoesNotThrow(() => container.Resolve<GCSamplerV2>());
 
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>());
                     Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>());
@@ -161,8 +161,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
                     Assert.DoesNotThrow(() => container.Resolve<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>());
                     Assert.DoesNotThrow(() => container.Resolve<GCSamplerNetCore>());
 
-                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IGCSampleTransformerModern>());
-                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<GCSamplerModern>());
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IGCSampleTransformerV2>());
+                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<GCSamplerV2>());
                 }
             }
         }

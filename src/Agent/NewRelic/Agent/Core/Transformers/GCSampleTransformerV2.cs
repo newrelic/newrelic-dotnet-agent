@@ -8,12 +8,12 @@ using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transformers
 {
-    public interface IGCSampleTransformerModern
+    public interface IGCSampleTransformerV2
     {
         void Transform(ImmutableGCSample sample);
     }
 
-    public class GCSampleTransformerModern : IGCSampleTransformerModern
+    public class GCSampleTransformerV2 : IGCSampleTransformerV2
     {
         private readonly IMetricBuilder _metricBuilder;
         private readonly IMetricAggregator _metricAggregator;
@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Transformers
         public ImmutableGCSample PreviousSample { get; private set; }
         public ImmutableGCSample CurrentSample {get; private set;} = new();
 
-        public GCSampleTransformerModern(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
+        public GCSampleTransformerV2(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
         {
             _metricBuilder = metricBuilder;
             _metricAggregator = metricAggregator;
@@ -79,10 +79,24 @@ namespace NewRelic.Agent.Core.Transformers
             }
         }
 
+        /// <summary>
+        /// Create a byte data metric representing the current value
+        /// </summary>
+        /// <param name="sampleType"></param>
+        /// <param name="currentValueBytes"></param>
+        /// <returns></returns>
         private MetricWireModel CreateMetric_ByteData(GCSampleType sampleType, long currentValueBytes)
         {
             return _metricBuilder.TryBuildGCBytesMetric(sampleType, currentValueBytes);
         }
+
+        /// <summary>
+        /// Create a byte data metric that is the difference between the current value and previous value
+        /// </summary>
+        /// <param name="sampleType"></param>
+        /// <param name="previousValueBytes"></param>
+        /// <param name="currentValueBytes"></param>
+        /// <returns></returns>
         private MetricWireModel CreateMetric_ByteDataDelta(GCSampleType sampleType, long previousValueBytes, long currentValueBytes)
         {
             var sampleValueBytes = currentValueBytes - previousValueBytes;
@@ -93,6 +107,13 @@ namespace NewRelic.Agent.Core.Transformers
             return _metricBuilder.TryBuildGCBytesMetric(sampleType, sampleValueBytes);
         }
 
+        /// <summary>
+        /// Create a count metric that is the difference between the current value and previous value
+        /// </summary>
+        /// <param name="sampleType"></param>
+        /// <param name="previousValue"></param>
+        /// <param name="currentValue"></param>
+        /// <returns></returns>
         private MetricWireModel CreateMetric_Count(GCSampleType sampleType, long previousValue, long currentValue)
         {
             var sampleValue = currentValue - previousValue;
