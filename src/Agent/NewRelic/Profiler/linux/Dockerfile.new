@@ -3,7 +3,7 @@
 
 # **WARNING** this will not build a profiler that works on Alpine Linux.
 # See https://github.com/newrelic/newrelic-dotnet-agent/issues/918
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 
 RUN apt-get update
 RUN apt-get install -y \

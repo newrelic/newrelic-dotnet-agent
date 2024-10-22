@@ -2,7 +2,7 @@
 # It then sets up the environment for compiling the New Relic .NET profiler.
 
 # ubuntu:18.04 - multi-platform image
-FROM ubuntu@sha256:152dc042452c496007f07ca9127571cb9c29697f42acbfad72324b2bb2e43c98 
+FROM ubuntu@sha256:99c35190e22d294cdace2783ac55effc69d32896daaa265f0bbedbcde4fbe3e5 
 
 RUN apt-get update -q -y
 RUN apt-get install -q -y \

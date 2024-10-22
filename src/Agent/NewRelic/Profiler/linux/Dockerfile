@@ -1,7 +1,7 @@
 # Using a multistage build to work around some expired certificates
 # that prevent cloning the CLR repo from the older ubuntu image.
 # v22.04
-FROM ubuntu@sha256:ca5534a51dd04bbcebe9b23ba05f389466cf0c190f1f8f182d7eea92a9671d00 AS ClrRepoCloner 
+FROM ubuntu@sha256:99c35190e22d294cdace2783ac55effc69d32896daaa265f0bbedbcde4fbe3e5 AS ClrRepoCloner 
 
 RUN apt-get update && apt-get install -y \
   git
@@ -16,7 +16,7 @@ RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
 # This builds an Ubuntu image, clones the coreclr github repo and builds it.
 # It then sets up the environment for compiling the New Relic .NET profiler.
 # v14.04
-FROM ubuntu@sha256:881afbae521c910f764f7187dbfbca3cc10c26f8bafa458c76dda009a901c29d
+FROM ubuntu@sha256:99c35190e22d294cdace2783ac55effc69d32896daaa265f0bbedbcde4fbe3e5
 
 RUN apt-get update && apt-get install -y \
   wget \
