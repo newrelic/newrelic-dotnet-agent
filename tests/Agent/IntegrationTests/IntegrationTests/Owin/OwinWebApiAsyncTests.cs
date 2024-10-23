@@ -87,7 +87,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = ExpectedTransactionCount },
             };

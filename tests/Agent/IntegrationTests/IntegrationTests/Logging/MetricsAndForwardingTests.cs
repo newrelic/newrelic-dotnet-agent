@@ -107,12 +107,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 6 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), CallCountAllHarvests = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), CallCountAllHarvests = 6 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 17 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 17 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();

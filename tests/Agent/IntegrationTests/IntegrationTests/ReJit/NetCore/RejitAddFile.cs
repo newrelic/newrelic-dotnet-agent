@@ -84,7 +84,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 });
                 expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", callCount = 1 });
                 expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 });
-                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", callCount = 2 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 2 });
             }
 
             var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

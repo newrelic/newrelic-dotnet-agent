@@ -45,8 +45,6 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             if (isAsync)
             {
                 transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
-
                 var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
                 if (parameterTypeNamesList[4] == "Elasticsearch.Net.IRequestParameters")
                 {

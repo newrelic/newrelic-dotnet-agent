@@ -54,8 +54,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/MetricHarvest/transmit", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 4 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSent", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSent", CallCountAllHarvests = 4 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

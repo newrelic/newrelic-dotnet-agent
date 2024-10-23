@@ -74,12 +74,12 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
 
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
             };
 
             Assertions.MetricsExist(expectedMetrics, metrics);
