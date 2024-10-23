@@ -683,6 +683,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportInfiniteTracingOneTimeMetrics();
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
+            ReportIfGCSamplerV2IsEnabled();
         }
 
         public void CollectMetrics()
@@ -838,5 +839,15 @@ namespace NewRelic.Agent.Core.AgentHealth
                 ReportSupportabilityGaugeMetric(MetricNames.SupportabilityIgnoredInstrumentation, ignoredCount);
             }
         }
+
+        private void ReportIfGCSamplerV2IsEnabled()
+        {
+            if (_configuration.GCSamplerV2Enabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled);
+            }
+            
+        }
+
     }
 }
