@@ -482,7 +482,7 @@ namespace NewRelic.Agent.Core.Aggregators
         }
 
         [Test]
-        public void Events_send_on_harvest_include_labels_disabled()
+        public void Events_send_on_harvest_labels_disabled()
         {
             // Arrange
             var sentEvents = null as LogEventWireModelCollection;
