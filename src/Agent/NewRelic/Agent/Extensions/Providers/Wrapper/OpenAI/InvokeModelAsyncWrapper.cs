@@ -271,17 +271,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             {
                 // We're using a helper method in NewRelic.Core because it has Newtonsoft.Json ILRepacked into it
                 // This avoids depending on Newtonsoft.Json being available in the customer application
-                case LlmModelType.Llama2:
-                    return WrapperHelpers.DeserializeObject<Llama2RequestPayload>(utf8Json);
-                case LlmModelType.CohereCommand:
-                    return WrapperHelpers.DeserializeObject<CohereCommandRequestPayload>(utf8Json);
                 case LlmModelType.Claude:
                     return WrapperHelpers.DeserializeObject<ClaudeRequestPayload>(utf8Json);
-                case LlmModelType.Titan:
-                case LlmModelType.TitanEmbedded:
-                    return WrapperHelpers.DeserializeObject<TitanRequestPayload>(utf8Json);
-                case LlmModelType.Jurassic:
-                    return WrapperHelpers.DeserializeObject<JurassicRequestPayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
@@ -299,18 +290,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
             switch (model)
             {
-                case LlmModelType.Llama2:
-                    return WrapperHelpers.DeserializeObject<Llama2ResponsePayload>(utf8Json);
-                case LlmModelType.CohereCommand:
-                    return WrapperHelpers.DeserializeObject<CohereCommandResponsePayload>(utf8Json);
-                case LlmModelType.Claude:
-                    return WrapperHelpers.DeserializeObject<ClaudeResponsePayload>(utf8Json);
-                case LlmModelType.Titan:
-                    return WrapperHelpers.DeserializeObject<TitanResponsePayload>(utf8Json);
-                case LlmModelType.TitanEmbedded:
-                    return WrapperHelpers.DeserializeObject<TitanEmbeddedResponsePayload>(utf8Json);
-                case LlmModelType.Jurassic:
-                    return WrapperHelpers.DeserializeObject<JurassicResponsePayload>(utf8Json);
+                case LlmModelType.GPT:
+                    return WrapperHelpers.DeserializeObject<GPTResponsePayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
@@ -322,12 +303,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
     /// </summary>
     public enum LlmModelType
     {
-        Llama2,
-        CohereCommand,
-        Claude,
-        Titan,
-        TitanEmbedded,
-        Jurassic
+        GPT,
     }
 
     public static class LlmModelTypeExtensions
@@ -340,23 +316,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
         /// <exception cref="Exception"></exception>
         public static LlmModelType FromModelId(this string modelId)
         {
-            if (modelId.StartsWith("meta.llama2"))
-                return LlmModelType.Llama2;
-
-            if (modelId.StartsWith("cohere.command"))
-                return LlmModelType.CohereCommand;
-
-            if (modelId.StartsWith("anthropic.claude"))
-                return LlmModelType.Claude;
-
-            if (modelId.StartsWith("amazon.titan-text"))
-                return LlmModelType.Titan;
-
-            if (modelId.StartsWith("amazon.titan-embed-text"))
-                return LlmModelType.TitanEmbedded;
-
-            if (modelId.StartsWith("ai21.j2"))
-                return LlmModelType.Jurassic;
+            if (modelId.StartsWith("gpt"))
+                return LlmModelType.GPT;
 
             throw new Exception($"Unknown model: {modelId}");
         }
