@@ -271,8 +271,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             {
                 // We're using a helper method in NewRelic.Core because it has Newtonsoft.Json ILRepacked into it
                 // This avoids depending on Newtonsoft.Json being available in the customer application
-                case LlmModelType.Claude:
-                    return WrapperHelpers.DeserializeObject<ClaudeRequestPayload>(utf8Json);
+                case LlmModelType.GPT:
+                    return WrapperHelpers.DeserializeObject<GPTRequestPayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
