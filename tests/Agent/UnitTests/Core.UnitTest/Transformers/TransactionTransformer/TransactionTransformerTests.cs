@@ -30,6 +30,7 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -89,7 +90,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
         private ILogEventAggregator _logEventAggregator;
-
+        private ILabelsService _labelsService;
         private Action _harvestAction;
         private TimeSpan? _harvestCycle;
 
@@ -135,11 +136,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _errorService = new ErrorService(_configurationService);
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _labelsService = Mock.Create<ILabelsService>();
 
             var scheduler = Mock.Create<IScheduler>();
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), Mock.Create<IAgentHealthReporter>());
+            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), Mock.Create<IAgentHealthReporter>(), _labelsService);
 
 
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, _logEventAggregator);
@@ -153,6 +155,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _logEventAggregator.Dispose();
             _metricNameService.Dispose();
             _sqlTraceAggregator.Dispose();
+            _labelsService.Dispose();
         }
 
         private IMetricBuilder GetSimpleMetricBuilder()

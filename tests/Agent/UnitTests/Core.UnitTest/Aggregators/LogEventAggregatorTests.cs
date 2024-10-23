@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -33,10 +34,16 @@ namespace NewRelic.Agent.Core.Aggregators
         private Action _harvestAction;
         private TimeSpan? _harvestCycle;
         private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
+        private ILabelsService _labelsService;
 
         private const string TimeStampKey = "timestamp";
 
         private Dictionary<string, object> _contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+        private List<Label> _labels =
+        [
+            new Label("label1", "value1"),
+            new Label("label2", "value2")
+        ];
 
         [SetUp]
         public void SetUp()
@@ -45,16 +52,19 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
             Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
             Mock.Arrange(() => configuration.LogEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
+            Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             _dataTransportService = Mock.Create<IDataTransportService>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _processStatic = Mock.Create<IProcessStatic>();
+            _labelsService = Mock.Create<ILabelsService>();
+            Mock.Arrange(() => _labelsService.GetFilteredLabels(Arg.IsAny<IEnumerable<string>>())).Returns(_labels);
 
             _scheduler = Mock.Create<IScheduler>();
             Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-            _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+            _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter, _labelsService);
 
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
@@ -64,6 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             _logEventAggregator.Dispose();
             _configurationAutoResponder.Dispose();
+            _labelsService.Dispose();
         }
 
         #region Configuration
@@ -118,6 +129,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 // Assert
                 Assert.That(sentEvents.LoggingEvents.Count(), Is.EqualTo(3));
                 Assert.That(logEvents, Is.EqualTo(sentEvents.LoggingEvents));
+                Assert.That(sentEvents.Labels.Count, Is.EqualTo(_labels.Count));
             });
         }
 
@@ -433,7 +445,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(false);
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
-            _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+            _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter, _labelsService);
 
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
@@ -467,6 +479,36 @@ namespace NewRelic.Agent.Core.Aggregators
             // Assert
             // The number of logs over capacity (100) should be reported as dropped
             Mock.Assert(() => _agentHealthReporter.ReportLoggingEventsDropped(5));
+        }
+
+        [Test]
+        public void Events_send_on_harvest_labels_disabled()
+        {
+            // Arrange
+            var sentEvents = null as LogEventWireModelCollection;
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+                .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
+            Mock.Arrange(() => _configurationAutoResponder.Configuration.LabelsEnabled).Returns(false);
+
+            var logEvents = new List<LogEventWireModel>
+            {
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(2, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(3, "message1", "info", "spanid", "traceid", _contextData)
+            };
+
+            _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
+
+            // Act
+            _harvestAction();
+
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(sentEvents.LoggingEvents.Count(), Is.EqualTo(3));
+                Assert.That(logEvents, Is.EqualTo(sentEvents.LoggingEvents));
+                Assert.That(sentEvents.Labels.Count, Is.EqualTo(0));
+            });
         }
 
         #region Helpers

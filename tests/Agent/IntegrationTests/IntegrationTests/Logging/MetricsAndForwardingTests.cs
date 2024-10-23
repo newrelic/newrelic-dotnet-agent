@@ -157,9 +157,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             Assert.NotNull(logEventData);
             Assert.NotNull(logEventData.Common);
             Assert.NotNull(logEventData.Common.Attributes);
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityGuid));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityName));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.Hostname));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.guid"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.name"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["hostname"].ToString()));
 
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
             Assert.Equal(17, logLines.Length);
