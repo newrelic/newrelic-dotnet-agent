@@ -119,7 +119,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             }
 
             // Embedding - does not create the other events
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
+            /*if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -135,7 +135,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 );
 
                 return;
-            }
+            }*/
 
             var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
@@ -212,7 +212,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 ErrorMessage = errorMessage
             };
 
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
+            /*if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -227,34 +227,34 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     errorData);
             }
             else
-            {
-                var completionId = EventHelper.CreateChatCompletionEvent(
+            {*/
+            var completionId = EventHelper.CreateChatCompletionEvent(
+                agent,
+                segment,
+                requestId,
+                requestPayload.Temperature,
+                requestPayload.MaxTokens,
+                invokeModelRequest.ModelId,
+                null,
+                0,
+                null,
+                "OpenAI",
+                true,
+                null,
+                errorData);
+
+            // Prompt
+            EventHelper.CreateChatMessageEvent(
                     agent,
                     segment,
                     requestId,
-                    requestPayload.Temperature,
-                    requestPayload.MaxTokens,
                     invokeModelRequest.ModelId,
-                    null,
+                    requestPayload.Prompt,
+                    "user",
                     0,
-                    null,
-                    "OpenAI",
-                    true,
-                    null,
-                    errorData);
-
-                // Prompt
-                EventHelper.CreateChatMessageEvent(
-                        agent,
-                        segment,
-                        requestId,
-                        invokeModelRequest.ModelId,
-                        requestPayload.Prompt,
-                        "user",
-                        0,
-                        completionId,
-                        false);
-            }
+                    completionId,
+                    false);
+            //}
         }
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
