@@ -278,12 +278,26 @@ try
 	$is35App = CheckIfAppIs35
 	$agentVersion = ""
 
-	if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null)
+	if ($env:NEW_RELIC_AGENT_VERSION_OVERRIDE -ne $null)
+	{
+		try
+		{
+			$version = [System.Version]$env:NEW_RELIC_AGENT_VERSION_OVERRIDE.ToString()
+			$agentVersion = $version.ToString()
+		}
+		catch
+		{
+			WriteToInstallLog "NEW_RELIC_AGENT_VERSION_OVERRIDE environment variable has an incorrect Agent version number. Failed to install."
+			exit 1
+		}
+	}
+	elseif ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null) # check for deprecated environment variable
 	{
 		try
 		{
 			$version = [System.Version]$env:NEWRELIC_AGENT_VERSION_OVERRIDE.ToString()
 			$agentVersion = $version.ToString()
+			WriteToInstallLog "NEWRELIC_AGENT_VERSION_OVERRIDE environment variable is deprecated and may be removed in a future release. Please use NEW_RELIC_AGENT_VERSION_OVERRIDE instead."
 		}
 		catch
 		{
