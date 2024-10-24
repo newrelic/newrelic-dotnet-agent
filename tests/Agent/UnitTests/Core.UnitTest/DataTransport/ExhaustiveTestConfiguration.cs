@@ -493,5 +493,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
+
+        public string AwsAccountId => "";
     }
 }

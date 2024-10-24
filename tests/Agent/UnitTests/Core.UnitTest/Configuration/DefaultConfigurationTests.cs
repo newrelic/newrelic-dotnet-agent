@@ -4439,7 +4439,89 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.That(result, Is.EqualTo("some-service-name"));
         }
 
+        #endregion Cloud
+        [Test]
+        public void Cloud_Section_Parsing_And_Override()
+        {
+            string xmlString = """
+            <?xml version="1.0"?>
+            <configuration xmlns="urn:newrelic-config" agentEnabled="true">
+              <cloud>
+                <aws accountId="123456789012" />
+              </cloud>
+            </configuration>
+            """;
+            var config = GenerateConfigFromXml(xmlString);
+
+            Assert.That(config.AwsAccountId, Is.EqualTo("123456789012"));
+
+            xmlString = """
+            <?xml version="1.0"?>
+            <configuration xmlns="urn:newrelic-config" agentEnabled="true">
+              <cloud>
+                <aws />
+              </cloud>
+            </configuration>
+            """;
+            config = GenerateConfigFromXml(xmlString);
+
+            Assert.That(config.AwsAccountId, Is.Null);
+
+            xmlString = """
+            <?xml version="1.0"?>
+            <configuration xmlns="urn:newrelic-config" agentEnabled="true">
+              <cloud>
+              </cloud>
+            </configuration>
+            """;
+            config = GenerateConfigFromXml(xmlString);
+
+            Assert.That(config.AwsAccountId, Is.Null);
+
+            xmlString = """
+            <?xml version="1.0"?>
+            <configuration xmlns="urn:newrelic-config" agentEnabled="true">
+            </configuration>
+            """;
+            config = GenerateConfigFromXml(xmlString);
+
+            Assert.That(config.AwsAccountId, Is.Null);
+
+            // null from the last test, but env override should work
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CLOUD_AWS_ACCOUNT_ID")).Returns("444488881212");
+
+            Assert.That(config.AwsAccountId, Is.EqualTo("444488881212"));
+
+            // If it exists in the config, the env variable should still override
+            xmlString = """
+            <?xml version="1.0"?>
+            <configuration xmlns="urn:newrelic-config" agentEnabled="true">
+              <cloud>
+                <aws accountId="123456789012" />
+              </cloud>
+            </configuration>
+            """;
+            config = GenerateConfigFromXml(xmlString);
+            Assert.That(config.AwsAccountId, Is.EqualTo("444488881212"));
+        }
+
+        #region
+
         #endregion
+
+        private DefaultConfiguration GenerateConfigFromXml(string xml)
+        {
+            var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };
+            var serializer = new XmlSerializer(typeof(configuration), root);
+
+            configuration localConfiguration;
+            using (var reader = new StringReader(xml))
+            {
+                localConfiguration = serializer.Deserialize(reader) as configuration;
+            }
+
+            return new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        }
 
         private void CreateDefaultConfiguration()
         {
