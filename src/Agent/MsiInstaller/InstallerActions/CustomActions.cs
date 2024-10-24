@@ -446,6 +446,8 @@ namespace InstallerActions
 
             String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
             if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
+            newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
+            if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
 
             return ActionResult.Success;
         }
