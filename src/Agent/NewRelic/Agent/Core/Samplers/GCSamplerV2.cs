@@ -16,6 +16,7 @@ namespace NewRelic.Agent.Core.Samplers
         private DateTime _lastSampleTime;
 
         private IGCSamplerV2ReflectionHelper _gCSamplerV2ReflectionHelper;
+        private bool _hasGCOccurred;
 
         private const int GCSamplerV2IntervalSeconds = 60;
 
@@ -35,6 +36,11 @@ namespace NewRelic.Agent.Core.Samplers
                 Log.Error($"Unable to get GC sample due to reflection error. No GC metrics will be reported.");
                 return;
             }
+
+            _hasGCOccurred |= _gCSamplerV2ReflectionHelper.HasGCOccurred;
+
+            if (!_hasGCOccurred) // don't do anything until at least one GC has completed
+                return;
 
             dynamic gcMemoryInfo = _gCSamplerV2ReflectionHelper.GCGetMemoryInfo_Invoker(0); // GCKind.Any
             dynamic generationInfo = _gCSamplerV2ReflectionHelper.GetGenerationInfo(gcMemoryInfo);

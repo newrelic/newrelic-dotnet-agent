@@ -48,10 +48,25 @@ namespace NewRelic.Agent.Core.Samplers
         }
 
         [Test]
-        public void Sample_TransformsSuccessfully()
+        public void Sample_ShouldNotTransform_WhenNoGCOccurred()
         {
             // Arrange
             Mock.Arrange(() => _reflectionHelper.ReflectionFailed).Returns(false);
+            Mock.Arrange(() => _reflectionHelper.HasGCOccurred).Returns(false);
+
+            // Act
+            _gcSamplerV2.Sample();
+
+            // Assert
+            Mock.Assert(() => _transformer.Transform(Arg.IsAny<ImmutableGCSample>()), Occurs.Never());
+        }
+
+        [Test]
+        public void Sample_Transforms_WhenGCHasOccurred()
+        {
+            // Arrange
+            Mock.Arrange(() => _reflectionHelper.ReflectionFailed).Returns(false);
+            Mock.Arrange(() => _reflectionHelper.HasGCOccurred).Returns(true);
 
             var gcMemoryInfo = new GCMemoryInfo { TotalCommittedBytes = 4096L };
             var generationInfo = new[]

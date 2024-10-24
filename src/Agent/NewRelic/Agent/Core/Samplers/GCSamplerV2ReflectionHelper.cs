@@ -16,6 +16,7 @@ namespace NewRelic.Agent.Core.Samplers
         bool ReflectionFailed { get; }
         Func<object, object> GCGetMemoryInfo_Invoker { get; }
         Func<object, object> GCGetTotalAllocatedBytes_Invoker { get; }
+        bool HasGCOccurred { get; }
     }
 
     public class GCSamplerV2ReflectionHelper : IGCSamplerV2ReflectionHelper
@@ -62,6 +63,8 @@ namespace NewRelic.Agent.Core.Samplers
                 ReflectionFailed = true;
             }
         }
+
+        public bool HasGCOccurred => GC.CollectionCount(0) > 0;
     }
 
     internal static class GCMemoryInfoHelper
