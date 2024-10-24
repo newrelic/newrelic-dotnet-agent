@@ -16,9 +16,9 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     private readonly AwsSdkContainerDynamoDBTestFixture _fixture;
 
     private readonly string _tableName = $"TestTable-{Guid.NewGuid()}";
+    private readonly string _title = "Ghost";
+    private readonly string _year = "1990";
 
-    private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdkDynamoDB/CreateTable/{tableName}";
-    private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdkDynamoDB/PutItem/{tableName}/{title}/{year}";
     private bool _initCollections;
 
     protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)
@@ -48,7 +48,16 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
                 _fixture.Delay(5);
 
                 _fixture.CreateTableAsync(_tableName);
-                _fixture.PutItemAsync(_tableName, "Ghost", 1990);
+
+                _fixture.PutItemAsync(_tableName, _title, _year);
+                _fixture.GetItemAsync(_tableName, _title, _year);
+                _fixture.UpdateItemAsync(_tableName, _title, _year);
+
+                _fixture.QueryAsync(_tableName, _title, _year);
+                _fixture.ScanAsync(_tableName);
+
+                _fixture.DeleteItemAsync(_tableName, _title, _year);
+                _fixture.DeleteTableAsync(_tableName);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -70,14 +79,36 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
+        var metricScopeBase = "WebTransaction/MVC/AwsSdkDynamoDB/";
+        var createTableScope = metricScopeBase + "CreateTable/{tableName}";
+        var scanScope = metricScopeBase + "Scan/{tableName}";
+        var deleteTableScope = metricScopeBase + "DeleteTable/{tableName}";
+        var putItemScope = metricScopeBase + "PutItem/{tableName}/{title}/{year}";
+        var getItemScope = metricScopeBase + "GetItem/{tableName}/{title}/{year}";
+        var updateItemScope = metricScopeBase + "UpdateItem/{tableName}/{title}/{year}";
+        var deleteItemScope = metricScopeBase + "DeleteItem/{tableName}/{title}/{year}";
+        var queryScope = metricScopeBase + "Query/{tableName}/{title}/{year}";
+
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1, metricScope = _metricScope1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1, metricScope = createTableScope},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/describe_table", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/describe_table", callCount = 1, metricScope = _metricScope1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/describe_table", callCount = 1, metricScope = createTableScope},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1, metricScope = _metricScope2},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1, metricScope = putItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", callCount = 1, metricScope = getItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", callCount = 1, metricScope = updateItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", callCount = 1, metricScope = deleteItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", callCount = 1, metricScope = queryScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", callCount = 1, metricScope = scanScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", callCount = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", callCount = 1, metricScope = deleteTableScope},
 
         };
 

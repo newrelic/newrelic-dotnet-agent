@@ -91,9 +91,35 @@ public class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
     {
         GetAndAssertStatusCode($"{BaseUrl}/CreateTableAsync?tableName={tableName}", System.Net.HttpStatusCode.OK);
     }
+    public void DeleteTableAsync(string tableName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/DeleteTableAsync?tableName={tableName}", System.Net.HttpStatusCode.OK);
+    }
 
-    public void PutItemAsync(string tableName, string title, int year)
+    public void PutItemAsync(string tableName, string title, string year)
     {
         GetAndAssertStatusCode($"{BaseUrl}/PutItemAsync?tableName={tableName}&title={title}&year={year}", System.Net.HttpStatusCode.OK);
     }
+    public void GetItemAsync(string tableName, string title, string year)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/GetItemAsync?tableName={tableName}&title={title}&year={year}", System.Net.HttpStatusCode.OK);
+    }
+    public void UpdateItemAsync(string tableName, string title, string year)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/UpdateItemAsync?tableName={tableName}&title={title}&year={year}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void DeleteItemAsync(string tableName, string title, string year)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/DeleteItemAsync?tableName={tableName}&title={title}&year={year}", System.Net.HttpStatusCode.OK);
+    }
+    public void QueryAsync(string tableName, string title, string year)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/QueryAsync?tableName={tableName}&title={title}&year={year}", System.Net.HttpStatusCode.OK);
+    }
+    public void ScanAsync(string tableName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/ScanAsync?tableName={tableName}", System.Net.HttpStatusCode.OK);
+    }
+
 }

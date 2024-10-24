@@ -35,6 +35,7 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             return client;
         }
 
+        #region Table Operations
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<bool> CreateTableAsync(string name)
         {
@@ -105,13 +106,26 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<bool> PutItemAsync(string tableName, string title, int year)
+        public async Task<bool> DeleteTableAsync(string tableName)
         {
-            var newMovie = new Movie(title, year);
+            var request = new DeleteTableRequest
+            {
+                TableName = tableName
+            };
+            var response = await _amazonDynamoDBClient.DeleteTableAsync(request);
+
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+        #endregion
+
+        #region CRUD operations
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> PutItemAsync(string tableName, string title, string year)
+        {
             var item = new Dictionary<string, AttributeValue>
             {
-                ["title"] = new AttributeValue { S = newMovie.Title },
-                ["year"] = new AttributeValue { N = newMovie.Year.ToString() },
+                ["title"] = new AttributeValue { S = title },
+                ["year"] = new AttributeValue { N = year },
             };
 
             var request = new PutItemRequest
@@ -125,14 +139,14 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<bool> GetItemAsync(string tableName, string title, int year)
+        public async Task<bool> GetItemAsync(string tableName, string title, string year)
         {
             var request = new GetItemRequest
             {
                 TableName = tableName,
                 Key = new Dictionary<string, AttributeValue>()
                 { { "title", new AttributeValue { S = title } },
-                  { "year",  new AttributeValue { N = year.ToString() } }
+                  { "year",  new AttributeValue { N = year } }
                 }
             };
             var response = await _amazonDynamoDBClient.GetItemAsync(request);
@@ -141,45 +155,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             var result = response.Item;
 
             Console.WriteLine($"GetItemAsync: response.Item['year'] == {result["year"]}");
-            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        }
-
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<bool> QueryAsync(string tableName, string title, string year)
-        {
-            var request = new QueryRequest
-            {
-                TableName = tableName,
-                KeyConditionExpression = "#title = :title and #year = :year",
-                ExpressionAttributeNames = new Dictionary<string, string>()
-                {
-                    {"#title", "title" },
-                    {"#year", "year" }
-                },
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
-                {
-                    {":title", new AttributeValue { S = title } },
-                    {":year" , new AttributeValue { N = year } }
-                }
-            };
-            var response = await _amazonDynamoDBClient.QueryAsync(request);
-
-            Console.WriteLine($"QueryAsync: number of item returned = {response.Items.Count}");
-            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        }
-
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<bool> ScanAsync(string tableName)
-        {
-            var request = new ScanRequest
-            {
-                TableName = tableName,
-                Limit = 10
-
-            };
-            var response = await _amazonDynamoDBClient.ScanAsync(request);
-
-            Console.WriteLine($"ScanAsync: number of item returned = {response.Items.Count}");
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
 
@@ -223,19 +198,48 @@ namespace AwsSdkTestApp.AwsSdkExercisers
 
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
+        #endregion
 
+        #region Query Operations
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<bool> DeleteTableAsync(string tableName)
+        public async Task<bool> QueryAsync(string tableName, string title, string year)
         {
-            var request = new DeleteTableRequest
+            var request = new QueryRequest
             {
-                TableName = tableName
+                TableName = tableName,
+                KeyConditionExpression = "#title = :title and #year = :year",
+                ExpressionAttributeNames = new Dictionary<string, string>()
+                {
+                    {"#title", "title" },
+                    {"#year", "year" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                {
+                    {":title", new AttributeValue { S = title } },
+                    {":year" , new AttributeValue { N = year } }
+                }
             };
-            var response = await _amazonDynamoDBClient.DeleteTableAsync(request);
+            var response = await _amazonDynamoDBClient.QueryAsync(request);
 
+            Console.WriteLine($"QueryAsync: number of item returned = {response.Items.Count}");
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> ScanAsync(string tableName)
+        {
+            var request = new ScanRequest
+            {
+                TableName = tableName,
+                Limit = 10
+
+            };
+            var response = await _amazonDynamoDBClient.ScanAsync(request);
+
+            Console.WriteLine($"ScanAsync: number of item returned = {response.Items.Count}");
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+        #endregion
 
         public void Dispose()
         {
@@ -243,16 +247,16 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         }
     }
 
-    public class Movie
-    {
-        public Movie(string title, int year)
-        {
-            Title = title;
-            Year = year;
-        }
+    //public class Movie
+    //{
+    //    public Movie(string title, string year)
+    //    {
+    //        Title = title;
+    //        Year = year;
+    //    }
 
-        public string Title { get; set; }
-        public int Year { get; set; }
-    }
+    //    public string Title { get; set; }
+    //    public string Year { get; set; }
+    //}
 
 }
