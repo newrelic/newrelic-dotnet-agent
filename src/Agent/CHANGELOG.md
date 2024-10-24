@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.33.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.32.0...v10.33.0) (2024-10-24)
+
+
+### New features
+
+* New Garbage Collection Metrics Sampler for .NET 6+ ([#2838](https://github.com/newrelic/newrelic-dotnet-agent/issues/2838)) ([f24a5da](https://github.com/newrelic/newrelic-dotnet-agent/commit/f24a5daa2cc6117a73eac96f2a45d738335d063a))
+
+
+### Fixes
+
+* Fix potential race condition in AWS SDK, AWS Bedrock, and Elastisearch that could lead to an orphaned Transaction. ([#2842](https://github.com/newrelic/newrelic-dotnet-agent/issues/2842)) ([3afa15f](https://github.com/newrelic/newrelic-dotnet-agent/commit/3afa15f3cf70d4bda5cecbd728c377ad7cb4ff28))
+
 ## [10.32.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.31.0...v10.32.0) (2024-10-15)
 
 
