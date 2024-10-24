@@ -83,7 +83,8 @@ namespace NewRelic.Agent.Extensions.Llm
             string role,
             int sequence,
             string completionId,
-            bool isResponse)
+            bool isResponse,
+            string vendor)
         {
             var attributes = new Dictionary<string, object>
             {
@@ -92,7 +93,7 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "span_id", segment.SpanId },
                 { "trace_id", agent.GetLinkingMetadata()["trace.id"] },
                 { "response.model", responseModel },
-                { "vendor", "bedrock" },
+                { "vendor", vendor },
                 { "ingest_source", "DotNet" },
                 { "content", content },
                 { "role", role },

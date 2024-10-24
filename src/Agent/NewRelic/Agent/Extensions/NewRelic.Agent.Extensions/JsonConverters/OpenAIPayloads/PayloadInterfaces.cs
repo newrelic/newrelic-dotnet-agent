@@ -5,26 +5,43 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 {
     public interface IRequestPayload
     {
-        string Prompt { get; set; }
+        MessageObj[] Messages { get; set; }
 
-        float Temperature { get; set; }
+        string Model { get; set; }
 
-        int MaxTokens { get; set; }
+        //float Temperature { get; set; }
+
+        //int MaxOutputTokenCount { get; set; }
     }
 
     public interface IResponsePayload
     {
-        ResponseData[] Responses { get; set; }
+        string Id { get; set; }
 
-        int? PromptTokenCount { get; set; }
+        string Object { get; set; }
 
-        string StopReason { get; set; }
+        string Created { get; set; }
+
+        string Model { get; set; }
+
+        ChoicesObj[] Choices { get; set; }
+
+        string SystemFingerprint { get; set; }
     }
 
     public class ResponseData
     {
-        public string Content { get; set; }
+        public string Text { get; set; }
 
-        public int? TokenCount { get; set; }
+        //public int? TokenCount { get; set; }
+    }
+
+    public class ResponseUsage
+    {
+        public int OutputTokenCount { get; set; }
+
+        public int InputTokenCount { get; set; }
+
+        public int TotalTokenCount { get; set; }
     }
 }

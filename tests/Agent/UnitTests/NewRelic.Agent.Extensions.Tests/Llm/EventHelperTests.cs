@@ -213,6 +213,7 @@ namespace Agent.Extensions.Tests.Llm
             var sequence = 1;
             var completionId = "456";
             var role = "role";
+            var vendor = "vendor";
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(
             new Dictionary<string, string>
@@ -229,7 +230,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, isResponse);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, isResponse, vendor);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());

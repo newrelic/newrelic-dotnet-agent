@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Llama 2 -->
     <tracerFactory name="OpenAIInvokeModelAsync">
-      <match assemblyName="OpenAI.Chat" className="OpenAI.Chat.ChatClient">
+      <match assemblyName="OpenAI" className="OpenAI.Chat.ChatClient">
         <exactMethodMatcher methodName="CompleteChatAsync" />
       </match>
     </tracerFactory>
