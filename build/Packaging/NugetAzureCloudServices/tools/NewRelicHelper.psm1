@@ -390,7 +390,7 @@ function cleanup_azure_service_definition([System.__ComObject] $project){
 		
 		$runtimeNode = $modified.Runtime
         if($runtimeNode -ne $null -and $runtimeNode.ChildNodes.Count -gt 0){
-        	$variableNodes = $runtimeNode.Environment.Variable | where { $_.name -eq "COR_ENABLE_PROFILING" -or $_.name -eq "COR_PROFILER" -or $_.name -eq "NEWRELIC_HOME" }
+        	$variableNodes = $runtimeNode.Environment.Variable | where { $_.name -eq "COR_ENABLE_PROFILING" -or $_.name -eq "COR_PROFILER" -or $_.name -eq "NEWRELIC_HOME" -or $_.name -eq "NEWRELIC_INSTALL_PATH" }
         	if($variableNodes -ne $null -and $variableNodes.Count -gt 0){
         		foreach($varNode in $variableNodes){
         			[Void]$varNode.ParentNode.RemoveChild($varNode)

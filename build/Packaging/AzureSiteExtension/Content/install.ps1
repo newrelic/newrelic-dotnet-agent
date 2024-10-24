@@ -304,7 +304,7 @@ try
 	}
 
 
-	if ($env:NEWRELIC_LICENSEKEY -eq $null)
+	if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
 	{
 		WriteToInstallLog "The environment variable NEWRELIC_LICENSE_KEY must be set. Please make sure to add it."
 	}
