@@ -711,6 +711,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
 
+        [JsonIgnore]
+        public string AwsAccountId => _configuration.AwsAccountId;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
