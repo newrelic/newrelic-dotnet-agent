@@ -231,5 +231,7 @@ namespace NewRelic.Agent.Configuration
         string AzureFunctionResourceIdWithFunctionName(string functionName);
 
         bool UtilizationDetectAzureFunction { get; }
+
+        bool GCSamplerV2Enabled { get; }
     }
 }
