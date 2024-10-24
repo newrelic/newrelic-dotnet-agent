@@ -444,7 +444,9 @@ namespace InstallerActions
             DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Asp35.dll");
 
 
-            String newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
+            String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
+            if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
+            newrelicHomePath = Environment.GetEnvironmentVariable("NEW_RELIC_HOME");
             if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
 
             return ActionResult.Success;

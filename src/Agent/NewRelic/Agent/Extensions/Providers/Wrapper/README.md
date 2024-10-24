@@ -204,7 +204,7 @@ You should use `AgentWrapperApi.HandleWrapperException` to deal with exceptions 
 
 ## Notes on dynamic wrapper assembly loading ##
 
-Wrapper assemblies are loaded dynamically at agent startup. All assemblies found in **[NEW_RELIC_HOME]/Extensions** will be loaded, and all `IWrapper`s found in the assembly will be instantiated and passed to the `WrapperService` (contained inside a `LazyMap`).
+Wrapper assemblies are loaded dynamically at agent startup. All assemblies found in **[NEWRELIC_HOME]/Extensions** will be loaded, and all `IWrapper`s found in the assembly will be instantiated and passed to the `WrapperService` (contained inside a `LazyMap`).
 
 When an instrumented method is hit, `WrapperService` will ask the `LazyMap` for an appropriate `IWrapper`. The map will return the first wrapper it finds that returns **true** from `IWrapper.CanWrap`, or null if they all return **false**. The resulting wrapper (or null) will be cached in the map which is keyed on the fully qualified method signature. If the wrapper loader returns null, the agent will fall back to using tracers.
 

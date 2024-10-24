@@ -45,7 +45,7 @@ fi
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
-echo "export CORECLR_NEW_RELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
+echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
 source /etc/profile.d/${PACKAGE_NAME}-path.sh
 
 chmod o+w $NEWRELIC_HOME/logs
@@ -53,4 +53,4 @@ chmod +x $NEWRELIC_HOME/*.sh 2> /dev/null
 
 printf "Initialize the New Relic .NET Agent environment variables by running:\n"
 printf "\t\033[1msource /etc/profile.d/${PACKAGE_NAME}-path.sh\033[0m\n"
-printf "\t\033[1msource $CORECLR_NEW_RELIC_HOME/setenv.sh\033[0m\n"
+printf "\t\033[1msource $CORECLR_NEWRELIC_HOME/setenv.sh\033[0m\n"
