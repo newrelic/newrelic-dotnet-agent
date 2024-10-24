@@ -43,8 +43,8 @@ namespace NewRelic.Agent.Core.Samplers
 
                 if (!ReflectionFailed)
                 {
-                    paramType = assembly.GetType("System.Boolean");
-                    returnType = assembly.GetType("System.Int64");
+                    paramType = typeof(bool);
+                    returnType = typeof(long);
                     if (!VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(gcType, "GetTotalAllocatedBytes", paramType, returnType, out var accessor1))
                     {
                         ReflectionFailed = true;
