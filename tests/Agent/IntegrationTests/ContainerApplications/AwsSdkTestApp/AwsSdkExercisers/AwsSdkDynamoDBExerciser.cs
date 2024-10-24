@@ -6,7 +6,6 @@ using Amazon.DynamoDBv2;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using Amazon.Runtime;
 using System.Threading;
@@ -16,7 +15,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
     public class AwsSdkDynamoDBExerciser : IDisposable
     {
         private readonly AmazonDynamoDBClient _amazonDynamoDBClient;
-        //private string _dynamoDbURL = null;
 
         public AwsSdkDynamoDBExerciser()
         {
@@ -40,7 +38,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<bool> CreateTableAsync(string name)
         {
-            Console.WriteLine("Got here 1");
             var response = await _amazonDynamoDBClient.CreateTableAsync(new CreateTableRequest
             {
                 TableName = name,
@@ -76,7 +73,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
                     WriteCapacityUnits = 5,
                 },
             });
-            Console.WriteLine("Got here 2");
             if (response.HttpStatusCode != System.Net.HttpStatusCode.OK)
             {
                 Console.WriteLine($"Got bad http status code: {response.HttpStatusCode}");
@@ -127,6 +123,119 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             var response = await _amazonDynamoDBClient.PutItemAsync(request);
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> GetItemAsync(string tableName, string title, int year)
+        {
+            var request = new GetItemRequest
+            {
+                TableName = tableName,
+                Key = new Dictionary<string, AttributeValue>()
+                { { "title", new AttributeValue { S = title } },
+                  { "year",  new AttributeValue { N = year.ToString() } }
+                }
+            };
+            var response = await _amazonDynamoDBClient.GetItemAsync(request);
+
+            // Check the response.
+            var result = response.Item;
+
+            Console.WriteLine($"GetItemAsync: response.Item['year'] == {result["year"]}");
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> QueryAsync(string tableName, string title, string year)
+        {
+            var request = new QueryRequest
+            {
+                TableName = tableName,
+                KeyConditionExpression = "#title = :title and #year = :year",
+                ExpressionAttributeNames = new Dictionary<string, string>()
+                {
+                    {"#title", "title" },
+                    {"#year", "year" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                {
+                    {":title", new AttributeValue { S = title } },
+                    {":year" , new AttributeValue { N = year } }
+                }
+            };
+            var response = await _amazonDynamoDBClient.QueryAsync(request);
+
+            Console.WriteLine($"QueryAsync: number of item returned = {response.Items.Count}");
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> ScanAsync(string tableName)
+        {
+            var request = new ScanRequest
+            {
+                TableName = tableName,
+                Limit = 10
+
+            };
+            var response = await _amazonDynamoDBClient.ScanAsync(request);
+
+            Console.WriteLine($"ScanAsync: number of item returned = {response.Items.Count}");
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> UpdateItemAsync(string tableName, string title, string year)
+        {
+            var request = new UpdateItemRequest
+            {
+                TableName = tableName,
+                Key = new Dictionary<string, AttributeValue>()
+                { { "title", new AttributeValue { S = title } },
+                  { "year",  new AttributeValue { N = year } }
+                },
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    {"#NA", "Rating" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>()
+                {
+                    { ":new", new AttributeValue { N = "5" } }
+                },
+                UpdateExpression = "SET #NA = :new"
+            };
+            var response = await _amazonDynamoDBClient.UpdateItemAsync(request);
+
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> DeleteItemAsync(string tableName, string title, string year)
+        {
+            var request = new DeleteItemRequest
+            {
+                TableName = tableName,
+                Key = new Dictionary<string, AttributeValue>()
+                { { "title", new AttributeValue { S = title } },
+                  { "year",  new AttributeValue { N = year } }
+                },
+            };
+            var response = await _amazonDynamoDBClient.DeleteItemAsync(request);
+
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> DeleteTableAsync(string tableName)
+        {
+            var request = new DeleteTableRequest
+            {
+                TableName = tableName
+            };
+            var response = await _amazonDynamoDBClient.DeleteTableAsync(request);
+
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
+
 
         public void Dispose()
         {
