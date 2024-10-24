@@ -97,7 +97,7 @@ When instrumentation in the `extensions` directory changes on disk, the profiler
 
 The Microsoft defined environment variables like `COR_ENABLE_PROFILING` and `COR_PROFILER_PATH` used to attach the profiler to a process.  On CoreCLR all of those environment variables are prefixed with `CORECLR` instead of `COR`, ie `CORECLR_ENABLE_PROFILING`.
 
-After the profiler attaches it uses custom environment variables to determine the path to `NewRelic.Agent.Core.dll`.  It tries to find the dll in the path specified by `NEW_RELIC_INSTALL_PATH`, or if that is undefined then `NEW_RELIC_HOME`.  On CoreCLR, those environment variables are prefixed with `CORECLR_` so that the agent does not try to use the .NET Framework managed agent in a CoreCLR process.
+After the profiler attaches it uses custom environment variables to determine the path to `NewRelic.Agent.Core.dll`.  It tries to find the dll in the path specified by `NEWRELIC_INSTALL_PATH`, or if that is undefined then `NEWRELIC_HOME`.  On CoreCLR, those environment variables are prefixed with `CORECLR_` so that the agent does not try to use the .NET Framework managed agent in a CoreCLR process.
 
 ## FAQ
 

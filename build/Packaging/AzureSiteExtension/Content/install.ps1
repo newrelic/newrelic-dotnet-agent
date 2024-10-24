@@ -278,26 +278,12 @@ try
 	$is35App = CheckIfAppIs35
 	$agentVersion = ""
 
-	if ($env:NEW_RELIC_AGENT_VERSION_OVERRIDE -ne $null)
-	{
-		try
-		{
-			$version = [System.Version]$env:NEW_RELIC_AGENT_VERSION_OVERRIDE.ToString()
-			$agentVersion = $version.ToString()
-		}
-		catch
-		{
-			WriteToInstallLog "NEW_RELIC_AGENT_VERSION_OVERRIDE environment variable has an incorrect Agent version number. Failed to install."
-			exit 1
-		}
-	}
-	elseif ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null) # check for deprecated environment variable
+	if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null)
 	{
 		try
 		{
 			$version = [System.Version]$env:NEWRELIC_AGENT_VERSION_OVERRIDE.ToString()
 			$agentVersion = $version.ToString()
-			WriteToInstallLog "NEWRELIC_AGENT_VERSION_OVERRIDE environment variable is deprecated and may be removed in a future release. Please use NEW_RELIC_AGENT_VERSION_OVERRIDE instead."
 		}
 		catch
 		{
@@ -318,9 +304,9 @@ try
 	}
 
 
-	if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
+	if ($env:NEWRELIC_LICENSEKEY -eq $null)
 	{
-		WriteToInstallLog "The environment variable NEW_RELIC_LICENSE_KEY must be set. Please make sure to add it."
+		WriteToInstallLog "The environment variable NEWRELIC_LICENSE_KEY must be set. Please make sure to add it."
 	}
 
 	RemoveNewRelicInstallArtifacts "."
@@ -337,7 +323,7 @@ try
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER']",
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_32']",
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_64']",
-					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEW_RELIC_HOME']")
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEWRELIC_HOME']")
 		$file = resolve-path(".\applicationHost.xdt")
 		RemoveXmlElements $file $xPaths
 	}

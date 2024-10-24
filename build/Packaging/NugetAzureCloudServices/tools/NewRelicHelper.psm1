@@ -244,12 +244,12 @@ function update_azure_service_definition([System.__ComObject] $project){
             	
             	#Helps Azure Workers find the newrelic.config
             	$variableNHNode = $xml.CreateElement('Variable','http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition')
-            	$variableNHNode.SetAttribute('name','NEW_RELIC_HOME')
+            	$variableNHNode.SetAttribute('name','NEWRELIC_HOME')
                 $variableNHNode.SetAttribute('value','D:\ProgramData\New Relic\.NET Agent\')
                 
                 #Helps Azure Workers find the NewRelic.Agent.Core.dll
             	$variableNIPNode = $xml.CreateElement('Variable','http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition')
-            	$variableNIPNode.SetAttribute('name','NEW_RELIC_INSTALL_PATH')
+            	$variableNIPNode.SetAttribute('name','NEWRELIC_INSTALL_PATH')
                 $variableNIPNode.SetAttribute('value','D:\Program Files\New Relic\.NET Agent\')
                 
             	$runtimeEnvironmentNode.AppendChild($variableCEPNode)
@@ -390,7 +390,7 @@ function cleanup_azure_service_definition([System.__ComObject] $project){
 		
 		$runtimeNode = $modified.Runtime
         if($runtimeNode -ne $null -and $runtimeNode.ChildNodes.Count -gt 0){
-        	$variableNodes = $runtimeNode.Environment.Variable | where { $_.name -eq "COR_ENABLE_PROFILING" -or $_.name -eq "COR_PROFILER" -or $_.name -eq "NEW_RELIC_HOME" -or $_.name -eq "NEW_RELIC_INSTALL_PATH" }
+        	$variableNodes = $runtimeNode.Environment.Variable | where { $_.name -eq "COR_ENABLE_PROFILING" -or $_.name -eq "COR_PROFILER" -or $_.name -eq "NEWRELIC_HOME" }
         	if($variableNodes -ne $null -and $variableNodes.Count -gt 0){
         		foreach($varNode in $variableNodes){
         			[Void]$varNode.ParentNode.RemoveChild($varNode)
