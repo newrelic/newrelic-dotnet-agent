@@ -4492,6 +4492,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             Assert.That(config.AwsAccountId, Is.EqualTo("444488881212"));
 
+            // A second call should use the cached value
+            Assert.That(config.AwsAccountId, Is.EqualTo("444488881212"));
+
             // If it exists in the config, the env variable should still override
             xmlString = """
             <?xml version="1.0"?>
