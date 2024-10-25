@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             // has a TableName property
             model = request.TableName;
 
-            var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation));
+            var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
             return isAsync ?
                 Delegates.GetAsyncDelegateFor<Task>(agent, segment)
                 :
