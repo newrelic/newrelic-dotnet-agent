@@ -94,7 +94,7 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             var startTime = DateTime.Now;
             do
             {
-                Thread.Sleep(sleepDuration);
+                await Task.Delay(sleepDuration);
 
                 var describeTableResponse = await _amazonDynamoDBClient.DescribeTableAsync(request);
                 status = describeTableResponse.Table.TableStatus;
