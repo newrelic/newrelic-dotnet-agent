@@ -37,8 +37,8 @@ services:
   dynamodb:
     command: "-jar DynamoDBLocal.jar -inMemory"
     image: "amazon/dynamodb-local:latest"
-    ports:
-      - "8123:8000"
+    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
+      - "8000"
     working_dir: /home/dynamodblocal
  
   awssdktestapp:

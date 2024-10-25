@@ -22,7 +22,7 @@ namespace AwsSdkTestApp.Controllers
             _logger.LogInformation("Created AwsSdkDynamoDBController");
         }
 
-        // GET: /AwsSdkDynamoDB/CreateTable?tableName=tableName
+        // GET: /AwsSdkDynamoDB/CreateTableAsync?tableName=tableName
         [HttpGet("CreateTableAsync")]
         public async Task CreateTableAsync([Required] string tableName)
         {
@@ -34,7 +34,7 @@ namespace AwsSdkTestApp.Controllers
             _logger.LogInformation("Finished CreateTableAsync for {tableName}", tableName);
         }
 
-        // GET: /AwsSdkDynamoDB/DeleteTable?tableName=tableName
+        // GET: /AwsSdkDynamoDB/DeleteTableAsync?tableName=tableName
         [HttpGet("DeleteTableAsync")]
         public async Task DeleteTableAsync([Required] string tableName)
         {
