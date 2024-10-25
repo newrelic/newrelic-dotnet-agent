@@ -91,6 +91,7 @@ namespace AwsSdkTestApp.AwsSdkExercisers
 
             int sleepDuration = 2000;
 
+            var startTime = DateTime.Now;
             do
             {
                 Thread.Sleep(sleepDuration);
@@ -100,7 +101,7 @@ namespace AwsSdkTestApp.AwsSdkExercisers
 
                 Console.Write(".");
             }
-            while (status != "ACTIVE");
+            while (status != "ACTIVE" && DateTime.Now - startTime < TimeSpan.FromMinutes(2));
 
             return status == TableStatus.ACTIVE;
         }
