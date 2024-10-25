@@ -378,7 +378,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool UtilizationDetectKubernetes => true;
 
         public bool UtilizationDetectAzureFunction => true;
-
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -495,5 +494,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public string LoggingLevel => "info";
 
         public string AwsAccountId => "";
+        public bool GCSamplerV2Enabled => true;
     }
 }

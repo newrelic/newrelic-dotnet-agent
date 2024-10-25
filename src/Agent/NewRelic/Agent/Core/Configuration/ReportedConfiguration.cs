@@ -714,6 +714,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore]
         public string AwsAccountId => _configuration.AwsAccountId;
 
+        [JsonProperty("gc_sampler_v2.enabled")]
+        public bool GCSamplerV2Enabled => _configuration.GCSamplerV2Enabled;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

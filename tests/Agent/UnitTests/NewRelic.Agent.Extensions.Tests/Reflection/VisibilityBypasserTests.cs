@@ -54,6 +54,8 @@ namespace NewRelic.Reflection.UnitTests
         public string GetWritableStringField { get { return _writableStringField; } }
         private int _writeableIntField = 7;
         public int GetWriteableIntField { get { return _writeableIntField; } }
+
+        public static int StaticMethodWithOneParameter(int param) { return param;}
     }
 
     public static class PublicStatic
@@ -628,7 +630,7 @@ namespace NewRelic.Reflection.UnitTests
     public class StaticMethodTests
     {
         [Test]
-        public void test_static_generator()
+        public void generate_parameterless_static_method_caller()
         {
             var assemblyName = Assembly.GetExecutingAssembly().FullName;
             var typeName = "NewRelic.Reflection.UnitTests.PublicStatic";
@@ -640,5 +642,66 @@ namespace NewRelic.Reflection.UnitTests
 
             Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<int>(assemblyName, typeName, "NoSuchMethod"));
         }
-    }
+        [Test]
+        public void try_generate_one_parameter_static_method_caller()
+        {
+            var methodName = "StaticMethodWithOneParameter";
+            var expectedValue = 5;
+
+            var success = VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(typeof(PublicOuter), methodName, typeof(int), typeof(int), out var accessor );
+            Assert.That(success, Is.True);
+
+            var actualValue = accessor(5);
+
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
+        }
+
+        [Test]
+        public void try_generate_one_parameter_static_method_caller_failure()
+        {
+            // Arrange
+            var ownerType = typeof(PublicStatic);
+            var methodName = "NonExistentMethod";
+            var paramType = typeof(int);
+            var returnType = typeof(int);
+            Func<object, object> accessor;
+
+            // Act
+            var result = VisibilityBypasser.Instance.TryGenerateOneParameterStaticMethodCaller(ownerType, methodName, paramType, returnType, out accessor);
+
+            // Assert
+            Assert.That(result, Is.False);
+            Assert.That(accessor, Is.Null);
+        }
+
+
+        [Test]
+        public void try_generate_parameterless_static_method_caller()
+        {
+            var methodName = "GetANumber";
+            var expectedValue = 3;
+
+            var success = VisibilityBypasser.Instance.TryGenerateParameterlessStaticMethodCaller<int>(typeof(PublicStatic), methodName, out var accessor);
+            Assert.That(success, Is.True);
+
+            var actualValue = accessor();
+
+            Assert.That(actualValue, Is.EqualTo(expectedValue));
+        }
+
+        [Test]
+        public void try_generate_parameterless_static_method_caller_failure()
+        {
+            // Arrange
+            var ownerType = typeof(PublicStatic);
+            var methodName = "NonExistentMethod";
+            Func<int> accessor;
+
+            // Act
+            var success = VisibilityBypasser.Instance.TryGenerateParameterlessStaticMethodCaller<int>(ownerType, methodName, out accessor);
+
+            // Assert
+            Assert.That(success, Is.False);
+            Assert.That(accessor, Is.Null);
+        }    }
 }

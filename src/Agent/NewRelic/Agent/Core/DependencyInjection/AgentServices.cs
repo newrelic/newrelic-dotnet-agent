@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Threading;
+#endif
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -58,7 +60,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// </summary>
         /// <param name="container"></param>
         /// <param name="serverlessModeEnabled"></param>
-        public static void RegisterServices(IContainer container, bool serverlessModeEnabled)
+        /// <param name="gcSamplerV2Enabled"></param>
+        public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
         {
             // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
             container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -91,9 +94,18 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
             container.Register<GcSampler, GcSampler>();
 #else
-            container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
-            container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
-            container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+            if (gcSamplerV2Enabled)
+            {
+                container.Register<IGCSamplerV2ReflectionHelper, GCSamplerV2ReflectionHelper>();
+                container.Register<IGCSampleTransformerV2, GCSampleTransformerV2>();
+                container.Register<GCSamplerV2, GCSamplerV2>();
+            }
+            else
+            {
+                container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
+                container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
+                container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+            }
 #endif
 
             container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
@@ -225,7 +237,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// <summary>
         /// Starts all of the services needed by resolving them.
         /// </summary>
-        public static void StartServices(IContainer container, bool serverlessModeEnabled)
+        public static void StartServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
         {
             if (!serverlessModeEnabled)
                 container.Resolve<AssemblyResolutionService>();
@@ -242,7 +254,12 @@ namespace NewRelic.Agent.Core.DependencyInjection
             samplerStartThread.Start();
 #else
             if (!serverlessModeEnabled)
-                container.Resolve<GCSamplerNetCore>().Start();
+            {
+                if (!gcSamplerV2Enabled)
+                    container.Resolve<GCSamplerNetCore>().Start();
+                else
+                    container.Resolve<GCSamplerV2>().Start();
+            }
 #endif
             if (!serverlessModeEnabled)
             {
