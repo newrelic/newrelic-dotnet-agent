@@ -38,7 +38,7 @@ services:
     command: "-jar DynamoDBLocal.jar -inMemory"
     image: "amazon/dynamodb-local:latest"
     ports:
-      - "8000:8000"
+      - "8123:8000"
     working_dir: /home/dynamodblocal
  
   awssdktestapp:

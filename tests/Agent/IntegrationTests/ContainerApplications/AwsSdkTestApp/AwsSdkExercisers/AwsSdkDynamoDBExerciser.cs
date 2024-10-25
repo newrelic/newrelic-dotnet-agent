@@ -27,7 +27,7 @@ namespace AwsSdkTestApp.AwsSdkExercisers
 
             AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig();
             // Set the endpoint URL
-            clientConfig.ServiceURL = "http://dynamodb:8000";
+            clientConfig.ServiceURL = "http://dynamodb:8123"; // port must match what is set in docker compose
             clientConfig.AuthenticationRegion = "us-west-2";
             var creds = new BasicAWSCredentials("xxx", "xxx");
             AmazonDynamoDBClient client = new AmazonDynamoDBClient(creds, clientConfig);
@@ -246,17 +246,4 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             _amazonDynamoDBClient?.Dispose();
         }
     }
-
-    //public class Movie
-    //{
-    //    public Movie(string title, string year)
-    //    {
-    //        Title = title;
-    //        Year = year;
-    //    }
-
-    //    public string Title { get; set; }
-    //    public string Year { get; set; }
-    //}
-
 }
