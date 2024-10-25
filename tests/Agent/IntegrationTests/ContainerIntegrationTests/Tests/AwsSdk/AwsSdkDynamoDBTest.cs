@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,18 +18,11 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     private readonly string _title = "Ghost";
     private readonly string _year = "1990";
 
-    private bool _initCollections;
-
-    protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)
+    protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
-        _initCollections = initCollections;
 
-        _fixture.SetAdditionalEnvironmentVariable("AWSSDK_INITCOLLECTIONS", initCollections.ToString());
-
-
-        // todo: is all of this necessary?
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
@@ -116,15 +108,12 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     }
 }
 
-public class AwsSdkDynamoDBTestInitializedCollections : AwsSdkDynamoDBTestBase
+// Base class with derived classes pattern copied from another tests file
+// but we currently don't need to use it for anything
+
+public class AwsSdkDynamoDBTest : AwsSdkDynamoDBTestBase
 {
-    public AwsSdkDynamoDBTestInitializedCollections(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
-    {
-    }
-}
-public class AwsSdkDynamoDBTestNullCollections : AwsSdkDynamoDBTestBase
-{
-    public AwsSdkDynamoDBTestNullCollections(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+    public AwsSdkDynamoDBTest(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
