@@ -82,6 +82,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // azure function mode disabled
         public const string AzureFunctionModeDisabledLogLineRegex = InfoLogLinePrefixRegex + "Azure Function mode is not enabled; Azure Functions will not be instrumented.(.*)";
 
+        // wrapper exceptions and application errors
+        public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
+        public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;
@@ -593,6 +597,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Select(match => TryExtractJson(match, 1))
                 .SelectMany(json => TryExtractFromJsonArray<CustomEventData>(json, 1))
                 .Where(transactionEvent => transactionEvent != null);
+        }
+
+        #endregion
+
+        #region Exceptions
+
+        public int GetWrapperExceptionLineCount()
+        {
+            return TryGetLogLines(WrapperExceptionLogLineRegex).Count();
+        }
+        public int GetApplicationErrorLineCount()
+        {
+            return TryGetLogLines(ApplicationErrorLogLineRegex).Count();
         }
 
         #endregion

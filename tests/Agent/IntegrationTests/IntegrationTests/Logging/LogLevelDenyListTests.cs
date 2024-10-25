@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -64,12 +64,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 2 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/denied", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/denied", CallCountAllHarvests = 2 },
             };
             var notExpectedMetrics = new List<Assertions.ExpectedMetric>
             {

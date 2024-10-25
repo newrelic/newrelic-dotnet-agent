@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
@@ -14,7 +13,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
         string distroTag,
         ContainerApplication.Architecture containerArchitecture,
         string dockerfile,
-        string dockerComposeFile = "docker-compose-awssdk.yml")
+        string dockerComposeFile = "docker-compose-awssdk.yml") 
         : RemoteApplicationFixture(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile,
             dockerComposeFile, "awssdktestapp"))
     {
@@ -50,9 +49,22 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
     {
         var address = $"http://localhost:{Port}/awssdk";
 
-        var queueUrl =  GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
+        var queueUrl = GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
 
         GetAndAssertStatusCode($"{address}/SQS_SendMessageToQueue?message=Hello&messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        var messagesJson = GetString($"{address}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
+
+        GetAndAssertStatusCode($"{address}/SQS_DeleteQueue?messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        return messagesJson;
+    }
+
+    public string ExerciseSQS_ReceiveEmptyMessage(string queueName)
+    {
+        var address = $"http://localhost:{Port}/awssdk";
+
+        var queueUrl = GetString($"{address}/SQS_InitializeQueue?queueName={queueName}");
 
         var messagesJson = GetString($"{address}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
 

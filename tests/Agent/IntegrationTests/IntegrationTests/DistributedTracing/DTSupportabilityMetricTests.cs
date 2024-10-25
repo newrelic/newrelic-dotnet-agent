@@ -53,7 +53,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/Null", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/ParseException", callCount = 1 },
                 // The methods for GenerateAcceptSuccessMetric and GenerateCreateSuccessMetric result in AcceptPayload/Success metrics so we should look for two.
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Success", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Success", CallCountAllHarvests = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/UntrustedAccount", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
             };

@@ -65,17 +65,17 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
             {
                 //transactions
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddNode/{id}", callCount = 1 },
 
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", CallCountAllHarvests = 3 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", metricScope = "WebTransaction/MVC/Rejit/GetAddNode/{id}", callCount = 1 }
             };
 

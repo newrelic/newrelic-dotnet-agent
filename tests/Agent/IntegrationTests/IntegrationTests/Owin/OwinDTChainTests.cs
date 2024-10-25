@@ -91,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 4 },
 
                 new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/allWeb", callCount = 1 },
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 3 },
 
                 new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/allWeb", callCount = 1 },

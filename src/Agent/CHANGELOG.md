@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.32.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.31.0...v10.32.0) (2024-10-15)
+
+
+### Notice
+
+* Environment variables that start with or contain `NEWRELIC_` are deprecated and may be removed in a future major release. Users are encouraged to update their installation to use `NEW_RELIC_` names as soon as possible. ([b00edda](https://github.com/newrelic/newrelic-dotnet-agent/commit/b00edda2e617ff3176cff8b2243171cbe51e391f))
+
+
+### New features
+
+* Implement consistent naming scheme for all environment variables. All environment variables starting with (or containing) `NEWRELIC_` are now named `NEW_RELIC_`. Support for previous environment variables is retained, so this is not a breaking change. ([#718](https://github.com/newrelic/newrelic-dotnet-agent/issues/718)) ([#2812](https://github.com/newrelic/newrelic-dotnet-agent/issues/2812)) ([b00edda](https://github.com/newrelic/newrelic-dotnet-agent/commit/b00edda2e617ff3176cff8b2243171cbe51e391f))
+* Update CosmosDB instrumentation to support latest version ([#2832](https://github.com/newrelic/newrelic-dotnet-agent/issues/2832)) ([27a78cb](https://github.com/newrelic/newrelic-dotnet-agent/commit/27a78cb141fed90f2a3585d910bd8a5f74f94238))
+
+
+### Fixes
+
+* Handle null or empty SQS messages and/or message attributes ([#2833](https://github.com/newrelic/newrelic-dotnet-agent/issues/2833)) ([758b770](https://github.com/newrelic/newrelic-dotnet-agent/commit/758b770bb0ecf7c1a39e12b43c3279f26fdc0ed1))
+* Update Profiler to check whether Azure function mode support is enabled ([#2822](https://github.com/newrelic/newrelic-dotnet-agent/issues/2822)) ([9669641](https://github.com/newrelic/newrelic-dotnet-agent/commit/966964114018066d0e72f2b3fc12ff7974b66804))
+
 ## [10.31.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.30.0...v10.31.0) (2024-09-25)
 
 

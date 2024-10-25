@@ -71,7 +71,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
             {
                 new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/TraceMetadata" },
                 new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"},
-                new Assertions.ExpectedMetric(){ callCount = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
             };
 
             var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();

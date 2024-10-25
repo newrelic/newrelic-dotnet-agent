@@ -27,6 +27,10 @@ ARG NEW_RELIC_HOST
 ARG NEW_RELIC_LICENSE_KEY
 ARG NEW_RELIC_APP_NAME
 
+# Control whether or not 'empty' things (e.g. message attributes) are initialized
+# to an empty collection or left null
+ARG AWSSDK_INITCOLLECTIONS
+
 ENV CORECLR_ENABLE_PROFILING=1 \
 CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A} \
 CORECLR_NEW_RELIC_HOME=/usr/local/newrelic-dotnet-agent \
@@ -34,7 +38,8 @@ CORECLR_PROFILER_PATH=/usr/local/newrelic-dotnet-agent/libNewRelicProfiler.so \
 NEW_RELIC_HOST=${NEW_RELIC_HOST} \
 NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY} \
 NEW_RELIC_APP_NAME=${NEW_RELIC_APP_NAME} \
-NEW_RELIC_LOG_DIRECTORY=/app/logs
+NEW_RELIC_LOG_DIRECTORY=/app/logs \
+AWSSDK_INITCOLLECTIONS=${AWSSDK_INITCOLLECTIONS}
 
 WORKDIR /app
 COPY --from=publish /app/publish .

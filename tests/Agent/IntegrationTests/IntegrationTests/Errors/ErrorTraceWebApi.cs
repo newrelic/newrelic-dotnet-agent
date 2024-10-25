@@ -61,7 +61,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", CallCountAllHarvests = 5 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
