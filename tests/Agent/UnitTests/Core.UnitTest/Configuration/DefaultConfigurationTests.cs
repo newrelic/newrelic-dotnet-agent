@@ -4438,8 +4438,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.That(result, Is.EqualTo("some-service-name"));
         }
+        #endregion
 
-        #endregion Cloud
+        #region Cloud
         [Test]
         public void Cloud_Section_Parsing_And_Override()
         {
@@ -4507,8 +4508,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             config = GenerateConfigFromXml(xmlString);
             Assert.That(config.AwsAccountId, Is.EqualTo("444488881212"));
         }
-
-        #region
 
         #endregion
 
