@@ -2025,6 +2025,30 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
+
+                <xs:element name="cloud" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Provide linking data needed for certain cloud services.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="aws" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:attribute name="accountId" type="xs:string">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The AWS Account ID used by this application.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">

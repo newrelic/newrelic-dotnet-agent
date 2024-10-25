@@ -493,7 +493,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string LoggingLevel => "info";
 
+        public string AwsAccountId => "";
         public bool GCSamplerV2Enabled => true;
-
     }
 }

@@ -360,6 +360,7 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
                 Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
                 Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+                Assert.That(agentSettings.AwsAccountId, Is.Empty);
             });
         }
     }

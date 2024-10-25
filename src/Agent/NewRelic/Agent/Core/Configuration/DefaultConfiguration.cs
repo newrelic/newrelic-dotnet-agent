@@ -2978,6 +2978,23 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        #region Cloud
+        private string _awsAccountId;
+        public string AwsAccountId
+        {
+            get
+            {
+                if (_awsAccountId != null)
+                {
+                    return _awsAccountId;
+                }
+                _awsAccountId = EnvironmentOverrides(_localConfiguration.cloud.aws.accountId, "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID");
+
+                return _awsAccountId;
+            }
+        }
+        #endregion
+
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
         {
             return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");
