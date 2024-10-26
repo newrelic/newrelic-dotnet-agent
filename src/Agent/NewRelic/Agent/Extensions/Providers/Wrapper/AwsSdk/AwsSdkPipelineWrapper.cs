@@ -13,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         public bool IsTransactionRequired => true;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
-        private ConcurrentHashSet<string> _unsupportedRequestTypes = new();
+        private static ConcurrentHashSet<string> _unsupportedRequestTypes = new();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
