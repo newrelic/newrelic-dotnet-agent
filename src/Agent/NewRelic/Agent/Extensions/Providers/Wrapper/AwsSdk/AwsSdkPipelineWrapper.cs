@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -12,6 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     public class AwsSdkPipelineWrapper : IWrapper
     {
         public bool IsTransactionRequired => true;
+        private string _accountId = null;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static HashSet<string> _unsupportedRequestTypes = new();
@@ -36,6 +38,24 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
 
             return "";
+        }
+
+        private string GetAccountId(IAgent agent)
+        {
+            if (_accountId != null)
+            {
+                return _accountId;
+            }
+            _accountId = agent.Configuration.AwsAccountId;
+            if (_accountId == null)
+            {
+                _accountId = "";
+            }
+            else if ((_accountId.Length != 12) || _accountId.Any(c => (c < '0') || (c > '9')))
+            {
+                agent.Logger.Warn("Supplied AWS Account Id appears to be invalid: {0}", _accountId);
+            }
+            return _accountId;
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -67,6 +87,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().FullName;
+            string accountId = agent.Configuration.AwsAccountId;
 
             if (requestType.StartsWith("Amazon.SQS"))
             {
@@ -74,7 +95,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
-                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, GetRegion(agent, requestContext));
+                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, GetRegion(agent, requestContext), accountId);
             }
 
             if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type

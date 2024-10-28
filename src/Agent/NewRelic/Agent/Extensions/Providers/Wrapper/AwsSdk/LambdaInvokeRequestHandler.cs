@@ -47,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
         }
 
-        public static AfterWrappedMethodDelegate HandleInvokeRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, string region)
+        public static AfterWrappedMethodDelegate HandleInvokeRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, string region, string accountId)
         {
             string functionName = request.FunctionName;
             string qualifier = request.Qualifier;
@@ -65,12 +65,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 string key = $"{region}:{functionName}";
                 if (!_arnCache.TryGetValue(key, out arn))
                 {
-                    arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, "");
+                    arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, accountId);
                     _arnCache.TryAdd(key, arn);
                 }
             }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
-            segment.GetExperimentalApi().MakeLeaf();
+            //segment.GetExperimentalApi().MakeLeaf();
 
             transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
             transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
