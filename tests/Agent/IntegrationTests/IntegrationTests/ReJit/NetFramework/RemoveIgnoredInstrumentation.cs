@@ -67,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // From initialize and first call to TestAddFile while the ignore list is present
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/{controller}/{action}/{id}", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/{controller}/{action}/{id}", CallCountAllHarvests = 2 },
                 // From the call after the ignore list removed
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 },
                 // Supportability metric indicating that the managed code successfully parsed the ignored instrumentation settings

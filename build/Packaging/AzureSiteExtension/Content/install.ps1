@@ -320,7 +320,7 @@ try
 
 	if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
 	{
-		WriteToInstallLog "The environment variable NEW_RELIC_LICENSE_KEY must be set. Please make sure to add it."
+		WriteToInstallLog "The environment variable NEWRELIC_LICENSE_KEY must be set. Please make sure to add it."
 	}
 
 	RemoveNewRelicInstallArtifacts "."
@@ -337,7 +337,7 @@ try
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER']",
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_32']",
 					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_64']",
-					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEW_RELIC_HOME']")
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEWRELIC_HOME']")
 		$file = resolve-path(".\applicationHost.xdt")
 		RemoveXmlElements $file $xPaths
 	}
