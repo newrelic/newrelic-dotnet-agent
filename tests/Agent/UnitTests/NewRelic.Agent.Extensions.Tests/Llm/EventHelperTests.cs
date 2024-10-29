@@ -245,7 +245,7 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
                 Assert.That(llmAttributes["trace_id"], Is.EqualTo(_agent.GetLinkingMetadata()["trace.id"]));
                 Assert.That(llmAttributes["response.model"], Is.EqualTo(responseModel));
-                Assert.That(llmAttributes["vendor"], Is.EqualTo("bedrock"));
+                Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
                 Assert.That(llmAttributes["content"], Is.EqualTo(content));
                 Assert.That(llmAttributes["role"], Is.EqualTo(role));
@@ -348,7 +348,7 @@ namespace Agent.Extensions.Tests.Llm
             var requestModel = "model1";
             var responseModel = "model2";
             var vendor = "vendor1";
-            
+
             var errorData = new LlmErrorData
             {
                 ErrorMessage = "error_message",
@@ -388,7 +388,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             InternalApi.SetAgentApiImplementation(agentApiMock);
-            
+
 
             // Act
             EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, true, null, errorData);
