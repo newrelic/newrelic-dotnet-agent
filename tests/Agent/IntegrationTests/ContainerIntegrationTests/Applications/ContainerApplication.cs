@@ -182,7 +182,7 @@ public class ContainerApplication : RemoteApplication
         WaitForAppServerToStartListening(RemoteProcess, captureStandardOutput);
     }
 
-    public override void Shutdown()
+    public override void Shutdown(bool force = false)
     {
         if (!IsRunning)
         {
