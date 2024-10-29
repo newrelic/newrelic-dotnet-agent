@@ -33,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"agent.Configuration.AiMonitoringEnabled {agent.Configuration.AiMonitoringEnabled}");
+            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"agent.Configuration.AiMonitoringEnabled {agent.Configuration.AiMonitoringEnabled}");
 
             // Don't do anything, including sending the version Supportability metric, if we're disabled
             if (!agent.Configuration.AiMonitoringEnabled)
@@ -46,14 +46,14 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 transaction.AttachToAsync();
             }
 
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Invoking model {ObjectDumper.Dump(instrumentedMethodCall.MethodCall.MethodArguments)}");
+            /*agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Invoking model {ObjectDumper.Dump(instrumentedMethodCall.MethodCall.MethodArguments)}");
             if (instrumentedMethodCall.MethodCall.MethodArguments.Length > 0)
             {
                 for (int i = 0; i < instrumentedMethodCall.MethodCall.MethodArguments.Length; i++)
                 {
                     agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"get model arguments {ObjectDumper.Dump(instrumentedMethodCall.MethodCall.MethodArguments[i])}");
                 }
-            }
+            }*/
 
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
             var operationType = "completion";// invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
@@ -117,8 +117,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         private void ProcessInvokeModel(ISegment segment, dynamic invokeModelRequest, dynamic invokeModelResponse, IAgent agent)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelRequest {invokeModelRequest}");
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse {invokeModelResponse}");
+            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelRequest {invokeModelRequest}");
+            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse {invokeModelResponse}");
 
             //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse {invokeModelResponse}");
 
@@ -133,7 +133,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest}: Could not deserialize request payload");
                 return;
             }
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"requestPayload {ObjectDumper.Dump(requestPayload)}");
+            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"requestPayload {ObjectDumper.Dump(requestPayload)}");
 
             //if (invokeModelResponse.ToString().Contains("OpenAI.Chat.ChatCompletion"))
             //{
@@ -146,8 +146,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelResponse}: Could not deserialize response payload");
                 return;
             }
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"responsePayload {ObjectDumper.Dump(responsePayload)}");
-
+            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"responsePayload {ObjectDumper.Dump(responsePayload)}");
 
             // Embedding - does not create the other events
             /*if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
@@ -179,13 +178,13 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 responsePayload.Id,
                 0,//requestPayload.Temperature,
                 responsePayload.Usage.TotalTokens,
-                requestPayload.Model,//invokeModelRequest.ModelId,
-                responsePayload.Model,//invokeModelRequest.ModelId,
+                requestPayload.Model,
+                responsePayload.Model,
                 1 + responsePayload.Choices.Length,
                 finishReason,
                 "OpenAI",
                 false,
-                null,  // not available in AWS
+                null,
                 null
             );
 
@@ -221,13 +220,11 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         private void HandleError(ISegment segment, dynamic invokeModelRequest, Task responseTask, IAgent agent)
         {
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking OpenAI model {invokeModelRequest.ModelId}: {responseTask.Exception!.Message}");
             agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking OpenAI model {invokeModelRequest}: {responseTask.Exception!.Message}");
 
             dynamic OpenAIException = responseTask.Exception!.InnerException;
             if (OpenAIException == null)
             {
-                //agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Task faulted but there was no inner exception");
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest}: Task faulted but there was no inner exception");
                 return;
             }
@@ -235,7 +232,6 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             var requestPayload = GetRequestPayload(invokeModelRequest, agent);
             if (requestPayload == null)
             {
-                //agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Could not deserialize request payload");
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest}: Could not deserialize request payload");
                 return;
             }
@@ -275,7 +271,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 requestId,
                 0,//requestPayload.Temperature,
                 0,//requestPayload.MaxTokens,
-                requestPayload.Model,//invokeModelRequest.ModelId,
+                requestPayload.Model,
                 null,
                 0,
                 null,
@@ -289,7 +285,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     agent,
                     segment,
                     requestId,
-                    "completion",//invokeModelRequest.ModelId,
+                    requestPayload.Model,
                     requestPayload.Messages[0].Content,
                     "user",
                     0,
@@ -301,13 +297,9 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest, IAgent agent)
         {
-            var model = "completion";// (string)invokeModelRequest.Model;
-
-            //return WrapperHelpers.DeserializeObject<GPTRequestPayload>(utf8Json);
+            var model = "request";
 
             GPTRequestPayload rp = new GPTRequestPayload();
-            //rp.Model = "BinaryContent";
-            //return rp;
 
             if (invokeModelRequest.ToString().Contains("OpenAI.Chat.ChatCompletionOptions"))
             {
@@ -318,67 +310,29 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 var sr = new StreamReader(bodyStream);
                 string utf8Json = sr.ReadToEnd();
                 bodyStream.Position = curPos;
-                //dynamic requestContent = invokeModelRequest.Data;//.GetRawResponse().Content;
-                                                            //var curPos = bodyStream.Position;
-                                                            //bodyStream.Position = 0;
-                                                            //var sr = new StreamReader(bodyStream);
-                //string utf8Json = requestContent.ToString();
-                //bodyStream.Position = curPos;
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"request utf8Json 1: {utf8Json}");
 
-                //rp.Temperature = requestContent.Temperature;
-                //rp.Model = model + "BinaryContent";
-
                 return WrapperHelpers.DeserializeObject<GPTRequestPayload>(utf8Json);
             }
-            else if (invokeModelRequest.ToString() == "System.ClientModel.BinaryContent")
-            {
-                dynamic requestContent = invokeModelRequest.Data;//.GetRawResponse().Content;
-                                                            //var curPos = bodyStream.Position;
-                                                            //bodyStream.Position = 0;
-                                                            //var sr = new StreamReader(bodyStream);
-                string utf8Json = requestContent.ToString();
-                //bodyStream.Position = curPos;
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"request utf8Json 2: {utf8Json}");
+            /*else if (invokeModelRequest.ToString() == "System.ClientModel.BinaryContent")
+             {
+                 dynamic requestContent = invokeModelRequest.Data;
+                 string utf8Json = requestContent.ToString();
+                 agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"request utf8Json 2: {utf8Json}");
 
-                rp.Model = model+"BinaryContent";
-                return null;
-            }
-            else if (invokeModelRequest.ToString() == "OpenAI.Chat.ChatMessage[]")
-            {
-                rp.Model = model+ "ChatMessage";
-                dynamic requestContent = invokeModelRequest;//.GetRawResponse().Content;
-                                                                 //var curPos = bodyStream.Position;
-                                                                 //bodyStream.Position = 0;
-                                                                 //var sr = new StreamReader(bodyStream);
-                string utf8Json = requestContent.ToString();
-                //bodyStream.Position = curPos;
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"request utf8Json 3: {utf8Json}");
-                return null;
-            }
+                 rp.Model = model + "BinaryContent";
+                 return null;
+             }
+             else if (invokeModelRequest.ToString() == "OpenAI.Chat.ChatMessage[]")
+             {
+                 rp.Model = model + "ChatMessage";
+                 dynamic requestContent = invokeModelRequest;
+                 string utf8Json = requestContent.ToString();
+                 agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"request utf8Json 3: {utf8Json}");
+                 return null;
+             }*/
 
-            //rp.Messages = invokeModelRequest.Content;
-            //rp.
             return null;
-
-
-            /*MemoryStream bodyStream = invokeModelRequest;
-                var curPos = bodyStream.Position;
-                bodyStream.Position = 0;
-                var sr = new StreamReader(bodyStream);
-                string utf8Json = sr.ReadToEnd();
-                bodyStream.Position = curPos;
-
-            if (model.StartsWith("completion"))
-            {
-                // We're using a helper method in NewRelic.Core because it has Newtonsoft.Json ILRepacked into it
-                // This avoids depending on Newtonsoft.Json being available in the customer application
-                return WrapperHelpers.DeserializeObject<GPTRequestPayload>(utf8Json);
-            }
-            else
-            { 
-                        throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
-                }*/
         }
 
         private static IResponsePayload GetResponsePayload(string modelId, dynamic invokeModelResponse, IAgent agent)
@@ -387,71 +341,22 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
             if (invokeModelResponse.ToString().Contains("OpenAI.Chat.ChatCompletion"))
             {
-                //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse- {ObjectDumper.Dump(invokeModelResponse.Value)}");
-
-                //MemoryStream bodyStream = new MemoryStream();
                 dynamic responseContent = invokeModelResponse.GetRawResponse().Content;
-                //var curPos = bodyStream.Position;
-                //bodyStream.Position = 0;
-                //var sr = new StreamReader(bodyStream);
                 string utf8Json = responseContent.ToString();
-                //bodyStream.Position = curPos;
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"response utf8Json: {utf8Json}");
 
                 return WrapperHelpers.DeserializeObject<GPTResponsePayload>(utf8Json);
-
-                /*rp.Content = invokeModelResponse.Value.Content;
-                rp.Usage.InputTokenCount = invokeModelResponse.Usage.InputTokenCount;
-                rp.Usage.OutputTokenCount = invokeModelResponse.Usage.OutputTokenCount;
-                rp.Usage.TotalTokenCount = invokeModelResponse.Usage.TotalTokenCount;
-                rp.StopReason = invokeModelResponse.FinishReason;
-                rp.Model = invokeModelResponse.Model;*/
-                //rp.Role = invokeModelResponse.StopReason;
             }
             else if (invokeModelResponse.ToString() == "System.ClientModel.ClientResult")
             {
-                //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse- {ObjectDumper.Dump(invokeModelResponse.Value)}");
-
-                //MemoryStream bodyStream = new MemoryStream();
                 dynamic responseContent = invokeModelResponse.GetRawResponse().Content;
-                //var curPos = bodyStream.Position;
-                //bodyStream.Position = 0;
-                //var sr = new StreamReader(bodyStream);
                 string utf8Json = responseContent.ToString();
-                //bodyStream.Position = curPos;
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"response utf8Json: {utf8Json}");
 
                 return WrapperHelpers.DeserializeObject<GPTResponsePayload>(utf8Json);
-
-                /*rp.Content = invokeModelResponse.Value.Content;
-                rp.Usage.InputTokenCount = invokeModelResponse.Usage.InputTokenCount;
-                rp.Usage.OutputTokenCount = invokeModelResponse.Usage.OutputTokenCount;
-                rp.Usage.TotalTokenCount = invokeModelResponse.Usage.TotalTokenCount;
-                rp.StopReason = invokeModelResponse.FinishReason;
-                rp.Model = invokeModelResponse.Model;*/
-                //rp.Role = invokeModelResponse.StopReason;
             }
 
-
-            //rp.Messages = invokeModelRequest.Content;
-            //rp.
             return null;
-
-            /*var model = "completion";//modelId.FromModelId();
-            MemoryStream bodyStream = invokeModelResponse;
-            var curPos = bodyStream.Position;
-            bodyStream.Position = 0;
-            var sr = new StreamReader(bodyStream);
-            string utf8Json = sr.ReadToEnd();
-            bodyStream.Position = curPos;
-
-            switch (model)
-            {
-                case "completion":// LlmModelType.GPT:
-                    return WrapperHelpers.DeserializeObject<GPTResponsePayload>(utf8Json);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
-            }*/
         }
     }
 

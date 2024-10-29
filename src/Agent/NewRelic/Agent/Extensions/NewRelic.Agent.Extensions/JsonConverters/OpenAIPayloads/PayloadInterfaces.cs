@@ -8,10 +8,6 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
         MessageObj[] Messages { get; set; }
 
         string Model { get; set; }
-
-        //float Temperature { get; set; }
-
-        //int MaxOutputTokenCount { get; set; }
     }
 
     public interface IResponsePayload
@@ -32,8 +28,6 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
     public class ResponseData
     {
         public string Text { get; set; }
-
-        //public int? TokenCount { get; set; }
     }
 
     public class ResponseUsage

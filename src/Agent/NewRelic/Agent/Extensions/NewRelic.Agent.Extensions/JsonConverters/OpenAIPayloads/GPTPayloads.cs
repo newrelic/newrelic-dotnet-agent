@@ -12,12 +12,6 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 
         [JsonProperty("model")]
         public string Model { get; set; }
-
-        /*[JsonProperty("temperature")]
-        public float Temperature { get; set; }
-
-        [JsonProperty("max_tokens_to_sample")]
-        public int MaxOutputTokenCount { get; set; }*/
     }
 
     public class GPTResponsePayload : IResponsePayload
@@ -36,7 +30,7 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 
         [JsonProperty("choices")]
         public ChoicesObj[] Choices { get; set; }
-        
+
         [JsonProperty("usage")]
         public UsageObj Usage { get; set; }
 
@@ -82,37 +76,4 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
         [JsonProperty("total_tokens")]
         public int TotalTokens { get; set; }
     }
-
-    /*public class GPTResponsePayloadOld : IResponsePayload
-    {
-        private ResponseData[] _responses;
-        public ResponseData[] Content
-        {
-            get
-            {
-                return _responses ??= [new ResponseData { Text = Completion }];
-            }
-            set { }
-        }
-
-        [JsonProperty("completion")]
-        public string Completion { get; set; }
-
-        public int? PromptTokenCount
-        {
-            get
-            {
-                return null;
-            }
-            set { }
-        }
-
-        [JsonProperty("model")]
-        public string Model { get; set; }
-
-        [JsonProperty("stop_reason")]
-        public string StopReason { get; set; }
-
-        public ResponseUsage Usage { get; set; }
-    }*/
 }
