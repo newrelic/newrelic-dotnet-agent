@@ -297,6 +297,27 @@ namespace NewRelic.Reflection
             return GenerateMethodCallerInternal(resultType, methodInfo);
         }
 
+        public bool TryGenerateOneParameterStaticMethodCaller(Type ownerType, string methodName, Type paramType, Type returnType, out Func<object, object> accessor)
+        {
+            try
+            {
+                var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static, null, new Type[] { paramType }, null);
+                if (methodInfo == null)
+                {
+                    accessor = null;
+                    return false;
+                }
+
+                accessor = (object param) => methodInfo.Invoke(null, new object[] { param });
+                return true;
+            }
+            catch
+            {
+                accessor = null;
+                return false;
+            }
+        }
+
         private static Func<object, object, object> GenerateMethodCallerInternal(Type ownerType, Type resultType, Type parameterType, string methodName)
         {
             var methodInfo = GetMethodInfo(ownerType, methodName);
@@ -655,6 +676,19 @@ namespace NewRelic.Reflection
                 throw new KeyNotFoundException(string.Format("Unable to find method {0} in type {1}", methodName, ownerType.AssemblyQualifiedName));
             }
             return (Func<TResult>)methodInfo.CreateDelegate(typeof(Func<TResult>));
+        }
+
+        public bool TryGenerateParameterlessStaticMethodCaller<TResult>(Type ownerType, string methodName, out Func<TResult> accessor)
+        {
+            var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            if (methodInfo == null)
+            {
+                accessor = null;
+                return false;
+            }
+
+            accessor = (Func<TResult>)methodInfo.CreateDelegate(typeof(Func<TResult>));
+            return true;
         }
 
         private static PropertyInfo GetPropertyInfo(Type type, string propertyName)

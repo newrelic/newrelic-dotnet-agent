@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -15,7 +16,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     internal static class SQSRequestHandler
     {
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
-        private static readonly HashSet<string> _unsupportedSQSRequestTypes = [];
+        private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
 
         public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
         {
@@ -35,8 +36,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    if (_unsupportedSQSRequestTypes.Add(requestType)) // log once per unsupported request type
+                    if (!_unsupportedSQSRequestTypes.Contains(requestType))  // log once per unsupported request type
+                    {
                         agent.Logger.Debug($"AwsSdkPipelineWrapper: SQS Request type {requestType} is not supported. Returning NoOp delegate.");
+                        _unsupportedSQSRequestTypes.Add(requestType);
+                    }
 
                     return Delegates.NoOp;
             }

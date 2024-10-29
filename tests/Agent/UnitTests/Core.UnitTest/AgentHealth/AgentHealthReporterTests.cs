@@ -60,6 +60,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
             Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
             Mock.Arrange(() => configuration.IgnoredInstrumentation).Returns(() => _ignoredInstrumentation);
+            Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
+
             return configuration;
         }
 
@@ -521,6 +523,13 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.CollectMetrics();
 
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/IgnoredInstrumentation"), Is.False);
+        }
+
+        [Test]
+        public void GCSamplerV2EnabledSupportabiliityMetricPresent()
+        {
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/GCSamplerV2/Enabled"), Is.True);
         }
     }
 }

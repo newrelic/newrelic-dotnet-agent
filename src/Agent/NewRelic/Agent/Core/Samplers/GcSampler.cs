@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,26 +14,6 @@ using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {
-    public enum GCSampleType
-    {
-        Gen0Size,
-        Gen0Promoted,
-        Gen1Size,
-        Gen1Promoted,
-        Gen2Size,
-        Gen2Survived,
-        LOHSize,
-        LOHSurvived,
-        HandlesCount,
-        InducedCount,
-        PercentTimeInGc,
-        Gen0CollectionCount,
-        Gen1CollectionCount,
-        Gen2CollectionCount
-    }
-
-#if NETFRAMEWORK
-
     public class GcSampler : AbstractSampler
     {
         private const string GCPerfCounterCategoryName = ".NET CLR Memory";
@@ -345,5 +327,5 @@ namespace NewRelic.Agent.Core.Samplers
             }
         }
     }
-#endif
 }
+#endif

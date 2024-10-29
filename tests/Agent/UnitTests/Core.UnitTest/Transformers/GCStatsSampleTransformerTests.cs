@@ -41,7 +41,12 @@ namespace NewRelic.Agent.Core.Transformers
             //Build example sample data
             var sampleValue = 0f;
             _sampleData = new Dictionary<GCSampleType, float>();
-            foreach (var val in Enum.GetValues(typeof(GCSampleType)))
+
+            var values = Enum.GetValues(typeof(GCSampleType));
+            // only consider "old" GCSampleType enum members for this test
+            values = values.Cast<GCSampleType>().Where(x => x < GCSampleType.POHSize).ToArray();
+            
+            foreach (var val in values)
             {
                 _sampleData.Add((GCSampleType)val, sampleValue++);
             }
