@@ -297,7 +297,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest, IAgent agent)
         {
-            var model = "request";
+            //var model = "request";
 
             GPTRequestPayload rp = new GPTRequestPayload();
 
