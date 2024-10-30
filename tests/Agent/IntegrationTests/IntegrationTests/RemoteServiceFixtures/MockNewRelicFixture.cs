@@ -156,7 +156,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public override void Dispose()
         {
-            MockNewRelicApplication.Shutdown();
+            MockNewRelicApplication.Shutdown(true);
             MockNewRelicApplication.Dispose();
             base.Dispose();
         }

@@ -43,7 +43,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             // This may cause us trouble in the future.
         }
 
-        public override void Shutdown()
+        public override void Shutdown(bool force = false)
         {
             if (RemoteProcess is null)
             {
