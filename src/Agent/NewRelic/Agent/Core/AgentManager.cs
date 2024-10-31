@@ -81,6 +81,7 @@ namespace NewRelic.Agent.Core
         private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
         private ThreadProfilingService _threadProfilingService;
         private readonly IWrapperService _wrapperService;
+        private Samplers.MeterListenerBridge _meterListenerBridge;
 
         private volatile bool _shutdownEventReceived;
         private volatile bool _isInitialized;
@@ -192,6 +193,7 @@ namespace NewRelic.Agent.Core
             var instrumentationService = _container.Resolve<IInstrumentationService>();
 
             _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
+            _meterListenerBridge = new Samplers.MeterListenerBridge();
 
             if (!serverlessModeEnabled)
             {
@@ -363,11 +365,13 @@ namespace NewRelic.Agent.Core
         {
             _container.Resolve<InstrumentationWatcher>().Start();
             _threadProfilingService.Start();
+            _meterListenerBridge.Start();
         }
 
         private void StopServices()
         {
             _threadProfilingService.Stop();
+            _meterListenerBridge.Stop();
         }
 
         /// <summary>
@@ -454,6 +458,7 @@ namespace NewRelic.Agent.Core
 
         public void Dispose()
         {
+            _meterListenerBridge.Dispose();
             _configurationSubscription.Dispose();
             _container.Dispose();
         }
