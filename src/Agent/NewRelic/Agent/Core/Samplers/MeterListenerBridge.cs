@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             // TODO: If the agent ever targets .net 9 the .net 9 build of the agent will not need to bridge the runtime metrics meter that is
             // built into the diagnostics source library. This check will need to be updated to not bridge the runtime metrics meter.
-            return meterName == "MyTestMeter";
+            return true;
         }
 
         private static object GetStateForInstrument(object instrument)
