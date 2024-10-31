@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <tracerFactory name="AzureServiceBusReceiveWrapper">
+      <!--
+            internal async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesAsync(
+            int maxMessages,
+            TimeSpan? maxWaitTime,
+            bool isProcessor,
+            CancellationToken cancellationToken)-->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="ReceiveMessagesAsync" parameters="System.Int32,System.Nullable`1[System.TimeSpan],System.Boolean,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+    <tracerFactory name="AzureServiceBusSendWrapper">
+      <!--
+            public virtual async Task SendMessagesAsync(
+            IEnumerable<ServiceBusMessage> messages,
+            CancellationToken cancellationToken = default))-->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusSender">
+        <exactMethodMatcher methodName="SendMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[Azure.Messaging.ServiceBus.ServiceBusMessage],System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>
