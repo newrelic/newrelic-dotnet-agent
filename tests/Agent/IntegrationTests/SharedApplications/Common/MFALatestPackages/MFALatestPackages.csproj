@@ -23,8 +23,8 @@
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.322" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.322" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="log4net" Version="2.0.17" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="log4net" Version="2.0.17" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="log4net" Version="3.0.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net" Version="3.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -44,8 +44,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MongoDB.Driver" Version="3.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MySql.Data" Version="9.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
@@ -81,8 +81,8 @@
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
     <PackageReference Include="RestSharp" Version="112.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     
-    <PackageReference Include="Serilog" Version="4.0.2" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog" Version="4.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Serilog" Version="4.1.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="4.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     
