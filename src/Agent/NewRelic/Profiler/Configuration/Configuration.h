@@ -564,7 +564,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             //If it contains MsBuild, it is a build command and should not be profiled.
             bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
             bool isKudu = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("Kudu.Services.Web")) ||
-                            NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("kuduagent.dll"));
+                          // kuduagent.dll is a new version of kudu (maybe KuduLite) in recent versions of Linux Azure App Services
+                          NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("kuduagent.dll"));
+            // DiagServer is a short-lived process that seems to be invoked every 5 minutes in recent versions of Linux Azure App Services.
+            bool isDiagServer = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("./DiagServer"));
+
 
             std::vector<xstring_t> out;
             Tokenize(commandLine, out);
@@ -601,7 +605,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 }
             }
 
-            if (isMsBuildInvocation || isKudu) {
+            if (isMsBuildInvocation || isKudu || isDiagServer) {
                 LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
                 return false;
             }
