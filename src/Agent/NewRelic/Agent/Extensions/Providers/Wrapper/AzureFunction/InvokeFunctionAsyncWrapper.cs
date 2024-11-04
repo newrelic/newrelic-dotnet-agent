@@ -2,15 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
 
@@ -87,6 +84,11 @@ public class InvokeFunctionAsyncWrapper : IWrapper
         {
             transaction.SetRequestMethod(functionDetails.RequestMethod);
             transaction.SetUri(functionDetails.RequestPath);
+
+            if (functionDetails.Headers?.Count != 0)
+            {
+                transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.HTTP);
+            }
         }
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionDetails.FunctionName);
@@ -139,6 +141,14 @@ public class InvokeFunctionAsyncWrapper : IWrapper
                 segment.End();
                 transaction.End();
             }
+        }
+
+        IEnumerable<string> GetHeaderValue(IReadOnlyDictionary<string, object> headers, string key)
+        {
+            if (!headers.ContainsKey(key))
+                return [];
+
+            return [headers[key].ToString()];
         }
     }
 }

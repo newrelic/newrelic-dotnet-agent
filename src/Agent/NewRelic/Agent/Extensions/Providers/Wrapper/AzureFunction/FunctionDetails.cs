@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
@@ -177,6 +178,13 @@ internal class FunctionDetails
                 }
             }
         }
+
+        if (functionContext?.BindingContext?.BindingData is IReadOnlyDictionary<string, object> bindingData && bindingData.ContainsKey("Headers"))
+        {
+            // The headers are stored as a JSON blob.
+            var headersJson = bindingData["Headers"].ToString();
+            Headers = DictionaryHelpers.FromJson(headersJson);
+        }
     }
 
     public bool IsValid()
@@ -191,6 +199,6 @@ internal class FunctionDetails
     public bool IsWebTrigger => Trigger == "http";
     public string RequestMethod { get; private set; }
     public string RequestPath { get; private set; }
-
+    public IReadOnlyDictionary<string, object> Headers { get; private set; }
     public bool? HasAspNetCoreExtensionReference => _hasAspNetCoreExtensionsReference;
 }
