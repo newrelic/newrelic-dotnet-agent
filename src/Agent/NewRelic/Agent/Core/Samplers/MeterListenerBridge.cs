@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
@@ -25,6 +26,7 @@ namespace NewRelic.Agent.Core.Samplers
         private static Meter NewRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private static ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
         private static ConcurrentDictionary<Type, Func<Meter, string, string, string, object>> _createInstrumentDelegates = new ConcurrentDictionary<Type, Func<Meter, string, string, string, object>>();
+        private static ConcurrentDictionary<Type, object> _bridgeMeasurementDelegates = new ConcurrentDictionary<Type, object>();
         private MeterProvider _meterProvider;
 
         public MeterListenerBridge()
@@ -144,12 +146,30 @@ namespace NewRelic.Agent.Core.Samplers
             var instrumentTypeName = instrument.GetType().Name;
             var genericType = instrument.GetType().GetGenericArguments().FirstOrDefault();
 
-            if (genericType == null || dynamicInstrument.IsObservable)
+            if (genericType == null)
             {
                 return null;
             }
 
-            var meter = _bridgedMeters.GetOrAdd(dynamicInstrument.Meter.Name, (Func<string, Meter>)CreateBridgedMeterFromInstrument);
+            Meter meter = _bridgedMeters.GetOrAdd(dynamicInstrument.Meter.Name, (Func<string, Meter>)CreateBridgedMeterFromInstrument);
+
+            if (dynamicInstrument.IsObservable)
+            {
+                if (instrumentTypeName.Contains("ObservableCounter") && genericType == typeof(long))
+                {
+                    // Need to create a function that can call the Observe() method on the instrument (the protected parameterless method)
+                    // and transform the IEnumerable<Measurement<T>> into the bridged IEnumerable<Measurement<T>> that the ilrepaced code expects
+                    var observeMethod = instrument.GetType().GetMethod("Observe", BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+                    meter.CreateObservableCounter((string)dynamicInstrument.Name, ForwardObservedMeasurements<long>, (string)dynamicInstrument.Unit, (string)dynamicInstrument.Description);
+
+                    IEnumerable<Measurement<T>> ForwardObservedMeasurements<T>() where T : struct
+                    {
+                        return BridgeMeasurements<T>((IEnumerable)observeMethod.Invoke(instrument, null));
+                    }
+                }
+                return null;
+            }
+
             var createInstrumentDelegate = _createInstrumentDelegates.GetOrAdd(instrument.GetType(), CreateBridgedInstrumentDelegate);
 
             if (createInstrumentDelegate == null)
@@ -164,6 +184,47 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 return CreateBridgedMeter(dynamicInstrument.Meter);
             }
+        }
+
+        private static IEnumerable<Measurement<T>> BridgeMeasurements<T>(IEnumerable originalMeasurements) where T : struct
+        {
+            var bridgedMeasurements = new List<Measurement<T>>();
+            Func<object, Measurement<T>> createBridgedMeasurement = null;
+            foreach (object measurement in originalMeasurements)
+            {
+                // Initializing the delegate to create the bridged measurment within the loop because the type of the original measurements
+                // is not IEnumerable<Measurement<T>> but is the concrete collection instead (which may change in the future).
+                if (createBridgedMeasurement == null)
+                {
+                    createBridgedMeasurement = (Func<object, Measurement<T>>)_bridgeMeasurementDelegates.GetOrAdd(measurement.GetType(), GetMethodToBridgeMeasurement<T>);
+                }
+                bridgedMeasurements.Add(createBridgedMeasurement(measurement));
+            }
+
+            return bridgedMeasurements;
+        }
+
+        private static Func<object, Measurement<T>> GetMethodToBridgeMeasurement<T>(Type originalMeasurementType) where T : struct
+        {
+            var measurementConstructor = typeof(Measurement<T>).GetConstructor([typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>)]);
+            if (measurementConstructor == null)
+            {
+                return null;
+            }
+
+            var originalMeasurementParameter =  Expression.Parameter(typeof(object), "originalMeasurement");
+            var typedOriginalMeasurement = Expression.Convert(originalMeasurementParameter, originalMeasurementType);
+
+            var valueProperty = originalMeasurementType.GetProperty("Value");
+            var tagsProperty = originalMeasurementType.GetProperty("Tags");
+
+            var valuePropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Value");
+            var tagsPropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Tags");
+
+            var newMeasurement = Expression.New(measurementConstructor, valuePropertyAccess, tagsPropertyAccess);
+            var lambda = Expression.Lambda<Func<object, Measurement<T>>>(newMeasurement, originalMeasurementParameter);
+
+            return lambda.Compile();
         }
 
         private static Func<Meter, string, string, string, object> CreateBridgedInstrumentDelegate(Type originalInstrumentType)
