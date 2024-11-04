@@ -353,7 +353,7 @@ function IS {
         =~) [[ $1 =~ $3 ]] && _osht_ok || _osht_nok;;
         !=) [[ $1 != $3 ]] && _osht_ok || _osht_nok;;
         =|==) [[ $1 == $3 ]] && _osht_ok || _osht_nok;;
-        *) [ "$1" $2 "$3" ] && _osht_ok || _osht_nok;;
+        *) [ "$1" "$2" "$3" ] && _osht_ok || _osht_nok;;
     esac
 }
 
@@ -364,7 +364,7 @@ function ISNT {
         =~) [[ ! $1 =~ $3 ]] && _osht_ok || _osht_nok;;
         !=) [[ $1 == $3 ]] && _osht_ok || _osht_nok;;
         =|==) [[ $1 != $3 ]] && _osht_ok || _osht_nok;;
-        *) [ ! "$1" $2 "$3" ] && _osht_ok || _osht_nok;;
+        *) [ ! "$1" "$2" "$3" ] && _osht_ok || _osht_nok;;
     esac
 }
 
