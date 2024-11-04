@@ -39,6 +39,12 @@ jobs:
     needs: check-modified-files
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -51,7 +57,9 @@ jobs:
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
-    needs: check-modified-files
+    needs:
+      - check-modified-files
+      - shellcheck
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
     # run this job if non-workflow files were modified, or if triggered by a release, a manual execution or schedule
     if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
