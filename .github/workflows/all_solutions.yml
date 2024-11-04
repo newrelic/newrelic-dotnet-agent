@@ -43,11 +43,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-      - name: Install and run Shellcheck
+      - name: Run Shellcheck
         run: |
-          sudo apt-get update && sudo apt-get install -y shellcheck
           find ${{ github.workspace }} -name "*.sh" -exec shellcheck --severity=error {} +
-          
+
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
