@@ -23,7 +23,6 @@ where TFixture : ConsoleDynamicMethodFixture
         {
             "amazonembed",
             "amazonexpress",
-            "cohere",
             "anthropic"
         };
 
