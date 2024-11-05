@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -z "$CORECLR_NEWRELIC_HOME" ]; && [ -z "$CORECLR_NEW_RELIC_HOME" ]; then
+if [ -z "$CORECLR_NEWRELIC_HOME" ] && [ -z "$CORECLR_NEW_RELIC_HOME" ]; then
     echo "CORECLR_NEWRELIC_HOME is undefined"
 else
     NRHOME=${CORECLR_NEWRELIC_HOME:-${CORECLR_NEW_RELIC_HOME}}
