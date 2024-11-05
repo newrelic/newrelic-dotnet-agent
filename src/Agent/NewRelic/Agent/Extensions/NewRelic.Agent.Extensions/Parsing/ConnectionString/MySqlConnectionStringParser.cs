@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var port = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
             if (port == null && host != null)
             {
-                return new ConnectionInfo(DatastoreVendor.MySQL.ToKnownName(), host, "default", databaseName);
+                return new ConnectionInfo(host, "default", databaseName);
             }
             else
             {
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                 {
                     portNum = -1;
                 }
-                return new ConnectionInfo(DatastoreVendor.MySQL.ToKnownName(), host, portNum, databaseName);
+                return new ConnectionInfo(host, portNum, databaseName);
             }
 
 

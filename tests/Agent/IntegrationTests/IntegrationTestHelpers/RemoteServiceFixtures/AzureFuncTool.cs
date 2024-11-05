@@ -157,7 +157,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             WaitForAppServerToStartListening(RemoteProcess, captureStandardOutput);
         }
 
-        public override void Shutdown()
+        public override void Shutdown(bool force = false)
         {
             base.Shutdown();
 

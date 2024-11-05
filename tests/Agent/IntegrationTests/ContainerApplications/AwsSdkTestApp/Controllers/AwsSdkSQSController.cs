@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using AwsSdkTestApp.AwsSdkExerciser;
+using AwsSdkTestApp.AwsSdkExercisers;
 using AwsSdkTestApp.SQSBackgroundService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,13 +15,13 @@ namespace AwsSdkTestApp.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AwsSdkController : ControllerBase
+    public class AwsSdkSQSController : ControllerBase
     {
-        private readonly ILogger<AwsSdkController> _logger;
+        private readonly ILogger<AwsSdkSQSController> _logger;
         private readonly ISQSRequestQueue _requestQueue;
         private readonly ISQSResponseQueue _responseQueue;
 
-        public AwsSdkController(ILogger<AwsSdkController> logger, ISQSRequestQueue requestQueue, ISQSResponseQueue responseQueue)
+        public AwsSdkSQSController(ILogger<AwsSdkSQSController> logger, ISQSRequestQueue requestQueue, ISQSResponseQueue responseQueue)
         {
             _logger = logger;
             _requestQueue = requestQueue;
@@ -36,20 +36,20 @@ namespace AwsSdkTestApp.Controllers
         {
             _logger.LogInformation("Starting SQS_SendReceivePurge for {Queue}", queueName);
 
-            using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
+            using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
             
-            await awsSdkExerciser.SQS_InitializeAsync(queueName);
+            await awsSdkSQSExerciser.SQS_InitializeAsync(queueName);
 
-            await awsSdkExerciser.SQS_SendMessageAsync("Hello World!");
-            await awsSdkExerciser.SQS_ReceiveMessageAsync();
+            await awsSdkSQSExerciser.SQS_SendMessageAsync("Hello World!");
+            await awsSdkSQSExerciser.SQS_ReceiveMessageAsync();
 
             var messages = new[] { "Hello", "World" };
-            await awsSdkExerciser.SQS_SendMessageBatchAsync(messages);
-            await awsSdkExerciser.SQS_ReceiveMessageAsync(messages.Length);
+            await awsSdkSQSExerciser.SQS_SendMessageBatchAsync(messages);
+            await awsSdkSQSExerciser.SQS_ReceiveMessageAsync(messages.Length);
 
-            await awsSdkExerciser.SQS_PurgeQueueAsync();
+            await awsSdkSQSExerciser.SQS_PurgeQueueAsync();
 
-            await awsSdkExerciser.SQS_TeardownAsync();
+            await awsSdkSQSExerciser.SQS_TeardownAsync();
 
             _logger.LogInformation("Finished SQS_SendReceivePurge for {Queue}", queueName);
         }
@@ -64,8 +64,8 @@ namespace AwsSdkTestApp.Controllers
         public async Task<string> SQS_InitializeQueueAsync([Required]string queueName)
         {
             _logger.LogInformation("Initializing queue {Queue}", queueName);
-            using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
-            var queueUrl = await awsSdkExerciser.SQS_InitializeAsync(queueName);
+            using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
+            var queueUrl = await awsSdkSQSExerciser.SQS_InitializeAsync(queueName);
             _logger.LogInformation("Queue {Queue} initialized with URL {QueueUrl}", queueName, queueUrl);
             return queueUrl;
         }
@@ -75,10 +75,10 @@ namespace AwsSdkTestApp.Controllers
         public async Task SQS_SendMessageToQueueAsync([Required]string message, [Required]string messageQueueUrl)
         {
             _logger.LogInformation("Sending message {Message} to {Queue}", message, messageQueueUrl);
-            using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
-            awsSdkExerciser.SQS_SetQueueUrl(messageQueueUrl);
+            using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
+            awsSdkSQSExerciser.SQS_SetQueueUrl(messageQueueUrl);
 
-            await awsSdkExerciser.SQS_SendMessageAsync(message);
+            await awsSdkSQSExerciser.SQS_SendMessageAsync(message);
             _logger.LogInformation("Message {Message} sent to {Queue}", message, messageQueueUrl);
         }
 
@@ -99,10 +99,10 @@ namespace AwsSdkTestApp.Controllers
         public async Task SQS_DeleteQueueAsync([Required]string messageQueueUrl)
         {
             _logger.LogInformation("Deleting queue {Queue}", messageQueueUrl);
-            using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
-            awsSdkExerciser.SQS_SetQueueUrl(messageQueueUrl);
+            using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
+            awsSdkSQSExerciser.SQS_SetQueueUrl(messageQueueUrl);
 
-            await awsSdkExerciser.SQS_TeardownAsync();
+            await awsSdkSQSExerciser.SQS_TeardownAsync();
             _logger.LogInformation("Queue {Queue} deleted", messageQueueUrl);
         }
     }
