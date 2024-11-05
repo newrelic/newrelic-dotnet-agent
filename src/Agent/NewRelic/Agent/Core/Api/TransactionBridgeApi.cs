@@ -226,7 +226,7 @@ namespace NewRelic.Agent.Core.Api
                 var method = new Method(typeof(object), "StartDatastoreSegment", string.Empty);
                 var methodCall = new MethodCall(method, null, null, false);
                 var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, model, operation);
-                var connectionInfo = new ConnectionInfo(vendor.ToLower(), host, portPathOrID, databaseName);
+                var connectionInfo = new ConnectionInfo(host, portPathOrID, databaseName);
                 return _transaction.StartDatastoreSegment(
                     methodCall: methodCall,
                     parsedSqlStatement: parsedSqlStatement,

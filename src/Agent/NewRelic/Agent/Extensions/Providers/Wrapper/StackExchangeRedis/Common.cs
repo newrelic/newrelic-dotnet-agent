@@ -122,7 +122,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
                 return null;
             }
 
-            return new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), host, port, null, null);
+            return new ConnectionInfo(host, port, null, null);
         }
 
         private static string GetCommandNameFromEnumValue(Enum commandValue)

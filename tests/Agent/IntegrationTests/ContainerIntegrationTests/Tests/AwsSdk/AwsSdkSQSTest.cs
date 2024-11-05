@@ -18,8 +18,8 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
     private readonly string _testQueueName1 = $"TestQueue1-{Guid.NewGuid()}";
     private readonly string _testQueueName2 = $"TestQueue2-{Guid.NewGuid()}";
     private readonly string _testQueueName3 = $"TestQueue3-{Guid.NewGuid()}";
-    private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdk/SQS_SendReceivePurge/{queueName}";
-    private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdk/SQS_SendMessageToQueue/{message}/{messageQueueUrl}";
+    private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendReceivePurge/{queueName}";
+    private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendMessageToQueue/{message}/{messageQueueUrl}";
     private bool _initCollections;
 
     protected AwsSdkSQSTestBase(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)

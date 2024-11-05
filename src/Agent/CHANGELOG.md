@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.33.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.0...v10.33.1) (2024-10-31)
+
+
+### Fixes
+
+* Fix syntax error in `setenv.sh` ([#2864](https://github.com/newrelic/newrelic-dotnet-agent/issues/2864)) ([a629138](https://github.com/newrelic/newrelic-dotnet-agent/commit/a629138e0e0b00a52f513d64c661576376e64455)), closes [#2863](https://github.com/newrelic/newrelic-dotnet-agent/issues/2863)
+
+## [10.33.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.32.0...v10.33.0) (2024-10-30)
+
+
+### New features
+
+* Add AWSSDK.DynamoDBv2 instrumentation.  Versions 3.5 through 4.0.0-preview.4 are supported.  Note: previous agent versions would instrument DynamoDB calls as Externals; now DynamoDB calls will show up as Database operations in the New Relic UI. ([2460527](https://github.com/newrelic/newrelic-dotnet-agent/commit/2460527c83c0b196329a2e2b61e435cd20cd6dbd))
+* Add config option for providing AWS account ID for linking ([#2851](https://github.com/newrelic/newrelic-dotnet-agent/issues/2851)) ([936b6f6](https://github.com/newrelic/newrelic-dotnet-agent/commit/936b6f63c837dd03222281870ae5db40574693ff))
+* New Garbage Collection Metrics Sampler for .NET 6+ ([#2838](https://github.com/newrelic/newrelic-dotnet-agent/issues/2838)) ([f24a5da](https://github.com/newrelic/newrelic-dotnet-agent/commit/f24a5daa2cc6117a73eac96f2a45d738335d063a))
+
+
+### Fixes
+
+* Fix potential race condition in AWS SDK, AWS Bedrock, and Elastisearch that could lead to an orphaned Transaction. ([#2842](https://github.com/newrelic/newrelic-dotnet-agent/issues/2842)) ([3afa15f](https://github.com/newrelic/newrelic-dotnet-agent/commit/3afa15f3cf70d4bda5cecbd728c377ad7cb4ff28))
+* Remove usage of non-thread safe HashSet in AwsSdk pipeline wrappers. Thanks, [@gjunge](https://github.com/gjunge)! ([#2855](https://github.com/newrelic/newrelic-dotnet-agent/issues/2855)) ([#2857](https://github.com/newrelic/newrelic-dotnet-agent/issues/2857)) ([ae1d422](https://github.com/newrelic/newrelic-dotnet-agent/commit/ae1d4220e684192525f13c670436dbf4400012bd))
+* Revert environment variable name change in installers and scripts ([#2852](https://github.com/newrelic/newrelic-dotnet-agent/issues/2852)) ([e77683b](https://github.com/newrelic/newrelic-dotnet-agent/commit/e77683b7e60afa502b6e700a51945c757530a47b))
+
 ## [10.32.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.31.0...v10.32.0) (2024-10-15)
 
 

@@ -82,7 +82,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
                 portNum = -1;
             }
             var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
-            var connectionInfo = new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), host, portNum, databaseName);
+            var connectionInfo = new ConnectionInfo(host, portNum, databaseName);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 

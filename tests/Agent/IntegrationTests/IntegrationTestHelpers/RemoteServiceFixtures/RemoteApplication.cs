@@ -325,10 +325,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             RemoteProcess.StandardInput.WriteLine(commandText);
         }
 
-        public virtual void Shutdown()
+        public virtual void Shutdown(bool force = false)
         {
             if (!IsRunning)
             {
+                return;
+            }
+
+            if (force)
+            {
+                try
+                {
+                    RemoteProcess.Kill();
+                }
+                catch
+                {
+                    // ignored
+                }
                 return;
             }
 

@@ -42,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public override void Dispose()
         {
-            OwinRemotingServerApplication.Shutdown();
+            OwinRemotingServerApplication.Shutdown(true);
             OwinRemotingServerApplication.Dispose();
             base.Dispose();
         }

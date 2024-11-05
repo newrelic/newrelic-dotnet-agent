@@ -21,7 +21,6 @@ where TFixture : ConsoleDynamicMethodFixture
         private string _prompt = "In one sentence, what is a large-language model?";
         private List<string> _bedrockModelsToTest = new List<string>
         {
-            "meta13",
             "amazonembed",
             "amazonexpress",
             "cohere",

@@ -31,7 +31,6 @@ namespace NewRelic.Agent.Core.Segments
         public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
         public string Model => _parsedSqlStatement.Model;
         public string CommandText { get; set; }
-        public string Vendor => _connectionInfo.Vendor;
         public string Host => _connectionInfo.Host;
         public int? Port => _connectionInfo.Port;
         public string PathOrId => _connectionInfo.PathOrId;
@@ -222,7 +221,7 @@ namespace NewRelic.Agent.Core.Segments
                 AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
             }
 
-            AttribDefs.DbSystem.TrySetValue(attribVals, Vendor);
+            AttribDefs.DbSystem.TrySetValue(attribVals, DatastoreVendorName.ToKnownName());
             AttribDefs.DbInstance.TrySetValue(attribVals, DatabaseName);
             AttribDefs.DbOperation.TrySetValue(attribVals, Operation);
             AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
