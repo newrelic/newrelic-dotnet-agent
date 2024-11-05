@@ -44,11 +44,25 @@ public class AzureServiceBusReceiveWrapper : IWrapper
             transaction.DetachFromPrimary(); //Remove from thread-local type storage
         }
 
+        MessageBrokerAction action =
+            instrumentedMethodCall.MethodCall.Method.MethodName switch
+        {
+            "ReceiveMessagesAsync" => MessageBrokerAction.Consume,
+            "ReceiveDeferredMessagesAsync" => MessageBrokerAction.Consume,
+            "PeekMessagesInternalAsync" => MessageBrokerAction.Peek,
+            "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
+            "CompleteMessageAsync" => MessageBrokerAction.Consume,
+            "DeadLetterInternalAsync" => MessageBrokerAction.Purge,  // TODO is this correct ???
+            "DeferMessageAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
+            "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
+            _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+        };
+
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
             MessageBrokerDestinationType.Queue,
-            MessageBrokerAction.Consume,
+            action,
             BrokerVendorName, queueName);
 
         // return an async delegate
@@ -69,11 +83,10 @@ public class AzureServiceBusReceiveWrapper : IWrapper
                     return;
                 }
 
+                // if the response contains a list of messages,
                 // get the first message from the response and extract DT headers
-                // per https://github.com/Azure/azure-sdk-for-net/issues/33652#issuecomment-1451320679
-                // the headers are in the ApplicationProperties dictionary
                 dynamic resultObj = GetTaskResult(responseTask);
-                if (resultObj != null && resultObj.Count > 0)
+                if (resultObj != null && resultObj.Count > 0) // TODO need to verify resultObj is of type IReadOnlyList<ServiceBusReceivedMessage>
                 {
                     var msg = resultObj[0];
                     if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)

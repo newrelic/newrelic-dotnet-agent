@@ -39,24 +39,36 @@ public class AzureServiceBusSendWrapper : IWrapper
             transaction.DetachFromPrimary(); //Remove from thread-local type storage
         }
 
+        MessageBrokerAction action =
+            instrumentedMethodCall.MethodCall.Method.MethodName switch
+            {
+                "SendMessagesAsync" => MessageBrokerAction.Produce,
+                "ScheduleMessagesAsync" => MessageBrokerAction.Produce,
+                "CancelScheduledMessagesAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
+                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+            };
+
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
             MessageBrokerDestinationType.Queue,
-            MessageBrokerAction.Consume,
+            action,
             BrokerVendorName, queueName);
 
-        dynamic messages = instrumentedMethodCall.MethodCall.MethodArguments[0];
-        // iterate all messages that are being sent,
-        // insert DT headers into each message
-        foreach (var message in messages)
+        if (action == MessageBrokerAction.Produce)
         {
-            if (message.ApplicationProperties is IDictionary<string, object> applicationProperties)
-                transaction.InsertDistributedTraceHeaders(applicationProperties, ProcessHeaders);
+            dynamic messages = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            // iterate all messages that are being sent,
+            // insert DT headers into each message
+            foreach (var message in messages)
+            {
+                if (message.ApplicationProperties is IDictionary<string, object> applicationProperties)
+                    transaction.InsertDistributedTraceHeaders(applicationProperties, ProcessHeaders);
+            }
         }
 
         // return an async delegate
-        return Delegates.GetAsyncDelegateFor<Task>(agent,segment);
+        return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
     }
 
     private void ProcessHeaders(IDictionary<string, object> applicationProperties, string key, string value)
