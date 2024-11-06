@@ -19,8 +19,8 @@ MSVBDPCADLL binary
 *.chm binary
 *.xpi binary
 
-# For docker-for-Windows-based build/testing, force some files to be checkout out with Linux-style line endings
+# For docker-for-Windows-based build/testing, force some files to be checked out with Linux-style line endings
 *.sh text eol=lf
-/Agent/packaging/test/applications/custom_xml/*.xml text eol=lf
-/Agent/packaging/redhat/newrelic-dotnetagent.spec text eol=lf
+/build/Linux/test/applications/custom_xml/*.xml text eol=lf
+/build/Linux/build/rpm/newrelic-dotnetagent.spec text eol=lf
 
