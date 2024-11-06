@@ -1096,11 +1096,13 @@ namespace NewRelic.Agent.Core.Metrics
         private const string Metrics = "Metrics";
         private const string Forwarding = "Forwarding";
         private const string LocalDecorating = "LocalDecorating";
+        private const string Labels = "Labels";
         private const string DotNet = "DotNET";
 
         private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNet + PathSeparator;
         private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
         private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNet + PathSeparator;
 
         public static string GetSupportabilityLogMetricsConfiguredName(bool enabled)
         {
@@ -1110,6 +1112,11 @@ namespace NewRelic.Agent.Core.Metrics
         public static string GetSupportabilityLogForwardingConfiguredName(bool enabled)
         {
             return SupportabilityLogForwardingConfigPs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string GetSupportabilityLogLabelsConfiguredName(bool enabled)
+        {
+            return SupportabilityLogLabelsConfigPs + (enabled ? Enabled : Disabled);
         }
 
         public static string GetSupportabilityLogDecoratingConfiguredName(bool enabled)
