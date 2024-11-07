@@ -377,11 +377,24 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             var stateTypeName = state.GetType().Name;
-            // TODO: Signal the other instrument types
-            if (state is Counter<T> counter)
+
+            switch (state)
             {
-                counter.Add(measurement, tags);
-                Console.WriteLine($"Signaled {measurement} to {counter.Meter.Name} - {counter.Name}");
+                case Counter<T> counter:
+                    counter.Add(measurement, tags);
+                    Console.WriteLine($"Signaled {measurement} to {counter.Meter.Name} - {counter.Name}");
+                    break;
+                case Histogram<T> histogram:
+                    histogram.Record(measurement, tags);
+                    Console.WriteLine($"Signaled {measurement} to {histogram.Meter.Name} - {histogram.Name}");
+                    break;
+                case UpDownCounter<T> upDownCounter:
+                    upDownCounter.Add(measurement, tags);
+                    Console.WriteLine($"Signaled {measurement} to {upDownCounter.Meter.Name} - {upDownCounter.Name}");
+                    break;
+                // TODO: Add gauge support with .net 9 (needs corresponding otel sdk update)
+                default:
+                    break;
             }
         }
 
