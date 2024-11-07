@@ -25,8 +25,9 @@ namespace NewRelic.Agent.Core.Samplers
         private dynamic _meterListener;
         private static Meter NewRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private static ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
-        private static ConcurrentDictionary<Type, Func<Meter, string, string, string, object>> _createInstrumentDelegates = new ConcurrentDictionary<Type, Func<Meter, string, string, string, object>>();
+        private static ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
         private static ConcurrentDictionary<Type, object> _bridgeMeasurementDelegates = new ConcurrentDictionary<Type, object>();
+        private static ConcurrentDictionary<Type, ObservableInstrumentCacheData> _createObservableInstrumentCache = new ConcurrentDictionary<Type, ObservableInstrumentCacheData>();
         private MeterProvider _meterProvider;
 
         public MeterListenerBridge()
@@ -143,8 +144,8 @@ namespace NewRelic.Agent.Core.Samplers
         private static object GetStateForInstrument(object instrument)
         {
             dynamic dynamicInstrument = instrument;
-            var instrumentTypeName = instrument.GetType().Name;
-            var genericType = instrument.GetType().GetGenericArguments().FirstOrDefault();
+            var instrumentType = instrument.GetType();
+            var genericType = instrumentType.GetGenericArguments().FirstOrDefault();
 
             if (genericType == null)
             {
@@ -155,22 +156,21 @@ namespace NewRelic.Agent.Core.Samplers
 
             if (dynamicInstrument.IsObservable)
             {
-                if (instrumentTypeName.Contains("ObservableCounter") && genericType == typeof(long))
+                var cacheData = _createObservableInstrumentCache.GetOrAdd(instrumentType, GetObservableInstrumentCacheData);
+                if (cacheData == null)
                 {
-                    // Need to create a function that can call the Observe() method on the instrument (the protected parameterless method)
-                    // and transform the IEnumerable<Measurement<T>> into the bridged IEnumerable<Measurement<T>> that the ilrepaced code expects
-                    var observeMethod = instrument.GetType().GetMethod("Observe", BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
-                    meter.CreateObservableCounter((string)dynamicInstrument.Name, ForwardObservedMeasurements<long>, (string)dynamicInstrument.Unit, (string)dynamicInstrument.Description);
-
-                    IEnumerable<Measurement<T>> ForwardObservedMeasurements<T>() where T : struct
-                    {
-                        return BridgeMeasurements<T>((IEnumerable)observeMethod.Invoke(instrument, null));
-                    }
+                    return null;
                 }
+
+                var createCallbackAndObservableInstrument = cacheData.CreateCallbackAndObservableInstrumentDelegate;
+                createCallbackAndObservableInstrument(instrument, meter, cacheData);
+
+                // We do not need a state object for observable instruments because the bridged instrument will trigger the callback function by
+                // calling the Observe method in the original instrument and bridging the returned Measurements<T>s.
                 return null;
             }
 
-            var createInstrumentDelegate = _createInstrumentDelegates.GetOrAdd(instrument.GetType(), CreateBridgedInstrumentDelegate);
+            var createInstrumentDelegate = (Func<Meter, string, string, string, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
 
             if (createInstrumentDelegate == null)
             {
@@ -183,6 +183,63 @@ namespace NewRelic.Agent.Core.Samplers
             Meter CreateBridgedMeterFromInstrument(string _)
             {
                 return CreateBridgedMeter(dynamicInstrument.Meter);
+            }
+        }
+
+        private static ObservableInstrumentCacheData GetObservableInstrumentCacheData(Type instrumentType)
+        {
+            var genericType = instrumentType.GetGenericArguments().FirstOrDefault();
+            if (genericType == null)
+            {
+                return null;
+            }
+
+            var cacheData = new ObservableInstrumentCacheData();
+            cacheData.CreateObservableInstrumentDelegate = CreateBridgedObservableInstrumentDelegate(instrumentType);
+            cacheData.CreateCallbackAndObservableInstrumentDelegate = CreateCallbackAndBridgedObservableInstrumentAction(instrumentType);
+            cacheData.ObserveMethodDelegate = CreateObserveMethodInvoker(instrumentType);
+
+            return cacheData;
+        }
+
+        public static Func<object, IEnumerable> CreateObserveMethodInvoker(Type instrumentType)
+        {
+            var observeMethod = instrumentType.GetMethod("Observe", BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+            var instrumentParameter = Expression.Parameter(typeof(object), "instrument");
+            var typedInstrument = Expression.Convert(instrumentParameter, instrumentType);
+            var observeMethodCall = Expression.Call(typedInstrument, observeMethod);
+            var convertedResult = Expression.Convert(observeMethodCall, typeof(IEnumerable));
+            var lambda = Expression.Lambda<Func<object, IEnumerable>>(convertedResult, instrumentParameter);
+
+            return lambda.Compile();
+        }
+
+        private static Action<object, Meter, ObservableInstrumentCacheData> CreateCallbackAndBridgedObservableInstrumentAction(Type instrumentType)
+        {
+            var genericType = instrumentType.GetGenericArguments().FirstOrDefault();
+            var methodInfo = typeof(MeterListenerBridge).GetMethod(nameof(CreateCallbackAndBridgedObservableInstrument), BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(genericType);
+            return (Action<object, Meter, ObservableInstrumentCacheData>)methodInfo.CreateDelegate(typeof(Action<object, Meter, ObservableInstrumentCacheData>));
+        }
+
+        private static void CreateCallbackAndBridgedObservableInstrument<T>(object instrument, Meter meter, ObservableInstrumentCacheData cacheData) where T : struct
+        {
+            var createObservableInstrument = (CreateObservableInstrumentDelegate<T>)cacheData.CreateObservableInstrumentDelegate;
+            if (createObservableInstrument == null)
+            {
+                return;
+            }
+
+            dynamic dynamicInstrument = instrument;
+
+            // Need to create a function that can call the Observe() method on the instrument (the protected parameterless method)
+            // and transform the IEnumerable<Measurement<T>> into the bridged IEnumerable<Measurement<T>> that the ilrepacked code expects
+
+            var observeMethod = cacheData.ObserveMethodDelegate;
+            createObservableInstrument(meter, (string)dynamicInstrument.Name, ForwardObservedMeasurements, (string)dynamicInstrument.Unit, (string)dynamicInstrument.Description);
+
+            IEnumerable<Measurement<T>> ForwardObservedMeasurements()
+            {
+                return BridgeMeasurements<T>(observeMethod(instrument));
             }
         }
 
@@ -240,13 +297,64 @@ namespace NewRelic.Agent.Core.Samplers
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
                 "UpDownCounter`1" => "CreateUpDownCounter",
+                // TODO: Add gauge support with .net 9 (needs corresponding otel sdk update)
                 _ => null
             };
+
+            if (createInstrumentMethodName == null)
+            {
+                return null;
+            }
 
             var methodInfo = typeof(Meter).GetMethod(createInstrumentMethodName, [typeof(string), typeof(string), typeof(string)]).MakeGenericMethod(genericType);
             var createDelegate = (Func<Meter, string, string, string, object>)methodInfo.CreateDelegate(typeof(Func<Meter, string, string, string, object>));
 
             return createDelegate;
+        }
+
+        private static Delegate CreateBridgedObservableInstrumentDelegate(Type originalInstrumentType)
+        {
+            var genericType = originalInstrumentType.GetGenericArguments().FirstOrDefault();
+            if (genericType == null)
+            {
+                return null;
+            }
+
+            string createInstrumentMethodName = originalInstrumentType.Name switch
+            {
+                "ObservableCounter`1" => nameof(CreateBridgedObservableCounter),
+                "ObservableGauge`1" => nameof(CreateBridgedObservableGauge),
+                "ObservableUpDownCounter`1" => nameof(CreateBridgedObservableUpDownCounter),
+                _ => null
+            };
+
+            if (createInstrumentMethodName == null)
+            {
+                return null;
+            }
+
+            var delegateType = typeof(CreateObservableInstrumentDelegate<>).MakeGenericType(genericType);
+            var methodInfo = typeof(MeterListenerBridge).GetMethod(createInstrumentMethodName, BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(genericType);
+            var createDelegate = methodInfo.CreateDelegate(delegateType);
+
+            return createDelegate;
+        }
+
+        private delegate object CreateObservableInstrumentDelegate<T>(Meter meter, string name, Func<IEnumerable<Measurement<T>>> callback, string unit, string description) where T : struct;
+
+        private static object CreateBridgedObservableCounter<T>(Meter meter, string name, Func<IEnumerable<Measurement<T>>> callback, string unit, string description) where T : struct
+        {
+            return meter.CreateObservableCounter(name, callback, unit, description);
+        }
+
+        private static object CreateBridgedObservableGauge<T>(Meter meter, string name, Func<IEnumerable<Measurement<T>>> callback, string unit, string description) where T : struct
+        {
+            return meter.CreateObservableGauge(name, callback, unit, description);
+        }
+
+        private static object CreateBridgedObservableUpDownCounter<T>(Meter meter, string name, Func<IEnumerable<Measurement<T>>> callback, string unit, string description) where T : struct
+        {
+            return meter.CreateObservableUpDownCounter(name, callback, unit, description);
         }
 
         private static Meter CreateBridgedMeter(object meter)
@@ -269,11 +377,19 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             var stateTypeName = state.GetType().Name;
+            // TODO: Signal the other instrument types
             if (state is Counter<T> counter)
             {
                 counter.Add(measurement, tags);
                 Console.WriteLine($"Signaled {measurement} to {counter.Meter.Name} - {counter.Name}");
             }
+        }
+
+        public class ObservableInstrumentCacheData
+        {
+            public Delegate CreateObservableInstrumentDelegate { get; set; }
+            public Action<object, Meter, ObservableInstrumentCacheData> CreateCallbackAndObservableInstrumentDelegate { get; set; }
+            public Func<object, IEnumerable> ObserveMethodDelegate { get; set; }
         }
     }
 }
