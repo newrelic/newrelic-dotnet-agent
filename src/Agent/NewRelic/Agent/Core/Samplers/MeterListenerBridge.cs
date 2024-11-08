@@ -81,27 +81,7 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 _meterListener = Activator.CreateInstance(meterListenerType);
 
-                var instrumentPublishProperty = meterListenerType.GetProperty("InstrumentPublished");
-
-                var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
-                var listenerParameter = Expression.Parameter(meterListenerType, "listener");
-
-                var meterNameProperty = Expression.Property(Expression.Property(instrumentParameter, "Meter"), "Name");
-
-                var shouldEnableMethod = typeof(MeterListenerBridge).GetMethod(nameof(ShouldEnableInstrumentsInMeter), BindingFlags.NonPublic | BindingFlags.Static);
-                var shouldEnableCall = Expression.Call(null, shouldEnableMethod, meterNameProperty);
-
-                var getInstrumentStateMethod = typeof(MeterListenerBridge).GetMethod(nameof(GetStateForInstrument), BindingFlags.NonPublic | BindingFlags.Static);
-                var getInstrumentStateCall = Expression.Call(null, getInstrumentStateMethod, instrumentParameter);
-
-                var enableMeasurementEventsMethod = Expression.Call(listenerParameter, "EnableMeasurementEvents", null, instrumentParameter, getInstrumentStateCall);
-
-                var lambdaBody = Expression.IfThen(shouldEnableCall, enableMeasurementEventsMethod);
-
-                var lambda = Expression.Lambda(instrumentPublishProperty.PropertyType, lambdaBody, instrumentParameter, listenerParameter);
-
-                instrumentPublishProperty.SetValue(_meterListener, lambda.Compile());
-
+                SubscribeToInstrumentPublishedEvent(meterListenerType, instrumentType);
 
                 SubscribeToMeasurementUpdates<byte>(meterListenerType, instrumentType);
                 SubscribeToMeasurementUpdates<short>(meterListenerType, instrumentType);
@@ -111,8 +91,32 @@ namespace NewRelic.Agent.Core.Samplers
                 SubscribeToMeasurementUpdates<double>(meterListenerType, instrumentType);
                 SubscribeToMeasurementUpdates<decimal>(meterListenerType, instrumentType);
 
-                // TODO: Subscribe to MeasurementCompleted event to remove the corresponding bridged instrument
+                SubscribeToMeasurementCompletedEvent(meterListenerType, instrumentType);
             }
+        }
+
+        private void SubscribeToInstrumentPublishedEvent(Type meterListenerType, Type instrumentType)
+        {
+            var instrumentPublishProperty = meterListenerType.GetProperty("InstrumentPublished");
+
+            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
+            var listenerParameter = Expression.Parameter(meterListenerType, "listener");
+
+            var meterNameProperty = Expression.Property(Expression.Property(instrumentParameter, "Meter"), "Name");
+
+            var shouldEnableMethod = typeof(MeterListenerBridge).GetMethod(nameof(ShouldEnableInstrumentsInMeter), BindingFlags.NonPublic | BindingFlags.Static);
+            var shouldEnableCall = Expression.Call(null, shouldEnableMethod, meterNameProperty);
+
+            var getInstrumentStateMethod = typeof(MeterListenerBridge).GetMethod(nameof(GetStateForInstrument), BindingFlags.NonPublic | BindingFlags.Static);
+            var getInstrumentStateCall = Expression.Call(null, getInstrumentStateMethod, instrumentParameter);
+
+            var enableMeasurementEventsMethod = Expression.Call(listenerParameter, "EnableMeasurementEvents", null, instrumentParameter, getInstrumentStateCall);
+
+            var lambdaBody = Expression.IfThen(shouldEnableCall, enableMeasurementEventsMethod);
+
+            var lambda = Expression.Lambda(instrumentPublishProperty.PropertyType, lambdaBody, instrumentParameter, listenerParameter);
+
+            instrumentPublishProperty.SetValue(_meterListener, lambda.Compile());
         }
 
         private void SubscribeToMeasurementUpdates<T>(Type meterListenerType, Type instrumentType)
@@ -136,6 +140,48 @@ namespace NewRelic.Agent.Core.Samplers
             var measurementRecordedLambda = Expression.Lambda(callbackDelegateType, methodCall, instrumentParameter, measurementParameter, tagsParameter, stateParameter);
 
             setMeasurementEventCallbackMethodInfo.Invoke(_meterListener, new object[] { measurementRecordedLambda.Compile() });
+        }
+
+        private void SubscribeToMeasurementCompletedEvent(Type meterListenerType, Type instrumentType)
+        {
+            var measurementsCompletedProperty = meterListenerType.GetProperty("MeasurementsCompleted");
+
+            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
+            var stateParameter = Expression.Parameter(typeof(object), "state");
+
+            var disableBridgedInstrumentMethod = typeof(MeterListenerBridge).GetMethod(nameof(DisableBridgedInstrument), BindingFlags.NonPublic | BindingFlags.Static);
+            var disableBridgedInstrumentCall = Expression.Call(null, disableBridgedInstrumentMethod, stateParameter);
+
+            var measurmentsCompletedLambda = Expression.Lambda(measurementsCompletedProperty.PropertyType, disableBridgedInstrumentCall, instrumentParameter, stateParameter);
+
+            measurementsCompletedProperty.SetValue(_meterListener, measurmentsCompletedLambda.Compile());
+        }
+
+        private static void DisableBridgedInstrument(object state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            var bridgedInstrument = state as Instrument;
+            if (bridgedInstrument == null)
+            {
+                return;
+            }
+
+            // The MeasurementsCompleted event is triggered when an instrument is no longer being subscribed to by a MeterListener
+            // or the Meter holding the instrumented is Disposed. In our use case, we subscribe to all instruments in a meter and
+            // do not disable individual individual instruments, so the only way this event will be triggered is if the corresponding
+            // meter is no longer being used by the application or if our MeterListener is being Disposed. In either case we can
+            // just Dispose of the bridged Meter.
+
+            if (_bridgedMeters.TryRemove(bridgedInstrument.Meter.Name, out var bridgedMeter))
+            {
+                var meterName = bridgedMeter.Name;
+                bridgedMeter.Dispose();
+                Console.WriteLine("Disposed bridged meter: " + meterName);
+            }
         }
 
 
