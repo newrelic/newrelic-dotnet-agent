@@ -12,51 +12,36 @@ using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
-public class AzureServiceBusReceiveWrapper : IWrapper
+public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 {
-    private const string BrokerVendorName = "AzureServiceBus";
-    private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
+    private static readonly ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
 
-    public bool IsTransactionRequired => false;
-
-    public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+    public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
         var canWrap = instrumentedMethodInfo.RequestedWrapperName.Equals(nameof(AzureServiceBusReceiveWrapper));
         return new CanWrapResponse(canWrap);
     }
 
-    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusReceiver.EntityPath;
-        string identifier = serviceBusReceiver.Identifier;
-        string fqns = serviceBusReceiver.FullyQualifiedNamespace;
-
-        // create a transaction
-        transaction = agent.CreateTransaction(
-            destinationType: MessageBrokerDestinationType.Queue,
-            brokerVendorName: BrokerVendorName,
-            destination: queueName);
-
-        if (instrumentedMethodCall.IsAsync)
-        {
-            transaction.AttachToAsync();
-            transaction.DetachFromPrimary(); //Remove from thread-local type storage
-        }
+        string queueName = serviceBusReceiver.EntityPath; // marty-test-queue
+        //string identifier = serviceBusReceiver.Identifier; // -9e860ed4-b16b-4d02-96e4-d8ed224ae24b
+        //string fqns = serviceBusReceiver.FullyQualifiedNamespace; // mt-test-servicebus.servicebus.windows.net   
 
         MessageBrokerAction action =
             instrumentedMethodCall.MethodCall.Method.MethodName switch
-        {
-            "ReceiveMessagesAsync" => MessageBrokerAction.Consume,
-            "ReceiveDeferredMessagesAsync" => MessageBrokerAction.Consume,
-            "PeekMessagesInternalAsync" => MessageBrokerAction.Peek,
-            "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
-            "CompleteMessageAsync" => MessageBrokerAction.Consume,
-            "DeadLetterInternalAsync" => MessageBrokerAction.Purge,  // TODO is this correct ???
-            "DeferMessageAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
-            "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
-            _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
-        };
+            {
+                "ReceiveMessagesAsync" => MessageBrokerAction.Consume,
+                "ReceiveDeferredMessagesAsync" => MessageBrokerAction.Consume,
+                "PeekMessagesInternalAsync" => MessageBrokerAction.Peek,
+                "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
+                "CompleteMessageAsync" => MessageBrokerAction.Consume,
+                "DeadLetterInternalAsync" => MessageBrokerAction.Purge,  // TODO is this correct ???
+                "DeferMessageAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
+                "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
+                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+            };
 
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
@@ -65,61 +50,89 @@ public class AzureServiceBusReceiveWrapper : IWrapper
             action,
             BrokerVendorName, queueName);
 
-        // return an async delegate
-        return Delegates.GetAsyncDelegateFor<Task>(
-            agent,
-            segment,
-            true,
-            HandleResponse,
-            TaskContinuationOptions.ExecuteSynchronously);
-
-        void HandleResponse(Task responseTask)
+        if (instrumentedMethodCall.IsAsync)
         {
-            try
-            {
-                if (responseTask.IsFaulted)
-                {
-                    // TODO: handle error here?
-                    return;
-                }
+            // return an async delegate
+            return Delegates.GetAsyncDelegateFor<Task>(
+                agent,
+                segment,
+                false,
+                HandleResponse,
+                TaskContinuationOptions.ExecuteSynchronously);
 
-                // if the response contains a list of messages,
-                // get the first message from the response and extract DT headers
-                dynamic resultObj = GetTaskResult(responseTask);
-                if (resultObj != null && resultObj.Count > 0) // TODO need to verify resultObj is of type IReadOnlyList<ServiceBusReceivedMessage>
+            void HandleResponse(Task responseTask)
+            {
+                try
                 {
-                    var msg = resultObj[0];
-                    if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+                    if (responseTask.IsFaulted)
                     {
-                        transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
+                        transaction.NoticeError(responseTask.Exception); // TODO ??? 
+                        return;
+                    }
+
+                    var resultObj = GetTaskResultFromObject(responseTask);
+                    ExtractDTHeadersIfAvailable(resultObj);
+                }
+                finally
+                {
+                    segment.End();
+                }
+            }
+        }
+
+        return Delegates.GetDelegateFor<object>(
+            onFailure: transaction.NoticeError,
+            onComplete: () => segment.End(),
+            onSuccess: ExtractDTHeadersIfAvailable);
+
+
+        void ExtractDTHeadersIfAvailable(object resultObj)
+        {
+            if (resultObj != null)
+            {
+                switch (instrumentedMethodCall.MethodCall.Method.MethodName)
+                {
+                    case "ReceiveMessagesAsync":
+                    case "ReceiveDeferredMessagesAsync":
+                    case "PeekMessagesInternalAsync":
+                        // if the response contains a list of messages,
+                        // get the first message from the response and extract DT headers
+                        dynamic messages = resultObj;
+                        if (messages.Count > 0)
+                        {
+                            var msg = messages[0];
+                            if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+                            {
+                                transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
+                            }
+                        }
+                        break;
+                }
+            }
+            IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+            {
+                var headerValues = new List<string>();
+                foreach (var item in applicationProperties)
+                {
+                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        headerValues.Add(item.Value as string);
                     }
                 }
-            }
-            finally
-            {
-                segment.End();
-                transaction.End();
+
+                return headerValues;
             }
         }
     }
 
-    private IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+    private static object GetTaskResultFromObject(object taskObj)
     {
-        var headerValues = new List<string>();
-        foreach (var item in applicationProperties)
+        var task = taskObj as Task;
+        if (task == null)
         {
-            if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-            {
-                headerValues.Add(item.Value as string);
-            }
+            return null;
         }
-
-        return headerValues;
-    }
-
-    private static object GetTaskResult(object task)
-    {
-        if (((Task)task).IsFaulted)
+        if (task.IsFaulted)
         {
             return null;
         }

@@ -2,50 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
-public class AzureServiceBusSendWrapper : IWrapper
+public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
 {
-    private const string BrokerVendorName = "AzureServiceBus";
-    private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
-
-    public bool IsTransactionRequired => true;
-
-    public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+    public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
         var canWrap = instrumentedMethodInfo.RequestedWrapperName.Equals(nameof(AzureServiceBusSendWrapper));
         return new CanWrapResponse(canWrap);
     }
 
-    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusReceiver.EntityPath;
-        string identifier = serviceBusReceiver.Identifier;
-        string fqns = serviceBusReceiver.FullyQualifiedNamespace;
+        string queueName = serviceBusReceiver.EntityPath; // marty-test-queue
+        //string identifier = serviceBusReceiver.Identifier; // -9e860ed4-b16b-4d02-96e4-d8ed224ae24b
+        //string fqns = serviceBusReceiver.FullyQualifiedNamespace; // mt-test-servicebus.servicebus.windows.net   
 
-        // ???
-        if (instrumentedMethodCall.IsAsync)
-        {
-            transaction.AttachToAsync();
-            transaction.DetachFromPrimary(); //Remove from thread-local type storage
-        }
-
+        // determine message broker action based on method name
         MessageBrokerAction action =
             instrumentedMethodCall.MethodCall.Method.MethodName switch
             {
                 "SendMessagesAsync" => MessageBrokerAction.Produce,
                 "ScheduleMessagesAsync" => MessageBrokerAction.Produce,
                 "CancelScheduledMessagesAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
-                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
             };
 
         // start a message broker segment
@@ -58,6 +44,7 @@ public class AzureServiceBusSendWrapper : IWrapper
         if (action == MessageBrokerAction.Produce)
         {
             dynamic messages = instrumentedMethodCall.MethodCall.MethodArguments[0];
+
             // iterate all messages that are being sent,
             // insert DT headers into each message
             foreach (var message in messages)
@@ -69,10 +56,10 @@ public class AzureServiceBusSendWrapper : IWrapper
 
         // return an async delegate
         return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
-    }
 
-    private void ProcessHeaders(IDictionary<string, object> applicationProperties, string key, string value)
-    {
-        applicationProperties.Add(key, value);
+        void ProcessHeaders(IDictionary<string, object> applicationProperties, string key, string value)
+        {
+            applicationProperties.Add(key, value);
+        }
     }
 }
