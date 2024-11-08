@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Grpc.Core;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -17,6 +16,8 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportAgentVersion(string agentVersion);
 
         void ReportLibraryVersion(string assemblyName, string assemblyVersion);
+
+        void ReportCustomInstrumentation(string assemblyName, string className, string method);
 
         void ReportTransactionEventReservoirResized(int newSize);
 
