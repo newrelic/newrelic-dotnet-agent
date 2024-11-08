@@ -19,18 +19,25 @@ namespace NewRelic.Agent.Core.Labels
 
         private readonly IConfigurationService _configurationService;
 
-        public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration(); } }
+        public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration([]); } }
+
+        public IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude)
+        {
+            return GetLabelsFromConfiguration(labelsToExclude);
+        }
 
         public LabelsService(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
 
-        private IEnumerable<Label> GetLabelsFromConfiguration()
+        private IEnumerable<Label> GetLabelsFromConfiguration(IEnumerable<string> labelsToExclude)
         {
             var labelsString = _configurationService.Configuration.Labels;
             if (string.IsNullOrEmpty(labelsString))
                 return Enumerable.Empty<Label>();
+
+            labelsToExclude ??= [];
 
             try
             {
@@ -39,6 +46,7 @@ namespace NewRelic.Agent.Core.Labels
                     .Trim(StringSeparators.SemiColon)
                     .Split(StringSeparators.SemiColon)
                     .Select(CreateLabelFromString)
+                    .Where(label => !labelsToExclude.Contains(label.Type, StringComparer.OrdinalIgnoreCase))
                     .GroupBy(label => label.Type)
                     .Select(labelGrouping => labelGrouping.Last())
                     .Take(MaxLabels)
