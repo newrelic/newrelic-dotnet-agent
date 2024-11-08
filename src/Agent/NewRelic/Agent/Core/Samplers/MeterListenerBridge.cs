@@ -9,9 +9,7 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -28,10 +26,14 @@ namespace NewRelic.Agent.Core.Samplers
         private static ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
         private static ConcurrentDictionary<Type, object> _bridgeMeasurementDelegates = new ConcurrentDictionary<Type, object>();
         private static ConcurrentDictionary<Type, ObservableInstrumentCacheData> _createObservableInstrumentCache = new ConcurrentDictionary<Type, ObservableInstrumentCacheData>();
+
+        private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
 
         public MeterListenerBridge()
         {
+            _sdkLogger = new OpenTelemetrySDKLogger();
+
             var providerBuilder = Sdk.CreateMeterProviderBuilder()
             //.ConfigureResource(r => r.AddService("myservice")) TODO: Add resource information
             .AddMeter("*")
@@ -70,6 +72,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             _meterListener?.Dispose();
             _meterProvider.Dispose();
+            _sdkLogger.Dispose();
         }
 
         private void TryCreateMeterListener()
