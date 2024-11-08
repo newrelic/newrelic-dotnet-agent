@@ -8,6 +8,9 @@
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.404.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.404.5" Condition="'$(TargetFramework)' == 'net8.0'" />
     
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net8.0'" />
+    
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     

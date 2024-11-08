@@ -27,7 +27,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
         string queueName = serviceBusReceiver.EntityPath; // marty-test-queue
         //string identifier = serviceBusReceiver.Identifier; // -9e860ed4-b16b-4d02-96e4-d8ed224ae24b
-        //string fqns = serviceBusReceiver.FullyQualifiedNamespace; // mt-test-servicebus.servicebus.windows.net   
+        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // mt-test-servicebus.servicebus.windows.net   
 
         MessageBrokerAction action =
             instrumentedMethodCall.MethodCall.Method.MethodName switch
@@ -48,7 +48,9 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             instrumentedMethodCall.MethodCall,
             MessageBrokerDestinationType.Queue,
             action,
-            BrokerVendorName, queueName);
+            BrokerVendorName,
+            queueName,
+            serverAddress: fqns );
 
         if (instrumentedMethodCall.IsAsync)
         {
