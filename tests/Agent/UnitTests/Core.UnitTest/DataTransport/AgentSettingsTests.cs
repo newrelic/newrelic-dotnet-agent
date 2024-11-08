@@ -343,7 +343,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "agent.disable_file_system_watcher": false,
                     "ai_monitoring.enabled": true,
                     "ai_monitoring.streaming.enabled": true,
-                    "ai_monitoring.record_content.enabled": true
+                    "ai_monitoring.record_content.enabled": true,
+                    "gc_sampler_v2.enabled": true
                 }
                 """;
 
@@ -361,6 +362,7 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
                 Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
                 Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+                Assert.That(agentSettings.AwsAccountId, Is.Empty);
             });
         }
     }

@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core
             }
 
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled);
+            AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core
                 Log.Info("The New Relic agent is operating in serverless mode.");
             }
 
-            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled);
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
             // Setup the internal API first so that AgentApi can use it.
             InternalApi.SetAgentApiImplementation(agentApi);

@@ -379,7 +379,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public virtual void Dispose()
         {
-            RemoteApplication.Shutdown();
+            RemoteApplication.Shutdown(true);
             RemoteApplication.Dispose();
         }
 

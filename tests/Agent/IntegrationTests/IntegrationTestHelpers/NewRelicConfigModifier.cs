@@ -527,6 +527,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             var labelsString = string.Join(";", labels.Select(x => x.Key + ":" + x.Value).ToArray());
             CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "labels", labelsString);
+
+        public NewRelicConfigModifier EnableGCSamplerV2(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "GCSamplerV2Enabled");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enabled}");
             return this;
         }
     }

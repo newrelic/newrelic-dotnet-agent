@@ -219,7 +219,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunction", "src\Agent\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PublicApiChangeTests", "tests\Agent\UnitTests\PublicApiChangeTests\PublicApiChangeTests.csproj", "{A8F6EFEA-1C31-4461-A7B4-25C30D954EE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Memcached", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Memcached\Memcached.csproj", "{5D74E5C5-9BA3-423B-86F7-14C2D1A14661}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Memcached", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Memcached\Memcached.csproj", "{5D74E5C5-9BA3-423B-86F7-14C2D1A14661}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -540,8 +540,8 @@ Global
 		{5D74E5C5-9BA3-423B-86F7-14C2D1A14661} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

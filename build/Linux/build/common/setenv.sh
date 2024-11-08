@@ -1,9 +1,11 @@
 #!/bin/bash
 
-if [ -z "$CORECLR_NEW_RELIC_HOME" ]; then
-    echo "CORECLR_NEW_RELIC_HOME is undefined"
+if [ -z "$CORECLR_NEWRELIC_HOME" ] && [ -z "$CORECLR_NEW_RELIC_HOME" ]; then
+    echo "CORECLR_NEWRELIC_HOME is undefined"
 else
+    NRHOME=${CORECLR_NEWRELIC_HOME:-${CORECLR_NEW_RELIC_HOME}}
+    
     export CORECLR_ENABLE_PROFILING=1
     export CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
-    export CORECLR_PROFILER_PATH=$CORECLR_NEW_RELIC_HOME/libNewRelicProfiler.so
+    export CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so
 fi

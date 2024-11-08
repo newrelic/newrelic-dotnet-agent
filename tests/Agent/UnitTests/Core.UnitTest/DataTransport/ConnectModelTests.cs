@@ -414,7 +414,8 @@ namespace NewRelic.Agent.Core.DataTransport
                             "agent.disable_file_system_watcher": false,
                             "ai_monitoring.enabled": true,
                             "ai_monitoring.streaming.enabled": true,
-                            "ai_monitoring.record_content.enabled": true
+                            "ai_monitoring.record_content.enabled": true,
+                            "gc_sampler_v2.enabled": true
                         },
                         "metadata": {
                             "hello": "there"

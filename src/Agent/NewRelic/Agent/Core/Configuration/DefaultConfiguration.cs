@@ -1912,7 +1912,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-
         public int? UtilizationLogicalProcessors
         {
             get
@@ -2190,7 +2189,8 @@ namespace NewRelic.Agent.Core.Configuration
                 return string.Empty;
             }
 
-            return $"{AzureFunctionResourceId}/functions/{functionName}";        }
+            return $"{AzureFunctionResourceId}/functions/{functionName}";
+        }
 
         public string AzureFunctionResourceGroupName
         {
@@ -2492,6 +2492,8 @@ namespace NewRelic.Agent.Core.Configuration
                 return DefaultHarvestCycle;
             }
         }
+
+        public bool GCSamplerV2Enabled => _bootstrapConfiguration.GCSamplerV2Enabled;
 
         #endregion
 
@@ -3001,6 +3003,23 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        #endregion
+
+        #region Cloud
+        private string _awsAccountId;
+        public string AwsAccountId
+        {
+            get
+            {
+                if (_awsAccountId != null)
+                {
+                    return _awsAccountId;
+                }
+                _awsAccountId = EnvironmentOverrides(_localConfiguration.cloud.aws.accountId, "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID");
+
+                return _awsAccountId;
+            }
+        }
         #endregion
 
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)

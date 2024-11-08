@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
@@ -12,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         public bool IsTransactionRequired => true;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
-        private static HashSet<string> _unsupportedRequestTypes = new();
+        private static ConcurrentHashSet<string> _unsupportedRequestTypes = new();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -53,9 +54,16 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
+            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            {
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            }
 
-            if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type
+            if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
+            {                
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
+                _unsupportedRequestTypes.Add(requestType);
+            }
 
             return Delegates.NoOp;
         }
