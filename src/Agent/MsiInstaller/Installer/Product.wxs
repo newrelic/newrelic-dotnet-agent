@@ -482,6 +482,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreAzureFunctionWrapperComponent" Guid="{6DC23A07-4063-462E-B43A-532D6F810AFE}">
         <File Id="CoreAzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
       </Component>
+      <Component Id="CoreMemcachedWrapperComponent" Guid="{1D7D04A1-24D5-4716-B7CB-EACB21D66D7D}">
+        <File Id="CoreMemcachedWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
+      </Component>      
       <Component Id="CoreAzureServiceBusWrapperComponent" Guid="{E2F1AE1C-9EE8-410D-932B-D6B9C25FE405}">
         <File Id="CoreAzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
       </Component>
