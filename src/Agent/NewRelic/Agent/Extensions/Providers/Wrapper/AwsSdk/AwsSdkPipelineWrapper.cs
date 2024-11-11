@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
@@ -13,7 +14,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     public class AwsSdkPipelineWrapper : IWrapper
     {
         public bool IsTransactionRequired => true;
-        private string _accountId = null;
+        private ArnBuilder _arnBuilder = null;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static HashSet<string> _unsupportedRequestTypes = new();
@@ -23,39 +24,37 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
-        private string GetRegion(IAgent agent, dynamic requestContext)
+        private ArnBuilder CreateArnBuilder(IAgent agent, dynamic requestContext)
         {
+            string 
+            if (_arnBuilder != null)
+            {
+                return _arnBuilder;
+            }
             try
             {
                 var clientconfig = requestContext.ClientConfig;
                 var regionEndpoint = clientconfig.RegionEndpoint;
                 var systemName = regionEndpoint.SystemName;
-                return systemName;
+                var partition = regionEndpoint.PartitionName;
+                _arnBuilder = new ArnBuilder(partition, systemName, GetAccountId(agent));
             }
             catch (Exception e)
             {
-                agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get region from requestContext.");
+                agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get required ARN components from requestContext.");
             }
 
-            return "";
+            return _arnBuilder;
         }
 
         private string GetAccountId(IAgent agent)
         {
-            if (_accountId != null)
+            string accountId = agent.Configuration.AwsAccountId;
+            if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
             {
-                return _accountId;
+                agent.Logger.Warn("Supplied AWS Account Id appears to be invalid");
             }
-            _accountId = agent.Configuration.AwsAccountId;
-            if (_accountId == null)
-            {
-                _accountId = "";
-            }
-            else if ((_accountId.Length != 12) || _accountId.Any(c => (c < '0') || (c > '9')))
-            {
-                agent.Logger.Warn("Supplied AWS Account Id appears to be invalid: {0}", _accountId);
-            }
-            return _accountId;
+            return accountId;
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -87,7 +86,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().FullName;
-            string accountId = agent.Configuration.AwsAccountId;
+            ArnBuilder builder = CreateArnBuilder(agent, requestContext);
 
             if (requestType.StartsWith("Amazon.SQS"))
             {
@@ -95,7 +94,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
-                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, GetRegion(agent, requestContext), accountId);
+                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
             if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type

@@ -9,6 +9,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Helpers;
+using NewRelic.Agent.Extensions.AwsSdk;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -47,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
         }
 
-        public static AfterWrappedMethodDelegate HandleInvokeRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, string region, string accountId)
+        public static AfterWrappedMethodDelegate HandleInvokeRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
             string functionName = request.FunctionName;
             string qualifier = request.Qualifier;
@@ -62,10 +63,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             else
             {
-                string key = $"{region}:{functionName}";
+                string key = $"{builder.Region}:{functionName}";
                 if (!_arnCache.TryGetValue(key, out arn))
                 {
-                    arn = AwsSdkHelpers.ConstructArn(agent, functionName, region, accountId);
+                    arn = builder.Build("function", functionName);
                     _arnCache.TryAdd(key, arn);
                 }
             }
@@ -74,7 +75,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
             transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
             transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
-            transaction.AddCloudSdkAttribute("aws.region", region);
+            transaction.AddCloudSdkAttribute("aws.region", builder.Region);
 
 
             if (!string.IsNullOrEmpty(arn))
