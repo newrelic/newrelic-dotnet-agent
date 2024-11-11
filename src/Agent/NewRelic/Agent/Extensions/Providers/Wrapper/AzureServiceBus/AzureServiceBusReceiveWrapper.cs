@@ -25,9 +25,8 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusReceiver.EntityPath; // marty-test-queue
-        //string identifier = serviceBusReceiver.Identifier; // -9e860ed4-b16b-4d02-96e4-d8ed224ae24b
-        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // mt-test-servicebus.servicebus.windows.net   
+        string queueName = serviceBusReceiver.EntityPath; // some-queue-name
+        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net   
 
         MessageBrokerAction action =
             instrumentedMethodCall.MethodCall.Method.MethodName switch
@@ -35,7 +34,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 "ReceiveMessagesAsync" => MessageBrokerAction.Consume,
                 "ReceiveDeferredMessagesAsync" => MessageBrokerAction.Consume,
                 "PeekMessagesInternalAsync" => MessageBrokerAction.Peek,
-                "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ???,
+                "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ??? Abandon sends the message back to the queue for re-delivery
                 "CompleteMessageAsync" => MessageBrokerAction.Consume,
                 "DeadLetterInternalAsync" => MessageBrokerAction.Purge,  // TODO is this correct ???
                 "DeferMessageAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
@@ -52,40 +51,39 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             queueName,
             serverAddress: fqns );
 
-        if (instrumentedMethodCall.IsAsync)
-        {
+        return instrumentedMethodCall.IsAsync
+            ?
             // return an async delegate
-            return Delegates.GetAsyncDelegateFor<Task>(
+            Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
                 false,
                 HandleResponse,
-                TaskContinuationOptions.ExecuteSynchronously);
+                TaskContinuationOptions.ExecuteSynchronously)
+            : Delegates.GetDelegateFor<object>(
+                onFailure: transaction.NoticeError,
+                onComplete: segment.End,
+                onSuccess: ExtractDTHeadersIfAvailable);
 
-            void HandleResponse(Task responseTask)
+        void HandleResponse(Task responseTask)
+        {
+            try
             {
-                try
+                if (responseTask.IsFaulted)
                 {
-                    if (responseTask.IsFaulted)
-                    {
-                        transaction.NoticeError(responseTask.Exception); // TODO ??? 
-                        return;
-                    }
+                    transaction.NoticeError(responseTask.Exception);
+                    return;
+                }
 
-                    var resultObj = GetTaskResultFromObject(responseTask);
-                    ExtractDTHeadersIfAvailable(resultObj);
-                }
-                finally
-                {
-                    segment.End();
-                }
+                var resultObj = GetTaskResultFromObject(responseTask);
+                ExtractDTHeadersIfAvailable(resultObj);
+            }
+            finally
+            {
+                segment.End();
             }
         }
 
-        return Delegates.GetDelegateFor<object>(
-            onFailure: transaction.NoticeError,
-            onComplete: () => segment.End(),
-            onSuccess: ExtractDTHeadersIfAvailable);
 
 
         void ExtractDTHeadersIfAvailable(object resultObj)
@@ -97,7 +95,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     case "ReceiveMessagesAsync":
                     case "ReceiveDeferredMessagesAsync":
                     case "PeekMessagesInternalAsync":
-                        // if the response contains a list of messages,
+                        // the response contains a list of messages.
                         // get the first message from the response and extract DT headers
                         dynamic messages = resultObj;
                         if (messages.Count > 0)
