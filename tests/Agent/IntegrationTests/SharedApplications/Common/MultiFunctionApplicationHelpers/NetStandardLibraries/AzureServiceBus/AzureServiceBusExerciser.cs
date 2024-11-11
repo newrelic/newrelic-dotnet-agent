@@ -130,4 +130,17 @@ internal class AzureServiceBusExerciser
         var message = new ServiceBusMessage(messageBody);
         await sender.SendMessageAsync(message);
     }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task SendAndReceiveAMessage(string queueName)
+    {
+        await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+
+        await SendAMessage(client, queueName, "Hello world!");
+
+        await using var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
+        await receiver.ReceiveMessageAsync();
+    }
 }
