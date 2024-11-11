@@ -92,6 +92,9 @@ namespace NewRelic.Agent.Api
         /// <param name="messagingSystemName"></param>
         /// <param name="cloudAccountId"></param>
         /// <param name="cloudRegion"></param>
+        /// <param name="serverAddress"></param>
+        /// <param name="serverPort"></param>
+        /// <param name="routingKey"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
