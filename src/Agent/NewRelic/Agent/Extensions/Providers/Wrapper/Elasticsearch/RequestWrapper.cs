@@ -45,8 +45,6 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             if (isAsync)
             {
                 transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
-
                 var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
                 if (parameterTypeNamesList[4] == "Elasticsearch.Net.IRequestParameters")
                 {
@@ -70,7 +68,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
 
             var transactionExperimental = transaction.GetExperimentalApi();
-            var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(DatastoreVendor.Elasticsearch.ToKnownName(), string.Empty, string.Empty, string.Empty), string.Empty, null);
+            var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, string.Empty), string.Empty, null);
             var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
             segment.GetExperimentalApi().SetSegmentData(datastoreSegmentData).MakeLeaf();
 
@@ -273,7 +271,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         {
             var segmentExperimentalApi = segment.GetExperimentalApi();
             var data = segmentExperimentalApi.SegmentData as IDatastoreSegmentData;
-            data.SetConnectionInfo(new ConnectionInfo(DatastoreVendor.Elasticsearch.ToKnownName(), uri.Host, uri.Port, string.Empty));
+            data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port, string.Empty));
             segmentExperimentalApi.SetSegmentData(data);
         }
 

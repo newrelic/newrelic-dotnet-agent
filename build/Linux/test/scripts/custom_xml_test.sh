@@ -9,7 +9,7 @@ install_agent
 verify_no_logs
 
 dos2unix Instrumentation.xml &>/dev/null
-cp Instrumentation.xml $CORECLR_NEWRELIC_HOME/extensions/
+cp Instrumentation.xml $CORECLR_NEW_RELIC_HOME/extensions/
 CORECLR_ENABLE_PROFILING=0 dotnet build
 dotnet bin/Debug/net6.0/custom_xml.dll
 

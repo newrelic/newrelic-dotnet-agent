@@ -30,10 +30,16 @@
         "packageName": "amazon.lambda.sqsevents"
     },
     {
-        "packageName": "awssdk.bedrockruntime"
+        "packageName": "awssdk.bedrockruntime",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
-        "packageName": "awssdk.sqs"
+        "packageName": "awssdk.sqs",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
         "packageName": "confluent.kafka"
@@ -48,7 +54,11 @@
         "ignoreReason": "frequent patch releases create too much noise"
     },
     {
-        "packageName": "log4net"
+        "packageName": "log4net",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2764"
     },
     {
         "packageName": "microsoft.extensions.logging"
@@ -60,7 +70,11 @@
         "packageName": "microsoft.net.http"
     },
     {
-        "packageName": "mongodb.driver"
+        "packageName": "mongodb.driver",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking since at least 2.25.0. See https://new-relic.atlassian.net/browse/NR-281915"
     },
     {
         "packageName": "mysql.data"
@@ -99,7 +113,10 @@
         "packageName": "serilog.sinks.console"
     },
     {
-        "packageName": "stackexchange.redis"
+        "packageName": "stackexchange.redis",
+        "ignorePatch": true,
+        "ignoreMinor": false,
+        "ignoreReason": "frequent patch releases create too much noise"
     },
     {
         "packageName": "system.data.sqlclient"

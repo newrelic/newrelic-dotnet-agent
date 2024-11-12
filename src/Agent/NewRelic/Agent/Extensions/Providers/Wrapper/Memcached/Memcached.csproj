@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <RootNamespace>NewRelic.Providers.Wrapper.Memcached</RootNamespace>
+    <AssemblyName>NewRelic.Providers.Wrapper.Memcached</AssemblyName>
+    <Description>Memcached Wrapper Provider for New Relic .NET Agent</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Instrumentation.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

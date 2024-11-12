@@ -37,7 +37,8 @@ namespace NewRelic { namespace Profiler
 
             // get the environment variable
             auto result = GetEnvironmentVariable(variableName.c_str(), value.get(), size);
-            if (result == 0) return nullptr;
+
+            if (result == 0) return nullptr; // not found
 
             return std::unique_ptr<xstring_t>(new xstring_t(value.get()));
         }

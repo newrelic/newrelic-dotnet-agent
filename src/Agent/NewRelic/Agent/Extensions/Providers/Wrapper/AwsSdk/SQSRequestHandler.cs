@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -15,7 +16,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     internal static class SQSRequestHandler
     {
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
-        private static readonly HashSet<string> _unsupportedSQSRequestTypes = [];
+        private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
 
         public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
         {
@@ -35,8 +36,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     action = MessageBrokerAction.Purge;
                     break;
                 default:
-                    if (_unsupportedSQSRequestTypes.Add(requestType)) // log once per unsupported request type
+                    if (!_unsupportedSQSRequestTypes.Contains(requestType))  // log once per unsupported request type
+                    {
                         agent.Logger.Debug($"AwsSdkPipelineWrapper: SQS Request type {requestType} is not supported. Returning NoOp delegate.");
+                        _unsupportedSQSRequestTypes.Add(requestType);
+                    }
 
                     return Delegates.NoOp;
             }
@@ -107,8 +111,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                         var ec = executionContext;
                         var response = ec.ResponseContext.Response; // response is a ReceiveMessageResponse
 
-                        // accept distributed trace headers from the first message in the response
-                        SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
+                        AcceptTracingHeadersIfSafe(transaction, response);
                     }
                 );
 
@@ -119,16 +122,25 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
                 // taskResult is a ReceiveMessageResponse
                 var taskResultGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
-                dynamic receiveMessageResponse = taskResultGetter(responseTask);
+                dynamic response = taskResultGetter(responseTask);
 
-                // accept distributed trace headers from the first message in the response
-                SqsHelper.AcceptDistributedTraceHeaders(transaction, receiveMessageResponse.Messages[0].MessageAttributes);
+                AcceptTracingHeadersIfSafe(transaction, response);
+
             }
         }
 
         private static bool ValidTaskResponse(Task response)
         {
             return response?.Status == TaskStatus.RanToCompletion;
+        }
+
+        private static void AcceptTracingHeadersIfSafe(ITransaction transaction, dynamic response)
+        {
+            if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
+            {
+                // accept distributed trace headers from the first message in the response
+                SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
+            }
         }
 
     }

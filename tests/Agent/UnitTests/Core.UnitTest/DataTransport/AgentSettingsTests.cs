@@ -322,6 +322,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "application_logging.forwarding.context_data.enabled": true,
                     "application_logging.forwarding.context_data.include": ["attr1", "attr2"],
                     "application_logging.forwarding.context_data.exclude": ["attr1", "attr2"],
+                    "application_logging.forwarding.labels.enabled": true,
+                    "application_logging.forwarding.labels.exclude": ["label1", "label2"],
                     "metrics.harvest_cycle": "00:01:00",
                     "transaction_traces.harvest_cycle": "00:01:00",
                     "error_traces.harvest_cycle": "00:01:00",
@@ -341,7 +343,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "agent.disable_file_system_watcher": false,
                     "ai_monitoring.enabled": true,
                     "ai_monitoring.streaming.enabled": true,
-                    "ai_monitoring.record_content.enabled": true
+                    "ai_monitoring.record_content.enabled": true,
+                    "gc_sampler_v2.enabled": true
                 }
                 """;
 
@@ -359,6 +362,7 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
                 Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
                 Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+                Assert.That(agentSettings.AwsAccountId, Is.Empty);
             });
         }
     }

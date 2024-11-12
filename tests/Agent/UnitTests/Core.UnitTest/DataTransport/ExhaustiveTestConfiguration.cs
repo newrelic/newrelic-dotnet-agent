@@ -378,7 +378,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool UtilizationDetectKubernetes => true;
 
         public bool UtilizationDetectAzureFunction => true;
-
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -446,6 +445,10 @@ namespace NewRelic.Agent.Core.DataTransport
             new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
         };
 
+        public bool LabelsEnabled => true;
+
+        public IEnumerable<string> LabelsExclude => new[] { "label1", "label2" };
+
         public bool DisableFileSystemWatcher => false;
 
         public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
@@ -493,5 +496,8 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
+
+        public string AwsAccountId => "";
+        public bool GCSamplerV2Enabled => true;
     }
 }

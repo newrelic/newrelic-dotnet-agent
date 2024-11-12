@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                 {
                     portNum = -1;
                 }
-                return new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0], utilizationHostName), portNum, null);
+                return new ConnectionInfo(ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0], utilizationHostName), portNum, null);
             }
 
             return new ConnectionInfo(null, null, null, null);

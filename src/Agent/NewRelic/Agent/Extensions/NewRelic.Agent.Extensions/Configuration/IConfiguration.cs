@@ -198,8 +198,10 @@ namespace NewRelic.Agent.Configuration
         bool LogDecoratorEnabled { get; }
         HashSet<string> LogLevelDenyList { get; }
         bool ContextDataEnabled { get; }
+        bool LabelsEnabled { get; }
         IEnumerable<string> ContextDataInclude { get; }
         IEnumerable<string> ContextDataExclude { get; }
+        IEnumerable<string> LabelsExclude { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled { get; }
@@ -231,5 +233,8 @@ namespace NewRelic.Agent.Configuration
         string AzureFunctionResourceIdWithFunctionName(string functionName);
 
         bool UtilizationDetectAzureFunction { get; }
+
+        string AwsAccountId { get; }
+        bool GCSamplerV2Enabled { get; }
     }
 }

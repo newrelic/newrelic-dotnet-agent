@@ -46,11 +46,11 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 3 }
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 3 }
             };
 
             foreach (var webFormName in new List<string>() { "webform1.aspx", "webformslow.aspx"} )

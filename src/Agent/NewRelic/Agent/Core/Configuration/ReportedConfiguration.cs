@@ -638,6 +638,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.context_data.exclude")]
         public IEnumerable<string> ContextDataExclude => _configuration.ContextDataExclude;
 
+        [JsonProperty("application_logging.forwarding.labels.enabled")]
+        public bool LabelsEnabled => _configuration.LabelsEnabled;
+
+        [JsonProperty("application_logging.forwarding.labels.exclude")]
+        public IEnumerable<string> LabelsExclude => _configuration.LabelsExclude;
+
         [JsonProperty("metrics.harvest_cycle")]
         public TimeSpan MetricsHarvestCycle => _configuration.MetricsHarvestCycle;
 
@@ -711,6 +717,11 @@ namespace NewRelic.Agent.Core.Configuration
 
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
 
+        [JsonIgnore]
+        public string AwsAccountId => _configuration.AwsAccountId;
+
+        [JsonProperty("gc_sampler_v2.enabled")]
+        public bool GCSamplerV2Enabled => _configuration.GCSamplerV2Enabled;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

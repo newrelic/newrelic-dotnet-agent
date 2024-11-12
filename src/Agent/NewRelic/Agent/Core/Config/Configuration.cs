@@ -98,6 +98,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCodeLevelMetrics codeLevelMetricsField;
         
+        private configurationCloud cloudField;
+        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -121,6 +123,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
+            this.cloudField = new configurationCloud();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
             this.utilizationField = new configurationUtilization();
@@ -597,6 +600,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.codeLevelMetricsField = value;
+            }
+        }
+        
+        public configurationCloud cloud
+        {
+            get
+            {
+                return this.cloudField;
+            }
+            set
+            {
+                this.cloudField = value;
             }
         }
         
@@ -5457,6 +5472,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationLoggingForwardingContextData contextDataField;
         
+        private configurationApplicationLoggingForwardingLabels labelsField;
+        
         private bool enabledField;
         
         private int maxSamplesStoredField;
@@ -5468,6 +5485,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingForwarding()
         {
+            this.labelsField = new configurationApplicationLoggingForwardingLabels();
             this.contextDataField = new configurationApplicationLoggingForwardingContextData();
             this.enabledField = true;
             this.maxSamplesStoredField = 10000;
@@ -5482,6 +5500,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.contextDataField = value;
+            }
+        }
+        
+        public configurationApplicationLoggingForwardingLabels labels
+        {
+            get
+            {
+                return this.labelsField;
+            }
+            set
+            {
+                this.labelsField = value;
             }
         }
         
@@ -5609,6 +5639,65 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationLoggingForwardingContextData Clone()
         {
             return ((configurationApplicationLoggingForwardingContextData)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingForwardingLabels
+    {
+        
+        private bool enabledField;
+        
+        private string excludeField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingForwardingLabels class constructor
+        /// </summary>
+        public configurationApplicationLoggingForwardingLabels()
+        {
+            this.enabledField = false;
+            this.excludeField = "";
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingForwardingLabels object
+        /// </summary>
+        public virtual configurationApplicationLoggingForwardingLabels Clone()
+        {
+            return ((configurationApplicationLoggingForwardingLabels)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -6009,6 +6098,79 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationCodeLevelMetrics Clone()
         {
             return ((configurationCodeLevelMetrics)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationCloud
+    {
+        
+        private configurationCloudAws awsField;
+        
+        /// <summary>
+        /// configurationCloud class constructor
+        /// </summary>
+        public configurationCloud()
+        {
+            this.awsField = new configurationCloudAws();
+        }
+        
+        public configurationCloudAws aws
+        {
+            get
+            {
+                return this.awsField;
+            }
+            set
+            {
+                this.awsField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationCloud object
+        /// </summary>
+        public virtual configurationCloud Clone()
+        {
+            return ((configurationCloud)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationCloudAws
+    {
+        
+        private string accountIdField;
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string accountId
+        {
+            get
+            {
+                return this.accountIdField;
+            }
+            set
+            {
+                this.accountIdField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationCloudAws object
+        /// </summary>
+        public virtual configurationCloudAws Clone()
+        {
+            return ((configurationCloudAws)(this.MemberwiseClone()));
         }
         #endregion
     }

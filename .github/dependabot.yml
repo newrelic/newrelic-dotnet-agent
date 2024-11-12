@@ -3,12 +3,25 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       github-actions:
         patterns:
           - "*"
-            
+
+# Docker can't be updated until we modernize the profiler build process
+#  - package-ecosystem: docker
+#    directories: 
+#      - "/src/Agent/NewRelic/Profiler/linux"
+#      - "/build/**/"
+#      - "/deploy/**/"
+#    schedule:
+#      interval: monthly
+#    groups:
+#      docker:
+#        patterns:
+#          - "*"
+          
   # We do not scan anything in the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
   # intentionally reference old versions of the Nuget packages they instrument.
   - package-ecosystem: nuget
@@ -30,7 +43,7 @@ updates:
       - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions
       - / # will pick up FullAgent.sln which contains the unit tests
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       nuget-tests:
         patterns:

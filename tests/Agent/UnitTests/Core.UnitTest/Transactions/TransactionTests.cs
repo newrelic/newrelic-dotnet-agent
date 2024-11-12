@@ -569,4 +569,26 @@ public class TransactionTests
         // Assert
         Assert.That(_transaction.TransactionMetadata.UserAndRequestAttributes.Count, Is.EqualTo(0));
     }
+
+    [Test]
+    public void HasHttpResponseStatusCode_ReturnsTrue_WhenStatusCodeIsSet()
+    {
+        // Arrange
+        _transaction.SetHttpResponseStatusCode(200);
+
+        // Act
+        var result = _transaction.HasHttpResponseStatusCode;
+
+        // Assert
+        Assert.That(result, Is.True);
+    }
+    [Test]
+    public void HasHttpResponseStatusCode_ReturnsFalse_WhenStatusCodeIsNotSet()
+    {
+        // Act
+        var result = _transaction.HasHttpResponseStatusCode;
+
+        // Assert
+        Assert.That(result, Is.False);
+    }
 }

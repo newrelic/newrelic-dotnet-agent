@@ -591,7 +591,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var foundMetrics = actualMetrics
                 .Where(actualMetric => (expectedMetric.IsRegexName && Regex.IsMatch(actualMetric.MetricSpec.Name, expectedMetric.metricName)) ||
                                        (!expectedMetric.IsRegexName && expectedMetric.metricName == actualMetric.MetricSpec.Name))
-                .Where(actualMetric => (expectedMetric.IsRegexScope && Regex.IsMatch(actualMetric.MetricSpec.Scope, expectedMetric.metricScope)) ||
+                .Where(actualMetric => (expectedMetric.IsRegexScope && Regex.IsMatch(actualMetric.MetricSpec.Scope ?? string.Empty, expectedMetric.metricScope)) ||
                                        (!expectedMetric.IsRegexScope && expectedMetric.metricScope == actualMetric.MetricSpec.Scope))
                 .ToList();
 

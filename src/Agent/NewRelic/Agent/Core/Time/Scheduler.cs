@@ -202,10 +202,7 @@ namespace NewRelic.Agent.Core.Time
 
                 foreach (var timer in _recurringTimers.Values)
                 {
-                    if (timer != null)
-                    {
-                        timer.Dispose();
-                    }
+                    timer?.Dispose();
                 }
                 _recurringTimers.Clear();
             }
@@ -219,8 +216,7 @@ namespace NewRelic.Agent.Core.Time
             public void Dispose()
             {
                 var timer = Timer;
-                if (timer != null)
-                    timer.Dispose();
+                timer?.Dispose();
             }
         }
     }

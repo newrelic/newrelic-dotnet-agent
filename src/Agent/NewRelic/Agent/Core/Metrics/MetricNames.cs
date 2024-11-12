@@ -837,6 +837,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
 
         public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
+        public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
 
         #endregion Supportability
 
@@ -1034,6 +1035,20 @@ namespace NewRelic.Agent.Core.Metrics
 
             { GCSampleType.LOHSize , "GC/LOH/Size" },
             { GCSampleType.LOHSurvived, "GC/LOH/Survived" },
+
+            { GCSampleType.LOHCollectionCount, "GC/LOH/Collections" },
+            { GCSampleType.POHCollectionCount, "GC/POH/Collections" },
+
+            { GCSampleType.TotalHeapMemory, "GC/Heap/Total" },
+            { GCSampleType.TotalCommittedMemory, "GC/Heap/Committed" },
+            { GCSampleType.TotalAllocatedMemory, "GC/Heap/Allocated" },
+
+            { GCSampleType.Gen0FragmentationSize, "GC/Gen0/Fragmentation" },
+            { GCSampleType.Gen1FragmentationSize, "GC/Gen1/Fragmentation" },
+            { GCSampleType.Gen2FragmentationSize, "GC/Gen2/Fragmentation" },
+            { GCSampleType.LOHFragmentationSize, "GC/LOH/Fragmentation" },
+            { GCSampleType.POHFragmentationSize, "GC/POH/Fragmentation" },
+            { GCSampleType.POHSize, "GC/POH/Size" }
         };
 
         public static string GetGCMetricName(GCSampleType sampleType)
@@ -1096,11 +1111,13 @@ namespace NewRelic.Agent.Core.Metrics
         private const string Metrics = "Metrics";
         private const string Forwarding = "Forwarding";
         private const string LocalDecorating = "LocalDecorating";
+        private const string Labels = "Labels";
         private const string DotNet = "DotNET";
 
         private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNet + PathSeparator;
         private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
         private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNet + PathSeparator;
 
         public static string GetSupportabilityLogMetricsConfiguredName(bool enabled)
         {
@@ -1110,6 +1127,11 @@ namespace NewRelic.Agent.Core.Metrics
         public static string GetSupportabilityLogForwardingConfiguredName(bool enabled)
         {
             return SupportabilityLogForwardingConfigPs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string GetSupportabilityLogLabelsConfiguredName(bool enabled)
+        {
+            return SupportabilityLogLabelsConfigPs + (enabled ? Enabled : Disabled);
         }
 
         public static string GetSupportabilityLogDecoratingConfiguredName(bool enabled)

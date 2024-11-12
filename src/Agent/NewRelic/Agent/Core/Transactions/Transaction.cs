@@ -72,6 +72,8 @@ namespace NewRelic.Agent.Core.Transactions
             }
         }
 
+        public bool HasHttpResponseStatusCode => TransactionMetadata.HttpResponseStatusCode.HasValue;
+
         public ITracingState TracingState { get; private set; }
 
         public string TraceId

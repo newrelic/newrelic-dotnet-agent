@@ -33,6 +33,8 @@ namespace NewRelic.Agent.Api
         /// </summary>
         ISegment CurrentSegment { get; }
 
+        bool HasHttpResponseStatusCode { get; }
+
         /// <summary>
         /// End this transaction.
         /// </summary>
@@ -163,6 +165,10 @@ namespace NewRelic.Agent.Api
         /// <summary>
         /// Detatches the transaction from each non-async active context storage. This is necessary when async tracking needs to continue but
         /// the primary context(s) the transaction may be stored can continue to persist, such as thread static or thread local storgage.
+        /// <para>
+        /// <b>Warning:</b> This method should only be called at the start of the transaction, before any other segments are created.
+        /// If called partway through the transaction, this can result in "Transaction was garbage collected without ever ending" errors.
+        /// </para>
         /// </summary>
         void DetachFromPrimary();
 

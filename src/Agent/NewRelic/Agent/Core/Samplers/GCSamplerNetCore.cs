@@ -127,10 +127,11 @@ namespace NewRelic.Agent.Core.Samplers
 
         public override void Dispose()
         {
-            base.Dispose();
             _listener?.StopListening();
             _listener?.Dispose();
             _listener = null;
+
+            base.Dispose();
         }
     }
 

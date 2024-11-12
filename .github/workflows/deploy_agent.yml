@@ -68,7 +68,7 @@ jobs:
 
       - name: Checkout
         if: ${{ inputs.get-version-automatically }}
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       
@@ -170,7 +170,7 @@ jobs:
           repository: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -180,7 +180,7 @@ jobs:
     needs: [get-release-info, get-external-artifacts]
     if: ${{ inputs.downloadsite }}
     name: Deploy MSI to Download Site
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - name: Download Deploy Artifacts
@@ -256,7 +256,7 @@ jobs:
     needs: get-external-artifacts
     if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       nuget_source: https://www.nuget.org
@@ -361,7 +361,7 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 

@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -31,24 +32,22 @@ namespace NewRelic.Agent.Core.Aggregators
         private const double ReservoirReductionSizeMultiplier = 0.5;
 
         private readonly IAgentHealthReporter _agentHealthReporter;
+        private readonly ILabelsService _labelsService;
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> _logEvents = new ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>(0);
         private int _logsDroppedCount;
 
-        public LogEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
+        public LogEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter,
+            ILabelsService labelsService)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
+            _labelsService = labelsService;
             ResetCollections(_configuration.LogEventsMaxSamplesStored);
         }
 
         protected override TimeSpan HarvestCycle => _configuration.LogEventsHarvestCycle;
         protected override bool IsEnabled => _configuration.LogEventCollectorEnabled;
-
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
 
         public override void Collect(LogEventWireModel loggingEventWireModel)
         {
@@ -103,6 +102,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 _configuration.ApplicationNames.ElementAt(0),
                 _configuration.EntityGuid,
                 hostname,
+                _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
                 aggregatedEvents);
 
             var responseStatus = DataTransportService.Send(modelsCollection, transactionId);

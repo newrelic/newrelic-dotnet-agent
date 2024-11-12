@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
             var instanceName = ParseInstanceName();
-            return new ConnectionInfo(DatastoreVendor.MySQL.ToKnownName(), host, portPathOrId, databaseName, instanceName);
+            return new ConnectionInfo(host, portPathOrId, databaseName, instanceName);
         }
 
         private string ParseHost()

@@ -22,9 +22,8 @@
 
 services:
   localstack:
-    container_name: "localstack-containertest"
     image: localstack/localstack:stable
-    expose: # ports are only available intneral to the service, not external so there's no chance for conflicts
+    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "4566"       # LocalStack Gateway
       - "4510-4559"  # external services port range
     environment:
@@ -34,10 +33,18 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  dynamodb:
+    command: "-jar DynamoDBLocal.jar -inMemory"
+    image: "amazon/dynamodb-local:latest"
+    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
+      - "8000"
+    working_dir: /home/dynamodblocal
  
   awssdktestapp:
     depends_on:
         - localstack
+        - dynamodb
     container_name: ${CONTAINER_NAME}
     image: ${CONTAINER_NAME}
     platform: ${PLATFORM}
@@ -52,8 +59,15 @@ services:
         NEW_RELIC_HOST: ${NEW_RELIC_HOST}
         DOTNET_VERSION: ${DOTNET_VERSION}
         APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
+        AWSSDK_INITCOLLECTIONS: ${AWSSDK_INITCOLLECTIONS}
     ports:
       - "${PORT}:80"
     volumes:
       - ${AGENT_PATH}:/usr/local/newrelic-dotnet-agent # AGENT_PATH from .env, points to newrelichome_linux_x64
       - ${LOG_PATH}:/app/logs # LOG_PATH from .env, should be a folder unique to this run of the smoketest app
+
+networks:
+    default:
+        driver: bridge
+        driver_opts:
+          com.docker.network.bridge.enable_icc: "true"

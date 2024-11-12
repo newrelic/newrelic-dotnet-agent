@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/AcceptDistributedTraceHeaders", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", CallCountAllHarvests = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
             };

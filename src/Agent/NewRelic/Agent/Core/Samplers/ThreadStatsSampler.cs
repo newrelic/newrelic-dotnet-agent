@@ -77,12 +77,13 @@ namespace NewRelic.Agent.Core.Samplers
 
         public override void Dispose()
         {
-            base.Dispose();
             _listener?.StopListening();
 #if NETFRAMEWORK // calling .Dispose() in .NET 7 explodes. No idea why.
                 _listener?.Dispose();
 #endif
             _listener = null;
+
+            base.Dispose();
         }
     }
 

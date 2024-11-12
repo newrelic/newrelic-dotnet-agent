@@ -401,6 +401,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AzureFunctionWrapperComponent" Guid="{949893C5-0212-447A-88A3-DDE3638DDC6E}">
         <File Id="AzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
       </Component>
+      <Component Id="MemcachedWrapperComponent" Guid="{2FF15179-BBEB-460C-A145-10F20C0CAD07}">
+        <File Id="MemcachednWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -475,6 +478,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAzureFunctionWrapperComponent" Guid="{6DC23A07-4063-462E-B43A-532D6F810AFE}">
         <File Id="CoreAzureFunctionWrapperFile" Name="NewRelic.Providers.Wrapper.AzureFunction.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll" />
+      </Component>
+      <Component Id="CoreMemcachedWrapperComponent" Guid="{1D7D04A1-24D5-4716-B7CB-EACB21D66D7D}">
+        <File Id="CoreMemcachedWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
       </Component>
    </ComponentGroup>
 
@@ -591,6 +597,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AzureFunctionInstrumentationComponent" Guid="{0D802289-3B47-4D94-8907-285FFD2779AB}">
         <File Id="AzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" />
       </Component>
+      <Component Id="MemcachedInstrumentationComponent" Guid="{065F899F-4942-43C6-9589-538C432E3E4D}">
+        <File Id="MemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" />
+      </Component>
    </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -662,6 +671,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAzureFunctionInstrumentationComponent" Guid="{BF3BEE66-A563-4A59-ADEC-65C3381C582E}">
         <File Id="CoreAzureFunctionInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreMemcachedInstrumentationComponent" Guid="{5A78488A-837C-4CA5-BD20-4A1ED734C085}">
+        <File Id="CoreMemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
@@ -784,6 +796,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrProfilerPathEnvironmentRemoved" Type="integer" Value="1" KeyPath="yes" />
       </Component>
       <Component Guid="{B63A32D5-33CC-4334-844C-B3B9E265B191}">
+        <Environment Id="OldCoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Action="remove" />
         <Environment Id="CoreClrNewRelicHomeEnvironment" System="yes" Name="CORECLR_NEWRELIC_HOME" Value="[NETAGENTCOMMONFOLDER]" Action="set" />
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Core Agent" Name="CoreClrNewRelicHomeEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>

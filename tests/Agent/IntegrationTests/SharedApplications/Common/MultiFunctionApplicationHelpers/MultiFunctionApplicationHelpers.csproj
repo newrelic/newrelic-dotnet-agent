@@ -158,7 +158,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
   </ItemGroup>
 
   <!-- The following section is used to specify particular versions of the RabbitMQ client to be tested with different
@@ -178,7 +178,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <ItemGroup>

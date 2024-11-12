@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.33.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.0...v10.33.1) (2024-10-31)
+
+
+### Fixes
+
+* Fix syntax error in `setenv.sh` ([#2864](https://github.com/newrelic/newrelic-dotnet-agent/issues/2864)) ([a629138](https://github.com/newrelic/newrelic-dotnet-agent/commit/a629138e0e0b00a52f513d64c661576376e64455)), closes [#2863](https://github.com/newrelic/newrelic-dotnet-agent/issues/2863)
+
+## [10.33.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.32.0...v10.33.0) (2024-10-30)
+
+
+### New features
+
+* Add AWSSDK.DynamoDBv2 instrumentation.  Versions 3.5 through 4.0.0-preview.4 are supported.  Note: previous agent versions would instrument DynamoDB calls as Externals; now DynamoDB calls will show up as Database operations in the New Relic UI. ([2460527](https://github.com/newrelic/newrelic-dotnet-agent/commit/2460527c83c0b196329a2e2b61e435cd20cd6dbd))
+* Add config option for providing AWS account ID for linking ([#2851](https://github.com/newrelic/newrelic-dotnet-agent/issues/2851)) ([936b6f6](https://github.com/newrelic/newrelic-dotnet-agent/commit/936b6f63c837dd03222281870ae5db40574693ff))
+* New Garbage Collection Metrics Sampler for .NET 6+ ([#2838](https://github.com/newrelic/newrelic-dotnet-agent/issues/2838)) ([f24a5da](https://github.com/newrelic/newrelic-dotnet-agent/commit/f24a5daa2cc6117a73eac96f2a45d738335d063a))
+
+
+### Fixes
+
+* Fix potential race condition in AWS SDK, AWS Bedrock, and Elastisearch that could lead to an orphaned Transaction. ([#2842](https://github.com/newrelic/newrelic-dotnet-agent/issues/2842)) ([3afa15f](https://github.com/newrelic/newrelic-dotnet-agent/commit/3afa15f3cf70d4bda5cecbd728c377ad7cb4ff28))
+* Remove usage of non-thread safe HashSet in AwsSdk pipeline wrappers. Thanks, [@gjunge](https://github.com/gjunge)! ([#2855](https://github.com/newrelic/newrelic-dotnet-agent/issues/2855)) ([#2857](https://github.com/newrelic/newrelic-dotnet-agent/issues/2857)) ([ae1d422](https://github.com/newrelic/newrelic-dotnet-agent/commit/ae1d4220e684192525f13c670436dbf4400012bd))
+* Revert environment variable name change in installers and scripts ([#2852](https://github.com/newrelic/newrelic-dotnet-agent/issues/2852)) ([e77683b](https://github.com/newrelic/newrelic-dotnet-agent/commit/e77683b7e60afa502b6e700a51945c757530a47b))
+
+## [10.32.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.31.0...v10.32.0) (2024-10-15)
+
+
+### Notice
+
+* Environment variables that start with or contain `NEWRELIC_` are deprecated and may be removed in a future major release. Users are encouraged to update their installation to use `NEW_RELIC_` names as soon as possible. ([b00edda](https://github.com/newrelic/newrelic-dotnet-agent/commit/b00edda2e617ff3176cff8b2243171cbe51e391f))
+
+
+### New features
+
+* Implement consistent naming scheme for all environment variables. All environment variables starting with (or containing) `NEWRELIC_` are now named `NEW_RELIC_`. Support for previous environment variables is retained, so this is not a breaking change. ([#718](https://github.com/newrelic/newrelic-dotnet-agent/issues/718)) ([#2812](https://github.com/newrelic/newrelic-dotnet-agent/issues/2812)) ([b00edda](https://github.com/newrelic/newrelic-dotnet-agent/commit/b00edda2e617ff3176cff8b2243171cbe51e391f))
+* Update CosmosDB instrumentation to support latest version ([#2832](https://github.com/newrelic/newrelic-dotnet-agent/issues/2832)) ([27a78cb](https://github.com/newrelic/newrelic-dotnet-agent/commit/27a78cb141fed90f2a3585d910bd8a5f74f94238))
+
+
+### Fixes
+
+* Handle null or empty SQS messages and/or message attributes ([#2833](https://github.com/newrelic/newrelic-dotnet-agent/issues/2833)) ([758b770](https://github.com/newrelic/newrelic-dotnet-agent/commit/758b770bb0ecf7c1a39e12b43c3279f26fdc0ed1))
+* Update Profiler to check whether Azure function mode support is enabled ([#2822](https://github.com/newrelic/newrelic-dotnet-agent/issues/2822)) ([9669641](https://github.com/newrelic/newrelic-dotnet-agent/commit/966964114018066d0e72f2b3fc12ff7974b66804))
+
+## [10.31.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.30.0...v10.31.0) (2024-09-25)
+
+
+### New features
+
+* Add support for the EnyimMemcachedCore client. ([#2781](https://github.com/newrelic/newrelic-dotnet-agent/issues/2781)) ([52bdc11](https://github.com/newrelic/newrelic-dotnet-agent/commit/52bdc11a5194074afb2e6f806ab764c8aca39051))
+* Allow container linking for AWS ECS applications. ([#2683](https://github.com/newrelic/newrelic-dotnet-agent/issues/2683)) ([d55567f](https://github.com/newrelic/newrelic-dotnet-agent/commit/d55567fb4674ea64443ac4a96e7d3f7f81dc3c97))
+* Parse Azure Function HttpTrigger parameters ([#2776](https://github.com/newrelic/newrelic-dotnet-agent/issues/2776)) ([7e8c28b](https://github.com/newrelic/newrelic-dotnet-agent/commit/7e8c28bbbcb97c62d0da0db6e1affcae2ff445b1))
+
+
+### Fixes
+
+* Prevent FileNotFoundException when handling connection issues while instrumenting .NET Framework apps. ([#2750](https://github.com/newrelic/newrelic-dotnet-agent/issues/2750)) ([#2751](https://github.com/newrelic/newrelic-dotnet-agent/issues/2751)) ([cebd287](https://github.com/newrelic/newrelic-dotnet-agent/commit/cebd28703224afed1fda24cb984657eb86f4b51d))
+
 ## [10.30.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.29.0...v10.30.0) (2024-09-11)
 
 

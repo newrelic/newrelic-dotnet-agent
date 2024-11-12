@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+            : base(fixture, output, false)
         {
         }
 
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     public class DotNetPerfMetricsTestsCoreOldest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public DotNetPerfMetricsTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+            : base(fixture, output, false)
         {
         }
 
@@ -38,13 +38,34 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+            : base(fixture, output, false)
         {
         }
 
         protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetCore;
     }
 
+    [NetCoreTest]
+    public class DotNetPerfMetricsTestsGCSamplerV2CoreOldest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public DotNetPerfMetricsTestsGCSamplerV2CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+
+        protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_V2;
+    }
+
+    [NetCoreTest]
+    public class DotNetPerfMetricsTestsGCSamplerV2CoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public DotNetPerfMetricsTestsGCSamplerV2CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+
+        protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_V2;
+    }
     
     public abstract class DotNetPerfMetricsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
@@ -58,8 +79,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected const string METRICNAME_THREADPOOL_COMPLETION_INUSE = "Threadpool/Completion/InUse";
 
         protected readonly TFixture Fixture;
+        private readonly bool _gcSamplerV2Enabled;
 
-        protected abstract string[] ExpectedMetricNames_GC { get; }
+        protected abstract string[] ExpectedMetricNames_GC { get;}
         protected string[] ExpectedMetricNames_GC_NetFramework => new string[]
         {
             "GC/Gen0/Size",
@@ -91,6 +113,29 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             "GC/Gen1/Collections",
             "GC/Gen2/Collections"
         };
+
+        protected string[] ExpectedMetricNames_GC_V2 => new string[]
+        {
+            "GC/Gen0/Size",
+            "GC/Gen0/Fragmentation",
+            "GC/Gen1/Size",
+            "GC/Gen1/Fragmentation",
+            "GC/Gen2/Size",
+            "GC/Gen2/Fragmentation",
+            "GC/LOH/Size",
+            "GC/LOH/Fragmentation",
+            "GC/POH/Size",
+            "GC/POH/Fragmentation",
+            "GC/Gen0/Collections",
+            "GC/Gen1/Collections",
+            "GC/Gen2/Collections",
+            "GC/LOH/Collections",
+            "GC/POH/Collections",
+            "GC/Heap/Total",
+            "GC/Heap/Committed",
+            "GC/Heap/Allocated"
+        };
+
         protected string[] ExpectedMetricNames_Memory => new string[]
         {
             "Memory/Physical",
@@ -113,9 +158,12 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             "Threadpool/Throughput/QueueLength"
         };
 
-        public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output, bool gcSamplerV2Enabled) : base(fixture)
         {
             Fixture = fixture;
+
+            _gcSamplerV2Enabled = gcSamplerV2Enabled;
+
             Fixture.TestLogger = output;
 
             Fixture.AddCommand($"PerformanceMetrics Test {THREADPOOL_WORKER_MAX} {THREADPOOL_COMPLETION_MAX}");
@@ -127,6 +175,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
                     Fixture.RemoteApplication.AddAppSetting("NewRelic.EventListenerSamplersEnabled", "true");
                     Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(10);
+
+                    if (_gcSamplerV2Enabled)
+                        Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(true);
                 }
             );
 

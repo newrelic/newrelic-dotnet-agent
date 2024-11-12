@@ -30,5 +30,10 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         {
             return _emptyEnvVarDictionary;
         }
+
+        public string GetEnvironmentVariableFromList(params string[] variables)
+        {
+            return null;
+        }
     }
 }

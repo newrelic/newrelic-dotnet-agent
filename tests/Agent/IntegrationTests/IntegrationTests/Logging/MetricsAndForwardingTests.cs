@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -107,12 +107,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 6 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), CallCountAllHarvests = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), CallCountAllHarvests = 6 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 17 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 17 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
@@ -157,9 +157,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             Assert.NotNull(logEventData);
             Assert.NotNull(logEventData.Common);
             Assert.NotNull(logEventData.Common.Attributes);
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityGuid));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityName));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.Hostname));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.guid"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.name"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["hostname"].ToString()));
 
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
             Assert.Equal(17, logLines.Length);

@@ -57,8 +57,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public override void Dispose()
         {
-            base.Dispose();
             _scheduler.StopExecuting(LogPeriodicReport);
+            base.Dispose();
         }
 
         private void LogPeriodicReport()
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 }
             }
             var message = events.Count > 0 ? string.Join(", ", events) : "No events";
-            Log.Info($"In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
+            Log.Info($"AgentHealthReporter: In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
         }
 
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
@@ -662,6 +662,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogMetricsConfiguredName(_configuration.LogMetricsCollectorEnabled));
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogForwardingConfiguredName(_configuration.LogEventCollectorEnabled));
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogDecoratingConfiguredName(_configuration.LogDecoratorEnabled));
+            ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogLabelsConfiguredName(_configuration.LabelsEnabled));
         }
 
         #endregion
@@ -683,6 +684,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportInfiniteTracingOneTimeMetrics();
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
+            ReportIfGCSamplerV2IsEnabled();
         }
 
         public void CollectMetrics()
@@ -838,5 +840,15 @@ namespace NewRelic.Agent.Core.AgentHealth
                 ReportSupportabilityGaugeMetric(MetricNames.SupportabilityIgnoredInstrumentation, ignoredCount);
             }
         }
+
+        private void ReportIfGCSamplerV2IsEnabled()
+        {
+            if (_configuration.GCSamplerV2Enabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled);
+            }
+            
+        }
+
     }
 }
