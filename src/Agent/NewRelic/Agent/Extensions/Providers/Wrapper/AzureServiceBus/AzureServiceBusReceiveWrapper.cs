@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -14,7 +12,10 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
 public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 {
-    private static readonly ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
+    private Func<object, object> _innerReceiverAccessor;
+    private Func<object, bool> _innerReceiverIsProcessorAccessor;
+
+    public override bool IsTransactionRequired => false; // only partially true. See the code below...
 
     public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
@@ -26,7 +27,14 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
         string queueName = serviceBusReceiver.EntityPath; // some-queue-name
-        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net   
+        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+
+        _innerReceiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(serviceBusReceiver.GetType(), "InnerReceiver");
+        object innerReceiver = _innerReceiverAccessor.Invoke(serviceBusReceiver);
+
+        // use reflection to access the _isProcessor field of the inner receiver
+        _innerReceiverIsProcessorAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<bool>(innerReceiver.GetType(), "_isProcessor");
+        var isProcessor = _innerReceiverIsProcessorAccessor.Invoke(innerReceiver);
 
         MessageBrokerAction action =
             instrumentedMethodCall.MethodCall.Method.MethodName switch
@@ -42,6 +50,16 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
             };
 
+        // if the inner receiver is configured as a processor, start a transaction
+        // the transaction will end at the conclusion of ReceiverManager.ProcessOneMessage()
+        if (isProcessor)
+        {
+            transaction = agent.CreateTransaction(
+                destinationType: MessageBrokerDestinationType.Queue,
+                BrokerVendorName,
+                destination: queueName);
+        }
+
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
@@ -49,7 +67,9 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             action,
             BrokerVendorName,
             queueName,
-            serverAddress: fqns );
+            serverAddress: fqns);
+
+        var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 
         return instrumentedMethodCall.IsAsync
             ?
@@ -57,87 +77,22 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
-                false,
-                HandleResponse,
+                true,
+                (responseTask) =>
+                {
+                    try
+                    {
+                        HandleReceiveResponse(responseTask, instrumentedMethodCall.MethodCall.Method.MethodName, transaction);
+                    }
+                    finally
+                    {
+                        segment.End();
+                    }
+                },
                 TaskContinuationOptions.ExecuteSynchronously)
             : Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
-                onSuccess: ExtractDTHeadersIfAvailable);
-
-        void HandleResponse(Task responseTask)
-        {
-            try
-            {
-                if (responseTask.IsFaulted)
-                {
-                    transaction.NoticeError(responseTask.Exception);
-                    return;
-                }
-
-                var resultObj = GetTaskResultFromObject(responseTask);
-                ExtractDTHeadersIfAvailable(resultObj);
-            }
-            finally
-            {
-                segment.End();
-            }
-        }
-
-
-
-        void ExtractDTHeadersIfAvailable(object resultObj)
-        {
-            if (resultObj != null)
-            {
-                switch (instrumentedMethodCall.MethodCall.Method.MethodName)
-                {
-                    case "ReceiveMessagesAsync":
-                    case "ReceiveDeferredMessagesAsync":
-                    case "PeekMessagesInternalAsync":
-                        // the response contains a list of messages.
-                        // get the first message from the response and extract DT headers
-                        dynamic messages = resultObj;
-                        if (messages.Count > 0)
-                        {
-                            var msg = messages[0];
-                            if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
-                            {
-                                transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
-                            }
-                        }
-                        break;
-                }
-            }
-            IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
-            {
-                var headerValues = new List<string>();
-                foreach (var item in applicationProperties)
-                {
-                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        headerValues.Add(item.Value as string);
-                    }
-                }
-
-                return headerValues;
-            }
-        }
-    }
-
-    private static object GetTaskResultFromObject(object taskObj)
-    {
-        var task = taskObj as Task;
-        if (task == null)
-        {
-            return null;
-        }
-        if (task.IsFaulted)
-        {
-            return null;
-        }
-
-        var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
-        return getResponse(task);
+                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
     }
 }

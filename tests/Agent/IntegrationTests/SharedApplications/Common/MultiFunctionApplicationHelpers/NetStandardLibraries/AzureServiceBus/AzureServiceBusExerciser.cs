@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
@@ -121,7 +122,8 @@ internal class AzureServiceBusExerciser
 
         // receive the message again and complete it to remove it from the queue
         var receivedMessage2 = await receiver.ReceiveMessageAsync();
-        await receiver.CompleteMessageAsync(receivedMessage2);        }
+        await receiver.CompleteMessageAsync(receivedMessage2);
+    }
 
 
     private static async Task SendAMessage(ServiceBusClient client, string queueName, string messageBody)
@@ -142,5 +144,78 @@ internal class AzureServiceBusExerciser
 
         await using var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
         await receiver.ReceiveMessageAsync();
+    }
+
+    [LibraryMethod]
+    // [Transaction] no transaction on this one; we're testing that the ServiceBusProcessor is creating transactions
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task ExerciseServiceBusProcessor(string queueName)
+    {
+        await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+
+        // create the sender
+        await using ServiceBusSender sender = client.CreateSender(queueName);
+
+        // create a set of messages that we can send
+        ServiceBusMessage[] messages = new ServiceBusMessage[]
+        {
+                new ServiceBusMessage("First"),
+                new ServiceBusMessage("Second")
+        };
+
+        // send the message batch
+        await sender.SendMessagesAsync(messages);
+
+        // create the options to use for configuring the processor
+        ServiceBusProcessorOptions options = new()
+        {
+            MaxConcurrentCalls = 2 // multi-threading. Yay!
+        };
+
+        // create a processor that we can use to process the messages
+        await using ServiceBusProcessor processor = client.CreateProcessor(queueName, options);
+
+        var receivedMessages = 0;
+
+        // configure the message handler to use
+        processor.ProcessMessageAsync += MessageHandler;
+        processor.ProcessErrorAsync += ErrorHandler; // ErrorHandler is required, but we won't exercise it
+
+        Task MessageHandler(ProcessMessageEventArgs args)
+        {
+            string body = args.Message.Body.ToString();
+            Console.WriteLine(body);
+
+            Interlocked.Increment(ref receivedMessages);
+
+            return Task.CompletedTask;
+        }
+        Task ErrorHandler(ProcessErrorEventArgs args)
+        {
+            // the error source tells me at what point in the processing an error occurred
+            Console.WriteLine(args.ErrorSource);
+            // the fully qualified namespace is available
+            Console.WriteLine(args.FullyQualifiedNamespace);
+            // as well as the entity path
+            Console.WriteLine(args.EntityPath);
+            Console.WriteLine(args.Exception.ToString());
+            return Task.CompletedTask;
+        }
+
+        // start processing
+        await processor.StartProcessingAsync();
+
+        // wait up to 30 seconds or until receivedMessages has a count of 2
+        var timeout = DateTime.UtcNow.AddSeconds(30);
+        while (receivedMessages < 2 && DateTime.UtcNow < timeout)
+        {
+            await Task.Delay(1000);
+        }
+
+        // chill for a bit
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
+        // stop processing
+        await processor.StopProcessingAsync();
     }
 }
