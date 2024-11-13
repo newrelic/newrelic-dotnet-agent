@@ -24,13 +24,13 @@ public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
         string queueName = serviceBusProcessor.EntityPath; // some-queue-name
         string fqns = serviceBusProcessor.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
 
-        transaction = agent.CreateTransaction(
-            destinationType: MessageBrokerDestinationType.Queue,
-            BrokerVendorName,
-            destination: queueName);
+        //transaction = agent.CreateTransaction(
+        //    destinationType: MessageBrokerDestinationType.Queue,
+        //    BrokerVendorName,
+        //    destination: queueName);
 
         // ???
-        var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "Azure.Messaging.ServiceBus.ServiceBusProcessor", "ProcessMessageAsync");
+        var segment = agent.CurrentTransaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "Azure.Messaging.ServiceBus.ServiceBusProcessor", "ProcessMessageAsync");
 
         //// start a message broker segment ???
         //var segment = transaction.StartMessageBrokerSegment(
@@ -55,7 +55,7 @@ public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
                 }
 
                 segment.End();
-                transaction.End();
+//                transaction.End();
             }, TaskContinuationOptions.ExecuteSynchronously)
             :
             Delegates.GetDelegateFor(
@@ -63,7 +63,7 @@ public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
                 onComplete: () =>
                 {
                     segment.End();
-                    transaction.End();
+//                    transaction.End();
                 });
     }
 }

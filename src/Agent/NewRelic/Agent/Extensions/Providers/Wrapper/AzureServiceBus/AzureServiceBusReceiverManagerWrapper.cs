@@ -20,23 +20,22 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
         public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
             ITransaction transaction)
         {
-
             // TODO not working at present -- transaction is always NoOpTransaction here but shouldn't be 
             // make sure the transaction ends when the receiver manager is done processing messages
             if (instrumentedMethodCall.IsAsync)
             {
                 return Delegates.GetAsyncDelegateFor<Task>(
                     agent,
-                    transaction.CurrentSegment,
-                    true,
+                    agent.CurrentTransaction.CurrentSegment,
+                    false,
                     onComplete: _ =>
                     {
-                        transaction.End();
+                        agent.CurrentTransaction.End();
                     });
             }
             return Delegates.GetDelegateFor(onComplete: () =>
             {
-                transaction.End();
+                agent.CurrentTransaction.End();
             });
         }
     }

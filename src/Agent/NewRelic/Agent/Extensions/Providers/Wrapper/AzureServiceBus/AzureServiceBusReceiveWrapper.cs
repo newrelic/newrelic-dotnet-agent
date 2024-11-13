@@ -50,9 +50,9 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
             };
 
-        // if the inner receiver is configured as a processor, start a transaction
+        // if the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction
         // the transaction will end at the conclusion of ReceiverManager.ProcessOneMessage()
-        if (isProcessor)
+        if (isProcessor && instrumentedMethodCall.MethodCall.Method.MethodName == "ReceiveMessagesAsync")
         {
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
