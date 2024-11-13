@@ -91,13 +91,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
-    public class ConsoleDynamicMethodFixtureCore60 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore60() : base("net6.0")
-        {
-        }
-    }
-
     public class ConsoleDynamicMethodFixtureCore80 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore80() : base("net8.0")

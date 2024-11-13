@@ -48,6 +48,9 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
 
+    <!--Package will not be supported beyond .NET 8: https://techcommunity.microsoft.com/blog/sqlserver/announcement-system-data-sqlclient-package-is-now-deprecated/4227205-->
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />

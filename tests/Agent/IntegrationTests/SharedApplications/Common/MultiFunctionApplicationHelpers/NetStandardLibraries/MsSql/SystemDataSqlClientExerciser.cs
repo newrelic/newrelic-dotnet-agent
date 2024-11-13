@@ -1,7 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETCOREAPP3_1_OR_GREATER && !NET8_0_OR_GREATER
+// System.Data.SqlClient is being deprecated: https://techcommunity.microsoft.com/blog/sqlserver/announcement-system-data-sqlclient-package-is-now-deprecated/4227205
+// This exerciser and the related tests should be deleted after .NET 8.0 EOL
+#if NETCOREAPP3_1_OR_GREATER && !NET9_0_OR_GREATER
+#pragma warning disable CS0618 // Type or member is obsolete
 
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +16,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Threading;
+
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
@@ -332,5 +336,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         }
     }
 }
-
+#pragma warning restore CS0618 // Type or member is obsolete
 #endif

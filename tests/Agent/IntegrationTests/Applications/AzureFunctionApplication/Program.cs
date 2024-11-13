@@ -20,13 +20,7 @@ internal class Program
 
 
         var host = new HostBuilder()
-// the net6 target uses the "basic" azure function configuration
-// the net8 target uses the aspnetcore azure function configuration
-#if NET6_0
-            .ConfigureFunctionsWorkerDefaults()
-#else
             .ConfigureFunctionsWebApplication()
-#endif
             .Build();
 
         var task = host.RunAsync(cts.Token);
