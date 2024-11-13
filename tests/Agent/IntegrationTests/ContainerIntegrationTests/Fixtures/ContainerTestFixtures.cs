@@ -35,7 +35,7 @@ public class DebianX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = "bookworm-slim"; // Debian 12
 
     public DebianX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
@@ -44,7 +44,7 @@ public class UbuntuX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
+    private const string DistroTag = "noble"; // Ubuntu 24.04
 
     public UbuntuX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
@@ -61,7 +61,7 @@ public class DebianArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = "bookworm-slim"; // Debian 12
 
     public DebianArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
@@ -70,7 +70,7 @@ public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "bookworm-slim";
+    private const string DistroTag = "noble"; // Ubuntu 24.04
 
     public UbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }

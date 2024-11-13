@@ -43,16 +43,6 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class KafkaDotNet6TestFixture : KafkaTestFixtureBase
-{
-    private const string Dockerfile = "KafkaTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
-    private const string DotnetVersion = "6.0";
-
-    public KafkaDotNet6TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
-}
-
 public class KafkaDotNet8TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";

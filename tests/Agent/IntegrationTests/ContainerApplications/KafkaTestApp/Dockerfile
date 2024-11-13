@@ -8,7 +8,7 @@ RUN apt-get update \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
-    && apt-get install -y aspnetcore-runtime-6.0
+    && apt-get install -y aspnetcore-runtime-8.0
 
 
 # build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
@@ -19,7 +19,7 @@ RUN apt-get update \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
-    && apt-get install -y dotnet-sdk-6.0
+    && apt-get install -y dotnet-sdk-8.0
 WORKDIR /src
 COPY ["KafkaTestApp/KafkaTestApp.csproj", "KafkaTestApp/"]
 ARG APP_DOTNET_VERSION
