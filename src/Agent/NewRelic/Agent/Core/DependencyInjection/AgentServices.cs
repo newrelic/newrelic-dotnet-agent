@@ -219,6 +219,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
             container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
 
+            if (!serverlessModeEnabled)
+            {
+                container.Register<MeterListenerBridge, MeterListenerBridge>();
+            }
+
             container.Build();
         }
 

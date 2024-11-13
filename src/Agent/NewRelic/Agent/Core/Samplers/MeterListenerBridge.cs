@@ -9,7 +9,10 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -18,7 +21,7 @@ using OpenTelemetry.Resources;
 
 namespace NewRelic.Agent.Core.Samplers
 {
-    public class MeterListenerBridge : IDisposable
+    public class MeterListenerBridge : ConfigurationBasedService
     {
         private dynamic _meterListener;
         private static Meter NewRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
@@ -29,27 +32,70 @@ namespace NewRelic.Agent.Core.Samplers
 
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
+        private IConnectionInfo _connectionInfo;
 
         public MeterListenerBridge()
         {
-            _sdkLogger = new OpenTelemetrySDKLogger();
+            _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
+            _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
+        }
 
-            var providerBuilder = Sdk.CreateMeterProviderBuilder()
-            //.ConfigureResource(r => r.AddService("myservice")) TODO: Add resource information
-            .AddMeter("*")
-            .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-            {
-                exporterOptions.Targets = ConsoleExporterOutputTargets.Console;
+        private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
+        {
+            Stop();
+            _connectionInfo = agentConnectedEvent.ConnectInfo;
+            Start();
+        }
 
-                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000 * 5;
-                metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-            });
+        private void OnPreCleanShutdown(PreCleanShutdownEvent preCleanShutdownEvent)
+        {
+            Stop();
+        }
 
-            _meterProvider = providerBuilder.Build();
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // Nothing to do here, but this abstract method must be implemented.
+            // The real work will start once the agent is connected.
         }
 
         public void Start()
         {
+            if (_sdkLogger == null)
+            {
+                _sdkLogger = new OpenTelemetrySDKLogger();
+            }
+
+            if (_meterProvider == null)
+            {
+                var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
+
+                var providerBuilder = Sdk.CreateMeterProviderBuilder()
+                .ConfigureResource(r => r
+                    .AddService(_configuration.ApplicationNames.First())
+                    .AddTelemetrySdk()
+                    .AddAttributes([new KeyValuePair<string, object>("entity.guid", _configuration.EntityGuid)]))
+                .AddMeter("*")
+                .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+                {
+                    exporterOptions.Targets = ConsoleExporterOutputTargets.Console;
+
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000 * 5;
+                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                })
+                .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
+                {
+                    exporterOptions.Endpoint = uriBuilder.Uri;
+                    exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                    exporterOptions.Headers = $"api-key={_configuration.AgentLicenseKey}";
+
+                    // TODO: configure exponential histograms and other metric settings
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000 * 5;
+                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                });
+
+                _meterProvider = providerBuilder.Build();
+            }
+
             if (_meterListener == null)
             {
                 try
@@ -66,13 +112,21 @@ namespace NewRelic.Agent.Core.Samplers
 
         public void Stop()
         {
+            _meterListener?.Dispose();
+            _meterListener = null;
+
+            _meterProvider?.Dispose();
+            _meterProvider = null;
+
+            _sdkLogger?.Dispose();
+            _sdkLogger = null;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
-            _meterListener?.Dispose();
-            _meterProvider.Dispose();
-            _sdkLogger.Dispose();
+            Stop();
+
+            base.Dispose();
         }
 
         private void TryCreateMeterListener()

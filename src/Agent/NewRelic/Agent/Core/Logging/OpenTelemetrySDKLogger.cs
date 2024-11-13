@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Diagnostics.Tracing;
 using NewRelic.Agent.Extensions.Logging;
 
@@ -21,7 +22,7 @@ namespace NewRelic.Agent.Core.Logging
             // on this class that are available before the .ctor completes. For example, the log level is set lazily
             // using a property and then cached.
 
-            if (eventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix))
+            if (eventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
             {
                 EnableEvents(eventSource, EventSourceLevel, EventKeywords.All);
             }
@@ -29,7 +30,7 @@ namespace NewRelic.Agent.Core.Logging
 
         protected override void OnEventWritten(EventWrittenEventArgs eventData)
         {
-            if (!eventData.EventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix))
+            if (!eventData.EventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -59,7 +60,7 @@ namespace NewRelic.Agent.Core.Logging
                 EventLevel.Warning => LogLevel.Warn,
                 EventLevel.Informational => LogLevel.Info,
                 EventLevel.LogAlways => LogLevel.Info,
-                EventLevel.Verbose => LogLevel.Finest,
+                EventLevel.Verbose => LogLevel.Debug,
                 _ => LogLevel.Finest
             };
 
