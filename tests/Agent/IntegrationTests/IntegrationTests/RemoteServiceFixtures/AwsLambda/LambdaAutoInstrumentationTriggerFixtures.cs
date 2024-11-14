@@ -166,4 +166,26 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
             CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
         }
     }
+    public class LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet9 : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet9() : base("net9.0")
+        {
+            CommandLineArguments = "--handler APIGatewayProxyFunctionEntryPoint";
+        }
+    }
+
+    public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet9 : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet9() : base("net9.0")
+        {
+            CommandLineArguments = "--handler APIGatewayHttpApiV2ProxyFunctionEntryPoint";
+        }
+    }
+    public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureNet9 : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureNet9() : base("net9.0")
+        {
+            CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
+        }
+    }
 }

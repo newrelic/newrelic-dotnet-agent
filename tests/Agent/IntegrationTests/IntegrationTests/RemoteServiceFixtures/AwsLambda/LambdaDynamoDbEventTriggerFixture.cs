@@ -118,16 +118,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaDynamoDbEventTriggerFixtureNet6 : LambdaDynamoDbEventTriggerFixtureBase
-    {
-        public LambdaDynamoDbEventTriggerFixtureNet6() : base("net6.0", false, false) { }
-    }
-
-    public class AsyncLambdaDynamoDbEventTriggerFixtureNet6 : LambdaDynamoDbEventTriggerFixtureBase
-    {
-        public AsyncLambdaDynamoDbEventTriggerFixtureNet6() : base("net6.0", true, false) { }
-    }
-
     public class LambdaDynamoDbEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase
     {
         public LambdaDynamoDbEventTriggerFixtureNet8() : base("net8.0", false, false) { }
@@ -146,16 +136,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     public class AsyncLambdaDynamoDbEventTriggerFixtureNet9 : LambdaDynamoDbEventTriggerFixtureBase
     {
         public AsyncLambdaDynamoDbEventTriggerFixtureNet9() : base("net9.0", true, false) { }
-    }
-
-    public class LambdaDynamoDbTimeWindowEventTriggerFixtureNet6 : LambdaDynamoDbEventTriggerFixtureBase
-    {
-        public LambdaDynamoDbTimeWindowEventTriggerFixtureNet6() : base("net6.0", false, true) { }
-    }
-
-    public class AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet6 : LambdaDynamoDbEventTriggerFixtureBase
-    {
-        public AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet6() : base("net6.0", true, true) { }
     }
 
     public class LambdaDynamoDbTimeWindowEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase

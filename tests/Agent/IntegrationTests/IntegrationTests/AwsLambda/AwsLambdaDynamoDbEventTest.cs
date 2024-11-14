@@ -77,22 +77,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
         }
     }
 
-    public class AwsLambdaDynamoDbEventTestNet6 : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureNet6>
-    {
-        public AwsLambdaDynamoDbEventTestNet6(LambdaDynamoDbEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEvent")
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncDynamoDbEventTestNet6 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncDynamoDbEventTestNet6(AsyncLambdaDynamoDbEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
-        {
-        }
-    }
-
     public class AwsLambdaDynamoDbEventTestNet8 : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureNet8>
     {
         public AwsLambdaDynamoDbEventTestNet8(LambdaDynamoDbEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
@@ -121,22 +105,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     {
         public AwsLambdaAsyncDynamoDbEventTestNet9(AsyncLambdaDynamoDbEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
-        {
-        }
-    }
-
-    public class AwsLambdaDynamoDbTimeWindowEventTestNet6 : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureNet6>
-    {
-        public AwsLambdaDynamoDbTimeWindowEventTestNet6(LambdaDynamoDbTimeWindowEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEvent")
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncDynamoDbTimeWindowEventTestNet6 : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncDynamoDbTimeWindowEventTestNet6(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEventAsync")
         {
         }
     }

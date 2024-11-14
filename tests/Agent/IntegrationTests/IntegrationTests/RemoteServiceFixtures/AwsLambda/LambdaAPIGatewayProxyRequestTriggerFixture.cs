@@ -181,16 +181,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
-    {
-        public LambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", false, false) { }
-    }
-
-    public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
-    {
-        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", true, false) { }
-    }
-
     public class LambdaAPIGatewayProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
         public LambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", false, false) { }
@@ -209,16 +199,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet9 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
         public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet9() : base("net9.0", true, false) { }
-    }
-
-    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
-    {
-        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", false, true) { }
-    }
-
-    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
-    {
-        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", true, true) { }
     }
 
     public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase

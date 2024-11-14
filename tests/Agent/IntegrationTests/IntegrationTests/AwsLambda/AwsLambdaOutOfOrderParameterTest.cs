@@ -76,14 +76,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaOutOfOrderParameterTestNet6 : AwsLambdaOutOfOrderParameterTest<LambdaOutOfOrderParameterFixtureNet6>
-    {
-        public AwsLambdaOutOfOrderParameterTestNet6(LambdaOutOfOrderParameterFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaOutOfOrderParameterTestNet8 : AwsLambdaOutOfOrderParameterTest<LambdaOutOfOrderParameterFixtureNet8>
     {
         public AwsLambdaOutOfOrderParameterTestNet8(LambdaOutOfOrderParameterFixtureNet8 fixture, ITestOutputHelper output)

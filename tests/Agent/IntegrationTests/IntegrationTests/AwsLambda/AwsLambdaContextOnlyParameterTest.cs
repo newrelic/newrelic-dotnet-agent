@@ -43,14 +43,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaContextOnlyParameterTestNet6 : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureNet6>
-    {
-        public AwsLambdaContextOnlyParameterTestNet6(LambdaContextOnlyParameterFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaContextOnlyParameterTestNet8 : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureNet8>
     {
         public AwsLambdaContextOnlyParameterTestNet8(LambdaContextOnlyParameterFixtureNet8 fixture, ITestOutputHelper output)

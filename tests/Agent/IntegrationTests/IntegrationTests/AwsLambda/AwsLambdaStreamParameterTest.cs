@@ -76,14 +76,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaStreamParameterTestNet6 : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureNet6>
-    {
-        public AwsLambdaStreamParameterTestNet6(LambdaStreamParameterFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaStreamParameterTestNet8 : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureNet8>
     {
         public AwsLambdaStreamParameterTestNet8(LambdaStreamParameterFixtureNet8 fixture, ITestOutputHelper output)

@@ -73,22 +73,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
         }
     }
 
-    public class AwsLambdaCustomParametersTestNet6 : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureNet6>
-    {
-        public AwsLambdaCustomParametersTestNet6(LambdaCustomParametersFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
-        {
-        }
-    }
-
-    public class AwsLambdaCustomParametersAsyncTestNet6 : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureNet6>
-    {
-        public AwsLambdaCustomParametersAsyncTestNet6(LambdaCustomParametersAsyncFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaCustomParametersTestNet8 : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureNet8>
     {
         public AwsLambdaCustomParametersTestNet8(LambdaCustomParametersFixtureNet8 fixture, ITestOutputHelper output)

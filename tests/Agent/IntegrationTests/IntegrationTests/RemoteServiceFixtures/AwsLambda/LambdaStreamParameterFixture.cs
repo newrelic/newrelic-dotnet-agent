@@ -22,11 +22,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaStreamParameterFixtureNet6 : LambdaStreamParameterFixtureBase
-    {
-        public LambdaStreamParameterFixtureNet6() : base("net6.0") { }
-    }
-
     public class LambdaStreamParameterFixtureNet8 : LambdaStreamParameterFixtureBase
     {
         public LambdaStreamParameterFixtureNet8() : base("net8.0") { }

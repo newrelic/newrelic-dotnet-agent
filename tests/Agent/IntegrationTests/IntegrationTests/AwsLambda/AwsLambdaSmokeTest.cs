@@ -73,38 +73,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaSmokeTest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet6>
-    {
-        public AwsLambdaSmokeTest(LambdaSnsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncSmokeTestNet6 : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncSmokeTestNet6(AsyncLambdaSnsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
-        {
-        }
-    }
-
-    public class AwsLambdaHandlerOnlySmokeTestNet6 : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureNet6>
-    {
-        public AwsLambdaHandlerOnlySmokeTestNet6(LambdaHandlerOnlySnsTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
-        {
-        }
-    }
-
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestNet6 : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureNet6>
-    {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestNet6(AsyncLambdaHandlerOnlySnsTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaSmokeTestNet8 : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet8>
     {
         public AwsLambdaSmokeTestNet8(LambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)

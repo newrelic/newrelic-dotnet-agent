@@ -48,16 +48,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaKinesisEventTriggerFixtureNet6 : LambdaKinesisEventTriggerFixtureBase
-    {
-        public LambdaKinesisEventTriggerFixtureNet6() : base("net6.0", false, false) { }
-    }
-
-    public class AsyncLambdaKinesisEventTriggerFixtureNet6 : LambdaKinesisEventTriggerFixtureBase
-    {
-        public AsyncLambdaKinesisEventTriggerFixtureNet6() : base("net6.0", true, false) { }
-    }
-
     public class LambdaKinesisEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
     {
         public LambdaKinesisEventTriggerFixtureNet8() : base("net8.0", false, false) { }
@@ -76,16 +66,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     public class AsyncLambdaKinesisEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
     {
         public AsyncLambdaKinesisEventTriggerFixtureNet9() : base("net9.0", true, false) { }
-    }
-
-    public class LambdaKinesisTimeWindowEventTriggerFixtureNet6 : LambdaKinesisEventTriggerFixtureBase
-    {
-        public LambdaKinesisTimeWindowEventTriggerFixtureNet6() : base("net6.0", false, true) { }
-    }
-
-    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet6 : LambdaKinesisEventTriggerFixtureBase
-    {
-        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet6() : base("net6.0", true, true) { }
     }
 
     public class LambdaKinesisTimeWindowEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase

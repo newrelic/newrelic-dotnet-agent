@@ -104,16 +104,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaS3EventTriggerFixtureNet6 : LambdaS3EventTriggerFixtureBase
-    {
-        public LambdaS3EventTriggerFixtureNet6() : base("net6.0", false) { }
-    }
-
-    public class AsyncLambdaS3EventTriggerFixtureNet6 : LambdaS3EventTriggerFixtureBase
-    {
-        public AsyncLambdaS3EventTriggerFixtureNet6() : base("net6.0", true) { }
-    }
-
     public class LambdaS3EventTriggerFixtureNet8 : LambdaS3EventTriggerFixtureBase
     {
         public LambdaS3EventTriggerFixtureNet8() : base("net8.0", false) { }

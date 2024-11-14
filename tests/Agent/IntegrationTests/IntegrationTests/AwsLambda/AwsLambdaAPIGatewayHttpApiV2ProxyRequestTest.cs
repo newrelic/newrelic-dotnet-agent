@@ -149,14 +149,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
         }
     }
 
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet6 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6>
-    {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet6(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
-        {
-        }
-    }
-
     public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet8 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8>
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet8(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
@@ -169,14 +161,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet9(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
-        {
-        }
-    }
-
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet6 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6>
-    {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet6(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
         {
         }
     }

@@ -218,16 +218,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureBase
-    {
-        public LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6() : base("net6.0", false) { }
-    }
-
-    public class AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureBase
-    {
-        public AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6() : base("net6.0", true) { }
-    }
-
     public class LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureBase
     {
         public LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8() : base("net8.0", false) { }

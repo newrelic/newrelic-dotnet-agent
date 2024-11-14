@@ -47,14 +47,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
         }
     }
 
-    public class AwsLambdaCustomEventsTestNet6 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet6>
-    {
-        public AwsLambdaCustomEventsTestNet6(LambdaCustomEventsTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaCustomEventsTestNet8 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet8>
     {
         public AwsLambdaCustomEventsTestNet8(LambdaCustomEventsTriggerFixtureNet8 fixture, ITestOutputHelper output)

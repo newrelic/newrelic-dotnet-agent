@@ -97,14 +97,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sns
         }
     }
 
-    public class AwsLambdaSnsEventTestNet6 : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureNet6>
-    {
-        public AwsLambdaSnsEventTestNet6(LambdaSnsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
     public class AwsLambdaSnsEventTestNet8 : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureNet8>
     {
         public AwsLambdaSnsEventTestNet8(LambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)

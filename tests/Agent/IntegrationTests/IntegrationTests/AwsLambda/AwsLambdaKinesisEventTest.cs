@@ -79,22 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
         }
     }
 
-    public class AwsLambdaKinesisEventTestNet6 : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureNet6>
-    {
-        public AwsLambdaKinesisEventTestNet6(LambdaKinesisEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEvent")
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncKinesisEventTestNet6 : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncKinesisEventTestNet6(AsyncLambdaKinesisEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEventAsync")
-        {
-        }
-    }
-
     public class AwsLambdaKinesisEventTestNet8 : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureNet8>
     {
         public AwsLambdaKinesisEventTestNet8(LambdaKinesisEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
@@ -123,22 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     {
         public AwsLambdaAsyncKinesisEventTestNet9(AsyncLambdaKinesisEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisEventAsync")
-        {
-        }
-    }
-
-    public class AwsLambdaKinesisTimeWindowEventTestNet6 : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureNet6>
-    {
-        public AwsLambdaKinesisTimeWindowEventTestNet6(LambdaKinesisTimeWindowEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEvent")
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncKinesisTimeWindowEventTestNet6 : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncKinesisTimeWindowEventTestNet6(AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEventAsync")
         {
         }
     }

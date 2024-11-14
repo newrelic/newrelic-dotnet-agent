@@ -82,22 +82,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.CloudWatch
         }
     }
 
-    public class AwsLambdaScheduledCloudWatchEventTestNet6 : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureNet6>
-    {
-        public AwsLambdaScheduledCloudWatchEventTestNet6(LambdaScheduledCloudWatchEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEvent")
-        {
-        }
-    }
-
-    public class AwsLambdaAsyncScheduledCloudWatchEventTestNet6 : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet6>
-    {
-        public AwsLambdaAsyncScheduledCloudWatchEventTestNet6(AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEventAsync")
-        {
-        }
-    }
-
     public class AwsLambdaScheduledCloudWatchEventTestNet8 : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureNet8>
     {
         public AwsLambdaScheduledCloudWatchEventTestNet8(LambdaScheduledCloudWatchEventTriggerFixtureNet8 fixture, ITestOutputHelper output)

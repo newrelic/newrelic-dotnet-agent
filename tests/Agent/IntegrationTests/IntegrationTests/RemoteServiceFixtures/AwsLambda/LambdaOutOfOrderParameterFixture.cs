@@ -22,11 +22,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaOutOfOrderParameterFixtureNet6 : LambdaOutOfOrderParameterFixtureBase
-    {
-        public LambdaOutOfOrderParameterFixtureNet6() : base("net6.0") { }
-    }
-
     public class LambdaOutOfOrderParameterFixtureNet8 : LambdaOutOfOrderParameterFixtureBase
     {
         public LambdaOutOfOrderParameterFixtureNet8() : base("net8.0") { }
