@@ -42,6 +42,9 @@
         "ignoreReason": "frequent patch releases create too much noise"
     },
     {
+        "packageName": "awssdk.dynamodbv2"
+    },
+    {
         "packageName": "confluent.kafka"
     },
     {
@@ -54,11 +57,29 @@
         "ignoreReason": "frequent patch releases create too much noise"
     },
     {
+        "packageName": "enyimmemcachedcore"
+    },
+    {
         "packageName": "log4net",
         "ignorePatch": true,
         "ignoreMinor": true,
         "ignoreMajor": true,
         "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2764"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http.aspnetcore"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.storage.queues"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.sdk"
     },
     {
         "packageName": "microsoft.extensions.logging"
@@ -86,9 +107,12 @@
         "packageName": "nest"
     },
     {
+        "packageName": "newrelic.agent.api"
+    },
+    {
         "packageName": "nlog"
     },
-    {   
+    {
         "packageName": "nservicebus"
     },
     {
