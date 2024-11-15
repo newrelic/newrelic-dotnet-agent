@@ -9,42 +9,18 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 {
     public class ArnBuilder
     {
-        private string _partition;
-        public string Partition
-        {
-            private set
-            {
-                _partition = value;
-            }
-            get => _partition;
-        }
+        public readonly string Partition;
+        public readonly string Region;
+        public readonly string AccountId;
 
-        private string _region;
-        public string Region
-        {
-            private set
-            {
-                _region = value;
-            }
-            get => _region;
-        }
-        private string _accountId;
-        public string AccountId
-        {
-            private set
-            {
-                _accountId = value;
-            }
-            get => _accountId;
-        }
         public ArnBuilder(string partition, string region, string accountId)
         {
-            _partition = partition;
-            _region = region;
-            _accountId = accountId;
+            Partition = partition;
+            Region = region;
+            AccountId = accountId;
         }
 
-        public string Build(string service, string resource) => ConstructArn(_partition, service, _region, _accountId, resource);
+        public string Build(string service, string resource) => ConstructArn(Partition, service, Region, AccountId, resource);
 
         // This is the full regex pattern for a Lambda ARN:
         // (arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_\.]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?
@@ -138,13 +114,13 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 }
             }
 
-            accountId = !string.IsNullOrEmpty(accountId) ? accountId : _accountId;
+            accountId = !string.IsNullOrEmpty(accountId) ? accountId : AccountId;
             if (string.IsNullOrEmpty(accountId))
             {
                 return null;
             }
 
-            region = !string.IsNullOrEmpty(region) ? region : _region;
+            region = !string.IsNullOrEmpty(region) ? region : Region;
             if (string.IsNullOrEmpty(region))
             {
                 return null;
@@ -153,10 +129,10 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
             if (!string.IsNullOrEmpty(alias))
             {
-                return ConstructArn(_partition, "lambda", region, accountId, $"function:{functionName}:{alias}");
+                return ConstructArn(Partition, "lambda", region, accountId, $"function:{functionName}:{alias}");
 
             }
-            return ConstructArn(_partition, "lambda", region, accountId, $"function:{functionName}");
+            return ConstructArn(Partition, "lambda", region, accountId, $"function:{functionName}");
         }
 
         private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);

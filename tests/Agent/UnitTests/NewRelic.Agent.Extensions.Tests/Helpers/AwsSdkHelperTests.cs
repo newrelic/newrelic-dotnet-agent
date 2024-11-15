@@ -37,6 +37,7 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase("123456789012:my-function:myalias:extra", "us-west-2", "123456789012", null)]
         [TestCase("123456789012:my-function:myalias:extra:lots:of:extra:way:too:many", "us-west-2", "123456789012", null)]
         [TestCase("eu-west-1:us-west-2", "eu-west-1", "123456789012", "arn:aws:lambda:eu-west-1:123456789012:function:us-west-2")]
+        [TestCase("", "us-west-2", "123456789012", null)]
         // Edge cases: functions that look like account IDs or region names
         [TestCase("123456789012:444455556666", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:444455556666")]
         [TestCase("444455556666", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:444455556666")]
