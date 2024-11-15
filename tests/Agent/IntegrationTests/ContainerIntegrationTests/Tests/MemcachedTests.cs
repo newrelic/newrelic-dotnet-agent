@@ -88,7 +88,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                 new() { metricName = datastoreStatementMemcachedRemove, callCount = 2, metricScope = transactionName },
             };
 
-            if (_fixture.DotnetVer == "8.0") // EnyimMemcachedCore 2.1.9
+            if (_fixture.DotnetVer == "8.0") // EnyimMemcachedCore 2.x
             {
                 expectedMetrics.Add(new() { metricName = datastoreAll, callCount = 20 });
                 expectedMetrics.Add(new() { metricName = datastoreAllOther, callCount = 20 });
