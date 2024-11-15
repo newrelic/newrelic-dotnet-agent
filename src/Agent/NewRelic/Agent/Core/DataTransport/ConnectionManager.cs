@@ -112,36 +112,42 @@ namespace NewRelic.Agent.Core.DataTransport
 #if !NETFRAMEWORK // Only available in System.Net.Http
             // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
             // issue such as network connectivity, DNS failure, server certificate validation or timeout.
-            catch (HttpRequestException)
+            catch (HttpRequestException hrex)
             {
+                Log.Info(hrex, "Connection failed.");
                 ScheduleRestart();
             }
 #endif
             // Occurs when the agent connects to APM but the connection gets aborted by the collector
-            catch (SocketException)
+            catch (SocketException sex)
             {
+                Log.Info(sex, "Connection failed.");
                 ScheduleRestart();
             }
             // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
-            catch (IOException)
+            catch (IOException ioex)
             {
+                Log.Info(ioex, "Connection failed.");
                 ScheduleRestart();
             }
             // Occurs when no network connection is available, DNS unavailable, etc.
-            catch (WebException)
+            catch (WebException wex)
             {
+                Log.Info(wex, "Connection failed.");
                 ScheduleRestart();
             }
             // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ocex)
             {
+                Log.Info(ocex, "Connection failed.");
                 ScheduleRestart();
             }
-            // This catch all is in place so that we avoid doing harm for all of the potentially destructive things that could happen during a connect.
+            // This catch-all is in place so that we avoid doing harm for all the potentially destructive things that could happen during connect.
             // We want to error on the side of doing no harm to our customers
             catch (Exception ex)
             {
-                ImmediateShutdown(ex.Message);
+                Log.Error(ex, "Connection failed due to an unexpected exception.");
+                ImmediateShutdown();
             }
         }
 
@@ -176,17 +182,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Helper methods
 
-        private static void ImmediateShutdown(string message)
+        private static void ImmediateShutdown()
         {
-            Log.Info("Shutting down: {0}", message);
+            Log.Info("Shutting down the agent.");
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
         }
 
         private void ScheduleRestart()
         {
-            var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
-            Log.Info("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, _retryTime);
+            var retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
+            Log.Info("Will attempt to reconnect in {0} seconds", retryTime.TotalSeconds);
+            _scheduler.ExecuteOnce(Connect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
         }
@@ -196,9 +202,11 @@ namespace NewRelic.Agent.Core.DataTransport
             switch (ex.StatusCode)
             {
                 case HttpStatusCode.Gone:
-                    ImmediateShutdown(ex.Message);
+                    Log.Info("401 GONE response received from the collector.");
+                    ImmediateShutdown();
                     break;
                 default:
+                    Log.Info(ex, "Connection failed.");
                     ScheduleRestart();
                     break;
             }
