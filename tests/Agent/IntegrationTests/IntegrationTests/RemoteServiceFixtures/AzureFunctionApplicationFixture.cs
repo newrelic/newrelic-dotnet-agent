@@ -66,10 +66,16 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
     {
     }
 }
-
-public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreOldest : AzureFunctionApplicationFixture
+public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net8.0", false)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", true)
+    {
+    }
+}
+
+public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", false)
     {
     }
 }
@@ -77,6 +83,13 @@ public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreOldest : 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreOldest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", "net8.0", true)
+    {
+    }
+}
+
+public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net9.0", true)
     {
     }
 }

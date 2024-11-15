@@ -8,9 +8,9 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
 [NetCoreTest]
-public class AzureFunctionInstrumentationDisabledTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreOldest>
+public class AzureFunctionInstrumentationDisabledTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest>
 {
-    public AzureFunctionInstrumentationDisabledTestsCoreOldest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreOldest fixture, ITestOutputHelper output)
+    public AzureFunctionInstrumentationDisabledTestsCoreLatest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, AzureFunctionHttpTriggerTestMode.AspNetCorePipeline) // test mode doesn't really matter here
     {
     }

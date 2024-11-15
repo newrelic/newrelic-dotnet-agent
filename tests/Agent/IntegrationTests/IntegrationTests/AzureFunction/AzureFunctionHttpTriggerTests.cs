@@ -337,11 +337,21 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 }
 
 
-// the net8 target builds the function app with the aspnetcore pipeline package
+// the net8 target builds the function app without the aspnetcore pipeline package included
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsCoreOldest(AzureFunctionApplicationFixtureHttpTriggerCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, AzureFunctionHttpTriggerTestMode.SimpleInvocation)
+    {
+    }
+}
+
+// the net9 target builds the function app with the aspnetcore pipeline package
+[NetCoreTest]
+public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
+{
+    public AzureFunctionHttpTriggerTestsCoreLatest(AzureFunctionApplicationFixtureHttpTriggerCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, AzureFunctionHttpTriggerTestMode.AspNetCorePipeline)
     {
     }

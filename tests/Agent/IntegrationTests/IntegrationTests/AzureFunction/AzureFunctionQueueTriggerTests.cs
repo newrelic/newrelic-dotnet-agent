@@ -121,3 +121,12 @@ public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTrigge
     }
 }
 
+[NetCoreTest]
+public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreLatest>
+{
+    public AzureFunctionQueueTriggerTestsCoreLatest(AzureFunctionApplicationFixtureQueueTriggerCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
