@@ -66,17 +66,18 @@
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <!-- NServiceBus v9+ only supports .NET8+, so constraint FW target to the latest 8.x version -->
-    <PackageReference Include="NServiceBus" Version="9.2.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <!-- NServiceBus v9+ only supports .NET8+, so constrain FW target to the latest 8.x version -->
+    <PackageReference Include="NServiceBus" Version="8.2.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="9.2.3" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     
     <!-- modern oracle only supports net472+ and net6.0+ -->
     <PackageReference Include="Oracle.ManagedDataAccess" Version="23.6.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    
-    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <!-- RabbitMQ v8+ only supports .NET+, so constrain FW target to the latest 6.x version -->
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
     <PackageReference Include="RestSharp" Version="112.1.0" Condition="'$(TargetFramework)' == 'net481'" />
