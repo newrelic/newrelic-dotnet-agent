@@ -103,52 +103,58 @@ namespace NewRelic.Agent.Core.DataTransport
                     ScheduleRestart();
                 }
             }
-            // This exception is thrown when the agent receives an unexpected HTTP error
-            // This is also the parent type of some of the more specific HTTP errors that we handle
-            catch (HttpException ex)
-            {
-                HandleHttpErrorResponse(ex);
-            }
-#if !NETFRAMEWORK // Only available in System.Net.Http
-            // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
-            // issue such as network connectivity, DNS failure, server certificate validation or timeout.
-            catch (HttpRequestException hrex)
-            {
-                Log.Info(hrex, "Connection failed.");
-                ScheduleRestart();
-            }
-#endif
-            // Occurs when the agent connects to APM but the connection gets aborted by the collector
-            catch (SocketException sex)
-            {
-                Log.Info(sex, "Connection failed.");
-                ScheduleRestart();
-            }
-            // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
-            catch (IOException ioex)
-            {
-                Log.Info(ioex, "Connection failed.");
-                ScheduleRestart();
-            }
-            // Occurs when no network connection is available, DNS unavailable, etc.
-            catch (WebException wex)
-            {
-                Log.Info(wex, "Connection failed.");
-                ScheduleRestart();
-            }
-            // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
-            catch (OperationCanceledException ocex)
-            {
-                Log.Info(ocex, "Connection failed.");
-                ScheduleRestart();
-            }
-            // This catch-all is in place so that we avoid doing harm for all the potentially destructive things that could happen during connect.
-            // We want to error on the side of doing no harm to our customers
             catch (Exception ex)
             {
-                Log.Error(ex, "Connection failed due to an unexpected exception.");
-                ImmediateShutdown();
+                HandleConnectionException(ex);
             }
+        }
+
+        private void HandleConnectionException(Exception ex)
+        {
+            bool shouldRestart = true;
+
+            switch (ex)
+            {
+#if !NETFRAMEWORK
+                // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
+                // issue such as network connectivity, DNS failure, server certificate validation or timeout.
+                case HttpRequestException:
+#endif
+                // Occurs when the agent connects to APM but the connection gets aborted by the collector
+                case SocketException:
+                // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
+                case IOException:
+                // Occurs when no network connection is available, DNS unavailable, etc.
+                case WebException:
+                // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                case OperationCanceledException:
+                    Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This exception is thrown when the agent receives an unexpected HTTP error
+                // This is also the parent type of some of the more specific HTTP errors that we handle
+                case HttpException httpEx:
+                    if (httpEx.StatusCode == HttpStatusCode.Gone) // per the collector response handling spec, the agent should shut down on a 410 response
+                    {
+                        Log.Info("401 GONE response received from the collector.");
+                        shouldRestart = false;
+                    }
+                    else
+                        Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This catch-all is in place so that we avoid doing harm for all the potentially destructive things that could happen during connect.
+                // We want to error on the side of doing no harm to our customers
+                default:
+                    Log.Error(ex, "Connection failed due to an unexpected exception.");
+                    shouldRestart = false;
+                    break;
+            }
+
+            if (shouldRestart)
+                ScheduleRestart();
+            else
+                ImmediateShutdown();
         }
 
         private void Disconnect()
@@ -178,7 +184,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-#endregion Synchronized methods
+        #endregion Synchronized methods
 
         #region Helper methods
 
@@ -195,21 +201,6 @@ namespace NewRelic.Agent.Core.DataTransport
             _scheduler.ExecuteOnce(Connect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
-        }
-
-        private void HandleHttpErrorResponse(HttpException ex)
-        {
-            switch (ex.StatusCode)
-            {
-                case HttpStatusCode.Gone:
-                    Log.Info("401 GONE response received from the collector.");
-                    ImmediateShutdown();
-                    break;
-                default:
-                    Log.Info(ex, "Connection failed.");
-                    ScheduleRestart();
-                    break;
-            }
         }
 
         #endregion
