@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
@@ -16,6 +14,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
     {
         private const string TempQueuePrefix = "amq.";
         private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
+        private const string BasicProperties7PlusType = "RabbitMQ.Client.BasicProperties";
         public const string VendorName = "RabbitMQ";
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
@@ -36,6 +35,22 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var func = _getHeadersFunc ?? (_getHeadersFunc = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(properties.GetType(), "Headers"));
             return func(properties) as IDictionary<string, object>;
         }
+#nullable enable
+        private static Func<object, object>? _getHeaders7PlusFunc = null;
+        public static IDictionary<string, object?>? GetHeaders7Plus(object properties)
+        {
+            // v7: public IDictionary<string, object?>? Headers { get; set; }
+            var func = _getHeaders7PlusFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(properties.GetType(), "Headers");
+            return func(properties) as IDictionary<string, object?>;
+        }
+        public static void SetHeaders7Plus(object properties, IDictionary<string, object?> headers)
+        {
+            // Unlike the GetHeaders function, we can't cache this action.  It is only valid for the specific Properties object instance provided.
+            var action = VisibilityBypasser.Instance.GeneratePropertySetter<IDictionary<string, object?>>(properties, "Headers");
+
+            action(headers);
+        }
+#nullable disable
 
         public static void SetHeaders(object properties, IDictionary<string, object> headers)
         {
@@ -62,12 +77,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
+        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IAgent agent)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
             // If we implement newer versions of the API or new methods we'll need to re-evaluate.
-            // never null. Headers property can be null.
-            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(basicPropertiesIndex);
 
             var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
             var destType = GetBrokerDestinationType(routingKey);
@@ -83,10 +96,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 serverPort: GetServerPort(instrumentedMethodCall, agent),
                 routingKey: routingKey);
 
+            return segment;
+        }
+        public static void InsertDTHeaders(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        {
+            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(basicPropertiesIndex);
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
             if (basicProperties.GetType().FullName != BasicPropertiesType)
             {
-                return segment;
+                return;
             }
 
             var setHeaders = new Action<dynamic, string, string>((carrier, key, value) =>
@@ -109,13 +127,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
 
-            return segment;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex, IAgent agent)
+        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IAgent agent)
         {
-            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
-
             var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
             var destType = GetBrokerDestinationType(routingKey);
             var destName = ResolveDestinationName(destType, routingKey);
@@ -130,34 +145,72 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 serverPort: GetServerPort(instrumentedMethodCall, agent),
                 routingKey: routingKey);
 
-            //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
-            if (basicProperties.GetType().FullName != BasicPropertiesType)
-            {
-                
-                return segment;
-            }
-
-            var setHeaders = new Action<object, string, string>((carrier, key, value) =>
-            {
-                var headers = GetHeaders(carrier);
-
-                if (headers == null)
-                {
-                    headers = new Dictionary<string, object>();
-                    SetHeaders(carrier, headers);
-                }
-                else if (headers is IReadOnlyDictionary<string, object>)
-                {
-                    headers = new Dictionary<string, object>(headers);
-                    SetHeaders(carrier, headers);
-                }
-
-                headers[key] = value;
-            });
-
-            transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
-
             return segment;
+        }
+
+        public static void InsertDTHeaders6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+        {
+            // v7+ basicProperties type is IReadOnlyBasicProperties
+            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
+            if (GetRabbitMQVersion(instrumentedMethodCall) >= 7)
+            {
+                // in v7, the properties property can sometimes be `EmptyBasicProperty` which
+                // can't be modified. 
+                // So for now, if the property isn't a `BasicProperties` type, we just bail
+                if (basicProperties.GetType().FullName != BasicProperties7PlusType)
+                {
+                    return;
+                }
+#nullable enable
+                var setHeaders = new Action<object, string, string>((carrier, key, value) =>
+                {
+                    var headers = GetHeaders7Plus(carrier);
+
+                    if (headers == null)
+                    {
+                        headers = new Dictionary<string, object?>();
+                        SetHeaders7Plus(carrier, headers);
+                    }
+                    else if (headers is IReadOnlyDictionary<string, object?>)
+                    {
+                        headers = new Dictionary<string, object?>(headers);
+                        SetHeaders7Plus(carrier, headers);
+                    }
+
+                    headers[key] = value;
+                });
+                transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
+#nullable disable
+            }
+            else  // v6
+            {
+                //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
+                if (basicProperties.GetType().FullName != BasicPropertiesType)
+                {
+
+                    return;
+                }
+
+                var setHeaders = new Action<object, string, string>((carrier, key, value) =>
+                {
+                    var headers = GetHeaders(carrier);
+
+                    if (headers == null)
+                    {
+                        headers = new Dictionary<string, object>();
+                        SetHeaders(carrier, headers);
+                    }
+                    else if (headers is IReadOnlyDictionary<string, object>)
+                    {
+                        headers = new Dictionary<string, object>(headers);
+                        SetHeaders(carrier, headers);
+                    }
+
+                    headers[key] = value;
+                });
+
+                transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
+            }
         }
 
         public static int GetRabbitMQVersion(InstrumentedMethodCall methodCall)

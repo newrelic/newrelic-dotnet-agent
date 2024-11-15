@@ -21,6 +21,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             // (IModel) uint QueuePurge(string queue)
+            // Task<uint> QueuePurgeAsync(string queue, CancellationToken cancellationToken)
             var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
             var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);

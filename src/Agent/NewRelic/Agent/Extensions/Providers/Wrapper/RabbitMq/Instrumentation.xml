@@ -5,41 +5,71 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
 
-	<instrumentation>
+  <instrumentation>
     <!-- Consume Pull -->
-		<tracerFactory name="BasicGetWrapper">
-			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
-				<exactMethodMatcher methodName="_Private_BasicGet" />
-			</match>
-		</tracerFactory>
+    <tracerFactory name="BasicGetWrapper">
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+        <exactMethodMatcher methodName="_Private_BasicGet" />
+      </match>
+      <!--
+         RabbitMQ v7+
+         public async Task<BasicGetResult?> BasicGetAsync(string queue, bool autoAck, CancellationToken cancellationToken)
+      -->
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Channel" >
+        <exactMethodMatcher methodName="BasicGetAsync" parameters="System.String,System.Boolean,System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
 
     <!-- Produce -->
-		<tracerFactory name="BasicPublishWrapper">
-			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
-				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
-				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.ReadOnlyMemory`1[System.Byte]"/>
-			</match>
-		</tracerFactory>
+    <tracerFactory name="BasicPublishWrapper">
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+        <exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
+        <exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.ReadOnlyMemory`1[System.Byte]"/>
+      </match>
+      <!--
+          RabbitMQ v7+
+          public async ValueTask BasicPublishAsync<TProperties>(string exchange, string routingKey,
+            bool mandatory, TProperties basicProperties, ReadOnlyMemory<byte> body,
+            CancellationToken cancellationToken = default)
+            where TProperties : IReadOnlyBasicProperties, IAmqpHeader
+      -->
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.Channel" >
+        <exactMethodMatcher methodName="BasicPublishAsync" parameters="System.String,System.String,System.Boolean,!!0,System.ReadOnlyMemory`1[System.Byte],System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
 
     <!-- Produce -->
-		<tracerFactory name="BasicPublishWrapperLegacy">
-			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
-				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
-			</match>
-		</tracerFactory>
+    <tracerFactory name="BasicPublishWrapperLegacy">
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+        <exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
+      </match>
+    </tracerFactory>
 
     <!-- Consume  Push / Event / Subscribe -->
-		<tracerFactory name="HandleBasicDeliverWrapper">
+    <tracerFactory name="HandleBasicDeliverWrapper">
       <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
         <exactMethodMatcher methodName="HandleBasicDeliver" />
       </match>
-		</tracerFactory>
-		
-		<tracerFactory name="QueuePurgeWrapper">
-			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
-				<exactMethodMatcher methodName="_Private_QueuePurge" />
-			</match>
-		</tracerFactory>
+      <!--
+        RabbitMQ 7+
+        protected async Task<bool> HandleBasicDeliverAsync(IncomingCommand cmd, CancellationToken cancellationToken)
+        -->
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.Channel">
+        <exactMethodMatcher methodName="HandleBasicDeliverAsync" parameters="RabbitMQ.Client.Impl.IncomingCommand,System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
 
-	</instrumentation>
+    <tracerFactory name="QueuePurgeWrapper">
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+        <exactMethodMatcher methodName="_Private_QueuePurge" />
+      </match>
+      <!--
+        RabbitMQ 7+
+        public async Task<uint> QueuePurgeAsync(string queue, CancellationToken cancellationToken)
+        -->
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.Channel">
+        <exactMethodMatcher methodName="QueuePurgeAsync" parameters="System.String,System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
+  </instrumentation>
 </extension>

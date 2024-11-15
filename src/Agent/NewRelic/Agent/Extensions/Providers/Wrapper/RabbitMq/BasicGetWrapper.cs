@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -34,7 +35,20 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent),
                 routingKey: queue); // no way to get routing key from BasicGet
 
-            return Delegates.GetDelegateFor(
+            return instrumentedMethodCall.IsAsync ?
+                Delegates.GetAsyncDelegateFor<Task>(
+                    agent, segment, false,
+                    onComplete: (t) =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            transaction.NoticeError(t.Exception);
+                        }
+
+                        segment.End();
+                    })
+                :
+                Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End
             );
