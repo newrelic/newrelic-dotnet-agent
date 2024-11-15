@@ -18,6 +18,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         private static Func<object, object> _getResultFromGenericTask;
         private static ConcurrentDictionary<string, string> _arnCache = new ConcurrentDictionary<string, string>();
         private static bool _reportMissingRequestId = true;
+        private static bool _reportBadInvocationName = true;
 
         private static object GetTaskResult(object task)
         {
@@ -63,15 +64,14 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             else
             {
-                string key = $"{builder.Region}:{functionName}";
-                if (!_arnCache.TryGetValue(key, out arn))
+                if (!_arnCache.TryGetValue(functionName, out arn))
                 {
-                    arn = builder.Build("function", functionName);
-                    _arnCache.TryAdd(key, arn);
+                    arn = builder.BuildFromPartialLambdaArn(functionName);
+                    _arnCache.TryAdd(functionName, arn);
                 }
             }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
-            //segment.GetExperimentalApi().MakeLeaf();
+            //segment.GetExperimentalApi().MakeLeaf(); // TODO: Leaf-or-not decision has not yet been finalized
 
             transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
             transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
@@ -81,6 +81,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             if (!string.IsNullOrEmpty(arn))
             {
                 transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
+            }
+            else if (_reportBadInvocationName)
+            {
+                agent.Logger.Debug($"Unable to parse lambda invocation named '{functionName}''");
+                _reportBadInvocationName = false;
             }
 
             if (isAsync)

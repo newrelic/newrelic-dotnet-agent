@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NUnit.Framework;
-using NewRelic.Agent.Extensions.Helpers;
+using NewRelic.Agent.Extensions.AwsSdk;
 
 namespace Agent.Extensions.Tests.Helpers
 {
-    public class AwsSdkHelperTests
+    public class AwsSdkArnBuilderTests
     {
         [Test]
         [TestCase("myfunction", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:myfunction")]
@@ -41,10 +41,30 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase("123456789012:444455556666", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:444455556666")]
         [TestCase("444455556666", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:444455556666")]
         [TestCase("us-west-2", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:us-west-2")]
-        public void ConstructArn(string name, string region, string accountId, string arn)
+        public void ConstructLambdaArn(string name, string region, string accountId, string arn)
         {
-            var constructedArn = AwsSdkHelpers.ConstructArn(null, name, region, accountId);
+            var arnBuilder = new ArnBuilder("aws", region, accountId);
+            var constructedArn = arnBuilder.BuildFromPartialLambdaArn(name);
             Assert.That(constructedArn, Is.EqualTo(arn), "Did not get expected ARN");
+        }
+
+        [Test]
+        [TestCase("aws", "s3", "us-west-2", "123456789012", "bucket_name", "arn:aws:s3:us-west-2:123456789012:bucket_name")]
+        [TestCase("aws", "dynamodb", "us-east-1", "987654321098", "table_name", "arn:aws:dynamodb:us-east-1:987654321098:table_name")]
+        [TestCase("aws", "dynamodb", "us-east-1", "987654321098", "table/tabletName", "arn:aws:dynamodb:us-east-1:987654321098:table/tabletName")]
+        [TestCase("aws", "ec2", "eu-west-1", "111122223333", "instance_id", "arn:aws:ec2:eu-west-1:111122223333:instance_id")]
+        [TestCase("aws", "sqs", "ap-southeast-1", "444455556666", "queue_name", "arn:aws:sqs:ap-southeast-1:444455556666:queue_name")]
+        [TestCase("aws", "sns", "ca-central-1", "777788889999", "topic_name", "arn:aws:sns:ca-central-1:777788889999:topic_name")]
+        [TestCase("aws-cn", "lambda", "cn-north-1", "222233334444", "function_name", "arn:aws-cn:lambda:cn-north-1:222233334444:function_name")]
+        [TestCase("aws-us-gov", "iam", "us-gov-west-1", "555566667777", "role_name", "arn:aws-us-gov:iam:us-gov-west-1:555566667777:role_name")]
+        [TestCase("aws", "rds", "sa-east-1", "888899990000", "db_instance", "arn:aws:rds:sa-east-1:888899990000:db_instance")]
+        [TestCase("aws", "s3", "", "123456789012", "bucket_name", null)]
+        [TestCase("aws", "s3", "us-west-2", "", "bucket_name", null)]
+        public void ConstructGenericArn(string partition, string service, string region, string accountId, string resource, string expectedArn)
+        {
+            var arnBuilder = new ArnBuilder(partition, region, accountId);
+            var constructedArn = arnBuilder.Build(service, resource);
+            Assert.That(constructedArn, Is.EqualTo(expectedArn), "Did not get expected ARN");
         }
     }
 }

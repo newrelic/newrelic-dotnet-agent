@@ -26,7 +26,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private ArnBuilder CreateArnBuilder(IAgent agent, dynamic requestContext)
         {
-            string 
             if (_arnBuilder != null)
             {
                 return _arnBuilder;
@@ -50,9 +49,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         private string GetAccountId(IAgent agent)
         {
             string accountId = agent.Configuration.AwsAccountId;
-            if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
+            if (accountId != null)
             {
-                agent.Logger.Warn("Supplied AWS Account Id appears to be invalid");
+                if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
+                {
+                    agent.Logger.Warn("Supplied AWS Account Id appears to be invalid");
+                }
             }
             return accountId;
         }
