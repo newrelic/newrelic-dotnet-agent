@@ -684,6 +684,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
             ReportIfGCSamplerV2IsEnabled();
+            ReportIfAwsAccountIdProvided();
         }
 
         public void CollectMetrics()
@@ -846,8 +847,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled);
             }
-            
         }
 
+        private void ReportIfAwsAccountIdProvided()
+        {
+            if (!string.IsNullOrEmpty(_configuration.AwsAccountId))
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAwsAccountIdProvided);
+            }
+        }
     }
 }

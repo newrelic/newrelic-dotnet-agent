@@ -61,6 +61,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
             Mock.Arrange(() => configuration.IgnoredInstrumentation).Returns(() => _ignoredInstrumentation);
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
+            Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
 
             return configuration;
         }
@@ -530,6 +531,13 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/GCSamplerV2/Enabled"), Is.True);
+        }
+
+        [Test]
+        public void AwsAccountIdSupportabiliityMetricPresent()
+        {
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
         }
     }
 }
