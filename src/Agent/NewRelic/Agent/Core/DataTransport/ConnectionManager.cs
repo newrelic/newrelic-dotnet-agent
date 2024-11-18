@@ -103,46 +103,58 @@ namespace NewRelic.Agent.Core.DataTransport
                     ScheduleRestart();
                 }
             }
-            // This exception is thrown when the agent receives an unexpected HTTP error
-            // This is also the parent type of some of the more specific HTTP errors that we handle
-            catch (HttpException ex)
-            {
-                HandleHttpErrorResponse(ex);
-            }
-#if !NETFRAMEWORK // Only available in System.Net.Http
-            // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
-            // issue such as network connectivity, DNS failure, server certificate validation or timeout.
-            catch (HttpRequestException)
-            {
-                ScheduleRestart();
-            }
-#endif
-            // Occurs when the agent connects to APM but the connection gets aborted by the collector
-            catch (SocketException)
-            {
-                ScheduleRestart();
-            }
-            // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
-            catch (IOException)
-            {
-                ScheduleRestart();
-            }
-            // Occurs when no network connection is available, DNS unavailable, etc.
-            catch (WebException)
-            {
-                ScheduleRestart();
-            }
-            // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
-            catch (OperationCanceledException)
-            {
-                ScheduleRestart();
-            }
-            // This catch all is in place so that we avoid doing harm for all of the potentially destructive things that could happen during a connect.
-            // We want to error on the side of doing no harm to our customers
             catch (Exception ex)
             {
-                ImmediateShutdown(ex.Message);
+                HandleConnectionException(ex);
             }
+        }
+
+        private void HandleConnectionException(Exception ex)
+        {
+            bool shouldRestart = true;
+
+            switch (ex)
+            {
+#if !NETFRAMEWORK
+                // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
+                // issue such as network connectivity, DNS failure, server certificate validation or timeout.
+                case HttpRequestException:
+#endif
+                // Occurs when the agent connects to APM but the connection gets aborted by the collector
+                case SocketException:
+                // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
+                case IOException:
+                // Occurs when no network connection is available, DNS unavailable, etc.
+                case WebException:
+                // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                case OperationCanceledException:
+                    Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This exception is thrown when the agent receives an unexpected HTTP error
+                // This is also the parent type of some of the more specific HTTP errors that we handle
+                case HttpException httpEx:
+                    if (httpEx.StatusCode == HttpStatusCode.Gone) // per the collector response handling spec, the agent should shut down on a 410 response
+                    {
+                        Log.Info("401 GONE response received from the collector.");
+                        shouldRestart = false;
+                    }
+                    else
+                        Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This catch-all is in place so that we avoid doing harm for all the potentially destructive things that could happen during connect.
+                // We want to error on the side of doing no harm to our customers
+                default:
+                    Log.Error(ex, "Connection failed due to an unexpected exception.");
+                    shouldRestart = false;
+                    break;
+            }
+
+            if (shouldRestart)
+                ScheduleRestart();
+            else
+                ImmediateShutdown();
         }
 
         private void Disconnect()
@@ -172,36 +184,23 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-#endregion Synchronized methods
+        #endregion Synchronized methods
 
         #region Helper methods
 
-        private static void ImmediateShutdown(string message)
+        private static void ImmediateShutdown()
         {
-            Log.Info("Shutting down: {0}", message);
+            Log.Info("Shutting down the agent.");
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
         }
 
         private void ScheduleRestart()
         {
-            var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
-            Log.Info("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, _retryTime);
+            var retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
+            Log.Info("Will attempt to reconnect in {0} seconds", retryTime.TotalSeconds);
+            _scheduler.ExecuteOnce(Connect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
-        }
-
-        private void HandleHttpErrorResponse(HttpException ex)
-        {
-            switch (ex.StatusCode)
-            {
-                case HttpStatusCode.Gone:
-                    ImmediateShutdown(ex.Message);
-                    break;
-                default:
-                    ScheduleRestart();
-                    break;
-            }
         }
 
         #endregion

@@ -116,7 +116,11 @@
         "packageName": "nservicebus"
     },
     {
-        "packageName": "rabbitmq.client"
+        "packageName": "rabbitmq.client",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2885"
     },
     {
         "packageName": "restsharp"
