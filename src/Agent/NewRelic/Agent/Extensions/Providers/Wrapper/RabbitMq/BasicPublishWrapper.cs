@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -40,9 +41,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 RabbitMqHelper.InsertDTHeaders(instrumentedMethodCall, transaction, BasicPropertiesIndex);
 
 
-            // TODO: probably need to do something special for v7 since the return type is ValueTask
-            //return Delegates.GetDelegateFor(segment);
-            return Delegates.NoOp;
+            // TODO: probably need to do something special for v7 since the return type is ValueTask<T>
+            return instrumentedMethodCall.IsAsync ?
+                Delegates.GetAsyncDelegateFor<Task>(agent, segment)
+              : Delegates.GetDelegateFor(segment);
         }
     }
 }

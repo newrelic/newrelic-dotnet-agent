@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -70,13 +71,28 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 serverPort: port,
                 routingKey: routingKey);
 
-            return Delegates.GetDelegateFor(
-                onFailure: transaction.NoticeError,
-                onComplete: () =>
-                {
-                    segment.End();
-                    transaction.End();
-                });
+            return instrumentedMethodCall.IsAsync
+                ? Delegates.GetAsyncDelegateFor<Task>(
+                    agent,
+                    segment,
+                    false,
+                    onComplete: (t) =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            transaction.NoticeError(t.Exception);
+                        }
+
+                        segment.End();
+                        transaction.End();
+                    })
+                : Delegates.GetDelegateFor(
+                    onFailure: transaction.NoticeError,
+                    onComplete: () =>
+                    {
+                        segment.End();
+                        transaction.End();
+                    });
 
             IEnumerable<string> GetHeaderValue(IDictionary<string, object> carrier, string key)
             {

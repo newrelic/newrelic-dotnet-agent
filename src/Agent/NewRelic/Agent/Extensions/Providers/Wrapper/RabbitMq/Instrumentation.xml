@@ -15,7 +15,7 @@ SPDX-License-Identifier: Apache-2.0
          RabbitMQ v7+
          public async Task<BasicGetResult?> BasicGetAsync(string queue, bool autoAck, CancellationToken cancellationToken)
       -->
-      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Channel" >
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.Channel" >
         <exactMethodMatcher methodName="BasicGetAsync" parameters="System.String,System.Boolean,System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>

@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -38,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             // Routing key is not available for this method.
             // It only returns uint and invocationTarget does not have the value.
 
-            return Delegates.GetDelegateFor(segment);
+            return instrumentedMethodCall.IsAsync ? Delegates.GetAsyncDelegateFor<Task>(agent, segment) : Delegates.GetDelegateFor(segment);
         }
     }
 }
