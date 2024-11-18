@@ -51,11 +51,12 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="HandleBasicDeliver" />
       </match>
       <!--
-        RabbitMQ 7+
-        protected async Task<bool> HandleBasicDeliverAsync(IncomingCommand cmd, CancellationToken cancellationToken)
-        -->
-      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.Channel">
-        <exactMethodMatcher methodName="HandleBasicDeliverAsync" parameters="RabbitMQ.Client.Impl.IncomingCommand,System.Threading.CancellationToken"/>
+        RabbitMQ v7+
+        public override Task HandleBasicDeliverAsync(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey,
+            IReadOnlyBasicProperties properties, ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
+      -->
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.AsyncEventingBasicConsumer">
+        <exactMethodMatcher methodName="HandleBasicDeliverAsync" parameters="System.String,System.UInt64,System.Boolean,System.String,System.String,RabbitMQ.Client.IReadOnlyBasicProperties,System.ReadOnlyMemory`1[System.Byte],System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
 

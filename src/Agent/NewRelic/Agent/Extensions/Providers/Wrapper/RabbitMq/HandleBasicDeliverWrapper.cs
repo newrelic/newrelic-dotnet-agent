@@ -40,6 +40,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             // (IBasicConsumer) void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
+            // (V7 IAsyncBasicConsumer) Task HandleBasicDeliverAsync(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IReadOnlyBasicProperties properties, ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
             var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(4);
             var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
@@ -107,14 +108,22 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             try
             {
-                _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
+                // v7 renamed "model" to "channel"
+                if (RabbitMqHelper.GetRabbitMQVersion(instrumentedMethodCall.MethodCall.InvocationTarget.GetType()) >= 7)
+                {
+                    _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Channel");
+                }
+                else
+                {
+                    _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
+                }
                 var model = _modelGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
 
                 object connection = null;
                 var modelType = model.GetType();
                 var connectionGetter = _connectionGetter.GetOrAdd(modelType, GetConnectionForType);
                 if (connectionGetter != null)
-                                {
+                {
                     connection = connectionGetter(modelType, model);
                 }
 
@@ -138,20 +147,17 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 static Func<Type, object, object> GetConnectionForType(Type modelType)
                 {
                     var version = RabbitMqHelper.GetRabbitMQVersion(modelType); // caches version in RabbitMqHelper.
-                    if (modelType.ToString() == "RabbitMQ.Client.Framing.Impl.Model")
+                    return modelType.ToString() switch
                     {
-                        return GetConnectionFromFramingModel;
-                    }
-                    else if (modelType.ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel" && version <= 5)
-                    {
-                        return GetConnectionFromAutorecoveryModel5OrOlder;
-                    }
-                    else if (modelType.ToString() == "RabbitMQ.Client.Impl.AutorecoveringModel" && version >= 6)
-                    {
-                        return GetConnectionFromAutorecoveryModel6OrNewer;
-                    }
-
-                    return null;
+                        "RabbitMQ.Client.Framing.Impl.Model" => GetConnectionFromFramingModel,
+                        "RabbitMQ.Client.Impl.AutorecoveringModel" when version <= 5 =>
+                            GetConnectionFromAutorecoveryModel5OrOlder,
+                        "RabbitMQ.Client.Impl.AutorecoveringModel" when version == 6 =>
+                            GetConnectionFromAutorecoveryModel6OrNewer,
+                        "RabbitMQ.Client.Impl.AutorecoveringChannel" when version >= 7 =>
+                            GetConnectionFromAutorecoveryModel6OrNewer,
+                        _ => null
+                    };
                 }
 
                 static object GetConnectionFromFramingModel(Type modelType, object model)
