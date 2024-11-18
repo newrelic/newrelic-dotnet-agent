@@ -508,14 +508,15 @@ jobs:
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
-
-      - name: Start Local CosmosDB Emulator for CosmosDB Tests
-        if: matrix.namespace == 'CosmosDB'
-        run: |
-          Write-Host "Launching Cosmos DB Emulator"
-          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
-          Start-CosmosDbEmulator
-        shell: pwsh
+        
+# save in case we move back to using the emulator
+#      - name: Start Local CosmosDB Emulator for CosmosDB Tests
+#        if: matrix.namespace == 'CosmosDB'
+#        run: |
+#          Write-Host "Launching Cosmos DB Emulator"
+#          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
+#          Start-CosmosDbEmulator
+#        shell: pwsh
 
       - name: Run Unbounded Integration Tests
         run: |
