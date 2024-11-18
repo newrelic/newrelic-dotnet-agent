@@ -17,20 +17,32 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     {
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
         private ConsoleDynamicMethodFixture _fixture;
+        private string _exerciser;
 
         public RabbitMqDistributedTracingTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             fixture.TestLogger = output;
 
+            // if fixture is FWLatest or CoreLatest, set _exerciser to RabbitMQ7AndNewer else set it to RabbitMQ6AndOlder
+            if (fixture.GetType().Name.Contains("FWLatest") || fixture.GetType().Name.Contains("CoreLatest"))
+            {
+                _exerciser = "RabbitMQ7AndNewer";
+                _fixture.AddCommand($"{_exerciser} Initialize");
+            }
+            else
+            {
+                _exerciser = "RabbitMQ6AndOlder";
+            }
+
             // RabbitMQ SendRecieve uses the BasicGet method to receive, which does not process incoming tracing payloads
-            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"{_exerciser} SendReceive {_sendReceiveQueue} TestMessage");
             // RabbitMQ SendRecieveWithEventingConsumer uses the HandleBasicDeliverWrapper on the receiving side, which does process incoming tracing headers
             // We execute the method twice to make sure this issue stays fixed: https://github.com/newrelic/newrelic-dotnet-agent/issues/464
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageOne");
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageTwo");
+            _fixture.AddCommand($"{_exerciser} SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageOne");
+            _fixture.AddCommand($"{_exerciser} SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageTwo");
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand($"{_exerciser} Shutdown");
 
             fixture.Actions
             (
@@ -54,8 +66,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
                 new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod"} ,
-                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
+                new Assertions.ExpectedMetric { metricName = $"DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.{_exerciser}/InstrumentedChildMethod"} ,
+                new Assertions.ExpectedMetric { metricName = $"DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.{_exerciser}/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();

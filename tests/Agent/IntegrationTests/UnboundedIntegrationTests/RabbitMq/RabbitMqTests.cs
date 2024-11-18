@@ -24,20 +24,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         // The topic name has to contain a '.' character.  See https://www.rabbitmq.com/tutorials/tutorial-five-dotnet.html
         private readonly string _sendReceiveTopic = "SendReceiveTopic.Topic";
 
-        private readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";
+        private readonly string _metricScopeBase;
 
         protected RabbitMqTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
+            // if fixture is FWLatest or CoreLatest, set exerciser to RabbitMQ7AndNewer else set it to RabbitMQ6AndOlder
+            string exerciser;
+            if (fixture.GetType().Name.Contains("FWLatest") || fixture.GetType().Name.Contains("CoreLatest"))
+            {
+                exerciser = "RabbitMQ7AndNewer";
+                _fixture.AddCommand($"{exerciser} Initialize");
+            }
+            else
+            {
+                exerciser = "RabbitMQ6AndOlder";
+            }
 
-            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
-            _fixture.AddCommand($"RabbitMQ SendReceiveTempQueue TempQueueTestMessage");
-            _fixture.AddCommand($"RabbitMQ QueuePurge {_purgeQueue}");
-            _fixture.AddCommand($"RabbitMQ SendReceiveTopic {_testExchangeName} {_sendReceiveTopic} TopicTestMessage");
+            _metricScopeBase = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.{exerciser}";
+
+            _fixture.AddCommand($"{exerciser} SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"{exerciser} SendReceiveTempQueue TempQueueTestMessage");
+            _fixture.AddCommand($"{exerciser} QueuePurge {_purgeQueue}");
+            _fixture.AddCommand($"{exerciser} SendReceiveTopic {_testExchangeName} {_sendReceiveTopic} TopicTestMessage");
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand($"{exerciser} Shutdown");
 
             // AddActions() executes the applied actions after actions defined by the base.
             // In this case the base defines an exerciseApplication action we want to wait after.

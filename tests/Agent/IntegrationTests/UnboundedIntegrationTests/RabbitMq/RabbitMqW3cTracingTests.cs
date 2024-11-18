@@ -14,15 +14,31 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
-    [NetFrameworkTest]
-    public abstract class RabbitMqW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
+    public abstract class RabbitMqW3cTracingTestBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        protected readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";
+        protected readonly string _metricScopeBase;
+        protected readonly TFixture _fixture;
+        protected readonly string _exerciser;
 
-        public RabbitMqW3cTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)  : base(fixture)
+        protected RabbitMqW3cTracingTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            fixture.TestLogger = output;
-            fixture.Actions
+            _fixture = fixture;
+
+            // if fixture is FWLatest or CoreLatest, set _exerciser to RabbitMQ7AndNewer else set it to {_exerciser}
+            if (fixture.GetType().Name.Contains("FWLatest") || fixture.GetType().Name.Contains("CoreLatest"))
+            {
+                _exerciser = "RabbitMQ7AndNewer";
+                _fixture.AddCommand($"{_exerciser} Initialize");
+            }
+            else
+            {
+                _exerciser = "RabbitMQ6AndOlder";
+            }
+            _metricScopeBase = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.{_exerciser}";
+
+
+            _fixture.TestLogger = output;
+            _fixture.Actions
             (
                 setupConfiguration: () =>
                 {
@@ -36,20 +52,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    public class RabbitMqW3cTracingBasicTest : RabbitMqW3cTracingTests
+    public abstract class RabbitMqW3cTracingBasicTestBase<TFixture> : RabbitMqW3cTracingTestBase<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private ConsoleDynamicMethodFixtureFW471 _fixture;
-
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
 
-        public RabbitMqW3cTracingBasicTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        protected RabbitMqW3cTracingBasicTestBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
-            _fixture = fixture;
-
-            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"{_exerciser} SendReceive {_sendReceiveQueue} TestMessage");
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand($"{_exerciser} Shutdown");
 
             fixture.Initialize();
         }
@@ -92,20 +104,52 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    public class RabbitMqW3cTracingEventingConsumerTest : RabbitMqW3cTracingTests
+    [NetFrameworkTest]
+    public class RabbitMqW3cTracingBasicTestFW462 : RabbitMqW3cTracingBasicTestBase<ConsoleDynamicMethodFixtureFW462>
     {
-        private ConsoleDynamicMethodFixtureFW471 _fixture;
-
-        private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
-
-        public RabbitMqW3cTracingEventingConsumerTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public RabbitMqW3cTracingBasicTestFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
-            _fixture = fixture;
+        }
+    }
 
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} TestMessage");
+    [NetFrameworkTest]
+    public class RabbitMqW3cTracingBasicTestFWLatest : RabbitMqW3cTracingBasicTestBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public RabbitMqW3cTracingBasicTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqW3cTracingBasicTestCoreOldest : RabbitMqW3cTracingBasicTestBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public RabbitMqW3cTracingBasicTestCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqW3cTracingBasicTestCoreLatest : RabbitMqW3cTracingBasicTestBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public RabbitMqW3cTracingBasicTestCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    public abstract class RabbitMqW3cTracingEventingConsumerTestBase<TFixture> : RabbitMqW3cTracingTestBase<TFixture> where TFixture: ConsoleDynamicMethodFixture
+    {
+        private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
+
+        protected RabbitMqW3cTracingEventingConsumerTestBase(TFixture fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+            _fixture.AddCommand($"{_exerciser} SendReceiveWithEventingConsumer {_sendReceiveQueue} TestMessage");
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand($"{_exerciser} Shutdown");
 
             fixture.Initialize();
         }
@@ -161,6 +205,42 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
             var metrics = _fixture.AgentLog.GetMetrics();
             Assertions.MetricsExist(expectedMetrics, metrics);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqW3cTracingEventingConsumerTestFW462 : RabbitMqW3cTracingEventingConsumerTestBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public RabbitMqW3cTracingEventingConsumerTestFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqW3cTracingEventingConsumerTestFWLatest : RabbitMqW3cTracingEventingConsumerTestBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public RabbitMqW3cTracingEventingConsumerTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqW3cTracingEventingConsumerTestCoreOldest : RabbitMqW3cTracingEventingConsumerTestBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public RabbitMqW3cTracingEventingConsumerTestCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqW3cTracingEventingConsumerTestCoreLatest : RabbitMqW3cTracingEventingConsumerTestBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public RabbitMqW3cTracingEventingConsumerTestCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+        {
         }
     }
 }

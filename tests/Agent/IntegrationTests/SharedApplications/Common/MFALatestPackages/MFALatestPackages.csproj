@@ -75,8 +75,8 @@
     <PackageReference Include="Oracle.ManagedDataAccess" Version="23.6.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
-    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
     <PackageReference Include="RestSharp" Version="112.1.0" Condition="'$(TargetFramework)' == 'net481'" />

@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NET8_0 && !NET481 // .NET 8 and FW481 are tested by RabbitMQ6AndNewer
+
 // See this project's .csproj file for target framework => RabbitMQ.Client version mappings
 #if NET48_OR_GREATER || NET6_0_OR_GREATER
 #define RABBIT6PLUS
@@ -24,7 +26,7 @@ using System.Threading;
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 {
     [Library]
-    class RabbitMQ
+    class RabbitMQ6AndOlder
     {
         private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory()
         { HostName = RabbitMqConfiguration.RabbitMqServerIp,
@@ -270,6 +272,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 }
             }
         }
-
     }
 }
+#endif
