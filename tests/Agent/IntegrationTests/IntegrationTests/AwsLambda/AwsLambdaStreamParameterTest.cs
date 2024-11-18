@@ -76,17 +76,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaStreamParameterTestNet8 : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureNet8>
+    public class AwsLambdaStreamParameterTestCoreOldest : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureCoreOldest>
     {
-        public AwsLambdaStreamParameterTestNet8(LambdaStreamParameterFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaStreamParameterTestCoreOldest(LambdaStreamParameterFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaStreamParameterTestNet9 : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureNet9>
+    public class AwsLambdaStreamParameterTestCoreLatest : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureCoreLatest>
     {
-        public AwsLambdaStreamParameterTestNet9(LambdaStreamParameterFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaStreamParameterTestCoreLatest(LambdaStreamParameterFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

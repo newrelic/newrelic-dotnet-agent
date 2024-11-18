@@ -48,43 +48,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaKinesisEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
+    public class LambdaKinesisEventTriggerFixtureCoreOldest : LambdaKinesisEventTriggerFixtureBase
     {
-        public LambdaKinesisEventTriggerFixtureNet8() : base("net8.0", false, false) { }
+        public LambdaKinesisEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, false) { }
     }
 
-    public class AsyncLambdaKinesisEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
+    public class AsyncLambdaKinesisEventTriggerFixtureCoreOldest : LambdaKinesisEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisEventTriggerFixtureNet8() : base("net8.0", true, false) { }
+        public AsyncLambdaKinesisEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, false) { }
     }
 
-    public class LambdaKinesisEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    public class LambdaKinesisEventTriggerFixtureCoreLatest : LambdaKinesisEventTriggerFixtureBase
     {
-        public LambdaKinesisEventTriggerFixtureNet9() : base("net9.0", false, false) { }
+        public LambdaKinesisEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, false) { }
     }
 
-    public class AsyncLambdaKinesisEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    public class AsyncLambdaKinesisEventTriggerFixtureCoreLatest : LambdaKinesisEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisEventTriggerFixtureNet9() : base("net9.0", true, false) { }
+        public AsyncLambdaKinesisEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, false) { }
     }
 
-    public class LambdaKinesisTimeWindowEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
+    public class LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest : LambdaKinesisEventTriggerFixtureBase
     {
-        public LambdaKinesisTimeWindowEventTriggerFixtureNet8() : base("net8.0", false, true) { }
+        public LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, true) { }
     }
 
-    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8 : LambdaKinesisEventTriggerFixtureBase
+    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest : LambdaKinesisEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet8() : base("net8.0", true, true) { }
+        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, true) { }
     }
 
-    public class LambdaKinesisTimeWindowEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    public class LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest : LambdaKinesisEventTriggerFixtureBase
     {
-        public LambdaKinesisTimeWindowEventTriggerFixtureNet9() : base("net9.0", false, true) { }
+        public LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, true) { }
     }
 
-    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9 : LambdaKinesisEventTriggerFixtureBase
+    public class AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest : LambdaKinesisEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureNet9() : base("net9.0", true, true) { }
+        public AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, true) { }
     }
 }

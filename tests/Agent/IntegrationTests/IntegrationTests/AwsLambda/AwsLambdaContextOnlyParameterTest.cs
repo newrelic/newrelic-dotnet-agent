@@ -43,17 +43,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaContextOnlyParameterTestNet8 : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureNet8>
+    public class AwsLambdaContextOnlyParameterTestCoreOldest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreOldest>
     {
-        public AwsLambdaContextOnlyParameterTestNet8(LambdaContextOnlyParameterFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaContextOnlyParameterTestCoreOldest(LambdaContextOnlyParameterFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaContextOnlyParameterTestNet9 : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureNet9>
+    public class AwsLambdaContextOnlyParameterTestCoreLatest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreLatest>
     {
-        public AwsLambdaContextOnlyParameterTestNet9(LambdaContextOnlyParameterFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaContextOnlyParameterTestCoreLatest(LambdaContextOnlyParameterFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

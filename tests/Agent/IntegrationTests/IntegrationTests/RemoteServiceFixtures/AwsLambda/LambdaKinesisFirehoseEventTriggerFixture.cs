@@ -54,23 +54,23 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaKinesisFirehoseEventTriggerFixtureNet8 : LambdaKinesisFirehoseEventTriggerFixtureBase
+    public class LambdaKinesisFirehoseEventTriggerFixtureCoreOldest : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
-        public LambdaKinesisFirehoseEventTriggerFixtureNet8() : base("net8.0", false) { }
+        public LambdaKinesisFirehoseEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false) { }
     }
 
-    public class AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8 : LambdaKinesisFirehoseEventTriggerFixtureBase
+    public class AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8() : base("net8.0", true) { }
+        public AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true) { }
     }
 
-    public class LambdaKinesisFirehoseEventTriggerFixtureNet9 : LambdaKinesisFirehoseEventTriggerFixtureBase
+    public class LambdaKinesisFirehoseEventTriggerFixtureCoreLatest : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
-        public LambdaKinesisFirehoseEventTriggerFixtureNet9() : base("net9.0", false) { }
+        public LambdaKinesisFirehoseEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false) { }
     }
 
-    public class AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9 : LambdaKinesisFirehoseEventTriggerFixtureBase
+    public class AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
-        public AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9() : base("net9.0", true) { }
+        public AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true) { }
     }
 }

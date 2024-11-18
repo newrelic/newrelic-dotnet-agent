@@ -73,33 +73,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
         }
     }
 
-    public class AwsLambdaCustomParametersTestNet8 : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureNet8>
+    public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreOldest>
     {
-        public AwsLambdaCustomParametersTestNet8(LambdaCustomParametersFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomParametersTestCoreOldest(LambdaCustomParametersFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaCustomParametersTestNet9 : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureNet9>
+    public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreLatest>
     {
-        public AwsLambdaCustomParametersTestNet9(LambdaCustomParametersFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomParametersTestCoreLatest(LambdaCustomParametersFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaCustomParametersAsyncTestNet8 : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureNet8>
+    public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreOldest>
     {
-        public AwsLambdaCustomParametersAsyncTestNet8(LambdaCustomParametersAsyncFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomParametersAsyncTestCoreOldest(LambdaCustomParametersAsyncFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaCustomParametersAsyncTestNet9 : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureNet9>
+    public class AwsLambdaCustomParametersAsyncTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreLatest>
     {
-        public AwsLambdaCustomParametersAsyncTestNet9(LambdaCustomParametersAsyncFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomParametersAsyncTestCoreLatest(LambdaCustomParametersAsyncFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
         {
         }

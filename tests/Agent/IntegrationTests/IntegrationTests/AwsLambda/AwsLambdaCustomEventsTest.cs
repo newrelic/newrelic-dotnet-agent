@@ -47,17 +47,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
         }
     }
 
-    public class AwsLambdaCustomEventsTestNet8 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet8>
+    public class AwsLambdaCustomEventsTestCoreOldest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaCustomEventsTestNet8(LambdaCustomEventsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomEventsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaCustomEventsTestNet9 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet9>
+    public class AwsLambdaCustomEventsTestCoreLatest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaCustomEventsTestNet9(LambdaCustomEventsTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomEventsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

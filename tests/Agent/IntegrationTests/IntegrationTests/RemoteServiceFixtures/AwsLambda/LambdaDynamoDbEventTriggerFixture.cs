@@ -118,43 +118,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaDynamoDbEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase
+    public class LambdaDynamoDbEventTriggerFixtureCoreOldest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public LambdaDynamoDbEventTriggerFixtureNet8() : base("net8.0", false, false) { }
+        public LambdaDynamoDbEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, false) { }
     }
 
-    public class AsyncLambdaDynamoDbEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase
+    public class AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public AsyncLambdaDynamoDbEventTriggerFixtureNet8() : base("net8.0", true, false) { }
+        public AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, false) { }
     }
 
-    public class LambdaDynamoDbEventTriggerFixtureNet9 : LambdaDynamoDbEventTriggerFixtureBase
+    public class LambdaDynamoDbEventTriggerFixtureCoreLatest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public LambdaDynamoDbEventTriggerFixtureNet9() : base("net9.0", false, false) { }
+        public LambdaDynamoDbEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, false) { }
     }
 
-    public class AsyncLambdaDynamoDbEventTriggerFixtureNet9 : LambdaDynamoDbEventTriggerFixtureBase
+    public class AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public AsyncLambdaDynamoDbEventTriggerFixtureNet9() : base("net9.0", true, false) { }
+        public AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, false) { }
     }
 
-    public class LambdaDynamoDbTimeWindowEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase
+    public class LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public LambdaDynamoDbTimeWindowEventTriggerFixtureNet8() : base("net8.0", false, true) { }
+        public LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, true) { }
     }
 
-    public class AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet8 : LambdaDynamoDbEventTriggerFixtureBase
+    public class AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet8() : base("net8.0", true, true) { }
+        public AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, true) { }
     }
 
-    public class LambdaDynamoDbTimeWindowEventTriggerFixtureNet9 : LambdaDynamoDbEventTriggerFixtureBase
+    public class LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public LambdaDynamoDbTimeWindowEventTriggerFixtureNet9() : base("net9.0", false, true) { }
+        public LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, true) { }
     }
 
-    public class AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet9 : LambdaDynamoDbEventTriggerFixtureBase
+    public class AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest : LambdaDynamoDbEventTriggerFixtureBase
     {
-        public AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureNet9() : base("net9.0", true, true) { }
+        public AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, true) { }
     }
 }

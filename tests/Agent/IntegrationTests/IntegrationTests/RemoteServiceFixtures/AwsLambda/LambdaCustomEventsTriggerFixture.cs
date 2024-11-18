@@ -22,13 +22,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaCustomEventsTriggerFixtureNet8 : LambdaCustomEventsTriggerFixtureBase
+    public class LambdaCustomEventsTriggerFixtureCoreOldest : LambdaCustomEventsTriggerFixtureBase
     {
-        public LambdaCustomEventsTriggerFixtureNet8() : base("net8.0") { }
+        public LambdaCustomEventsTriggerFixtureCoreOldest() : base(CoreOldestTFM) { }
     }
 
-    public class LambdaCustomEventsTriggerFixtureNet9 : LambdaCustomEventsTriggerFixtureBase
+    public class LambdaCustomEventsTriggerFixtureCoreLatest : LambdaCustomEventsTriggerFixtureBase
     {
-        public LambdaCustomEventsTriggerFixtureNet9() : base("net9.0") { }
+        public LambdaCustomEventsTriggerFixtureCoreLatest() : base(CoreLatestTFM) { }
     }
 }

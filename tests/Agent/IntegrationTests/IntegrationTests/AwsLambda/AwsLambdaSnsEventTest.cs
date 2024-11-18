@@ -97,17 +97,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sns
         }
     }
 
-    public class AwsLambdaSnsEventTestNet8 : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureNet8>
+    public class AwsLambdaSnsEventTestCoreOldest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaSnsEventTestNet8(LambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaSnsEventTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaSnsEventTestNet9 : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureNet9>
+    public class AwsLambdaSnsEventTestCoreLatest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaSnsEventTestNet9(LambdaSnsEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaSnsEventTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

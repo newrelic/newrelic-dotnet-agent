@@ -80,33 +80,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
         }
     }
 
-    public class AwsLambdaSesEventTestNet8 : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureNet8>
+    public class AwsLambdaSesEventTestCoreOldest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaSesEventTestNet8(LambdaSesEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaSesEventTestCoreOldest(LambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/SesEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncSesEventTestNet8 : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncSesEventTestCoreOldest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncSesEventTestNet8(AsyncLambdaSesEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncSesEventTestCoreOldest(AsyncLambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/SesEventAsync")
         {
         }
     }
 
-    public class AwsLambdaSesEventTestNet9 : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureNet9>
+    public class AwsLambdaSesEventTestCoreLatest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaSesEventTestNet9(LambdaSesEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaSesEventTestCoreLatest(LambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/SesEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncSesEventTestNet9 : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureNet9>
+    public class AwsLambdaAsyncSesEventTestCoreLatest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncSesEventTestNet9(AsyncLambdaSesEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncSesEventTestCoreLatest(AsyncLambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/SesEventAsync")
         {
         }

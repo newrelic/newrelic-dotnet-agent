@@ -82,33 +82,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.CloudWatch
         }
     }
 
-    public class AwsLambdaScheduledCloudWatchEventTestNet8 : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureNet8>
+    public class AwsLambdaScheduledCloudWatchEventTestCoreOldest : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaScheduledCloudWatchEventTestNet8(LambdaScheduledCloudWatchEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaScheduledCloudWatchEventTestCoreOldest(LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncScheduledCloudWatchEventTestNet8 : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncScheduledCloudWatchEventTestCoreOldest : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncScheduledCloudWatchEventTestNet8(AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncScheduledCloudWatchEventTestCoreOldest(AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEventAsync")
         {
         }
     }
 
-    public class AwsLambdaScheduledCloudWatchEventTestNet9 : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureNet9>
+    public class AwsLambdaScheduledCloudWatchEventTestCoreLatest : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaScheduledCloudWatchEventTestNet9(LambdaScheduledCloudWatchEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaScheduledCloudWatchEventTestCoreLatest(LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncScheduledCloudWatchEventTestNet9 : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet9>
+    public class AwsLambdaAsyncScheduledCloudWatchEventTestCoreLatest : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncScheduledCloudWatchEventTestNet9(AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncScheduledCloudWatchEventTestCoreLatest(AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/ScheduledCloudWatchEventAsync")
         {
         }

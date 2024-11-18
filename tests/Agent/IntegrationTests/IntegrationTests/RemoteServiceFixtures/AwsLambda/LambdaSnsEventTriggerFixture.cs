@@ -105,43 +105,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaSnsEventTriggerFixtureNet8 : LambdaSnsEventTriggerFixtureBase
+    public class LambdaSnsEventTriggerFixtureCoreOldest : LambdaSnsEventTriggerFixtureBase
     {
-        public LambdaSnsEventTriggerFixtureNet8() : base("net8.0", false, true) { }
+        public LambdaSnsEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, true) { }
     }
 
-    public class AsyncLambdaSnsEventTriggerFixtureNet8 : LambdaSnsEventTriggerFixtureBase
+    public class AsyncLambdaSnsEventTriggerFixtureCoreOldest : LambdaSnsEventTriggerFixtureBase
     {
-        public AsyncLambdaSnsEventTriggerFixtureNet8() : base("net8.0", true, true) { }
+        public AsyncLambdaSnsEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, true) { }
     }
 
-    public class LambdaHandlerOnlySnsTriggerFixtureNet8 : LambdaSnsEventTriggerFixtureBase
+    public class LambdaHandlerOnlySnsTriggerFixtureCoreOldest : LambdaSnsEventTriggerFixtureBase
     {
-        public LambdaHandlerOnlySnsTriggerFixtureNet8() : base("net8.0", false, false) { }
+        public LambdaHandlerOnlySnsTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, false) { }
     }
 
-    public class AsyncLambdaHandlerOnlySnsTriggerFixtureNet8 : LambdaSnsEventTriggerFixtureBase
+    public class AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest : LambdaSnsEventTriggerFixtureBase
     {
-        public AsyncLambdaHandlerOnlySnsTriggerFixtureNet8() : base("net8.0", true, false) { }
+        public AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, false) { }
     }
 
-    public class LambdaSnsEventTriggerFixtureNet9 : LambdaSnsEventTriggerFixtureBase
+    public class LambdaSnsEventTriggerFixtureCoreLatest : LambdaSnsEventTriggerFixtureBase
     {
-        public LambdaSnsEventTriggerFixtureNet9() : base("net9.0", false, true) { }
+        public LambdaSnsEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, true) { }
     }
 
-    public class AsyncLambdaSnsEventTriggerFixtureNet9 : LambdaSnsEventTriggerFixtureBase
+    public class AsyncLambdaSnsEventTriggerFixtureCoreLatest : LambdaSnsEventTriggerFixtureBase
     {
-        public AsyncLambdaSnsEventTriggerFixtureNet9() : base("net9.0", true, true) { }
+        public AsyncLambdaSnsEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, true) { }
     }
 
-    public class LambdaHandlerOnlySnsTriggerFixtureNet9 : LambdaSnsEventTriggerFixtureBase
+    public class LambdaHandlerOnlySnsTriggerFixtureCoreLatest : LambdaSnsEventTriggerFixtureBase
     {
-        public LambdaHandlerOnlySnsTriggerFixtureNet9() : base("net9.0", false, false) { }
+        public LambdaHandlerOnlySnsTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, false) { }
     }
 
-    public class AsyncLambdaHandlerOnlySnsTriggerFixtureNet9 : LambdaSnsEventTriggerFixtureBase
+    public class AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest : LambdaSnsEventTriggerFixtureBase
     {
-        public AsyncLambdaHandlerOnlySnsTriggerFixtureNet9() : base("net9.0", true, false) { }
+        public AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, false) { }
     }
 }

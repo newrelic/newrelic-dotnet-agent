@@ -79,33 +79,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
         }
     }
 
-    public class AwsLambdaKinesisFirehoseEventTestNet8 : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureNet8>
+    public class AwsLambdaKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaKinesisFirehoseEventTestNet8(LambdaKinesisFirehoseEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaKinesisFirehoseEventTestCoreOldest(LambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncKinesisFirehoseEventTestNet8 : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncKinesisFirehoseEventTestNet8(AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEventAsync")
         {
         }
     }
 
-    public class AwsLambdaKinesisFirehoseEventTestNet9 : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureNet9>
+    public class AwsLambdaKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaKinesisFirehoseEventTestNet9(LambdaKinesisFirehoseEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaKinesisFirehoseEventTestCoreLatest(LambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncKinesisFirehoseEventTestNet9 : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9>
+    public class AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncKinesisFirehoseEventTestNet9(AsyncLambdaKinesisFirehoseEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEventAsync")
         {
         }

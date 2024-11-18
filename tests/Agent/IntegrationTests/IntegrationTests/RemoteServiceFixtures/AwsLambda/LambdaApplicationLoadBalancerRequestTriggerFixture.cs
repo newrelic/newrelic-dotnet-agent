@@ -108,43 +108,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaApplicationLoadBalancerRequestTriggerFixtureNet8 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public LambdaApplicationLoadBalancerRequestTriggerFixtureNet8() : base("net8.0", false, false) { }
+        public LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, false) { }
     }
 
-    public class AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8() : base("net8.0", true, false) { }
+        public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, false) { }
     }
 
-    public class LambdaApplicationLoadBalancerRequestTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public LambdaApplicationLoadBalancerRequestTriggerFixtureNet9() : base("net9.0", false, false) { }
+        public LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, false) { }
     }
 
-    public class AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9() : base("net9.0", true, false) { }
+        public AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, false) { }
     }
 
-    public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", false, true) { }
+        public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, true) { }
     }
 
-    public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", true, true) { }
+        public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, true) { }
     }
 
-    public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9() : base("net9.0", false, true) { }
+        public LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, true) { }
     }
 
-    public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
+    public class AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
-        public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9() : base("net9.0", true, true) { }
+        public AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, true) { }
     }
 }

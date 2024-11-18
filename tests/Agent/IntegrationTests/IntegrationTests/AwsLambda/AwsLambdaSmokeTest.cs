@@ -73,65 +73,65 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaSmokeTestNet8 : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet8>
+    public class AwsLambdaSmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaSmokeTestNet8(LambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaSmokeTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaAsyncSmokeTestNet8 : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncSmokeTestNet8(AsyncLambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncSmokeTestCoreOldest(AsyncLambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlySmokeTestNet8 : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureNet8>
+    public class AwsLambdaHandlerOnlySmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaHandlerOnlySmokeTestNet8(LambdaHandlerOnlySnsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaHandlerOnlySmokeTestCoreOldest(LambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestNet8 : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureNet8>
+    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestNet8(AsyncLambdaHandlerOnlySnsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaSmokeTestNet9 : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet9>
+    public class AwsLambdaSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaSmokeTestNet9(LambdaSnsEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaAsyncSmokeTestNet9 : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureNet9>
+    public class AwsLambdaAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncSmokeTestNet9(AsyncLambdaSnsEventTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncSmokeTestCoreLatest(AsyncLambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlySmokeTestNet9 : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureNet9>
+    public class AwsLambdaHandlerOnlySmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaHandlerOnlySmokeTestNet9(LambdaHandlerOnlySnsTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaHandlerOnlySmokeTestCoreLatest(LambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestNet9 : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureNet9>
+    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestNet9(AsyncLambdaHandlerOnlySnsTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
         {
         }

@@ -22,13 +22,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaContextOnlyParameterFixtureNet8 : LambdaContextOnlyParameterFixtureBase
+    public class LambdaContextOnlyParameterFixtureCoreOldest : LambdaContextOnlyParameterFixtureBase
     {
-        public LambdaContextOnlyParameterFixtureNet8() : base("net8.0") { }
+        public LambdaContextOnlyParameterFixtureCoreOldest() : base(CoreOldestTFM) { }
     }
 
-    public class LambdaContextOnlyParameterFixtureNet9 : LambdaContextOnlyParameterFixtureBase
+    public class LambdaContextOnlyParameterFixtureCoreLatest : LambdaContextOnlyParameterFixtureBase
     {
-        public LambdaContextOnlyParameterFixtureNet9() : base("net9.0") { }
+        public LambdaContextOnlyParameterFixtureCoreLatest() : base(CoreLatestTFM) { }
     }
 }

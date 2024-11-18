@@ -120,23 +120,23 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaSesEventTriggerFixtureNet8 : LambdaSesEventTriggerFixtureBase
+    public class LambdaSesEventTriggerFixtureCoreOldest : LambdaSesEventTriggerFixtureBase
     {
-        public LambdaSesEventTriggerFixtureNet8() : base("net8.0", false) { }
+        public LambdaSesEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false) { }
     }
 
-    public class AsyncLambdaSesEventTriggerFixtureNet8 : LambdaSesEventTriggerFixtureBase
+    public class AsyncLambdaSesEventTriggerFixtureCoreOldest : LambdaSesEventTriggerFixtureBase
     {
-        public AsyncLambdaSesEventTriggerFixtureNet8() : base("net8.0", true) { }
+        public AsyncLambdaSesEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true) { }
     }
 
-    public class LambdaSesEventTriggerFixtureNet9 : LambdaSesEventTriggerFixtureBase
+    public class LambdaSesEventTriggerFixtureCoreLatest : LambdaSesEventTriggerFixtureBase
     {
-        public LambdaSesEventTriggerFixtureNet9() : base("net9.0", false) { }
+        public LambdaSesEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false) { }
     }
 
-    public class AsyncLambdaSesEventTriggerFixtureNet9 : LambdaSesEventTriggerFixtureBase
+    public class AsyncLambdaSesEventTriggerFixtureCoreLatest : LambdaSesEventTriggerFixtureBase
     {
-        public AsyncLambdaSesEventTriggerFixtureNet9() : base("net9.0", true) { }
+        public AsyncLambdaSesEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true) { }
     }
 }

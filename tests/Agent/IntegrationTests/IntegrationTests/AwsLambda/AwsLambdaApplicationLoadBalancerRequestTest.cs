@@ -132,65 +132,65 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureNet8>
+    public class AwsLambdaApplicationLoadBalancerRequestTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestTestNet8(LambdaApplicationLoadBalancerRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestTestCoreOldest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandler", false)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureNet9>
+    public class AwsLambdaApplicationLoadBalancerRequestTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestTestNet9(LambdaApplicationLoadBalancerRequestTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestTestCoreLatest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandler", false)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestAsyncTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8>
+    public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestAsyncTestNet8(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestAsyncTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9>
+    public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestAsyncTestNet9(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8>
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet8(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9>
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestNet9(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8>
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet8(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
         {
         }
     }
 
-    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet9 : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9>
+    public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
     {
-        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestNet9(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureNet9 fixture, ITestOutputHelper output)
+        public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
         {
         }
