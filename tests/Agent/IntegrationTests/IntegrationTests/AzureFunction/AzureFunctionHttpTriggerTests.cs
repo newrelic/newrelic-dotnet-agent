@@ -336,7 +336,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
     private bool IsPipelineTest => _testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline;
 }
 
-// The net6 target builds the function app without the aspnetcore pipeline package included
+
+// the net8 target builds the function app without the aspnetcore pipeline package included
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
@@ -346,7 +347,7 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
     }
 }
 
-// the net8 target builds the function app with the aspnetcore pipeline package
+// the net9 target builds the function app with the aspnetcore pipeline package
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {

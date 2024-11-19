@@ -141,8 +141,5 @@
         "ignorePatch": true,
         "ignoreMinor": false,
         "ignoreReason": "frequent patch releases create too much noise"
-    },
-    {
-        "packageName": "system.data.sqlclient"
     }
 ]

@@ -96,7 +96,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(internalTransaction));
 
-            Mock.Assert(() => internalTransaction.ForceChangeDuration(TimeSpan.FromMilliseconds(1)));
+            var expectedTimeSpan = TimeSpan.FromMilliseconds(1);
+            Mock.Assert(() => internalTransaction.ForceChangeDuration(expectedTimeSpan));
         }
 
         [Test]
