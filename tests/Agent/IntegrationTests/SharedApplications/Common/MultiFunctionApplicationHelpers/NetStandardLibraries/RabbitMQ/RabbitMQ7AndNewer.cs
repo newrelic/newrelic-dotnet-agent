@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET8_0 || NET481 // Other TFMs are tested in RabbitMQ6AndOlder
+#if NET9_0 || NET481 // Other TFMs are tested in RabbitMQ6AndOlder
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
