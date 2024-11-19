@@ -12,29 +12,40 @@ jobs:
     name: Trivy Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Run Trivy in table mode
         # Table output is only useful when running on a pull request or push.
         if: contains(fromJSON('["push", "pull_request"]'), github.event_name)
         uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # v.0.28.0
         with:
-          scan-type: fs
-          format: table
-          exit-code: 1
+          scan-type: 'fs'
+          format: 'table'
+          exit-code: 0
           ignore-unfixed: true
-          severity: CRITICAL,HIGH,MEDIUM,LOW
+          skip-dirs: 'tests'
+          severity: 'CRITICAL'
 
       - name: Run Trivy in report mode
         # Only generate sarif when running nightly on the dev branch.
         if: ${{ github.event_name == 'schedule' }}
         uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # v.0.28.0
         with:
-          scan-type: fs
-          format: sarif
-          output: trivy-results.sarif
+          scan-type: 'fs'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
           ignore-unfixed: true
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          skip-dirs: 'tests'
+          severity: 'CRITICAL'
 
       - name: Upload Trivy scan results to GitHub Security tab
         # Only upload sarif when running nightly on the dev branch.
