@@ -30,10 +30,10 @@ jobs:
         with:
           scan-type: 'fs'
           format: 'table'
-          exit-code: 0
+          exit-code: 0 # set to 1 to fail the action if vulnerabilities are found
           ignore-unfixed: true
           skip-dirs: 'tests'
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
 
       - name: Run Trivy in report mode
         # Only generate sarif when running nightly on the dev branch.
@@ -45,7 +45,7 @@ jobs:
           output: 'trivy-results.sarif'
           ignore-unfixed: true
           skip-dirs: 'tests'
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
 
       - name: Upload Trivy scan results to GitHub Security tab
         # Only upload sarif when running nightly on the dev branch.
