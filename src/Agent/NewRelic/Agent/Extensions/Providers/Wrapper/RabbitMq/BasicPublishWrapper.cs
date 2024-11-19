@@ -41,9 +41,12 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 RabbitMqHelper.InsertDTHeaders(instrumentedMethodCall, transaction, BasicPropertiesIndex);
 
 
-            // TODO: probably need to do something special for v7 since the return type is ValueTask<T>
+            // TODO: Can we handle ValueTask<T> return type somehow? Without it, we can't properly manage a message broker segment that wraps the publish call
             return instrumentedMethodCall.IsAsync ?
-                Delegates.GetAsyncDelegateFor<Task>(agent, segment)
+                Delegates.GetAsyncDelegateFor<Task>(agent, segment, false, (_) =>
+                {
+                    segment.End(); // TODO: this never gets called because the delegate is never invoked
+                })
               : Delegates.GetDelegateFor(segment);
         }
     }
