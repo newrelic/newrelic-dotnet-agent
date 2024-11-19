@@ -22,23 +22,23 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaCustomParametersFixtureNet6 : LambdaCustomParametersFixtureBase
+    public class LambdaCustomParametersFixtureCoreOldest : LambdaCustomParametersFixtureBase
     {
-        public LambdaCustomParametersFixtureNet6() : base("net6.0", false) { }
+        public LambdaCustomParametersFixtureCoreOldest() : base(CoreOldestTFM, false) { }
     }
 
-    public class LambdaCustomParametersAsyncFixtureNet6 : LambdaCustomParametersFixtureBase
+    public class LambdaCustomParametersAsyncFixtureCoreOldest : LambdaCustomParametersFixtureBase
     {
-        public LambdaCustomParametersAsyncFixtureNet6() : base("net6.0", true) { }
+        public LambdaCustomParametersAsyncFixtureCoreOldest() : base(CoreOldestTFM, true) { }
     }
 
-    public class LambdaCustomParametersFixtureNet8 : LambdaCustomParametersFixtureBase
+    public class LambdaCustomParametersFixtureCoreLatest : LambdaCustomParametersFixtureBase
     {
-        public LambdaCustomParametersFixtureNet8() : base("net8.0", false) { }
+        public LambdaCustomParametersFixtureCoreLatest() : base(CoreLatestTFM, false) { }
     }
 
-    public class LambdaCustomParametersAsyncFixtureNet8 : LambdaCustomParametersFixtureBase
+    public class LambdaCustomParametersAsyncFixtureCoreLatest : LambdaCustomParametersFixtureBase
     {
-        public LambdaCustomParametersAsyncFixtureNet8() : base("net8.0", true) { }
+        public LambdaCustomParametersAsyncFixtureCoreLatest() : base(CoreLatestTFM, true) { }
     }
 }

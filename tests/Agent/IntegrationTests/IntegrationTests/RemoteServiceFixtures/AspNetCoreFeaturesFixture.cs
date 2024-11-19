@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             base(new RemoteService(
                 ApplicationDirectoryName,
                 ExecutableName,
-                targetFramework: "net8.0",
+                targetFramework: "net9.0",
                 ApplicationType.Bounded,
                 true,
                 true,
