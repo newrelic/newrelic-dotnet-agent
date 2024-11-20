@@ -94,17 +94,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sqs
         }
     }
 
-    public class AwsLambdaSqsEventTestNet6 : AwsLambdaSqsEventTest<LambdaSqsEventTriggerFixtureNet6>
+    public class AwsLambdaSqsEventTestCoreOldest : AwsLambdaSqsEventTest<LambdaSqsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaSqsEventTestNet6(LambdaSqsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaSqsEventTestCoreOldest(LambdaSqsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaSqsEventTestNet8 : AwsLambdaSqsEventTest<LambdaSqsEventTriggerFixtureNet8>
+    public class AwsLambdaSqsEventTestCoreLatest : AwsLambdaSqsEventTest<LambdaSqsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaSqsEventTestNet8(LambdaSqsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaSqsEventTestCoreLatest(LambdaSqsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

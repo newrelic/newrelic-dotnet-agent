@@ -17,11 +17,11 @@ From a Powershell command prompt in the same folder as this README file:
 3. Build the base images. The images will be pushed to the DotNetReg container registry with tags per .NET version
 
 ```
-docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 --push .
 docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 --push .
 
-docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 -push .
 docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 -push .
+docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 -push .
 ```
 
 4. Disable buildx in Docker Desktop

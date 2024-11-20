@@ -123,16 +123,16 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
     }
 }
 
-public class KafkaDotNet6Test : LinuxKafkaTest<KafkaDotNet6TestFixture>
+public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 {
-    public KafkaDotNet6Test(KafkaDotNet6TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
 
-public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
+public class KafkaDotNet9Test : LinuxKafkaTest<KafkaDotNet9TestFixture>
 {
-    public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet9Test(KafkaDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

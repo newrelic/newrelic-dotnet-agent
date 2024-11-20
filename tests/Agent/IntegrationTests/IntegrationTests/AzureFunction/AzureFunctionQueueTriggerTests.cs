@@ -129,3 +129,4 @@ public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTrigge
     {
     }
 }
+
