@@ -414,6 +414,8 @@ namespace NewRelic.Agent.Core.Transactions
                     return MetricNames.MessageBrokerAction.Produce;
                 case MessageBrokerAction.Purge:
                     return MetricNames.MessageBrokerAction.Purge;
+                case MessageBrokerAction.Process:
+                    return MetricNames.MessageBrokerAction.Process;
                 default:
                     throw new InvalidOperationException("Unexpected enum value: " + wrapper);
             }

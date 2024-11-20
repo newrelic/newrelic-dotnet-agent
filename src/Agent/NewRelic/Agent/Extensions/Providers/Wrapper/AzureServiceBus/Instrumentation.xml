@@ -118,13 +118,11 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
     <tracerFactory name="AzureServiceBusReceiverManagerWrapper">
       <!--
-      https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ReceiverManager.cs#L161
-      private async Task ProcessOneMessage(
-            ServiceBusReceivedMessage triggerMessage,
-            CancellationToken cancellationToken)
-            -->
+      https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ReceiverManager.cs#L149
+      protected async Task ProcessOneMessageWithinScopeAsync(ServiceBusReceivedMessage message, string activityName, CancellationToken cancellationToken)
+      -->
       <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ReceiverManager">
-        <exactMethodMatcher methodName="ProcessOneMessage" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ProcessOneMessageWithinScopeAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.String,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
   </instrumentation>

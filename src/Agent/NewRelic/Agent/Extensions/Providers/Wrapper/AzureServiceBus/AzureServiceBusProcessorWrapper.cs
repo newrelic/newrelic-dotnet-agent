@@ -4,13 +4,12 @@
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
 public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
 {
-    public override bool IsTransactionRequired => false;
+    public override bool IsTransactionRequired => true;
 
     public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
@@ -20,50 +19,29 @@ public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
 
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        dynamic serviceBusProcessor = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusProcessor.EntityPath; // some-queue-name
-        string fqns = serviceBusProcessor.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+        if (instrumentedMethodCall.IsAsync)
+            transaction.AttachToAsync();
 
-        //transaction = agent.CreateTransaction(
-        //    destinationType: MessageBrokerDestinationType.Queue,
-        //    BrokerVendorName,
-        //    destination: queueName);
-
-        // ???
-        var segment = agent.CurrentTransaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "Azure.Messaging.ServiceBus.ServiceBusProcessor", "ProcessMessageAsync");
-
-        //// start a message broker segment ???
-        //var segment = transaction.StartMessageBrokerSegment(
-        //    instrumentedMethodCall.MethodCall,
-        //    MessageBrokerDestinationType.Queue,
-        //    MessageBrokerAction.Consume,
-        //    BrokerVendorName,
-        //    queueName,
-        //    serverAddress: fqns);
-
+        // this call wraps the client event handler callback, so start a method segment that will time the callback
+        var segment = transaction.StartMethodSegment(
+            instrumentedMethodCall.MethodCall,
+            instrumentedMethodCall.MethodCall.Method.Type.Name,
+            instrumentedMethodCall.MethodCall.Method.MethodName);
 
         return instrumentedMethodCall.IsAsync ?
             Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
-                true, // TODO Is this correct?? 
-                t =>
-            {
-                if (t.IsFaulted)
+                false,  // TODO Is this correct? 
+                onComplete: t =>
                 {
-                    transaction.NoticeError(t.Exception);
-                }
+                    if (t.Status == TaskStatus.Faulted)
+                        transaction.NoticeError(t.Exception);
 
-                segment.End();
-//                transaction.End();
-            }, TaskContinuationOptions.ExecuteSynchronously)
-            :
-            Delegates.GetDelegateFor(
-                onFailure: transaction.NoticeError,
-                onComplete: () =>
-                {
                     segment.End();
-//                    transaction.End();
-                });
+                }
+            )
+            :
+            Delegates.GetDelegateFor(segment);
     }
 }

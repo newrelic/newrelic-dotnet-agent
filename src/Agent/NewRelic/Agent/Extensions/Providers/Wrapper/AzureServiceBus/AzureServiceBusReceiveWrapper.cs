@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -12,6 +14,8 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
 public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 {
+    private static readonly ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
+
     private Func<object, object> _innerReceiverAccessor;
     private Func<object, bool> _innerReceiverIsProcessorAccessor;
 
@@ -50,17 +54,26 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
             };
 
-        // if the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction
-        // the transaction will end at the conclusion of ReceiverManager.ProcessOneMessage()
+        // If the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction.
+        // The transaction will end at the conclusion of ReceiverManager.ProcessOneMessageWithinScopeAsync()
         if (isProcessor && instrumentedMethodCall.MethodCall.Method.MethodName == "ReceiveMessagesAsync")
         {
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
                 BrokerVendorName,
                 destination: queueName);
+
+            if (instrumentedMethodCall.IsAsync)
+                transaction.DetachFromPrimary();
         }
 
-        // start a message broker segment
+        if (instrumentedMethodCall.IsAsync)
+        {
+            transaction.AttachToAsync();
+        }
+
+
+        // start a message broker segment (only happens if transaction is not NoOpTransaction)
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
             MessageBrokerDestinationType.Queue,
@@ -77,7 +90,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
-                true,
+                true, // TODO Is this correct??
                 (responseTask) =>
                 {
                     try
@@ -90,9 +103,84 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     }
                 },
                 TaskContinuationOptions.ExecuteSynchronously)
-            : Delegates.GetDelegateFor<object>(
+            :
+            Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
                 onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
     }
+
+    private static object GetTaskResultFromObject(object taskObj)
+    {
+        var task = taskObj as Task;
+        if (task == null)
+        {
+            return null;
+        }
+        if (task.IsFaulted)
+        {
+            return null;
+        }
+        if (task.IsCanceled)
+        {
+            return null;
+        }
+
+        var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+        return getResponse(task);
+    }
+
+    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction)
+    {
+        if (responseTask.IsCanceled)
+            return;
+
+        if (responseTask.IsFaulted)
+        {
+            transaction.NoticeError(responseTask.Exception);
+            return;
+        }
+
+        var resultObj = GetTaskResultFromObject(responseTask);
+        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName);
+    }
+    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName)
+    {
+        if (resultObj != null)
+        {
+            switch (instrumentedMethodName)
+            {
+                case "ReceiveMessagesAsync":
+                case "ReceiveDeferredMessagesAsync":
+                case "PeekMessagesInternalAsync":
+                    // the response contains a list of messages.
+                    // get the first message from the response and extract DT headers
+                    dynamic messages = resultObj;
+                    if (messages.Count > 0)
+                    {
+                        var msg = messages[0];
+                        if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+                        {
+                            transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+    {
+        var headerValues = new List<string>();
+        foreach (var item in applicationProperties)
+        {
+            if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                headerValues.Add(item.Value as string);
+            }
+        }
+
+        return headerValues;
+    }
+
 }
