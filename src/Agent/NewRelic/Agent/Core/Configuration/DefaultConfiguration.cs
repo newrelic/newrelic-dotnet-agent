@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -47,6 +48,7 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
         /// <summary>
         /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
@@ -72,7 +74,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
             : this()
         {
             _environment = environment;
@@ -84,7 +86,7 @@ namespace NewRelic.Agent.Core.Configuration
             _utilizationFullHostName = new Lazy<string>(_dnsStatic.GetFullHostName);
             _utilizationHostName = new Lazy<string>(_dnsStatic.GetHostName);
 
-
+            _agentHealthReporter = agentHealthReporter;
 
             if (localConfiguration != null)
             {
@@ -217,6 +219,11 @@ namespace NewRelic.Agent.Core.Configuration
                 if (_agentLicenseKey != null)
                     _agentLicenseKey = _agentLicenseKey.Trim();
 
+                if (_agentLicenseKey == null && !ServerlessModeEnabled)
+                {
+                    TrySetSuperAgentStatus(HealthCodes.LicenseKeyMissing);
+                }
+
                 return _agentLicenseKey;
             }
         }
@@ -316,6 +323,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
             }
 
+            TrySetSuperAgentStatus(HealthCodes.ApplicationNameMissing);
             throw new Exception("An application name must be provided");
         }
 
@@ -2495,7 +2503,35 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool GCSamplerV2Enabled => _bootstrapConfiguration.GCSamplerV2Enabled;
 
-        #endregion
+        #region Super Agent
+
+        public virtual string FleetId
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.superagent.fleetId, "NEW_RELIC_SUPERAGENT_FLEET_ID");
+            }
+        }
+
+        public virtual string HealthDeliveryLocation
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.superagent.health.deliveryLocation, "NEW_RELIC_SUPERAGENT_HEALTH_DELIVERY_LOCATION");
+            }
+        }
+
+        public virtual int HealthFrequency
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.superagent.health.frequency, "NEW_RELIC_SUPERAGENT_HEALTH_FREQUENCY") ?? 5;
+            }
+        }
+
+        #endregion Super Agent
+
+        #endregion Properties
 
         #region Helpers
 
@@ -2857,6 +2893,17 @@ namespace NewRelic.Agent.Core.Configuration
         private static int? GetNullableIntValue(bool specified, int value)
         {
             return specified ? value : default(int?);
+        }
+
+        // Since the configuration is initialized before the AgentHealthReporter, needed a way to not call it till it was ready 
+        private void TrySetSuperAgentStatus((bool IsHealthy, string Code, string Status) healthStatus)
+        {
+            if (_agentHealthReporter == null)
+            {
+                return;
+            }
+
+            _agentHealthReporter.SetSuperAgentStatus(healthStatus);
         }
 
         #endregion

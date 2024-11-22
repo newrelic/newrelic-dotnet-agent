@@ -10,6 +10,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Core.AgentHealth;
+
 #if !NETFRAMEWORK
 using System.Net.Http;
 #endif
@@ -45,7 +47,6 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 

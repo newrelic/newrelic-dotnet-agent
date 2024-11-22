@@ -708,7 +708,7 @@ namespace NewRelic.Agent.Core.Metrics
         };
 
 
-        ///DistributedTracing
+        //DistributedTracing
 
         private const string SupportabilityDistributedTracePs = SupportabilityPs + "DistributedTrace" + PathSeparator;
 
@@ -761,7 +761,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityDistributedTraceCreatePayloadException =
             SupportabilityDistributedTraceCreatePayloadPs + "Exception";
 
-        ///Trace Context
+        //Trace Context
 
         private const string SupportabilityTraceContextPs = SupportabilityPs + "TraceContext" + PathSeparator;
 
@@ -1152,6 +1152,15 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return SupportabilityLogForwardingEnabledWithFrameworkNamePs + loggingFramework + PathSeparator + Enabled;
         }
+
+        #endregion
+
+        #region Super Agent
+
+        private const string SuperAgent = "SuperAgent";
+        private const string Health = "Health";
+        private const string SupportabilitySuperAgentPs = SupportabilityPs + SuperAgent + PathSeparator;
+        public const string SupportabilitySuperAgentHealthEnabled = SupportabilitySuperAgentPs + Health + PathSeparator + Enabled;
 
         #endregion
     }

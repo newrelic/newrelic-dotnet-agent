@@ -17,6 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.IO;
+using System.Security.Policy;
+using System.Runtime.InteropServices;
+using Grpc.Core;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -38,10 +42,27 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
+        private readonly HealthCheck _healthCheck;
+
         public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
         {
+            _healthCheck = new()
+            {
+                IsHealthy = true,
+                Status = "Agent starting",
+                LastError = string.Empty
+            };
+
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
+
+            // Want this to start immediately and write out the first health check - only if fl
+            if (string.IsNullOrWhiteSpace(_configuration.FleetId))
+            {
+                Log.Info(">>>>>>>>>AgentHealthReporter: Starting health check");
+                _scheduler.ExecuteEvery(PublishSuperAgentHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
+
             _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
@@ -667,6 +688,81 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion
 
+        #region Super Agent
+
+        private void ReportIfSuperAgentHealthEnabled()
+        {
+            if (!string.IsNullOrWhiteSpace(_configuration.FleetId))
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilitySuperAgentHealthEnabled);
+            }
+        }
+
+        public void SetSuperAgentStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)
+        {
+            Log.Info($">>>>>>>>>SetSuperAgentStatus code:'{healthStatus.Code}' status:'{healthStatus.Status}' params:'{(statusParams == null ? string.Empty : string.Join(",", statusParams))}'");
+
+            // Do nothing if super agent is not enabled
+            if (string.IsNullOrWhiteSpace(_configuration.FleetId))
+            {
+                return;
+            }
+
+            if (healthStatus.Equals(HealthCodes.AgentShutdownHealthy))
+            {
+                if (_healthCheck.IsHealthy)
+                {
+                    _healthCheck.TrySetHealth(healthStatus);
+                }
+            }
+            else
+            {
+                _healthCheck.TrySetHealth(healthStatus, statusParams);
+            }
+        }
+
+        public void PublishSuperAgentHealthCheck()
+        {
+            Log.Info(">>>>>>>>>PublishSuperAgentHealthCheck");
+            if (string.IsNullOrWhiteSpace(_configuration.FleetId)
+                || string.IsNullOrWhiteSpace(_configuration.HealthDeliveryLocation))
+            {
+                Log.Info(">>>>>>>>>PublishSuperAgentHealthCheck.NOPE");
+                return;
+            }
+
+            Log.Info(">>>>>>>>>PublishSuperAgentHealthCheck.YEP");
+
+            var fileUri = new Uri(_configuration.HealthDeliveryLocation);
+            if (fileUri.Scheme != Uri.UriSchemeFile)
+            {
+                Log.Debug("The provided superagent.health.delivery_location is not a file URL, skipping super agent health check: " + _configuration.HealthDeliveryLocation);
+                return;
+            }
+
+            // Ensure the path is cleaned up for Windows by removing a possible leading slash
+            var cleanedPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? fileUri.LocalPath.TrimStart('/') : fileUri.LocalPath;
+            if (!Directory.Exists(cleanedPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(cleanedPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error creating directory for super agent health check: " + cleanedPath);
+                    return;
+                }
+            }
+
+            using (StreamWriter writer = new StreamWriter(Path.Combine(cleanedPath, _healthCheck.FileName)))
+            {
+                writer.WriteAsync(_healthCheck.ToYaml()).GetAwaiter().GetResult();
+            }
+        }
+
+        #endregion
+
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
             TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
@@ -685,6 +781,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
             ReportIfGCSamplerV2IsEnabled();
+            ReportIfSuperAgentHealthEnabled();
         }
 
         public void CollectMetrics()
@@ -849,6 +946,5 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
             
         }
-
     }
 }

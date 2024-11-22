@@ -151,5 +151,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLogForwardingEnabledWithFramework(string logFramework);
         void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
         void ReportLoggingEventsEmpty(int count = 1);
+        void SetSuperAgentStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams);
+        void PublishSuperAgentHealthCheck();
     }
 }

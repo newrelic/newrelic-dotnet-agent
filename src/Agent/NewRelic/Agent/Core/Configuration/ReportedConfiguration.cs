@@ -728,6 +728,15 @@ namespace NewRelic.Agent.Core.Configuration
             return _configuration.GetAppSettings();
         }
 
+        [JsonProperty("superagent.fleet_id")]
+        public string FleetId => _configuration.FleetId;
+
+        [JsonProperty("superagent.health.delivery_location")]
+        public string HealthDeliveryLocation => _configuration.HealthDeliveryLocation;
+
+        [JsonProperty("superagent.health.frequency")]
+        public int HealthFrequency => _configuration.HealthFrequency;
+
         #endregion
     }
 }

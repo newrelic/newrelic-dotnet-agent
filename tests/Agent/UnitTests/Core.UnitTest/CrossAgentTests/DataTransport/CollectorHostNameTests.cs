@@ -14,12 +14,14 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using System.Reflection;
 using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 {
     internal class TestDefaultConfiguration : DefaultConfiguration
     {
-        public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+        public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) :
+            base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter) { }
     }
 
     [TestFixture]
@@ -47,6 +49,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 
         private IDnsStatic _dnsStatic;
 
+        private IAgentHealthReporter _agentHealthReporter;
+
         public static List<TestCaseData> CollectorHostnameTestData
         {
             get { return GetCollectorHostnameTestData(); }
@@ -65,7 +69,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
             _dnsStatic = Mock.Create<IDnsStatic>();
-            _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+            _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
         }
 

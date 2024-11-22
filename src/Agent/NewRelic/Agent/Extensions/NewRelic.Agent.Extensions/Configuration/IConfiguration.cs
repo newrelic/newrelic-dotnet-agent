@@ -236,5 +236,9 @@ namespace NewRelic.Agent.Configuration
 
         string AwsAccountId { get; }
         bool GCSamplerV2Enabled { get; }
+
+        string FleetId { get; }
+        string HealthDeliveryLocation { get; }
+        int HealthFrequency { get; }
     }
 }

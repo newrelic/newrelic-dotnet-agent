@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
@@ -81,6 +82,7 @@ namespace NewRelic.Agent.Core
         private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
         private ThreadProfilingService _threadProfilingService;
         private readonly IWrapperService _wrapperService;
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
         private volatile bool _shutdownEventReceived;
         private volatile bool _isInitialized;
@@ -153,6 +155,9 @@ namespace NewRelic.Agent.Core
             // process really needs to be refactored so that it's more explicit in its behavior.
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
+
+            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
+            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
@@ -288,6 +293,7 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
                     "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
+                    "NEW_RELIC_SUPERAGENT_HEALTH_FREQUENCY"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {
@@ -297,7 +303,9 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROXY_USER",
                     "NEW_RELIC_PROXY_PASS",
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
-                    "NEW_RELIC_PROXY_PASS_OBFUSCATED"
+                    "NEW_RELIC_PROXY_PASS_OBFUSCATED",
+                    "NEW_RELIC_SUPERAGENT_FLEET_ID",
+                    "NEW_RELIC_SUPERAGENT_HEALTH_DELIVERY_LOCATION"
                 };
 
                 List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
@@ -409,7 +417,7 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
-
+            
             Shutdown(true);
         }
 
@@ -437,13 +445,16 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
+                _agentHealthReporter?.SetSuperAgentStatus(HealthCodes.AgentShutdownHealthy);
             }
             catch (Exception e)
             {
+                _agentHealthReporter?.SetSuperAgentStatus(HealthCodes.AgentShutdownError, e.Message);
                 Log.Info(e, "Unexpected exception during agent shutdown");
             }
             finally
             {
+                _agentHealthReporter?.PublishSuperAgentHealthCheck();
                 Log.Debug("Shutting down internal agent services...");
                 Dispose();
 
