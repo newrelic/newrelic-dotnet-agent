@@ -11,9 +11,15 @@ namespace NewRelic.Agent.Core.Logging
 
     public class OpenTelemetrySDKLogger : EventListener
     {
+        // The OpenTelmetry SDK and documentation has a built in diagnostic logger, all code that wants to be compatible with the
+        // OpenTelemetry SDK diagnostic logger needs to write events to an EventSource that has a name prefixed with "OpenTelemetry-".
         const string OpenTelemetryEventSourceNamePrefix = "OpenTelemetry-";
 
         private EventLevel? _eventSourceLevel;
+
+        // We need to configure the EventSource log level outside of the constructor because the OnEventSourceCreated event handler
+        // can be triggered before the constructor completes (after the base constructor completes). For performance reasons, we
+        // only want to subscribe to events written at a level that matches the logging level enabled for our logging library.
         public EventLevel EventSourceLevel => _eventSourceLevel ??= MapLoggingLevelToEventSourceLevel();
 
         protected override void OnEventSourceCreated(EventSource eventSource)
