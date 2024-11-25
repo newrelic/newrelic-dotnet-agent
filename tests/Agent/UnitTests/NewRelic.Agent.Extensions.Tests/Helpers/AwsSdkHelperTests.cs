@@ -67,5 +67,17 @@ namespace Agent.Extensions.Tests.Helpers
             var constructedArn = arnBuilder.Build(service, resource);
             Assert.That(constructedArn, Is.EqualTo(expectedArn), "Did not get expected ARN");
         }
+
+        [Test]
+        [TestCase("aws", "us-west-2", "123456789012", "Partition: aws, Region: us-west-2, AccountId: [Present]")]
+        [TestCase("aws", "", "123456789012", "Partition: aws, Region: [Missing], AccountId: [Present]")]
+        [TestCase("aws", "us-west-2", "", "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
+        [TestCase("aws", "us-west-2", null, "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
+        [TestCase("", "", "", "Partition: [Missing], Region: [Missing], AccountId: [Missing]")]
+        public void ArnBuilderToString(string partition, string region, string accountId, string expected)
+        {
+            var arnBuilder = new ArnBuilder(partition, region, accountId);
+            Assert.That(arnBuilder.ToString(), Is.EqualTo(expected), "Did not get expected string");
+        }
     }
 }

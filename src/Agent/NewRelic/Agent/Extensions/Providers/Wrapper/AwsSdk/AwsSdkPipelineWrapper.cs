@@ -28,9 +28,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private ArnBuilder CreateArnBuilder(IAgent agent, dynamic requestContext)
         {
-            string partition = "";
-            string systemName = "";
-            string accountId = "";
+            string partition = null;
+            string systemName = null;
+            string accountId = null;
             try
             {
                 accountId = GetAccountId(agent);

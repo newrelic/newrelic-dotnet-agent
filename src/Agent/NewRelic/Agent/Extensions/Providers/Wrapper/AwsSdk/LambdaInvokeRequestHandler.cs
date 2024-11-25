@@ -87,7 +87,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             else if (_reportBadInvocationName)
             {
-                agent.Logger.Debug($"Unable to parse lambda invocation named '{functionName}''");
+                agent.Logger.Debug($"Unable to resolve Lambda invocation named '{functionName}' [{builder.ToString()}]");
                 _reportBadInvocationName = false;
             }
 
