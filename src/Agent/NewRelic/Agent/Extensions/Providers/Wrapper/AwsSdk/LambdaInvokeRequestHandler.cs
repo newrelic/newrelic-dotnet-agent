@@ -19,6 +19,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         private static ConcurrentDictionary<string, string> _arnCache = new ConcurrentDictionary<string, string>();
         private static bool _reportMissingRequestId = true;
         private static bool _reportBadInvocationName = true;
+        private const int MAX_CACHE_SIZE = 25;  // Shouldn't ever get this big, but just in case
 
         private static object GetTaskResult(object task)
         {
@@ -67,11 +68,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 if (!_arnCache.TryGetValue(functionName, out arn))
                 {
                     arn = builder.BuildFromPartialLambdaArn(functionName);
-                    _arnCache.TryAdd(functionName, arn);
+                    if (_arnCache.Count < MAX_CACHE_SIZE)
+                    {
+                        _arnCache.TryAdd(functionName, arn);
+                    }
                 }
             }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
-            //segment.GetExperimentalApi().MakeLeaf(); // TODO: Leaf-or-not decision has not yet been finalized
 
             transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
             transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");

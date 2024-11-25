@@ -14,10 +14,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
     public class AwsSdkPipelineWrapper : IWrapper
     {
         public bool IsTransactionRequired => true;
-        private ArnBuilder _arnBuilder = null;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static HashSet<string> _unsupportedRequestTypes = new();
+        private static bool _reportBadAccountId = true;
+        private static bool _reportBadArnBuilder = false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -26,24 +27,27 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private ArnBuilder CreateArnBuilder(IAgent agent, dynamic requestContext)
         {
-            if (_arnBuilder != null)
-            {
-                return _arnBuilder;
-            }
+            string partition = "";
+            string systemName = "";
+            string accountId = "";
             try
             {
+                accountId = GetAccountId(agent);
                 var clientconfig = requestContext.ClientConfig;
                 var regionEndpoint = clientconfig.RegionEndpoint;
-                var systemName = regionEndpoint.SystemName;
-                var partition = regionEndpoint.PartitionName;
-                _arnBuilder = new ArnBuilder(partition, systemName, GetAccountId(agent));
+                systemName = regionEndpoint.SystemName;
+                partition = regionEndpoint.PartitionName;
             }
             catch (Exception e)
             {
-                agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get required ARN components from requestContext.");
+                if (_reportBadArnBuilder)
+                {
+                    agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get required ARN components from requestContext.");
+                    _reportBadArnBuilder = false;
+                }
             }
 
-            return _arnBuilder;
+            return new ArnBuilder(partition, systemName, accountId); ;
         }
 
         private string GetAccountId(IAgent agent)
@@ -53,7 +57,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
                 {
-                    agent.Logger.Warn("Supplied AWS Account Id appears to be invalid");
+                    if (_reportBadAccountId)
+                    {
+                        agent.Logger.Warn("Supplied AWS Account ID appears to be invalid");
+                        _reportBadAccountId = false;
+                    }
                 }
             }
             return accountId;

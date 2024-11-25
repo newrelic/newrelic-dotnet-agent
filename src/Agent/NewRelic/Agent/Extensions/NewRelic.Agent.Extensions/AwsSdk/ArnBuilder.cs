@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             string region = null;
             string accountId = null;
 
-            // If there's only one string, assume it's the function name
+            // If there's only one segment, assume it's the function name
             if (segments.Length == 1)
             {
                 functionName = segments[0];
@@ -126,11 +126,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 return null;
             }
 
-
             if (!string.IsNullOrEmpty(alias))
             {
-                return ConstructArn(Partition, "lambda", region, accountId, $"function:{functionName}:{alias}");
-
+                functionName += $":{alias}";
             }
             return ConstructArn(Partition, "lambda", region, accountId, $"function:{functionName}");
         }
