@@ -59,7 +59,9 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         Consume,
         Peek,
         Purge,
-        Process
+        Process,
+        Settle,
+        Cancel
     }
 
     ///<summary>This enum must be a sequence of values starting with 0 and incrementing by 1. See MetricNames.GetEnumerationFunc</summary>

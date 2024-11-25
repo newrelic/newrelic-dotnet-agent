@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -55,30 +54,39 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         _fixture.Initialize();
     }
 
-    private readonly string _metricNameBase = "MessageBroker/AzureServiceBus/Queue/Consume/Named";
-    private readonly string _transactionNameBase = "OtherTransaction/Message/AzureServiceBus/Queue/Named";
+    private readonly string _consumeMetricNameBase = "MessageBroker/ServiceBus/Queue/Consume/Named";
+    private readonly string _processMetricNameBase = "MessageBroker/ServiceBus/Queue/Process/Named";
+    private readonly string _settleMetricNameBase = "MessageBroker/ServiceBus/Queue/Settle/Named";
+    private readonly string _transactionNameBase = "OtherTransaction/Message/ServiceBus/Queue/Named";
 
     [Fact]
     public void Test()
     {
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
+        // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"{_metricNameBase}/{_queueName}", callCount = 2},
-            new() { metricName = $"{_metricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
+            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 4},
+            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 4, metricScope = $"{_transactionNameBase}/{_queueName}"},
+            new() { metricName = $"{_processMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
+            new() { metricName = $"{_settleMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
         };
 
-        var expectedTransactinEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueName}");
+        var expectedTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueName}");
 
         var expectedTransactionTraceSegments = new List<string>
         {
-            $"{_metricNameBase}/{_queueName}"
+            $"{_consumeMetricNameBase}/{_queueName}",
+            $"{_processMetricNameBase}/{_queueName}",
+            "DotNet/ServiceBusProcessor/OnProcessMessageAsync",
+            $"{_settleMetricNameBase}/{_queueName}",
         };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueName}");
 
-        var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"{_metricNameBase} /{_queueName}");
+        var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_consumeMetricNameBase}/{_queueName}");
+        var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueName}");
 
         var expectedConsumeAgentAttributes = new List<string>
         {
@@ -88,17 +96,27 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
 
         var expectedIntrinsicAttributes = new List<string> { "span.kind", };
 
+        // make sure log does not contain "Transaction has already ended"
+        var transactionAlreadyEndedErrors = _fixture.AgentLog.TryGetLogLines(AgentLogBase.TransactionAlreadyEndedLogLineRegex);
+        Assert.Empty(transactionAlreadyEndedErrors);
+
         Assertions.MetricsExist(expectedMetrics, metrics);
 
         NrAssert.Multiple(
-            () => Assert.True(expectedTransactinEvent != null, "expectedTransactionEvent should not be null"),
-            () => Assert.True(transactionSample != null, "transactionSample should not be null"),
+            () => Assert.NotNull(expectedTransactionEvent),
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(queueConsumeSpanEvent),
+            () => Assert.NotNull(queueProcessSpanEvent),
             () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
 
             () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvents)
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
+            () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
+            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent)
         );
     }
 }

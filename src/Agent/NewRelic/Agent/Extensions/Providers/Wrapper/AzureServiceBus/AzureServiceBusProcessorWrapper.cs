@@ -29,18 +29,7 @@ public class AzureServiceBusProcessorWrapper : AzureServiceBusWrapperBase
             instrumentedMethodCall.MethodCall.Method.MethodName);
 
         return instrumentedMethodCall.IsAsync ?
-            Delegates.GetAsyncDelegateFor<Task>(
-                agent,
-                segment,
-                false,  // TODO Is this correct? 
-                onComplete: t =>
-                {
-                    if (t.Status == TaskStatus.Faulted)
-                        transaction.NoticeError(t.Exception);
-
-                    segment.End();
-                }
-            )
+            Delegates.GetAsyncDelegateFor<Task>(agent, segment)
             :
             Delegates.GetDelegateFor(segment);
     }

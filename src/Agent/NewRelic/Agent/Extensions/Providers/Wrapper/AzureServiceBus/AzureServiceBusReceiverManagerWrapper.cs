@@ -47,12 +47,12 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                 return Delegates.GetAsyncDelegateFor<Task>(
                     agent,
                     segment,
-                    true,
+                    false,
                     onComplete: _ =>
                     {
                         segment.End();
                         transaction.End();
-                    });
+                    }, TaskContinuationOptions.ExecuteSynchronously);
             }
             return Delegates.GetDelegateFor(onComplete: () =>
             {

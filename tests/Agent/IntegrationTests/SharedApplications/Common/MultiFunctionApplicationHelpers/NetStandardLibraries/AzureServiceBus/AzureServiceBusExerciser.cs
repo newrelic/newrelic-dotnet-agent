@@ -71,18 +71,16 @@ internal class AzureServiceBusExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public static async Task ScheduleAndReceiveAMessage(string queueName)
+    public static async Task ScheduleAndCancelAMessage(string queueName)
     {
         await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
         await using var sender = client.CreateSender(queueName);
 
         var message = new ServiceBusMessage("Hello world!");
-        await sender.ScheduleMessageAsync(message, DateTime.UtcNow.AddSeconds(5));
+        var messageSequenceId = await sender.ScheduleMessageAsync(message, DateTime.UtcNow.AddSeconds(90));
 
-        await Task.Delay(TimeSpan.FromSeconds(10));
-
-        await using var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
-        await receiver.ReceiveMessageAsync();
+        // cancel the scheduled message
+        await sender.CancelScheduledMessageAsync(messageSequenceId);
     }
 
     [LibraryMethod]
@@ -169,7 +167,7 @@ internal class AzureServiceBusExerciser
         // create the options to use for configuring the processor
         ServiceBusProcessorOptions options = new()
         {
-            MaxConcurrentCalls = 2 // multi-threading. Yay!
+            MaxConcurrentCalls = 1 // multi-threading. Yay!
         };
 
         // create a processor that we can use to process the messages
@@ -181,15 +179,17 @@ internal class AzureServiceBusExerciser
         processor.ProcessMessageAsync += MessageHandler;
         processor.ProcessErrorAsync += ErrorHandler; // ErrorHandler is required, but we won't exercise it
 
-        Task MessageHandler(ProcessMessageEventArgs args)
+        async Task MessageHandler(ProcessMessageEventArgs args)
         {
             string body = args.Message.Body.ToString();
-            Console.WriteLine(body);
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+            Console.WriteLine($"ThreadId: {threadId} - body: {body}");
 
             Interlocked.Increment(ref receivedMessages);
 
-            return Task.CompletedTask;
+            await Task.Delay(1000); // simulate processing the message
         }
+
         Task ErrorHandler(ProcessErrorEventArgs args)
         {
             // the error source tells me at what point in the processing an error occurred

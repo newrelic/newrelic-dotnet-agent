@@ -353,7 +353,9 @@ namespace NewRelic.Agent.Core.Metrics
             Consume,
             Peek,
             Purge,
-            Process
+            Process,
+            Settle,
+            Cancel
         }
 
         public const string MessageBrokerPrefix = "MessageBroker";

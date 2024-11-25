@@ -40,23 +40,27 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         _innerReceiverIsProcessorAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<bool>(innerReceiver.GetType(), "_isProcessor");
         var isProcessor = _innerReceiverIsProcessorAccessor.Invoke(innerReceiver);
 
+        var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
+
         MessageBrokerAction action =
-            instrumentedMethodCall.MethodCall.Method.MethodName switch
+            instrumentedMethodName switch
             {
                 "ReceiveMessagesAsync" => MessageBrokerAction.Consume,
                 "ReceiveDeferredMessagesAsync" => MessageBrokerAction.Consume,
                 "PeekMessagesInternalAsync" => MessageBrokerAction.Peek,
-                "AbandonMessageAsync" => MessageBrokerAction.Purge, // TODO is this correct ??? Abandon sends the message back to the queue for re-delivery
-                "CompleteMessageAsync" => MessageBrokerAction.Consume,
-                "DeadLetterInternalAsync" => MessageBrokerAction.Purge,  // TODO is this correct ???
-                "DeferMessageAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
-                "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO is this correct or should we extend MessageBrokerAction with more values???
-                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+                "AbandonMessageAsync" => MessageBrokerAction.Settle,
+                "CompleteMessageAsync" => MessageBrokerAction.Settle,
+                "DeadLetterInternalAsync" => MessageBrokerAction.Settle,
+                "DeferMessageAsync" => MessageBrokerAction.Settle,
+                "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO This doesn't quite fit. OTEL uses a default action with no name for this
+                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodName}")
             };
+
+        agent.Logger.Finest("AzureServiceBusReceiveWrapper - BeforeWrappedMethod: instrumentedMethodName: {instrumentedMethodName} - action: {action} - isProcessor: {isProcessor}", instrumentedMethodName, action, isProcessor);
 
         // If the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction.
         // The transaction will end at the conclusion of ReceiverManager.ProcessOneMessageWithinScopeAsync()
-        if (isProcessor && instrumentedMethodCall.MethodCall.Method.MethodName == "ReceiveMessagesAsync")
+        if (isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
         {
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
@@ -65,6 +69,14 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 
             if (instrumentedMethodCall.IsAsync)
                 transaction.DetachFromPrimary();
+
+            transaction.LogFinest("Created transaction for ReceiveMessagesAsync in processor mode.");
+        }
+
+        if (!isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
+        {
+            transaction = agent.CurrentTransaction;
+            transaction.LogFinest("Using existing transaction for ReceiveMessagesAsync, not in processor mode.");
         }
 
         if (instrumentedMethodCall.IsAsync)
@@ -82,23 +94,25 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             queueName,
             serverAddress: fqns);
 
-        var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
-
         return instrumentedMethodCall.IsAsync
             ?
             // return an async delegate
             Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
-                true, // TODO Is this correct??
+                isProcessor, // TODO Is this correct??
                 (responseTask) =>
                 {
                     try
                     {
-                        HandleReceiveResponse(responseTask, instrumentedMethodCall.MethodCall.Method.MethodName, transaction);
+                        if (responseTask.IsFaulted)
+                            transaction.NoticeError(responseTask.Exception);
+
+                        HandleReceiveResponse(responseTask, instrumentedMethodName, transaction, isProcessor);
                     }
                     finally
                     {
+                        transaction.LogFinest($"Ending segment for {instrumentedMethodName}.");
                         segment.End();
                     }
                 },
@@ -107,7 +121,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
-                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
+                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor));
     }
 
     private static object GetTaskResultFromObject(object taskObj)
@@ -130,21 +144,15 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         return getResponse(task);
     }
 
-    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction)
+    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction, bool isProcessor)
     {
         if (responseTask.IsCanceled)
             return;
 
-        if (responseTask.IsFaulted)
-        {
-            transaction.NoticeError(responseTask.Exception);
-            return;
-        }
-
         var resultObj = GetTaskResultFromObject(responseTask);
-        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName);
+        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor);
     }
-    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName)
+    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor)
     {
         if (resultObj != null)
         {
@@ -158,11 +166,17 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     dynamic messages = resultObj;
                     if (messages.Count > 0)
                     {
+                        transaction.LogFinest($"Received {messages.Count} message(s). Accepting DT headers.");
                         var msg = messages[0];
                         if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
                         {
                             transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
                         }
+                    }
+                    else if (messages.Count == 0 && isProcessor) // if there are no messages and the receiver is a processor, ignore the transaction we created
+                    {
+                        transaction.LogFinest("No messages received. Ignoring transaction.");
+                        transaction.Ignore();
                     }
                     break;
             }
