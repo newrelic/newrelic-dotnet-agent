@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
@@ -16,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         public bool IsTransactionRequired => true;
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
-        private static HashSet<string> _unsupportedRequestTypes = new();
+        private static ConcurrentHashSet<string> _unsupportedRequestTypes = new();
         private static bool _reportBadAccountId = true;
         private static bool _reportBadArnBuilder = false;
 
@@ -105,10 +106,17 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
                 return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
+			}
+            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            {
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
 
-            if (_unsupportedRequestTypes.Add(requestType)) // log once per unsupported request type
+            if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
+            {                
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
+                _unsupportedRequestTypes.Add(requestType);
+            }
 
             return Delegates.NoOp;
         }

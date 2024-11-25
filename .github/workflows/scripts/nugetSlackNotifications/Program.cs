@@ -68,7 +68,8 @@ namespace nugetSlackNotifications
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Caught exception while checking {package.PackageName} for updates.");
-                    await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
+                    if (!_testMode)
+                        await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
                 }
             }
 
@@ -131,7 +132,7 @@ namespace nugetSlackNotifications
             // check publish date
             if (latest.Published >= searchTime)
             {
-                if (previous != null && (package.IgnorePatch || package.IgnoreMinor))
+                if (previous != null && (package.IgnorePatch || package.IgnoreMinor || package.IgnoreMajor))
                 {
                     var previousVersion = previous.Identity.Version;
                     var latestVersion = latest.Identity.Version;
@@ -151,6 +152,14 @@ namespace nugetSlackNotifications
                         if (previousVersion.Major == latestVersion.Major)
                         {
                             Log.Information($"Package {packageName} ignores Minor version updates; the Major version ({latestVersion.Major}) has not been updated.");
+                            return;
+                        }
+                    }
+                    if (package.IgnoreMajor)
+                    {
+                        if (previousVersion.Major != latestVersion.Major)
+                        {
+                            Log.Information($"Package {packageName} ignores Major version updates.");
                             return;
                         }
                     }

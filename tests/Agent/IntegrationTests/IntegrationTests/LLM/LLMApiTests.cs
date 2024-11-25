@@ -50,7 +50,7 @@ where TFixture : ConsoleDynamicMethodFixture
             _fixture.Initialize();
         }
 
-        [Fact]
+        //[Fact] The Meta Llama models have been deprecated, so these tests need to be reworked
         public void BedrockApiTest()
         {
             bool found = false;

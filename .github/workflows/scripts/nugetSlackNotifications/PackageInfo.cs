@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace nugetSlackNotifications
 {
@@ -10,6 +10,8 @@ namespace nugetSlackNotifications
         public bool IgnorePatch { get; set; }
         [JsonPropertyName("ignoreMinor")]
         public bool IgnoreMinor { get; set; }
+        [JsonPropertyName("ignoreMajor")]
+        public bool IgnoreMajor { get; set; }
         [JsonPropertyName("ignoreReason")]
         public string IgnoreReason {get; set;}
     }

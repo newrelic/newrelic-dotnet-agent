@@ -16,9 +16,18 @@ public enum AzureFunctionHttpTriggerTestMode
     AspNetCorePipeline,
     SimpleInvocation
 }
+
 public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : AzureFunctionApplicationFixture
 {
+    const string TestTraceId = "12345678901234567890123456789012";
+    const string AccountId = "1";
+    const string ParentType = "App";
+    const string AppId = "5043";
+    const string TransactionId = "5569065a5b1313bd";
+    const bool Sampled = true;
+    const string Priority = "1.23456";
+
     private readonly TFixture _fixture;
     private readonly AzureFunctionHttpTriggerTestMode _testMode;
 
@@ -32,6 +41,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetOrDeleteSpanEventsEnabled(true);
                 configModifier
                     .ForceTransactionTraces()
                     .ConfigureFasterTransactionTracesHarvestCycle(20)
@@ -141,6 +151,34 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.Equal("HttpTriggerFunctionUsingSimpleInvocation", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.type", out var parentType));
+            Assert.Equal(ParentType, parentType);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.app", out var appId));
+            Assert.Equal(AppId, appId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.account", out var accountId));
+            Assert.Equal(AccountId, accountId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.transportType", out var transportType));
+            Assert.Equal("HTTP", transportType);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("traceId", out var traceId));
+            Assert.Equal(TestTraceId, traceId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("priority", out var priority));
+            Assert.Equal(Priority, priority.ToString().Substring(0, 7)); // keep the values the same length
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("sampled", out var sampled));
+            Assert.Equal(Sampled, sampled);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parentId", out var traceParent));
+            Assert.Equal(TransactionId, traceParent);
+
+            // changes - just make sure it is present.
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.transportDuration", out var transportDuration));
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("guid", out var guid));
         }
         else
         {
@@ -248,6 +286,34 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.Equal("HttpTriggerFunctionUsingAspNetCorePipeline", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.type", out var parentType));
+            Assert.Equal(ParentType, parentType);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.app", out var appId));
+            Assert.Equal(AppId, appId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.account", out var accountId));
+            Assert.Equal(AccountId, accountId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.transportType", out var transportType));
+            Assert.Equal("HTTP", transportType);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("traceId", out var traceId));
+            Assert.Equal(TestTraceId, traceId);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("priority", out var priority));
+            Assert.Equal(Priority, priority.ToString().Substring(0, 7)); // keep the values the same length
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("sampled", out var sampled));
+            Assert.Equal(Sampled, sampled);
+
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parentId", out var traceParent));
+            Assert.Equal(TransactionId, traceParent);
+
+            // changes - just make sure it is present.
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("parent.transportDuration", out var transportDuration));
+            Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("guid", out var guid));
         }
         else
         {
@@ -270,7 +336,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
     private bool IsPipelineTest => _testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline;
 }
 
-// The net6 target builds the function app without the aspnetcore pipeline package included
+
+// the net8 target builds the function app without the aspnetcore pipeline package included
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
@@ -280,7 +347,7 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
     }
 }
 
-// the net8 target builds the function app with the aspnetcore pipeline package
+// the net9 target builds the function app with the aspnetcore pipeline package
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {

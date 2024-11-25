@@ -1816,6 +1816,29 @@
                                                 </xs:attribute>
                                             </xs:complexType>
                                         </xs:element>
+                                        <xs:element name="labels" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Include configured labels with log records.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            Controls whether or not labels are included with log records. Defaults to false.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="exclude" type="xs:string" default="">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            A comma-separated list of case-insensitive strings that define the labels that should NOT be added to log records.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
                                     </xs:sequence>
                                     <xs:attribute name="enabled" type="xs:boolean" default="true">
                                         <xs:annotation>

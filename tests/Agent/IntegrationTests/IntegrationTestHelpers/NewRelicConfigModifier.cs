@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -106,7 +107,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier AddExpectedStatusCodes(string statusCodes)
         {
-            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector"}, "expectedStatusCodes", statusCodes );
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector" }, "expectedStatusCodes", statusCodes);
             return this;
         }
 
@@ -385,7 +386,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier EnableAgentTiming(bool enable = true)
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "diagnostics", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics"}, "captureAgentTiming", enable.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics" }, "captureAgentTiming", enable.ToString().ToLower());
             return this;
         }
 
@@ -435,8 +436,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "EnableAspNetCore6PlusBrowserInjection");
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enableBrowserInjection}");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "EnableAspNetCore6PlusBrowserInjection");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", $"{enableBrowserInjection}");
             return this;
         }
 
@@ -501,6 +502,31 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier SetDisableFileSystemWatcher(bool enabled = true)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "disableFileSystemWatcher", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableApplicationLoggingForwardLabels(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "labels" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier SetApplicationLoggingForwardLabelsExcludes(string excludes)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "labels" }, "exclude", excludes);
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLabels(string labels)
+        {
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "labels", labels);
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLabels(Dictionary<string, string> labels)
+        {
+            var labelsString = string.Join(";", labels.Select(x => x.Key + ":" + x.Value).ToArray());
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "labels", labelsString);
             return this;
         }
 

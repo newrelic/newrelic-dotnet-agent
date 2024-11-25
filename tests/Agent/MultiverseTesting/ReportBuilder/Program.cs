@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -6,15 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using NewRelic.Agent.MultiverseScanner.Reporting;
 
 namespace ReportBuilder
 {
-	class Program
-	{
-		static void Main(string[] args)
-		{
+    class Program
+    {
+        static void Main(string[] args)
+        {
             if (args.Length != 3 || string.IsNullOrWhiteSpace(args[0]) || string.IsNullOrWhiteSpace(args[1]))
             {
                 Console.WriteLine("ERROR Missing argument: Must supply agent version, path to report, and an output path.");
@@ -112,5 +111,5 @@ namespace ReportBuilder
 
             return overview;
         }
-	}
+    }
 }

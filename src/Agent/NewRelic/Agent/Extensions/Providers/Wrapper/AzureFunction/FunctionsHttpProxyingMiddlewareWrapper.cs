@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
+using Microsoft.Extensions.Primitives;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -33,6 +35,10 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 
                     agent.CurrentTransaction.SetRequestMethod(httpContext.Request.Method);
                     agent.CurrentTransaction.SetUri(httpContext.Request.Path);
+
+                    // Only need to accept DT headers from incoming request.
+                    var headers = httpContext.Request.Headers as IDictionary<string, StringValues>;
+                    transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
                     break;
                 case "TryHandleHttpResult":
                     if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
@@ -52,5 +58,13 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
         }
 
         return Delegates.NoOp;
+
+        static IEnumerable<string> GetHeaderValue(IDictionary<string, StringValues> headers, string key)
+        {
+            if (!headers.ContainsKey(key))
+                return [];
+
+            return headers[key].ToArray();
+        }
     }
 }

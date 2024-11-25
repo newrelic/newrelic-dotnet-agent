@@ -62,6 +62,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.IgnoredInstrumentation).Returns(() => _ignoredInstrumentation);
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
             Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
+            Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
 
             return configuration;
         }
@@ -388,7 +389,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLoggingEventsDropped(3);
             _agentHealthReporter.ReportLoggingEventsEmpty();
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
-
+            
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("Framework1");
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("Framework2");
 
@@ -406,7 +407,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
                 { "Supportability/Logging/DotNET/log4net/enabled", 1 },
                 { "Supportability/Logging/Forwarding/DotNET/Framework1/enabled", 1},
-                { "Supportability/Logging/Forwarding/DotNET/Framework2/enabled", 1}
+                { "Supportability/Logging/Forwarding/DotNET/Framework2/enabled", 1},
+                { "Supportability/Logging/Labels/DotNET/enabled", 1 },
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));
 
@@ -453,6 +455,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
                 { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
+                { "Supportability/Logging/Labels/DotNET/enabled", 1 },
             };
 
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricNameModel.Name, x.DataModel.Value0));

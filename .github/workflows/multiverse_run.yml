@@ -30,8 +30,8 @@ jobs:
     env:
       multiverse_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting
       multiverse_solution: ${{ github.workspace }}/tests/Agent/MultiverseTesting/MultiverseTesting.sln
-      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/netcoreapp3.1
-      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/netcoreapp3.1
+      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/net8.0
+      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/net8.0
       MVS_XML_PATH: ${{ github.workspace }}/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper
 
     steps:
@@ -60,11 +60,6 @@ jobs:
           echo "dotnet build ${{ env.multiverse_solution }} --configuration Release"
           dotnet build ${{ env.multiverse_solution }} --configuration Release
         shell: bash
-
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
-        with:
-          dotnet-version: '3.1.100'
 
       - name: Run ConsoleScanner
         run: |
@@ -96,8 +91,8 @@ jobs:
     env:
       multiverse_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting
       multiverse_solution: ${{ github.workspace }}/tests/Agent/MultiverseTesting/MultiverseTesting.sln
-      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/netcoreapp3.1
-      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/netcoreapp3.1
+      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/net8.0
+      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/net8.0
       MVS_XML_PATH: ${{ github.workspace }}/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper
 
     steps:
@@ -105,11 +100,6 @@ jobs:
         uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit 
-
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
-        with:
-          dotnet-version: '3.1.100'
 
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

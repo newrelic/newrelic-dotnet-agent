@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -23,7 +24,9 @@ namespace NewRelic.Agent.Core.Utilities
                         "attributes": {
                             "entity.name": "myApplicationName",
                             "entity.guid": "guid",
-                            "hostname": "hostname"
+                            "hostname": "hostname",
+                            "tags.label1": "value1",
+                            "tags.label2": "value2"
                         }
                     },
                     "logs": [{
@@ -75,10 +78,12 @@ namespace NewRelic.Agent.Core.Utilities
                 """;
 
             var _contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 }, {"key3", new { Foo = 1, Bar = 2 } } };
+            var labels = new List<Label> { new Label("label1", "value1"), new Label("label2", "value2") };
             var sourceObject = new LogEventWireModelCollection(
             "myApplicationName",
             "guid",
             "hostname",
+            labels,
             new List<LogEventWireModel>()
             {
                 new LogEventWireModel(1, "TestMessage1", "TestLevel", "TestSpanId1", "TestTraceId1", _contextData),

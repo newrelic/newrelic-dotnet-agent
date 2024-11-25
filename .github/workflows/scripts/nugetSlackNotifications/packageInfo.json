@@ -42,6 +42,9 @@
         "ignoreReason": "frequent patch releases create too much noise"
     },
     {
+        "packageName": "awssdk.dynamodbv2"
+    },
+    {
         "packageName": "confluent.kafka"
     },
     {
@@ -54,7 +57,29 @@
         "ignoreReason": "frequent patch releases create too much noise"
     },
     {
-        "packageName": "log4net"
+        "packageName": "enyimmemcachedcore"
+    },
+    {
+        "packageName": "log4net",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2764"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http.aspnetcore"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.storage.queues"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.sdk"
     },
     {
         "packageName": "microsoft.extensions.logging"
@@ -66,7 +91,11 @@
         "packageName": "microsoft.net.http"
     },
     {
-        "packageName": "mongodb.driver"
+        "packageName": "mongodb.driver",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking since at least 2.25.0. See https://new-relic.atlassian.net/browse/NR-281915"
     },
     {
         "packageName": "mysql.data"
@@ -78,13 +107,20 @@
         "packageName": "nest"
     },
     {
+        "packageName": "newrelic.agent.api"
+    },
+    {
         "packageName": "nlog"
     },
-    {   
+    {
         "packageName": "nservicebus"
     },
     {
-        "packageName": "rabbitmq.client"
+        "packageName": "rabbitmq.client",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2885"
     },
     {
         "packageName": "restsharp"
@@ -109,8 +145,5 @@
         "ignorePatch": true,
         "ignoreMinor": false,
         "ignoreReason": "frequent patch releases create too much noise"
-    },
-    {
-        "packageName": "system.data.sqlclient"
     }
 ]

@@ -135,6 +135,32 @@ namespace ParsingTests
             Assert.That(actual, Is.EqualTo(expected));
         }
 
+        [TestCase("AlphaBeta", "alpha_beta")]
+        [TestCase("Alpha", "alpha")]
+        [TestCase("alpha", "alpha")]
+        [TestCase("alpha_beta", "alpha_beta")]
+        [TestCase("alphaBeta", "alpha_beta")]
+        [TestCase("AlphaBetaGamma", "alpha_beta_gamma")]
+        [TestCase("A", "a")]
+        [TestCase("", "")]
+        public void validate_ToSnakeCase(string input, string expected)
+        {
+            var actual = input.ToSnakeCase();
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void validate_ToSnakeCase_nullInput_throwsException()
+        {
+            Assert.Throws<ArgumentNullException>(TryNullSnakeCase);
+        }
+
+        private void TryNullSnakeCase()
+        {
+            string input = null;
+            input.ToSnakeCase();
+        }
+
 #if NET6_0_OR_GREATER
         [Test]
         public void validate_CleanUri_handles_invalidoperationexception()

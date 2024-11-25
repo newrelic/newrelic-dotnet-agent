@@ -88,33 +88,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
         }
     }
 
-    public class AwsLambdaS3EventTestNet6 : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureNet6>
+    public class AwsLambdaS3EventTestCoreOldest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaS3EventTestNet6(LambdaS3EventTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaS3EventTestCoreOldest(LambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/S3Event")
         {
         }
     }
 
-    public class AwsLambdaAsyncS3EventTestNet6 : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureNet6>
+    public class AwsLambdaAsyncS3EventTestCoreOldest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncS3EventTestNet6(AsyncLambdaS3EventTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncS3EventTestCoreOldest(AsyncLambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/S3EventAsync")
         {
         }
     }
 
-    public class AwsLambdaS3EventTestNet8 : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureNet8>
+    public class AwsLambdaS3EventTestCoreLatest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaS3EventTestNet8(LambdaS3EventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaS3EventTestCoreLatest(LambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/S3Event")
         {
         }
     }
 
-    public class AwsLambdaAsyncS3EventTestNet8 : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureNet8>
+    public class AwsLambdaAsyncS3EventTestCoreLatest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncS3EventTestNet8(AsyncLambdaS3EventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncS3EventTestCoreLatest(AsyncLambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/S3EventAsync")
         {
         }
