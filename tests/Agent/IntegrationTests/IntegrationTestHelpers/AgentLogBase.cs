@@ -72,6 +72,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
+        public const string TransactionAlreadyEndedLogLineRegex = TransactionLinePrefix + "Transaction has already ended(.*)";
 
         // Serverless payloads
         public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";

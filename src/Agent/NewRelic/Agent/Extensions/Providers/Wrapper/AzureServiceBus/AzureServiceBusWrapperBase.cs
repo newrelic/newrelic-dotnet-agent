@@ -4,17 +4,15 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.AzureServiceBus
+namespace NewRelic.Providers.Wrapper.AzureServiceBus;
+
+public abstract class AzureServiceBusWrapperBase : IWrapper
 {
-    public abstract class AzureServiceBusWrapperBase : IWrapper
-    {
-        protected const string BrokerVendorName = "AzureServiceBus";
+    protected const string BrokerVendorName = "ServiceBus";
 
-        public bool IsTransactionRequired => true; // only instrument service bus methods if we're already in a transaction
+    public virtual bool IsTransactionRequired => true; // only instrument service bus methods if we're already in a transaction
 
-        public abstract CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo);
+    public abstract CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo);
 
-        public abstract AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,ITransaction transaction);
-
-    }
+    public abstract AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction);
 }

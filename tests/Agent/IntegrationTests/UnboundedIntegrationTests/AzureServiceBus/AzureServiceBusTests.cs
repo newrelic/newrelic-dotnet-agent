@@ -28,7 +28,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
         _fixture.AddCommand($"AzureServiceBusExerciser InitializeQueue {_queueName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ExerciseMultipleReceiveOperationsOnAMessage {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ScheduleAndReceiveAMessage {_queueName}");
+        _fixture.AddCommand($"AzureServiceBusExerciser ScheduleAndCancelAMessage {_queueName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndDeadLetterAMessage {_queueName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndAbandonAMessage {_queueName}");
         _fixture.AddCommand($"AzureServiceBusExerciser DeleteQueue {_queueName}");
@@ -62,40 +62,43 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}", callCount = 4},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndReceiveAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 4},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
 
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}", callCount = 10},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}", callCount = 5, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndReceiveAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}", callCount = 3, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 6},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 3, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
 
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1 },
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage" },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1 },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage" },
 
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Purge/Named/{_queueName}", callCount = 2 },
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Purge/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage" },
-            new() { metricName = $"MessageBroker/AzureServiceBus/Queue/Purge/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage" },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}", callCount = 1 },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage" },
+
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 5 },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage" },
+            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage" },
         };
 
         var exerciseMultipleReceiveOperationsOnAMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage");
-        var scheduleAndReceiveAMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/ScheduleAndReceiveAMessage");
 
         var expectedTransactionTraceSegments = new List<string>
         {
-            $"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}"
+            $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}"
         };
 
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/ScheduleAndReceiveAMessage"); // this will always be the slowest transaction
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage");
 
-        var queueProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/AzureServiceBus/Queue/Produce/Named/{_queueName}");
-        var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/AzureServiceBus/Queue/Consume/Named/{_queueName}");
-        var queuePeekSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/AzureServiceBus/Queue/Peek/Named/{_queueName}");
-        var queuePurgeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/AzureServiceBus/Queue/Purge/Named/{_queueName}");
+        var queueProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}");
+        var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}");
+        var queuePeekSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}");
+        var queueSettleSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}");
+        var queueCancelSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}");
 
         var expectedProduceAgentAttributes = new List<string>
         {
@@ -116,7 +119,13 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             "messaging.destination.name",
         };
 
-        var expectedPurgeAgentAttributes = new List<string>
+        var expectedSettleAgentAttributes = new List<string>
+        {
+            "server.address",
+            "messaging.destination.name",
+        };
+
+        var expectedCancelAgentAttributes = new List<string>
         {
             "server.address",
             "messaging.destination.name",
@@ -128,7 +137,6 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
         NrAssert.Multiple(
             () => Assert.True(exerciseMultipleReceiveOperationsOnAMessageTransactionEvent != null, "ExerciseMultipleReceiveOperationsOnAMessageTransactionEvent should not be null"),
-            () => Assert.True(scheduleAndReceiveAMessageTransactionEvent != null, "ScheduleAndReceiveAMessageTransactionEvent should not be null"),
             () => Assert.True(transactionSample != null, "transactionSample should not be null"),
             () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
 
@@ -145,8 +153,11 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             () => Assertions.SpanEventHasAttributes(expectedPeekAgentAttributes,
                 Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queuePeekSpanEvents),
 
-            () => Assertions.SpanEventHasAttributes(expectedPurgeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queuePurgeSpanEvents)
+            () => Assertions.SpanEventHasAttributes(expectedSettleAgentAttributes,
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueSettleSpanEvents),
+
+            () => Assertions.SpanEventHasAttributes(expectedCancelAgentAttributes,
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueCancelSpanEvents)
         );
     }
 }
