@@ -10,7 +10,7 @@
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.404.5" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -34,7 +34,7 @@
     <PackageReference Include="MassTransit" Version="8.2.5" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.44.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net9.0'" />
