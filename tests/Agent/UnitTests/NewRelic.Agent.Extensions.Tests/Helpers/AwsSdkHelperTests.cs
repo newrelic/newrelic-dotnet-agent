@@ -74,6 +74,7 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase("aws", "us-west-2", "", "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
         [TestCase("aws", "us-west-2", null, "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
         [TestCase("", "", "", "Partition: [Missing], Region: [Missing], AccountId: [Missing]")]
+        [TestCase(null, null, null, "Partition: [Missing], Region: [Missing], AccountId: [Missing]")]
         public void ArnBuilderToString(string partition, string region, string accountId, string expected)
         {
             var arnBuilder = new ArnBuilder(partition, region, accountId);

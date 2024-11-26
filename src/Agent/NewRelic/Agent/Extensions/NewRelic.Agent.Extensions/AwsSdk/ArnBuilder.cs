@@ -137,9 +137,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         {
             string partition = string.IsNullOrEmpty(Partition) ? "[Missing]" : Partition;
             string region = string.IsNullOrEmpty(Region) ? "[Missing]" : Region;
-            string accountId = string.IsNullOrEmpty(AccountId) ? "[Missing]" : "[Present]";
+            string idPresent = string.IsNullOrEmpty(AccountId) ? "[Missing]" : "[Present]";
             
-            return $"Partition: {partition}, Region: {region}, AccountId: {accountId}";
+            return $"Partition: {partition}, Region: {region}, AccountId: {idPresent}";
         }
 
         private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);
