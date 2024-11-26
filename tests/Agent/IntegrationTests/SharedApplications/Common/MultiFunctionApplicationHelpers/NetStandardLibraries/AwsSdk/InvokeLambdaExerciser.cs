@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.Lambda.Model;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -32,7 +33,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
             {
                 var response = client.Invoke(request);
             }
-            catch
+            catch (ResourceNotFoundException)
             {
             }
 #else
@@ -60,7 +61,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
                 string returnValue = System.Text.Encoding.UTF8.GetString(stream.ToArray());
                 return returnValue;
             }
-            catch
+            catch (ResourceNotFoundException)
             {
             }
             return null;
@@ -87,7 +88,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
                 string returnValue = System.Text.Encoding.UTF8.GetString(stream.ToArray());
                 return returnValue;
             }
-            catch
+            catch (ResourceNotFoundException)
             {
             }
             return null;
