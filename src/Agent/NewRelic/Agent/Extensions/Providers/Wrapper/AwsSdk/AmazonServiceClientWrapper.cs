@@ -3,6 +3,7 @@
 
 using System;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk

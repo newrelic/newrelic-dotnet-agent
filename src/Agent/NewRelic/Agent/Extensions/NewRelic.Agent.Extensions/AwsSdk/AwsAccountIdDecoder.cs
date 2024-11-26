@@ -3,10 +3,9 @@
 
 using System;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Agent.Extensions.AwsSdk
 {
-    // TODO: This should probably be moved to the Extensions project and have unit tests written for it
-    internal static class AwsAccountIdDecoder
+    public static class AwsAccountIdDecoder
     {
         // magic number
         private const long Mask = 0x7FFFFFFFFF80;
