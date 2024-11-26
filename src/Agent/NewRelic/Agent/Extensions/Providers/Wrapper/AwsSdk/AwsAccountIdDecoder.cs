@@ -5,6 +5,7 @@ using System;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
+    // TODO: This should probably be moved to the Extensions project and have unit tests written for it
     internal static class AwsAccountIdDecoder
     {
         // magic number
