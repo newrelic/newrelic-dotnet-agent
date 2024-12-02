@@ -343,7 +343,6 @@ jobs:
     needs: package-and-deploy
     if: ${{ inputs.deploy }}
     permissions:
-      contents: write
       pull-requests: write
 
     steps:
