@@ -61,7 +61,7 @@ jobs:
       - name: Check for updates to core technology packages
         env:
           DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
-          DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOTTY_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           CORECLR_ENABLE_PROFILING: 1
           CORECLR_NEW_RELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
           CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
