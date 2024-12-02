@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -48,12 +47,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
-            return new ArnBuilder(partition, systemName, accountId); ;
+            return new ArnBuilder(partition, systemName, accountId);
         }
 
         private string GetAccountId(IAgent agent)
         {
-            string accountId = agent.Configuration.AwsAccountId;
+            string accountId = AmazonServiceClientWrapper.AwsAccountId;
+
             if (accountId != null)
             {
                 if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
@@ -65,6 +65,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     }
                 }
             }
+
             return accountId;
         }
 
@@ -109,7 +110,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 			}
             else if (requestType.StartsWith("Amazon.DynamoDBv2"))
             {
-                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext, builder);
             }
 
             if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type

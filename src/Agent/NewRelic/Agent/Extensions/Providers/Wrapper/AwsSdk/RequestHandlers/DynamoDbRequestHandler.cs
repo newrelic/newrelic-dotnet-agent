@@ -4,17 +4,18 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
     internal static class DynamoDbRequestHandler
     {
 
-        private static ConcurrentDictionary<string,string> _operationNameCache = new ConcurrentDictionary<string,string>();
+        private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
-        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext, ArnBuilder builder)
         {
             var requestType = ((object)request).GetType().Name;
 
@@ -26,9 +27,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             // has a TableName property
             string model = request.TableName;
 
-            string region = executionContext.RequestContext.ClientConfig.RegionEndpoint.SystemName; // TODO: This might need some null checking
-            string arn = GetArnFromTableName(model, region);
-            transaction.AddFaasAttribute("cloud.resource_id", arn); // TODO: Not 100% positive this is the correct attribute name; need to verify
+            // TODO: The entity relationship docs suggest cloud.resource_id should be a span attribute, so maybe we added it to the DataStore segment below instead??
+            var arn = builder.Build("dynamodb", $"table/{model}");
+            if (string.IsNullOrEmpty(arn))
+                transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
 
@@ -41,12 +43,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         private static string GetOperationNameFromRequestType(string requestType)
         {
             return requestType.Replace("Request", string.Empty).ToSnakeCase();
-        }
-
-        private static string GetArnFromTableName(string tableName, string region)
-        {
-            var accountId = AmazonServiceClientWrapper.AwsAccountId ?? "(unknown)";
-            return $"arn:aws:dynamodb:{region}:{accountId}:table/{tableName}";
         }
     }
 }

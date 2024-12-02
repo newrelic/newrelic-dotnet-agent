@@ -5,18 +5,16 @@ using System.Collections.Concurrent;
 using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
-using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.AwsSdk;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
     internal static class LambdaInvokeRequestHandler
     {
         private static Func<object, object> _getResultFromGenericTask;
-        private static ConcurrentDictionary<string, string> _arnCache = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> _arnCache = new();
         private static bool _reportMissingRequestId = true;
         private static bool _reportBadInvocationName = true;
         private const int MAX_CACHE_SIZE = 25;  // Shouldn't ever get this big, but just in case

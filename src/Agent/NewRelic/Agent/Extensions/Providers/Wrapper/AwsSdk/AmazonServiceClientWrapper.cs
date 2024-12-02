@@ -10,7 +10,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 {
     public class AmazonServiceClientWrapper : IWrapper
     {
-        // TODO: Can an application use a separate account ID per service? If so, need to cache by service type
+        /// <summary>
+        /// The AWS account id.
+        /// Parsed from the access key in the credentials of the client - or fall back to the configuration value if parsing fails.
+        /// Assumes only a single account id is used in the application.
+        /// </summary>
         public static string AwsAccountId { get; private set; }
 
         public bool IsTransactionRequired => false;
@@ -22,18 +26,18 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            if (AwsAccountId != null) // only look up the account id once. See comment above regarding caching by service type
+            if (AwsAccountId != null)
                 return Delegates.NoOp;
 
-            // get the AWSCredentials parameter
-            dynamic awsCredentials = instrumentedMethodCall.MethodCall.MethodArguments[0];
-
-            dynamic immutableCredentials = awsCredentials.GetCredentials();
-            string accessKey = immutableCredentials.AccessKey;
-
-            // convert the access key to an account id; if an exception is thrown, fall back to getting the account id from config
             try
             {
+                // get the AWSCredentials parameter
+                dynamic awsCredentials = instrumentedMethodCall.MethodCall.MethodArguments[0];
+
+                dynamic immutableCredentials = awsCredentials.GetCredentials();
+                string accessKey = immutableCredentials.AccessKey;
+
+                // convert the access key to an account id
                 AwsAccountId = AwsAccountIdDecoder.GetAccountId(accessKey);
             }
             catch (Exception e)
