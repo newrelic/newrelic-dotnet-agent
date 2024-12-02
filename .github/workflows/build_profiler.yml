@@ -372,6 +372,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
         with:
+            token: ${{ secrets.DOTNET_AGENT_GH_TOKEN}}
             commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
             title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"
             branch: profiler-nuget-updates/${{ github.ref_name }}
