@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core.Transactions
         private Segment StartSegmentImpl(MethodCall methodCall)
         {
             var methodCallData = GetMethodCallData(methodCall);
-
+            // TODO: Create and start an activity for the segment here, and pass the activity to the segment
             return new Segment(this, methodCallData);
         }
 
