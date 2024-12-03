@@ -33,7 +33,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
             {
                 var response = client.Invoke(request);
             }
-            catch (ResourceNotFoundException)
+            catch
             {
             }
 #else
@@ -61,7 +61,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
                 string returnValue = System.Text.Encoding.UTF8.GetString(stream.ToArray());
                 return returnValue;
             }
-            catch (ResourceNotFoundException)
+            catch
             {
             }
             return null;
@@ -88,7 +88,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AwsSdk
                 string returnValue = System.Text.Encoding.UTF8.GetString(stream.ToArray());
                 return returnValue;
             }
-            catch (ResourceNotFoundException)
+            catch
             {
             }
             return null;
