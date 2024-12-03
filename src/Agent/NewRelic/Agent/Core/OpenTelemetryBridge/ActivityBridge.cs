@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,7 +15,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class ActivityBridge : IDisposable
     {
         private dynamic _activityListener;
-        private object 
 
         public void Start()
         {
@@ -39,9 +39,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // Need to subscribe to ActivityStarted and ActivityStopped callbacks. These methods will be used to trigger the starting and stopping
             // of segments and potentially transactions using the agent's API.
 
-            // Need to subscribe to the Sample and SampleUsingParentId callbacks to get sampling decisions aligned with the agent.
-            // Activity will not actually be created by an activity source unless an activity listener is listening to it and the
-            // activity is sampled.
+            // Need to subscribe to the Sample callbacks to ensure that activities are created and attributed collected. Subscribing to the
+            // SampleByParentId callback is not necessary, because the ActivitySource will fallback to the Sample callback when the W3C id format
+            // is enabled so long as our listener does not define a SampleByParentId callback.
+            // The decision to sample an activity can be made by multiple listeners. The highest sampling decision made by any listener is the one
+            // that is applied to the activity. It's possible for activities that we do not intend to smaple with our listener, to be sampled
+            // because of a decision made by another listener outside of our control.
+            ConfigureSampleCallback(_activityListener, activityListenerType, assembly);
 
             // Enable the listener
             var addActivityListenerMethod = activitySourceType.GetMethod("AddActivityListener", [activityListenerType]);
@@ -72,8 +76,33 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static bool ShouldListenToActivitySource(object activitySource)
         {
-            // Listen to all activity sources for now
-            return true;
+            dynamic dynamicActivitySource = activitySource;
+            // Listen to all non-legacy activity sources for now
+            return !string.IsNullOrEmpty((string)dynamicActivitySource.Name);
+        }
+
+        // Activity will not actually be created by an activity source unless an activity listener is listening to it and the
+        // activity is sampled. This method creates and registers a Sample callback that ensures that the activities we want to
+        // capture are created and sampled, and will eventually have the property set that will trigger the population of all of
+        // the desired tags (requires activity.AllDataRequested to be true).
+        //
+        // Generates code similar to the following.
+        // activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded;
+        private void ConfigureSampleCallback(dynamic activityListener, Type activityListenerType, Assembly assembly)
+        {
+            var sampleProperty = activityListenerType.GetProperty("Sample");
+            var activityContextType = assembly.GetType("System.Diagnostics.ActivityContext", throwOnError: false);
+            var activityCreationOptionsType = assembly.GetType("System.Diagnostics.ActivityCreationOptions`1", throwOnError: false);
+            var activitySamplingResultType = assembly.GetType("System.Diagnostics.ActivitySamplingResult", throwOnError: false);
+
+            // The parameter to the Sample callback is a ref ActivityCreationOptions<ActivityContext> parameter.
+            var parameterType = activityCreationOptionsType.MakeGenericType(activityContextType).MakeByRefType();
+            var optionsParameter = Expression.Parameter(parameterType, "options");
+            // Converting the enum types here by using the int representation of the enum value (we can't use the ilrepacked enum type directly).
+            var samplingValue = Expression.Convert(Expression.Constant((int)ActivitySamplingResult.AllDataAndRecorded), activitySamplingResultType);
+            var sampleLambda = Expression.Lambda(sampleProperty.PropertyType, samplingValue, optionsParameter);
+
+            sampleProperty.SetValue(activityListener, sampleLambda.Compile());
         }
     }
 }
