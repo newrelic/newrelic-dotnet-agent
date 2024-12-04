@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using Amazon.Runtime;
-using System.Threading;
+using Amazon;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {
@@ -25,12 +25,16 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         private AmazonDynamoDBClient GetDynamoDBClient()
         {
 
-            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig();
-            // Set the endpoint URL
-            clientConfig.ServiceURL = "http://dynamodb:8000"; // port must match what is set in docker compose
-            clientConfig.AuthenticationRegion = "us-west-2";
-            var creds = new BasicAWSCredentials("xxx", "xxx");
-            AmazonDynamoDBClient client = new AmazonDynamoDBClient(creds, clientConfig);
+            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+            {
+                // Set the endpoint URL
+                ServiceURL = "http://dynamodb:8000", // port must match what is set in docker compose
+                AuthenticationRegion = "us-west-2",
+                RegionEndpoint = RegionEndpoint.USWest2
+            };
+
+            // use plausible (but fake) access key and fake secret key so account id parsing can be tested
+            AmazonDynamoDBClient client = new AmazonDynamoDBClient("FOOIHSFODNNAEXAMPLE", "MOREGIBBERISH", clientConfig);
 
             return client;
         }

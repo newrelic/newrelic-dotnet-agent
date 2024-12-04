@@ -33,10 +33,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             try
             {
                 accountId = GetAccountId(agent);
-                var clientconfig = requestContext.ClientConfig;
-                var regionEndpoint = clientconfig.RegionEndpoint;
-                systemName = regionEndpoint.SystemName;
-                partition = regionEndpoint.PartitionName;
+                var clientConfig = requestContext.ClientConfig;
+                if (clientConfig.RegionEndpoint != null)
+                {
+                    var regionEndpoint = clientConfig.RegionEndpoint;
+                    systemName = regionEndpoint.SystemName;
+                    partition = regionEndpoint.PartitionName;
+                }
             }
             catch (Exception e)
             {
@@ -46,8 +49,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     _reportBadArnBuilder = false;
                 }
             }
-
-            return new ArnBuilder(partition, systemName, accountId);
+            agent.Logger.Debug($"AwsSdkPipelineWrapper: Creating ArnBuilder with partition: {partition}, systemName: {systemName}, accountId: {accountId}");
+            var arnBuilder = new ArnBuilder(partition, systemName, accountId);
+            agent.Logger.Debug($"AwsSdkPipelineWrapper: ArnBuilder created: {arnBuilder}");
+            return arnBuilder;
         }
 
         private string GetAccountId(IAgent agent)
@@ -66,6 +71,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
+            // TODO: testing only
+            agent.Logger.Debug($"AwsSdkPipelineWrapper: Using accountId: {accountId}");
             return accountId;
         }
 
@@ -104,17 +111,19 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
-            else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
+
+            if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
                 return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
-			}
-            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            }
+
+            if (requestType.StartsWith("Amazon.DynamoDBv2"))
             {
-                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext, builder);
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
             if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
-            {                
+            {
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
                 _unsupportedRequestTypes.Add(requestType);
             }

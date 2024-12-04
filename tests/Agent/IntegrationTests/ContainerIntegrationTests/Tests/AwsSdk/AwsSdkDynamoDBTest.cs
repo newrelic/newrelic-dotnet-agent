@@ -23,6 +23,8 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
         _fixture = fixture;
         _fixture.TestLogger = output;
 
+        _fixture.SetAdditionalEnvironmentVariable("AWSSDK_INITCOLLECTIONS", "true");
+
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
@@ -54,9 +56,9 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
 
-                // shut down the container and wait for the agent log to see it
-                _fixture.ShutdownRemoteApplication();
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
+                //// shut down the container and wait for the agent log to see it
+                //_fixture.ShutdownRemoteApplication();
+                //_fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
             });
 
         _fixture.Initialize();

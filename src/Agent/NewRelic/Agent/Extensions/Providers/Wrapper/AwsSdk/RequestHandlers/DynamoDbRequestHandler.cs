@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 
         private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
-        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext, ArnBuilder builder)
+        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
             var requestType = ((object)request).GetType().Name;
 
@@ -29,8 +29,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 
             // TODO: The entity relationship docs suggest cloud.resource_id should be a span attribute, so maybe we added it to the DataStore segment below instead??
             var arn = builder.Build("dynamodb", $"table/{model}");
-            if (string.IsNullOrEmpty(arn))
+            if (!string.IsNullOrEmpty(arn))
                 transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
+            else
+            {
+                agent.Logger.Debug($"Unable to build ARN for DynamoDB request. ArnBuilder reports: {builder}");
+            }
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
 

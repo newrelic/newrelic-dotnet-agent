@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             string partition = string.IsNullOrEmpty(Partition) ? "[Missing]" : Partition;
             string region = string.IsNullOrEmpty(Region) ? "[Missing]" : Region;
             string idPresent = string.IsNullOrEmpty(AccountId) ? "[Missing]" : "[Present]";
-            
+
             return $"Partition: {partition}, Region: {region}, AccountId: {idPresent}";
         }
 
@@ -155,6 +155,5 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             }
             return "arn:" + partition + ":" + service + ":" + region + ":" + accountId + ":" + resource;
         }
-
     }
 }

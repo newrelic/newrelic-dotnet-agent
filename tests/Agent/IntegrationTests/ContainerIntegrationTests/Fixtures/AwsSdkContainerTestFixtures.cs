@@ -32,7 +32,7 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = "noble";
 
     private readonly string BaseUrl;
 
@@ -78,7 +78,7 @@ public class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = "noble";
 
     private readonly string BaseUrl;
 

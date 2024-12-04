@@ -31,13 +31,20 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         /// <summary>
         /// Performs a Base-32 decode of the specified input string.
         /// Allowed character range is a-z and 2-7. 'a' being 0 and '7' is 31.
+        ///
+        /// public to allow for unit testing
         /// </summary>
         /// <param name="src">The string to be decoded. Must be at least 10 characters.</param>
         /// <returns>A long containing first 6 bytes of the base 32 decoded data.</returns>
         /// <exception cref="ArgumentException">If src has less than 10 characters.</exception>
         /// <exception cref="ArgumentOutOfRangeException">If src contains invalid characters for Base-32</exception>
-        private static long Base32Decode(string src)
+        public static long Base32Decode(string src)
         {
+            if (string.IsNullOrEmpty(src))
+            {
+                throw new ArgumentNullException(nameof(src), "The input string cannot be null or empty.");
+            }
+
             if (src.Length < 10)
             {
                 throw new ArgumentException("The input string must be at least 10 characters long.", nameof(src));
