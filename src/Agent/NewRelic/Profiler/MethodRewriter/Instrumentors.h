@@ -55,7 +55,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // some special name methods seem to give us trouble, but allow constructors to
             // be instrumented
             if (IsMdSpecialName(function->GetMethodAttributes()) &&
-                    !IsMdInstanceInitializerW(function->GetMethodAttributes(), function->GetFunctionName().c_str())) {
+                    !wcscmp(function->GetFunctionName().c_str(), _X(".ctor"))) {
                 LogError(L"Skipping SpecialName method: ", function->ToString());
                 return false;
             }
