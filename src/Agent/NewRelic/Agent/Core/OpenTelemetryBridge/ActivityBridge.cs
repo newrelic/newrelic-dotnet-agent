@@ -9,12 +9,21 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     public class ActivityBridge : IDisposable
     {
+        private IAgent _agent;
+
         private dynamic _activityListener;
+
+        public ActivityBridge(IAgent agent)
+        {
+            _agent = agent;
+        }
 
         public void Start()
         {
@@ -38,6 +47,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             // Need to subscribe to ActivityStarted and ActivityStopped callbacks. These methods will be used to trigger the starting and stopping
             // of segments and potentially transactions using the agent's API.
+            ConfigureActivityStartedAndStoppedCallbacks(_activityListener, activityListenerType, assembly, _agent);
 
             // Need to subscribe to the Sample callbacks to ensure that activities are created and attributed collected. Subscribing to the
             // SampleByParentId callback is not necessary, because the ActivitySource will fallback to the Sample callback when the W3C id format
@@ -88,7 +98,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         //
         // Generates code similar to the following.
         // activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded;
-        private void ConfigureSampleCallback(dynamic activityListener, Type activityListenerType, Assembly assembly)
+        private void ConfigureSampleCallback(object activityListener, Type activityListenerType, Assembly assembly)
         {
             var sampleProperty = activityListenerType.GetProperty("Sample");
             var activityContextType = assembly.GetType("System.Diagnostics.ActivityContext", throwOnError: false);
@@ -103,6 +113,66 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var sampleLambda = Expression.Lambda(sampleProperty.PropertyType, samplingValue, optionsParameter);
 
             sampleProperty.SetValue(activityListener, sampleLambda.Compile());
+        }
+
+        private static void ConfigureActivityStartedAndStoppedCallbacks(object activityListener, Type activityListenerType, Assembly assembly, IAgent agent)
+        {
+            var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
+            ConfigureActivityStartedCallback(activityListener, activityListenerType, activityType, agent);
+            ConfigureActivityStoppedCallback(activityListener, activityListenerType, activityType, agent);
+        }
+
+        private static void ConfigureActivityStartedCallback(object activityListener, Type activityListenerType, Type activityType, IAgent agent)
+        {
+            var activityStartedProperty = activityListenerType.GetProperty("ActivityStarted");
+            var activityStartedMethod = typeof(ActivityBridge).GetMethod(nameof(ActivityStarted), BindingFlags.NonPublic | BindingFlags.Static);
+
+            var activityParameter = Expression.Parameter(activityType, "activity");
+            var agentInstance = Expression.Constant(agent);
+            var activityStartedCall = Expression.Call(null, activityStartedMethod, activityParameter, agentInstance);
+            var activityStartedLambda = Expression.Lambda(activityStartedProperty.PropertyType, activityStartedCall, activityParameter);
+
+            activityStartedProperty.SetValue(activityListener, activityStartedLambda.Compile());
+        }
+
+        private static void ConfigureActivityStoppedCallback(object activityListener, Type activityListenerType, Type activityType, IAgent agent)
+        {
+            var activityStoppedProperty = activityListenerType.GetProperty("ActivityStopped");
+            var activityStoppedMethod = typeof(ActivityBridge).GetMethod(nameof(ActivityStopped), BindingFlags.NonPublic | BindingFlags.Static);
+
+            var activityParameter = Expression.Parameter(activityType, "activity");
+            var agentInstance = Expression.Constant(agent);
+            var activityStoppedCall = Expression.Call(null, activityStoppedMethod, activityParameter, agentInstance);
+            var activityStoppedLambda = Expression.Lambda(activityStoppedProperty.PropertyType, activityStoppedCall, activityParameter);
+
+            activityStoppedProperty.SetValue(activityListener, activityStoppedLambda.Compile());
+        }
+
+        private static void ActivityStarted(object originalActivity, IAgent agent)
+        {
+            // This method will be called when an activity is started. This is where we would start a segment or transaction.
+            var transaction = agent.CurrentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished)
+            {
+                dynamic activity = originalActivity;
+                var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
+                var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
+                var segment = transaction.StartCustomSegment(methodCall, activity.DisplayName);
+
+                activity.SetCustomProperty("NewRelicSegment", segment);
+            }
+        }
+
+        private static void ActivityStopped(object originalActivity, IAgent agent)
+        {
+            // This method will be called when an activity is stopped. This is where we would end a segment or transaction.
+            dynamic activity = originalActivity;
+            var segment = activity.GetCustomProperty("NewRelicSegment") as ISegment;
+
+            if (segment != null)
+            {
+                segment.End();
+            }
         }
     }
 }

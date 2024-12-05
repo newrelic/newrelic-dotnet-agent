@@ -74,7 +74,6 @@ namespace NewRelic.Agent.Core.Samplers
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
         private IConnectionInfo _connectionInfo;
-        private OpenTelemetryBridge.ActivityBridge _activityBridge;
 
         public MeterListenerBridge()
         {
@@ -150,12 +149,6 @@ namespace NewRelic.Agent.Core.Samplers
                 }
                 _meterListener?.Start();
             }
-
-            if (_activityBridge == null)
-            {
-                _activityBridge = new OpenTelemetryBridge.ActivityBridge();
-                _activityBridge.Start();
-            }
         }
 
         public void Stop()
@@ -168,9 +161,6 @@ namespace NewRelic.Agent.Core.Samplers
 
             _sdkLogger?.Dispose();
             _sdkLogger = null;
-
-            _activityBridge?.Dispose();
-            _activityBridge = null;
         }
 
         public override void Dispose()

@@ -43,6 +43,7 @@ using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -222,6 +223,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             if (!serverlessModeEnabled)
             {
                 container.Register<MeterListenerBridge, MeterListenerBridge>();
+                container.Register<ActivityBridge, ActivityBridge>();
             }
 
             container.Build();
