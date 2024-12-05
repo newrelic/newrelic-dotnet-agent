@@ -11,7 +11,7 @@ namespace Agent.Extensions.Tests.Helpers
         [Test]
         [TestCase("myfunction", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:myfunction")]
         [TestCase("myfunction", "us-west-2", "", null)]
-        [TestCase("myfunction", "", "123456789012", null)]
+        [TestCase("myfunction", "", "123456789012", "arn:aws:lambda:(unknown):123456789012:function:myfunction")]
         [TestCase("myfunction:alias", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:myfunction:alias")]
         [TestCase("myfunction:alias", "us-west-2", "", null)]
         [TestCase("123456789012:function:my-function", "us-west-2", "123456789012", "arn:aws:lambda:us-west-2:123456789012:function:my-function")]
@@ -59,7 +59,7 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase("aws-cn", "lambda", "cn-north-1", "222233334444", "function_name", "arn:aws-cn:lambda:cn-north-1:222233334444:function_name")]
         [TestCase("aws-us-gov", "iam", "us-gov-west-1", "555566667777", "role_name", "arn:aws-us-gov:iam:us-gov-west-1:555566667777:role_name")]
         [TestCase("aws", "rds", "sa-east-1", "888899990000", "db_instance", "arn:aws:rds:sa-east-1:888899990000:db_instance")]
-        [TestCase("aws", "s3", "", "123456789012", "bucket_name", null)]
+        [TestCase("aws", "s3", "", "123456789012", "bucket_name", "arn:aws:s3:(unknown):123456789012:bucket_name")]
         [TestCase("aws", "s3", "us-west-2", "", "bucket_name", null)]
         public void ConstructGenericArn(string partition, string service, string region, string accountId, string resource, string expectedArn)
         {
@@ -70,11 +70,11 @@ namespace Agent.Extensions.Tests.Helpers
 
         [Test]
         [TestCase("aws", "us-west-2", "123456789012", "Partition: aws, Region: us-west-2, AccountId: [Present]")]
-        [TestCase("aws", "", "123456789012", "Partition: aws, Region: [Missing], AccountId: [Present]")]
+        [TestCase("aws", "", "123456789012", "Partition: aws, Region: (unknown), AccountId: [Present]")]
         [TestCase("aws", "us-west-2", "", "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
         [TestCase("aws", "us-west-2", null, "Partition: aws, Region: us-west-2, AccountId: [Missing]")]
-        [TestCase("", "", "", "Partition: [Missing], Region: [Missing], AccountId: [Missing]")]
-        [TestCase(null, null, null, "Partition: [Missing], Region: [Missing], AccountId: [Missing]")]
+        [TestCase("", "", "", "Partition: aws, Region: (unknown), AccountId: [Missing]")]
+        [TestCase(null, null, null, "Partition: aws, Region: (unknown), AccountId: [Missing]")]
         public void ArnBuilderToString(string partition, string region, string accountId, string expected)
         {
             var arnBuilder = new ArnBuilder(partition, region, accountId);

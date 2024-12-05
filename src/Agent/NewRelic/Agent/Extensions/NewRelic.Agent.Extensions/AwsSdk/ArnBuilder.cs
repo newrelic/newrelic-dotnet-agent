@@ -14,9 +14,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public ArnBuilder(string partition, string region, string accountId)
         {
-            Partition = partition ?? "aws";
-            Region = region ?? "(unknown)"; // default to a non-empty string to allow for local testing
-            AccountId = accountId ?? "(unknown)";
+            Partition = string.IsNullOrEmpty(partition) ? "aws" : partition;
+            Region = string.IsNullOrEmpty(region) ? "(unknown)" : region;
+            AccountId = accountId ?? "";
         }
 
         public string Build(string service, string resource) => ConstructArn(Partition, service, Region, AccountId, resource);
@@ -134,11 +134,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public override string ToString()
         {
-            string partition = string.IsNullOrEmpty(Partition) ? "[Missing]" : Partition;
-            string region = string.IsNullOrEmpty(Region) ? "[Missing]" : Region;
             string idPresent = string.IsNullOrEmpty(AccountId) ? "[Missing]" : "[Present]";
 
-            return $"Partition: {partition}, Region: {region}, AccountId: {idPresent}";
+            return $"Partition: {Partition}, Region: {Region}, AccountId: {idPresent}";
         }
 
         private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);
