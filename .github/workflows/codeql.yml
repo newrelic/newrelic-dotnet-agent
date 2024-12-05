@@ -1,10 +1,13 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "feature/*"]
+    branches:
+      - main
+      - "feature/**"
+    paths-ignore:
+      - ".github/**" # skip changes to the .github folder (workflows, etc.)
+      
   schedule:
     - cron: '20 3 * * 1'
 
