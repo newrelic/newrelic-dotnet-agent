@@ -1,12 +1,16 @@
-name: .NET Agent All Solutions Build
+name: All Solutions Build
 
 on:
   pull_request:
     branches:
       - main
       - "feature/**"
+    paths-ignore:
+      - ".github/**" # skip changes to the .github folder (workflows, etc.)
+
   release:
     types: [published]
+    
   workflow_dispatch:
 
   schedule:
