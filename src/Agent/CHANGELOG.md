@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
+
+
+### Fixes
+
+* Remove .NET Standard libraries from .NET Framework target ([#2896](https://github.com/newrelic/newrelic-dotnet-agent/issues/2896)) ([0873941](https://github.com/newrelic/newrelic-dotnet-agent/commit/0873941b6c869db7696e154950b36762a2e2b16f))
+
 ## [10.34.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.1...v10.34.0) (2024-11-19)
 
 
