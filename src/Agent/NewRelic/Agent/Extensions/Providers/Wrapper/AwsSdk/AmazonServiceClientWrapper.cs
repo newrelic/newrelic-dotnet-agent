@@ -39,9 +39,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
                 // convert the access key to an account id
                 AwsAccountId = AwsAccountIdDecoder.GetAccountId(accessKey);
-
-                // TODO: TESTING ONLY
-                agent.Logger.Info($"Successfully parsed AWS AccountId: {AwsAccountId}");
             }
             catch (Exception e)
             {

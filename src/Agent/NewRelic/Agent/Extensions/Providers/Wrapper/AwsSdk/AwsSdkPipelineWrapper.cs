@@ -49,10 +49,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     _reportBadArnBuilder = false;
                 }
             }
-            agent.Logger.Debug($"AwsSdkPipelineWrapper: Creating ArnBuilder with partition: {partition}, systemName: {systemName}, accountId: {accountId}");
-            var arnBuilder = new ArnBuilder(partition, systemName, accountId);
-            agent.Logger.Debug($"AwsSdkPipelineWrapper: ArnBuilder created: {arnBuilder}");
-            return arnBuilder;
+
+            return new ArnBuilder(partition, systemName, accountId);
         }
 
         private string GetAccountId(IAgent agent)
@@ -71,8 +69,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
-            // TODO: testing only
-            agent.Logger.Debug($"AwsSdkPipelineWrapper: Using accountId: {accountId}");
             return accountId;
         }
 

@@ -3,7 +3,6 @@
 
 using System.Linq;
 using System.Text.RegularExpressions;
-using NewRelic.Agent.Extensions.Collections;
 
 namespace NewRelic.Agent.Extensions.AwsSdk
 {
