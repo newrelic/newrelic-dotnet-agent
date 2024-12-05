@@ -10,6 +10,7 @@ on:
   push: 
     paths-ignore:
       - ".github/**" # skip changes to the .github branch (workflows, etc.)
+      
   workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running

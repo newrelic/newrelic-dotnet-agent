@@ -49,8 +49,14 @@ tests/Agent/IntegrationTests/.vs/config/applicationhost.config
 .DS_Store
 
 # Local profiler build artificats
-src/Agent/_profilerBuild/*Debug
-src/Agent/NewRelic/Profiler/Profiler/VersionInfo.h
+/src/Agent/_profilerBuild/*Debug
+/src/Agent/NewRelic/Profiler/Profiler/VersionInfo.h
+/src/Agent/NewRelic/Profiler/CMakeFiles
+/src/Agent/NewRelic/Profiler/CMakeCache.txt
+/src/Agent/NewRelic/Profiler/cmake_install.cmake
+/src/Agent/NewRelic/Profiler/Makefile
+/src/Agent/_profilerBuild/x64-Release
+/src/Agent/_profilerBuild/x86-Release
 
 # Ignore any signing keys used in Linux packaging
 build/Linux/keys

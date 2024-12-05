@@ -1,12 +1,14 @@
-name: .NET Agent All Solutions Build
+name: All Solutions Build
 
 on:
   pull_request:
     branches:
       - main
       - "feature/**"
+
   release:
     types: [published]
+
   workflow_dispatch:
 
   schedule:
