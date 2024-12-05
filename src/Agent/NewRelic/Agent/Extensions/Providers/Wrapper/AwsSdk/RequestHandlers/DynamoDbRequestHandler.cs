@@ -27,14 +27,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             // has a TableName property
             string model = request.TableName;
 
-            // TODO: The entity relationship docs suggest cloud.resource_id should be a span attribute, so maybe we added it to the DataStore segment below instead??
+            // get the arn and send it in an attribute  - used for entity relationship linking
             var arn = builder.Build("dynamodb", $"table/{model}");
             if (!string.IsNullOrEmpty(arn))
                 transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
-            else
-            {
-                agent.Logger.Debug($"Unable to build ARN for DynamoDB request. ArnBuilder reports: {builder}");
-            }
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
 
