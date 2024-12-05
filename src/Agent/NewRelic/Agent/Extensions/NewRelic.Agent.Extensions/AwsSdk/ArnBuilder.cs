@@ -15,9 +15,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public ArnBuilder(string partition, string region, string accountId)
         {
-            Partition = partition ?? "";
-            Region = region ?? "";
-            AccountId = accountId ?? "";
+            Partition = partition ?? "aws";
+            Region = region ?? "(unknown)"; // default to a non-empty string to allow for local testing
+            AccountId = accountId ?? "(unknown)";
         }
 
         public string Build(string service, string resource) => ConstructArn(Partition, service, Region, AccountId, resource);

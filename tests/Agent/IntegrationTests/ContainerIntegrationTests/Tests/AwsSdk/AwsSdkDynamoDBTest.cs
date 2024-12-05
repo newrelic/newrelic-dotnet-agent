@@ -18,6 +18,8 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     private readonly string _title = "Ghost";
     private readonly string _year = "1990";
 
+    private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
+
     protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -68,9 +70,6 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     [Fact]
     public void Test()
     {
-        Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount());
-        Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount());
-
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
         var metricScopeBase = "WebTransaction/MVC/AwsSdkDynamoDB/";
@@ -106,7 +105,31 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
         };
 
-        Assertions.MetricsExist(expectedMetrics, metrics);
+        var expectedAttributes = new Dictionary<string, object> {{ "cloud.resource_id", $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}" } };
+
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(createTableScope);
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(createTableScope);
+        var spanEvent = _fixture.AgentLog.TryGetSpanEvent(createTableScope);
+
+
+        Assert.Multiple(
+            () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
+            () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
+
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(transactionEvent),
+            () => Assert.NotNull(spanEvent),
+
+            () => Assertions.TransactionTraceHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Agent, transactionSample),
+            () => Assertions.TransactionEventDoesNotHaveAttributes(["cloud.resource_id"], Agent.Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Agent, transactionEvent),
+            () => Assertions.SpanEventHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, spanEvent),
+
+            () => Assertions.MetricsExist(expectedMetrics, metrics)
+            );
+
+
+
+
     }
 }
 

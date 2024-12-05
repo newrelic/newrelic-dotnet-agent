@@ -29,12 +29,14 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             {
                 // Set the endpoint URL
                 ServiceURL = "http://dynamodb:8000", // port must match what is set in docker compose
-                AuthenticationRegion = "us-west-2",
-                RegionEndpoint = RegionEndpoint.USWest2
+                AuthenticationRegion = "us-east-2"
+                //RegionEndpoint = RegionEndpoint.USEast2 **DO NOT* specify RegionEndpoint for local tests
             };
 
             // use plausible (but fake) access key and fake secret key so account id parsing can be tested
-            AmazonDynamoDBClient client = new AmazonDynamoDBClient("FOOIHSFODNNAEXAMPLE", "MOREGIBBERISH", clientConfig);
+            var creds = new BasicAWSCredentials("FOOIHSFODNNAEXAMPLE", "MOREGIBBERISH"); // account id will be "520056171328"
+
+            AmazonDynamoDBClient client = new AmazonDynamoDBClient(creds, clientConfig);
 
             return client;
         }
