@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
+using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
@@ -105,11 +107,27 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
         };
 
-        var expectedAttributes = new Dictionary<string, object> {{ "cloud.resource_id", $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}" } };
+        var expectedOperations = new[] { "create_table", "describe_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
+        var expectedOperationsCount = expectedOperations.Length;
+
+        // TODO: Eventually this attribute should be present only on the datastore span events, not the transaction sample event
+        string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}";
+        var expectedAttributes = new Dictionary<string, object>
+        {
+            { "cloud.resource_id", expectedArn }
+        };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(createTableScope);
         var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(createTableScope);
-        var spanEvent = _fixture.AgentLog.TryGetSpanEvent(createTableScope);
+        var createTableSpanEvent = _fixture.AgentLog.TryGetSpanEvent(createTableScope);
+
+        // get all datastore span events for dynamodb so we can verify counts and operations
+        var datastoreSpanEvents = _fixture.AgentLog.GetSpanEvents()
+            .Where(se => se.AgentAttributes.ContainsKey("db.system") && (string)se.AgentAttributes["db.system"] == "dynamodb")
+            .ToList();
+
+        // select the set of AgentAttributes values with a key of "db.operation"
+        var dbOperations = datastoreSpanEvents.Select(se => (string)se.AgentAttributes["db.operation"]).ToList();
 
 
         Assert.Multiple(
@@ -118,18 +136,18 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
             () => Assert.NotNull(transactionSample),
             () => Assert.NotNull(transactionEvent),
-            () => Assert.NotNull(spanEvent),
+            () => Assert.NotNull(createTableSpanEvent),
+
+            () => Assert.Equal(expectedOperationsCount, datastoreSpanEvents.Count),
+            () => Assert.Equal(expectedOperationsCount, dbOperations.Count),
+            () => Assert.Equal(expectedOperationsCount, dbOperations.Intersect(expectedOperations).Count()),
 
             () => Assertions.TransactionTraceHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Agent, transactionSample),
             () => Assertions.TransactionEventDoesNotHaveAttributes(["cloud.resource_id"], Agent.Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Agent, transactionEvent),
-            () => Assertions.SpanEventHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, spanEvent),
+            () => Assertions.SpanEventHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, createTableSpanEvent),
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
-
-
-
-
     }
 }
 
