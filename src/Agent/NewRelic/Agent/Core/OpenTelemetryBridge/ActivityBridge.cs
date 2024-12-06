@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -60,6 +61,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // Enable the listener
             var addActivityListenerMethod = activitySourceType.GetMethod("AddActivityListener", [activityListenerType]);
             addActivityListenerMethod.Invoke(null, new object[] { _activityListener });
+
+            // Allow agent instrumentation to create activities visible to the customer's application code.
+            var activityKindType = assembly.GetType("System.Diagnostics.ActivityKind", throwOnError: false);
+            NewRelicActivitySourceProxy.SetAndCreateRuntimeActivitySource(activitySourceType, activityKindType);
         }
 
         public void Dispose()
@@ -173,6 +178,159 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 segment.End();
             }
+        }
+    }
+
+    public class NewRelicActivitySourceProxy : IDisposable
+    {
+        private const string ActivitySourceName = "NewRelic.Agent";
+        private static INewRelicActivitySource _activitySource = CreateDefaultActivitySource();
+        private static int _usingRuntimeActivitySource = 0;
+
+        private static INewRelicActivitySource CreateDefaultActivitySource()
+        {
+            return new DefaultActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion);
+        }
+
+        public static void SetAndCreateRuntimeActivitySource(Type activitySourceType, Type activityKindType)
+        {
+            // We only need to create the runtime activity source once. If it has already been created, we can return early.
+            if (Interlocked.CompareExchange(ref _usingRuntimeActivitySource, 1, 0) == 1)
+            {
+                return;
+            }
+
+            var originalActivitySource = Interlocked.Exchange(ref _activitySource, new RuntimeActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion, activitySourceType, activityKindType)) as IDisposable;
+            originalActivitySource?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _activitySource?.Dispose();
+        }
+
+        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        {
+            return _activitySource.StartActivity(activityName, kind);
+        }
+    }
+
+    public interface INewRelicActivitySource : IDisposable
+    {
+        INewRelicActivity StartActivity(string activityName, ActivityKind kind);
+    }
+
+    public class DefaultActivitySource : INewRelicActivitySource
+    {
+        private readonly ActivitySource _activitySource;
+
+        public DefaultActivitySource(string name, string version)
+        {
+            _activitySource = new ActivitySource(name, version);
+        }
+        public void Dispose()
+        {
+            _activitySource.Dispose();
+        }
+
+        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        {
+            var activity = _activitySource.StartActivity(activityName, kind);
+            return new DefaultNewRelicActivity(activity);
+        }
+    }
+
+    public class RuntimeActivitySource : INewRelicActivitySource
+    {
+        private readonly dynamic _activitySource;
+        private readonly Func<string, int, object> _startActivityMethod;
+
+        public RuntimeActivitySource(string name, string version, Type activitySourceType, Type activityKindType)
+        {
+            _activitySource = Activator.CreateInstance(activitySourceType, name, version);
+            _startActivityMethod = CreateStartActivityMethod(activitySourceType, activityKindType);
+        }
+
+        public void Dispose()
+        {
+            _activitySource?.Dispose();
+        }
+
+        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        {
+            var activity = _startActivityMethod(activityName, (int)kind);
+            return new RuntimeNewRelicActivity(activity);
+        }
+
+        private Func<string, int, object> CreateStartActivityMethod(Type activitySourceType, Type activityKindType)
+        {
+            var activityNameParameter = Expression.Parameter(typeof(string), "activityName");
+            var activityKindParameter = Expression.Parameter(typeof(int), "kind");
+
+            var typedActivityKind = Expression.Convert(activityKindParameter, activityKindType);
+            var activitySourceInstance = Expression.Constant(_activitySource, activitySourceType);
+
+            var startActivityMethod = activitySourceType.GetMethod("StartActivity", new Type[] { typeof(string), activityKindType });
+            var startActivityCall = Expression.Call(activitySourceInstance, startActivityMethod, activityNameParameter, typedActivityKind);
+            var startActivityLambda = Expression.Lambda<Func<string, int, object>>(startActivityCall, activityNameParameter, activityKindParameter);
+            return startActivityLambda.Compile();
+        }
+    }
+
+    public interface INewRelicActivity : IDisposable
+    {
+        string SpanId { get; }
+        bool IsStopped { get; }
+        void Stop();
+    }
+
+    public class DefaultNewRelicActivity : INewRelicActivity
+    {
+        private readonly Activity _activity;
+
+        public DefaultNewRelicActivity(Activity activity)
+        {
+            _activity = activity;
+        }
+
+        public bool IsStopped => _activity == default || _activity.IsStopped;
+
+        public string SpanId => _activity == default ? null : _activity.SpanId.ToString();
+
+        public void Dispose()
+        {
+            _activity?.Dispose();
+        }
+
+        public void Stop()
+        {
+            _activity.Stop();
+        }
+    }
+
+    public class RuntimeNewRelicActivity : INewRelicActivity
+    {
+        private readonly object _activity;
+
+        public RuntimeNewRelicActivity(object activity)
+        {
+            _activity = activity;
+        }
+
+        public bool IsStopped => (bool?)((dynamic)_activity)?.IsStopped ?? true;
+
+        public string SpanId => (string)((dynamic)_activity)?.SpanId.ToString();
+
+        public void Dispose()
+        {
+            dynamic dynamicActivity = _activity;
+            dynamicActivity?.Dispose();
+        }
+
+        public void Stop()
+        {
+            dynamic dynamicActivity = _activity;
+            dynamicActivity?.Stop();
         }
     }
 }

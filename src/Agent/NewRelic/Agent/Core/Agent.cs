@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core
 {
@@ -67,6 +68,7 @@ namespace NewRelic.Agent.Core
         private readonly ISimpleSchedulingService _simpleSchedulingService;
 
         private readonly ICustomEventTransformer _customEventTransformer;
+        private readonly NewRelicActivitySourceProxy _activitySourceProxy;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
@@ -76,7 +78,7 @@ namespace NewRelic.Agent.Core
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
             ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService,
-            ICustomEventTransformer customEventTransformer)
+            ICustomEventTransformer customEventTransformer, NewRelicActivitySourceProxy activitySourceProxy)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -100,6 +102,8 @@ namespace NewRelic.Agent.Core
             _simpleSchedulingService = simpleSchedulingService;
 
             _customEventTransformer = customEventTransformer;
+
+            _activitySourceProxy = activitySourceProxy;
 
             Instance = this;
         }
@@ -594,6 +598,8 @@ namespace NewRelic.Agent.Core
                 _logEventAggregator.Collect(logEventWireModel);
             }
         }
+
+        public NewRelicActivitySourceProxy ActivitySourceProxy => _activitySourceProxy;
 
         #endregion
 

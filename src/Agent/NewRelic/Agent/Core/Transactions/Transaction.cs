@@ -197,11 +197,19 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        private Segment StartSegmentImpl(MethodCall methodCall)
+        private Segment StartSegmentImpl(MethodCall methodCall, bool createActivity = true)
         {
             var methodCallData = GetMethodCallData(methodCall);
-            // TODO: Create and start an activity for the segment here, and pass the activity to the segment
-            return new Segment(this, methodCallData);
+            var segment = new Segment(this, methodCallData);
+
+            // This is temporary. We should only do this if the segment was not created from an activity
+            if (createActivity)
+            {
+                // TODO: Create and start an activity for the segment here, and pass the activity to the segment
+                var activity = Agent.ActivitySourceProxy.StartActivity("temp segment name", ActivityKind.Internal);
+            }
+
+            return segment;
         }
 
         // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
@@ -219,8 +227,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (segmentName == null)
                 throw new ArgumentNullException(nameof(segmentName));
 
-
-            var segment = StartSegmentImpl(methodCall);
+            // TODO: The create activity parameter is temporary for the proof of concept
+            var segment = StartSegmentImpl(methodCall, createActivity: false);
             var customSegmentData = CreateCustomSegmentData(segmentName);
 
             segment.SetSegmentData(customSegmentData);

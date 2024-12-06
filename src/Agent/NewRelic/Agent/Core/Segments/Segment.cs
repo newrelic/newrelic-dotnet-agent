@@ -17,6 +17,7 @@ using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -134,7 +135,7 @@ namespace NewRelic.Agent.Core.Segments
             get
             {
                 // If _spanId is null and this is called rapidly from different threads, the returned value could be different for each.
-                return _spanId ?? (_spanId = GuidGenerator.GenerateNewRelicGuid());
+                return _spanId ?? (_spanId = _activity?.SpanId ?? GuidGenerator.GenerateNewRelicGuid());
             }
             set
             {
@@ -151,6 +152,11 @@ namespace NewRelic.Agent.Core.Segments
                 var endTime = _transactionSegmentState.GetRelativeTime();
                 Agent.Instance?.StackExchangeRedisCache?.Harvest(this);
                 RelativeEndTime = endTime;
+
+                if (_activity != null && !_activity.IsStopped)
+                {
+                    _activity.Stop();
+                }
 
                 Finish();
 
@@ -197,6 +203,12 @@ namespace NewRelic.Agent.Core.Segments
         {
             if (ex != null) ErrorData = _transactionSegmentState.ErrorService.FromException(ex);
             End();
+        }
+
+        private INewRelicActivity _activity;
+        public void SetActivity(INewRelicActivity activity)
+        {
+            _activity = activity;
         }
 
         public void MakeCombinable()

@@ -224,6 +224,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             {
                 container.Register<MeterListenerBridge, MeterListenerBridge>();
                 container.Register<ActivityBridge, ActivityBridge>();
+                container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
             }
 
             container.Build();
