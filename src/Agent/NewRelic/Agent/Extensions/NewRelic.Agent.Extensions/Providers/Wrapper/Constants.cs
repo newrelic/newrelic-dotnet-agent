@@ -81,6 +81,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         CosmosDB,
         Elasticsearch,
         DynamoDB,
+        ODBC,
         Other
     }
 

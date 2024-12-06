@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Globalization;
-#if NETFRAMEWORK
 using System.Data.Odbc;
+#if NETFRAMEWORK
 using System.Data.OleDb;
 #endif
 using NewRelic.Agent.Api;
@@ -28,17 +28,17 @@ namespace NewRelic.Agent.Extensions.Parsing
         public static DatastoreVendor GetVendorName(IDbCommand command)
         {
 
-#if NETFRAMEWORK
 			// If this is an OdbcCommand, the only way to give the data store name is by looking at the connection driver
 
 			var odbcCommand = command as OdbcCommand;
 			if (odbcCommand != null && odbcCommand.Connection != null)
 				return ExtractVendorNameFromString(odbcCommand.Connection.Driver);
-
-			// If this is an OleDbCommand, the only way to give the data store name is by looking at the connection provider
-			var oleCommand = command as OleDbCommand;
+#if NETFRAMEWORK
+            // If this is an OleDbCommand, the only way to give the data store name is by looking at the connection provider
+            var oleCommand = command as OleDbCommand;
 			if (oleCommand != null && oleCommand.Connection != null)
 				return ExtractVendorNameFromString(oleCommand.Connection.Provider);
+
 #endif
             return GetVendorName(command.GetType().Name);
         }
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Extensions.Parsing
             { "OracleCommand", DatastoreVendor.Oracle },
             { "OracleDatabase", DatastoreVendor.Oracle },
             { "NpgsqlCommand", DatastoreVendor.Postgres },
-            { "DB2Command", DatastoreVendor.IBMDB2 },
+            { "DB2Command", DatastoreVendor.IBMDB2 }
         };
 
         /// <summary>
@@ -85,6 +85,11 @@ namespace NewRelic.Agent.Extensions.Parsing
 
             if (text.IndexOf("DB2", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("IBM", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.IBMDB2;
+
+            // This works for redshift since the driver reports as "Amazon Redshift ODBC Driver"
+            // Other drivers may not report as expected
+            if (text.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) != -1)
+                return DatastoreVendor.ODBC;
 
             return DatastoreVendor.Other;
         }

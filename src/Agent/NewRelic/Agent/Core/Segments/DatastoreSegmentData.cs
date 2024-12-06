@@ -233,6 +233,12 @@ namespace NewRelic.Agent.Core.Segments
             {
                 AttribDefs.DbServerPort.TrySetValue(attribVals, Port.Value);
             }
+
+            // For AWS Redshift relationship
+            if (Host.EndsWith(".redshift.amazonaws.com"))
+            {
+                AttribDefs.ConfigurationEndpointAddress.TrySetValue(attribVals, Host);
+            }
         }
 
         public void SetConnectionInfo(ConnectionInfo connInfo)

@@ -1,12 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETFRAMEWORK
 using System;
 using System.Data.Odbc;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
@@ -30,15 +30,17 @@ namespace NewRelic.Providers.Wrapper.Sql
 				var sql = odbcCommand.CommandText ?? string.Empty;
 				var vendor = SqlWrapperHelper.GetVendorName(odbcCommand);
 
+				object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, odbcCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
+				var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(odbcCommand.Connection.ConnectionString, GetConnectionInfo);
+
 				var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
 
 				var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agent);
 
-				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql, queryParameters);
+				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters);
 
 				return Delegates.GetDelegateFor(segment);
 			}
 		}
 	}
 }
-#endif

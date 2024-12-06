@@ -145,8 +145,9 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessageRoutingKey { get; }
         AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
-    }
 
+        AttributeDefinition<string, string> ConfigurationEndpointAddress { get; }
+    }
 
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
     {
@@ -594,6 +595,12 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<string, string> _dbInstance;
         public AttributeDefinition<string, string> DbInstance => _dbInstance ?? (_dbInstance =
             AttributeDefinitionBuilder.CreateString("db.instance", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _configurationEndpointAddress;
+        public AttributeDefinition<string, string> ConfigurationEndpointAddress => _configurationEndpointAddress ?? (_configurationEndpointAddress =
+            AttributeDefinitionBuilder.CreateString("configuration.endpoint.address", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
