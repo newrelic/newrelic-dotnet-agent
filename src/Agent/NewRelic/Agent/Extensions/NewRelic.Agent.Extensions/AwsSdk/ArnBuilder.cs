@@ -3,7 +3,6 @@
 
 using System.Linq;
 using System.Text.RegularExpressions;
-using NewRelic.Agent.Extensions.Collections;
 
 namespace NewRelic.Agent.Extensions.AwsSdk
 {
@@ -15,8 +14,8 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public ArnBuilder(string partition, string region, string accountId)
         {
-            Partition = partition ?? "";
-            Region = region ?? "";
+            Partition = string.IsNullOrEmpty(partition) ? "aws" : partition;
+            Region = string.IsNullOrEmpty(region) ? "(unknown)" : region;
             AccountId = accountId ?? "";
         }
 
@@ -135,11 +134,9 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public override string ToString()
         {
-            string partition = string.IsNullOrEmpty(Partition) ? "[Missing]" : Partition;
-            string region = string.IsNullOrEmpty(Region) ? "[Missing]" : Region;
             string idPresent = string.IsNullOrEmpty(AccountId) ? "[Missing]" : "[Present]";
-            
-            return $"Partition: {partition}, Region: {region}, AccountId: {idPresent}";
+
+            return $"Partition: {Partition}, Region: {Region}, AccountId: {idPresent}";
         }
 
         private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);
@@ -155,6 +152,5 @@ namespace NewRelic.Agent.Extensions.AwsSdk
             }
             return "arn:" + partition + ":" + service + ":" + region + ":" + accountId + ":" + resource;
         }
-
     }
 }

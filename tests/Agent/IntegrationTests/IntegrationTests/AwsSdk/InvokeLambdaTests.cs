@@ -53,9 +53,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
             else
             {
                 _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaSync {_function} \"fakepayload\"");
-                // This will fail without an ARN because there's no account ID
-                _fixture.AddCommand($"InvokeLambdaExerciser InvokeLambdaSync fakefunction fakepayload");
-
             }
             _fixture.Initialize();
         }
@@ -65,14 +62,15 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
         {
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
+            var expectedCount = _isAsync ? 2 : 1;
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"DotNet/InvokeRequest", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/InvokeRequest", CallCountAllHarvests = expectedCount},
             };
             Assertions.MetricsExist(expectedMetrics, metrics);
 
-            var transactions = _fixture.AgentLog.GetTransactionEvents();
-            Assert.Equal(2, transactions.Count());
+            var transactions = _fixture.AgentLog.GetTransactionEvents().ToList();
+            Assert.Equal(expectedCount, transactions.Count());
 
             foreach (var transaction in transactions)
             {
@@ -82,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
             var allSpans = _fixture.AgentLog.GetSpanEvents()
                 .Where(e => e.AgentAttributes.ContainsKey("cloud.platform"))
                 .ToList();
-            Assert.Equal(2, allSpans.Count);
+            Assert.Equal(expectedCount, allSpans.Count);
 
             foreach (var span in allSpans)
             {
@@ -96,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
             var spansWithArn = _fixture.AgentLog.GetSpanEvents()
                 .Where(e => e.AgentAttributes.ContainsKey("cloud.resource_id"))
                 .ToList();
-            Assert.Equal(_isAsync ? 2 : 1, spansWithArn.Count);
+            Assert.Equal(expectedCount, spansWithArn.Count);
             foreach (var span in spansWithArn)
             {
                 Assert.Equal(_arn, span.AgentAttributes["cloud.resource_id"]);

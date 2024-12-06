@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -34,10 +33,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             try
             {
                 accountId = GetAccountId(agent);
-                var clientconfig = requestContext.ClientConfig;
-                var regionEndpoint = clientconfig.RegionEndpoint;
-                systemName = regionEndpoint.SystemName;
-                partition = regionEndpoint.PartitionName;
+                var clientConfig = requestContext.ClientConfig;
+                if (clientConfig.RegionEndpoint != null)
+                {
+                    var regionEndpoint = clientConfig.RegionEndpoint;
+                    systemName = regionEndpoint.SystemName;
+                    partition = regionEndpoint.PartitionName;
+                }
             }
             catch (Exception e)
             {
@@ -48,12 +50,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 }
             }
 
-            return new ArnBuilder(partition, systemName, accountId); ;
+            return new ArnBuilder(partition, systemName, accountId);
         }
 
         private string GetAccountId(IAgent agent)
         {
-            string accountId = agent.Configuration.AwsAccountId;
+            string accountId = AmazonServiceClientWrapper.AwsAccountId;
+
             if (accountId != null)
             {
                 if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
@@ -65,6 +68,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                     }
                 }
             }
+
             return accountId;
         }
 
@@ -103,17 +107,19 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
-            else if (requestType == "Amazon.Lambda.Model.InvokeRequest")
+
+            if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
                 return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
-			}
-            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            }
+
+            if (requestType.StartsWith("Amazon.DynamoDBv2"))
             {
-                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
             if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
-            {                
+            {
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
                 _unsupportedRequestTypes.Add(requestType);
             }
