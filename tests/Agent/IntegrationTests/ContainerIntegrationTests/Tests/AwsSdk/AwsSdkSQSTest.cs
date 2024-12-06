@@ -40,7 +40,7 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                //configModifier.LogToConsole();
+                configModifier.LogToConsole();
 
             },
             exerciseApplication: () =>
