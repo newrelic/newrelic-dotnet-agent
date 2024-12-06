@@ -18,6 +18,8 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     private readonly string _title = "Ghost";
     private readonly string _year = "1990";
 
+    private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
+
     protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -66,9 +68,6 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     [Fact]
     public void Test()
     {
-        Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount());
-        Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount());
-
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
         var metricScopeBase = "WebTransaction/MVC/AwsSdkDynamoDB/";
@@ -104,7 +103,47 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
         };
 
-        Assertions.MetricsExist(expectedMetrics, metrics);
+        var expectedOperations = new[] { "create_table", "describe_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
+        var expectedOperationsCount = expectedOperations.Length;
+
+        // TODO: Eventually this attribute will be present only on the datastore span events, not the transaction sample event
+        string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}";
+        var expectedAttributes = new Dictionary<string, object>
+        {
+            { "cloud.resource_id", expectedArn }
+        };
+
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(createTableScope);
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(createTableScope);
+        var createTableSpanEvent = _fixture.AgentLog.TryGetSpanEvent(createTableScope);
+
+        // get all datastore span events for dynamodb so we can verify counts and operations
+        var datastoreSpanEvents = _fixture.AgentLog.GetSpanEvents()
+            .Where(se => se.AgentAttributes.ContainsKey("db.system") && (string)se.AgentAttributes["db.system"] == "dynamodb")
+            .ToList();
+
+        // select the set of AgentAttributes values with a key of "db.operation"
+        var dbOperations = datastoreSpanEvents.Select(se => (string)se.AgentAttributes["db.operation"]).ToList();
+
+
+        Assert.Multiple(
+            () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
+            () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
+
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(transactionEvent),
+            () => Assert.NotNull(createTableSpanEvent),
+
+            () => Assert.Equal(expectedOperationsCount, datastoreSpanEvents.Count),
+            () => Assert.Equal(expectedOperationsCount, dbOperations.Count),
+            () => Assert.Equal(expectedOperationsCount, dbOperations.Intersect(expectedOperations).Count()),
+
+            () => Assertions.TransactionTraceHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Agent, transactionSample),
+            () => Assertions.TransactionEventDoesNotHaveAttributes(["cloud.resource_id"], Agent.Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Agent, transactionEvent),
+            () => Assertions.SpanEventHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, createTableSpanEvent),
+
+            () => Assertions.MetricsExist(expectedMetrics, metrics)
+            );
     }
 }
 
