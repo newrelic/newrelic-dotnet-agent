@@ -838,6 +838,7 @@ namespace NewRelic.Agent.Core.Metrics
 
         public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
         public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
+        public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPs + "AwsAccountId/Config";
 
         #endregion Supportability
 
