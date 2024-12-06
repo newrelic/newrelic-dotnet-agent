@@ -5,10 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
@@ -68,6 +66,9 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
     [Fact]
     public void Test()
     {
+        Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount());
+        Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount());
+
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
         var metricScopeBase = "WebTransaction/MVC/AwsSdkDynamoDB/";

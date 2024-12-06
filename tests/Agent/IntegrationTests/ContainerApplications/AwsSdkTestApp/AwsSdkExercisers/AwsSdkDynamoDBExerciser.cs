@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using Amazon.Runtime;
-using Amazon;
+using System.Threading;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {

@@ -13,10 +13,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
     internal static class DynamoDbRequestHandler
     {
 
-        private static ConcurrentDictionary<string, string> _operationNameCache = new ConcurrentDictionary<string, string>();
+        private static ConcurrentDictionary<string, string> _operationNameCache = new ConcurrentDictionary<string,string>();
 
-        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall,
-            IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
         {
             var requestType = request.GetType().Name as string;
 
