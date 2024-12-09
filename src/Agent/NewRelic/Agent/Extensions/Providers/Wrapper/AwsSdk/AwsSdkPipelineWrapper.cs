@@ -32,8 +32,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             string accountId = null;
             try
             {
-                accountId = GetAccountId(agent);
                 var clientConfig = requestContext.ClientConfig;
+                accountId = GetAccountId(agent, clientConfig);
                 if (clientConfig.RegionEndpoint != null)
                 {
                     var regionEndpoint = clientConfig.RegionEndpoint;
@@ -53,9 +53,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return new ArnBuilder(partition, systemName, accountId);
         }
 
-        private string GetAccountId(IAgent agent)
+        private string GetAccountId(IAgent agent, dynamic clientConfig)
         {
-            string accountId = AmazonServiceClientWrapper.AwsAccountId;
+            // TODO: what if (though it's not supposed to be possible) there isn't a matching cache key?
+            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache[clientConfig];
 
             if (accountId != null)
             {
