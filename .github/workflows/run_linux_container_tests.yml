@@ -1,4 +1,4 @@
-name: .NET Agent Linux Container Integration Tests
+name: Linux Container Integration Tests
 
 on:
   workflow_call:
