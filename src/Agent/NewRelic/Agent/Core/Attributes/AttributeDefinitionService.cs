@@ -289,6 +289,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .Create<object, object>(attribName, AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithConvert(x => x)
                 .Build(_attribFilter);
         }
 

@@ -217,6 +217,10 @@ namespace Agent.Extensions.Tests.Helpers
         {
             throw new NotImplementedException();
         }
+        public ISpan AddCloudSdkAttribute(string key, object value)
+        {
+            throw new NotImplementedException();
+        }
 
         public ISpan SetName(string name)
         {

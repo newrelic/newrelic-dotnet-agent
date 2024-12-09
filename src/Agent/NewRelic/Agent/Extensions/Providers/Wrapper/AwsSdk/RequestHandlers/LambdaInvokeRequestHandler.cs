@@ -30,13 +30,13 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             return getResponse(task);
         }
 
-        private static void SetRequestIdIfAvailable(IAgent agent, ITransaction transaction, dynamic response)
+        private static void SetRequestIdIfAvailable(IAgent agent, ISegment segment, dynamic response)
         {
             try
             {
                 dynamic metadata = response.ResponseMetadata;
                 string requestId = metadata.RequestId;
-                transaction.AddCloudSdkAttribute("aws.requestId", requestId);
+                segment.AddCloudSdkAttribute("aws.requestId", requestId);
             }
             catch (Exception e)
             {
@@ -74,14 +74,14 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             }
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "InvokeRequest");
 
-            transaction.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
-            transaction.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
-            transaction.AddCloudSdkAttribute("aws.region", builder.Region);
+            segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
+            segment.AddCloudSdkAttribute("aws.operation", "InvokeRequest");
+            segment.AddCloudSdkAttribute("aws.region", builder.Region);
 
 
             if (!string.IsNullOrEmpty(arn))
             {
-                transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
+                segment.AddCloudSdkAttribute("cloud.resource_id", arn);
             }
             else if (_reportBadInvocationName)
             {
@@ -101,7 +101,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
                         {
                             transaction.NoticeError(responseTask.Exception);
                         }
-                        SetRequestIdIfAvailable(agent, transaction, GetTaskResult(responseTask));
+                        SetRequestIdIfAvailable(agent, segment, GetTaskResult(responseTask));
                     }
                     finally
                     {
@@ -115,7 +115,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
                     onFailure: ex => segment.End(ex),
                     onSuccess: response =>
                     {
-                        SetRequestIdIfAvailable(agent, transaction, response);
+                        SetRequestIdIfAvailable(agent, segment, response);
                         segment.End();
                     }
                 );
