@@ -449,6 +449,19 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        public ISpan AddCloudSdkAttribute(string key, object value)
+        {
+            SpanAttributeValueCollection customAttribValues;
+            lock (_customAttribValuesSyncRoot)
+            {
+                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanAttributeValueCollection());
+            }
+
+            AttribDefs.GetCloudSdkAttribute(key).TrySetValue(customAttribValues, value);
+
+            return this;
+        }
+
         public ISpan SetName(string name)
         {
             SegmentNameOverride = name;

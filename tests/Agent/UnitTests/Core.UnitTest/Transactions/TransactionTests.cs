@@ -591,35 +591,4 @@ public class TransactionTests
         // Assert
         Assert.That(result, Is.False);
     }
-    public void AddCloudSdkAttribute_SetAttributeInTransactionMetadata()
-    {
-        // Arrange
-        var key = "TestAttribute";
-        var value = "TestValue";
-
-        // Act
-        _transaction.AddCloudSdkAttribute(key, value);
-
-        // Assert
-        var allAttributeValuesDic = _transaction.TransactionMetadata.UserAndRequestAttributes.GetAllAttributeValuesDic();
-
-        var attributeValue = allAttributeValuesDic[key];
-        Assert.That(attributeValue, Is.EqualTo(value));
-    }
-
-    [TestCase("   ")]
-    [TestCase("")]
-    [TestCase(null)]
-    public void AddCloudSdkAttribute_DoesNotSetAttribute_WhenKeyIsBad(string key)
-    {
-        // Arrange
-        var value = "TestValue";
-
-        // Act
-        _transaction.AddCloudSdkAttribute(key, value);
-
-        // Assert
-        Assert.That(_transaction.TransactionMetadata.UserAndRequestAttributes.Count, Is.EqualTo(0));
-    }
-
 }

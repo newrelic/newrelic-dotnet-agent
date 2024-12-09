@@ -1393,17 +1393,5 @@ namespace NewRelic.Agent.Core.Transactions
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
         }
-
-        public void AddCloudSdkAttribute(string name, object value)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                Log.Debug($"AddCloudSdkAttribute - Name cannot be null/empty");
-                return;
-            }
-
-            var cloudAttrib = _attribDefs.GetCloudSdkAttribute(name);
-            TransactionMetadata.UserAndRequestAttributes.TrySetValue(cloudAttrib, value);
-        }
     }
 }
