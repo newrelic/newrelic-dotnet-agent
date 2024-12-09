@@ -7,54 +7,55 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk
+namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
+
+public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
 {
-    public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
+    private readonly AwsSdkContainerMultiServiceTestFixture _fixture;
+
+    private readonly string _tableName = $"TableName_{Guid.NewGuid()}";
+    private readonly string _queueName = $"QueueName_{Guid.NewGuid()}";
+    private readonly string _bookName = $"BookName_{Guid.NewGuid()}";
+
+    public AwsSdkMultiServiceTest(AwsSdkContainerMultiServiceTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly AwsSdkContainerMultiServiceTestFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        private readonly string _tableName = $"TableName_{Guid.NewGuid()}";
-        private readonly string _queueName = $"QueueName_{Guid.NewGuid()}";
-        private readonly string _bookName = $"BookName_{Guid.NewGuid()}";
+        _fixture.Actions(setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
+                configModifier.ForceTransactionTraces();
+                configModifier.EnableDistributedTrace();
+                configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                configModifier.LogToConsole();
 
-        public AwsSdkMultiServiceTest(AwsSdkContainerMultiServiceTestFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Delay(5);
 
-            _fixture.Actions(setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetLogLevel("finest");
-                    configModifier.ForceTransactionTraces();
-                    configModifier.EnableDistributedTrace();
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                    configModifier.LogToConsole();
+                _fixture.ExerciseMultiService(_tableName, _queueName, _bookName);
 
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Delay(5);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
+                    TimeSpan.FromMinutes(2));
 
-                    _fixture.ExerciseMultiService(_tableName, _queueName, _bookName);
+                // shut down the container and wait for the agent log to see it
+                _fixture.ShutdownRemoteApplication();
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
+            });
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
-                        TimeSpan.FromMinutes(2));
+        _fixture.Initialize();
+    }
 
-                    // shut down the container and wait for the agent log to see it
-                    _fixture.ShutdownRemoteApplication();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
-                });
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-        }
+    [Fact]
+    public void Test()
+    {
+        // TODO: Verify that cloud.resource_id appears only on the dynamodb datastore segment and not on the whole transaction.
+        // TODO: Verify that the sqs message broker segment does not have cloud.resource_id.
     }
 }
