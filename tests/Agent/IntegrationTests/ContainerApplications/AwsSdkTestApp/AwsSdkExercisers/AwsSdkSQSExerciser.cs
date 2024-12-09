@@ -8,6 +8,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using System.Linq;
 using System.Collections.Generic;
+using Amazon.Runtime;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {
@@ -25,14 +26,15 @@ namespace AwsSdkTestApp.AwsSdkExercisers
         private AmazonSQSClient GetSqsClient()
         {
             // configure the client to use LocalStack
-            var awsCredentials = new Amazon.Runtime.BasicAWSCredentials("dummy", "dummy");
+            // use plausible (but fake) access key and fake secret key so account id parsing can be tested
+            var creds = new BasicAWSCredentials("FOOIHSHSDNNAEXAMPLE", "MOREGIBBERISH"); 
             var config = new AmazonSQSConfig
             {
                 ServiceURL = "http://localstack:4566",
                 AuthenticationRegion = "us-west-2"
             };
 
-            var sqsClient = new AmazonSQSClient(awsCredentials, config);
+            var sqsClient = new AmazonSQSClient(creds, config);
             return sqsClient;
         }
 

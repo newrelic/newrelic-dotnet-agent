@@ -34,7 +34,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             dynamic client = instrumentedMethodCall.MethodCall.InvocationTarget;
-            if (AmazonServiceClientInstanceCache.Contains(client))
+
+            if (AmazonServiceClientInstanceCache.Contains(client)) // don't do anything if we've already seen this client instance
                 return Delegates.NoOp;
 
             AmazonServiceClientInstanceCache.Add(client);
@@ -60,7 +61,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return Delegates.GetDelegateFor(onComplete: () =>
             {
                 // get the _config field from the client
-                dynamic clientConfig = client.Config;
+                object clientConfig = client.Config;
 
                 // cache the account id using clientConfig as the key
                 AwsAccountIdByClientConfigCache.TryAdd(clientConfig, awsAccountId);

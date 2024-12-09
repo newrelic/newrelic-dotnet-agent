@@ -55,6 +55,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private string GetAccountId(IAgent agent, dynamic clientConfig)
         {
+            // TODO: what if (though it's not supposed to be possible) there isn't a matching cache key?
             string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache[clientConfig];
 
             if (accountId != null)
