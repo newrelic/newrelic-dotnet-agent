@@ -83,12 +83,12 @@ public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerT
 }
 
 // Temporarily disabled until Centos updates their package repos to include .NET 9 GA
-//public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestFixture>
-//{
-//    public CentosX64ContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-//    {
-//    }
-//}
+public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestFixture>
+{
+    public CentosX64ContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
 
 // temporarily disabled until the checksum issue is resolved
 // public class CentosArm64ContainerTest : LinuxContainerTest<CentosArm64ContainerTestFixture>
