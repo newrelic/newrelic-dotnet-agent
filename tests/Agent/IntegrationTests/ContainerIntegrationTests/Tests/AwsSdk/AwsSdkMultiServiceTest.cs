@@ -17,6 +17,10 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
     private readonly string _queueName = $"QueueName_{Guid.NewGuid()}";
     private readonly string _bookName = $"BookName_{Guid.NewGuid()}";
 
+    private const string _expectedAccountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
+    private const string _unxpectedAccountId = "520198777664"; // matches the account ID parsed from the fake access key used in AwsSdkSQSExerciser
+
+
     public AwsSdkMultiServiceTest(AwsSdkContainerMultiServiceTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -57,5 +61,6 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
     {
         // TODO: Verify that cloud.resource_id appears only on the dynamodb datastore segment and not on the whole transaction.
         // TODO: Verify that the sqs message broker segment does not have cloud.resource_id.
+        // TODO: verify that the account ID in cloud.resource_id matches the expected account id
     }
 }

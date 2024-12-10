@@ -12,17 +12,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 {
     public class AmazonServiceClientWrapper : IWrapper
     {
-        /// <summary>
-        /// The AWS account id.
-        /// Parsed from the access key in the credentials of the client - or fall back to the configuration value if parsing fails.
-        /// Assumes only a single account id is used in the application.
-        /// </summary>
-        //public static string AwsAccountId { get; private set; }
-
         // cache the account id per instance of AmazonServiceClient.Config
         public static ConcurrentDictionary<object, string> AwsAccountIdByClientConfigCache = new();
 
-        private static ConcurrentHashSet<object> AmazonServiceClientInstanceCache = new();
+        private static readonly ConcurrentHashSet<object> AmazonServiceClientInstanceCache = new();
 
         public bool IsTransactionRequired => false;
 
@@ -33,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            dynamic client = instrumentedMethodCall.MethodCall.InvocationTarget;
+            object client = instrumentedMethodCall.MethodCall.InvocationTarget;
 
             if (AmazonServiceClientInstanceCache.Contains(client)) // don't do anything if we've already seen this client instance
                 return Delegates.NoOp;
@@ -61,7 +54,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return Delegates.GetDelegateFor(onComplete: () =>
             {
                 // get the _config field from the client
-                object clientConfig = client.Config;
+                object clientConfig = ((dynamic)client).Config;
 
                 // cache the account id using clientConfig as the key
                 AwsAccountIdByClientConfigCache.TryAdd(clientConfig, awsAccountId);

@@ -12,38 +12,60 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
     internal static class DynamoDbRequestHandler
     {
-
         private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
         public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
             var requestType = ((object)request).GetType().Name;
 
-            // PutItemRequest => put_item,
-            // CreateTableRequest => create_table, etc.
-            var operation = _operationNameCache.GetOrAdd(requestType, GetOperationNameFromRequestType);
+            var operation = _operationNameCache.GetOrAdd(requestType, requestType.Replace("Request", string.Empty).ToSnakeCase());
 
-            // Even though there is no common interface they all implement, every Request type I checked
-            // has a TableName property
+            // all request objects implement a TableName property
             string model = request.TableName;
-
-            // TODO: this should be added to the datastore segment only
-            // get the arn and send it in an attribute  - used for entity relationship linking
-            var arn = builder.Build("dynamodb", $"table/{model}");
-            if (!string.IsNullOrEmpty(arn))
-                transaction.AddCloudSdkAttribute("cloud.resource_id", arn);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
 
+            var arn = builder.Build("dynamodb", $"table/{model}");
+            if (!string.IsNullOrEmpty(arn))
+                segment.AddCloudSdkAttribute("cloud.resource_id", arn);
+            segment.AddCloudSdkAttribute("aws.operation", operation);
+            segment.AddCloudSdkAttribute("aws.region", builder.Region);
+
             return isAsync ?
-                Delegates.GetAsyncDelegateFor<Task>(agent, segment)
+                Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, responseTask =>
+                {
+                    try
+                    {
+                        if (responseTask.IsFaulted)
+                            transaction.NoticeError(responseTask.Exception);
+                        else
+                            SetRequestIdIfAvailable(agent, segment, ((dynamic)responseTask).Result);
+                    }
+                    finally
+                    {
+                        segment.End();
+                    }
+
+                }, TaskContinuationOptions.ExecuteSynchronously)
                 :
-                Delegates.GetDelegateFor(segment);
+                Delegates.GetDelegateFor<object>(
+                    onFailure: segment.End,
+                    onSuccess: response =>
+                    {
+                        SetRequestIdIfAvailable(agent, segment, response);
+                        segment.End();
+                    }
+            );
+
         }
 
-        private static string GetOperationNameFromRequestType(string requestType)
+        private static void SetRequestIdIfAvailable(IAgent agent, ISegment segment, dynamic response)
         {
-            return requestType.Replace("Request", string.Empty).ToSnakeCase();
+            if (response != null && response.ResponseMetadata != null && response.ResponseMetadata.RequestId != null)
+            {
+                string requestId = response.ResponseMetadata.RequestId;
+                segment.AddCloudSdkAttribute("aws.requestId", requestId);
+            }
         }
     }
 }
