@@ -2211,10 +2211,10 @@ namespace CompositeTests
 
         #endregion GetLinkingMetadataCATS
 
-        #region Span Custom Attributes
+        #region Span Attributes
 
         [Test]
-        public void SpanCustomAttributes()
+        public void SpanAttributes()
         {
             var agentWrapperApi = _compositeTestAgent.GetAgent();
             var dtm1 = DateTime.Now;
@@ -2238,6 +2238,9 @@ namespace CompositeTests
             segment.AddCustomAttribute("key7", dtm2);
             segment.AddCustomAttribute("key8", null);
             segment.AddCustomAttribute("", dtm2);
+            segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
+            segment.AddCloudSdkAttribute("aws.region", "us-west-2");
+            segment.AddCloudSdkAttribute("cloud.resource_id", "arn:aws:lambda:us-west-2:123456789012:function:myfunction");
 
             var singleStringValue = new StringValues("avalue");
             var multiStringValue = new StringValues(new[] { "onevalue", "twovalue", "threevalue" });
@@ -2255,6 +2258,13 @@ namespace CompositeTests
                 new ExpectedAttribute(){ Key = "key7", Value = dtm2.ToString("o")},
                 new ExpectedAttribute(){ Key = "key9a", Value = "avalue"},
                 new ExpectedAttribute(){ Key = "key9b", Value = "onevalue,twovalue,threevalue"}
+            };
+
+            var expectedCloudSdkAttributes = new[]
+            {
+                new ExpectedAttribute(){ Key = "cloud.platform", Value = "aws_lambda"},
+                new ExpectedAttribute(){ Key = "aws.region", Value = "us-west-2"},
+                new ExpectedAttribute(){ Key = "cloud.resource_id", Value = "arn:aws:lambda:us-west-2:123456789012:function:myfunction"},
             };
 
             var unexpectedAttributes = new[]
@@ -2275,6 +2285,7 @@ namespace CompositeTests
             (
                 () => Assert.That(allSpans, Has.Count.EqualTo(2)),
                 () => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, testSpan),
+                () => SpanAssertions.HasAttributes(expectedCloudSdkAttributes, AttributeClassification.AgentAttributes, testSpan),
                 () => SpanAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, testSpan)
             );
         }

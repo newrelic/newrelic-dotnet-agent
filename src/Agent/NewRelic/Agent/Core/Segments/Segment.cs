@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Segments
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
         public string TypeName => MethodCallData.TypeName;
 
-        private SpanAttributeValueCollection _customAttribValues;
+        private SpanAttributeValueCollection _attribValues;
 
         public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
         {
@@ -318,7 +318,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public SpanAttributeValueCollection GetAttributeValues()
         {
-            var attribValues = _customAttribValues ?? new SpanAttributeValueCollection();
+            var attribValues = _attribValues ?? new SpanAttributeValueCollection();
 
             AttribDefs.Duration.TrySetValue(attribValues, DurationOrZero);
             AttribDefs.NameForSpan.TrySetValue(attribValues, GetTransactionTraceName());
@@ -434,14 +434,14 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
-        private readonly object _customAttribValuesSyncRoot = new object();
+        private readonly object _attribValuesSyncRoot = new object();
 
         public ISpan AddCustomAttribute(string key, object value)
         {
             SpanAttributeValueCollection customAttribValues;
-            lock (_customAttribValuesSyncRoot)
+            lock (_attribValuesSyncRoot)
             {
-                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanAttributeValueCollection());
+                customAttribValues = _attribValues ?? (_attribValues = new SpanAttributeValueCollection());
             }
 
             AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(customAttribValues, value);
@@ -452,9 +452,9 @@ namespace NewRelic.Agent.Core.Segments
         public ISpan AddCloudSdkAttribute(string key, object value)
         {
             SpanAttributeValueCollection customAttribValues;
-            lock (_customAttribValuesSyncRoot)
+            lock (_attribValuesSyncRoot)
             {
-                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanAttributeValueCollection());
+                customAttribValues = _attribValues ?? (_attribValues = new SpanAttributeValueCollection());
             }
 
             AttribDefs.GetCloudSdkAttribute(key).TrySetValue(customAttribValues, value);
