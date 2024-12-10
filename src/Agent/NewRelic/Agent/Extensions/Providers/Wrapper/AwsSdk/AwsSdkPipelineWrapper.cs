@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Caching;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
@@ -55,8 +56,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private string GetAccountId(IAgent agent, dynamic clientConfig)
         {
-            // TODO: what if (though it's not supposed to be possible) there isn't a matching cache key?
-            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache[clientConfig];
+            var cacheKey = new WeakReferenceKey<object>(clientConfig);
+            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.ContainsKey(cacheKey) ? (string)AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.Get(clientConfig) : agent.Configuration.AwsAccountId;
 
             if (accountId != null)
             {
