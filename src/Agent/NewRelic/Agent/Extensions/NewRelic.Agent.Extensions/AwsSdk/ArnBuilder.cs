@@ -119,11 +119,8 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                 return null;
             }
 
+            // The member Region cannot be blank (it has a default) so we don't need to check it here
             region = !string.IsNullOrEmpty(region) ? region : Region;
-            if (string.IsNullOrEmpty(region))
-            {
-                return null;
-            }
 
             if (!string.IsNullOrEmpty(alias))
             {

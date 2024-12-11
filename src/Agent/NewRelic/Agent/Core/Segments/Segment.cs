@@ -451,13 +451,13 @@ namespace NewRelic.Agent.Core.Segments
 
         public ISpan AddCloudSdkAttribute(string key, object value)
         {
-            SpanAttributeValueCollection customAttribValues;
+            SpanAttributeValueCollection attribValues;
             lock (_attribValuesSyncRoot)
             {
-                customAttribValues = _attribValues ?? (_attribValues = new SpanAttributeValueCollection());
+                attribValues = _attribValues ?? (_attribValues = new SpanAttributeValueCollection());
             }
 
-            AttribDefs.GetCloudSdkAttribute(key).TrySetValue(customAttribValues, value);
+            AttribDefs.GetCloudSdkAttribute(key).TrySetValue(attribValues, value);
 
             return this;
         }
