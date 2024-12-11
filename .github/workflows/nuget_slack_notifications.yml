@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           egress-policy: audit # Leave it audit mode
 
@@ -61,7 +61,7 @@ jobs:
       - name: Check for updates to core technology packages
         env:
           DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
-          DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOTTY_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           CORECLR_ENABLE_PROFILING: 1
           CORECLR_NEW_RELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
           CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"

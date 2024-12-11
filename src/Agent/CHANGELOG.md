@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
+
+
+### Fixes
+
+* Remove .NET Standard libraries from .NET Framework target ([#2896](https://github.com/newrelic/newrelic-dotnet-agent/issues/2896)) ([0873941](https://github.com/newrelic/newrelic-dotnet-agent/commit/0873941b6c869db7696e154950b36762a2e2b16f))
+
+## [10.34.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.1...v10.34.0) (2024-11-19)
+
+
+### Notice
+
+* The .NET agent now allows you to opt-in to adding your custom tags (labels) to agent-forwarded logs. With custom tags on logs, platform engineers can easily filter, search, and correlate log data for faster and more efficient troubleshooting, improved performance, and optimized resource utilization. To learn more about this feature see the [documentation](https://docs.newrelic.com/docs/logs/logs-context/Custom-tags-agent-forwarder-logs).(https://github.com/newrelic/newrelic-dotnet-agent/pull/2831) ([d1e29ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/d1e29eaa5103fede483c7248fed5ace0620c6ccd))
+
+
+### New features
+
+* Add Distributed Tracing support for Azure Functions HTTPTrigger. ([#2868](https://github.com/newrelic/newrelic-dotnet-agent/issues/2868)) ([0278836](https://github.com/newrelic/newrelic-dotnet-agent/commit/0278836fc9b538f9eceabd47af7b5da46ed13274))
+* The .NET agent now allows you to opt-in to adding your custom tags (labels) to agent-forwarded logs. With custom tags on logs, platform engineers can easily filter, search, and correlate log data for faster and more efficient troubleshooting, improved performance, and optimized resource utilization. To learn more about this feature see the [documentation](https://docs.newrelic.com/docs/logs/logs-context/Custom-tags-agent-forwarder-logs).(https://github.com/newrelic/newrelic-dotnet-agent/pull/2831) ([d1e29ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/d1e29eaa5103fede483c7248fed5ace0620c6ccd))
+
+
+### Fixes
+
+* Don't instrument certain processes in Azure Linux App Service deployments. Resolves [#2871](https://github.com/newrelic/newrelic-dotnet-agent/issues/2871). ([7ed945b](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ed945b659be8a670d27c5a266738ffd5a712a41))
+* Fix a bug in `run.sh`. Resolves [#2887](https://github.com/newrelic/newrelic-dotnet-agent/issues/2887) ([#2888](https://github.com/newrelic/newrelic-dotnet-agent/issues/2888)) ([df17cfd](https://github.com/newrelic/newrelic-dotnet-agent/commit/df17cfdf6d777ed623c437c2f9dd5dfab3651260))
+
 ## [10.33.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.0...v10.33.1) (2024-10-31)
 
 

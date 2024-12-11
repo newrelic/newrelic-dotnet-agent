@@ -1,12 +1,14 @@
-name: .NET Agent All Solutions Build
+name: All Solutions Build
 
 on:
   pull_request:
     branches:
       - main
       - "feature/**"
+
   release:
     types: [published]
+
   workflow_dispatch:
 
   schedule:
@@ -40,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           disable-sudo: true
           egress-policy: audit
@@ -509,14 +511,15 @@ jobs:
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
-
-      - name: Start Local CosmosDB Emulator for CosmosDB Tests
-        if: matrix.namespace == 'CosmosDB'
-        run: |
-          Write-Host "Launching Cosmos DB Emulator"
-          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
-          Start-CosmosDbEmulator
-        shell: pwsh
+        
+# save in case we move back to using the emulator
+#      - name: Start Local CosmosDB Emulator for CosmosDB Tests
+#        if: matrix.namespace == 'CosmosDB'
+#        run: |
+#          Write-Host "Launching Cosmos DB Emulator"
+#          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
+#          Start-CosmosDbEmulator
+#        shell: pwsh
 
       - name: Run Unbounded Integration Tests
         run: |
@@ -560,7 +563,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           disable-sudo: true
           egress-policy: audit
@@ -627,7 +630,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           disable-sudo: true
           egress-policy: audit
@@ -738,7 +741,7 @@ jobs:
     if: always()
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           disable-sudo: true
           egress-policy: audit

@@ -68,17 +68,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaMultipleInvocationsTestNet6 : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureNet6>
+    public class AwsLambdaMultipleInvocationsTestCoreOldest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaMultipleInvocationsTestNet6(LambdaCustomEventsTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaMultipleInvocationsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaMultipleInvocationsTestNet8 : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureNet8>
+    public class AwsLambdaMultipleInvocationsTestCoreLatest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaMultipleInvocationsTestNet8(LambdaCustomEventsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaMultipleInvocationsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

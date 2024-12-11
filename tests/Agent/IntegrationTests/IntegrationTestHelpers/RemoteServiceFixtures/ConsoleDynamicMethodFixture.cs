@@ -91,16 +91,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
-    public class ConsoleDynamicMethodFixtureCore60 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    public class ConsoleDynamicMethodFixtureCore80 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCore60() : base("net6.0")
+        public ConsoleDynamicMethodFixtureCore80() : base("net8.0")
         {
         }
     }
 
-    public class ConsoleDynamicMethodFixtureCore80 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    public class ConsoleDynamicMethodFixtureCore90 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCore80() : base("net8.0")
+        public ConsoleDynamicMethodFixtureCore90() : base("net9.0")
         {
         }
     }
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore60
+    public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore80
     {
         public ConsoleDynamicMethodFixtureCoreOldest()
         {
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore90
     {
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore90
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureCoreLatestCSP()

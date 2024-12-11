@@ -68,7 +68,8 @@ namespace nugetSlackNotifications
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Caught exception while checking {package.PackageName} for updates.");
-                    await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
+                    if (!_testMode)
+                        await SendSlackNotification($"Dotty: caught exception while checking {package.PackageName} for updates: {ex}");
                 }
             }
 
