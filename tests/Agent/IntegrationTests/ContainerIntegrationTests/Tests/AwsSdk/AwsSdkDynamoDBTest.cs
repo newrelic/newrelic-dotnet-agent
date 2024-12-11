@@ -107,41 +107,31 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
         var expectedOperations = new[] { "create_table", "describe_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
         var expectedOperationsCount = expectedOperations.Length;
 
-        // TODO: Eventually this attribute will be present only on the datastore span events, not the transaction sample event
         string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}";
-        var expectedAttributes = new Dictionary<string, object>
+        var expectedAwsAgentAttributes = new string[]
         {
-            { "cloud.resource_id", expectedArn }
+            "aws.operation", "aws.requestId", "aws.region", "cloud.resource_id",
         };
 
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(createTableScope);
-        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(createTableScope);
-        var createTableSpanEvent = _fixture.AgentLog.TryGetSpanEvent(createTableScope);
 
         // get all datastore span events for dynamodb so we can verify counts and operations
         var datastoreSpanEvents = _fixture.AgentLog.GetSpanEvents()
             .Where(se => se.AgentAttributes.ContainsKey("db.system") && (string)se.AgentAttributes["db.system"] == "dynamodb")
             .ToList();
 
-        // select the set of AgentAttributes values with a key of "db.operation"
-        var dbOperations = datastoreSpanEvents.Select(se => (string)se.AgentAttributes["db.operation"]).ToList();
+        // select the set of AgentAttributes values with a key of "aws.operation"
+        var awsOperations = datastoreSpanEvents.Select(se => (string)se.AgentAttributes["aws.operation"]).ToList();
 
 
         Assert.Multiple(
             () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
             () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
 
-            () => Assert.NotNull(transactionSample),
-            () => Assert.NotNull(transactionEvent),
-            () => Assert.NotNull(createTableSpanEvent),
-
             () => Assert.Equal(expectedOperationsCount, datastoreSpanEvents.Count),
-            () => Assert.Equal(expectedOperationsCount, dbOperations.Count),
-            () => Assert.Equal(expectedOperationsCount, dbOperations.Intersect(expectedOperations).Count()),
+            () => Assert.Equal(expectedOperationsCount, awsOperations.Intersect(expectedOperations).Count()),
 
-            () => Assertions.TransactionTraceHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.TransactionTraceAttributeType.Agent, transactionSample),
-            () => Assertions.TransactionEventDoesNotHaveAttributes(["cloud.resource_id"], Agent.Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Agent, transactionEvent),
-            () => Assertions.SpanEventHasAttributes(expectedAttributes, Agent.Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, createTableSpanEvent),
+            () => Assert.All(datastoreSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
+            () => Assert.All(datastoreSpanEvents, se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"])),
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
