@@ -254,6 +254,7 @@ jobs:
           AwsLambda.Sns,
           AwsLambda.Sqs,
           AwsLambda.WebRequest,
+          AwsSdk,
           AzureFunction,
           BasicInstrumentation, 
           CatInbound, 

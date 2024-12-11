@@ -351,6 +351,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 catch (Exception ex)
                 {
                     TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
+                    AgentLogExpected = false;
                     throw;
                 }
                 finally
