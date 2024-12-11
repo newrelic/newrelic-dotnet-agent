@@ -94,6 +94,24 @@ namespace Agent.Extensions.Tests.Cache
         }
 
         [Test]
+        public async Task GetHashCode_ShouldReturnZeroIfTargetIsGarbageCollected()
+        {
+            // Arrange
+            var weakRefKey = GetWeakReferenceKey();
+
+            // Act
+            Assert.That(weakRefKey.Value, Is.Not.Null);
+            // force garbage collection
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            await Task.Delay(500);
+            GC.Collect(); // Force another collection
+
+            // Assert
+            Assert.That(weakRefKey.GetHashCode(), Is.EqualTo(0));
+        }
+
+        [Test]
         public async Task Value_ShouldReturnNullIfTargetIsGarbageCollected()
         {
             // Arrange
@@ -115,6 +133,39 @@ namespace Agent.Extensions.Tests.Cache
         {
             var foo = new Foo();
             return new WeakReferenceKey<Foo>(foo);
+        }
+        [Test]
+        public void Equals_ShouldReturnFalseForNonWeakReferenceKeyObject()
+        {
+            // Arrange
+            var foo = new Foo();
+            var weakReferenceKey = new WeakReferenceKey<Foo>(foo);
+
+            // Act
+            var result = weakReferenceKey.Equals(new object());
+
+            // Assert
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public async Task Equals_ShouldReturnFalseIfTargetIsGarbageCollected()
+        {
+            // Arrange
+            var weakRefKey1 = GetWeakReferenceKey();
+            var weakRefKey2 = GetWeakReferenceKey();
+
+            // Act
+            Assert.That(weakRefKey1.Value, Is.Not.Null);
+            Assert.That(weakRefKey2.Value, Is.Not.Null);
+            // force garbage collection
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            await Task.Delay(500);
+            GC.Collect(); // Force another collection
+
+            // Assert
+            Assert.That(weakRefKey1.Equals(weakRefKey2), Is.False);
         }
 
         private class Foo
