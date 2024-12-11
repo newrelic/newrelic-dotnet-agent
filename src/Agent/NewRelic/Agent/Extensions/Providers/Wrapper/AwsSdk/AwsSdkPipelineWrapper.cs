@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Caching;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
@@ -32,8 +33,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             string accountId = null;
             try
             {
-                accountId = GetAccountId(agent);
                 var clientConfig = requestContext.ClientConfig;
+                accountId = GetAccountId(agent, clientConfig);
                 if (clientConfig.RegionEndpoint != null)
                 {
                     var regionEndpoint = clientConfig.RegionEndpoint;
@@ -53,9 +54,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return new ArnBuilder(partition, systemName, accountId);
         }
 
-        private string GetAccountId(IAgent agent)
+        private string GetAccountId(IAgent agent, object clientConfig)
         {
-            string accountId = AmazonServiceClientWrapper.AwsAccountId;
+            var cacheKey = new WeakReferenceKey<object>(clientConfig);
+            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.ContainsKey(cacheKey) ? AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.Get(cacheKey) : agent.Configuration.AwsAccountId;
 
             if (accountId != null)
             {
