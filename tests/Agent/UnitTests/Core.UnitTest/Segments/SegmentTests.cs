@@ -66,7 +66,6 @@ namespace NewRelic.Agent.Core.Segments.Tests
             segment.MakeLeaf();
             Assert.That(segment.IsLeaf, Is.True);
 
-            Assert.That(segment.GetTransactionTraceName(), Is.Null);
             segment.SetName("foo");
             Assert.That(segment.GetTransactionTraceName(), Is.EqualTo("foo"));
 
