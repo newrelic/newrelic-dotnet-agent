@@ -54,10 +54,10 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             return new ArnBuilder(partition, systemName, accountId);
         }
 
-        private string GetAccountId(IAgent agent, dynamic clientConfig)
+        private string GetAccountId(IAgent agent, object clientConfig)
         {
             var cacheKey = new WeakReferenceKey<object>(clientConfig);
-            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.ContainsKey(cacheKey) ? (string)AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.Get(clientConfig) : agent.Configuration.AwsAccountId;
+            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.ContainsKey(cacheKey) ? AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.Get(cacheKey) : agent.Configuration.AwsAccountId;
 
             if (accountId != null)
             {

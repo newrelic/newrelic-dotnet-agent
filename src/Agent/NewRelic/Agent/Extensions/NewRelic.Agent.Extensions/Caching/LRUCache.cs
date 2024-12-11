@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Extensions.Caching
 
         public TValue Get(TKey key)
         {
-            _lock.EnterReadLock();
+            _lock.EnterUpgradeableReadLock();
             try
             {
                 if (_cacheMap.TryGetValue(key, out var node))
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Extensions.Caching
             }
             finally
             {
-                _lock.ExitReadLock();
+                _lock.ExitUpgradeableReadLock();
             }
         }
 

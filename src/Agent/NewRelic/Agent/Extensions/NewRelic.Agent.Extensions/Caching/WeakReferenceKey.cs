@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Extensions.Caching
     /// <typeparam name="T"></typeparam>
     public class WeakReferenceKey<T> where T : class
     {
-        public WeakReference<T> WeakReference { get; }
+        private WeakReference<T> WeakReference { get; }
 
         public WeakReferenceKey(T cacheKey)
         {
