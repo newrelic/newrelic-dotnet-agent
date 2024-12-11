@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -47,10 +48,6 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
                     TimeSpan.FromMinutes(2));
-
-                // shut down the container and wait for the agent log to see it
-                _fixture.ShutdownRemoteApplication();
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
             });
 
         _fixture.Initialize();
@@ -59,8 +56,16 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
     [Fact]
     public void Test()
     {
-        // TODO: Verify that cloud.resource_id appears only on the dynamodb datastore segment and not on the whole transaction.
-        // TODO: Verify that the sqs message broker segment does not have cloud.resource_id.
-        // TODO: verify that the account ID in cloud.resource_id matches the expected account id
+        // get all span events
+        var spanEvents = _fixture.AgentLog.GetSpanEvents();
+        // select all span events having an Agent attribute with a key of "cloud.resource_id"
+        var cloudResourceIdSpanEvents = spanEvents.Where(spanEvent => spanEvent.AgentAttributes.ContainsKey("cloud.resource_id")).ToList();
+
+        string expectedArn = $"arn:aws:dynamodb:(unknown):{_expectedAccountId}:table/{_tableName}";
+
+        Assert.Multiple(
+            () => Assert.All(cloudResourceIdSpanEvents,
+                se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"]))
+        );
     }
 }
