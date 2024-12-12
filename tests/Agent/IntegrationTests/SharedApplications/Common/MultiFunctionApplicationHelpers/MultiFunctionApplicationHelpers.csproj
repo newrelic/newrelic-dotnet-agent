@@ -275,7 +275,7 @@
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net48'" />
     
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
   
   <ItemGroup>
