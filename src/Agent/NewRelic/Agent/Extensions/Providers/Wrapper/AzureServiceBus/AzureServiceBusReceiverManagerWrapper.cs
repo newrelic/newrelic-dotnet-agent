@@ -20,8 +20,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             return new CanWrapResponse(canWrap);
         }
 
-        public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
-            ITransaction transaction)
+        public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
             _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManager.GetType(), "Receiver");
@@ -42,9 +41,9 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                 queueName,
                 serverAddress: fqns);
 
-            if (instrumentedMethodCall.IsAsync)
-            {
-                return Delegates.GetAsyncDelegateFor<Task>(
+            return instrumentedMethodCall.IsAsync
+                ?
+                Delegates.GetAsyncDelegateFor<Task>(
                     agent,
                     segment,
                     false,
@@ -52,13 +51,13 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                     {
                         segment.End();
                         transaction.End();
-                    }, TaskContinuationOptions.ExecuteSynchronously);
-            }
-            return Delegates.GetDelegateFor(onComplete: () =>
-            {
-                segment.End();
-                transaction.End();
-            });
+                    }, TaskContinuationOptions.ExecuteSynchronously)
+                :
+                Delegates.GetDelegateFor(onComplete: () =>
+                {
+                    segment.End();
+                    transaction.End();
+                });
         }
     }
 }

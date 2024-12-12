@@ -29,6 +29,8 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
+        transaction.LogFinest("AzureServiceBusReceiveWrapper.BeforeWrappedMethod() is starting.");
+
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
         string queueName = serviceBusReceiver.EntityPath; // some-queue-name
         string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
@@ -56,8 +58,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodName}")
             };
 
-        agent.Logger.Finest("AzureServiceBusReceiveWrapper - BeforeWrappedMethod: instrumentedMethodName: {instrumentedMethodName} - action: {action} - isProcessor: {isProcessor}", instrumentedMethodName, action, isProcessor);
-
         // If the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction.
         // The transaction will end at the conclusion of ReceiverManager.ProcessOneMessageWithinScopeAsync()
         if (isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
@@ -68,15 +68,16 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 destination: queueName);
 
             if (instrumentedMethodCall.IsAsync)
+            {
                 transaction.DetachFromPrimary();
+            }
 
             transaction.LogFinest("Created transaction for ReceiveMessagesAsync in processor mode.");
         }
-
-        if (!isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
+        else
         {
             transaction = agent.CurrentTransaction;
-            transaction.LogFinest("Using existing transaction for ReceiveMessagesAsync, not in processor mode.");
+            transaction.LogFinest($"Using existing transaction for {instrumentedMethodName}.");
         }
 
         if (instrumentedMethodCall.IsAsync)
@@ -100,20 +101,32 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
-                isProcessor, // TODO Is this correct??
+                false,
                 (responseTask) =>
                 {
                     try
                     {
                         if (responseTask.IsFaulted)
+                        {
                             transaction.NoticeError(responseTask.Exception);
+                        }
 
                         HandleReceiveResponse(responseTask, instrumentedMethodName, transaction, isProcessor);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.LogFinest($"Unexpected exception: {ex.Message}");
                     }
                     finally
                     {
                         transaction.LogFinest($"Ending segment for {instrumentedMethodName}.");
                         segment.End();
+
+                        if (isProcessor && responseTask.IsCanceled)
+                        {
+                            transaction.LogFinest("ReceiveMessagesAsync task was canceled in processor mode. Ignoring transaction.");
+                            transaction.Ignore();
+                        }
                     }
                 },
                 TaskContinuationOptions.ExecuteSynchronously)
@@ -146,9 +159,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 
     private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction, bool isProcessor)
     {
-        if (responseTask.IsCanceled)
-            return;
-
         var resultObj = GetTaskResultFromObject(responseTask);
         ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor);
     }

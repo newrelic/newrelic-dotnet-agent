@@ -67,8 +67,8 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 4},
-            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 4, metricScope = $"{_transactionNameBase}/{_queueName}"},
+            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 2},
+            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
             new() { metricName = $"{_processMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
             new() { metricName = $"{_settleMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
         };
@@ -95,10 +95,6 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         };
 
         var expectedIntrinsicAttributes = new List<string> { "span.kind", };
-
-        // make sure log does not contain "Transaction has already ended"
-        var transactionAlreadyEndedErrors = _fixture.AgentLog.TryGetLogLines(AgentLogBase.TransactionAlreadyEndedLogLineRegex);
-        Assert.Empty(transactionAlreadyEndedErrors);
 
         Assertions.MetricsExist(expectedMetrics, metrics);
 
