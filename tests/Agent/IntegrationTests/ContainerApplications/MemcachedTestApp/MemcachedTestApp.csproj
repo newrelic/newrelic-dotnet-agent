@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
-    <PackageReference Include="EnyimMemcachedCore" Version="3.3.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="EnyimMemcachedCore" Version="3.3.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="EnyimMemcachedCore" Version="3.3.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="EnyimMemcachedCore" Version="3.3.1" Condition="'$(TargetFramework)' == 'net9.0'" />
   </ItemGroup>
 
 </Project>
