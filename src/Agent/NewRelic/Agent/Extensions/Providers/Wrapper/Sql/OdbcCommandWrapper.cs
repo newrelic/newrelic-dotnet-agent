@@ -2,45 +2,48 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Data.Odbc;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
+using System.Data;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
-	public class OdbcCommandWrapper : IWrapper
-	{
-		public const string WrapperName = "OdbcCommandTracer";
-		public bool IsTransactionRequired => true;
+    public class OdbcCommandWrapper : IWrapper
+    {
+        public const string WrapperName = "OdbcCommandTracer";
+        public bool IsTransactionRequired => true;
 
-		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-		{
-			return new CanWrapResponse(methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase));
-		}
+        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        {
+            return new CanWrapResponse(methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase));
+        }
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-		{
-			{
-				var odbcCommand = (OdbcCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
-				if (odbcCommand == null)
-					return Delegates.NoOp;
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        {
+            {
+                var odbcCommand = (IDbCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
+                if (odbcCommand == null)
+                {
+                    return Delegates.NoOp;
+                }
 
-				var sql = odbcCommand.CommandText ?? string.Empty;
-				var vendor = SqlWrapperHelper.GetVendorName(odbcCommand);
+                var sql = odbcCommand.CommandText;
 
-				object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, odbcCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
-				var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(odbcCommand.Connection.ConnectionString, GetConnectionInfo);
+                var vendor = SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(odbcCommand.Connection.ConnectionString);
 
-				var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
+                object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, odbcCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
+                var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(odbcCommand.Connection.ConnectionString, GetConnectionInfo);
 
-				var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agent);
+                var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
 
-				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters);
+                var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agent);
 
-				return Delegates.GetDelegateFor(segment);
-			}
-		}
-	}
+                var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters);
+
+                return Delegates.GetDelegateFor(segment);
+            }
+        }
+    }
 }

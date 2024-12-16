@@ -15,7 +15,6 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-    <PackageReference Include="System.Data.Odbc" Version="6.0.0" />
   </ItemGroup>
   
   <ItemGroup>
