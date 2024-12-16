@@ -23,8 +23,7 @@ namespace NewRelic.Providers.Wrapper.Sql
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             {
-                var odbcCommand = (IDbCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
-                if (odbcCommand == null)
+                if (instrumentedMethodCall.MethodCall.InvocationTarget is not IDbCommand odbcCommand)
                 {
                     return Delegates.NoOp;
                 }

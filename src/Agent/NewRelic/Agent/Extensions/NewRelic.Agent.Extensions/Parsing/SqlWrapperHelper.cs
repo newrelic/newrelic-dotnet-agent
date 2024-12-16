@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
@@ -20,7 +21,7 @@ namespace NewRelic.Agent.Extensions.Parsing
         private const string NullQueryParameterValue = "Null";
 
         private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}");
-        private static Dictionary<string, DatastoreVendor> _vendorNameCache = new Dictionary<string, DatastoreVendor>();
+        private static ConcurrentDictionary<string, DatastoreVendor> _vendorNameCache = new ConcurrentDictionary<string, DatastoreVendor>();
 
         /// <summary>
         /// Gets the name of the datastore being used by a dbCommand.
