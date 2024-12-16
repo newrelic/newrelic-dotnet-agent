@@ -15,7 +15,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="AWSSDK.SQS" Version="3.7.400.33" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.403.8" />
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.34.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.404.5" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.34.1" />
   </ItemGroup>
 </Project>

@@ -81,13 +81,13 @@
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
     <PackageReference Include="RestSharp" Version="112.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     
-    <PackageReference Include="Serilog" Version="4.1.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog" Version="4.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Serilog" Version="4.2.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="4.2.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
