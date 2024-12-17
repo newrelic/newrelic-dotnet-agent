@@ -26,7 +26,7 @@ namespace ParsingTests
         [TestCase("Oracle", ExpectedResult = DatastoreVendor.Oracle)]
         [TestCase("PostgreSQL", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("IBMDB2", ExpectedResult = DatastoreVendor.IBMDB2)]
-        public DatastoreVendor GetVendorName_ReturnsCorrectHost_IfOleDbConnectionProviderContainsKnownHost(
+        public DatastoreVendor GetVendorName_ReturnsCorrectVendor_IfOleDbConnectionProviderContainsKnownProvider(
             string provider)
         {
             var command = new OleDbCommand
@@ -45,7 +45,7 @@ namespace ParsingTests
         [TestCase("NpgsqlCommand", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("DB2Command", ExpectedResult = DatastoreVendor.IBMDB2)]
         public DatastoreVendor
-            GetVendorName_ReturnsCorrectHost(string typeName)
+            GetVendorName_ReturnsCorrectVendor(string typeName)
         {
             return SqlWrapperHelper.GetVendorName(typeName);
         }
@@ -80,6 +80,20 @@ namespace ParsingTests
             var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
             Assert.That(datastoreName, Is.EqualTo(DatastoreVendor.Other));
+        }
+
+        [Test]
+        [TestCase("DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;", ExpectedResult = DatastoreVendor.MSSQL)]
+        [TestCase("Driver={MySQL ODBC 5.2 UNICODE Driver};Server=localhost;Database=myDataBase;User=myUsername;Password=myPassword;Option=3;", ExpectedResult = DatastoreVendor.MySQL)]
+        [TestCase("Driver={Microsoft ODBC for Oracle};Server=myServerAddress;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Oracle)]
+        [TestCase("Driver={Oracle in OraClient11g_home1};Dbq=myTNSServiceName;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Oracle)]
+        [TestCase("Driver={PostgreSQL UNICODE};Server=IP address;Port=5432;Database=myDataBase;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Postgres)]
+        [TestCase("Driver={IBM DB2 ODBC DRIVER};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.IBMDB2)]
+        [TestCase("Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.ODBC)]
+        [TestCase("Driver={MyCoolDb ODBC DRIVER};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.ODBC)]
+        public DatastoreVendor GetVendorNameFromOdbcConnectionString_ReturnsExpectedVendor(string connectionString)
+        {
+            return SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(connectionString);
         }
 
         public class UnknownDbCommand : IDbCommand
