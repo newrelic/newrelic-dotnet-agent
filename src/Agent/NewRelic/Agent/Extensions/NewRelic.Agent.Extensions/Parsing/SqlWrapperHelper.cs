@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.Data.Odbc;
+using System.Text.RegularExpressions;
 #if NETFRAMEWORK
 using System.Data.OleDb;
 #endif
@@ -19,6 +20,9 @@ namespace NewRelic.Agent.Extensions.Parsing
     {
         private const string NullQueryParameterValue = "Null";
 
+        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}");
+        private static ConcurrentDictionary<string, DatastoreVendor> _vendorNameCache = new ConcurrentDictionary<string, DatastoreVendor>();
+
         /// <summary>
         /// Gets the name of the datastore being used by a dbCommand.
         /// </summary>
@@ -28,19 +32,33 @@ namespace NewRelic.Agent.Extensions.Parsing
         public static DatastoreVendor GetVendorName(IDbCommand command)
         {
 
-			// If this is an OdbcCommand, the only way to give the data store name is by looking at the connection driver
-
-			var odbcCommand = command as OdbcCommand;
-			if (odbcCommand != null && odbcCommand.Connection != null)
-				return ExtractVendorNameFromString(odbcCommand.Connection.Driver);
 #if NETFRAMEWORK
             // If this is an OleDbCommand, the only way to give the data store name is by looking at the connection provider
             var oleCommand = command as OleDbCommand;
-			if (oleCommand != null && oleCommand.Connection != null)
-				return ExtractVendorNameFromString(oleCommand.Connection.Provider);
+            if (oleCommand != null && oleCommand.Connection != null)
+                return ExtractVendorNameFromString(oleCommand.Connection.Provider);
 
 #endif
             return GetVendorName(command.GetType().Name);
+        }
+
+        public static DatastoreVendor GetVendorNameFromOdbcConnectionString(string connectionString)
+        {
+            // Example connection string: DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=MssqlPassw0rd;Encrypt=no;
+            if (_vendorNameCache.TryGetValue(connectionString, out DatastoreVendor vendor))
+            {
+                return vendor;
+            }
+
+            var match = _getDriverFromConnectionStringRegex.Match(connectionString);
+            if (match.Success)
+            {
+                var driver = match.Groups[1].Value;
+                vendor = ExtractVendorNameFromString(driver);
+                _vendorNameCache[connectionString] = vendor;
+                return vendor;
+            }
+            return DatastoreVendor.ODBC; // or maybe Other?
         }
 
         public static DatastoreVendor GetVendorName(string typeName)
