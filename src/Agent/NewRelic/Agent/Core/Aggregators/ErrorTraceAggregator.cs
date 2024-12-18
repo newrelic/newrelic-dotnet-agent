@@ -80,15 +80,15 @@ namespace NewRelic.Agent.Core.Aggregators
             }
 
             // if we don't have any events to publish then don't
-            var eventCount = errorTraceWireModels.Count;
-            if (eventCount > 0)
+            var traceCount = errorTraceWireModels.Count;
+            if (traceCount > 0)
             {
                 var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
 
                 HandleResponse(responseStatus, errorTraceWireModels);
             }
 
-            Log.Finest($"Error Trace harvest finished. {eventCount} event(s) sent.");
+            Log.Finest($"Error Trace harvest finished. {traceCount} trace(s) sent.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

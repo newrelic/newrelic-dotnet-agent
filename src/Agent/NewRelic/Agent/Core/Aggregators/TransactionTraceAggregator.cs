@@ -49,6 +49,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
+            Log.Finest("Transaction Trace harvest starting.");
+
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
                 .SelectMany(t => t.GetCollectedSamples())

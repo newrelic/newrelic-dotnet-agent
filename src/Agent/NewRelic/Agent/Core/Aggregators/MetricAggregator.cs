@@ -78,14 +78,14 @@ namespace NewRelic.Agent.Core.Aggregators
             oldMetrics.MergeUnscopedStats(MetricNames.SupportabilityMetricHarvestTransmit, MetricDataWireModel.BuildCountData());
             var metricsToSend = oldMetrics.ConvertToJsonForSending(_metricNameService).ToList();
 
-            var eventCount = metricsToSend.Count;
-            if (eventCount > 0)
+            var metricCount = metricsToSend.Count;
+            if (metricCount > 0)
             {
                 var responseStatus = DataTransportService.Send(metricsToSend, transactionId);
                 HandleResponse(responseStatus, metricsToSend);
             }
 
-            Log.Finest($"Metric harvest finished. {eventCount} metric(s) sent.");
+            Log.Finest($"Metric harvest finished. {metricCount} metric(s) sent.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
