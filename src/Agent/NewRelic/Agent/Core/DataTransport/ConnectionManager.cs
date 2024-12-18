@@ -118,6 +118,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
                 // issue such as network connectivity, DNS failure, server certificate validation or timeout.
                 case HttpRequestException:
+                // Occurs when HttpClient.SendAsync() times out on .NET 6+
                 case TaskCanceledException:
 #endif
                 // Occurs when the agent connects to APM but the connection gets aborted by the collector

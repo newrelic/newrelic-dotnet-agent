@@ -184,7 +184,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
             }
 #if !NETFRAMEWORK
-            catch (Exception ex) when (ex is TaskCanceledException) // This exception is specific to .NET Core
+            catch (Exception ex) when (ex is TaskCanceledException) // This exception is specific to .NET 6+
             {
                 LogErrorResponse(ex, method, startTime, null);
                 return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
