@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 #if !NETFRAMEWORK
 using System.Net.Http;
+using System.Threading.Tasks;
 #endif
 using System.Net.Sockets;
 
@@ -119,6 +118,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
                 // issue such as network connectivity, DNS failure, server certificate validation or timeout.
                 case HttpRequestException:
+                case TaskCanceledException:
 #endif
                 // Occurs when the agent connects to APM but the connection gets aborted by the collector
                 case SocketException:

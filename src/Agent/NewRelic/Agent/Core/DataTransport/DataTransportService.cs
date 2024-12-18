@@ -17,7 +17,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-
+#if !NETFRAMEWORK
+using System.Threading.Tasks;
+#endif
 namespace NewRelic.Agent.Core.DataTransport
 {
     public interface IDataTransportService
@@ -176,11 +178,18 @@ namespace NewRelic.Agent.Core.DataTransport
                 var errorStatus = GetDataTransportResponseStatusByHttpStatusCode(ex.StatusCode);
                 return new DataTransportResponse<T>(errorStatus);
             }
-            catch (Exception ex) when (ex is SocketException || ex is WebException || ex is OperationCanceledException)
+            catch (Exception ex) when (ex is SocketException or WebException or OperationCanceledException)
             {
                 LogErrorResponse(ex, method, startTime, null);
                 return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
             }
+#if !NETFRAMEWORK
+            catch (Exception ex) when (ex is TaskCanceledException) // This exception is specific to .NET Core
+            {
+                LogErrorResponse(ex, method, startTime, null);
+                return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
+            }
+#endif
             catch (Exception ex)
             {
                 LogErrorResponse(ex, method, startTime, null);

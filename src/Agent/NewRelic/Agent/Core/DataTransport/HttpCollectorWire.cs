@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
 
-                var httpClient = _httpClientFactory.CreateClient(connectionInfo.Proxy, _configuration);
+                var httpClient = _httpClientFactory.GetOrCreateClient(connectionInfo.Proxy, _configuration);
 
                 request = new HttpRequest(_configuration)
                 {

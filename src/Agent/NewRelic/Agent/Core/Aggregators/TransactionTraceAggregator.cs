@@ -59,13 +59,17 @@ namespace NewRelic.Agent.Core.Aggregators
                 .Select(t => t.CreateWireModel())
                 .ToList();
 
-            if (!traceWireModels.Any())
-                return;
+            // if we don't have any traces to publish then don't
+            var traceCount = traceWireModels.Count;
+            if (traceCount > 0)
+            {
+                LogUnencodedTraceData(traceWireModels);
 
-            LogUnencodedTraceData(traceWireModels);
+                var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
+                HandleResponse(responseStatus, traceSamples);
+            }
 
-            var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
-            HandleResponse(responseStatus, traceSamples);
+            Log.Finest($"Transaction Trace harvest finished. {traceCount} trace(s) sent.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModelComponents> traceSamples)

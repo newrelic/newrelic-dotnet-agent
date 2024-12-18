@@ -323,7 +323,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var appNames = string.Join(":", _configuration.ApplicationNames.ToArray());
 
 #if NETSTANDARD2_0
-			return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
+            return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #else
 
             return HttpRuntime.AppDomainAppId != null
@@ -420,34 +420,36 @@ namespace NewRelic.Agent.Core.DataTransport
         private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
+            string serializedData;
             try
             {
-                var serializedData = _serializer.Serialize(data);
-                try
-                {
-                    var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
-                    return ParseResponse<T>(responseBody);
-                }
-                catch (DataTransport.HttpException ex)
-                {
-                    Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
-
-                    if (ex.StatusCode == HttpStatusCode.Gone)
-                    {
-                        Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
-                    }
-
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug(ex, "Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex);
-                    throw;
-                }
+                serializedData = _serializer.Serialize(data);
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex);
+                Log.Debug("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex); // log message only since exception is rethrown
+                throw;
+            }
+
+            try
+            {
+                var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
+                return ParseResponse<T>(responseBody);
+            }
+            catch (DataTransport.HttpException ex)
+            {
+                Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
+
+                if (ex.StatusCode == HttpStatusCode.Gone)
+                {
+                    Log.Info("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                }
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex); // log message only since exception is rethrown
                 throw;
             }
         }

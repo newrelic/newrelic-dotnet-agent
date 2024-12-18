@@ -6,7 +6,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
+using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
@@ -26,11 +26,53 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _configuration = configuration;
 
             // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
-            var httpHandler = new HttpClientHandler { Proxy = proxy };
-            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpHandler.SslProtocols.ToString());
-            var httpClient = new HttpClient(httpHandler, true) {Timeout = System.Threading.Timeout.InfiniteTimeSpan};
+            var httpHandler = GetHttpHandler(proxy);
+
+            var httpClient = new HttpClient(httpHandler, true) { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
             _httpClientWrapper = new HttpClientWrapper(httpClient, (int)configuration.CollectorTimeout);
         }
+
+        private dynamic GetHttpHandler(IWebProxy proxy)
+        {
+            // check whether the application is running .NET 6 or later
+            // if so, set the pooled connection lifetime to 1 minute
+            // https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.pooledconnectionlifetime?view=net-6.0
+
+            if (System.Environment.Version.Major >= 6)
+            {
+                try
+                {
+                    var pooledConnectionLifetime = TimeSpan.FromMinutes(5); // an in-use connection will be closed and recycled after 5 minutes
+                    var pooledConnectionIdleTimeout = TimeSpan.FromMinutes(1); // a connection that is idle for 1 minute will be closed and recycled
+
+                    Log.Info($"Creating a SocketsHttpHandler with PooledConnectionLifetime set to {pooledConnectionLifetime} and PooledConnectionIdleTimeout set to {pooledConnectionIdleTimeout}");
+
+                    // use reflection to create a SocketsHttpHandler instance and set the PooledConnectionLifetime to 1 minute
+                    var assembly = Assembly.Load("System.Net.Http");
+                    var handlerType = assembly.GetType("System.Net.Http.SocketsHttpHandler");
+                    dynamic handler = Activator.CreateInstance(handlerType);
+
+                    handler.PooledConnectionLifetime = pooledConnectionLifetime;
+                    handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
+
+                    handler.Proxy = proxy;
+
+                    Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {0}", handler.SslOptions.EnabledSslProtocols);
+                    return handler;
+                }
+                catch (Exception e)
+                {
+                    Log.Info(e, "Application is running .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpHandler.");
+                }
+            }
+
+            // if the application is not running .NET 6 or later, use the default HttpClientHandler
+            var httpClientHandler = new HttpClientHandler { Proxy = proxy };
+            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpClientHandler.SslProtocols.ToString());
+
+            return httpClientHandler;
+        }
+
 
         public override IHttpResponse Send(IHttpRequest request)
         {
