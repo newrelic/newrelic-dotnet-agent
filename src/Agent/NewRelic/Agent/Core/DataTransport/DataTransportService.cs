@@ -224,7 +224,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var endTime = DateTime.UtcNow;
             _agentHealthReporter.ReportSupportabilityCollectorErrorException(method, endTime - startTime, httpStatusCode);
-            Log.Error(exception, "_connectionManager.SendDataRequest() failed.");
+            Log.Error(exception, "Exception in TrySendDataRequest():");
         }
 
         private DataTransportResponseStatus GetDataTransportResponseStatusByHttpStatusCode(HttpStatusCode httpStatusCode)
