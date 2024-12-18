@@ -118,8 +118,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
                 // issue such as network connectivity, DNS failure, server certificate validation or timeout.
                 case HttpRequestException:
-                // Occurs when HttpClient.SendAsync() times out on .NET 6+
-                case TaskCanceledException:
 #endif
                 // Occurs when the agent connects to APM but the connection gets aborted by the collector
                 case SocketException:
@@ -128,6 +126,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when no network connection is available, DNS unavailable, etc.
                 case WebException:
                 // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                // OperationCanceledException is a base class for TaskCanceledException, which can be thrown by HttpClient.SendAsync in .NET 6+
                 case OperationCanceledException:
                     Log.Info("Connection failed: {0}", ex.Message);
                     break;
