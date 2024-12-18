@@ -45,6 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
 
+                Log.Finest("Request({0}): Invoking \"{1}\"", requestGuid, method);
                 var httpClient = _httpClientFactory.GetOrCreateClient(connectionInfo.Proxy, _configuration);
 
                 request = new HttpRequest(_configuration)

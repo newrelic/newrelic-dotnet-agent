@@ -107,7 +107,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     req.Content.Headers.Add(contentHeader.Key, contentHeader.Value);
                 }
 
+                Log.Finest($"Request({request.RequestGuid}: Sending");
                 var response = _httpClientWrapper.SendAsync(req).GetAwaiter().GetResult();
+                Log.Finest($"Request({request.RequestGuid}: Sent");
 
                 var httpResponse = new HttpResponse(request.RequestGuid, response);
                 return httpResponse;

@@ -438,7 +438,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (DataTransport.HttpException ex)
             {
-                Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
+                Log.Debug("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
                 if (ex.StatusCode == HttpStatusCode.Gone)
                 {
