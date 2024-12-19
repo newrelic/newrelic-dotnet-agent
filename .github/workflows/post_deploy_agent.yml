@@ -189,3 +189,21 @@ jobs:
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
           PUBLISH_PATH: ${{ github.workspace }}/publish
+
+  release-tags:
+    name: Create release tags
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release tags for Lambda and K8s Init Containers
+        uses: dev-hanz-ops/install-gh-cli-action@c78dbed4be2f8d6133a14a9a597ee12fd4ed5c93 # v3
+        with:
+          gh-cli-version: 2.63.2
+        run: |
+          gh auth login --with-token <<< $GH_RELEASE_TOKEN
+          echo "newrelic/newrelic-lambda-layers - Releasing New Relic .NET Agent ${AGENT_VERSION}.0 with tag ${AGENT_VERSION}.0_dotnet"
+          gh create release "${AGENT_VERSION}.0_dotnet" -t "New Relic .NET Agent ${AGENT_VERSION}.0" --repo=newrelic/newrelic-lambda-layers
+          echo "newrelic/newrelic-agent-init-container - Releasing New Relic .NET Agent ${AGENT_VERSION}.0 with tag ${AGENT_VERSION}.0_dotnet"
+          gh create release "${AGENT_VERSION}.0_dotnet" -t "New Relic .NET Agent ${AGENT_VERSION}.0" --repo=newrelic/newrelic-agent-init-container
+        env:
+          GH_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ inputs.agent_version }}-1.x86_64"
