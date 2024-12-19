@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             using var cts = new CancellationTokenSource(_timeoutMilliseconds);
             try
             {
-                var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token);
+                var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false);
                 return new HttpResponseMessageWrapper(httpResponseMessage);
             }
             catch (Exception e)
