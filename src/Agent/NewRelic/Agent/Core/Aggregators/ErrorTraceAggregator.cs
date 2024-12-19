@@ -79,14 +79,16 @@ namespace NewRelic.Agent.Core.Aggregators
                 _readerWriterLock.ExitWriteLock();
             }
 
-            if (errorTraceWireModels.Count <= 0)
-                return;
+            // if we don't have any events to publish then don't
+            var traceCount = errorTraceWireModels.Count;
+            if (traceCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
 
-            var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
+                HandleResponse(responseStatus, errorTraceWireModels);
+            }
 
-            HandleResponse(responseStatus, errorTraceWireModels);
-
-            Log.Finest("Error Trace harvest finished.");
+            Log.Finest($"Error Trace harvest finished. {traceCount} trace(s) sent.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

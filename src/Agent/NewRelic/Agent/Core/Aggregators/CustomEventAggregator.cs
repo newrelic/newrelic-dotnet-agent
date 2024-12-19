@@ -89,14 +89,16 @@ namespace NewRelic.Agent.Core.Aggregators
             var customEvents = originalCustomEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
             // if we don't have any events to publish then don't
-            if (customEvents.Count <= 0)
-                return;
+            var eventCount = customEvents.Count;
+            if (eventCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(customEvents, transactionId);
 
-            var responseStatus = DataTransportService.Send(customEvents, transactionId);
+                HandleResponse(responseStatus, customEvents);
+            }
 
-            HandleResponse(responseStatus, customEvents);
+            Log.Finest($"Custom Event harvest finished. {eventCount} event(s) sent.");
 
-            Log.Finest("Custom Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

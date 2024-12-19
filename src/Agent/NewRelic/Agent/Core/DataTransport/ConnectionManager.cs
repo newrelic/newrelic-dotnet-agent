@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 #if !NETFRAMEWORK
 using System.Net.Http;
+using System.Threading.Tasks;
 #endif
 using System.Net.Sockets;
 
@@ -127,6 +126,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when no network connection is available, DNS unavailable, etc.
                 case WebException:
                 // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                // OperationCanceledException is a base class for TaskCanceledException, which can be thrown by HttpClient.SendAsync in .NET 6+
                 case OperationCanceledException:
                     Log.Info("Connection failed: {0}", ex.Message);
                     break;
