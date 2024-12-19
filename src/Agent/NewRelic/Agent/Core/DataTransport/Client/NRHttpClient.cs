@@ -35,9 +35,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         private dynamic GetHttpHandler(IWebProxy proxy)
         {
             // check whether the application is running .NET 6 or later
-            // if so, set the pooled connection lifetime to 1 minute
-            // https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.pooledconnectionlifetime?view=net-6.0
-
             if (System.Environment.Version.Major >= 6)
             {
                 try
@@ -78,12 +75,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             try
             {
-                var req = new HttpRequestMessage
-                {
-                    RequestUri = request.Uri,
-                    Method = _configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post
-                };
-
+                using var req = new HttpRequestMessage();
+                req.RequestUri = request.Uri;
+                req.Method = _configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
@@ -94,7 +88,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     req.Headers.Add(header.Key, header.Value);
                 }
 
-                var content = new ByteArrayContent(request.Content.PayloadBytes);
+                using var content = new ByteArrayContent(request.Content.PayloadBytes);
                 var encoding = request.Content.IsCompressed ? request.Content.CompressionType.ToLower() : "identity";
                 content.Headers.ContentType = new MediaTypeHeaderValue(request.Content.ContentType);
                 content.Headers.Add("Content-Encoding", encoding);
@@ -108,7 +102,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 }
 
                 Log.Finest($"Request({request.RequestGuid}: Sending");
-                var response = _httpClientWrapper.SendAsync(req).GetAwaiter().GetResult();
+                using var response = _httpClientWrapper.SendAsync(req).GetAwaiter().GetResult();
                 Log.Finest($"Request({request.RequestGuid}: Sent");
 
                 var httpResponse = new HttpResponse(request.RequestGuid, response);
