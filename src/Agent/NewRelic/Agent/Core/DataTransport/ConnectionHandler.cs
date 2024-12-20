@@ -17,7 +17,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Newtonsoft.Json;
+#if NETFRAMEWORK
 using System.Web;
+#endif
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -425,7 +428,7 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 serializedData = _serializer.Serialize(data);
             }
-            catch (Exception ex)
+            catch (JsonSerializationException ex)
             {
                 Log.Debug("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex); // log message only since exception is rethrown
                 throw;
