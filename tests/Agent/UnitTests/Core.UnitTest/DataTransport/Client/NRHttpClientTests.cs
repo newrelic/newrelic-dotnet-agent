@@ -3,6 +3,7 @@
 
 #if !NETFRAMEWORK
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -27,15 +28,16 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public void SetUp()
         {
             _mockConfiguration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns( "12345");
+            Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns("12345");
             Mock.Arrange(() => _mockConfiguration.AgentRunId).Returns("123");
             Mock.Arrange(() => _mockConfiguration.CollectorMaxPayloadSizeInBytes).Returns(int.MaxValue);
+            Mock.Arrange(() => _mockConfiguration.CollectorTimeout).Returns(60000); // 60 seconds
+            Mock.Arrange(() => _mockConfiguration.PutForDataSend).Returns(false);
 
             _mockConnectionInfo = Mock.Create<IConnectionInfo>();
             Mock.Arrange(() => _mockConnectionInfo.Host).Returns("testhost.com");
             Mock.Arrange(() => _mockConnectionInfo.HttpProtocol).Returns("https");
             Mock.Arrange(() => _mockConnectionInfo.Port).Returns(123);
-
 
             _mockProxy = Mock.Create<IWebProxy>();
             _mockHttpClientWrapper = Mock.Create<IHttpClientWrapper>();
@@ -50,6 +52,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _client.Dispose();
             _mockHttpClientWrapper.Dispose();
         }
+
         [Test]
         public void Send_ReturnsResponse_WhenSendAsyncSucceeds()
         {
@@ -68,10 +71,11 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             // Assert
             Assert.That(response, Is.Not.Null);
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
         [Test]
-        public void SendAsync_ThrowsHttpRequestException_WhenSendAsyncThrows()
+        public void Send_ThrowsHttpRequestException_WhenSendAsyncThrows()
         {
             // Arrange
             var request = CreateHttpRequest();
@@ -83,6 +87,60 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Assert.Throws<HttpRequestException>(() => _client.Send(request));
         }
 
+        [Test]
+        public void Send_AddsCustomHeaders()
+        {
+            // Arrange
+            var request = CreateHttpRequest();
+            request.Headers.Add("Custom-Header", "HeaderValue");
+
+            var mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
+            Mock.Arrange(() => mockHttpResponseMessage.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponseMessage.IsSuccessStatusCode).Returns(true);
+
+            Mock.Arrange(() => _mockHttpClientWrapper.SendAsync(Arg.IsAny<HttpRequestMessage>()))
+                .ReturnsAsync(mockHttpResponseMessage);
+
+            // Act
+            var response = _client.Send(request);
+
+            // Assert
+            Mock.Assert(() => _mockHttpClientWrapper.SendAsync(Arg.Matches<HttpRequestMessage>(req =>
+                req.Headers.Contains("Custom-Header") && req.Headers.GetValues("Custom-Header").First() == "HeaderValue")), Occurs.Once());
+        }
+
+        [Test]
+        public void Send_SetsContentHeaders()
+        {
+            // Arrange
+            var request = CreateHttpRequest();
+
+            var mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
+            Mock.Arrange(() => mockHttpResponseMessage.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponseMessage.IsSuccessStatusCode).Returns(true);
+
+            Mock.Arrange(() => _mockHttpClientWrapper.SendAsync(Arg.IsAny<HttpRequestMessage>()))
+                .ReturnsAsync(mockHttpResponseMessage);
+
+            // Act
+            var response = _client.Send(request);
+
+            // Assert
+            Mock.Assert(() => _mockHttpClientWrapper.SendAsync(Arg.Matches<HttpRequestMessage>(req =>
+                req.Content.Headers.ContentType.MediaType == "application/json" &&
+                req.Content.Headers.ContentLength == request.Content.PayloadBytes.Length)), Occurs.Once());
+        }
+
+        [Test]
+        public void Dispose_DisposesHttpClientWrapper()
+        {
+            // Act
+            _client.Dispose();
+
+            // Assert
+            Mock.Assert(() => _mockHttpClientWrapper.Dispose(), Occurs.Once());
+        }
+
         private IHttpRequest CreateHttpRequest()
         {
             var request = new HttpRequest(_mockConfiguration)
@@ -90,7 +148,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Endpoint = "Test",
                 ConnectionInfo = _mockConnectionInfo,
                 RequestGuid = Guid.NewGuid(),
-                Content = { SerializedData = "{\"Test\"}", ContentType = "application/json"}
+                Content = { SerializedData = "{\"Test\"}", ContentType = "application/json" }
             };
 
             return request;

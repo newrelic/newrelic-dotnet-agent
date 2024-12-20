@@ -96,14 +96,16 @@ namespace NewRelic.Agent.Core.Aggregators
             var eventHarvestData = new EventHarvestData(originalTransactionEvents.Size, originalTransactionEvents.GetAddAttemptsCount());
 
             // if we don't have any events to publish then don't
-            if (aggregatedEvents.Count <= 0)
-                return;
+            var eventCount = aggregatedEvents.Count;
+            if (eventCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents, transactionId);
 
-            var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents, transactionId);
+                HandleResponse(responseStatus, aggregatedEvents);
+            }
 
-            HandleResponse(responseStatus, aggregatedEvents);
+            Log.Finest($"Transaction Event harvest finished. {eventCount} event(s) sent.");
 
-            Log.Finest("Transaction Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

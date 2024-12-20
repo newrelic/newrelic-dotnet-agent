@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 using (responseStream)
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    var responseBody = reader.ReadLineAsync().GetAwaiter().GetResult();
+                    var responseBody = reader.ReadLineAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                     if (responseBody != null)
                     {
