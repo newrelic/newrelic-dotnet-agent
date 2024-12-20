@@ -8,16 +8,15 @@ using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Utilities
 {
+    // Borrowed from https://stackoverflow.com/a/56928748/2078975
+    [NrExcludeFromCodeCoverage]
     public class AsyncHelper
     {
-        private static readonly TaskFactory _taskFactory = new
-            TaskFactory(CancellationToken.None,
-                TaskCreationOptions.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default);
+        private static readonly TaskFactory _taskFactory =
+            new(CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
 
         /// <summary>
-        /// Safely executes an async method synchronously. 
+        /// Safely executes an async method synchronously.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <param name="task"></param>
