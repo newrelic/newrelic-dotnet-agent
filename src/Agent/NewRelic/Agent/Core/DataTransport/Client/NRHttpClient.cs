@@ -9,7 +9,6 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -103,7 +102,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 }
 
                 Log.Finest($"Request({request.RequestGuid}: Sending");
-                var response = AsyncHelper.RunSync(() => _httpClientWrapper.SendAsync(req));
+                var response = _httpClientWrapper.SendAsync(req).ConfigureAwait(false).GetAwaiter().GetResult();
                 Log.Finest($"Request({request.RequestGuid}: Sent");
 
                 var httpResponse = new HttpResponse(request.RequestGuid, response);
