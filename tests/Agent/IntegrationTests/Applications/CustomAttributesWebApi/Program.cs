@@ -19,8 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
 
         static void Main(string[] args)
         {
-            Debugger.Launch();
-
             if (Parser.Default == null)
                 throw new NullReferenceException("CommandLine.Parser.Default");
 
