@@ -8,9 +8,10 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
+
 #if !NETFRAMEWORK
 using System.Net.Http;
-using System.Threading.Tasks;
 #endif
 using System.Net.Sockets;
 
@@ -37,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IScheduler _scheduler;
         private int _connectionAttempt = 0;
         private bool _started;
-        private readonly object _syncObject = new object();
+        private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
         private bool _runtimeConfigurationUpdated = false;
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
@@ -69,7 +70,8 @@ namespace NewRelic.Agent.Core.DataTransport
             if (_started)
                 return;
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 // Second, a thread-safe check inside the blocking code block that ensures we'll never start more than once
                 if (_started)
@@ -82,16 +84,25 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _started = true;
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
         private void Connect()
         {
             try
             {
-                lock (_syncObject)
+                _lockSemaphore.Wait();
+                try
                 {
                     _runtimeConfigurationUpdated = false;
                     _connectionHandler.Connect();
+                }
+                finally
+                {
+                    _lockSemaphore.Release();
                 }
 
                 // If the runtime configuration has changed, the app names have updated, so we schedule a restart
@@ -159,9 +170,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void Disconnect()
         {
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 _connectionHandler.Disconnect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
@@ -169,18 +185,28 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 Disconnect();
                 Connect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
         public T SendDataRequest<T>(string method, params object[] data)
         {
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 return _connectionHandler.SendDataRequest<T>(method, data);
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
