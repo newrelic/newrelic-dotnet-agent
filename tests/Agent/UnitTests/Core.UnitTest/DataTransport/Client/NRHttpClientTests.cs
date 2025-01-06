@@ -6,12 +6,12 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
+using Nito.AsyncEx;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -139,6 +139,37 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             // Assert
             Mock.Assert(() => _mockHttpClientWrapper.Dispose(), Occurs.Once());
+        }
+
+        [Test]
+        public void Send_Does_Not_Deadlock()
+        {
+            using var client = new NRHttpClient(_mockProxy, _mockConfiguration);
+
+            client.SetHttpClientWrapper(new HttpClientWrapper(new HttpClient(), 500));
+
+            var request = new HttpRequest(_mockConfiguration)
+            {
+                Endpoint = "connect",
+                ConnectionInfo = _mockConnectionInfo,
+                RequestGuid = Guid.NewGuid(),
+                Content = { SerializedData = "{\"Test\"}", ContentType = "application/json" }
+            };
+
+            // start a thread that might deadlock - if join times out, we know it deadlocked
+            var thread = new Thread(() => SendWithAsyncContext(client, request));
+            thread.Start();
+            if (!thread.Join(5000)) {
+                Assert.Fail("Deadlock detected. Check logic in NRHttpClient.Send() and HttpClientWrapper.Send() for correct usage of .ConfigureAwait(false)");
+            }
+        }
+
+        private static void SendWithAsyncContext(NRHttpClient client, HttpRequest request)
+        {
+            AsyncContext.Run(() =>
+            {
+                var response = client.Send(request);
+            });
         }
 
         private IHttpRequest CreateHttpRequest()
