@@ -103,6 +103,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Connect()
         {
             try
@@ -173,10 +174,25 @@ namespace NewRelic.Agent.Core.DataTransport
                 ImmediateShutdown();
         }
 
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Disconnect()
         {
             _connectionHandler.Disconnect();
         }
+
+        private void LockAndDisconnect()
+        {
+            _lockSemaphore.Wait();
+            try
+            {
+                Disconnect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
 
         private void Reconnect()
         {
@@ -221,7 +237,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
             Log.Info("Will attempt to reconnect in {0} seconds", retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, retryTime);
+            _scheduler.ExecuteOnce(LockAndConnect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
         }
@@ -271,9 +287,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void OnCleanShutdown(CleanShutdownEvent eventData)
         {
-            Disconnect();
+            LockAndDisconnect();
         }
-
         #endregion Event handlers
     }
 }
