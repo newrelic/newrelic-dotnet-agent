@@ -33,6 +33,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             using var cts = new CancellationTokenSource(_timeoutMilliseconds);
             try
             {
+                // .ConfigureAwait(false) is used to avoid deadlocks.
                 var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false);
                 return new HttpResponseMessageWrapper(httpResponseMessage);
             }

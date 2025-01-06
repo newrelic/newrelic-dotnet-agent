@@ -102,6 +102,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 }
 
                 Log.Finest($"Request({request.RequestGuid}: Sending");
+                // .ConfigureAwait(false) is used to avoid deadlocks.
                 var response = _httpClientWrapper.SendAsync(req).ConfigureAwait(false).GetAwaiter().GetResult();
                 Log.Finest($"Request({request.RequestGuid}: Sent");
 
