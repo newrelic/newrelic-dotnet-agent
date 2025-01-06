@@ -80,9 +80,22 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
                     Connect();
                 else
-                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                    _scheduler.ExecuteOnce(LockAndConnect, TimeSpan.Zero);
 
                 _started = true;
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
+        private void LockAndConnect()
+        {
+            _lockSemaphore.Wait();
+            try
+            {
+                Connect();
             }
             finally
             {
@@ -94,16 +107,8 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                _lockSemaphore.Wait();
-                try
-                {
-                    _runtimeConfigurationUpdated = false;
-                    _connectionHandler.Connect();
-                }
-                finally
-                {
-                    _lockSemaphore.Release();
-                }
+                _runtimeConfigurationUpdated = false;
+                _connectionHandler.Connect();
 
                 // If the runtime configuration has changed, the app names have updated, so we schedule a restart
                 // This uses the existing ScheduleRestart logic so the current Connect can finish and we follow the backoff pattern and don't spam reconnect attempts.
@@ -170,15 +175,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void Disconnect()
         {
-            _lockSemaphore.Wait();
-            try
-            {
-                _connectionHandler.Disconnect();
-            }
-            finally
-            {
-                _lockSemaphore.Release();
-            }
+            _connectionHandler.Disconnect();
         }
 
         private void Reconnect()
