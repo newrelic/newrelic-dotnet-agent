@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.IO;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
@@ -11,7 +12,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     /// </summary>
     public interface IHttpContentWrapper
     {
-        Stream ReadAsStream();
+        Task<Stream> ReadAsStreamAsync();
         IHttpContentHeadersWrapper Headers { get; }
     }
 }

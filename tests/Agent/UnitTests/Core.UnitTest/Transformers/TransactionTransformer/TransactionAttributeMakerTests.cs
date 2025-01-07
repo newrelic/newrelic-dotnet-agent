@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
 
         [SetUp]
@@ -1677,7 +1677,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => environment.GetEnvironmentVariableFromList("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
             localConfig.processHost.displayName = localConfigurationValue;
 
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Unknown));
 
             var transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
 

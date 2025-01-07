@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -70,9 +71,9 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override Task ManualHarvestAsync(string transactionId) => InternalHarvest(transactionId);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override Task HarvestAsync() => InternalHarvest();
 
         protected void InternalHarvest(string transactionId = null)
         {
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
                     _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
                     aggregatedEvents);
 
-                var responseStatus = DataTransportService.Send(modelsCollection, transactionId);
+                var responseStatus = DataTransportService.SendAsync(modelsCollection, transactionId);
 
                 HandleResponse(responseStatus, aggregatedEvents);
             }

@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.TransactionTraceThreshold).Returns(TimeSpan.FromSeconds(5));
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(500);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
         }
 
         [TearDown]

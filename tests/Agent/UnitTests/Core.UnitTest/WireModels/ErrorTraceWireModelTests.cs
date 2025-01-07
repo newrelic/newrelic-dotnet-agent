@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 _dataTransportService = Mock.Create<IDataTransportService>();
                 _logging = new TestUtilities.Logging();
 
-                EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(CreateMockConfiguration(),
+                EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(CreateMockConfiguration(),
                     ConfigurationUpdateSource.Unknown));
 
                 _timestamp = new DateTime(2018, 1, 1, 1, 0, 0);

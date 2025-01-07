@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         [TearDown]
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_SendsModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_NoNewModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void GetLoadedModules_SendError_DuplciatesNotSaved()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            var result = Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
                 .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
 

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -43,9 +44,9 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override Task ManualHarvestAsync(string transactionId) => InternalHarvest(transactionId);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override Task HarvestAsync() => InternalHarvest();
 
         protected void InternalHarvest(string transactionId = null)
         {
@@ -67,7 +68,7 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 LogUnencodedTraceData(traceWireModels);
 
-                var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
+                var responseStatus = DataTransportService.SendAsync(traceWireModels, transactionId);
                 HandleResponse(responseStatus, traceSamples);
             }
 

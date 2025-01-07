@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
@@ -39,7 +40,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _httpClientFactory = httpClientFactory;
         }
 
-        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
+        public async Task<string> SendDataAsync(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
         {
             HttpRequest request = null;
             try
@@ -63,9 +64,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 foreach (var header in _requestHeadersMap)
                     request.Headers.Add(header.Key, header.Value);
 
-                using var response = httpClient.Send(request);
+                using var response = await httpClient.SendAsync(request);
 
-                var responseContent = response.GetContent();
+                var responseContent = await response.GetContentAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {

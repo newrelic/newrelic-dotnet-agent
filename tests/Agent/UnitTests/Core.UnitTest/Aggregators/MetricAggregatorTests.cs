@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
             _metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, _outOfBandMetricSources, _processStatic, scheduler);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         [TearDown]
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_SendsApmRequiredMetricEvenIfNoOtherMetricsExist()
         {
             var sentMetrics = Enumerable.Empty<MetricWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
             _harvestAction();
@@ -148,10 +148,10 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
             _metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, processStatic, scheduler);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             var sentMetrics = Enumerable.Empty<MetricWireModel>();
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
             var maxThreads = 25;
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_SendsReportedMetrics()
         {
             var sentMetrics = Enumerable.Empty<MetricWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
             _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
@@ -260,7 +260,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_AggregatesMetricsBeforeSending()
         {
             var sentMetrics = Enumerable.Empty<MetricWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
             _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
@@ -328,9 +328,9 @@ namespace NewRelic.Agent.Core.Aggregators
         [Test]
         public void PreCleanShutdownEvent_TriggersHarvest()
         {
-            EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
+            EventBus<PreCleanShutdownEvent>.PublishAsync(new PreCleanShutdownEvent());
 
-            Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()), Occurs.Once());
+            Mock.Assert(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]
@@ -338,7 +338,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<MetricWireModel> unsentMetrics = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<MetricWireModel>>((metrics) =>
                 {
                     unsentMetrics = metrics;

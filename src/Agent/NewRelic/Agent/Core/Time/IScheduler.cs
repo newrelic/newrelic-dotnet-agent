@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Time
 {
@@ -14,6 +15,8 @@ namespace NewRelic.Agent.Core.Time
         /// <param name="timeUntilExecution">The delay until execution. Must be non-negative.</param>
         void ExecuteOnce(Action action, TimeSpan timeUntilExecution);
 
+        Task ExecuteOnceAsync(Func<Task> taskFunc, TimeSpan timeUntilExecution);
+
         /// <summary>
         /// Schedules <paramref name="action"/> to execute asynchronously once per <paramref name="timeBetweenExecutions"/>. First execution is delayed until <paramref name="optionalInitialDelay"/>.
         /// 
@@ -24,11 +27,15 @@ namespace NewRelic.Agent.Core.Time
         /// <param name="optionalInitialDelay">A specific time delay before the first execution. Must be non-negative. Defaults to <paramref name="timeBetweenExecutions"/> if unspecified.</param>
         void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
 
+        void ExecuteEveryAsync(Func<Task> task, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
+
         /// <summary>
         /// Removes any scheduled recurrences of <paramref name="action"/>. Will not stop an action that has been scheduled via <see cref="ExecuteOnce"/>. If the action is currently executing and <paramref name="timeToWaitForInProgressAction"/> is not null, will block until the action is finished or throw if the timeout is reached.
         /// </summary>
         /// <param name="action">The action to stop executing repeatedly.</param>
         /// <param name="timeToWaitForInProgressAction"></param>
         void StopExecuting(Action action, TimeSpan? timeToWaitForInProgressAction = null);
+
+        Task StopExecutingAsync(Func<Task> task, TimeSpan? timeToWaitForInProgressAction = null);
     }
 }

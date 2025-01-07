@@ -16,23 +16,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
+
 namespace NewRelic.Agent.Core.DataTransport
 {
     public interface IDataTransportService
     {
-        IEnumerable<CommandModel> GetAgentCommands();
-        void SendCommandResults(IDictionary<string, object> commandResults);
-        void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData);
-        DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId);
-        DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId);
-        DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId);
-        DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable, string transactionId);
-        DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId);
-        DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId);
-        DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId);
-        DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId);
+        Task<IEnumerable<CommandModel>> GetAgentCommandsAsync();
+        Task SendCommandResultsAsync(IDictionary<string, object> commandResults);
+        Task SendThreadProfilingDataAsync(IEnumerable<ThreadProfilingModel> threadProfilingData);
+        Task<DataTransportResponseStatus> SendAsync(IEnumerable<TransactionTraceWireModel> transactionSampleDatas,
+            string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(IEnumerable<MetricWireModel> metrics, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<ErrorEventWireModel> errorEvents, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<ISpanEventWireModel> enumerable, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(IEnumerable<CustomEventWireModel> customEvents, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(LogEventWireModelCollection loggingEvents, string transactionId);
+        Task<DataTransportResponseStatus> SendAsync(LoadedModuleWireModelCollection loadedModules, string transactionId);
     }
 
     public class DataTransportService : ConfigurationBasedService, IDataTransportService
@@ -52,67 +58,67 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Public API
 
-        public IEnumerable<CommandModel> GetAgentCommands()
+        public async Task<IEnumerable<CommandModel>> GetAgentCommandsAsync()
         {
-            var response = TrySendDataRequest<List<CommandModel>>("get_agent_commands", _configuration.AgentRunId);
+            var response = await TrySendDataRequestAsync<List<CommandModel>>("get_agent_commands", _configuration.AgentRunId).ConfigureAwait(false);
             if (response.Status != DataTransportResponseStatus.RequestSuccessful || response.ReturnValue == null)
                 return Enumerable.Empty<CommandModel>();
 
             return response.ReturnValue;
         }
 
-        public void SendCommandResults(IDictionary<string, object> commandResults)
+        public async Task SendCommandResultsAsync(IDictionary<string, object> commandResults)
         {
-            TrySendDataRequest("agent_command_results", _configuration.AgentRunId, commandResults);
+            await TrySendDataRequestAsync("agent_command_results", _configuration.AgentRunId, commandResults).ConfigureAwait(false);
         }
 
-        public void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData)
+        public async Task SendThreadProfilingDataAsync(IEnumerable<ThreadProfilingModel> threadProfilingData)
         {
-            TrySendDataRequest("profile_data", _configuration.AgentRunId, threadProfilingData);
+            await TrySendDataRequestAsync("profile_data", _configuration.AgentRunId, threadProfilingData).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
         {
-            return TrySendDataRequest("analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents);
+            return await TrySendDataRequestAsync("analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
         {
-            return TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
+            return await TrySendDataRequestAsync("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
         {
-            return TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
+            return await TrySendDataRequestAsync("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(IEnumerable<CustomEventWireModel> customEvents, string transactionId)
         {
-            return TrySendDataRequest("custom_event_data", _configuration.AgentRunId, customEvents);
+            return await TrySendDataRequestAsync("custom_event_data", _configuration.AgentRunId, customEvents).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId)
         {
             _ = transactionId;
-            return TrySendDataRequest("transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
+            return await TrySendDataRequestAsync("transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId)
         {
-            return TrySendDataRequest("error_data", _configuration.AgentRunId, errorTraceDatas);
+            return await TrySendDataRequestAsync("error_data", _configuration.AgentRunId, errorTraceDatas).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId)
         {
-            return TrySendDataRequest("sql_trace_data", sqlTraceWireModels);
+            return await TrySendDataRequestAsync("sql_trace_data", sqlTraceWireModels).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(LogEventWireModelCollection loggingEvents, string transactionId)
         {
-            return TrySendDataRequest("log_event_data", loggingEvents);
+            return await TrySendDataRequestAsync("log_event_data", loggingEvents).ConfigureAwait(false);
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
             if (!metrics.Any())
             {
@@ -130,7 +136,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
 
-            var status = TrySendDataRequest("metric_data", model);
+            var status = await TrySendDataRequestAsync("metric_data", model).ConfigureAwait(false);
 
             if (status == DataTransportResponseStatus.RequestSuccessful)
                 _lastMetricSendTime = endTime;
@@ -138,14 +144,14 @@ namespace NewRelic.Agent.Core.DataTransport
             return status;
         }
 
-        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId)
+        public async Task<DataTransportResponseStatus> SendAsync(LoadedModuleWireModelCollection loadedModules, string transactionId)
         {
             if (loadedModules.LoadedModules.Count < 1)
             {
                 return DataTransportResponseStatus.RequestSuccessful;
             }
 
-            return TrySendDataRequest("update_loaded_modules", loadedModules);
+            return await TrySendDataRequestAsync("update_loaded_modules", loadedModules).ConfigureAwait(false);
         }
 
         #endregion Public API
@@ -153,18 +159,18 @@ namespace NewRelic.Agent.Core.DataTransport
         #region Private helpers
 
 
-        private DataTransportResponseStatus TrySendDataRequest(string method, params object[] data)
+        private async Task<DataTransportResponseStatus> TrySendDataRequestAsync(string method, params object[] data)
         {
-            var response = TrySendDataRequest<object>(method, data);
+            var response = await TrySendDataRequestAsync<object>(method, data).ConfigureAwait(false);
             return response.Status;
         }
 
-        private DataTransportResponse<T> TrySendDataRequest<T>(string method, params object[] data)
+        private async Task<DataTransportResponse<T>> TrySendDataRequestAsync<T>(string method, params object[] data)
         {
             var startTime = DateTime.UtcNow;
             try
             {
-                var returnValue = _connectionManager.SendDataRequest<T>(method, data);
+                var returnValue = await _connectionManager.SendDataRequestAsync<T>(method, data).ConfigureAwait(false);
                 return new DataTransportResponse<T>(DataTransportResponseStatus.RequestSuccessful, returnValue);
             }
             catch (HttpException ex)
@@ -204,14 +210,14 @@ namespace NewRelic.Agent.Core.DataTransport
         private static void Shutdown(string message)
         {
             Log.Info("Shutting down: {0}", message);
-            EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
+            EventBus<KillAgentEvent>.PublishAsync(new KillAgentEvent());
         }
 
         private static void Restart()
         {
             if(!Agent.IsAgentShuttingDown)
             {
-                EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
+                EventBus<RestartAgentEvent>.PublishAsync(new RestartAgentEvent());
             }
             else
             {

@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             {
             }
 
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.That(wasCalled, Is.False);
         }
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             var wasCalled = false;
             using (new EventSubscription<object>(_ => wasCalled = true))
             {
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
             }
 
             Assert.That(wasCalled, Is.True);
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             using (new EventSubscription<object>(callback))
             using (new EventSubscription<object>(callback))
             {
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
             }
 
             Assert.That(callCount, Is.EqualTo(1));

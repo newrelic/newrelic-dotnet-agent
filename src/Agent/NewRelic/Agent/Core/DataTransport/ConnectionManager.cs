@@ -14,6 +14,7 @@ using System.Threading;
 using System.Net.Http;
 #endif
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -109,7 +110,7 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
                 _runtimeConfigurationUpdated = false;
-                _connectionHandler.Connect();
+                _connectionHandler.ConnectAsync();
 
                 // If the runtime configuration has changed, the app names have updated, so we schedule a restart
                 // This uses the existing ScheduleRestart logic so the current Connect can finish and we follow the backoff pattern and don't spam reconnect attempts.
@@ -177,7 +178,7 @@ namespace NewRelic.Agent.Core.DataTransport
         // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Disconnect()
         {
-            _connectionHandler.Disconnect();
+            _connectionHandler.DisconnectAsync();
         }
 
         private void LockAndDisconnect()
@@ -196,7 +197,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void Reconnect()
         {
-            EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
+            EventBus<StopHarvestEvent>.PublishAsync(new StopHarvestEvent());
 
             _lockSemaphore.Wait();
             try
@@ -210,12 +211,12 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        public T SendDataRequest<T>(string method, params object[] data)
+        public async Task<T> SendDataRequestAsync<T>(string method, params object[] data)
         {
-            _lockSemaphore.Wait();
+            await _lockSemaphore.WaitAsync();
             try
             {
-                return _connectionHandler.SendDataRequest<T>(method, data);
+                return await _connectionHandler.SendDataRequestAsync<T>(method, data).ConfigureAwait(false);
             }
             finally
             {
@@ -230,7 +231,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private static void ImmediateShutdown()
         {
             Log.Info("Shutting down the agent.");
-            EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
+            EventBus<KillAgentEvent>.PublishAsync(new KillAgentEvent());
         }
 
         private void ScheduleRestart()

@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>(), Arg.IsAny<string>());
+            return service.SendAsync(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>(), Arg.IsAny<string>());
         }
 
         protected override string GetExpectedDestinationAreaName()
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         protected override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
         {
-            return service.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>());
+            return service.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>());
         }
 
         protected override string GetExpectedDestinationAreaName()
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsSuccessful_IfRequestSuccessful()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Returns<string, object[]>(null);
 
             var result = ExecuteRequest(_dataTransportService);
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase((HttpStatusCode)555, DataTransportResponseStatus.Discard)]
         public void SendXyz_ReturnsCorrectRetention_IfHttpException(HttpStatusCode statusCode, DataTransportResponseStatus expected)
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
             var actual = ExecuteRequest(_dataTransportService);
@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsCommunicationError_IfSocketException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new SocketException(-1));
 
             var result = ExecuteRequest(_dataTransportService);
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsCommunicationError_IfWebException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new WebException());
 
             var result = ExecuteRequest(_dataTransportService);
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsCorrectRetention_IfOperationCanceledException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new OperationCanceledException());
 
             var result = ExecuteRequest(_dataTransportService);
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsOtherError_IfOtherException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new Exception());
 
             var result = ExecuteRequest(_dataTransportService);
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase(HttpStatusCode.Conflict)]
         public void SendXyz_PublishesRestartAgentEvent_ForCertainHttpStatusCodes(HttpStatusCode statusCode)
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
             using (new EventExpectation<RestartAgentEvent>())
@@ -199,19 +199,19 @@ namespace NewRelic.Agent.Core.DataTransport
             _connectionManager = new ConnectionManager(_connectionHandler, _scheduler);
             _disposableCollection.Add(_dataTransportService = new DataTransportService(_connectionManager, _dateTimeStatic, _agentHealthReporter));
 
-            Mock.Arrange(() => _connectionHandler.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionHandler.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
             ExecuteRequest(_dataTransportService);
 
-            Mock.Assert(() => _connectionHandler.Disconnect(), Occurs.Once());
-            Mock.Assert(() => _connectionHandler.Connect(), Occurs.Once());
+            Mock.Assert(() => _connectionHandler.DisconnectAsync(), Occurs.Once());
+            Mock.Assert(() => _connectionHandler.ConnectAsync(), Occurs.Once());
         }
 
         [Test]
         public void SendXyz_PublishesShutdownAgentEvent_IfForHttpStatusCodeGone()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(HttpStatusCode.Gone, null));
 
             using (new EventExpectation<KillAgentEvent>())
@@ -225,7 +225,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var exception = new HttpException(HttpStatusCode.InternalServerError, "Internal Server Error");
 
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(exception);
 
             ExecuteRequest(_dataTransportService);
@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test, TestCaseSource(nameof(ExceptionsThatShouldTriggerSupportabilityMetrics))]
         public void SendXyz_GenerateCollectorErrorExceptionSupportabilityMetrics_ForExceptions(Exception exception)
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(exception);
 
             ExecuteRequest(_dataTransportService);

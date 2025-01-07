@@ -413,12 +413,12 @@ namespace NewRelic.Agent.Core.Errors
                 config.errorCollector.expectedStatusCodes = expectedStatusCodes;
             }
 
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+            EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(config));
         }
 
         private void SetupErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
         {
-            EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
+            EventBus<ErrorGroupCallbackUpdateEvent>.PublishAsync(new ErrorGroupCallbackUpdateEvent(callback));
         }
     }
 }

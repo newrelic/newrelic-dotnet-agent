@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             _mockHttpResponseMessage.Arrange(message => message.Content).Returns((IHttpContentWrapper)null);
 
-            var result = _httpResponse.GetContent();
+            var result = _httpResponse.GetContentAsync();
 
             Assert.That(result, Is.EqualTo(Constants.EmptyResponseBody));
         }
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
             mockContent.Arrange(content => content.ReadAsStream()).Returns(stream);
 
-            var result = _httpResponse.GetContent();
+            var result = _httpResponse.GetContentAsync();
 
             Assert.That(result, Is.EqualTo(TestResponseBody));
         }
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             mockHeaders.Arrange(headers => headers.ContentEncoding).Returns(new List<string> { "gzip" });
             mockContent.Arrange(content => content.ReadAsStream()).Returns(compressedStream);
 
-            var result = _httpResponse.GetContent();
+            var result = _httpResponse.GetContentAsync();
 
             Assert.That(result, Is.EqualTo(TestResponseBody));
         }

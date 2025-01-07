@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
         [Test]
         public void publishing_without_subscribing_does_not_throw_exception()
         {
-            Assert.DoesNotThrow(() => EventBus<object>.Publish(new object()));
+            Assert.DoesNotThrow(() => EventBus<object>.PublishAsync(new object()));
         }
 
         [Test]
@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             bool wasCalled = false;
             Action<object> callback = _ => wasCalled = true;
             EventBus<object>.Subscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
             EventBus<object>.Unsubscribe(callback);
 
             Assert.That(wasCalled, Is.True);
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             Action<object> secondCallback = _ => secondWasCalled = true;
             EventBus<object>.Subscribe(firstCallback);
             EventBus<object>.Subscribe(secondCallback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
             EventBus<object>.Unsubscribe(firstCallback);
             EventBus<object>.Unsubscribe(secondCallback);
 
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             Action<object> callback = _ => wasCalled = true;
             EventBus<object>.Subscribe(callback);
             EventBus<object>.Unsubscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.That(wasCalled, Is.False);
         }
@@ -65,9 +65,9 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             int callCount = 0;
             Action<object> callback = _ => ++callCount;
             EventBus<object>.Subscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
             EventBus<object>.Unsubscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.That(callCount, Is.EqualTo(1));
         }
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             bool wasCalled = false;
             Action<object> callback = _ => wasCalled = true;
             EventBus<object>.Subscribe(callback);
-            EventBus<string>.Publish(string.Empty);
+            EventBus<string>.PublishAsync(string.Empty);
             EventBus<object>.Unsubscribe(callback);
 
             Assert.That(wasCalled, Is.False);
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             Action<object> callback = _ => ++callCount;
             EventBus<object>.Subscribe(callback);
             EventBus<object>.Subscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
             EventBus<object>.Unsubscribe(callback);
 
             Assert.That(callCount, Is.EqualTo(1));
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             EventBus<object>.Subscribe(callback);
             EventBus<object>.Subscribe(callback);
             EventBus<object>.Unsubscribe(callback);
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.That(wasCalled, Is.False);
         }
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             using (new EventSubscription<object>(_ => { throw new Exception(); }))
             using (new EventSubscription<object>(_ => secondCalled = true))
             {
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
             }
 
             Assert.Multiple(() =>
@@ -150,7 +150,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             using (var logger = new TestUtilities.Logging())
             using (new EventSubscription<object>(_ => { throw new Exception(); }))
             {
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
 
                 Assert.That(logger.ErrorCount, Is.EqualTo(1));
             }

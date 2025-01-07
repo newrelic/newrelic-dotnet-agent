@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var internalTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => internalTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(internalTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(internalTransaction));
 
             var expectedTimeSpan = TimeSpan.FromMilliseconds(1);
             Mock.Assert(() => internalTransaction.ForceChangeDuration(expectedTimeSpan));
@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(2)));
         }
@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(3)));
         }
@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(5)));
         }
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => mockedTransaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
             Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => mockedTransaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
         }
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => mockedTransaction.Finish());
         }
@@ -206,7 +206,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
         }
@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Never());
         }
@@ -252,7 +252,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()));
         }
@@ -275,7 +275,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+            EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(mockedTransaction));
 
             Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()), Occurs.Never());
         }

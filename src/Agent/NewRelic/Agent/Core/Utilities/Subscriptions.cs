@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -11,22 +13,21 @@ namespace NewRelic.Agent.Core.Utilities
     /// </summary>
     public class Subscriptions : IDisposable
     {
-        private readonly ICollection<IDisposable> _subscriptions = new List<IDisposable>();
+        private readonly ConcurrentBag<IDisposable> _subscriptions = new();
 
         public void Add<T>(Action<T> callback)
         {
-            lock (_subscriptions)
-            {
-                _subscriptions.Add(new EventSubscription<T>(callback));
-            }
+            _subscriptions.Add(new EventSubscription<T>(callback));
         }
 
         public void Add<TRequest, TResponse>(RequestBus<TRequest, TResponse>.RequestHandler requestHandler)
         {
-            lock (_subscriptions)
-            {
-                _subscriptions.Add(new RequestSubscription<TRequest, TResponse>(requestHandler));
-            }
+            _subscriptions.Add(new RequestSubscription<TRequest, TResponse>(requestHandler));
+        }
+
+        public void AddAsync<T>(Func<Task<T>> taskFunc)
+        {
+            _subscriptions(new EventSubscriptionAsync<T>(taskFunc));
         }
 
         public void Dispose()

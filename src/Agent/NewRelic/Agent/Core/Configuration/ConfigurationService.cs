@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Configuration
             UpdateLogLevel(previousLogLevel);
 
             var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
-            EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(configurationUpdatedEvent);
         }
 
         private void OnGetCurrentConfiguration(GetCurrentConfigurationRequest eventData, RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)

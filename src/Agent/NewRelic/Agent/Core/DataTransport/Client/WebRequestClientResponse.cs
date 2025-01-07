@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _response = response;
         }
 
-        public string GetContent()
+        public async Task<string> GetContentAsync()
         {
             try
             {
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 using (responseStream)
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    var responseBody = reader.ReadLine();
+                    var responseBody = await reader.ReadToEndAsync().ConfigureAwait(false);
                     return responseBody ?? Constants.EmptyResponseBody;
                 }
             }

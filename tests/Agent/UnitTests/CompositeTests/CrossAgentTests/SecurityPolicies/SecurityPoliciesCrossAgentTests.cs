@@ -146,14 +146,14 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             var securityPolicies = JsonConvert.SerializeObject(testData.SecurityPolicies);
 
-            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+            Mock.Arrange(() => _collectorWire.SendDataAsync("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns("{'return_value': { 'redirect_host': '', 'security_policies': " + securityPolicies + "}}");
         }
 
         private void InitializeConnectResponse()
         {
             var jsonString = JsonConvert.SerializeObject(_compositeTestAgent.ServerConfiguration);
-            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+            Mock.Arrange(() => _collectorWire.SendDataAsync("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns((Func<string, ConnectionInfo, string, string>)((method, connectionInfo, serializedData) =>
                 {
                     _connectRawData = serializedData;
@@ -165,7 +165,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             try
             {
-                _connectionHandler.Connect();
+                _connectionHandler.ConnectAsync();
             }
             catch (SecurityPoliciesValidationException)
             {

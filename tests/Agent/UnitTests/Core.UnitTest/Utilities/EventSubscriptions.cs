@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 subscriptions.Add<object>(_ => wasCalled = true);
             }
 
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.That(wasCalled, Is.False);
         }
@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
                 subscriptions.Add<object>(_ => wasCalled2 = true);
             }
 
-            EventBus<object>.Publish(new object());
+            EventBus<object>.PublishAsync(new object());
 
             Assert.Multiple(() =>
             {
@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             {
                 subscriptions.Add<object>(_ => wasCalled1 = true);
                 subscriptions.Add<object>(_ => wasCalled2 = true);
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
             }
 
             Assert.Multiple(() =>
@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             using (var subscriptions = new Subscriptions())
             {
                 subscriptions.Add<object>(null);
-                EventBus<object>.Publish(new object());
+                EventBus<object>.PublishAsync(new object());
             }
         }
 

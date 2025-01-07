@@ -8,6 +8,7 @@ using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Time
 {
@@ -21,6 +22,7 @@ namespace NewRelic.Agent.Core.Time
         private readonly DisposableCollection<TimerStatus> _oneTimeTimers = new DisposableCollection<TimerStatus>();
 
         private readonly IDictionary<Action, Timer> _recurringTimers = new Dictionary<Action, Timer>();
+        private readonly IDictionary<Func<Task>, Timer> _recurringTimersAsync = new Dictionary<Func<Task>, Timer>();
 
         #region Public API
 
@@ -65,6 +67,49 @@ namespace NewRelic.Agent.Core.Time
             }
         }
 
+        public async Task ExecuteOnceAsync(Func<Task> taskFunc, TimeSpan timeUntilExecution)
+        {
+            if (timeUntilExecution < TimeSpan.Zero)
+                throw new ArgumentException("Must be non-negative", "timeUntilExecution");
+
+            await _lockSemaphore.WaitAsync();
+            try
+            {
+                // Removes processed oneTimeTimers
+                var timersToRemove = new List<TimerStatus>();
+                for (var x = 0; x < _oneTimeTimers.Count; x++)
+                {
+                    var execution = _oneTimeTimers[x];
+                    if (execution.HasRun)
+                    {
+                        timersToRemove.Add(execution);
+                    }
+                }
+
+                foreach (var ttr in timersToRemove)
+                {
+                    _oneTimeTimers.Remove(ttr);
+                }
+
+                // Create a new timer that will mark itself as complete after it executes. The timer needs to be stored somewhere so that it won't be GC'd before it runs.
+                var newExecution = new TimerStatus();
+                var flaggingTaskFunc = new Func<Task>(async () =>
+                {
+                    await taskFunc().ConfigureAwait(false);
+                    newExecution.HasRun = true;
+                });
+
+                var timer = CreateExecuteOnceAsyncTimer(flaggingTaskFunc, timeUntilExecution);
+                newExecution.Timer = timer;
+
+                _oneTimeTimers.Add(newExecution);
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
         public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
         {
             if (timeBetweenExecutions < TimeSpan.Zero)
@@ -89,10 +134,37 @@ namespace NewRelic.Agent.Core.Time
             }
         }
 
+        public void ExecuteEveryAsync(Func<Task> task, TimeSpan timeBetweenExecutions,
+            TimeSpan? optionalInitialDelay = null)
+        {
+            if (timeBetweenExecutions < TimeSpan.Zero)
+                throw new ArgumentException("Must be non-negative", "timeBetweenExecutions");
+
+            _lockSemaphore.Wait();
+            try
+            {
+                var existingTimer = _recurringTimersAsync.GetValueOrDefault(task);
+                existingTimer?.Dispose();
+
+                var timer = CreateExecuteEveryAsyncTimer(task, timeBetweenExecutions, optionalInitialDelay);
+                _recurringTimersAsync[task] = timer;
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
         public static Timer CreateExecuteOnceTimer(Action action)
         {
             return PrivateCreateExecuteOnceTimer(action, DisablePeriodicExecution);
         }
+
+        private Timer CreateExecuteOnceAsyncTimer(Func<Task> taskFunc, TimeSpan timeUntilExecution)
+        {
+            return PrivateCreateExecuteOnceAsyncTimer(taskFunc, timeUntilExecution);
+        }
+
 
         /// <summary>
         /// Schedules <paramref name="action"/> to execute asynchronously a single time after waiting for <paramref name="timeUntilExecution"/>.
@@ -114,6 +186,17 @@ namespace NewRelic.Agent.Core.Time
                 using (new IgnoreWork())
                     action.CatchAndLog();
             });
+            return new Timer(ignoreWorkAction, null, timeUntilExecution, DisablePeriodicExecution);
+        }
+
+        private static Timer PrivateCreateExecuteOnceAsyncTimer(Func<Task> taskFunc, TimeSpan timeUntilExecution)
+        {
+            var ignoreWorkAction = new TimerCallback(async void (_) =>
+            {
+                using (new IgnoreWork())
+                    await taskFunc().ConfigureAwait(false); // TODO: implement .CatchAndLog();
+            });
+
             return new Timer(ignoreWorkAction, null, timeUntilExecution, DisablePeriodicExecution);
         }
 
@@ -177,6 +260,58 @@ namespace NewRelic.Agent.Core.Time
             return timer;
         }
 
+        public static Timer CreateExecuteEveryAsyncTimer(Func<Task> task, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
+        {
+            var initialDelay = optionalInitialDelay ?? timeBetweenExecutions;
+
+            if (timeBetweenExecutions < TimeSpan.Zero)
+                throw new ArgumentException("Must be non-negative", "timeBetweenExecutions");
+            if (initialDelay < TimeSpan.Zero)
+                throw new ArgumentException("Must be non-negative", "optionalInitialDelay");
+            
+            Timer timer = null;
+            var ignoreWorkAction = new TimerCallback(async void (_) =>
+            {
+                try
+                {
+                    timer.Change(DisablePeriodicExecution, DisablePeriodicExecution);
+
+                    using (new IgnoreWork())
+                        await task().ConfigureAwait(false);
+
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, "CreateExecuteEveryTimer() failed");
+                }
+                finally
+                {
+                    try
+                    {
+                        // Change timer in finally so its enabled even if there was an exception
+                        // while executing Action. 
+                        timer.Change(timeBetweenExecutions, DisablePeriodicExecution);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // This can happen when the agent shuts down. The callback for a timer can still
+                        // called after the timer has been disposed because it was already queue up. Even
+                        // if you used the other Dispose overload that will attempt to wait for the callback
+                        // to complete the documentation mentions that there is a race condition that could
+                        // allow the callback to still execute. This catch block is here to prevent the
+                        // instrumented application from crashing.
+                    }
+                }
+
+            });
+
+            // Initialize the timer with an execution time of Never so that we can guarantee `timer` is assign before the timer ticks the first time
+            timer = new Timer(ignoreWorkAction, null, DisablePeriodicExecution, DisablePeriodicExecution);
+            timer.Change(initialDelay, DisablePeriodicExecution);
+
+            return timer;
+        }
+
         public void StopExecuting(Action action, TimeSpan? timeToWaitForInProgressAction = null)
         {
             _lockSemaphore.Wait();
@@ -187,6 +322,36 @@ namespace NewRelic.Agent.Core.Time
                     return;
 
                 _recurringTimers.Remove(action);
+
+                if (timeToWaitForInProgressAction == null)
+                {
+                    existingTimer.Dispose();
+                }
+                else
+                {
+                    var waitHandle = new ManualResetEvent(false);
+                    existingTimer.Dispose(waitHandle);
+
+                    // We intentionally allow timeout exceptions to bubble up
+                    waitHandle.WaitOne(timeToWaitForInProgressAction.Value);
+                }
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
+        public async Task StopExecutingAsync(Func<Task> taskFunc, TimeSpan? timeToWaitForInProgressAction = null)
+        {
+            await _lockSemaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                var existingTimer = _recurringTimersAsync.GetValueOrDefault(taskFunc);
+                if (existingTimer == null)
+                    return;
+
+                _recurringTimersAsync.Remove(taskFunc);
 
                 if (timeToWaitForInProgressAction == null)
                 {

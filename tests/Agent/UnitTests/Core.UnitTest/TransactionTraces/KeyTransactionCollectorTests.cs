@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
                 { _keyTransactionName, _keyTransactionApdexT }
             });
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(500);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
         }
 
         [TearDown]

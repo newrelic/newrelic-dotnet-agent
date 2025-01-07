@@ -47,7 +47,7 @@ namespace CompositeTests
 
             var scheduler = _compositeTestAgent.Container.Resolve<IScheduler>();
 
-            EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
+            EventBus<RestartAgentEvent>.PublishAsync(new RestartAgentEvent());
 
             Mock.Assert(() => scheduler.StopExecuting(Arg.IsAny<Action>(), TimeSpan.FromSeconds(2)), Occurs.Exactly(numExistingAggregators));
 

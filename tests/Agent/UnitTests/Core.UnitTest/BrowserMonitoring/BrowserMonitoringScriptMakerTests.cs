@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             UpdateDefaultConfiguration();
             Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
             var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
 
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             UpdateDefaultConfiguration();
             Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
             var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
 
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             UpdateDefaultConfiguration();
             Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
             var transaction = BuildTestTransaction(applicationTime: TimeSpan.FromSeconds(2));
 

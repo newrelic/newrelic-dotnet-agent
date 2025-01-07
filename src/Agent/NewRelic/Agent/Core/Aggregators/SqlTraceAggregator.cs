@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -45,9 +46,9 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override Task ManualHarvestAsync(string transactionId) => InternalHarvest(transactionId);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override Task HarvestAsync() => InternalHarvest();
 
         protected void InternalHarvest(string transactionId = null)
         {
@@ -70,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var traceCount = slowestTraces.Count;
             if (traceCount > 0)
             {
-                var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
+                var responseStatus = DataTransportService.SendAsync(slowestTraces, transactionId);
                 HandleResponse(responseStatus, slowestTraces);
             }
 

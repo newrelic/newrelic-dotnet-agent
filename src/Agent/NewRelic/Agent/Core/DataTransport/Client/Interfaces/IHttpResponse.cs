@@ -11,6 +11,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     {
         bool IsSuccessStatusCode { get; }
         HttpStatusCode StatusCode { get; }
-        string GetContent();
+        Task<string> GetContentAsync();
     }
 }

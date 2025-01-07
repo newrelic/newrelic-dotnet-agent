@@ -3,6 +3,7 @@
 
 using System;
 using System.Net;
+using System.Threading.Tasks;
 #if !NETFRAMEWORK
 using System.Net.Http;
 #endif
@@ -24,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _proxy = proxy;
         }
 
-        public abstract IHttpResponse Send(IHttpRequest request);
+        public abstract Task<IHttpResponse> SendAsync(IHttpRequest request);
 
         public virtual void Dispose()
         {
@@ -35,7 +36,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
 
-        protected void DiagnoseConnectionError(string host)
+        protected async Task DiagnoseConnectionErrorAsync(string host)
         {
             _diagnoseConnectionError = false;
             try
@@ -50,10 +51,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Log.Error(ex, "Unable to resolve host name \"{0}\"", host);
             }
 
-            TestConnection();
+            await TestConnectionAsync();
         }
 
-        protected void TestConnection()
+        protected async Task TestConnectionAsync()
         {
             const string testAddress = "http://www.google.com";
             try
@@ -64,9 +65,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     wc.Proxy = _proxy;
 
                     wc.DownloadString(testAddress);
+                    await Task.CompletedTask;
                 }
 #else
-                _lazyHttpClient.Value.GetAsync(testAddress).ConfigureAwait(false).GetAwaiter().GetResult();
+                await _lazyHttpClient.Value.GetAsync(testAddress).ConfigureAwait(false);
 #endif
                 Log.Info("Connection test to \"{0}\" succeeded", testAddress);
             }

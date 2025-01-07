@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Configuration
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
 
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(2));
         }
@@ -30,11 +30,11 @@ namespace NewRelic.Agent.Core.Configuration
             var subscriber = new ConfigurationSubscriber();
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(3);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(3));
         }
@@ -45,11 +45,11 @@ namespace NewRelic.Agent.Core.Configuration
             var subscriber = new ConfigurationSubscriber();
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(1);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.That(subscriber.Configuration.ConfigurationVersion, Is.EqualTo(2));
         }

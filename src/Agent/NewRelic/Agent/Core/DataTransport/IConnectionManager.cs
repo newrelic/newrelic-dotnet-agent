@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public interface IConnectionManager : IDisposable
     {
-        T SendDataRequest<T>(string method, params object[] data);
+        Task<T> SendDataRequestAsync<T>(string method, params object[] data);
 
         void AttemptAutoStart();
     }

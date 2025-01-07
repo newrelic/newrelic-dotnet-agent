@@ -37,7 +37,7 @@ namespace CompositeTests
             var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
-            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+            Mock.Arrange(() => _collectorWire.SendDataAsync("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns("{'return_value': { 'redirect_host': ''}}");
 
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
@@ -58,7 +58,7 @@ namespace CompositeTests
         {
             ConnectRespondsWithEventHarvestConfig(null);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
@@ -72,7 +72,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
@@ -86,7 +86,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldGenerateSupportabilityMetric(MetricNames.SupportabilityEventHarvestReportPeriod, 5);
         }
@@ -100,7 +100,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
@@ -119,7 +119,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
@@ -137,7 +137,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            _connectionHandler.ConnectAsync();
 
             ShouldGenerateSupportabilityMetric(MetricNames.SupportabilityEventHarvestReportPeriod, 5000);
             ShouldGenerateSupportabilityMetric(expectedMetricName, 10);
@@ -161,7 +161,7 @@ namespace CompositeTests
             }
 
             var serverConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(_compositeTestAgent.ServerConfiguration);
-            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+            Mock.Arrange(() => _collectorWire.SendDataAsync("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns($"{{'return_value': {serverConfigJson} }}");
         }
 

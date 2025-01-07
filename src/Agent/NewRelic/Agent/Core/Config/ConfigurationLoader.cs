@@ -432,7 +432,7 @@ namespace NewRelic.Agent.Core.Config
         }
         public static void PublishDeserializedEvent(configuration config)
         {
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+            EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(config));
         }
 
         /// <summary>

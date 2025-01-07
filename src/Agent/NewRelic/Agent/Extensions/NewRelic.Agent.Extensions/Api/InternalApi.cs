@@ -281,7 +281,7 @@ namespace NewRelic.Agent.Api
         /// </code></example>
         public static void StartAgent()
         {
-            _agentApiImplementation?.StartAgent();
+            _agentApiImplementation?.StartAgentAsync();
         }
 
         /// <summary> Sets the name of the application to <paramref name="applicationName"/>. At least one
@@ -298,7 +298,7 @@ namespace NewRelic.Agent.Api
         /// <param name="applicationName3"> (Optional) The third application name. </param>
         public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
-            _agentApiImplementation?.SetApplicationName(applicationName, applicationName2, applicationName3);
+            _agentApiImplementation?.SetApplicationNameAsync(applicationName, applicationName2, applicationName3);
         }
 
         /// <summary> Gets the request metadata for the current transaction. </summary>
@@ -327,7 +327,7 @@ namespace NewRelic.Agent.Api
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
         public static void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
         {
-            _agentApiImplementation?.SetErrorGroupCallback(callback);
+            _agentApiImplementation?.SetErrorGroupCallbackAsync(callback);
         }
 
         /// <summary> Sets the method that will be invoked to define the token count of completion.
@@ -338,7 +338,7 @@ namespace NewRelic.Agent.Api
         /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
         public static void SetLlmTokenCountingCallback(Func<string, string, int> callback)
         {
-            _agentApiImplementation?.SetLlmTokenCountingCallback(callback);
+            _agentApiImplementation?.SetLlmTokenCountingCallbackAsync(callback);
         }
 
         public static void RecordLlmFeedbackEvent(string traceId, object rating, string category, string message, IDictionary<string, object>? metadata)

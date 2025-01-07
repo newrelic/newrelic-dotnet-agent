@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
 
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.Multiple(() =>
             {
@@ -44,11 +44,11 @@ namespace NewRelic.Agent.Core.Utilities
             var testService = new TestConfigurationBasedService();
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(3);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.Multiple(() =>
             {
@@ -63,11 +63,11 @@ namespace NewRelic.Agent.Core.Utilities
             var testService = new TestConfigurationBasedService();
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(2);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(1);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
 
             Assert.Multiple(() =>
             {

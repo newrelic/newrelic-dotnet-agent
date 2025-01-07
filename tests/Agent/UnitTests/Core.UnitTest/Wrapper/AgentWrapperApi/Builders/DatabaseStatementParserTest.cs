@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                     new configurationAdd() {key = "SqlStatementCacheCapacity", value = capacity.ToString()}
                 }
             };
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(newConfiguration));
+            EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(newConfiguration));
         }
     }
 }

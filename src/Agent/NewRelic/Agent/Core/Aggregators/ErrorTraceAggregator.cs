@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -61,9 +62,9 @@ namespace NewRelic.Agent.Core.Aggregators
                 _readerWriterLock.ExitReadLock();
             }
         }
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
-        protected override void Harvest() => InternalHarvest();
-        protected void InternalHarvest(string transactionId = null)
+        protected override async Task ManualHarvestAsync(string transactionId) => await InternalHarvestAsync(transactionId).ConfigureAwait(false);
+        protected override async Task HarvestAsync() => await InternalHarvestAsync().ConfigureAwait(false);
+        protected async Task InternalHarvestAsync(string transactionId = null)
         {
             Log.Finest("Error Trace harvest starting.");
 
@@ -83,7 +84,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var traceCount = errorTraceWireModels.Count;
             if (traceCount > 0)
             {
-                var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
+                var responseStatus = await DataTransportService.SendAsync(errorTraceWireModels, transactionId).ConfigureAwait(false);
 
                 HandleResponse(responseStatus, errorTraceWireModels);
             }

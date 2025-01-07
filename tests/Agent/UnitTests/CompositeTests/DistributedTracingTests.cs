@@ -40,7 +40,7 @@ namespace CompositeTests
         [Test]
         public void CreatedTransactionIdTraceIdSpanIdShouldBeLowerCase()
         {
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             var transaction = _agent.CreateTransaction(
                 isWeb: true,

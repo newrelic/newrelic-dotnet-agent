@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public interface ICollectorWire
     {
-        string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid);
+        Task<string> SendDataAsync(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid);
     }
 }

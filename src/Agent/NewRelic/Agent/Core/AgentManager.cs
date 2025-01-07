@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core
 {
@@ -48,7 +49,7 @@ namespace NewRelic.Agent.Core
                     //the DisabledAgentManager because the Singleton is still being created so we need to do that here.
                     if (agentManager._shutdownEventReceived)
                     {
-                        agentManager.Shutdown(false);
+                        agentManager.ShutdownAsync(false);
                         return DisabledAgentManager;
                     }
 
@@ -410,10 +411,10 @@ namespace NewRelic.Agent.Core
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
 
-            Shutdown(true);
+            ShutdownAsync(true);
         }
 
-        private void Shutdown(bool cleanShutdown)
+        private async Task ShutdownAsync(bool cleanShutdown)
         {
             Agent.IsAgentShuttingDown = true;
 
@@ -431,8 +432,8 @@ namespace NewRelic.Agent.Core
                 if (cleanShutdown)
                 {
                     Log.Debug("Agent is connected, executing a clean shutdown.");
-                    EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
-                    EventBus<CleanShutdownEvent>.Publish(new CleanShutdownEvent());
+                    await EventBus<PreCleanShutdownEvent>.PublishAsync(new PreCleanShutdownEvent()).ConfigureAwait(false);
+                    await EventBus<CleanShutdownEvent>.PublishAsync(new CleanShutdownEvent()).ConfigureAwait(false);
                 }
 
                 Log.Debug("Shutting down public agent services...");
@@ -468,7 +469,7 @@ namespace NewRelic.Agent.Core
             //because the AgentManager is still in the middle of initializing itself. In this scenario,
             //the AgentSingleton will check to see if a shutdownEvent was received, and call Shutdown
             //appropriately.
-            if (_isInitialized) Shutdown(false);
+            if (_isInitialized) ShutdownAsync(false);
         }
 
         #endregion Event handlers

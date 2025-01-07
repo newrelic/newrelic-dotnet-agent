@@ -4,6 +4,7 @@
 #if !NETFRAMEWORK
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -20,9 +21,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _httpContent = httpContent;
         }
 
-        public Stream ReadAsStream()
+        public async Task<Stream> ReadAsStreamAsync()
         {
-            return _httpContent.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            return await _httpContent.ReadAsStreamAsync().ConfigureAwait(false);
         }
 
         public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);

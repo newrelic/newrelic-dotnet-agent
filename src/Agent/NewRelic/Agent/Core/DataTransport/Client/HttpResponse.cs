@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _httpResponseMessageWrapper = httpResponseMessageWrapper;
         }
 
-        public string GetContent()
+        public async Task<string> GetContentAsync()
         {
             try
             {
@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     return Constants.EmptyResponseBody;
                 }
 
-                var responseStream = _httpResponseMessageWrapper.Content.ReadAsStream();
+                var responseStream = await _httpResponseMessageWrapper.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
                 var contentTypeEncoding = _httpResponseMessageWrapper.Content.Headers.ContentEncoding;
                 if (contentTypeEncoding.Contains("gzip"))
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 using (responseStream)
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    var responseBody = reader.ReadLineAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    var responseBody = await reader.ReadToEndAsync().ConfigureAwait(false);
 
                     if (responseBody != null)
                     {

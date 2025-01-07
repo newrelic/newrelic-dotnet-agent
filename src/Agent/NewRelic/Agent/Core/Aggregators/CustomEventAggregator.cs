@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -66,11 +67,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override async Task ManualHarvestAsync(string transactionId) => await InternalHarvestAsync(transactionId).ConfigureAwait(false);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override async Task HarvestAsync() => await InternalHarvestAsync().ConfigureAwait(false);
 
-        protected void InternalHarvest(string transactionId = null)
+        protected async Task InternalHarvestAsync(string transactionId = null)
         {
             Log.Finest("Custom Event harvest starting.");
 
@@ -92,7 +93,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var eventCount = customEvents.Count;
             if (eventCount > 0)
             {
-                var responseStatus = DataTransportService.Send(customEvents, transactionId);
+                var responseStatus = await DataTransportService.SendAsync(customEvents, transactionId).ConfigureAwait(false);
 
                 HandleResponse(responseStatus, customEvents);
             }

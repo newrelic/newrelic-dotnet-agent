@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -101,9 +102,9 @@ namespace NewRelic.Agent.Core.Aggregators
             _agentHealthReporter.ReportSpanEventCollected(added);
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override Task ManualHarvestAsync(string transactionId) => InternalHarvest(transactionId);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override Task HarvestAsync() => InternalHarvest();
 
         protected void InternalHarvest(string transactionId = null)
         {
@@ -128,7 +129,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var eventCount = wireModels.Count;
             if (eventCount > 0)
             {
-                var responseStatus = DataTransportService.Send(eventHarvestData, wireModels, transactionId);
+                var responseStatus = DataTransportService.SendAsync(eventHarvestData, wireModels, transactionId);
                 HandleResponse(responseStatus, wireModels);
             }
 

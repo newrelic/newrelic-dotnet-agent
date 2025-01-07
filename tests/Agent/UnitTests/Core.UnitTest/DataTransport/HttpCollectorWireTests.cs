@@ -59,17 +59,17 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContent()).Returns(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).Returns(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.That(response, Is.EqualTo(expected));
@@ -91,17 +91,17 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContent()).Returns(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).Returns(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
 
             Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
-            Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
+            Assert.Throws<HttpRequestException>(() => collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
             Mock.Assert(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
@@ -121,17 +121,17 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.InternalServerError);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(false);
-            Mock.Arrange(() => mockHttpResponse.GetContent()).Returns(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).Returns(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
-            Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
+            Assert.Throws<HttpException>(() => collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
             Mock.Assert(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
@@ -153,17 +153,17 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContent()).Returns(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).Returns(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var result = collectorWire.SendData("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
+            var result = collectorWire.SendDataAsync("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
 
             // Assert
             Assert.That(result, Is.EqualTo("{}"));
@@ -187,10 +187,10 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpResponse = Mock.Create<IHttpResponse>();
             Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
             Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
-            Mock.Arrange(() => mockHttpResponse.GetContent()).Returns(expected);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).Returns(expected);
 
             var mockHttpClient = Mock.Create<IHttpClient>();
-            Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
             Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
@@ -203,7 +203,7 @@ namespace NewRelic.Agent.Core.DataTransport
             AuditLog.IsAuditLogEnabled = isEnabled;
 
             // Act
-            _ = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            _ = collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());

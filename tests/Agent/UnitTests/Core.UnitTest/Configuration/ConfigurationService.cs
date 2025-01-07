@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var wasCalled = false;
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
-                    EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
+                    EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(new configuration()));
                 }
 
                 Assert.That(wasCalled, Is.True);
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
-                    EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(new ServerConfiguration
+                    EventBus<ServerConfigurationUpdatedEvent>.PublishAsync(new ServerConfigurationUpdatedEvent(new ServerConfiguration
                     {
                         AgentRunId = "123"
                     }));
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
-                    EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
+                    EventBus<AppNameUpdateEvent>.PublishAsync(new AppNameUpdateEvent(new[] { "NewAppName" }));
                 }
 
                 Assert.That(wasCalled, Is.True);
@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var wasCalled = false;
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
-                    EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
+                    EventBus<ErrorGroupCallbackUpdateEvent>.PublishAsync(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
                 Assert.That(wasCalled, Is.True);
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var wasCalled = false;
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
-                    EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
+                    EventBus<ErrorGroupCallbackUpdateEvent>.PublishAsync(new ErrorGroupCallbackUpdateEvent(_callback));
                 }
 
                 Assert.That(wasCalled, Is.False);
@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             public void responds_with_latest_configuration()
             {
                 // ARRANGE
-                EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(new ServerConfiguration
+                EventBus<ServerConfigurationUpdatedEvent>.PublishAsync(new ServerConfigurationUpdatedEvent(new ServerConfiguration
                 {
                     AgentRunId = 24,
                     ApdexT = 42
@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 var updatedLocalConfig = new configuration();
                 updatedLocalConfig.log.level = "finest";
 
-                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+                EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(updatedLocalConfig));
 
                 Assert.Multiple(() =>
                 {
@@ -230,14 +230,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 // Set the current log level to finest
                 var updatedLocalConfig = new configuration();
                 updatedLocalConfig.log.level = "finest";
-                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+                EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(updatedLocalConfig));
 
                 // Reset the log level tracking variables
                 _newLogLevel = null;
                 _logLevelChanged = false;
 
                 // Public a config update with the log level unchanged
-                EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(updatedLocalConfig));
+                EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(updatedLocalConfig));
 
                 Assert.Multiple(() =>
                 {

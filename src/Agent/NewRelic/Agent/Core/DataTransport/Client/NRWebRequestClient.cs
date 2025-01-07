@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _configuration = configuration;
         }
 
-        public override IHttpResponse Send(IHttpRequest request)
+        public override async Task<IHttpResponse> SendAsync(IHttpRequest request)
         {
             try
             {
@@ -54,14 +54,14 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     _httpWebRequest.Headers.Add(header.Key, header.Value);
                 }
 
-                using (var outputStream = _httpWebRequest.GetRequestStream())
+                using (var outputStream = await _httpWebRequest.GetRequestStreamAsync())
                 {
                     if (outputStream == null)
                     {
                         throw new NullReferenceException("outputStream");
                     }
 
-                    outputStream.Write(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength);
+                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength).ConfigureAwait(false);
                 }
 
                 var resp = (HttpWebResponse)_httpWebRequest.GetResponse();
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
                 if (_diagnoseConnectionError)
                 {
-                    DiagnoseConnectionError(request.Uri.Host);
+                    await DiagnoseConnectionErrorAsync(request.Uri.Host).ConfigureAwait(false);
                 }
 
                 throw;

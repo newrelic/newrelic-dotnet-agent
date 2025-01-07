@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.Api
         {
             Func<IReadOnlyDictionary<string, object>, string> myCallback = ex => "mygroup";
 
-            _agentApi.SetErrorGroupCallback(myCallback);
+            _agentApi.SetErrorGroupCallbackAsync(myCallback);
 
             NrAssert.Multiple(
                 () => Assert.That(_errorGroupCallbackUpdateEvents, Has.Count.EqualTo(1), "Expected only one update event to be triggered."),
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Api
         {
             Func<string, string, int> myCallback = (_, _) => 42;
 
-            _agentApi.SetLlmTokenCountingCallback(myCallback);
+            _agentApi.SetLlmTokenCountingCallbackAsync(myCallback);
 
             NrAssert.Multiple(
                 () => Assert.That(_llmTokenCountingCallbackUpdateEvents, Has.Count.EqualTo(1), "Expected only one update event to be triggered."),

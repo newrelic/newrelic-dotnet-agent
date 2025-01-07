@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
                 var profileData = SerializeData();
 
-                _dataTransportService.SendThreadProfilingData(profileData);
+                _dataTransportService.SendThreadProfilingDataAsync(profileData);
 
                 LogFailedProfiles();
 

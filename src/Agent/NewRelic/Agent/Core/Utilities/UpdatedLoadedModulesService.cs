@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Utilities
 
         private void SendUpdatedLoadedModules(LoadedModuleWireModelCollection loadedModulesCollection)
         {
-            var responseStatus = _dataTransportService.Send(loadedModulesCollection, null);
+            var responseStatus = _dataTransportService.SendAsync(loadedModulesCollection, null);
             if (responseStatus != DataTransportResponseStatus.RequestSuccessful)
             {
                 // Try again next time

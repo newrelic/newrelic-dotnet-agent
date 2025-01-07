@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 #if NETFRAMEWORK
 using System.Web;
@@ -69,7 +70,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Public API
 
-        public void Connect()
+        public async Task ConnectAsync()
         {
             // Need to disable before connecting so that we can easily tell that we just finished connecting during a configuration update
             Disable();
@@ -79,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 ValidateNotBothHsmAndSecurityPolicies(_configuration);
                 LogTlsConfiguration();
 
-                var preconnectResult = SendPreconnectRequest();
+                var preconnectResult = await SendPreconnectRequestAsync().ConfigureAwait(false);
                 _connectionInfo = new ConnectionInfo(_configuration, preconnectResult.RedirectHost);
 
                 ValidateAgentTokenSettingToPoliciesReceived(preconnectResult.SecurityPolicies);
@@ -90,13 +91,13 @@ namespace NewRelic.Agent.Core.DataTransport
                     ValidateAllRequiredPoliciesFromServerExist(preconnectResult.SecurityPolicies);
 
                     var securityPoliciesConfiguration = new SecurityPoliciesConfiguration(preconnectResult.SecurityPolicies);
-                    EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(securityPoliciesConfiguration));
+                    EventBus<SecurityPoliciesConfigurationUpdatedEvent>.PublishAsync(new SecurityPoliciesConfigurationUpdatedEvent(securityPoliciesConfiguration));
 
                     _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("CSP"));
                 }
 
                 var serverConfiguration = SendConnectRequest();
-                EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfiguration));
+                EventBus<ServerConfigurationUpdatedEvent>.PublishAsync(new ServerConfigurationUpdatedEvent(serverConfiguration));
 
                 LogSecurityPolicySettingsOnceAllSettingsResolved();
                 GenerateFasterEventHarvestConfigMetrics(serverConfiguration.EventHarvestConfig);
@@ -104,9 +105,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 GenerateSpanEventsHarvestLimitMetrics(serverConfiguration.SpanEventHarvestConfig);
 
                 _dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration, serverConfiguration.RequestHeadersMap, _agentHealthReporter);
-                SendAgentSettings();
+                await SendAgentSettingsAsync().ConfigureAwait(false);
 
-                EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+                EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
                 Log.Info("Agent fully connected.");
             }
 
@@ -146,24 +147,24 @@ namespace NewRelic.Agent.Core.DataTransport
             Log.Debug("Setting applied: {{\"custom_instrumentation_editor\": {0}}}. Source: {1}", _configuration.CustomInstrumentationEditorEnabled, _configuration.CustomInstrumentationEditorEnabledSource);
         }
 
-        public void Disconnect()
+        public async Task DisconnectAsync()
         {
             if (!string.IsNullOrEmpty(_configuration.AgentRunId?.ToString()))
-                SendShutdownCommand();
+                await SendShutdownCommandAsync().ConfigureAwait(false);
 
             Disable();
         }
 
-        public T SendDataRequest<T>(string method, params object[] data)
+        public async Task<T> SendDataRequestAsync<T>(string method, params object[] data)
         {
-            return SendDataOverWire<T>(_dataRequestWire, method, data);
+            return await SendDataOverWireAsync<T>(_dataRequestWire, method, data).ConfigureAwait(false);
         }
 
         #endregion Public API
 
         #region Connect helper methods
 
-        private PreconnectResult SendPreconnectRequest()
+        private async Task<PreconnectResult> SendPreconnectRequestAsync()
         {
             _connectionInfo = new ConnectionInfo(_configuration);
 
@@ -177,7 +178,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 payload["security_policies_token"] = _configuration.SecurityPoliciesToken;
             }
 
-            var result = SendNonDataRequest<PreconnectResult>("preconnect", payload);
+            var result = await SendNonDataRequestAsync<PreconnectResult>("preconnect", payload).ConfigureAwait(false);
             return result;
         }
 
@@ -238,7 +239,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private ServerConfiguration SendConnectRequest()
         {
             var connectParameters = GetConnectParameters();
-            var responseMap = SendNonDataRequest<Dictionary<string, object>>("connect", connectParameters);
+            var responseMap = SendNonDataRequestAsync<Dictionary<string, object>>("connect", connectParameters);
             if (responseMap == null)
                 throw new Exception("Empty connect result payload");
 
@@ -335,13 +336,13 @@ namespace NewRelic.Agent.Core.DataTransport
 #endif
         }
 
-        private void SendAgentSettings()
+        private async Task SendAgentSettingsAsync()
         {
             var agentSettings = new ReportedConfiguration(_configuration);
 
             try
             {
-                SendDataOverWire<object>(_dataRequestWire, "agent_settings", agentSettings);
+                await SendDataOverWireAsync<object>(_dataRequestWire, "agent_settings", agentSettings).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -388,11 +389,11 @@ namespace NewRelic.Agent.Core.DataTransport
             return true;
         }
 
-        private void SendShutdownCommand()
+        private async Task SendShutdownCommandAsync()
         {
             try
             {
-                SendDataOverWire<object>(_dataRequestWire, "shutdown");
+                await SendDataOverWireAsync<object>(_dataRequestWire, "shutdown").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -407,20 +408,20 @@ namespace NewRelic.Agent.Core.DataTransport
             if (string.IsNullOrEmpty(_configuration.AgentRunId?.ToString()))
                 return;
 
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(ServerConfiguration.GetDefault()));
+            EventBus<ServerConfigurationUpdatedEvent>.PublishAsync(new ServerConfigurationUpdatedEvent(ServerConfiguration.GetDefault()));
         }
 
         #endregion Connect helper methods
 
         #region Data transfer helper methods
 
-        private T SendNonDataRequest<T>(string method, params object[] data)
+        private async Task<T> SendNonDataRequestAsync<T>(string method, params object[] data)
         {
             var wire = _collectorWireFactory.GetCollectorWire(_configuration, _agentHealthReporter);
-            return SendDataOverWire<T>(wire, method, data);
+            return await SendDataOverWireAsync<T>(wire, method, data).ConfigureAwait(false);
         }
 
-        private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
+        private async Task<T> SendDataOverWireAsync<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
             string serializedData;
@@ -436,7 +437,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             try
             {
-                var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
+                var responseBody = await wire.SendDataAsync(method, _connectionInfo, serializedData, requestGuid).ConfigureAwait(false);
                 return ParseResponse<T>(responseBody);
             }
             catch (DataTransport.HttpException ex)

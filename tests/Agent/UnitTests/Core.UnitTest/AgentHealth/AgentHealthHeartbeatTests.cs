@@ -1,7 +1,8 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
@@ -19,14 +20,30 @@ namespace NewRelic.Agent.Core.AgentHealth
             _action = action;
         }
 
+        public Task ExecuteOnceAsync(Func<Task> taskFunc, TimeSpan timeUntilExecution)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
         {
             _action = action;
         }
 
+        public void ExecuteEveryAsync(Func<Task> task, TimeSpan timebetweenExecutions,
+            TimeSpan? optionalInitialDelay = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public void StopExecuting(Action action, TimeSpan? timeToWaitForInProgressAction = null)
         {
             _action = null;
+        }
+
+        public Task StopExecutingAsync(Func<Task> task, TimeSpan? timeToWaitForInProgressAction = TODO)
+        {
+            throw new NotImplementedException();
         }
 
         public void ForceExecute()

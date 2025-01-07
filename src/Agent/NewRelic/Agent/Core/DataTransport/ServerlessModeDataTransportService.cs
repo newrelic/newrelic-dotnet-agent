@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
@@ -82,19 +83,21 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(IEnumerable<TransactionTraceWireModel> transactionSampleDatas,
+            string transactionId)
         {
             Enqueue(transactionId, "transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(IEnumerable<ErrorTraceWireModel> errorTraceDatas,
+            string transactionId)
         {
             Enqueue(transactionId, "error_data", _configuration.AgentRunId, errorTraceDatas);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(IEnumerable<MetricWireModel> metrics, string transactionId)
         {
             if (!metrics.Any())
             {
@@ -113,49 +116,55 @@ namespace NewRelic.Agent.Core.DataTransport
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<TransactionEventWireModel> transactionEvents, string transactionId)
         {
             Enqueue(transactionId, "analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<ErrorEventWireModel> errorEvents, string transactionId)
         {
             Enqueue(transactionId, "error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(EventHarvestData eventHarvestData,
+            IEnumerable<ISpanEventWireModel> spanEvents, string transactionId)
         {
             Enqueue(transactionId, "span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(IEnumerable<SqlTraceWireModel> sqlTraceWireModels,
+            string transactionId)
         {
             Enqueue(transactionId, "sql_trace_data", sqlTraceWireModels);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
-        public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(IEnumerable<CustomEventWireModel> customEvents,
+            string transactionId)
         {
             Enqueue(transactionId, "custom_event_data", _configuration.AgentRunId, customEvents);
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
         #region IDataTransportService NotImplemented Methods
-        public IEnumerable<CommandModel> GetAgentCommands() => null;
-        public void SendCommandResults(IDictionary<string, object> commandResults) { }
-        public void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData) => throw new NotImplementedException();
+        public Task<IEnumerable<CommandModel>> GetAgentCommandsAsync() => null;
+        public Task SendCommandResultsAsync(IDictionary<string, object> commandResults) { }
+        public Task SendThreadProfilingDataAsync(IEnumerable<ThreadProfilingModel> threadProfilingData) => throw new NotImplementedException();
 
-        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents, string transactionId)
+        public Task<DataTransportResponseStatus> SendAsync(LogEventWireModelCollection loggingEvents, string transactionId)
         {
             // Not supported in serverless mode
             return DataTransportResponseStatus.RequestSuccessful;
         }
 
         // Not supported in serverless mode
-        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules, string transactionId) => throw new NotImplementedException();
+        public Task<DataTransportResponseStatus> SendAsync(LoadedModuleWireModelCollection loadedModules,
+            string transactionId) => throw new NotImplementedException();
         #endregion
 
         public bool FlushData(string transactionId)

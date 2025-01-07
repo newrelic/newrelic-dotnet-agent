@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
             _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter, _labelsService);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         [TearDown]
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as LogEventWireModelCollection;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
             var logEvents = new List<LogEventWireModel>
             {
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 
             // Act
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             _harvestAction();
 
             // Assert
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as LogEventWireModelCollection;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
 
             var logEvents = new List<LogEventWireModel>
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sendCalled = true;
@@ -190,7 +190,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -244,7 +244,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEventCount = events.LoggingEvents.Count();
@@ -272,7 +272,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEventCount = events.LoggingEvents.Count();
@@ -300,7 +300,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             LogEventWireModelCollection sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events =>
                 {
                     sentEvents = events;
@@ -447,7 +447,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
             _logEventAggregator = new LogEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter, _labelsService);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
         }
@@ -462,7 +462,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Logs_Dropped_Metric_is_reported_when_capacity_is_exceeded()
         {
             // Arrange
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .Returns<LogEventWireModelCollection>(events => DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
 
             var logEvents = new List<LogEventWireModel>();
@@ -486,7 +486,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as LogEventWireModelCollection;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
             Mock.Arrange(() => _configurationAutoResponder.Configuration.LabelsEnabled).Returns(false);
 

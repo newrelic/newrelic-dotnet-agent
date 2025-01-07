@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
             _transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, _scheduler, _processStatic, _transactionCollectors);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         [TearDown]
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_SendsTracesFromCollectors()
         {
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<TransactionTraceWireModel>>(traces => sentTraces = traces);
 
             var trace1 = Mock.Create<TransactionTraceWireModel>();
@@ -112,10 +112,10 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
             _transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, scheduler, _processStatic, transactionCollectors);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
                 {
                     sentTraces = traces;
@@ -140,9 +140,9 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => _transactionCollector1.GetCollectedSamples()).Returns(new[] {
                 new TransactionTraceWireModelComponents(new TransactionMetricName(), new TimeSpan(), false, () => trace) });
 
-            EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
+            EventBus<PreCleanShutdownEvent>.PublishAsync(new PreCleanShutdownEvent());
 
-            Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()), Occurs.Once());
+            Mock.Assert(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]
@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
             _transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, _scheduler, _processStatic, _transactionCollectors);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
         }

@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
@@ -71,7 +72,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
 
-        public override IHttpResponse Send(IHttpRequest request)
+        public override async Task<IHttpResponse> SendAsync(IHttpRequest request)
         {
             try
             {
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
                 Log.Finest($"Request({request.RequestGuid}: Sending");
                 // .ConfigureAwait(false) is used to avoid deadlocks.
-                var response = _httpClientWrapper.SendAsync(req).ConfigureAwait(false).GetAwaiter().GetResult();
+                var response = await _httpClientWrapper.SendAsync(req).ConfigureAwait(false);
                 Log.Finest($"Request({request.RequestGuid}: Sent");
 
                 var httpResponse = new HttpResponse(request.RequestGuid, response);
@@ -113,7 +114,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 if (_diagnoseConnectionError)
                 {
-                    DiagnoseConnectionError(request.Uri.Host);
+                    await DiagnoseConnectionErrorAsync(request.Uri.Host).ConfigureAwait(false);
                 }
 
                 throw;

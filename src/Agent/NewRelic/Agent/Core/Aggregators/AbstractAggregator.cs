@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -27,7 +28,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _scheduler = scheduler;
             _processStatic = processStatic;
 
-            _subscriptions.Add<StopHarvestEvent>(OnStopHarvestEvent);
+            _subscriptions.Add<StopHarvestEvent>(OnStopHarvestEventAsync);
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
 
@@ -36,19 +37,19 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private void OnManualHarvest(ManualHarvestEvent manualHarvestEvent)
         {
-            ManualHarvest(manualHarvestEvent.TransactionId);
+            ManualHarvestAsync(manualHarvestEvent.TransactionId);
         }
 
-        private void OnStopHarvestEvent(StopHarvestEvent obj)
+        private async Task OnStopHarvestEventAsync(StopHarvestEvent obj)
         {
-            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+            await _scheduler.StopExecutingAsync(HarvestAsync, TimeSpan.FromSeconds(2)).ConfigureAwait(false);
         }
 
         public abstract void Collect(T wireModel);
 
-        protected abstract void Harvest();
+        protected abstract Task HarvestAsync();
 
-        protected abstract void ManualHarvest(string transactionId);
+        protected abstract Task ManualHarvestAsync(string transactionId);
 
         protected abstract bool IsEnabled { get; }
 
@@ -58,17 +59,17 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             if (IsEnabled)
             {
-                _scheduler.ExecuteEvery(Harvest, HarvestCycle);
+                _scheduler.ExecuteEvery(HarvestAsync, HarvestCycle);
             }
             else
             {
-                _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+                _scheduler.StopExecuting(HarvestAsync, TimeSpan.FromSeconds(2));
             }
         }
 
         private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
         {
-            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+            _scheduler.StopExecuting(HarvestAsync, TimeSpan.FromSeconds(2));
 
             if (!_configuration.CollectorSendDataOnExit || !IsEnabled)
                 return;
@@ -77,12 +78,12 @@ namespace NewRelic.Agent.Core.Aggregators
             if (!(uptime.TotalMilliseconds > _configuration.CollectorSendDataOnExitThreshold))
                 return;
 
-            Harvest();
+            HarvestAsync();
         }
 
         public override void Dispose()
         {
-            _scheduler.StopExecuting(Harvest);
+            _scheduler.StopExecuting(HarvestAsync);
             base.Dispose();
         }
 

@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
-            var response = _client.Send(request);
+            var response = _client.SendAsync(request);
 
             // Assert
             Assert.That(response, Is.Not.Null);
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .Throws<HttpRequestException>();
 
             // Act & Assert
-            Assert.Throws<HttpRequestException>(() => _client.Send(request));
+            Assert.Throws<HttpRequestException>(() => _client.SendAsync(request));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
-            var response = _client.Send(request);
+            var response = _client.SendAsync(request);
 
             // Assert
             Mock.Assert(() => _mockHttpClientWrapper.SendAsync(Arg.Matches<HttpRequestMessage>(req =>
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 .ReturnsAsync(mockHttpResponseMessage);
 
             // Act
-            var response = _client.Send(request);
+            var response = _client.SendAsync(request);
 
             // Assert
             Mock.Assert(() => _mockHttpClientWrapper.SendAsync(Arg.Matches<HttpRequestMessage>(req =>
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 try
                 {
-                    var response = client.Send(request);
+                    var response = client.SendAsync(request);
                 }
                 catch (TaskCanceledException)
                 {

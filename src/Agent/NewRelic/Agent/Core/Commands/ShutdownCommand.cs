@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Commands
 
         public override object Process(IDictionary<string, object> arguments)
         {
-            EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
+            EventBus<KillAgentEvent>.PublishAsync(new KillAgentEvent());
             return null;
         }
     }

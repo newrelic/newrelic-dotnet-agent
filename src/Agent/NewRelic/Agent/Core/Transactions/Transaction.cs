@@ -164,8 +164,8 @@ namespace NewRelic.Agent.Core.Transactions
 
                 if (Agent.Configuration.ServerlessModeEnabled)
                 {
-                    EventBus<ManualHarvestEvent>.Publish(new ManualHarvestEvent(Guid));
-                    EventBus<FlushServerlessDataEvent>.Publish(new FlushServerlessDataEvent(Guid));
+                    EventBus<ManualHarvestEvent>.PublishAsync(new ManualHarvestEvent(Guid));
+                    EventBus<FlushServerlessDataEvent>.PublishAsync(new FlushServerlessDataEvent(Guid));
                 }
             };
 
@@ -1192,7 +1192,7 @@ namespace NewRelic.Agent.Core.Transactions
             try
             {
                 GC.SuppressFinalize(this);
-                EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(this));
+                EventBus<TransactionFinalizedEvent>.PublishAsync(new TransactionFinalizedEvent(this));
             }
             catch
             {

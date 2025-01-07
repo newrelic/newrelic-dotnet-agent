@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.DataTransport
             using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
             {
                 connectionManager.AttemptAutoStart();
-                Mock.Assert(() => _connectionHandler.Connect());
+                Mock.Assert(() => _connectionHandler.ConnectAsync());
             }
         }
 
@@ -74,10 +74,10 @@ namespace NewRelic.Agent.Core.DataTransport
                 connectionManager.AttemptAutoStart();
 
                 // Connect shouldn't occur until scheduled action is invoked
-                Mock.Assert(() => _connectionHandler.Connect(), Occurs.Never());
+                Mock.Assert(() => _connectionHandler.ConnectAsync(), Occurs.Never());
 
                 scheduledAction();
-                Mock.Assert(() => _connectionHandler.Connect());
+                Mock.Assert(() => _connectionHandler.ConnectAsync());
             }
         }
 
@@ -119,7 +119,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
             Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-            Mock.Arrange(() => _connectionHandler.Connect())
+            Mock.Arrange(() => _connectionHandler.ConnectAsync())
                 .Throws(ex);
 
             Action scheduledAction = null;
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
 
                 scheduledAction();
-                Mock.Assert(() => _connectionHandler.Connect(), Occurs.Exactly(2));
+                Mock.Assert(() => _connectionHandler.ConnectAsync(), Occurs.Exactly(2));
             }
         }
 
@@ -144,7 +144,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
             Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-            Mock.Arrange(() => _connectionHandler.Connect())
+            Mock.Arrange(() => _connectionHandler.ConnectAsync())
                 .Throws(testData);
 
             // Act
@@ -174,7 +174,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
             Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-            Mock.Arrange(() => _connectionHandler.Connect())
+            Mock.Arrange(() => _connectionHandler.ConnectAsync())
                 .Throws(new HttpException(HttpStatusCode.InternalServerError, null));
 
             Action scheduledAction = null;

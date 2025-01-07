@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _sqlTraceAggregator = new SqlTraceAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         [TearDown]
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
             _sqlTraceAggregator = new SqlTraceAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
 
             Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
         }
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -143,12 +143,12 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
             _sqlTraceAggregator.Collect(new SqlTraceStatsCollection());
 
             // Act
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             _harvestAction();
 
             // Assert
@@ -161,9 +161,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var sqlTracesPerPeriod = 5;
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -222,9 +222,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var sqlTracesPerPeriod = 5;
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 10);
@@ -263,9 +263,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var sqlTracesPerPeriod = 5;
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -298,9 +298,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var sqlTracesPerPeriod = 5;
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -342,9 +342,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var sqlTracesPerPeriod = 5;
             var configuration = GetDefaultConfiguration(int.MaxValue, sqlTracesPerPeriod);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection(maxTraces: 5);
@@ -389,7 +389,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTraces = null as IEnumerable<SqlTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .DoInstead<IEnumerable<SqlTraceWireModel>>(sqlTraces => sentSqlTraces = sqlTraces);
 
             var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -414,7 +414,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sendCalled = true;
@@ -437,7 +437,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;
@@ -464,7 +464,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;
@@ -491,7 +491,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentSqlTracesCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTracesCount = sqlTraces.Count();
@@ -516,7 +516,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
                 {
                     sentSqlTraces = sqlTraces;

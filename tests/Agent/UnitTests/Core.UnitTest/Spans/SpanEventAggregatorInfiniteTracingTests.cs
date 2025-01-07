@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         private void FireAgentConnectedEvent()
         {
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var aggregator = CreateAggregator(streamingSvc);
             FireAgentConnectedEvent();
 
-            EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
+            EventBus<PreCleanShutdownEvent>.PublishAsync(new PreCleanShutdownEvent());
 
             Mock.Assert(() => streamingSvc.Wait(Arg.IsAny<int>()), Occurs.Once());
         }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
@@ -60,9 +61,9 @@ namespace NewRelic.Agent.Core.Aggregators
                 done = _metricStatsCollectionQueue.MergeMetrics(metric);
             }
         }
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        protected override Task ManualHarvestAsync(string transactionId) => InternalHarvest(transactionId);
 
-        protected override void Harvest() => InternalHarvest();
+        protected override Task HarvestAsync() => InternalHarvest();
 
         protected void InternalHarvest(string transactionId = null)
         {
@@ -81,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var metricCount = metricsToSend.Count;
             if (metricCount > 0)
             {
-                var responseStatus = DataTransportService.Send(metricsToSend, transactionId);
+                var responseStatus = DataTransportService.SendAsync(metricsToSend, transactionId);
                 HandleResponse(responseStatus, metricsToSend);
             }
 

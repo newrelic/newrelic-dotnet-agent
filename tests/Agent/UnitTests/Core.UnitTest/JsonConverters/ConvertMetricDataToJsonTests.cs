@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.JsonConverters
         [Test]
         public void Serialize_NoErrors()
         {
-            Assert.DoesNotThrow(() => _connectionHandler.SendDataRequest<object>("metric_data", _wellformedMetricData));
+            Assert.DoesNotThrow(() => _connectionHandler.SendDataRequestAsync<object>("metric_data", _wellformedMetricData));
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.JsonConverters
             var node2 = new Node { Name = "Node2", Child = node1 };
             node1.Child = node2; // circular reference, should throw
 
-            Assert.Throws<JsonSerializationException>(() => _connectionHandler.SendDataRequest<object>("metric_data", node1));
+            Assert.Throws<JsonSerializationException>(() => _connectionHandler.SendDataRequestAsync<object>("metric_data", node1));
         }
 
         [Test]

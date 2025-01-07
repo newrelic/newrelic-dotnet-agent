@@ -238,21 +238,21 @@ namespace CompositeTests
             if (!enableServerlessMode)
             {
                 // Redirect the mock DataTransportService to capture harvested wire models
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(Metrics));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(CustomEvents));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(TransactionTraces));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(ErrorTraces));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(SqlTraces));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
-                Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
+                Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>(), Arg.IsAny<string>()))
                     .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
             }
 
@@ -385,12 +385,12 @@ namespace CompositeTests
         public void PushConfiguration()
         {
             // Push LocalConfigurationUpdates
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(LocalConfiguration));
+            EventBus<ConfigurationDeserializedEvent>.PublishAsync(new ConfigurationDeserializedEvent(LocalConfiguration));
 
             // Push ServerConfigurationUpdates
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(ServerConfiguration));
+            EventBus<ServerConfigurationUpdatedEvent>.PublishAsync(new ServerConfigurationUpdatedEvent(ServerConfiguration));
 
-            EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(SecurityConfiguration));
+            EventBus<SecurityPoliciesConfigurationUpdatedEvent>.PublishAsync(new SecurityPoliciesConfigurationUpdatedEvent(SecurityConfiguration));
 
             // Update CurrentConfiguration
             IConfiguration newConfig = null;
@@ -407,7 +407,7 @@ namespace CompositeTests
 
         private void EnableAggregators()
         {
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+            EventBus<AgentConnectedEvent>.PublishAsync(new AgentConnectedEvent());
         }
 
         private static configuration GetDefaultTestLocalConfiguration()

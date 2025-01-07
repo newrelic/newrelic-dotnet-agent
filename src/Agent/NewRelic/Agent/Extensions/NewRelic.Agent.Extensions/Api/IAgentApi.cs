@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Api
 {
@@ -240,21 +241,21 @@ namespace NewRelic.Agent.Api
         /// <example><code>
         ///   NewRelic.Api.Agent.NewRelic.StartAgent();
         /// </code></example>
-        void StartAgent();
+        Task StartAgentAsync();
 
         /// <summary> Sets the name of the application to <paramref name="applicationName"/>. At least one
         /// given name must not be null.
         /// 
         /// An application may also have up to two additional names. This can be useful, for example, to
         /// have multiple applications report under the same roll-up name. </summary>
-        ///
+        /// 
         /// <exception cref="ArgumentException"> Thrown when <paramref name="applicationName"/>,
         /// <paramref name="applicationName2"/> and <paramref name="applicationName3"/> are all null. </exception>
-        ///
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null);
+        Task SetApplicationNameAsync(string applicationName, string? applicationName2 = null,
+            string? applicationName3 = null);
 
         /// <summary> Gets the request metadata for the current transaction. </summary>
         ///
@@ -268,21 +269,21 @@ namespace NewRelic.Agent.Api
 
         /// <summary> Sets the method that will be invoked to define the error group that an exception
         /// should belong to.
-        ///
+        /// 
         /// The callback takes an IReadOnlyDictionary of attributes, the stack trace, and Exception,
         /// and returns the name of the error group to use. Return values
         /// that are null, empty, or whitespace will not associate the Exception to an error group.
         /// </summary>
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
-        void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback);
+        Task SetErrorGroupCallbackAsync(Func<IReadOnlyDictionary<string, object>, string> callback);
 
         /// <summary> Sets the method that will be invoked to define the token count on completion.
-        ///
+        /// 
         /// The callback takes the model name and input value, and returns an integer of the token count.
         /// A value returned from the callback that is less than or equal to 0 will be ignored.
         /// </summary>
         /// <param name="callback">The callback to invoke to generate the token count based on the model and input..</param>
-        void SetLlmTokenCountingCallback(Func<string, string, int> callback);
+        Task SetLlmTokenCountingCallbackAsync(Func<string, string, int> callback);
 
         /// <summary>
         /// Creates an event with the customer feedback on the LLM interaction.

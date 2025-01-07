@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void PushConfiguration(IConfiguration newConfig)
         {
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(newConfig, ConfigurationUpdateSource.Local));
+            EventBus<ConfigurationUpdatedEvent>.PublishAsync(new ConfigurationUpdatedEvent(newConfig, ConfigurationUpdateSource.Local));
         }
 
 
