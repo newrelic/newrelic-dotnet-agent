@@ -123,16 +123,16 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var eventHarvestData = new EventHarvestData(spanEventsPriorityQueue.Size, spanEventsPriorityQueue.GetAddAttemptsCount());
             var wireModels = spanEventsPriorityQueue.Where(node => null != node).Select(node => node.Data).ToList();
-            
+
             // if we don't have any events to publish then don't
-            if (wireModels.Count <= 0)
-                return;
+            var eventCount = wireModels.Count;
+            if (eventCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(eventHarvestData, wireModels, transactionId);
+                HandleResponse(responseStatus, wireModels);
+            }
 
-            var responseStatus = DataTransportService.Send(eventHarvestData, wireModels, transactionId);
-
-            HandleResponse(responseStatus, wireModels);
-
-            Log.Finest("Span Event harvest finished.");
+            Log.Finest($"Span Event harvest finished. {eventCount} event(s) sent.");
         }
 
         private void ReduceReservoirSize(int newSize)
