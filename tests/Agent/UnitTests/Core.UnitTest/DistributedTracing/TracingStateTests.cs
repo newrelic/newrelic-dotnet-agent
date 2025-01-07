@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.Priority, Is.EqualTo(Priority));
                 Assert.That(tracingState.Sampled, Is.EqualTo(Sampled));
                 Assert.That(tracingState.TransactionId, Is.EqualTo(TransactionId));
-                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default), $"Timestamp should not be {(DateTime)default}");
+                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {(DateTime)default}");
                 Assert.That(tracingState.TransportDuration, Is.GreaterThan(TimeSpan.Zero), $"TransportDuration should not be Zero");
             });
         }
@@ -222,7 +222,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.Sampled, Is.EqualTo(Sampled));
                 Assert.That(tracingState.TransactionId, Is.EqualTo(TransactionId));
                 Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
-                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default), $"Timestamp should not be {(DateTime)default}");
+                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {(DateTime)default}");
                 Assert.That(tracingState.TransportDuration, Is.GreaterThan(TimeSpan.Zero), $"TransportDuration should not be Zero");
             });
         }
