@@ -159,7 +159,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             Assert.DoesNotThrow(() =>
             {
-                // start a thread that might deadlock - if the thread doesn't throw TaskCanceledException within 5 seconds, then we have a deadlock
+                // start a thread that might deadlock - if the thread doesn't complete within 5 seconds, then we have a deadlock
                 var thread = new Thread(() => SendWithAsyncContext(client, request));
                 thread.Start();
                 if (!thread.Join(5000))
