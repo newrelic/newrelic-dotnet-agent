@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.Priority, Is.EqualTo(Priority));
                 Assert.That(tracingState.Sampled, Is.EqualTo(Sampled));
                 Assert.That(tracingState.TransactionId, Is.EqualTo(TransactionId));
-                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {(DateTime)default}");
+                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {default(DateTime)}");
                 Assert.That(tracingState.TransportDuration, Is.GreaterThan(TimeSpan.Zero), $"TransportDuration should not be Zero");
             });
         }
@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.TransactionId, Is.Null);
                 Assert.That(tracingState.Sampled, Is.Null);
                 Assert.That(tracingState.Priority, Is.Null);
-                Assert.That(tracingState.Timestamp, Is.EqualTo((DateTime)default), $"Timestamp: expected {(DateTime)default}, actual: {tracingState.Timestamp}");
+                Assert.That(tracingState.Timestamp, Is.EqualTo(default(DateTime)), $"Timestamp: expected {default(DateTime)}, actual: {tracingState.Timestamp}");
                 Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero), $"TransportDuration: expected {TimeSpan.Zero}, actual: {tracingState.TransportDuration}");
 
                 Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.NullPayload), "TracingState IngestErrors should contain NullPayload");
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.TransactionId, Is.Null);
                 Assert.That(tracingState.Sampled, Is.Null);
                 Assert.That(tracingState.Priority, Is.Null);
-                Assert.That(tracingState.Timestamp, Is.EqualTo((DateTime)default), $"Timestamp: expected {(DateTime)default}, actual: {tracingState.Timestamp}");
+                Assert.That(tracingState.Timestamp, Is.EqualTo(default(DateTime)), $"Timestamp: expected {default(DateTime)}, actual: {tracingState.Timestamp}");
                 Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero), $"TransportDuration: expected {TimeSpan.Zero}, actual: {tracingState.TransportDuration}");
 
                 Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.Version), "TracingState IngestErrors should contain Version error.");
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.TransactionId, Is.Null);
                 Assert.That(tracingState.Sampled, Is.Null);
                 Assert.That(tracingState.Priority, Is.Null);
-                Assert.That(tracingState.Timestamp, Is.EqualTo((DateTime)default), $"Timestamp: expected {(DateTime)default}, actual: {tracingState.Timestamp}");
+                Assert.That(tracingState.Timestamp, Is.EqualTo(default(DateTime)), $"Timestamp: expected {default(DateTime)}, actual: {tracingState.Timestamp}");
                 Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero), $"TransportDuration: expected {TimeSpan.Zero}, actual: {tracingState.TransportDuration}");
 
                 Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
@@ -188,7 +188,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.TransactionId, Is.Null);
                 Assert.That(tracingState.Sampled, Is.Null);
                 Assert.That(tracingState.Priority, Is.Null);
-                Assert.That(tracingState.Timestamp, Is.EqualTo((DateTime)default), $"Timestamp: expected {(DateTime)default}, actual: {tracingState.Timestamp}");
+                Assert.That(tracingState.Timestamp, Is.EqualTo(default(DateTime)), $"Timestamp: expected {default(DateTime)}, actual: {tracingState.Timestamp}");
                 Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero), $"TransportDuration: expected {TimeSpan.Zero}, actual: {tracingState.TransportDuration}");
 
                 Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
@@ -222,7 +222,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.Sampled, Is.EqualTo(Sampled));
                 Assert.That(tracingState.TransactionId, Is.EqualTo(TransactionId));
                 Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
-                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {(DateTime)default}");
+                Assert.That(tracingState.Timestamp, Is.Not.EqualTo(default(DateTime)), $"Timestamp should not be {default(DateTime)}");
                 Assert.That(tracingState.TransportDuration, Is.GreaterThan(TimeSpan.Zero), $"TransportDuration should not be Zero");
             });
         }
@@ -251,7 +251,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Assert.That(tracingState.TraceId, Is.EqualTo(TraceId));
                 Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
                 Assert.That(tracingState.Type, Is.EqualTo(DistributedTracingParentType.Unknown));
-                Assert.That(tracingState.Timestamp, Is.EqualTo((DateTime)default), $"Timestamp: expected {(DateTime)default}, actual: {tracingState.Timestamp}");
+                Assert.That(tracingState.Timestamp, Is.EqualTo(default(DateTime)), $"Timestamp: expected {default(DateTime)}, actual: {tracingState.Timestamp}");
                 Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero), $"TransportDuration: expected {TimeSpan.Zero}, actual: {tracingState.TransportDuration}");
             });
         }
