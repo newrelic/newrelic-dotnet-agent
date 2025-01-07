@@ -172,8 +172,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             AsyncContext.Run(() =>
             {
                 try
-                { 
-                var response = client.Send(request);
+                {
+                    var response = client.Send(request);
                 }
                 catch (TaskCanceledException)
                 {
