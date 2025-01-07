@@ -77,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     StartInjecting();
                     _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
-                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                            .GetAwaiter().GetResult();
                 }
                 finally
                 {
