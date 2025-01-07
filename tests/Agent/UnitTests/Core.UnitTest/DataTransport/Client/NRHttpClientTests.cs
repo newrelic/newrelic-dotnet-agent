@@ -12,6 +12,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using Nito.AsyncEx;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -156,19 +157,28 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Content = { SerializedData = "{\"Test\"}", ContentType = "application/json" }
             };
 
-            // start a thread that might deadlock - if join times out, we know it deadlocked
-            var thread = new Thread(() => SendWithAsyncContext(client, request));
-            thread.Start();
-            if (!thread.Join(5000)) {
-                Assert.Fail("Deadlock detected. Check logic in NRHttpClient.Send() and HttpClientWrapper.Send() for correct usage of .ConfigureAwait(false)");
-            }
+            Assert.DoesNotThrow(() =>
+            {
+                // start a thread that might deadlock - if the thread doesn't throw TaskCanceledException within 5 seconds, then we have a deadlock
+                var thread = new Thread(() => SendWithAsyncContext(client, request));
+                thread.Start();
+                if (!thread.Join(5000))
+                    throw new Exception("Deadlock detected.");
+            }, "Deadlock detected. Check logic in NRHttpClient.Send() and HttpClientWrapper.Send() for correct usage of .ConfigureAwait(false)");
         }
 
         private static void SendWithAsyncContext(NRHttpClient client, HttpRequest request)
         {
             AsyncContext.Run(() =>
             {
+                try
+                { 
                 var response = client.Send(request);
+                }
+                catch (TaskCanceledException)
+                {
+                    // expected exception
+                }
             });
         }
 
