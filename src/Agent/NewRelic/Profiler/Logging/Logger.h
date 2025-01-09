@@ -180,7 +180,7 @@ namespace NewRelic {
                 }
 
                 using stream_char_t = typename _Log::char_type;
-                if (log.GetInitialized() && log.GetEnabled() && (level >= log.GetLevel()))
+                if (log.GetInitialized() && (log.GetEnabled() || log.GetConsoleLogging()) && (level >= log.GetLevel()))
                 {
                     //each thread will have these on the stack...
                     std::tm  tstruct;
