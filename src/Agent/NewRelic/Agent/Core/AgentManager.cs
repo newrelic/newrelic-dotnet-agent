@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.Core
             public AgentSingleton() : base(DisabledAgentManager) { }
 
             // Called by Singleton::Singleton
-            protected override IAgentManager CreateInstance()
+            protected override async Task<IAgentManager> CreateInstanceAsync()
             {
                 try
                 {
@@ -49,7 +50,7 @@ namespace NewRelic.Agent.Core
                     //the DisabledAgentManager because the Singleton is still being created so we need to do that here.
                     if (agentManager._shutdownEventReceived)
                     {
-                        agentManager.ShutdownAsync(false);
+                        await agentManager.ShutdownAsync(false).ConfigureAwait(false);
                         return DisabledAgentManager;
                     }
 
@@ -70,13 +71,11 @@ namespace NewRelic.Agent.Core
             }
         }
 
-        public static IAgentManager Instance
+        public static async Task<IAgentManager> InstanceAsync()
         {
-            get
-            {
-                // The singleton pointer may be null if we instrument a method that's invoked in the agent constructor.
-                return Singleton?.ExistingInstance ?? DisabledAgentManager;
-            }
+            return Singleton != null
+                ? await Singleton.ExistingInstanceAsync().ConfigureAwait(false)
+                : DisabledAgentManager;
         }
 
         private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
@@ -139,7 +138,7 @@ namespace NewRelic.Agent.Core
 
             AssertAgentEnabled();
 
-            EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
+            EventBus<KillAgentEvent>.Subscribe(OnShutdownAgentAsync);
 
             //Initialize the extensions loader with extensions folder based on the the install path
             ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
@@ -187,7 +186,7 @@ namespace NewRelic.Agent.Core
 
         private void Initialize(bool serverlessModeEnabled)
         {
-            AgentInitializer.OnExit += ProcessExit;
+            AgentInitializer.OnExit += ProcessExitAsync;
 
             var nativeMethods = _container.Resolve<INativeMethods>();
             var instrumentationService = _container.Resolve<IInstrumentationService>();
@@ -407,11 +406,11 @@ namespace NewRelic.Agent.Core
             }
         }
 
-        private void ProcessExit(object sender, EventArgs e)
+        private async void ProcessExitAsync(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
 
-            ShutdownAsync(true);
+            await ShutdownAsync(true).ConfigureAwait(false);
         }
 
         private async Task ShutdownAsync(bool cleanShutdown)
@@ -427,7 +426,7 @@ namespace NewRelic.Agent.Core
             {
                 Log.Info("Starting the shutdown process for the .NET Agent.");
 
-                AgentInitializer.OnExit -= ProcessExit;
+                AgentInitializer.OnExit -= ProcessExitAsync;
 
                 if (cleanShutdown)
                 {
@@ -461,7 +460,7 @@ namespace NewRelic.Agent.Core
 
         #region Event handlers
 
-        private void OnShutdownAgent(KillAgentEvent eventData)
+        private async Task OnShutdownAgentAsync(KillAgentEvent eventData)
         {
             _shutdownEventReceived = true;
 
@@ -469,7 +468,8 @@ namespace NewRelic.Agent.Core
             //because the AgentManager is still in the middle of initializing itself. In this scenario,
             //the AgentSingleton will check to see if a shutdownEvent was received, and call Shutdown
             //appropriately.
-            if (_isInitialized) ShutdownAsync(false);
+            if (_isInitialized)
+                await ShutdownAsync(false).ConfigureAwait(false);
         }
 
         #endregion Event handlers

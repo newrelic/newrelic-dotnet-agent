@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.Utilities
     public static class EventBus<T>
     {
         private static event Action<T> Events = _ => { };
-        private static event Func<Task<T>> EventsAsync;
+        private static event Func<T, Task> EventsAsync;
 
         private static readonly ReaderWriterLock Lock = new ReaderWriterLock();
         private static readonly ReaderLockGuard ReaderLockGuard = new ReaderLockGuard(Lock);
@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
             }
         }
 
-        public static void Subscribe(Func<Task<T>> callback)
+        public static void Subscribe(Func<T, Task> callback)
         {
             using (WriterLockGuard.Acquire())
             {

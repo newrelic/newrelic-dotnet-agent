@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core
                 LoggerBootstrapper.Initialize();
 
                 // Force agent to be initialized
-                var agent = AgentManager.Instance;
+                var agent = AgentManager.InstanceAsync;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.PreserveSig)]

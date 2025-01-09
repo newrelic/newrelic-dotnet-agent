@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core
@@ -42,7 +43,7 @@ namespace NewRelic.Agent.Core
             {
             }
 
-            protected override IAgentMock CreateInstance()
+            protected override Task<IAgentManager> CreateInstanceAsync()
             {
                 if (count == 0)
                 {
@@ -60,7 +61,7 @@ namespace NewRelic.Agent.Core
             {
                 try
                 {
-                    return singleton.ExistingInstance;
+                    return singleton.ExistingInstanceAsync;
                 }
                 catch (NullReferenceException)
                 {

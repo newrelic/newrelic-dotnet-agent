@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.Tracer;
 
 namespace NewRelic.Agent.Core
@@ -116,7 +117,7 @@ namespace NewRelic.Agent.Core
 				if (!TryInitialize($"{typeName}.{methodName}")) return NoOpFinishTracer;
 			}
 
-            var tracer = GetTracer(
+            var tracer = await GetTracerAsync(
                 tracerFactoryName,
                 tracerArguments,
                 metricName,
@@ -127,7 +128,7 @@ namespace NewRelic.Agent.Core
                 argumentSignature,
                 invocationTarget,
                 args,
-                functionId);
+                functionId).ConfigureAwait(false);
 
             if (tracer == null)
             {
@@ -163,7 +164,7 @@ namespace NewRelic.Agent.Core
         /// <exception cref="System.ArgumentNullException"> thrown if any one of <paramref name="assemblyName"/>, <paramref name="type"/>,
         /// <paramref name="typeName"/>, <paramref name="methodName"/>, <paramref name="argumentSignature"/> or <paramref name="args"/> is null. 
         /// This function is only called from the injected managed byte-code</exception>
-        public static ITracer GetTracer(
+        public static async Task<ITracer> GetTracerAsync(
             string tracerFactoryName,
             uint tracerArguments,
             string metricName,
@@ -194,7 +195,7 @@ namespace NewRelic.Agent.Core
                 if (IgnoreWork.AgentDepth > 0)
                     return null;
 
-                var agent = AgentManager.Instance;
+                var agent = await AgentManager.InstanceAsync().ConfigureAwait(false);
 
                 return agent?.GetTracerImpl(
                     tracerFactoryName,
