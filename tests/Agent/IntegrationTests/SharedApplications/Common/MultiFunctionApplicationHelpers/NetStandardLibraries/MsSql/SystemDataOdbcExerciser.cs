@@ -182,36 +182,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             return string.Join(",", teamMembers);
         }
 
-        //[LibraryMethod]
-        //[Transaction]
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
-        //{
-        //    ExecuteParameterizedStoredProcedure(procedureNameWith, true);
-        //    ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
-        //}
-
-        //private int ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
-        //{
-        //    EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
-        //    using (var connection = new OdbcConnection(_connectionString))
-        //    using (var command = new OdbcCommand(procedureName, connection))
-        //    {
-        //        connection.Open();
-        //        command.CommandType = CommandType.StoredProcedure;
-        //        foreach (var parameter in DbParameterData.MsSqlParameters)
-        //        {
-        //            var paramName = paramsWithAtSign
-        //                ? parameter.ParameterName
-        //                : parameter.ParameterName.TrimStart('@');
-
-        //            command.Parameters.Add(new OdbcParameter(paramName, parameter.Value));
-        //        }
-
-        //        return command.ExecuteNonQuery();
-        //    }
-        //}
-
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
