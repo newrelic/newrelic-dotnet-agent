@@ -20,11 +20,11 @@
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="log4net" Version="2.0.17" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="log4net" Version="2.0.17" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="log4net" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="MassTransit" Version="8.3.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="8.3.4" Condition="'$(TargetFramework)' == 'net9.0'" />
