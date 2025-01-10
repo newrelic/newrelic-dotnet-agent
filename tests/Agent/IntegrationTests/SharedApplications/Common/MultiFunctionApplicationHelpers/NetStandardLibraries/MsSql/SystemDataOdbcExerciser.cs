@@ -5,21 +5,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
 using System.Data;
-
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Threading;
+using System.Data.Odbc;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
-    [Library]
-    public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
-    {
-        private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
+    [Library]
+    public class SystemDataOdbcExerciser : MsSqlExerciserBase
+    {
+        private static string _connectionString = MsSqlOdbcConfiguration.MsSqlOdbcConnectionString;
 
         [LibraryMethod]
         [Transaction]
@@ -28,11 +27,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 connection.Open();
 
-                using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
+                using (var command = new OdbcCommand(SelectPersonByFirstNameMsSql, connection))
                 {
 
                     using (var reader = command.ExecuteReader())
@@ -52,17 +51,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                 var countSql = string.Format(CountPersonMsSql, tableName);
                 var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
-                using (var command = new SqlCommand(insertSql, connection))
+                using (var command = new OdbcCommand(insertSql, connection))
                 {
                     var insertCount = command.ExecuteNonQuery();
                 }
 
-                using (var command = new SqlCommand(countSql, connection))
+                using (var command = new OdbcCommand(countSql, connection))
                 {
                     var teamMemberCount = command.ExecuteScalar();
                 }
 
-                using (var command = new SqlCommand(deleteSql, connection))
+                using (var command = new OdbcCommand(deleteSql, connection))
                 {
                     var deleteCount = command.ExecuteNonQuery();
                 }
@@ -78,11 +77,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand(SelectPersonByLastNameMsSql, connection))
+                using (var command = new OdbcCommand(SelectPersonByLastNameMsSql, connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -101,17 +100,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                 var countSql = string.Format(CountPersonMsSql, tableName);
                 var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
-                using (var command = new SqlCommand(insertSql, connection))
+                using (var command = new OdbcCommand(insertSql, connection))
                 {
                     var insertCount = await command.ExecuteNonQueryAsync();
                 }
 
-                using (var command = new SqlCommand(countSql, connection))
+                using (var command = new OdbcCommand(countSql, connection))
                 {
                     var teamMemberCount = await command.ExecuteScalarAsync();
                 }
 
-                using (var command = new SqlCommand(deleteSql, connection))
+                using (var command = new OdbcCommand(deleteSql, connection))
                 {
                     var deleteCount = await command.ExecuteNonQueryAsync();
                 }
@@ -127,13 +126,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 connection.Open();
 
-                using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
+                using (var command = new OdbcCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
                 {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
+                    command.Parameters.Add(new OdbcParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -146,6 +145,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                         }
                     }
                 }
+
             }
 
             return string.Join(",", teamMembers);
@@ -158,13 +158,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand(SelectPersonByParameterizedLastNameMsSql, connection))
+                using (var command = new OdbcCommand(SelectPersonByParameterizedLastNameMsSql, connection))
                 {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
+                    command.Parameters.Add(new OdbcParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
@@ -181,31 +181,64 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 
             return string.Join(",", teamMembers);
         }
+
+        //[LibraryMethod]
+        //[Transaction]
+        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        //public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+        //{
+        //    ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+        //    ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+        //}
+
+        //private int ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        //{
+        //    EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
+        //    using (var connection = new OdbcConnection(_connectionString))
+        //    using (var command = new OdbcCommand(procedureName, connection))
+        //    {
+        //        connection.Open();
+        //        command.CommandType = CommandType.StoredProcedure;
+        //        foreach (var parameter in DbParameterData.MsSqlParameters)
+        //        {
+        //            var paramName = paramsWithAtSign
+        //                ? parameter.ParameterName
+        //                : parameter.ParameterName.TrimStart('@');
+
+        //            command.Parameters.Add(new OdbcParameter(paramName, parameter.Value));
+        //        }
+
+        //        return command.ExecuteNonQuery();
+        //    }
+        //}
+
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+        public void OdbcParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
         {
-            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
-            ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+            ExecuteOdbcParameterizedStoredProcedure(procedureNameWith, true);
+            ExecuteOdbcParameterizedStoredProcedure(procedureNameWithout, false);
         }
 
-        private void ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+        private void ExecuteOdbcParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
-            EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
+            EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
 
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(procedureName, connection))
+            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
+
+            using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
+            using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
             {
                 connection.Open();
                 command.CommandType = CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.MsSqlParameters)
+                foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
                 {
                     var paramName = paramsWithAtSign
                         ? parameter.ParameterName
                         : parameter.ParameterName.TrimStart('@');
 
-                    command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
+                    command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
                 }
 
                 command.ExecuteNonQuery();
@@ -215,12 +248,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         public void CreateTable(string tableName)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 connection.Open();
 
                 var createTable = string.Format(CreatePersonTableMsSql, tableName);
-                using (var command = new SqlCommand(createTable, connection))
+                using (var command = new OdbcCommand(createTable, connection))
                 {
                     command.ExecuteNonQuery();
                 }
@@ -232,11 +265,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 connection.Open();
 
-                using (var command = new SqlCommand(dropTableSql, connection))
+                using (var command = new OdbcCommand(dropTableSql, connection))
                 {
                     command.ExecuteNonQuery();
                 }
@@ -248,11 +281,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var connection = new OdbcConnection(_connectionString))
             {
                 connection.Open();
 
-                using (var command = new SqlCommand(dropProcedureSql, connection))
+                using (var command = new OdbcCommand(dropProcedureSql, connection))
                 {
                     command.ExecuteNonQuery();
                 }
@@ -269,8 +302,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var parameters = string.Join(", ", dbParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
             var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(statement, connection))
+            using (var connection = new OdbcConnection(_connectionString))
+            using (var command = new OdbcCommand(statement, connection))
             {
                 connection.Open();
                 command.ExecuteNonQuery();
