@@ -8,8 +8,8 @@
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.8" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net9.0'" />

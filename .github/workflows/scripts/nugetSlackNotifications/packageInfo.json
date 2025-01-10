@@ -45,7 +45,11 @@
         "packageName": "elasticsearch.net"
     },
     {
-        "packageName": "elastic.clients.elasticsearch"
+        "packageName": "elastic.clients.elasticsearch",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking since 8.16.0. See https://new-relic.atlassian.net/browse/NR-356677"
     },
     {
         "packageName": "enyimmemcachedcore"
