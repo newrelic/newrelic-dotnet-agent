@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Extensions.Parsing
     {
         private const string NullQueryParameterValue = "Null";
 
-        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}", RegexOptions.IgnoreCase);
+        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static ConcurrentDictionary<string, DatastoreVendor> _vendorNameCache = new ConcurrentDictionary<string, DatastoreVendor>();
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Extensions.Parsing
                 _vendorNameCache[connectionString] = vendor;
                 return vendor;
             }
-            return DatastoreVendor.ODBC; // or maybe Other?
+            return DatastoreVendor.ODBC;
         }
 
         public static DatastoreVendor GetVendorName(string typeName)
