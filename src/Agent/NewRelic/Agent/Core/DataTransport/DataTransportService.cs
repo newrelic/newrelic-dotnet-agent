@@ -5,7 +5,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
@@ -17,7 +16,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-
 namespace NewRelic.Agent.Core.DataTransport
 {
     public interface IDataTransportService
@@ -176,7 +174,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 var errorStatus = GetDataTransportResponseStatusByHttpStatusCode(ex.StatusCode);
                 return new DataTransportResponse<T>(errorStatus);
             }
-            catch (Exception ex) when (ex is SocketException || ex is WebException || ex is OperationCanceledException)
+            // OperationCanceledException is a base class for TaskCanceledException, which can be thrown by HttpClient.SendAsync in .NET 6+
+            catch (Exception ex) when (ex is SocketException or WebException or OperationCanceledException) 
             {
                 LogErrorResponse(ex, method, startTime, null);
                 return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
@@ -225,7 +224,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var endTime = DateTime.UtcNow;
             _agentHealthReporter.ReportSupportabilityCollectorErrorException(method, endTime - startTime, httpStatusCode);
-            Log.Error(exception, "");
+            Log.Error(exception, "Exception in TrySendDataRequest():");
         }
 
         private DataTransportResponseStatus GetDataTransportResponseStatusByHttpStatusCode(HttpStatusCode httpStatusCode)

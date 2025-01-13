@@ -2,7 +2,7 @@ name: Check Markdown links
 
 on: 
   schedule:
-    - cron: "0 9 * * 1-5" # run once a day, M-F
+    - cron: '0 0 1 * *' # run once a month on the first
   workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
