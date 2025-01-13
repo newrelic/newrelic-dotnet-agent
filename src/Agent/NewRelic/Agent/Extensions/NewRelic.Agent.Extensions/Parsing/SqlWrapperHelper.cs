@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Extensions.Parsing
     {
         private const string NullQueryParameterValue = "Null";
 
-        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}");
+        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static ConcurrentDictionary<string, DatastoreVendor> _vendorNameCache = new ConcurrentDictionary<string, DatastoreVendor>();
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Extensions.Parsing
 
         public static DatastoreVendor GetVendorNameFromOdbcConnectionString(string connectionString)
         {
-            // Example connection string: DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=MssqlPassw0rd;Encrypt=no;
+            // Example connection string: DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;
             if (_vendorNameCache.TryGetValue(connectionString, out DatastoreVendor vendor))
             {
                 return vendor;
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Extensions.Parsing
                 _vendorNameCache[connectionString] = vendor;
                 return vendor;
             }
-            return DatastoreVendor.ODBC; // or maybe Other?
+            return DatastoreVendor.ODBC;
         }
 
         public static DatastoreVendor GetVendorName(string typeName)

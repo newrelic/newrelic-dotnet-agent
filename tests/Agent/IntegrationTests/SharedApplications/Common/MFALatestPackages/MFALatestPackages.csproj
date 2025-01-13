@@ -94,9 +94,12 @@
     
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
-    
+
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" Condition="'$(TargetFramework)' == 'net9.0'" />
+
+    <PackageReference Include="System.Data.Odbc" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="System.Data.Odbc" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
   </ItemGroup>
 </Project>
