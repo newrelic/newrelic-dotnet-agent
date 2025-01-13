@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var success = false;
             try
             {
-                success = await _responseStream.MoveNext(_streamCancellationToken);
+                success = await _responseStream.MoveNext(_streamCancellationToken).ConfigureAwait(false);
             }
             catch (RpcException rpcEx)
             {

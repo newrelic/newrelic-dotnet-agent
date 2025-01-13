@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 #if NETFRAMEWORK
 using System.Net;
@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
         }
 
-        public IHttpClient CreateClient(IWebProxy proxy, IConfiguration configuration)
+        public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration)
         {
             return new NRWebRequestClient(proxy, configuration);
         }

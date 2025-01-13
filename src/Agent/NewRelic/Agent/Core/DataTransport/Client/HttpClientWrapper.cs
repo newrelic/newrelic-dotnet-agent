@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -6,9 +6,8 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -31,19 +30,20 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public async Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message)
         {
-            var cts = new CancellationTokenSource(_timeoutMilliseconds);
-            return new HttpResponseMessageWrapper(await _httpClient.SendAsync(message, cts.Token));
-        }
-
-        public TimeSpan Timeout
-        {
-            get
+            using var cts = new CancellationTokenSource(_timeoutMilliseconds);
+            try
             {
-                return _httpClient.Timeout;
+                // .ConfigureAwait(false) is used to avoid deadlocks.
+                var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false);
+                return new HttpResponseMessageWrapper(httpResponseMessage);
             }
-            set
+            catch (Exception e)
             {
-                _httpClient.Timeout = value;
+                Log.Debug(cts.IsCancellationRequested
+                    ? $"HttpClient.SendAsync() timed out after {_timeoutMilliseconds}ms."
+                    : $"HttpClient.SendAsync() threw an unexpected exception: {e}");
+
+                throw;
             }
         }
     }

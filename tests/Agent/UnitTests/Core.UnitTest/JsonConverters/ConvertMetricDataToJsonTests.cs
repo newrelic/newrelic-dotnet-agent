@@ -10,8 +10,10 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.SharedInterfaces;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
+using JsonSerializer = NewRelic.Agent.Core.DataTransport.JsonSerializer;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {
@@ -23,7 +25,6 @@ namespace NewRelic.Agent.Core.JsonConverters
 
         private MetricWireModelCollection _wellformedMetricData;
         private string _wellformedJson = "[\"440491846668652\",1450462672.0,1450462710.0,[[{\"name\":\"DotNet/name\",\"scope\":\"WebTransaction/DotNet/name\"},[1,3.0,2.0,3.0,3.0,9.0]],[{\"name\":\"Custom/name\"},[1,4.0,3.0,4.0,4.0,16.0]]]]";
-
 
         [SetUp]
         public void Setup()
@@ -56,6 +57,16 @@ namespace NewRelic.Agent.Core.JsonConverters
         }
 
         [Test]
+        public void Serialize_ThrowsOnInvalidObject()
+        {
+            var node1 = new Node { Name = "Node1" };
+            var node2 = new Node { Name = "Node2", Child = node1 };
+            node1.Child = node2; // circular reference, should throw
+
+            Assert.Throws<JsonSerializationException>(() => _connectionHandler.SendDataRequest<object>("metric_data", node1));
+        }
+
+        [Test]
         public void Serialize_MatchesExpectedOutput()
         {
             var model = new MetricWireModelCollection[] { _wellformedMetricData };
@@ -63,5 +74,12 @@ namespace NewRelic.Agent.Core.JsonConverters
             var serializedMetrics = Newtonsoft.Json.JsonConvert.SerializeObject(model);
             Assert.That(serializedMetrics, Is.EqualTo(_wellformedJson));
         }
+
+        public class Node
+        {
+            public string Name { get; set; }
+            public Node Child { get; set; }
+        }
+
     }
 }

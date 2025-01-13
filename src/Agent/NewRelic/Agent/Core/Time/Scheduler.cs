@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.Time
         // The System.Threading.Timer class uses -1 milliseconds as a magic "off" value
         private static readonly TimeSpan DisablePeriodicExecution = TimeSpan.FromMilliseconds(-1);
 
-        private readonly object _lock = new object();
+        private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
 
         private readonly DisposableCollection<TimerStatus> _oneTimeTimers = new DisposableCollection<TimerStatus>();
 
@@ -29,7 +29,8 @@ namespace NewRelic.Agent.Core.Time
             if (timeUntilExecution < TimeSpan.Zero)
                 throw new ArgumentException("Must be non-negative", "timeUntilExecution");
 
-            lock (_lock)
+            _lockSemaphore.Wait();
+            try
             {
                 // Removes processed oneTimeTimers
                 var timersToRemove = new List<TimerStatus>();
@@ -58,6 +59,10 @@ namespace NewRelic.Agent.Core.Time
 
                 _oneTimeTimers.Add(newExecution);
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
         public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
@@ -65,7 +70,8 @@ namespace NewRelic.Agent.Core.Time
             if (timeBetweenExecutions < TimeSpan.Zero)
                 throw new ArgumentException("Must be non-negative", "timeBetweenExecutions");
 
-            lock (_lock)
+            _lockSemaphore.Wait();
+            try
             {
                 var existingTimer = _recurringTimers.GetValueOrDefault(action);
                 if (existingTimer != null)
@@ -76,6 +82,10 @@ namespace NewRelic.Agent.Core.Time
 
                 var timer = CreateExecuteEveryTimer(action, timeBetweenExecutions, optionalInitialDelay);
                 _recurringTimers[action] = timer;
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
@@ -169,7 +179,8 @@ namespace NewRelic.Agent.Core.Time
 
         public void StopExecuting(Action action, TimeSpan? timeToWaitForInProgressAction = null)
         {
-            lock (_lock)
+            _lockSemaphore.Wait();
+            try
             {
                 var existingTimer = _recurringTimers.GetValueOrDefault(action);
                 if (existingTimer == null)
@@ -190,13 +201,18 @@ namespace NewRelic.Agent.Core.Time
                     waitHandle.WaitOne(timeToWaitForInProgressAction.Value);
                 }
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
         #endregion Public API
 
         public void Dispose()
         {
-            lock (_lock)
+            _lockSemaphore.Wait();
+            try
             {
                 _oneTimeTimers.Dispose();
 
@@ -205,6 +221,10 @@ namespace NewRelic.Agent.Core.Time
                     timer?.Dispose();
                 }
                 _recurringTimers.Clear();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 

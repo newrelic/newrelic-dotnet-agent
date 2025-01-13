@@ -30,16 +30,10 @@
         "packageName": "amazon.lambda.sqsevents"
     },
     {
-        "packageName": "awssdk.bedrockruntime",
-        "ignorePatch": true,
-        "ignoreMinor": false,
-        "ignoreReason": "frequent patch releases create too much noise"
+        "packageName": "awssdk.bedrockruntime"
     },
     {
-        "packageName": "awssdk.sqs",
-        "ignorePatch": true,
-        "ignoreMinor": false,
-        "ignoreReason": "frequent patch releases create too much noise"
+        "packageName": "awssdk.sqs"
     },
     {
         "packageName": "awssdk.dynamodbv2"
@@ -53,18 +47,21 @@
     {
         "packageName": "elastic.clients.elasticsearch",
         "ignorePatch": true,
-        "ignoreMinor": false,
-        "ignoreReason": "frequent patch releases create too much noise"
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking since 8.16.0. See https://new-relic.atlassian.net/browse/NR-356677"
     },
     {
         "packageName": "enyimmemcachedcore"
     },
     {
-        "packageName": "log4net",
-        "ignorePatch": true,
-        "ignoreMinor": true,
-        "ignoreMajor": true,
-        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2764"
+        "packageName": "log4net"
+    },
+    {
+        "packageName": "masstransit"
+    },
+    {
+        "packageName": "microsoft.azure.cosmos"
     },
     {
         "packageName": "microsoft.azure.functions.worker"
@@ -83,6 +80,12 @@
     },
     {
         "packageName": "microsoft.extensions.logging"
+    },
+    {
+        "packageName": "microsoft.extensions.logging.configuration"
+    },
+    {
+        "packageName": "microsoft.extensions.logging.console"
     },
     {
         "packageName": "microsoft.data.sqlclient"
@@ -113,7 +116,16 @@
         "packageName": "nlog"
     },
     {
+        "packageName": "nlog.extensions.logging"
+    },
+    {
         "packageName": "nservicebus"
+    },
+    {
+        "packageName": "orcacle.manageddataaccess"
+    },
+    {
+        "packageName": "orcacle.manageddataaccess.core"
     },
     {
         "packageName": "rabbitmq.client",
@@ -141,9 +153,6 @@
         "packageName": "serilog.sinks.console"
     },
     {
-        "packageName": "stackexchange.redis",
-        "ignorePatch": true,
-        "ignoreMinor": false,
-        "ignoreReason": "frequent patch releases create too much noise"
+        "packageName": "stackexchange.redis"
     }
 ]

@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+            Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -73,7 +73,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.That(response, Is.EqualTo(expected));
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -96,14 +96,14 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+            Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
             Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -126,14 +126,14 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+            Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
             Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+            Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var mockHttpClient = Mock.Create<IHttpClient>();
             Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+            Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 

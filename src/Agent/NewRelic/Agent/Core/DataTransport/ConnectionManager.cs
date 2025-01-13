@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Threading;
+
 #if !NETFRAMEWORK
 using System.Net.Http;
 #endif
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IScheduler _scheduler;
         private int _connectionAttempt = 0;
         private bool _started;
-        private readonly object _syncObject = new object();
+        private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
         private bool _runtimeConfigurationUpdated = false;
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
@@ -70,7 +70,8 @@ namespace NewRelic.Agent.Core.DataTransport
             if (_started)
                 return;
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 // Second, a thread-safe check inside the blocking code block that ensures we'll never start more than once
                 if (_started)
@@ -79,21 +80,36 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
                     Connect();
                 else
-                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                    _scheduler.ExecuteOnce(LockAndConnect, TimeSpan.Zero);
 
                 _started = true;
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
+        private void LockAndConnect()
+        {
+            _lockSemaphore.Wait();
+            try
+            {
+                Connect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Connect()
         {
             try
             {
-                lock (_syncObject)
-                {
-                    _runtimeConfigurationUpdated = false;
-                    _connectionHandler.Connect();
-                }
+                _runtimeConfigurationUpdated = false;
+                _connectionHandler.Connect();
 
                 // If the runtime configuration has changed, the app names have updated, so we schedule a restart
                 // This uses the existing ScheduleRestart logic so the current Connect can finish and we follow the backoff pattern and don't spam reconnect attempts.
@@ -127,6 +143,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Occurs when no network connection is available, DNS unavailable, etc.
                 case WebException:
                 // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                // OperationCanceledException is a base class for TaskCanceledException, which can be thrown by HttpClient.SendAsync in .NET 6+
                 case OperationCanceledException:
                     Log.Info("Connection failed: {0}", ex.Message);
                     break;
@@ -157,30 +174,52 @@ namespace NewRelic.Agent.Core.DataTransport
                 ImmediateShutdown();
         }
 
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Disconnect()
         {
-            lock (_syncObject)
+            _connectionHandler.Disconnect();
+        }
+
+        private void LockAndDisconnect()
+        {
+            _lockSemaphore.Wait();
+            try
             {
-                _connectionHandler.Disconnect();
+                Disconnect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
+
 
         private void Reconnect()
         {
             EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 Disconnect();
                 Connect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
         public T SendDataRequest<T>(string method, params object[] data)
         {
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 return _connectionHandler.SendDataRequest<T>(method, data);
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
@@ -198,7 +237,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
             Log.Info("Will attempt to reconnect in {0} seconds", retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, retryTime);
+            _scheduler.ExecuteOnce(LockAndConnect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
         }
@@ -248,9 +287,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void OnCleanShutdown(CleanShutdownEvent eventData)
         {
-            Disconnect();
+            LockAndDisconnect();
         }
-
         #endregion Event handlers
     }
 }

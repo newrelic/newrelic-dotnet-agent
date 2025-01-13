@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     return _timestamp = _newRelicPayload.Timestamp;
                 }
 
-                return _timestamp = (DateTime)default; // default is same as new.
+                return _timestamp = default(DateTime); // default is same as new.
             }
         }
 

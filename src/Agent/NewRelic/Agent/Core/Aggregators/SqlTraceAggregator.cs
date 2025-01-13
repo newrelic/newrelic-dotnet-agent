@@ -66,14 +66,15 @@ namespace NewRelic.Agent.Core.Aggregators
                 .Take(_configuration.SqlTracesPerPeriod)
                 .ToList();
 
-            if (!slowestTraces.Any())
-                return;
+            // if we don't have any traces to publish then don't
+            var traceCount = slowestTraces.Count;
+            if (traceCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
+                HandleResponse(responseStatus, slowestTraces);
+            }
 
-            var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
-
-            HandleResponse(responseStatus, slowestTraces);
-
-            Log.Finest("SQL Trace harvest finished.");
+            Log.Finest($"SQL Trace harvest finished. {traceCount} trace(s) sent.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
