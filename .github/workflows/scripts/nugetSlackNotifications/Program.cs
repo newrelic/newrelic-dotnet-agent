@@ -256,25 +256,19 @@ namespace nugetSlackNotifications
                     });
                 }
 
-                var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
-                var commitMessage = "test:Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
-                var newCommit = new NewCommit(commitMessage, newTree.Sha, masterReference.Object.Sha);
-                var commit = await ghClient.Git.Commit.Create(Owner, Repo, newCommit);
-                var branchref = await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
+                var commitMessage = "test: Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
                 Log.Information($"Successfully created {branchName} branch.");
 
                 var newPr = new NewPullRequest(commitMessage, branchName, "main");
-                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog;
+                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog + "\n\n**Don't forget to update the .NET Compatibility docs:docs: with the new versions!**\n";
                 var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
                 Log.Information($"Successfully created PR for {branchName} at {pullRequest.HtmlUrl}");
 
                 return pullRequest.HtmlUrl;
             }
-            else
-            {
-                Log.Information($"Pull request will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
-                return "";
-            }
+
+            Log.Information($"Pull request will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
+            return "";
         }
 
         [Trace]
