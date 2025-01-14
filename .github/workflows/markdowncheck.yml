@@ -2,7 +2,7 @@ name: Check Markdown links
 
 on: 
   schedule:
-    - cron: "0 9 * * 1-5" # run once a day, M-F
+    - cron: '0 0 1 * *' # run once a month on the first
   workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           egress-policy: audit # Leave it audit mode
 

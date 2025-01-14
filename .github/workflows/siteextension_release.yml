@@ -1,4 +1,4 @@
-name: .NET New Relic Azure Site Extension Release Build
+name: Azure Site Extension Release Build
 
 on:
   release:

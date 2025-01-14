@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                 portNum = -1;
             }
 
-            return new ConnectionInfo(DatastoreVendor.Postgres.ToKnownName(), host, portNum, databaseName);
+            return new ConnectionInfo(host, portNum, databaseName);
         }
     }
 }

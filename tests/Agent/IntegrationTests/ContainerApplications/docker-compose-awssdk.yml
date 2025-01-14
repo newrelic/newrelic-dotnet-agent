@@ -33,10 +33,18 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  dynamodb:
+    command: "-jar DynamoDBLocal.jar -inMemory"
+    image: "amazon/dynamodb-local:latest"
+    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
+      - "8000"
+    working_dir: /home/dynamodblocal
  
   awssdktestapp:
     depends_on:
         - localstack
+        - dynamodb
     container_name: ${CONTAINER_NAME}
     image: ${CONTAINER_NAME}
     platform: ${PLATFORM}

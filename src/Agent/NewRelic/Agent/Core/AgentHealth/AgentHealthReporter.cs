@@ -662,6 +662,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogMetricsConfiguredName(_configuration.LogMetricsCollectorEnabled));
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogForwardingConfiguredName(_configuration.LogEventCollectorEnabled));
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogDecoratingConfiguredName(_configuration.LogDecoratorEnabled));
+            ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogLabelsConfiguredName(_configuration.LabelsEnabled));
         }
 
         #endregion

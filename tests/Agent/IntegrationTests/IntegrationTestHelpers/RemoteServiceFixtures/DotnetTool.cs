@@ -178,7 +178,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        public override void Shutdown()
+        public override void Shutdown(bool force = false)
         {
             if (!IsRunning)
             {

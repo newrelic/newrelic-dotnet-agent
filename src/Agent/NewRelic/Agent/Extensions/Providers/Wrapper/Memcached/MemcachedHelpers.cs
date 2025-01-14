@@ -4,7 +4,6 @@
 using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Memcached
@@ -27,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.Memcached
         {
             if (_hasGetServerFailed)
             {
-                return new ConnectionInfo(DatastoreVendor.Memcached.ToKnownName(), null, -1, null);
+                return new ConnectionInfo(null, -1, null);
             }
 
             try
@@ -67,13 +66,13 @@ namespace NewRelic.Providers.Wrapper.Memcached
                 _portGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(endpointType, "Port");
                 int? port = _portGetter(endpoint);
 
-                return new ConnectionInfo(DatastoreVendor.Memcached.ToKnownName(), address, port.HasValue ? port.Value : -1, null);
+                return new ConnectionInfo(address, port.HasValue ? port.Value : -1, null);
             }
             catch (Exception exception)
             {
                 agent.Logger.Warn(exception, "Unable to get Memcached server address/port, likely to due to type differences. Server address/port will not be available.");
                 _hasGetServerFailed = true;
-                return new ConnectionInfo(DatastoreVendor.Memcached.ToKnownName(), null, -1, null);
+                return new ConnectionInfo(null, -1, null);
             }
         }
     }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -12,49 +12,49 @@
     from each other due to a shared dependency on AWSSDK.Core -->
     
     <!-- 2.0.0 is from March 2020 -->
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.0.0 is from April 2020 -->
-    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.1.0 is from October 2020 -->
-    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.4.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.4.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.3.0 is from September 2023. DynamoDBTimeWindowEvent not available until 2.3.0 -->
-    <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="2.3.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="2.3.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.1.0 is from August 2023. KinesisTimeWindowEvent not available until 2.1 -->
-    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.0.0 is from March 2020 -->
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.3.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.3.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.0.0 is from March 2021 -->
-    <PackageReference Include="Amazon.Lambda.S3Events" Version="2.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.S3Events" Version="3.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.S3Events" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.S3Events" Version="3.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 2.1.0 is from October 2020 -->
-    <PackageReference Include="Amazon.Lambda.SimpleEmailEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.SimpleEmailEvents" Version="3.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SimpleEmailEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SimpleEmailEvents" Version="3.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 1.2.0 is from October 2020 -->
-    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- 1.2.0 is from October 2020 -->
-    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.2.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <!-- Non-event libraries -->
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.11.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.20">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

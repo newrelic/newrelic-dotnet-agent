@@ -12,9 +12,10 @@ namespace NewRelic.Agent.Core.Utilities
         [TestCase(DotnetCoreVersion.netcoreapp30, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.netcoreapp31, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net5, ExpectedResult = true)]
-        [TestCase(DotnetCoreVersion.net6, ExpectedResult = false)]
+        [TestCase(DotnetCoreVersion.net6, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net7, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net8, ExpectedResult = false)]
+        [TestCase(DotnetCoreVersion.net9, ExpectedResult = false)]
         [TestCase(DotnetCoreVersion.Other, ExpectedResult = false)]
         public bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
         {

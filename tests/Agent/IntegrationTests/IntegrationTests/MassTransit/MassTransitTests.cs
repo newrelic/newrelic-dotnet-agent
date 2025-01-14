@@ -108,9 +108,9 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         }
     }
     [NetCoreTest]
-    public class MassTransitTests_StartHost_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MassTransitTests_StartHost_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MassTransitTests_StartHost_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public MassTransitTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, false)
         {
         }
@@ -142,9 +142,9 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         }
     }
     [NetCoreTest]
-    public class MassTransitTests_StartBus_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MassTransitTests_StartBus_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MassTransitTests_StartBus_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public MassTransitTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, true)
         {
         }

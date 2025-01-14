@@ -42,7 +42,7 @@ where TFixture : ConsoleDynamicMethodFixture
             _fixture.Initialize();
         }
 
-        [Fact]
+        //[Fact] // The model we were using that was marked as disabled is deprecated, so the test no longer works
         public void BedrockDisabledTest()
         {
             // Make sure it actually got called

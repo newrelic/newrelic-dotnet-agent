@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContainerIntegrationTests",
 	ProjectSection(ProjectDependencies) = postProject
 		{0EECB18A-4350-4D17-AB0D-F7647B4E3B58} = {0EECB18A-4350-4D17-AB0D-F7647B4E3B58}
 		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {1F7402D8-E345-480C-BBA6-6313A1DEEB23}
+		{3D46F286-A19A-4942-8E3F-8999E953A6F2} = {3D46F286-A19A-4942-8E3F-8999E953A6F2}
 		{70731828-AFC8-4262-9076-3FB39E224D10} = {70731828-AFC8-4262-9076-3FB39E224D10}
 		{FBA07795-8066-4641-88E5-05DD272D333A} = {FBA07795-8066-4641-88E5-05DD272D333A}
 	EndProjectSection
@@ -35,7 +36,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemcachedTestApp", "ContainerApplications\MemcachedTestApp\MemcachedTestApp.csproj", "{3D46F286-A19A-4942-8E3F-8999E953A6F2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemcachedTestApp", "ContainerApplications\MemcachedTestApp\MemcachedTestApp.csproj", "{3D46F286-A19A-4942-8E3F-8999E953A6F2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers", "..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj", "{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers.Test", "..\Shared\TestSerializationHelpers.Test\TestSerializationHelpers.Test.csproj", "{76A0FABB-B5B2-46B4-8C81-239F1C7E056A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -79,6 +84,14 @@ Global
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76A0FABB-B5B2-46B4-8C81-239F1C7E056A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76A0FABB-B5B2-46B4-8C81-239F1C7E056A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76A0FABB-B5B2-46B4-8C81-239F1C7E056A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76A0FABB-B5B2-46B4-8C81-239F1C7E056A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

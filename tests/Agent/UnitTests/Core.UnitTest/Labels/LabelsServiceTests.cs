@@ -13,6 +13,8 @@ namespace NewRelic.Agent.Core.Labels.Tests
     [TestFixture]
     public class LabelsServiceTests
     {
+        private const string TestLabel = "test1:value1;test2:value2";
+
         [TestCase(null)]
         public void empty_collection(string labelsConfigurationString)
         {
@@ -25,6 +27,59 @@ namespace NewRelic.Agent.Core.Labels.Tests
 
             // assert
             Assert.That(labelsService.Labels, Is.Empty);
+        }
+
+        [Test]
+        public void GetFilteredLabels_NoFilter_Success()
+        {
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+
+            // act
+            var labelsService = new LabelsService(configurationService);
+
+            // assert
+            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+        }
+
+        [TestCase("test1", 1, "test2")]
+        [TestCase("TEST1", 1, "test2")]
+        [TestCase("fred", 2, "test1")]
+        [TestCase("test", 2, "test1")]
+        [TestCase(null, 2, "test1")]
+        public void GetFilteredLabels_WithFilter_Success(string filterString, int labelsCount, string remainingLabelType)
+        {
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+            var filter = new List<string> { filterString };
+
+            // act
+            var labelsService = new LabelsService(configurationService);
+            var filteredLabels = labelsService.GetFilteredLabels(filter);
+
+            // assert
+            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+            Assert.That(filteredLabels.Count, Is.EqualTo(labelsCount));
+            Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo(remainingLabelType));
+        }
+
+        [Test]
+        public void GetFilteredLabels_WithNullFilter_Success()
+        {
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+
+            // act
+            var labelsService = new LabelsService(configurationService);
+            var filteredLabels = labelsService.GetFilteredLabels(null);
+
+            // assert
+            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+            Assert.That(filteredLabels.Count, Is.EqualTo(2));
+            Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo("test1"));
         }
 
         public class TestCase
@@ -264,7 +319,7 @@ namespace NewRelic.Agent.Core.Labels.Tests
             }
         }
 
-       [TestCaseSource(nameof(CrossAgentTestCases))]
+        [TestCaseSource(nameof(CrossAgentTestCases))]
         public void cross_agent_tests(TestCase testCase)
         {
             using (var logger = new TestUtilities.Logging())

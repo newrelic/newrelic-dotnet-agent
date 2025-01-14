@@ -151,23 +151,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #endregion
 
-    #region System.Data.SqlClient (.NET Core/5+ only)
-
-    [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-    {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
-        {
-        }
-    }
-
-    #endregion
-
-
     #region Microsoft.Data.SqlClient (FW and Core/5+)
 
     [NetFrameworkTest]

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 // Several methods exercised here do not exist in MongoDB.Driver version 2.3 which is the oldest we support on .NET Framework. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
@@ -7,7 +7,7 @@
 #endif
 
 // Some methods exercised here do not exist in MongoDB.Driver version 2.8.1 which is the oldest we support on .NET Core. It is bound to the net6.0 TFM in MultiFunctionApplicationHelpers.csproj
-#if NET6_0
+#if NET8_0
 #define MONGODRIVER2_8_1
 #endif
 

@@ -17,151 +17,59 @@
 
 *.tlog
 
-#NCrunch
-_NCrunch_*/
-*.ncrunchsolution
-*.ncrunchsolution.user
-*.ncrunchproject
-*.ncrunchproject.user
-
-# NuGet package files
-Agent/NewRelic/Tray/packages/
-Agent/packages/
-PerformanceTests/packages/
-PhantomJSTests/packages/
-
 # Version Files
 VersionAssemblyInfo.cs
-
-# Misc build artifacts
 
 # Build output
 bin/
 obj/
-*.ipch
-*.idl
-*.tlb
-*.mrg.h
-UpgradeLog.htm
-
-# Development stuff
-*.swp
-tags
-FILES
-junk
-*.out
-*.jmconfig
-Agent/.vs/config/applicationhost.config
 
 # Windows image thumbnail cache file
 Thumbs.db
 
-# NDepends utility
-NDependOut/
-*.ndproj
-
 *.pidb
-
-test-results
 
 #ignore launchSettings
 launchSettings.json
 
 # Ignore FullAgent build output
 src/_build/
-Agent/_build/
-Build/_staging
-Build/BuildArtifacts
 
 # Build tools should be saved in full, even if they match ignore patterns.
-!Agent/BuildTools/*
-!Agent/BuildTools/SignTool/*
+!/build/Tools/*
 
-# External libraries should be saved in full, even if they match ignore patterns.
-!Agent/ExternalLibs/*
-
-# Don't save any of the logs in NewRelicHome
-Agent/NewRelicHome/Logs/*
-
-# Ignore C++ generated source files.
-Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.idl
-Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
-
-# Ignore build output files copied to New Relic Home x86/x64
+# Ignore home dirs
 newrelichome_*
-src/Agent/New Relic Home*
 
-# Ignore New Relic Home generated registry files
-src/Agent/New Relic Home x86.reg
-src/Agent/New Relic Home x64.reg
-
-# Ignore generated version files
-Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
-Agent/Shared/SharedAssemblyInfoVersion.cs
-Agent/NewRelic/Profiler/Profiler/VersionInfo.h
-
-Agent/NewRelic/Profiler/Profiler/test-results
-
-# Ignore source files generated during build
-Agent/Installer/Core.wxs
-Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
-
-# Ignore license reviewer output files
-LicenseData/license_errors.txt
-
-# Sample apps
-App_Data
-
-#Functional Tests
-FunctionalTests/InstallUtil.InstallLog
-*.coverage
-TestResults/*
-*.pubxml.user
+# Integration Tests
 tests/Agent/IntegrationTests/Applications/*/Deploy/
 tests/Agent/IntegrationTests/SharedApplications/*/Deploy/
 tests/Agent/IntegrationTests/UnboundedApplications/*/Deploy/
 tests/Agent/IntegrationTests/.vs/config/applicationhost.config
 .DS_Store
-Agent/UpgradeLog*.htm
 
-#PlatformTests
-tests/Agent/PlatformTests/packages/
-tests/Agent/PlatformTests/Applications/ServiceFabricApplication/packages/
-tests/Agent/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
-tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
-tests/Agent/PlatformTests/Applications/NetFrameworkBasicApplication/packages
-
-/Tests/Benchmarking/BenchmarkDotNet.Artifacts
-*.dgml
-
-#SmokeTest
-tests/Agent/SmokeTest/logs/
-tests/Agent/SmokeTest/agent/
-
-# Include built binaries so that building the profiler is not necessary when only doing managed agent work
-# The Home Builder picks up profiler binaries from this location
-src/Agent/_profilerBuild/**/*.exp
-src/Agent/_profilerBuild/**/*.iobj
-src/Agent/_profilerBuild/**/*.ipdb
-src/Agent/_profilerBuild/**/*.lib
-src/Agent/_profilerBuild/**/*.pdb
-src/Agent/NewRelic/Profiler/out/build/x64-Debug/VSInheritEnvironments.txt
-
-# Ignore any locally built profiler Debug-mode binaries
-src/Agent/_profilerBuild/*Debug
+# Local profiler build artificats
+/src/Agent/_profilerBuild/*Debug
+/src/Agent/NewRelic/Profiler/Profiler/VersionInfo.h
+/src/Agent/NewRelic/Profiler/CMakeFiles
+/src/Agent/NewRelic/Profiler/CMakeCache.txt
+/src/Agent/NewRelic/Profiler/cmake_install.cmake
+/src/Agent/NewRelic/Profiler/Makefile
+/src/Agent/_profilerBuild/x64-Release
+/src/Agent/_profilerBuild/x86-Release
 
 # Ignore any signing keys used in Linux packaging
 build/Linux/keys
-
-tests/TestResults/*
 
 # ignore profiler binaries - they're now pulled from a NuGet package (see Home.csproj)
 /src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
 /src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
 /src/Agent/_profilerBuild/x64-Release/NewRelic.Profiler.dll
 /src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll
-/tests/Agent/IntegrationTests/ContainerApplications/.env
 
-/tests/Agent/IntegrationTests/LocalStack/volume
+# ignore Docker environment files
 *.env
+
+# Container Integration Tests
+/tests/Agent/IntegrationTests/LocalStack/volume
 /tests/Agent/IntegrationTests/ContainerApplications/volume/cache

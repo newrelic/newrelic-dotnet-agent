@@ -1,11 +1,11 @@
-name: .NET Agent Unit Tests and Code Coverage
+name: Unit Tests and Code Coverage
 
 on:
-  push:
+  pull_request:
     branches:
-      - main # runs after a completed PR to main
-      - feature/* # runs after a push to a feature branch
-  pull_request: # runs on a PR to any branch
+      - main
+      - "feature/**"
+      
   workflow_dispatch: # allows for manual trigger
 
 env:
@@ -54,7 +54,7 @@ jobs:
         run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
+        uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
         with:
             flags: Agent
             directory: ${{ env.test_results_path }}

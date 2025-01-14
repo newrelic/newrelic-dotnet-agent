@@ -9,5 +9,7 @@ namespace NewRelic.Agent.Core.Labels
     public interface ILabelsService : IDisposable
     {
         IEnumerable<Label> Labels { get; }
+
+        IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude);
     }
 }

@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
 
-            return new ConnectionInfo(DatastoreVendor.IBMDB2.ToKnownName(), host, portPathOrId, databaseName);
+            return new ConnectionInfo(host, portPathOrId, databaseName);
         }
 
         private string ParseHost()
