@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.35.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.1...v10.35.0) (2025-01-14)
+
+
+### New features
+
+* Use `SocketsHttpHandler` to configure `HttpClient` in .NET 6+. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
+
+### Fixes
+
+* Incorrect string comparison in the profiler caused constructor instrumentation to fail on Linux ([#2912](https://github.com/newrelic/newrelic-dotnet-agent/issues/2912)) ([49a71c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/49a71c50d43f2cb18e208dddb258a456aebb7e61))
+* Refactoring to reduce the likelihood of a deadlock in `HttpClient.SendAsync()`. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
 ## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
 
 
