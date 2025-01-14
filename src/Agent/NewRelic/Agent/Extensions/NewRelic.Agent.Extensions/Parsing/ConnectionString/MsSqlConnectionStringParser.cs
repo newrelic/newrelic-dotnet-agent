@@ -1,10 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -38,8 +38,8 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             // Example of want we would need to process: win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS
             try
             {
-                var splitIndex = host.IndexOf(',');
-                if (splitIndex == -1) splitIndex = host.IndexOf('\\');
+                var splitIndex = host.IndexOf(StringSeparators.CommaChar);
+                if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
                 host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
             }
             catch
@@ -56,11 +56,11 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 
             try
             {
-                if (portPathOrId.IndexOf(',') != -1)
+                if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
                 {
-                    var startOfValue = portPathOrId.IndexOf(',') + 1;
-                    var endOfValue = portPathOrId.Contains('\\')
-                        ? portPathOrId.IndexOf('\\')
+                    var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
+                    var endOfValue = portPathOrId.Contains(StringSeparators.BackslashChar)
+                        ? portPathOrId.IndexOf(StringSeparators.BackslashChar)
                         : portPathOrId.Length;
                     return (startOfValue > 0) ? portPathOrId.Substring(startOfValue, endOfValue - startOfValue) : null;
                 }
@@ -80,9 +80,9 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 
             try
             {
-                if (instanceName.IndexOf('\\') != -1)
+                if (instanceName.IndexOf(StringSeparators.BackslashChar) != -1)
                 {
-                    var startOfValue = instanceName.IndexOf('\\') + 1;
+                    var startOfValue = instanceName.IndexOf(StringSeparators.BackslashChar) + 1;
                     var endOfValue = instanceName.Length;
                     return (startOfValue > 0) ? instanceName.Substring(startOfValue, endOfValue - startOfValue) : null;
                 }
