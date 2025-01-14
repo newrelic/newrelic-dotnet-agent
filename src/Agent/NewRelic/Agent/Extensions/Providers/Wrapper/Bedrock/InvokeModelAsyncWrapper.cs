@@ -163,7 +163,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     "user",
                     0,
                     completionId,
-                    false);
+                    false,
+                    "bedrock");
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -177,7 +178,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     "assistant",
                     i + 1,
                     completionId,
-                    true);
+                    true,
+                    "bedrock");
             }
         }
 
@@ -253,7 +255,8 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                         "user",
                         0,
                         completionId,
-                        false);
+                        false,
+                        "bedrock");
             }
         }
 
