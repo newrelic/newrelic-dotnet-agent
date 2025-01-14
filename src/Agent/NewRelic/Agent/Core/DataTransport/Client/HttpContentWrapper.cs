@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public Stream ReadAsStream()
         {
-            return _httpContent.ReadAsStreamAsync().GetAwaiter().GetResult();
+            return _httpContent.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);
