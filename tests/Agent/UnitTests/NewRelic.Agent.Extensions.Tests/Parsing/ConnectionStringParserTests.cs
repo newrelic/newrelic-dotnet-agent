@@ -51,6 +51,12 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
 
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "default", "NewRelic", null, "DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;")]
+        [TestCase(DatastoreVendor.ODBC, "win-database.pdx.vm.datanerd.us", "1234", "myDataBase", null, "Driver={MySQL ODBC 5.2 UNICODE Driver};Server=win-database.pdx.vm.datanerd.us:1234;Database=myDataBase;User=myUsername;Password=myPassword;Option=3;")]
+        [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", null, "Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
+
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
             var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString, "hostname_of_localhost");

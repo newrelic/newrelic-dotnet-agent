@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                 case DatastoreVendor.Redis:
                     return new StackExchangeRedisConnectionStringParser(connectionString);
                 case DatastoreVendor.ODBC:
-                        return new OdbcConnectionStringParser(connectionString);
+                    return new OdbcConnectionStringParser(connectionString);
                 default:
                     return null;
             }
