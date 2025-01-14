@@ -2,22 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Elasticsearch
+namespace NewRelic.Providers.Wrapper.OpenSearch
 {
-
     public class RequestWrapper : SearchRequestWrapperBase, IWrapper
     {
-        private const string WrapperName = "ElasticsearchRequestWrapper";
+        private const string WrapperName = "OpenSearchRequestWrapper";
 
-        public override DatastoreVendor Vendor => DatastoreVendor.Elasticsearch;
+        public override DatastoreVendor Vendor => DatastoreVendor.OpenSearch;
 
         public override int RequestParamsIndex => 3;
 
@@ -26,6 +29,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
