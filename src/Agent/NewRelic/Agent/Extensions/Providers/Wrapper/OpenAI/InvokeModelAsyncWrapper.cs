@@ -13,8 +13,6 @@ using System.Net;
 using System.IO;
 using NewRelic.Agent.Extensions.JsonConverters;
 using NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads;
-using System.Linq;
-using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.OpenAI
 {
@@ -25,6 +23,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
         private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
         private static ConcurrentDictionary<string, string> _libraryVersions = new();
         private const string WrapperName = "OpenAIInvokeModelAsync";
+        private const string VendorName = "OpenAI";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -33,8 +32,6 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"agent.Configuration.AiMonitoringEnabled {agent.Configuration.AiMonitoringEnabled}");
-
             // Don't do anything, including sending the version Supportability metric, if we're disabled
             if (!agent.Configuration.AiMonitoringEnabled)
             {
@@ -46,25 +43,14 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 transaction.AttachToAsync();
             }
 
-            /*agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Invoking model {ObjectDumper.Dump(instrumentedMethodCall.MethodCall.MethodArguments)}");
-            if (instrumentedMethodCall.MethodCall.MethodArguments.Length > 0)
-            {
-                for (int i = 0; i < instrumentedMethodCall.MethodCall.MethodArguments.Length; i++)
-                {
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"get model arguments {ObjectDumper.Dump(instrumentedMethodCall.MethodCall.MethodArguments[i])}");
-                }
-            }*/
-
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
             var operationType = "completion";// invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
-            var segment = transaction.StartCustomSegment(
-                instrumentedMethodCall.MethodCall,
-                "Llm/" + operationType + "/OpenAI/" + instrumentedMethodCall.MethodCall.Method.MethodName
-            );
+            var methodMethodName = $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
+            var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, methodMethodName);
 
             // required per spec
             var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-            agent.RecordSupportabilityMetric("DotNet/ML/OpenAI/" + version);
+            agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
 
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
@@ -89,8 +75,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 dynamic invokeModelResponse = GetTaskResult(responseTask);
                 if (invokeModelResponse == null)// || invokeModelResponse.HttpStatusCode >= HttpStatusCode.MultipleChoices)
                 {
-                    //agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest.ModelId}: Response payload {(invokeModelResponse == null ? "is null" : $"has non-success HttpStatusCode: {invokeModelResponse.HttpStatusCode}")}");
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model 'completion': Response payload {ObjectDumper.Dump(invokeModelResponse)}");
+                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model 'completion': Response payload is null");
                     return;
                 }
 
@@ -117,36 +102,19 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         private void ProcessInvokeModel(ISegment segment, dynamic invokeModelRequest, dynamic invokeModelResponse, IAgent agent)
         {
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelRequest {invokeModelRequest}");
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse {invokeModelResponse}");
-
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse {invokeModelResponse}");
-
-            //if (invokeModelRequest.ToString() == "System.ClientModel.ClientResult`1[OpenAI.Chat.ChatCompletion]")
-            //{
-            //    agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"requestPayload {ObjectDumper.Dump(invokeModelResponse.Content)}");
-            //}
-
             var requestPayload = GetRequestPayload(invokeModelRequest, agent);
             if (requestPayload == null)
             {
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest}: Could not deserialize request payload");
                 return;
             }
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"requestPayload {ObjectDumper.Dump(requestPayload)}");
 
-            //if (invokeModelResponse.ToString().Contains("OpenAI.Chat.ChatCompletion"))
-            //{
-            //    agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"invokeModelResponse- {ObjectDumper.Dump(invokeModelResponse)}");
-            //}
-            //var responsePayload = GetResponsePayload(invokeModelRequest.ModelId, invokeModelResponse);
             var responsePayload = GetResponsePayload("completion", invokeModelResponse, agent);
             if (responsePayload == null)
             {
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelResponse}: Could not deserialize response payload");
                 return;
             }
-            //agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"responsePayload {ObjectDumper.Dump(responsePayload)}");
 
             // Embedding - does not create the other events
             /*if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
@@ -158,7 +126,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
                     invokeModelRequest.ModelId,
-                    "OpenAI",
+                    VendorName,
                     false,
                     null, // not available in AWS
                     null
@@ -172,6 +140,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             {
                 finishReason = responsePayload.Choices[0].FinishReason;
             }
+
             var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
@@ -182,7 +151,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 responsePayload.Model,
                 1 + responsePayload.Choices.Length,
                 finishReason,
-                "OpenAI",
+                VendorName,
                 false,
                 null,
                 null
@@ -199,7 +168,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     0,
                     completionId,
                     false,
-                    "openai");
+                    VendorName);
 
             // Responses
             for (var i = 0; i < responsePayload.Choices.Length; i++)
@@ -214,7 +183,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     i + 1,
                     completionId,
                     true,
-                    "openai");
+                    VendorName);
             }
         }
 
@@ -222,8 +191,8 @@ namespace NewRelic.Providers.Wrapper.OpenAI
         {
             agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error invoking OpenAI model {invokeModelRequest}: {responseTask.Exception!.Message}");
 
-            dynamic OpenAIException = responseTask.Exception!.InnerException;
-            if (OpenAIException == null)
+            dynamic oaiException = responseTask.Exception!.InnerException;
+            if (oaiException == null)
             {
                 agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error invoking model {invokeModelRequest}: Task faulted but there was no inner exception");
                 return;
@@ -236,10 +205,10 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 return;
             }
 
-            HttpStatusCode statusCode = OpenAIException.StatusCode;
-            string errorCode = OpenAIException.ErrorCode;
-            string errorMessage = OpenAIException.Message;
-            string requestId = OpenAIException.RequestId;
+            HttpStatusCode statusCode = oaiException.StatusCode;
+            string errorCode = oaiException.ErrorCode;
+            string errorMessage = oaiException.Message;
+            string requestId = oaiException.RequestId;
 
             var errorData = new LlmErrorData
             {
@@ -258,7 +227,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
                     null,
-                    "OpenAI",
+                    VendorName,
                     true,
                     null,
                     errorData);
@@ -275,7 +244,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 null,
                 0,
                 null,
-                "OpenAI",
+                VendorName,
                 true,
                 null,
                 errorData);
@@ -291,16 +260,12 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     0,
                     completionId,
                     false,
-                    "openai");
+                    VendorName);
             //}
         }
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest, IAgent agent)
         {
-            //var model = "request";
-
-            GPTRequestPayload rp = new GPTRequestPayload();
-
             if (invokeModelRequest.ToString().Contains("OpenAI.Chat.ChatCompletionOptions"))
             {
                 MemoryStream bodyStream = new MemoryStream();
@@ -357,107 +322,6 @@ namespace NewRelic.Providers.Wrapper.OpenAI
             }
 
             return null;
-        }
-    }
-
-    /// <summary>
-    /// The set of models supported by the OpenAI wrapper.
-    /// </summary>
-    public enum LlmModelType
-    {
-        GPT,
-    }
-
-    public static class LlmModelTypeExtensions
-    {
-        /// <summary>
-        /// Converts a modelId to an LlmModelType. Throws an exception if the modelId is unknown.
-        /// </summary>
-        /// <param name="modelId"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static LlmModelType FromModelId(this string modelId)
-        {
-            if (modelId.StartsWith("gpt"))
-                return LlmModelType.GPT;
-
-            throw new Exception($"Unknown model: {modelId}");
-        }
-    }
-
-    public class ObjectDumper
-    {
-        public static string Dump(object obj)
-        {
-            return new ObjectDumper().DumpObject(obj);
-        }
-
-        System.Text.StringBuilder _dumpBuilder = new System.Text.StringBuilder();
-
-        string DumpObject(object obj)
-        {
-            DumpObject(obj, 0);
-            return _dumpBuilder.ToString();
-        }
-
-        void DumpObject(object obj, int nestingLevel = 0)
-        {
-            try
-            {
-                var nestingSpaces = "".PadLeft(nestingLevel * 4);
-
-                if (obj == null)
-                {
-                    _dumpBuilder.AppendFormat("{0}null\n", nestingSpaces);
-                }
-                else if (obj is string || obj.GetType().IsPrimitive)
-                {
-                    _dumpBuilder.AppendFormat("{0}{1}\n", nestingSpaces, obj);
-                }
-                else if (ImplementsDictionary(obj.GetType()))
-                {
-                    using (var e = ((dynamic)obj).GetEnumerator())
-                    {
-                        var enumerator = (System.Collections.IEnumerator)e;
-                        while (enumerator.MoveNext())
-                        {
-                            dynamic p = enumerator.Current;
-
-                            var key = p.Key;
-                            var value = p.Value;
-                            _dumpBuilder.AppendFormat("{0}{1} ({2})\n", nestingSpaces, key, value != null ? value.GetType().ToString() : "<null>");
-                            DumpObject(value, nestingLevel + 1);
-                        }
-                    }
-                }
-                else if (obj is System.Collections.IEnumerable)
-                {
-                    foreach (dynamic p in obj as System.Collections.IEnumerable)
-                    {
-                        DumpObject(p, nestingLevel);
-                    }
-                }
-                else
-                {
-                    foreach (System.ComponentModel.PropertyDescriptor descriptor in System.ComponentModel.TypeDescriptor.GetProperties(obj))
-                    {
-                        string name = descriptor.Name;
-                        object value = descriptor.GetValue(obj);
-
-                        _dumpBuilder.AppendFormat("{0}{1} ({2})\n", nestingSpaces, name, value != null ? value.GetType().ToString() : "<null>");
-                        DumpObject(value, nestingLevel + 1);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ObjectDumper exception: {ex}");
-            }
-        }
-
-        bool ImplementsDictionary(Type t)
-        {
-            return t.GetInterfaces().Any(i => i.Name.Contains("IDictionary"));
         }
     }
 }
