@@ -149,32 +149,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
         }
     }
 
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet6 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6>
+    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet6(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreOldest(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
         {
         }
     }
 
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet8 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8>
+    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestNet8(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreLatest(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
         {
         }
     }
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet6 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6>
+
+    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet6(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreOldest(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
         {
         }
     }
 
-    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet8 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8>
+    public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncNet8(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreLatest(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
         {
         }

@@ -34,23 +34,23 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaScheduledCloudWatchEventTriggerFixtureNet6 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    public class LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
     {
-        public LambdaScheduledCloudWatchEventTriggerFixtureNet6() : base("net6.0", false) { }
+        public LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false) { }
     }
 
-    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet6 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
     {
-        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet6() : base("net6.0", true) { }
+        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true) { }
     }
 
-    public class LambdaScheduledCloudWatchEventTriggerFixtureNet8 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    public class LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
     {
-        public LambdaScheduledCloudWatchEventTriggerFixtureNet8() : base("net8.0", false) { }
+        public LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false) { }
     }
 
-    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet8 : LambdaScheduledCloudWatchEventTriggerFixtureBase
+    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
     {
-        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureNet8() : base("net8.0", true) { }
+        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true) { }
     }
 }

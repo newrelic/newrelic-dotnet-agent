@@ -1,6 +1,5 @@
-# Dump of /usr/local/bin/cosmos/start.sh in the docker image... useful for discovering undocumented env vars, unless it changes! :)
-
 #!/bin/sh
+# Dump of /usr/local/bin/cosmos/start.sh in the docker image... useful for discovering undocumented env vars, unless it changes! :)
 
 export PAL_NO_DEFAULT_PACKAGES=1
 export PAL_LOADER_SNAPS=1

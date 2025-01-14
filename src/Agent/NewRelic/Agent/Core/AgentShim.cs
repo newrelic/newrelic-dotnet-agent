@@ -21,14 +21,15 @@ namespace NewRelic.Agent.Core
         }
 
         private static bool _initialized = false;
-        private static object _initLock = new object();
+        private static SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
 
         static bool TryInitialize(string method)
         {
-            if (Monitor.IsEntered(_initLock)) return false;
+            if (_lockSemaphore.CurrentCount == 0) return false;
             if (DeferInitialization(method)) return false;
 
-            lock (_initLock)
+            _lockSemaphore.Wait();
+            try
             {
                 if (!_initialized)
                 {
@@ -37,6 +38,10 @@ namespace NewRelic.Agent.Core
                 }
 
                 return true;
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 

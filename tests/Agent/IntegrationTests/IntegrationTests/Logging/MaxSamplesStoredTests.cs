@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -60,8 +60,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
 
             Assert.NotNull(logData.Common);
             Assert.NotNull(logData.Common.Attributes);
-            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityGuid));
-            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.Hostname));
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes["entity.guid"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes["hostname"].ToString()));
 
             // Since we set the maximum number of log lines per five-second harvest interval
             // stored to 1 in setupConfiguration, there should only be one log line

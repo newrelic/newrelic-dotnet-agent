@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
+
+
+### Fixes
+
+* Remove .NET Standard libraries from .NET Framework target ([#2896](https://github.com/newrelic/newrelic-dotnet-agent/issues/2896)) ([0873941](https://github.com/newrelic/newrelic-dotnet-agent/commit/0873941b6c869db7696e154950b36762a2e2b16f))
+
+## [10.34.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.1...v10.34.0) (2024-11-19)
+
+
+### Notice
+
+* The .NET agent now allows you to opt-in to adding your custom tags (labels) to agent-forwarded logs. With custom tags on logs, platform engineers can easily filter, search, and correlate log data for faster and more efficient troubleshooting, improved performance, and optimized resource utilization. To learn more about this feature see the [documentation](https://docs.newrelic.com/docs/logs/logs-context/Custom-tags-agent-forwarder-logs).(https://github.com/newrelic/newrelic-dotnet-agent/pull/2831) ([d1e29ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/d1e29eaa5103fede483c7248fed5ace0620c6ccd))
+
+
+### New features
+
+* Add Distributed Tracing support for Azure Functions HTTPTrigger. ([#2868](https://github.com/newrelic/newrelic-dotnet-agent/issues/2868)) ([0278836](https://github.com/newrelic/newrelic-dotnet-agent/commit/0278836fc9b538f9eceabd47af7b5da46ed13274))
+* The .NET agent now allows you to opt-in to adding your custom tags (labels) to agent-forwarded logs. With custom tags on logs, platform engineers can easily filter, search, and correlate log data for faster and more efficient troubleshooting, improved performance, and optimized resource utilization. To learn more about this feature see the [documentation](https://docs.newrelic.com/docs/logs/logs-context/Custom-tags-agent-forwarder-logs).(https://github.com/newrelic/newrelic-dotnet-agent/pull/2831) ([d1e29ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/d1e29eaa5103fede483c7248fed5ace0620c6ccd))
+
+
+### Fixes
+
+* Don't instrument certain processes in Azure Linux App Service deployments. Resolves [#2871](https://github.com/newrelic/newrelic-dotnet-agent/issues/2871). ([7ed945b](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ed945b659be8a670d27c5a266738ffd5a712a41))
+* Fix a bug in `run.sh`. Resolves [#2887](https://github.com/newrelic/newrelic-dotnet-agent/issues/2887) ([#2888](https://github.com/newrelic/newrelic-dotnet-agent/issues/2888)) ([df17cfd](https://github.com/newrelic/newrelic-dotnet-agent/commit/df17cfdf6d777ed623c437c2f9dd5dfab3651260))
+
+## [10.33.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.33.0...v10.33.1) (2024-10-31)
+
+
+### Fixes
+
+* Fix syntax error in `setenv.sh` ([#2864](https://github.com/newrelic/newrelic-dotnet-agent/issues/2864)) ([a629138](https://github.com/newrelic/newrelic-dotnet-agent/commit/a629138e0e0b00a52f513d64c661576376e64455)), closes [#2863](https://github.com/newrelic/newrelic-dotnet-agent/issues/2863)
+
+## [10.33.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.32.0...v10.33.0) (2024-10-30)
+
+
+### New features
+
+* Add AWSSDK.DynamoDBv2 instrumentation.  Versions 3.5 through 4.0.0-preview.4 are supported.  Note: previous agent versions would instrument DynamoDB calls as Externals; now DynamoDB calls will show up as Database operations in the New Relic UI. ([2460527](https://github.com/newrelic/newrelic-dotnet-agent/commit/2460527c83c0b196329a2e2b61e435cd20cd6dbd))
+* Add config option for providing AWS account ID for linking ([#2851](https://github.com/newrelic/newrelic-dotnet-agent/issues/2851)) ([936b6f6](https://github.com/newrelic/newrelic-dotnet-agent/commit/936b6f63c837dd03222281870ae5db40574693ff))
+* New Garbage Collection Metrics Sampler for .NET 6+ ([#2838](https://github.com/newrelic/newrelic-dotnet-agent/issues/2838)) ([f24a5da](https://github.com/newrelic/newrelic-dotnet-agent/commit/f24a5daa2cc6117a73eac96f2a45d738335d063a))
+
+
+### Fixes
+
+* Fix potential race condition in AWS SDK, AWS Bedrock, and Elastisearch that could lead to an orphaned Transaction. ([#2842](https://github.com/newrelic/newrelic-dotnet-agent/issues/2842)) ([3afa15f](https://github.com/newrelic/newrelic-dotnet-agent/commit/3afa15f3cf70d4bda5cecbd728c377ad7cb4ff28))
+* Remove usage of non-thread safe HashSet in AwsSdk pipeline wrappers. Thanks, [@gjunge](https://github.com/gjunge)! ([#2855](https://github.com/newrelic/newrelic-dotnet-agent/issues/2855)) ([#2857](https://github.com/newrelic/newrelic-dotnet-agent/issues/2857)) ([ae1d422](https://github.com/newrelic/newrelic-dotnet-agent/commit/ae1d4220e684192525f13c670436dbf4400012bd))
+* Revert environment variable name change in installers and scripts ([#2852](https://github.com/newrelic/newrelic-dotnet-agent/issues/2852)) ([e77683b](https://github.com/newrelic/newrelic-dotnet-agent/commit/e77683b7e60afa502b6e700a51945c757530a47b))
+
 ## [10.32.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.31.0...v10.32.0) (2024-10-15)
 
 

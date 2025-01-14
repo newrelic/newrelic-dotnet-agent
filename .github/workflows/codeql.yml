@@ -1,10 +1,13 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "feature/*"]
+    branches:
+      - main
+      - "feature/**"
+    paths-ignore:
+      - ".github/**" # skip changes to the .github folder (workflows, etc.)
+      
   schedule:
     - cron: '20 3 * * 1'
 
@@ -49,7 +52,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@662472033e021d55d94146f66f6058822b0b39fd # v3.27.0
+      uses: github/codeql-action/init@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         languages: csharp
 
@@ -59,7 +62,7 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@662472033e021d55d94146f66f6058822b0b39fd # v3.27.0
+      uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         category: "/language:csharp"
 
@@ -84,7 +87,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@662472033e021d55d94146f66f6058822b0b39fd # v3.27.0
+      uses: github/codeql-action/init@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         languages: c-cpp
 
@@ -100,6 +103,6 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@662472033e021d55d94146f66f6058822b0b39fd # v3.27.0
+      uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         category: "/language:c-cpp"

@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     wc.DownloadString(testAddress);
                 }
 #else
-                _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
+                _lazyHttpClient.Value.GetAsync(testAddress).ConfigureAwait(false).GetAwaiter().GetResult();
 #endif
                 Log.Info("Connection test to \"{0}\" succeeded", testAddress);
             }
