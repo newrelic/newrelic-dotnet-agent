@@ -5,6 +5,7 @@ using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NUnit.Framework;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace ParsingTests
 {
@@ -51,9 +52,11 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
 
-        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "default", "NewRelic", null, "DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;")]
-        [TestCase(DatastoreVendor.ODBC, "win-database.pdx.vm.datanerd.us", "1234", "myDataBase", null, "Driver={MySQL ODBC 5.2 UNICODE Driver};Server=win-database.pdx.vm.datanerd.us:1234;Database=myDataBase;User=myUsername;Password=myPassword;Option=3;")]
-        [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", null, "Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;")]
+        // A lot of the following connection strings are contrived examples for code coverage purposes
+        [TestCase(DatastoreVendor.ODBC, "examplecluster.abc123xyz789.us-west-2.redshift.amazonaws.com", "5439", "dev", null, "Driver={Amazon Redshift (x64)};Server=examplecluster.abc123xyz789.us-west-2.redshift.amazonaws.com;Database=dev;UID=adminuser;PWD=secret;Port=5439")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "5439", "dev", null, "Driver={Amazon Redshift (x64)};Hostname=localhost;Database=dev;UID=adminuser;PWD=secret;Port=5439")]
+        [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", null, "Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Data source=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;")]
+        [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", "someInstance", "Driver={ODBC Driver for Sequel Server};Server=mySequelServerHost,1234\\someInstance;Database=myDatabase")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
 
@@ -91,6 +94,19 @@ namespace ParsingTests
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
             Assert.That(connectionInfo2, Is.Not.SameAs(connectionInfo1));
+        }
+
+        [Test]
+        public void ConnectionStringParser_UnknownVendor_EmptyResult()
+        {
+            var connectionString = @"Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=c:\txtFilesFolder\;Extensions=asc,csv,tab,txt;";
+
+            var connectionInfo = ConnectionInfoParser.FromConnectionString(DatastoreVendor.Other, connectionString, "localhost");
+
+            Assert.That(connectionInfo.Host, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.PortPathOrId, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.DatabaseName, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.InstanceName, Is.Null);
         }
     }
 }

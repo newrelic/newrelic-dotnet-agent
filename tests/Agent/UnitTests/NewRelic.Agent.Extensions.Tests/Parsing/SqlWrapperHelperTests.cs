@@ -88,12 +88,25 @@ namespace ParsingTests
         [TestCase("Driver={Microsoft ODBC for Oracle};Server=myServerAddress;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Oracle)]
         [TestCase("Driver={Oracle in OraClient11g_home1};Dbq=myTNSServiceName;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Oracle)]
         [TestCase("Driver={PostgreSQL UNICODE};Server=IP address;Port=5432;Database=myDataBase;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Postgres)]
+        [TestCase("Driver={npgsql};Server=IP address;Port=5432;Database=myDataBase;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("Driver={IBM DB2 ODBC DRIVER};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.IBMDB2)]
         [TestCase("Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.ODBC)]
         [TestCase("Driver={MyCoolDb ODBC DRIVER};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.ODBC)]
+        [TestCase("Driver={MyCoolDb};Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.Other)]
+        [TestCase("Database=myDataBase;Hostname=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;", ExpectedResult = DatastoreVendor.ODBC)] // no driver specified
         public DatastoreVendor GetVendorNameFromOdbcConnectionString_ReturnsExpectedVendor(string connectionString)
         {
             return SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(connectionString);
+        }
+
+        [Test]
+        public void GetVendorNameFromOdbcConnectionString_MultipleTimes_UsesCachedVendor()
+        {
+            var connectionString = "DRIVER ={ SQL Server Native Client 11.0}; Server = 127.0.0.1; Database = NewRelic; Trusted_Connection = no; UID = sa; PWD = password; Encrypt = no;";
+
+            var vendor1 = SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(connectionString);
+            var vendor2 = SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(connectionString);
+            Assert.That(vendor1, Is.EqualTo(vendor2));
         }
 
         public class UnknownDbCommand : IDbCommand

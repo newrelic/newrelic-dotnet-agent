@@ -89,6 +89,9 @@ namespace NewRelic.Agent.Extensions.Parsing
         /// <returns></returns>
         private static DatastoreVendor ExtractVendorNameFromString(string text)
         {
+            // Note that, because of the ordering of the following checks, an ODBC connection string for a known DB vendor should result in that vendor
+            // being returned, instead of ODBC
+            // example: Driver={ODBC Driver 17 for SQL Server};Server=myServerAddress;Database=myDataBase;
             if (text.IndexOf("SQL Server", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("SQLServer", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.MSSQL;
 
@@ -104,9 +107,9 @@ namespace NewRelic.Agent.Extensions.Parsing
             if (text.IndexOf("DB2", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("IBM", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.IBMDB2;
 
-            // This works for redshift since the driver reports as "Amazon Redshift ODBC Driver"
+            // This works for redshift since the driver reports as "Amazon Redshift (x64)"
             // Other drivers may not report as expected
-            if (text.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) != -1)
+            if (text.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("Redshift", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.ODBC;
 
             return DatastoreVendor.Other;
