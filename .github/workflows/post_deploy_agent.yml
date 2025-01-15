@@ -200,6 +200,11 @@ jobs:
           disable-sudo: true
           egress-policy: audit
       - name: Create release tags for Lambda and K8s Init Containers
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Create release tags for Lambda and K8s Init Containers
         run: |
           RELEASE_TITLE="New Relic .NET Agent ${AGENT_VERSION}.0"
           RELEASE_TAG="${AGENT_VERSION}.0_dotnet"
