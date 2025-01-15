@@ -11,8 +11,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     public interface IHttpClientWrapper : IDisposable
     {
         Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message);
-
-        TimeSpan Timeout { get; set; }
     }
 }
 #endif

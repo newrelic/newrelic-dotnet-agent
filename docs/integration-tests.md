@@ -265,10 +265,10 @@ You will need to install the .NET SDKs for .NET Core 3.1, .NET 5, .NET 6, and .N
 sudo apt-get update -q -y && sudo apt-get install -q -y curl
 sudo mkdir -p /usr/share/dotnet
 
-sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/7.0.100/dotnet-sdk-7.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/7.0.100/dotnet-sdk-7.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 
 sudo ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 dotnet --list-sdks
