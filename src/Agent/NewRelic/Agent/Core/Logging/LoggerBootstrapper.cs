@@ -20,10 +20,6 @@ namespace NewRelic.Agent.Core
     public static class LoggerBootstrapper
     {
 
-        // Watch out!  If you change the time format that the agent puts into its log files, other log parsers may fail.
-        //private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
-        //private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %property{threadid}] %message\r\n");
-
         private const string AuditLogLayout = "{UTCTimestamp} NewRelic Audit: {Message:l}\n";
 
         private const string FileLogLayout = "{UTCTimestamp} NewRelic {NRLogLevel,6}: [pid: {pid}, tid: {tid}] {Message:l}\n{Exception:l}";
@@ -52,21 +48,24 @@ namespace NewRelic.Agent.Core
         /// <remarks>This should only be called once, as soon as you have a valid config.</remarks>
         public static void ConfigureLogger(ILogConfig config)
         {
+            // if logging is disabled, it's disabled. We don't need to do anything else.
+            if (!config.Enabled) 
+            {
+                Log.Logger = Serilog.Core.Logger.None; // a logger that does nothing
+                return;
+            }
+
             SetLoggingLevel(config.LogLevel);
 
-            AuditLog.IsAuditLogEnabled = config.IsAuditLogEnabled;
+            AuditLog.IsAuditLogEnabled = config.IsAuditLogEnabled && !config.Console;
 
             var loggerConfig = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                 .Enrich.With(new ThreadIdEnricher(), new ProcessIdEnricher(), new NrLogLevelEnricher(), new UTCTimestampEnricher())
+                .ConfigureConsoleSink(config)
                 .ConfigureAuditLogSink(config)
                 .ConfigureFileSink(config)
                 .ConfigureDebugSink();
-
-            if (config.Console)
-            {
-                loggerConfig = loggerConfig.ConfigureConsoleSink();
-            }
 
             // configure the global singleton logger instance (which remains specific to the Agent by way of ILRepack)
             var configuredLogger = loggerConfig.CreateLogger();
@@ -169,8 +168,10 @@ namespace NewRelic.Agent.Core
         /// <summary>
         /// Configure the console sink
         /// </summary>
-        private static LoggerConfiguration ConfigureConsoleSink(this LoggerConfiguration loggerConfiguration)
+        private static LoggerConfiguration ConfigureConsoleSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
+            if (!config.Console) return loggerConfiguration;
+
             return loggerConfiguration
                 .WriteTo.Async(a =>
                     a.Logger(configuration =>
@@ -185,14 +186,11 @@ namespace NewRelic.Agent.Core
         /// <summary>
         /// Configure the file log sink
         /// </summary>
-        /// <param name="loggerConfiguration"></param>
-        /// <param name="config">The configuration for the appender.</param>
         private static LoggerConfiguration ConfigureFileSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
-            if (!config.Enabled)
-            {
-                return loggerConfiguration;
-            }
+            // console logging disables all file logging output.
+            if (config.Console) return loggerConfiguration;
+
             string logFileName = config.GetFullLogFileName();
 
             try
@@ -222,11 +220,12 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
-        /// Setup the audit log file appender and attach it to a logger.
+        /// Configure the audit log sink
         /// </summary>
         private static LoggerConfiguration ConfigureAuditLogSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
-            if (!config.IsAuditLogEnabled || !config.Enabled) return loggerConfiguration;
+            // console logging disables all file logging output, including audit logs
+            if (!config.IsAuditLogEnabled || config.Console) return loggerConfiguration;
 
             string logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
 
@@ -242,13 +241,8 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
-        /// Sets up a rolling file appender using defaults shared for all our rolling file appenders.
+        /// Configure the rolling log sink
         /// </summary>
-        /// <param name="loggerConfiguration"></param>
-        /// <param name="fileName">The name of the file this appender will write to.</param>
-        /// <param name="outputFormat"></param>
-        /// <param name="config"></param>
-        /// <remarks>This does not call appender.ActivateOptions or add the appender to the logger.</remarks>
         private static LoggerConfiguration ConfigureRollingLogSink(this LoggerConfiguration loggerConfiguration, string fileName, string outputFormat, ILogConfig config)
         {
             // check that the log file is accessible
