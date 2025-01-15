@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.Utilization
                     }
                 }
 
-                var response = httpClient.Value.SendAsync(request).GetAwaiter().GetResult();
+                var response = httpClient.Value.SendAsync(request).ConfigureAwait(false).GetAwaiter().GetResult();
                 if (!response.IsSuccessStatusCode)
                 {
                     var statusCode = response.StatusCode;
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Utilization
                     Log.Debug("CallVendorApi ({0}) failed with WebException with status: {1}; message: {2}", vendorName, statusCode, statusDescription);
                 }
 
-                return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                return response.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
