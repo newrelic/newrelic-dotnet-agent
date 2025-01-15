@@ -238,10 +238,14 @@ namespace nugetSlackNotifications
                 var tokenAuth = new Credentials(_githubToken);
                 ghClient.Credentials = tokenAuth;
 
+                // create a new branch
                 var masterReference = await ghClient.Git.Reference.Get(Owner, Repo, "heads/main");
                 var branchName = $"dotty/test-updates-{DateTime.Now.ToString("yyyy-MMM-dd")}";
                 var newBranch = new NewReference($"refs/heads/{branchName}", masterReference.Object.Sha);
                 await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
+                Log.Information($"Successfully created {branchName} branch.");
+
+                // commit changes to the branch
                 var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, masterReference.Object.Sha);
                 var nt = new NewTree { BaseTree = latestCommit.Tree.Sha };
                 foreach (var projectInfo in projectInfos)
@@ -255,10 +259,13 @@ namespace nugetSlackNotifications
                         Content = string.Join('\n', await File.ReadAllLinesAsync(Path.Combine(_searchRootPath, projectInfo.ProjectFile)))
                     });
                 }
-
                 var commitMessage = "test: Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
-                Log.Information($"Successfully created {branchName} branch.");
+                var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
+                var newCommit = new NewCommit(commitMessage, newTree.Sha, masterReference.Object.Sha);
+                var commit = await ghClient.Git.Commit.Create(Owner, Repo, newCommit);
+                await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
 
+                // create PR
                 var newPr = new NewPullRequest(commitMessage, branchName, "main");
                 newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog + "\n\n**Don't forget to update the .NET Compatibility docs:docs: with the new versions!**\n";
                 var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
