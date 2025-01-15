@@ -62,10 +62,13 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
         var cloudResourceIdSpanEvents = spanEvents.Where(spanEvent => spanEvent.AgentAttributes.ContainsKey("cloud.resource_id")).ToList();
 
         string expectedArn = $"arn:aws:dynamodb:(unknown):{_expectedAccountId}:table/{_tableName}";
+        string unExpectedArn = $"arn:aws:dynamodb:(unknown):{_unxpectedAccountId}:table/{_tableName}";
 
+        // verify all span events contain the expected arn, and do not contain the unexpected arn and all are of category datastore
         Assert.Multiple(
-            () => Assert.All(cloudResourceIdSpanEvents,
-                se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"]))
+            () => Assert.All(cloudResourceIdSpanEvents, se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"])),
+            () => Assert.All(cloudResourceIdSpanEvents, se => Assert.NotEqual(_unxpectedAccountId, se.AgentAttributes["cloud.resource_id"])),
+            () => Assert.All(cloudResourceIdSpanEvents, se => Assert.Equal("datastore", se.IntrinsicAttributes["category"]))
         );
     }
 }

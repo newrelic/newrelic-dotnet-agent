@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
+public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
 {
     private readonly AwsSdkContainerDynamoDBTestFixture _fixture;
 
@@ -21,7 +21,7 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
 
     private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
 
-    protected AwsSdkDynamoDBTestBase(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    public AwsSdkDynamoDBTest(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -114,9 +114,9 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
         };
 
 
-        // get all datastore span events for dynamodb so we can verify counts and operations
+        // get all datastore span events so we can verify counts and operations
         var datastoreSpanEvents = _fixture.AgentLog.GetSpanEvents()
-            .Where(se => se.AgentAttributes.ContainsKey("db.system") && (string)se.AgentAttributes["db.system"] == "dynamodb")
+            .Where(se => (string)se.IntrinsicAttributes["category"] == "datastore")
             .ToList();
 
         // select the set of AgentAttributes values with a key of "aws.operation"
@@ -137,14 +137,3 @@ public abstract class AwsSdkDynamoDBTestBase : NewRelicIntegrationTest<AwsSdkCon
             );
     }
 }
-
-// Base class with derived classes pattern copied from another tests file
-// but we currently don't need to use it for anything
-
-public class AwsSdkDynamoDBTest : AwsSdkDynamoDBTestBase
-{
-    public AwsSdkDynamoDBTest(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
-
