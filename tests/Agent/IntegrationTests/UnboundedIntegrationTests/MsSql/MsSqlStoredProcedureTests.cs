@@ -76,7 +76,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName }
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName }
             };
 
             var expectedTransactionTraceSegments = new List<string>

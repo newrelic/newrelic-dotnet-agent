@@ -147,7 +147,6 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
     }
 
-
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
     {
         public IAttributeDefinitions AttributeDefs { get; private set; }

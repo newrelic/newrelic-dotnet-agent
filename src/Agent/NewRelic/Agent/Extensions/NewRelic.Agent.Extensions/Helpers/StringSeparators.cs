@@ -8,6 +8,9 @@ namespace NewRelic.Agent.Helpers
         public const char PathSeparatorChar = '/';
         public static readonly char[] PathSeparator = { PathSeparatorChar };
 
+        public const char BackslashChar = '\\';
+        public static readonly char[] Backslash = { BackslashChar };
+
         public const char CommaChar = ',';
         public static readonly char[] Comma = { CommaChar };
 

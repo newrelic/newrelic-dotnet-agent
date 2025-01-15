@@ -1,9 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
 
-            var hasMultipleHosts = host != null && host.IndexOf(',') != -1;
+            var hasMultipleHosts = host != null && host.IndexOf(StringSeparators.CommaChar) != -1;
             if (hasMultipleHosts)
                 host = null;
             else if (host != null)

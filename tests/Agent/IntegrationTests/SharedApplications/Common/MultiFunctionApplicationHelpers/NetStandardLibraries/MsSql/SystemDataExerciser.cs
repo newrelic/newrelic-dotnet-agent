@@ -14,13 +14,15 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Threading;
 using System.Data.OleDb;
-using System.Data.Odbc;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
     [Library]
     public class SystemDataExerciser : MsSqlExerciserBase
     {
+
+        private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -28,7 +30,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -78,7 +80,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
@@ -127,7 +129,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -159,7 +161,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
@@ -195,7 +197,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         private int ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             using (var command = new SqlCommand(procedureName, connection))
             {
                 connection.Open();
@@ -210,39 +212,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                 }
 
                 return command.ExecuteNonQuery();
-            }
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureNameWith, string procedureNameWithout)
-        {
-            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWith, true);
-            ExecuteParameterizedStoredProcedureUsingOdbcDriver(procedureNameWithout, false);
-        }
-
-        private void ExecuteParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
-        {
-            EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
-
-            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
-
-            using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
-            using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
-            {
-                connection.Open();
-                command.CommandType = CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
-                {
-                    var paramName = paramsWithAtSign
-                        ? parameter.ParameterName
-                        : parameter.ParameterName.TrimStart('@');
-
-                    command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
-                }
-
-                command.ExecuteNonQuery();
             }
         }
 
@@ -280,7 +249,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         public void CreateTable(string tableName)
         {
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -297,7 +266,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -313,7 +282,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -334,7 +303,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var parameters = string.Join(", ", dbParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
             var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             using (var command = new SqlCommand(statement, connection))
             {
                 connection.Open();
