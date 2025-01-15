@@ -57,6 +57,7 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "5439", "dev", null, "Driver={Amazon Redshift (x64)};Hostname=localhost;Database=dev;UID=adminuser;PWD=secret;Port=5439")]
         [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", null, "Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Data source=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;")]
         [TestCase(DatastoreVendor.ODBC, "mySequelServerHost", "1234", "myDataBase", "someInstance", "Driver={ODBC Driver for Sequel Server};Server=mySequelServerHost,1234\\someInstance;Database=myDataBase")]
+        [TestCase(DatastoreVendor.ODBC, "myReddishServerHost", "234", "unknown", null, "Driver={ODBC Driver for Reddish Server};Server=myReddishServerHost:234")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
 
