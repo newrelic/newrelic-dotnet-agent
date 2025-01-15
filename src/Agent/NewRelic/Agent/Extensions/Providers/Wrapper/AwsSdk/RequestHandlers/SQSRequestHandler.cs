@@ -11,7 +11,7 @@ using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
     internal static class SQSRequestHandler
     {
@@ -48,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             var dtHeaders = agent.GetConfiguredDTHeaders();
 
             string requestQueueUrl = request.QueueUrl;
-            ISegment segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
+            var segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
             switch (action)
             {
                 case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
@@ -117,7 +117,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
             void ProcessResponse(Task responseTask)
             {
-                if (!ValidTaskResponse(responseTask) || (segment == null) || action != MessageBrokerAction.Consume)
+                if (!ValidTaskResponse(responseTask) || segment == null || action != MessageBrokerAction.Consume)
                     return;
 
                 // taskResult is a ReceiveMessageResponse

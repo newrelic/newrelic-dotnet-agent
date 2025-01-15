@@ -58,5 +58,57 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
             Assert.That(duration, Is.EqualTo(TimeSpan.FromSeconds(1)));
         }
+        [Test]
+        public void Misc_Segment_Setters()
+        {
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+            Assert.That(segment.IsLeaf, Is.False);
+            segment.MakeLeaf();
+            Assert.That(segment.IsLeaf, Is.True);
+
+            segment.SetName("foo");
+            Assert.That(segment.GetTransactionTraceName(), Is.EqualTo("foo"));
+
+            Assert.That(segment.Combinable, Is.False);
+            segment.MakeCombinable();
+            Assert.That(segment.Combinable, Is.True);
+
+            Assert.That(segment.IsExternal, Is.False);
+        }
+
+        [Test]
+        public void NoOpSegment()
+        {
+            var segment = new NoOpSegment();
+            Assert.That(segment.IsDone, Is.True);
+            Assert.That(segment.IsValid, Is.False);
+            Assert.That(segment.IsDone, Is.True);
+            Assert.That(segment.DurationShouldBeDeductedFromParent, Is.False);
+            Assert.That(segment.IsLeaf, Is.False);
+            Assert.That(segment.IsExternal, Is.False);
+            Assert.That(segment.SpanId, Is.Null);
+            Assert.That(segment.SegmentData, Is.Not.Null);
+            Assert.That(segment.AttribDefs, Is.Not.Null);
+            Assert.That(segment.AttribValues, Is.Not.Null);
+            Assert.That(segment.TypeName, Is.EqualTo(string.Empty));
+            Assert.That(segment.UserCodeFunction, Is.EqualTo(string.Empty));
+            Assert.That(segment.UserCodeNamespace, Is.EqualTo(string.Empty));
+            Assert.That(segment.SegmentNameOverride, Is.Null);
+
+            Assert.DoesNotThrow(() => segment.End());
+            Assert.DoesNotThrow(() => segment.End(new Exception()));
+            Assert.DoesNotThrow(() => segment.EndStackExchangeRedis());
+            Assert.DoesNotThrow(() => segment.MakeCombinable());
+            Assert.DoesNotThrow(() => segment.MakeLeaf());
+            Assert.DoesNotThrow(() => segment.RemoveSegmentFromCallStack());
+            Assert.DoesNotThrow(() => segment.SetMessageBrokerDestination("destination"));
+            Assert.DoesNotThrow(() => segment.SetSegmentData(null));
+            Assert.DoesNotThrow(() => segment.AddCustomAttribute("key", "value"));
+            Assert.DoesNotThrow(() => segment.AddCloudSdkAttribute("key", "value"));
+            Assert.DoesNotThrow(() => segment.SetName("name"));
+            Assert.That(segment.GetCategory(), Is.EqualTo(string.Empty));
+            Assert.That(segment.DurationOrZero, Is.EqualTo(TimeSpan.Zero));
+
+        }
     }
 }
