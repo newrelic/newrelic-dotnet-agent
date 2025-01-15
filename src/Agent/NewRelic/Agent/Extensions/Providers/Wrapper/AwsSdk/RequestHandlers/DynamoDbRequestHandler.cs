@@ -4,15 +4,16 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk
+namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
     internal static class DynamoDbRequestHandler
     {
 
-        private static ConcurrentDictionary<string,string> _operationNameCache = new ConcurrentDictionary<string,string>();
+        private static ConcurrentDictionary<string, string> _operationNameCache = new ConcurrentDictionary<string,string>();
 
         public static AfterWrappedMethodDelegate HandleDynamoDbRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
         {
@@ -30,6 +31,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             model = request.TableName;
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.DynamoDB, model, operation), isLeaf: true);
+
             return isAsync ?
                 Delegates.GetAsyncDelegateFor<Task>(agent, segment)
                 :

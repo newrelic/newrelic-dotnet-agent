@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Condition="'$(NR_DEV_BUILD_HOME)' != 'false'" Command="del /q &quot;$(TargetDir)*.*&quot;"/>
-    <Exec Condition="'$(NR_DEV_BUILD_HOME)' != 'false'" WorkingDirectory="$(SolutionDir)Build" Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File .\build_home.ps1 -Configuration $(ConfigurationName)"/>
+    <Exec Condition="'$(NR_DEV_BUILD_HOME)' != 'false'" Command="del /q &quot;$(TargetDir)*.*&quot;" />
+    <Exec Condition="'$(NR_DEV_BUILD_HOME)' != 'false'" WorkingDirectory="$(SolutionDir)Build" Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File .\build_home.ps1 -Configuration $(ConfigurationName)" />
   </Target>
 
   <ItemGroup>

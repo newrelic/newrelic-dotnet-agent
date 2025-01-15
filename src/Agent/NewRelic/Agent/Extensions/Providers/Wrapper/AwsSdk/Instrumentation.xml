@@ -13,5 +13,14 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="InvokeAsync" parameters="Amazon.Runtime.IExecutionContext" />
       </match>
     </tracerFactory>
+    <tracerFactory name="AmazonServiceClientWrapper">
+      <!--
+      https://github.com/aws/aws-sdk-net/blob/main/sdk/src/Core/Amazon.Runtime/AmazonServiceClient.cs#L155
+      protected AmazonServiceClient(AWSCredentials credentials, ClientConfig config)
+      -->
+      <match assemblyName="AWSSDK.Core" className="Amazon.Runtime.AmazonServiceClient">
+        <exactMethodMatcher methodName=".ctor" parameters="Amazon.Runtime.AWSCredentials,Amazon.Runtime.ClientConfig" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>
