@@ -119,7 +119,9 @@
         "packageName": "nlog.extensions.logging"
     },
     {
-        "packageName": "nservicebus"
+        "packageName": "nservicebus",
+        "ignoreTFMs": "net481",
+        "ignoreReason": "net481 doesn't support v9.x"
     },
     {
         "packageName": "oracle.manageddataaccess"

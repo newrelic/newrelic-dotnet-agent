@@ -168,7 +168,7 @@ namespace nugetSlackNotifications
                 var previousVersionDescription = previous?.Identity.Version.ToNormalizedString() ?? "Unknown";
                 var latestVersionDescription = latest.Identity.Version.ToNormalizedString();
                 Log.Information($"Package {packageName} was updated from {previousVersionDescription} to {latestVersionDescription}.");
-                _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), latest.Published.Value.Date));
+                _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), latest.Published.Value.Date, package.IgnoreTFMs));
             }
             else
             {
@@ -242,11 +242,11 @@ namespace nugetSlackNotifications
                 var masterReference = await ghClient.Git.Reference.Get(Owner, Repo, "heads/main");
                 var branchName = $"dotty/test-updates-{DateTime.Now.ToString("yyyy-MMM-dd")}";
                 var newBranch = new NewReference($"refs/heads/{branchName}", masterReference.Object.Sha);
-                await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
+                var newBranchRef = await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
                 Log.Information($"Successfully created {branchName} branch.");
 
-                // commit changes to the branch
-                var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, masterReference.Object.Sha);
+                // commit changes to the newly created branch
+                var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, newBranchRef.Object.Sha);
                 var nt = new NewTree { BaseTree = latestCommit.Tree.Sha };
                 foreach (var projectInfo in projectInfos)
                 {
@@ -261,7 +261,7 @@ namespace nugetSlackNotifications
                 }
                 var commitMessage = "test: Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
                 var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
-                var newCommit = new NewCommit(commitMessage, newTree.Sha, masterReference.Object.Sha);
+                var newCommit = new NewCommit(commitMessage, newTree.Sha, newBranchRef.Object.Sha);
                 var commit = await ghClient.Git.Commit.Create(Owner, Repo, newCommit);
                 await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
 
