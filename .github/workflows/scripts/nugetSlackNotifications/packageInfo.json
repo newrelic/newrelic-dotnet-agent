@@ -122,10 +122,10 @@
         "packageName": "nservicebus"
     },
     {
-        "packageName": "orcacle.manageddataaccess"
+        "packageName": "oracle.manageddataaccess"
     },
     {
-        "packageName": "orcacle.manageddataaccess.core"
+        "packageName": "oracle.manageddataaccess.core"
     },
     {
         "packageName": "rabbitmq.client",
