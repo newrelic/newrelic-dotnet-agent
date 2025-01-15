@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -35,14 +35,14 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MongoDB.Driver" Version="2.29.0" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -72,7 +72,7 @@
     
     <!-- NServiceBus v9+ only supports .NET8+, so constrain FW target to the latest 8.x version -->
     <PackageReference Include="NServiceBus" Version="8.2.4" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NServiceBus" Version="9.2.3" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="NServiceBus" Version="9.2.4" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <!-- modern oracle only supports net472+ and net6.0+ -->
     <PackageReference Include="Oracle.ManagedDataAccess" Version="23.7.0" Condition="'$(TargetFramework)' == 'net481'" />
