@@ -126,6 +126,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         AttributeDefinition<object, object> GetLambdaAttribute(string name);
         AttributeDefinition<object, object> GetFaasAttribute(string name);
+        AttributeDefinition<object, object> GetCloudSdkAttribute(string name);
 
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
@@ -189,6 +190,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _cloudSdkAttributes = new();
 
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
@@ -280,6 +282,20 @@ namespace NewRelic.Agent.Core.Attributes
         }
 
 
+        private AttributeDefinition<object, object> CreateCloudSdkAttribute(string attribName)
+        {
+            return AttributeDefinitionBuilder
+                .Create<object, object>(attribName, AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithConvert(x => x)
+                .Build(_attribFilter);
+        }
+
+        public AttributeDefinition<object, object> GetCloudSdkAttribute(string name)
+        {
+            return _cloudSdkAttributes.GetOrAdd(name, CreateCloudSdkAttribute);
+        }
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
         {
             return _trxCustomAttributes.GetOrAdd(name, CreateCustomAttributeForTransaction);
