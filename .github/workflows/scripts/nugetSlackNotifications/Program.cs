@@ -267,7 +267,7 @@ namespace nugetSlackNotifications
 
                 // create PR
                 var newPr = new NewPullRequest(commitMessage, branchName, "main");
-                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog + "\n\n**Don't forget to update the .NET Compatibility docs:docs: with the new versions!**\n";
+                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog + "\n\n**Don't forget to update the .NET Compatibility docs:memo: with the new versions!**\n";
                 var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
                 Log.Information($"Successfully created PR for {branchName} at {pullRequest.HtmlUrl}");
 
