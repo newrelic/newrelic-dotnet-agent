@@ -36,9 +36,9 @@ namespace nugetSlackNotifications
 
                 foreach (var package in matchingPackages)
                 {
-                    if (package.VersionAsVersion < versionData.NewVersionAsVersion && package.Pin)
+                    if (package.VersionAsVersion < versionData.NewVersionAsVersion && !string.IsNullOrEmpty(versionData.IgnoreTfMs) && versionData.IgnoreTfMs.Split(",").Contains(package.TargetFramework))
                     {
-                        Log.Warning($"Not updating {package.Include} for {package.TargetFramework}, it is pinned to {package.Version}.  Manual verification recommended.");
+                        Log.Warning($"Not updating {package.Include} for {package.TargetFramework}, this TFM is ignored.  Manual verification recommended.");
                         continue;
                     }
 
