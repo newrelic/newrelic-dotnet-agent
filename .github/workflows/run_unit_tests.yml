@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - "feature/**"
+  
+  # needs to run on every push to main to keep CodeCov in sync
+  push:
+    branches:
+      - main
       
   workflow_dispatch: # allows for manual trigger
 
