@@ -14,5 +14,7 @@ namespace nugetSlackNotifications
         public bool IgnoreMajor { get; set; }
         [JsonPropertyName("ignoreReason")]
         public string IgnoreReason {get; set;}
+        [JsonPropertyName("ignoreTFMs")]
+        public string IgnoreTFMs { get; set; }
     }
 }

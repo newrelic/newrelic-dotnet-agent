@@ -331,5 +331,10 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return;
         }
+
+        public void AddCloudSdkAttribute(string name, object value)
+        {
+            return;
+        }
     }
 }

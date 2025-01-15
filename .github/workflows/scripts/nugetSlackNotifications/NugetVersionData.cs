@@ -10,8 +10,10 @@ namespace nugetSlackNotifications
         public Version NewVersionAsVersion { get; set; }
         public string Url { get; set; }
         public DateTime PublishDate { get; set; }
+        public string IgnoreTfMs { get; }
 
-        public NugetVersionData(string packageName, string oldVersion, string newVersion, string url, DateTime publishDate)
+        public NugetVersionData(string packageName, string oldVersion, string newVersion, string url,
+            DateTime publishDate, string ignoreTfMs)
         {
             PackageName = packageName;
             OldVersion = oldVersion;
@@ -19,6 +21,7 @@ namespace nugetSlackNotifications
             NewVersionAsVersion = new Version(newVersion);
             Url = url;
             PublishDate = publishDate;
+            IgnoreTfMs = ignoreTfMs;
         }
     }
 }
