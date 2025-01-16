@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net9.0'" />
-
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.411.17" Condition="'$(TargetFramework)' == 'net9.0'" />
     
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.405.10" Condition="'$(TargetFramework)' == 'net9.0'" />
+
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net9.0'" />
     
