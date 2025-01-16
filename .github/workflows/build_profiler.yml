@@ -7,6 +7,13 @@ on:
       - "feature/**"
     paths-ignore:
       - ".github/**" # skip changes to the .github folder (workflows, etc.)
+
+  # needs to run on every push to main to keep CodeCov in sync
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/**" # skip changes to the .github folder (workflows, etc.)
       
   # this workflow can be called from another workflow
   workflow_call:
