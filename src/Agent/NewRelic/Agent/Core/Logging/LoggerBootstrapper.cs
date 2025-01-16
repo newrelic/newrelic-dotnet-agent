@@ -30,8 +30,16 @@ namespace NewRelic.Agent.Core
 
         public static void SetLoggingLevel(string newLogLevel) => _loggingLevelSwitch.MinimumLevel = newLogLevel.MapToSerilogLogLevel();
 
+        private static bool _isWindows;
+
         public static void Initialize()
         {
+#if NETSTANDARD2_0
+            _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+            _isWindows = true;
+#endif
+
             var startupLoggerConfig = new LoggerConfiguration()
                 .Enrich.With(new ThreadIdEnricher(), new ProcessIdEnricher(), new NrLogLevelEnricher(), new UTCTimestampEnricher())
                 .MinimumLevel.Information()
@@ -48,7 +56,7 @@ namespace NewRelic.Agent.Core
         /// <remarks>This should only be called once, as soon as you have a valid config.</remarks>
         public static void ConfigureLogger(ILogConfig config)
         {
-            // if logging is disabled, it's disabled. We don't need to do anything else.
+            // if logging is disabled, we don't log anywhere
             if (!config.Enabled) 
             {
                 Log.Logger = Serilog.Core.Logger.None; // a logger that does nothing
@@ -89,6 +97,9 @@ namespace NewRelic.Agent.Core
             _inMemorySink.Dispose();
         }
 
+        /// <summary>
+        /// Configures the in-memory log sink used during bootstrapping.
+        /// </summary>
         private static LoggerConfiguration ConfigureInMemoryLogSink(this LoggerConfiguration loggerConfiguration)
         {
             // formatter not needed since this will be pushed to other sinks for output.
@@ -115,12 +126,7 @@ namespace NewRelic.Agent.Core
         /// <param name="loggerConfiguration"></param>
         private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
         {
-#if NETSTANDARD2_0
-            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#else
-            var isWindows = true;
-#endif
-            if (isWindows)
+            if (_isWindows)
             {
                 const string eventLogName = "Application";
                 const string eventLogSourceName = "New Relic .NET Agent";
@@ -199,21 +205,24 @@ namespace NewRelic.Agent.Core
                     .WriteTo
                     .Async(a =>
                         a.Logger(configuration =>
-                            {
-                                configuration
-                                    .ExcludeAuditLog()
-                                    .ConfigureRollingLogSink(logFileName, FileLogLayout, config);
-                            })
-                        );
+                        {
+                            configuration
+                                .ExcludeAuditLog()
+                                .ConfigureRollingLogSink(logFileName, FileLogLayout, config);
+                        })
+                    );
             }
             catch (Exception ex)
             {
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
 
-                // Fallback to the event log sink if we cannot setup a file logger.
-                Extensions.Logging.Log.FileLoggingHasFailed = true;
-                Log.Logger.Warning("Falling back to EventLog sink.");
-                loggerConfiguration.ConfigureEventLogSink();
+                if (_isWindows)
+                {
+                    // Fallback to the event log sink if we cannot setup a file logger.
+                    Extensions.Logging.Log.FileLoggingHasFailed = true;
+                    Log.Logger.Warning("Falling back to EventLog sink.");
+                    loggerConfiguration.ConfigureEventLogSink();
+                }
             }
 
             return loggerConfiguration;
