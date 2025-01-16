@@ -20,7 +20,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
     internal class BedrockModels
     {
         private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient =
-            new AmazonBedrockRuntimeClient(AwsBedrockConfiguration.AwsAccessKeyId, AwsBedrockConfiguration.AwsSecretAccessKey, AwsBedrockConfiguration.AwsRegion.ToRegionId());
+            new AmazonBedrockRuntimeClient(AwsConfiguration.AwsAccessKeyId, AwsConfiguration.AwsSecretAccessKey, AwsConfiguration.AwsRegion.ToRegionId());
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static async Task<string> InvokeAmazonEmbedAsync(string prompt, bool generateError) => await InvokeTitanAsync(prompt, true, generateError);
