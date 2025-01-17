@@ -34,7 +34,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("debug");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.LogToConsole();
 
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _topicName);
             },

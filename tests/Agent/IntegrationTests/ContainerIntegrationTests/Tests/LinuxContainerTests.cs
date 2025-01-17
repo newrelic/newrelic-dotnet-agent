@@ -22,7 +22,6 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.LogToConsole();
             },
             exerciseApplication: () =>
             {
