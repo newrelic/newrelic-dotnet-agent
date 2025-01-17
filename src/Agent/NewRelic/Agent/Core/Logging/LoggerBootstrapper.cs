@@ -59,6 +59,7 @@ namespace NewRelic.Agent.Core
             // if logging is disabled, we don't log anywhere
             if (!config.Enabled) 
             {
+                SetLoggingLevel("off"); // to short-circuit logging calls
                 Log.Logger = Serilog.Core.Logger.None; // a logger that does nothing
                 return;
             }
