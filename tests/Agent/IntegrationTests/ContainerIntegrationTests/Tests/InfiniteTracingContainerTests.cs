@@ -33,7 +33,6 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 configModifier.SetLogLevel("Finest");
-                configModifier.LogToConsole();
             },
             exerciseApplication: () =>
             {

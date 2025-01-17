@@ -35,8 +35,6 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                configModifier.LogToConsole();
-
             },
             exerciseApplication: () =>
             {
