@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Extensions.Helpers
 
             if (!success)
             {
-                transaction.NoticeError(new SearchRequestException(apiCallDetails.ToString()));
+                transaction.NoticeError(new Exception(apiCallDetails.ToString()));
             }
 
         }
@@ -270,17 +270,5 @@ namespace NewRelic.Agent.Extensions.Helpers
         {
             return response?.Status == TaskStatus.RanToCompletion;
         }
-    }
-
-    public class SearchRequestException : Exception
-    {
-        public SearchRequestException(string message)
-            : base(message) { }
-
-        public SearchRequestException()
-            : base() { }
-
-        public SearchRequestException(string message, Exception innerException)
-            : base(message, innerException) { }
     }
 }
