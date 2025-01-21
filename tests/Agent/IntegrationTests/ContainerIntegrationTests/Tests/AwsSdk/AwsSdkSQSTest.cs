@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -40,8 +41,6 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                configModifier.LogToConsole();
-
             },
             exerciseApplication: () =>
             {
@@ -176,4 +175,3 @@ public class AwsSdkSQSTestNullCollections : AwsSdkSQSTestBase
     {
     }
 }
-

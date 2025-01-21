@@ -30,6 +30,21 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
+        public void NoLogLevelsAreEnabled_WhenLogIsDisabled()
+        {
+            ILogConfig config = LogConfigFixtureWithLogEnabled(false);
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+            NrAssert.Multiple(
+                () => Assert.That(Log.IsFinestEnabled, Is.False),
+                () => Assert.That(Log.IsDebugEnabled, Is.False),
+                () => Assert.That(Log.IsInfoEnabled, Is.False),
+                () => Assert.That(Log.IsWarnEnabled, Is.False),
+                () => Assert.That(Log.IsErrorEnabled, Is.False)
+            );
+        }
+
+        [Test]
         public static void All_log_levels_are_enabled_when_config_log_is_all()
         {
             ILogConfig config = GetLogConfig("all");
@@ -210,7 +225,7 @@ namespace NewRelic.Agent.Core
                 "   <application>" +
                 "       <name>Test</name>" +
                 "   </application>" +
-                "   <log level=\"debug\" console=\"true\" enabled=\"{0}\" />" +
+                "   <log level=\"all\" console=\"false\" enabled=\"{0}\" />" +
                 "</configuration>",
                 enabled.ToString().ToLower());
 

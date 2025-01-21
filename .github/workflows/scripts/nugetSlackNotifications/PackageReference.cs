@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
@@ -33,8 +33,5 @@ namespace nugetSlackNotifications
                 return match.Success ? match.Value : null;
             }
         }
-
-        [XmlAttribute]
-        public bool Pin { get; set; }
     }
 }

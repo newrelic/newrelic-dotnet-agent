@@ -1,10 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.AwsSdk;
+using NewRelic.Agent.Extensions.Caching;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk
 {
@@ -14,10 +18,60 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
 
         private const string WrapperName = "AwsSdkPipelineWrapper";
         private static ConcurrentHashSet<string> _unsupportedRequestTypes = new();
+        private static bool _reportBadAccountId = true;
+        private static bool _reportBadArnBuilder = false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        }
+
+        private ArnBuilder CreateArnBuilder(IAgent agent, dynamic requestContext)
+        {
+            string partition = null;
+            string systemName = null;
+            string accountId = null;
+            try
+            {
+                var clientConfig = requestContext.ClientConfig;
+                accountId = GetAccountId(agent, clientConfig);
+                if (clientConfig.RegionEndpoint != null)
+                {
+                    var regionEndpoint = clientConfig.RegionEndpoint;
+                    systemName = regionEndpoint.SystemName;
+                    partition = regionEndpoint.PartitionName;
+                }
+            }
+            catch (Exception e)
+            {
+                if (_reportBadArnBuilder)
+                {
+                    agent.Logger.Debug(e, $"AwsSdkPipelineWrapper: Unable to get required ARN components from requestContext.");
+                    _reportBadArnBuilder = false;
+                }
+            }
+
+            return new ArnBuilder(partition, systemName, accountId);
+        }
+
+        private string GetAccountId(IAgent agent, object clientConfig)
+        {
+            var cacheKey = new WeakReferenceKey<object>(clientConfig);
+            string accountId = AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.ContainsKey(cacheKey) ? AmazonServiceClientWrapper.AwsAccountIdByClientConfigCache.Get(cacheKey) : agent.Configuration.AwsAccountId;
+
+            if (accountId != null)
+            {
+                if ((accountId.Length != 12) || accountId.Any(c => (c < '0') || (c > '9')))
+                {
+                    if (_reportBadAccountId)
+                    {
+                        agent.Logger.Warn("Supplied AWS Account ID appears to be invalid");
+                        _reportBadAccountId = false;
+                    }
+                }
+            }
+
+            return accountId;
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -49,18 +103,25 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
             }
             dynamic request = requestContext.OriginalRequest;
             string requestType = request.GetType().FullName;
+            ArnBuilder builder = CreateArnBuilder(agent, requestContext);
 
             if (requestType.StartsWith("Amazon.SQS"))
             {
                 return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
             }
-            else if (requestType.StartsWith("Amazon.DynamoDBv2"))
+
+            if (requestType == "Amazon.Lambda.Model.InvokeRequest")
             {
-                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+                return LambdaInvokeRequestHandler.HandleInvokeRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
+            }
+
+            if (requestType.StartsWith("Amazon.DynamoDBv2"))
+            {
+                return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
             if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
-            {                
+            {
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
                 _unsupportedRequestTypes.Add(requestType);
             }

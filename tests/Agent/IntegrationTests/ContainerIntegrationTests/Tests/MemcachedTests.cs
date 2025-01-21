@@ -26,7 +26,6 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("debug");
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.LogToConsole();
                 },
                 exerciseApplication: () =>
                 {

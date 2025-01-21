@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
 
         // Collector responses
-        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
+        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":(.*)";
         public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
 
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
@@ -496,7 +496,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             foreach (var match in matches)
             {
-                var json = "{ \"agent_run_id\"" + match;
+                var json = match;
                 json = json?.Trim('[', ']');
                 json = json.Remove(json.Length - 1); // remove the extra }
 

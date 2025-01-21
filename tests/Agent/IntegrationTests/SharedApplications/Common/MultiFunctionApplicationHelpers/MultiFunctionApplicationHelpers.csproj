@@ -275,6 +275,14 @@
     <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
+  <!-- AWS SDK -->
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.400.7" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.404.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.302" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.302" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
