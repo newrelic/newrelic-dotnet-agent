@@ -2,12 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
+using System.IO;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.Tar;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
+using Telerik.JustMock.AutoMock.Ninject.Activation;
 
 namespace CompositeTests
 {
@@ -17,6 +22,9 @@ namespace CompositeTests
         private static CompositeTestAgent _compositeTestAgent;
 
         private IAgent _agent;
+
+        private string _testHost = "localhost";
+        private int _testPort = 1337;
 
         [SetUp]
         public void SetUp()
@@ -31,11 +39,11 @@ namespace CompositeTests
             _compositeTestAgent.Dispose();
         }
 
-
         [TestCase("PUT", "my-index", "_search", "Search", false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "search", "scroll", "Scroll", false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "my-index", "_search", null, false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "search", "scroll", null, false, DatastoreVendor.OpenSearch)]
+
         [TestCase("PUT", "_my-index", "_search", "Search", false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "_search", "scroll", "Scroll", false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "_my-index", "_search", null, false, DatastoreVendor.OpenSearch)]
@@ -43,9 +51,35 @@ namespace CompositeTests
         public void Test_BuildSegment_TryProcessResponse_Success(string request, string path, string operationData,
             string requestParams, bool isAsync, DatastoreVendor datastoreVendor)
         {
-            var response = new TestSearchResponse(true);
-            GetTestData(request, path, operationData, requestParams, isAsync, datastoreVendor, response,
-                out var instrumentedMethodCall, out var segment, out var transaction);
+            var testResponse = new TestSearchResponse(true, _testHost, _testPort, false);
+
+            var combinedPath = $"/{path}/{operationData}";
+
+            var testWrapper = new TestSearchRequestWrapper(datastoreVendor);
+            var testRequest = new TestSearchRequest();
+            var methodArgs = isAsync
+                ? new object[] { request, combinedPath, null, null, GetRequestParams(requestParams) }
+                : new object[] { request, combinedPath, null, GetRequestParams(requestParams) };
+
+            var paramsIndex = isAsync ? 4 : 3;
+
+            var method = new Method(typeof(TestSearchRequest), "", "");
+            var methodCall = new MethodCall(method, testRequest, methodArgs, isAsync);
+            var instrumentedMethodInfo = new InstrumentedMethodInfo(
+                1,
+                method,
+                "requestedWrapperName",
+                isAsync,
+                "metricName",
+                TransactionNamePriority.CustomTransactionName,
+                false);
+
+            var instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
+
+            var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
+
+            var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
 
             Assert.That(segment, Is.Not.Null);
             Assert.That(segment.SegmentData, Is.Not.Null);
@@ -63,8 +97,140 @@ namespace CompositeTests
             }
             
             Assert.That(datastoreSegmentData.Operation, Is.Not.Null);
-            Assert.That(datastoreSegmentData.Host, Is.EqualTo("localhost"));
-            Assert.That(datastoreSegmentData.Port, Is.EqualTo(1337));
+            Assert.That(datastoreSegmentData.Host, Is.EqualTo(_testHost));
+            Assert.That(datastoreSegmentData.Port, Is.EqualTo(_testPort));
+        }
+
+        [TestCase(true, true)]
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        public void Test_TryProcessResponse_Nulls(bool responseNull, bool segmentNull)
+        {
+            var testResponse = responseNull ? null : new TestSearchResponse(true, _testHost, _testPort, false);
+
+            var combinedPath = $"/my-index/_search";
+
+            var testWrapper = new TestSearchRequestWrapper(DatastoreVendor.Elasticsearch);
+            var testRequest = new TestSearchRequest();
+            var methodArgs = new object[] { "PUT", combinedPath, null, GetRequestParams("Search") };
+
+            var paramsIndex = 3;
+
+            var method = new Method(typeof(TestSearchRequest), "", "");
+            var methodCall = new MethodCall(method, testRequest, methodArgs, false);
+            var instrumentedMethodInfo = new InstrumentedMethodInfo(
+                1,
+                method,
+                "requestedWrapperName",
+                false,
+                "metricName",
+                TransactionNamePriority.CustomTransactionName,
+                false);
+
+            var instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
+
+            var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
+
+            var segment = segmentNull ? null : testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
+
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+
+            if (responseNull && !segmentNull)
+            {
+                var segmentData = segment.SegmentData as DatastoreSegmentData;
+                Assert.That(segmentData.Host, Is.Not.EqualTo(_testHost));
+                Assert.That(segmentData.Port, Is.Not.EqualTo(_testPort));
+            }
+            else if(!responseNull && !segmentNull)
+            {
+                var segmentData = segment.SegmentData as DatastoreSegmentData;
+                Assert.That(segmentData.Host, Is.EqualTo(_testHost));
+                Assert.That(segmentData.Port, Is.EqualTo(_testPort));
+            }
+            else
+            {
+                // Nothing really to test if the segment is null.
+                Assert.That(!transaction.IsFinished);
+            }
+        }
+
+        [Test]
+        public void ReportError_NoticeError()
+        {
+            var testResponse = new TestSearchResponse(false, _testHost, _testPort, true);
+
+            var combinedPath = $"/my-index/_search";
+
+            var testWrapper = new TestSearchRequestWrapper(DatastoreVendor.Elasticsearch);
+            var testRequest = new TestSearchRequest();
+            var methodArgs = new object[] { "PUT", combinedPath, null, GetRequestParams("Search") };
+
+            var paramsIndex = 3;
+
+            var method = new Method(typeof(TestSearchRequest), "", "");
+            var methodCall = new MethodCall(method, testRequest, methodArgs, false);
+            var instrumentedMethodInfo = new InstrumentedMethodInfo(
+                1,
+                method,
+                "requestedWrapperName",
+                false,
+                "metricName",
+                TransactionNamePriority.CustomTransactionName,
+                false);
+
+            var instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
+
+            var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
+
+            var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
+
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+
+            var fullTransaction = transaction as Transaction;
+
+            var errorState = fullTransaction.TransactionMetadata.TransactionErrorState;
+            Assert.That(errorState.HasError);
+            Assert.That(errorState.ErrorData.RawException.Message, Is.EqualTo("OriginalException"));
+        }
+
+        [Test]
+        public void ReportError_SuccessGetter()
+        {
+            var testResponse = new TestSearchResponse(false, _testHost, _testPort, false);
+
+            var combinedPath = $"/my-index/_search";
+
+            var testWrapper = new TestSearchRequestWrapper(DatastoreVendor.Elasticsearch);
+            var testRequest = new TestSearchRequest();
+            var methodArgs = new object[] { "PUT", combinedPath, null, GetRequestParams("Search") };
+
+            var paramsIndex = 3;
+
+            var method = new Method(typeof(TestSearchRequest), "", "");
+            var methodCall = new MethodCall(method, testRequest, methodArgs, false);
+            var instrumentedMethodInfo = new InstrumentedMethodInfo(
+                1,
+                method,
+                "requestedWrapperName",
+                false,
+                "metricName",
+                TransactionNamePriority.CustomTransactionName,
+                false);
+
+            var instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
+
+            var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
+
+            var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
+
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+
+            var fullTransaction = transaction as Transaction;
+
+            var errorState = fullTransaction.TransactionMetadata.TransactionErrorState;
+            Assert.That(errorState.HasError);
+            Assert.That(errorState.ErrorData.RawException.Message, Is.EqualTo("CompositeTests.TestSearchResponseApiInfo"));
         }
 
         [Test]
@@ -94,39 +260,9 @@ namespace CompositeTests
         {
             var completedTask = Task.CompletedTask;
             var delayedTask = Task.Delay(3000);
-            Assert.That(SearchRequestWrapperBase.ValidTaskResponse(completedTask), Is.True);
-            Assert.That(SearchRequestWrapperBase.ValidTaskResponse(delayedTask), Is.False);
-        }
-
-        private void GetTestData(string request, string path, string operationData,
-            string requestParams, bool isAsync, DatastoreVendor datastoreVendor, TestSearchResponse response,
-            out InstrumentedMethodCall instrumentedMethodCall, out Segment segment, out ITransaction transaction)
-        {
-            var combinedPath = $"/{path}/{operationData}";
-
-            var wrapperBase = new TestSearchRequestWrapper(datastoreVendor);
-            var testRequest = new TestSearchRequest();
-            var methodArgs = isAsync
-                ? new object[] { request, combinedPath, null, null, GetRequestParams(requestParams) }
-                : new object[] { request, combinedPath, null, GetRequestParams(requestParams) };
-
-            var method = new Method(typeof(TestSearchRequest), "", "");
-            var methodCall = new MethodCall(method, testRequest, methodArgs, isAsync);
-            var instrumentedMethodInfo = new InstrumentedMethodInfo(
-                1,
-                method,
-                "requestedWrapperName",
-                isAsync,
-                "metricName",
-                TransactionNamePriority.CustomTransactionName,
-                false);
-
-            instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
-
-            transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
-
-            segment = wrapperBase.BuildSegment(isAsync, instrumentedMethodCall, transaction) as Segment;
-            wrapperBase.TryProcessResponse(_agent, transaction, response, segment);
+            Assert.That(TestSearchRequestWrapper.ValidTaskResponse(completedTask), Is.True);
+            Assert.That(TestSearchRequestWrapper.ValidTaskResponse(delayedTask), Is.False);
+            Assert.That(TestSearchRequestWrapper.ValidTaskResponse(null), Is.False);
         }
 
         private object GetRequestParams(string paramsType)
@@ -156,8 +292,9 @@ namespace CompositeTests
     public class TestSearchRequestWrapper : SearchRequestWrapperBase
     {
         public override DatastoreVendor Vendor { get;  }
-        public override int RequestParamsIndex => 3;
-        public override int RequestParamsIndexAsync => 4;
+
+        public new ConcurrentDictionary<Type, Func<object, object>> GetRequestResponseFromGeneric => base.GetRequestResponseFromGeneric;
+
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse("TestSearchRequestWrapper".Equals(methodInfo.RequestedWrapperName));
@@ -166,6 +303,21 @@ namespace CompositeTests
         public TestSearchRequestWrapper(DatastoreVendor datastoreVendor)
         {
             Vendor = datastoreVendor;
+        }
+
+        public new ISegment BuildSegment(int requestParamsIndex, InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction)
+        {
+            return base.BuildSegment(requestParamsIndex, instrumentedMethodCall, transaction);
+        }
+
+        public new void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
+        {
+            base.TryProcessResponse(agent, transaction, response, segment);
+        }
+
+        public new static bool ValidTaskResponse(Task response)
+        {
+            return SearchRequestWrapperBase.ValidTaskResponse(response);
         }
     }
 
@@ -184,22 +336,35 @@ namespace CompositeTests
 
     public class TestSearchResponse
     {
-        public object ApiCallDetails => new TestSearhResponseApiInfo();
+        public object ApiCallDetails { get; }
 
-        public object ApiCall => new TestSearhResponseApiInfo();
+        public object ApiCall { get; }
 
-        public Exception OriginalException => new Exception("OriginalException");
-
-        public bool SuccessOrKnownError { get; }
-
-        public TestSearchResponse(bool successOrKnownError)
+        public TestSearchResponse(bool successOrKnownError, string testHost, int testPort, bool hasException)
         {
-            SuccessOrKnownError = successOrKnownError;
+            var apiInfo = new TestSearchResponseApiInfo(testHost, testPort, hasException, successOrKnownError);
+            ApiCallDetails = apiInfo;
+            ApiCall = apiInfo;
+            
         }
     }
 
-    public class TestSearhResponseApiInfo
+    public class TestSearchResponseApiInfo
     {
-        public Uri Uri => new Uri("http://localhost:1337");
+        public Uri Uri { get; }
+
+        public Exception OriginalException { get; }
+
+        public bool SuccessOrKnownError { get; }
+
+        public TestSearchResponseApiInfo(string host, int port, bool hasException, bool successOrKnownError)
+        {
+            Uri = new Uri($"http://{host}:{port}");
+            successOrKnownError = SuccessOrKnownError;
+            if (hasException)
+            {
+                OriginalException = new Exception("OriginalException");
+            }
+        }
     }
 }

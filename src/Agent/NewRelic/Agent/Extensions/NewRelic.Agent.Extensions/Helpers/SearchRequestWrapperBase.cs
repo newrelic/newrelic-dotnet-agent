@@ -22,29 +22,15 @@ namespace NewRelic.Agent.Extensions.Helpers
         private Func<object, object> _exceptionGetter;
         private Func<object, Uri> _uriGetter;
 
-        public ConcurrentDictionary<Type, Func<object, object>> GetRequestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
+        protected ConcurrentDictionary<Type, Func<object, object>> GetRequestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
 
         public abstract DatastoreVendor Vendor { get; } 
 
-        public abstract int RequestParamsIndex { get; }
-
-        public abstract int RequestParamsIndexAsync { get; }
-
-        public bool IsTransactionRequired => true;
-
-        public ISegment BuildSegment(bool isAsync, InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction)
+        protected ISegment BuildSegment(int requestParamsIndex, InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction)
         {
-            var indexOfRequestParams = RequestParamsIndex;
-
-            if (isAsync)
-            {
-                transaction.AttachToAsync();
-                indexOfRequestParams = RequestParamsIndexAsync;
-            }
-
             var path = (string)instrumentedMethodCall.MethodCall.MethodArguments[1];
             var request = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
-            var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
+            var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[requestParamsIndex];
             var splitPath = path.Trim('/').Split('/');
 
             var operation = (requestParams == null) ? GetOperationFromPath(request, splitPath) : GetOperationFromRequestParams(requestParams);
@@ -63,7 +49,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             return segment;
         }
 
-        public void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
+        protected void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
         {
             try
             {
@@ -280,7 +266,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             segmentExperimentalApi.SetSegmentData(data);
         }
 
-        public static bool ValidTaskResponse(Task response)
+        protected static bool ValidTaskResponse(Task response)
         {
             return response?.Status == TaskStatus.RanToCompletion;
         }

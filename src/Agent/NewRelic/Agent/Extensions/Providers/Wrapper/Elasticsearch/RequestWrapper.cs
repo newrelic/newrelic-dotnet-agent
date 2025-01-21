@@ -16,12 +16,12 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
     public class RequestWrapper : SearchRequestWrapperBase, IWrapper
     {
         private const string WrapperName = "ElasticsearchRequestWrapper";
+        private const int RequestParamsIndex = 3;
+        private const int RequestParamsIndexAsync = 4;
 
         public override DatastoreVendor Vendor => DatastoreVendor.Elasticsearch;
 
-        public override int RequestParamsIndex => 3;
-
-        public override int RequestParamsIndexAsync => 4;
+        public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -33,7 +33,15 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var isAsync = instrumentedMethodCall.IsAsync ||
                           instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName.EndsWith("RequestAsync");
 
-            var segment = BuildSegment(isAsync, instrumentedMethodCall, transaction);
+            var indexOfRequestParams = RequestParamsIndex;
+
+            if (isAsync)
+            {
+                transaction.AttachToAsync();
+                indexOfRequestParams = RequestParamsIndexAsync;
+            }
+
+            var segment = BuildSegment(indexOfRequestParams, instrumentedMethodCall, transaction);
 
             if (isAsync)
             {
