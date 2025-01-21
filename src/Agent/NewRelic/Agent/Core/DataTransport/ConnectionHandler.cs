@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Extensions.Helpers;
 using Newtonsoft.Json;
 #if NETFRAMEWORK
 using System.Web;
@@ -238,6 +239,9 @@ namespace NewRelic.Agent.Core.DataTransport
         private ServerConfiguration SendConnectRequest()
         {
             var connectParameters = GetConnectParameters();
+
+            Log.Finest("Connect properties: {connect}", PropertyHelper.GetPropertiesAsString(connectParameters));
+
             var responseMap = SendNonDataRequest<Dictionary<string, object>>("connect", connectParameters);
             if (responseMap == null)
                 throw new Exception("Empty connect result payload");

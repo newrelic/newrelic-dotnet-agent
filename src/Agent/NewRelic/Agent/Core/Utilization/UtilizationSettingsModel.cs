@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.Utilization
             TotalRamMebibytes = totalRamBytes.HasValue ? totalRamBytes.Value / (1024 * 1024) : totalRamBytes;
             Hostname = hostname;
             FullHostName = fullHostName;
-            IpAddress = ipAddress;
+            IpAddress = ipAddress ?? new List<string>();
             BootId = bootId;
             Vendors = vendors;
             Config = utilitizationConfig;

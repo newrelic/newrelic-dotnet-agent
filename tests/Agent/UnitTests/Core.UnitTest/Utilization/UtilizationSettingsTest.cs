@@ -317,6 +317,179 @@ namespace NewRelic.Agent.Core.Utilization
             Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
+        [Test]
+        public void when_vendors_contain_empty_strings_serializes_correctly()
+        {
+            var vendors = new Dictionary<string, IVendorModel>
+            {
+                { "aws", new AwsVendorModel("", "myInstanceId", "myInstanceType") },
+                { "azure", new AzureVendorModel("myLocation", "", "myVmId", "myVmSize") },
+                { "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "") },
+                { "pcf", new PcfVendorModel("myInstanceGuid", "", "myMemoryLimit") },
+                { "docker", new DockerVendorModel("myBootId") }
+            };
+            var config = new UtilitizationConfig("loc-alhost", 2, 2048);
+            var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
+
+            // ACT
+            var actualJson = JsonConvert.SerializeObject(settingsModel);
+
+            var expectedObject = new Dictionary<string, object>
+            {
+                {"metadata_version", 5},
+                {"logical_processors", 4},
+                {"total_ram_mib", 1024},
+                {"hostname", "lo-calhost"},
+                {"full_hostname", "lo-calhost.domain.com"},
+                {"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
+                {
+                    "config",  new Dictionary<string, object>
+                    {
+                        {"hostname", "loc-alhost"},
+                        {"logical_processors", 2},
+                        {"total_ram_mib", 2048}
+                    }
+                },
+                {
+                    "vendors", new Dictionary<string, object>
+                    {
+                        {
+                            "aws", new Dictionary<string, object>
+                            {
+                                {"availabilityZone", ""},
+                                {"instanceId", "myInstanceId"},
+                                {"instanceType", "myInstanceType"}
+                            }
+                        },
+                        {
+                            "azure", new Dictionary<string,object>
+                            {
+                                {"location", "myLocation" },
+                                {"name", ""},
+                                {"vmId", "myVmId" },
+                                {"vmSize", "myVmSize" }
+                            }
+                        },
+                        {
+                            "gcp", new Dictionary<string,object>
+                            {
+                                {"id", "myId" },
+                                {"machineType", "myMachineType" },
+                                {"name", "myName" },
+                                {"zone", ""}
+                            }
+                        },
+                        {
+                            "pcf", new Dictionary<string,object>
+                            {
+                                {"cf_instance_guid", "myInstanceGuid" },
+                                {"cf_instance_ip", ""},
+                                {"memory_limit", "myMemoryLimit" }
+                            }
+                        },
+                        {
+                            "docker", new Dictionary<string,object>
+                            {
+                                {"id", "myBootId" }
+                            }
+                        }
+                    }
+                }
+            };
+            var expectedJson = JsonConvert.SerializeObject(expectedObject);
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+        }
+
+        [Test]
+        public void when_ip_addresses_are_null_serializes_correctly()
+        {
+            var vendors = new Dictionary<string, IVendorModel>
+            {
+                { "aws", new AwsVendorModel("myZone", "myInstanceId", "myInstanceType") },
+                { "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize") },
+                { "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
+                { "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
+                { "docker", new DockerVendorModel("myBootId") },
+                { "kubernetes", new KubernetesVendorModel("10.96.0.1") }
+            };
+            var config = new UtilitizationConfig("loc-alhost", 2, 2048);
+            var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", null, null, vendors, config);
+
+            // ACT
+            var actualJson = JsonConvert.SerializeObject(settingsModel);
+
+            var expectedObject = new Dictionary<string, object>
+            {
+                {"metadata_version", 5},
+                {"logical_processors", 4},
+                {"total_ram_mib", 1024},
+                {"hostname", "lo-calhost"},
+                {"full_hostname", "lo-calhost.domain.com"},
+                {"ip_address", new List<string>()},
+                {
+                    "config",  new Dictionary<string, object>
+                    {
+                        {"hostname", "loc-alhost"},
+                        {"logical_processors", 2},
+                        {"total_ram_mib", 2048}
+                    }
+                },
+                {
+                    "vendors", new Dictionary<string, object>
+                    {
+                        {
+                            "aws", new Dictionary<string, object>
+                            {
+                                {"availabilityZone", "myZone"},
+                                {"instanceId", "myInstanceId"},
+                                {"instanceType", "myInstanceType"}
+                            }
+                        },
+                        {
+                            "azure", new Dictionary<string,object>
+                            {
+                                {"location", "myLocation" },
+                                {"name", "myName" },
+                                {"vmId", "myVmId" },
+                                {"vmSize", "myVmSize" }
+                            }
+                        },
+                        {
+                            "gcp", new Dictionary<string,object>
+                            {
+                                {"id", "myId" },
+                                {"machineType", "myMachineType" },
+                                {"name", "myName" },
+                                {"zone", "myZone" }
+                            }
+                        },
+                        {
+                            "pcf", new Dictionary<string,object>
+                            {
+                                {"cf_instance_guid", "myInstanceGuid" },
+                                {"cf_instance_ip", "myInstanceIp" },
+                                {"memory_limit", "myMemoryLimit" }
+                            }
+                        },
+                        {
+                            "docker", new Dictionary<string,object>
+                            {
+                                {"id", "myBootId" }
+                            }
+                        },
+                        {
+                            "kubernetes", new Dictionary<string,object>
+                            {
+                                {"kubernetes_service_host", "10.96.0.1" }
+                            }
+                        }
+                    }
+                }
+            };
+            var expectedJson = JsonConvert.SerializeObject(expectedObject);
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+        }
+
         //Same method used in main code, except this one take the config vs having it be global.
         private UtilitizationConfig GetUtilitizationConfig(IConfiguration configuration)
         {
@@ -346,6 +519,151 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return new UtilitizationConfig(billingHost, logicalProcessors, totalRamMib);
+        }
+        [Test]
+        public void when_vendors_contain_special_characters_serializes_correctly()
+        {
+            var vendors = new Dictionary<string, IVendorModel>
+            {
+                { "aws", new AwsVendorModel("my@Zone!", "my#InstanceId$", "my%InstanceType^") },
+                { "azure", new AzureVendorModel("my&Location*", "my(Name)", "my+VmId=", "my{VmSize}") },
+                { "gcp" , new GcpVendorModel("my]Id[", "my|MachineType\\", "my;Name:", "my'Zone\"") },
+                { "pcf", new PcfVendorModel("my<InstanceGuid>", "my,InstanceIp.", "my?MemoryLimit/") },
+                { "docker", new DockerVendorModel("my~BootId`") },
+                { "kubernetes", new KubernetesVendorModel("10.96.0.1@k8s") }
+            };
+            var config = new UtilitizationConfig("loc@alhost", 2, 2048);
+            var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo@calhost", "lo@calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
+
+            // ACT
+            var actualJson = JsonConvert.SerializeObject(settingsModel);
+
+            var expectedObject = new Dictionary<string, object>
+            {
+                {"metadata_version", 5},
+                {"logical_processors", 4},
+                {"total_ram_mib", 1024},
+                {"hostname", "lo@calhost"},
+                {"full_hostname", "lo@calhost.domain.com"},
+                {"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
+                {
+                    "config",  new Dictionary<string, object>
+                    {
+                        {"hostname", "loc@alhost"},
+                        {"logical_processors", 2},
+                        {"total_ram_mib", 2048}
+                    }
+                },
+                {
+                    "vendors", new Dictionary<string, object>
+                    {
+                        {
+                            "aws", new Dictionary<string, object>
+                            {
+                                {"availabilityZone", "my@Zone!"},
+                                {"instanceId", "my#InstanceId$"},
+                                {"instanceType", "my%InstanceType^"}
+                            }
+                        },
+                        {
+                            "azure", new Dictionary<string,object>
+                            {
+                                {"location", "my&Location*" },
+                                {"name", "my(Name)"},
+                                {"vmId", "my+VmId=" },
+                                {"vmSize", "my{VmSize}" }
+                            }
+                        },
+                        {
+                            "gcp", new Dictionary<string,object>
+                            {
+                                {"id", "my]Id[" },
+                                {"machineType", "my|MachineType\\" },
+                                {"name", "my;Name:" },
+                                {"zone", "my'Zone\"" }
+                            }
+                        },
+                        {
+                            "pcf", new Dictionary<string,object>
+                            {
+                                {"cf_instance_guid", "my<InstanceGuid>" },
+                                {"cf_instance_ip", "my,InstanceIp."},
+                                {"memory_limit", "my?MemoryLimit/" }
+                            }
+                        },
+                        {
+                            "docker", new Dictionary<string,object>
+                            {
+                                {"id", "my~BootId`" }
+                            }
+                        },
+                        {
+                            "kubernetes", new Dictionary<string,object>
+                            {
+                                {"kubernetes_service_host", "10.96.0.1@k8s" }
+                            }
+                        }
+                    }
+                }
+            };
+            var expectedJson = JsonConvert.SerializeObject(expectedObject);
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+        }
+        [Test]
+        public void when_all_properties_are_null_serializes_correctly()
+        {
+            var vendors = new Dictionary<string, IVendorModel>
+            {
+                { "aws", new AwsVendorModel(null, null, null) },
+                { "azure", new AzureVendorModel(null, null, null, null) },
+                { "gcp" , new GcpVendorModel(null, null, null, null) },
+                { "pcf", new PcfVendorModel(null, null, null) },
+                { "docker", new DockerVendorModel(null) },
+                { "kubernetes", new KubernetesVendorModel(null) }
+            };
+            var config = new UtilitizationConfig(null, null, null);
+            var settingsModel = new UtilizationSettingsModel(null, null, null, null, null, null, vendors, config);
+
+            // ACT
+            var actualJson = JsonConvert.SerializeObject(settingsModel);
+
+            var expectedObject = new Dictionary<string, object>
+            {
+                {"metadata_version", 5},
+                {"logical_processors", (int?)null},
+                {"total_ram_mib", (int?)null},
+                {"hostname", (string)null},
+                {"full_hostname", (string)null},
+                {"ip_address", new List<string>()},
+                {
+                    "config", new UtilitizationConfig(null, null, null)
+                },
+                {
+                    "vendors", new Dictionary<string, object>
+                    {
+                        {
+                            "aws", new Dictionary<string, object>()
+                        },
+                        {
+                            "azure", new Dictionary<string,object>()
+                        },
+                        {
+                            "gcp", new Dictionary<string,object>()
+                        },
+                        {
+                            "pcf", new Dictionary<string,object>()
+                        },
+                        {
+                            "docker", new Dictionary<string,object>()
+                        },
+                        {
+                            "kubernetes", new Dictionary<string,object>()
+                        }
+                    }
+                }
+            };
+            var expectedJson = JsonConvert.SerializeObject(expectedObject);
+            Assert.That(actualJson, Is.EqualTo(expectedJson), string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
     }
 }

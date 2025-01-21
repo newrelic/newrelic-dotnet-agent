@@ -502,5 +502,129 @@ namespace NewRelic.Agent.Core.DataTransport
                 });
             }
         }
+        [Test]
+        public void SerializesCorrectlyWithNullValues()
+        {
+            var config = Mock.Create<IConfiguration>();
+
+            using (new ConfigurationAutoResponder(config))
+            {
+                var connectModel = new ConnectModel
+                    (
+                    1,
+                    "dotnet",
+                    null, // DisplayHost is null
+                    "myHost",
+                    null, // AppNames is null
+                    "1.0",
+                    0,
+                    null, // SecuritySettings is null
+                    true,
+                    null, // Identifier is null
+                    null, // Labels is null
+                    null, // Metadata is null
+                    null, // UtilizationSettings is null
+                    null, // Environment is null
+                    null, // SecurityPoliciesSettings is null
+                    null, // EventHarvestConfig is null
+                    null  // Configuration is null
+                );
+
+                var json = JsonConvert.SerializeObject(connectModel);
+
+                const string expectedJson = """
+                    {
+                        "pid": 1,
+                        "language": "dotnet",
+                        "host": "myHost",
+                        "app_name": null,
+                        "agent_version": "1.0",
+                        "agent_version_timestamp": 0,
+                        "security_settings": null,
+                        "high_security": true,
+                        "event_harvest_config": null,
+                        "identifier": null,
+                        "labels": null,
+                        "settings": null,
+                        "metadata": null,
+                        "utilization": null
+                    }
+                    """;
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(json, Is.Not.Null);
+                    Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+                });
+            }
+        }
+
+        [Test]
+        public void SerializesCorrectlyWithSomeNullValues()
+        {
+            var config = Mock.Create<IConfiguration>();
+
+            using (new ConfigurationAutoResponder(config))
+            {
+                var connectModel = new ConnectModel
+                    (
+                    1,
+                    "dotnet",
+                    "customHostName",
+                    "myHost",
+                    new[] { "name1", "name2" },
+                    "1.0",
+                    0,
+                    new SecuritySettingsModel(new TransactionTraceSettingsModel("raw")),
+                    true,
+                    "myIdentifier",
+                    new[] { new Label("type1", "value1") },
+                    new Dictionary<string, string> { { "hello", "there" } },
+                    null, // UtilizationSettings is null
+                    null, // Environment is null
+                    null, // SecurityPoliciesSettings is null
+                    null, // EventHarvestConfig is null
+                    null  // Configuration is null
+                );
+
+                var json = JsonConvert.SerializeObject(connectModel);
+
+                const string expectedJson = """
+                    {
+                        "pid": 1,
+                        "language": "dotnet",
+                        "display_host": "customHostName",
+                        "host": "myHost",
+                        "app_name": ["name1", "name2"],
+                        "agent_version": "1.0",
+                        "agent_version_timestamp": 0,
+                        "security_settings": {
+                            "transaction_tracer": {
+                                "record_sql": "raw"
+                            }
+                        },
+                        "high_security": true,
+                        "event_harvest_config": null,
+                        "identifier": "myIdentifier",
+                        "labels": [{
+                                "label_type": "type1",
+                                "label_value": "value1"
+                            }
+                        ],
+                        "settings": null,
+                        "metadata": {
+                            "hello": "there"
+                        },
+                        "utilization": null
+                    }
+                    """;
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(json, Is.Not.Null);
+                    Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+                });
+            }
+        }
     }
 }

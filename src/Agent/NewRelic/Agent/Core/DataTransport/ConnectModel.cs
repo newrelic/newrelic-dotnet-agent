@@ -135,6 +135,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public SecurityPoliciesSettingsModel(IConfiguration configuration)
         {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
             if (configuration.TransactionTracerRecordSql == DefaultConfiguration.RawStringValue)
             {
                 throw new ArgumentException($"{DefaultConfiguration.RawStringValue} is not a valid record_sql setting for security policies.");
