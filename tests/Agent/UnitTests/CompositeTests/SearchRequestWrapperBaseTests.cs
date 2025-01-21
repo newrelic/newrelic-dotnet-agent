@@ -39,18 +39,26 @@ namespace CompositeTests
             _compositeTestAgent.Dispose();
         }
 
+        // Path no underscore
         [TestCase("PUT", "my-index", "_search", "Search", false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "search", "scroll", "Scroll", false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "my-index", "_search", null, false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "my-index", "/third", null, false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "search", "scroll", null, false, DatastoreVendor.OpenSearch)]
 
+        // Path with underscore
         [TestCase("PUT", "_my-index", "_search", "Search", false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "_search", "scroll", "Scroll", false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "_my-index", "_search", null, false, DatastoreVendor.OpenSearch)]
         [TestCase("PUT", "_my-index", "/third", null, false, DatastoreVendor.OpenSearch)]
         [TestCase("GET", "_search", "scroll", null, false, DatastoreVendor.OpenSearch)]
 
+        // Test different request operations
+        [TestCase("DELETE", "_search", "scroll", null, false, DatastoreVendor.OpenSearch)]
+        [TestCase("POST", "_doc", "index", null, false, DatastoreVendor.OpenSearch)]
+        [TestCase("HEAD", "_mtermvectors", "index", null, false, DatastoreVendor.OpenSearch)]
+
+        // Test empty paths
         [TestCase("PUT", null, null, "Search", false, DatastoreVendor.OpenSearch)]
         public void Test_BuildSegment_TryProcessResponse_Success(string request, string path, string operationData,
             string requestParams, bool isAsync, DatastoreVendor datastoreVendor)
