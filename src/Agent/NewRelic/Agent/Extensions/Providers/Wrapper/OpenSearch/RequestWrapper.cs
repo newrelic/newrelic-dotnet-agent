@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
@@ -14,6 +15,8 @@ namespace NewRelic.Providers.Wrapper.OpenSearch
         private const string WrapperName = "OpenSearchRequestWrapper";
         private const int RequestParamsIndex = 3;
         private const int RequestParamsIndexAsync = 4;
+
+        private static Func<object, object> _apiCallDetailsGetter;
 
         public override DatastoreVendor Vendor => DatastoreVendor.OpenSearch;
 
@@ -52,7 +55,8 @@ namespace NewRelic.Providers.Wrapper.OpenSearch
                     }
                     var responseGetter = GetRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
                     var response = responseGetter(responseTask);
-                    TryProcessResponse(agent, transaction, response, segment);
+                    _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
+                    TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
                 }
             }
             else
@@ -60,7 +64,8 @@ namespace NewRelic.Providers.Wrapper.OpenSearch
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            TryProcessResponse(agent, transaction, response, segment);
+                            _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
+                            TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
                         },
                         onFailure: exception =>
                         {
@@ -68,6 +73,16 @@ namespace NewRelic.Providers.Wrapper.OpenSearch
                             segment.End(exception);
                         });
             }
+        }
+
+        private static Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
+        {
+            var typeOfResponse = response.GetType();
+            var responseAssemblyName = typeOfResponse.Assembly.FullName;
+            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("OpenSearch.Net")
+                ? "ApiCallDetails" : "ApiCall";
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
         }
     }
 }

@@ -17,7 +17,6 @@ namespace NewRelic.Agent.Extensions.Helpers
 {
     public abstract class SearchRequestWrapperBase
     {
-        private Func<object, object> _apiCallDetailsGetter;
         private Func<object, bool> _successGetter;
         private Func<object, object> _exceptionGetter;
         private Func<object, Uri> _uriGetter;
@@ -35,8 +34,8 @@ namespace NewRelic.Agent.Extensions.Helpers
 
             var operation = (requestParams == null) ? GetOperationFromPath(request, splitPath) : GetOperationFromRequestParams(requestParams);
 
-            var model = splitPath[0]; // For SQL datastores, "model" is the table name. For OpenSearch it's the index name.  This is often the first component of the request path, but not always.
-            if ((model.Length == 0) || (model[0] == '_')) // Per OpenSearch docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
+            var model = splitPath[0]; // For Elastic/OpenSearch model is the index name.  This is often the first component of the request path, but not always.
+            if ((model.Length == 0) || (model[0] == '_')) // Per Elastic/OpenSearch docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
             {
                 model = "Unknown";
             }
@@ -49,7 +48,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             return segment;
         }
 
-        protected void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
+        protected void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment, Func<object, object> apiCallDetailsGetter)
         {
             try
             {
@@ -57,7 +56,7 @@ namespace NewRelic.Agent.Extensions.Helpers
                 {
                     return;
                 }
-                var apiCallDetails = GetApiCallDetailsFromResponse(response);
+                var apiCallDetails = apiCallDetailsGetter.Invoke(response);
                 var uri = GetUriFromApiCallDetails(apiCallDetails);
                 SetUriOnDatastoreSegment(segment, uri);
                 ReportError(transaction, apiCallDetails);
@@ -91,14 +90,6 @@ namespace NewRelic.Agent.Extensions.Helpers
             {
                 transaction.NoticeError(new Exception(apiCallDetails.ToString()));
             }
-
-        }
-
-        private object GetApiCallDetailsFromResponse(object response)
-        {
-            var ApiCallDetailsGetter = _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
-            var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
-            return apiCallDetails;
         }
 
         private Uri GetUriFromApiCallDetails(object apiCallDetails)
@@ -107,17 +98,6 @@ namespace NewRelic.Agent.Extensions.Helpers
             var uri = UriGetter.Invoke(apiCallDetails);
 
             return uri;
-        }
-
-        private static Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
-        {
-            var typeOfResponse = response.GetType();
-            var responseAssemblyName = typeOfResponse.Assembly.FullName;
-            var apiCallDetailsPropertyName =
-                responseAssemblyName.StartsWith("OpenSearch.Net") || responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
-                ? "ApiCallDetails" : "ApiCall";
-
-            return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
         }
 
         private static Func<object, Uri> GetUriGetterFromApiCallDetails(object apiCallDetails)

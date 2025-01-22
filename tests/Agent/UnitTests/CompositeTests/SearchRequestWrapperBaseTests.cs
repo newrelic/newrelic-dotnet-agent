@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Reflection;
 using NUnit.Framework;
 
 namespace CompositeTests
@@ -61,6 +62,7 @@ namespace CompositeTests
             string requestParams, bool isAsync, DatastoreVendor datastoreVendor)
         {
             var testResponse = new TestSearchResponse(true, _testHost, _testPort, false);
+            var apiCallDetailsGetter = GetApiCallDetailsGetterFromResponse(testResponse);
 
             var combinedPath = String.IsNullOrEmpty(path) ? "" : $"/{path}/{operationData}";
 
@@ -88,7 +90,7 @@ namespace CompositeTests
             var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
 
             var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
-            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment, apiCallDetailsGetter);
 
             Assert.That(segment, Is.Not.Null);
             Assert.That(segment.SegmentData, Is.Not.Null);
@@ -116,6 +118,7 @@ namespace CompositeTests
             string requestParams, bool isAsync, DatastoreVendor datastoreVendor)
         {
             var testResponse = new EvilTestSearchResponse();
+            var apiCallDetailsGetter = GetApiCallDetailsGetterFromResponse(testResponse);
 
             var combinedPath = $"/{path}/{operationData}";
 
@@ -143,7 +146,7 @@ namespace CompositeTests
             var transaction = _agent.CreateTransaction(true, "mycategory", "mytransactionname", false);
 
             var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
-            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment, apiCallDetailsGetter);
 
             Assert.That(segment, Is.Not.Null);
             Assert.That(segment.SegmentData, Is.Not.Null);
@@ -173,6 +176,7 @@ namespace CompositeTests
         public void Test_TryProcessResponse_Nulls(bool responseNull, bool segmentNull)
         {
             var testResponse = responseNull ? null : new TestSearchResponse(true, _testHost, _testPort, false);
+            var apiCallDetailsGetter = responseNull ? null : GetApiCallDetailsGetterFromResponse(testResponse);
 
             var combinedPath = $"/my-index/_search";
 
@@ -199,7 +203,7 @@ namespace CompositeTests
 
             var segment = segmentNull ? null : testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
 
-            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment, apiCallDetailsGetter);
 
             if (responseNull && !segmentNull)
             {
@@ -224,6 +228,7 @@ namespace CompositeTests
         public void ReportError_NoticeError()
         {
             var testResponse = new TestSearchResponse(false, _testHost, _testPort, true);
+            var apiCallDetailsGetter = GetApiCallDetailsGetterFromResponse(testResponse);
 
             var combinedPath = $"/my-index/_search";
 
@@ -250,7 +255,7 @@ namespace CompositeTests
 
             var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
 
-            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment, apiCallDetailsGetter);
 
             var fullTransaction = transaction as Transaction;
 
@@ -263,6 +268,7 @@ namespace CompositeTests
         public void ReportError_SuccessGetter()
         {
             var testResponse = new TestSearchResponse(false, _testHost, _testPort, false);
+            var apiCallDetailsGetter = GetApiCallDetailsGetterFromResponse(testResponse);
 
             var combinedPath = $"/my-index/_search";
 
@@ -289,7 +295,7 @@ namespace CompositeTests
 
             var segment = testWrapper.BuildSegment(paramsIndex, instrumentedMethodCall, transaction) as Segment;
 
-            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment);
+            testWrapper.TryProcessResponse(_agent, transaction, testResponse, segment, apiCallDetailsGetter);
 
             var fullTransaction = transaction as Transaction;
 
@@ -349,6 +355,17 @@ namespace CompositeTests
                     return null;
             }
         }
+
+        private static Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
+        {
+            var typeOfResponse = response.GetType();
+            var responseAssemblyName = typeOfResponse.Assembly.FullName;
+            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("OpenSearch.Net")
+                || responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
+                ? "ApiCallDetails" : "ApiCall";
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
+        }
     }
 
     public class SearchRequestParameters
@@ -382,9 +399,9 @@ namespace CompositeTests
             return base.BuildSegment(requestParamsIndex, instrumentedMethodCall, transaction);
         }
 
-        public new void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
+        public new void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment, Func<object, object> _apiCallDetailsGetter)
         {
-            base.TryProcessResponse(agent, transaction, response, segment);
+            base.TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
         }
 
         public new static string GetOperationFromRequestParams(object requestParams)
