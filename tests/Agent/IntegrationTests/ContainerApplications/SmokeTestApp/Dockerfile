@@ -5,9 +5,8 @@ FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
 WORKDIR /app
 EXPOSE 80
 
-# build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
 ARG DOTNET_VERSION
-FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
+FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 COPY ["SmokeTestApp/SmokeTestApp.csproj", "SmokeTestApp/"]
