@@ -21,7 +21,6 @@ public class ContainerApplication : RemoteApplication
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
-    private readonly string _buildArch;
     private readonly string _agentArch;
     private readonly string _containerPlatform;
 
