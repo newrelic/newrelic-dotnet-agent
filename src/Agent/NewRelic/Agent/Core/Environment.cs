@@ -24,7 +24,8 @@ namespace NewRelic.Agent.Core
     [JsonConverter(typeof(EnvironmentConverter))]
     public class Environment
     {
-        private readonly List<object[]> _environmentMap = new List<object[]>();
+        // **TESTING ONLY**
+        public List<object[]> _environmentMap { get; } = new List<object[]>();
 
         private readonly IProcessStatic _processStatic;
 

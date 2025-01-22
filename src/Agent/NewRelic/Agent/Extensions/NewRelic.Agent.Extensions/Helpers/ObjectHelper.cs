@@ -21,7 +21,11 @@ namespace NewRelic.Agent.Extensions.Helpers
 
         private static void TraverseObject(object obj, StringBuilder stringBuilder, string prefix, int indentLevel)
         {
-            if (obj == null) return;
+            if (obj == null)
+            {
+                stringBuilder.AppendLine("null");
+                return;
+            }
 
             try
             {
@@ -60,7 +64,7 @@ namespace NewRelic.Agent.Extensions.Helpers
                         continue;
                     }
 
-                    var value = property.GetValue(obj, null);
+                    var value = property.GetValue(obj, null) ?? "null";
 
                     if (propertyName.ToLower().Contains("license") || propertyName.ToLower().Contains("key") ||
                         propertyName.ToLower().Contains("accountid"))
@@ -106,7 +110,7 @@ namespace NewRelic.Agent.Extensions.Helpers
                     var fieldName = string.IsNullOrEmpty(prefix) ? field.Name : $"{prefix}.{field.Name}";
                     var indent = new string(' ', indentLevel * 2);
 
-                    var value = field.GetValue(obj);
+                    var value = field.GetValue(obj) ?? "null";
 
                     if (fieldName.ToLower().Contains("license") || fieldName.ToLower().Contains("key") ||
                         fieldName.ToLower().Contains("accountid"))
@@ -155,7 +159,7 @@ namespace NewRelic.Agent.Extensions.Helpers
 
         private static string ObfuscateValue(string value)
         {
-            if (string.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value) || value == "null") return value; // no need to obfuscate null values
             return new string('*', value.Length);
         }
 
