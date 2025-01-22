@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using NewRelic.Agent.Extensions.Helpers;
 using Newtonsoft.Json;
 #if NETFRAMEWORK
@@ -424,16 +425,29 @@ namespace NewRelic.Agent.Core.DataTransport
         private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
-            string serializedData;
-            try
+            string serializedData = null;
+            // TESTING ONLY -- retry loop is temporary
+            var retryCount = 1;
+            while (retryCount >= 0)
             {
-                serializedData = _serializer.Serialize(data);
-            }
-            catch (Exception ex)
-            {
-                Log.Debug("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex); // log message only since exception is rethrown
-                Log.Finest("Request({RequestGuid}): Dumping request object: {Dump}", requestGuid, ObjectHelper.GetObjectAsString(data));
-                throw;
+                try
+                {
+                    serializedData = _serializer.Serialize(data);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex); // log message only since exception is rethrown
+                    Log.Finest("Request({RequestGuid}): Dumping request object: {Dump}", requestGuid, ObjectHelper.GetObjectAsString(data));
+
+                    // TESTING ONLY
+                    if (retryCount-- == 0) // don't retry more than once
+                    {
+                        throw;
+                    }
+
+                    Thread.Sleep(1234); // delay a bit before retrying
+                }
             }
 
             try
