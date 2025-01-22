@@ -49,7 +49,7 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
     }
 }
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class DebianX64ContainerTest : LinuxContainerTest<DebianX64ContainerTestFixture>
 {
     public DebianX64ContainerTest(DebianX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -57,7 +57,7 @@ public class DebianX64ContainerTest : LinuxContainerTest<DebianX64ContainerTestF
     }
 }
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestFixture>
 {
     public UbuntuX64ContainerTest(UbuntuX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -65,7 +65,7 @@ public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestF
     }
 }
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class AlpineX64ContainerTest : LinuxContainerTest<AlpineX64ContainerTestFixture>
 {
     public AlpineX64ContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -89,7 +89,7 @@ public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerT
     }
 }
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestFixture>
 {
     public CentosX64ContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -106,7 +106,7 @@ public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestF
 //    }
 //}
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class AmazonX64ContainerTest : LinuxContainerTest<AmazonX64ContainerTestFixture>
 {
     public AmazonX64ContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -122,7 +122,7 @@ public class AmazonArm64ContainerTest : LinuxContainerTest<AmazonArm64ContainerT
     }
 }
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class FedoraX64ContainerTest : LinuxContainerTest<FedoraX64ContainerTestFixture>
 {
     public FedoraX64ContainerTest(FedoraX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

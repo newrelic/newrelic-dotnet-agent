@@ -13,7 +13,7 @@ using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
 {
     private readonly AwsSdkContainerDynamoDBTestFixture _fixture;

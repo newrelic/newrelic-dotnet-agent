@@ -28,8 +28,8 @@ permissions:
 
 jobs:
 
-  run-x64-linux-container-tests:
-    name: Run x64 Linux Container Integration Tests
+  run-amd64-linux-container-tests:
+    name: Run amd64 Linux Container Integration Tests
     runs-on: ubuntu-latest
 
     env:
@@ -79,10 +79,10 @@ jobs:
         with:
           dotnet-version: '9.0.x'
   
-      - name: Build & Run x64 Linux Container Integration Tests
+      - name: Build & Run amd64 Linux Container Integration Tests
         env:
-          BUILD_ARCH: x64
-        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Category=x64
+          BUILD_ARCH: amd64
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Category=amd64
 
   run-arm64-linux-container-tests:
     name: Run arm64 Linux Container Integration Tests

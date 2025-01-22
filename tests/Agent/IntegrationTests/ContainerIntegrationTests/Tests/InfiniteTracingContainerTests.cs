@@ -79,15 +79,15 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
 
 // only testing on a subset of linux distros to keep total test runtime under control. Additional distros can be uncommented below if needed.
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class DebianX64InfiniteTracingContainerTest(DebianX64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<DebianX64ContainerTestFixture>(fixture, output);
 
-//[Trait("Category", "x64")]
+//[Trait("Category", "amd64")]
 //public class UbuntuX64InfiniteTracingContainerTest(UbuntuX64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<UbuntuX64ContainerTestFixture>(fixture, output);
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class AlpineX64InfiniteTracingContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<AlpineX64ContainerTestFixture>(fixture, output);
 
@@ -99,7 +99,7 @@ public class DebianArm64InfiniteTracingContainerTest(DebianArm64ContainerTestFix
 //public class UbuntuArm64InfiniteTracingContainerTest(UbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<UbuntuArm64ContainerTestFixture>(fixture, output);
 
-//[Trait("Category", "x64")]
+//[Trait("Category", "amd64")]
 //public class CentosX64InfiniteTracingContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<CentosX64ContainerTestFixture>(fixture, output);
 
@@ -107,7 +107,7 @@ public class DebianArm64InfiniteTracingContainerTest(DebianArm64ContainerTestFix
 //public class CentosArm64InfiniteTracingContainerTest(CentosArm64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<CentosArm64ContainerTestFixture>(fixture, output);
 
-[Trait("Category", "x64")]
+[Trait("Category", "amd64")]
 public class AmazonX64InfiniteTracingContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<AmazonX64ContainerTestFixture>(fixture, output);
 
@@ -115,7 +115,7 @@ public class AmazonX64InfiniteTracingContainerTest(AmazonX64ContainerTestFixture
 public class AmazonArm64InfiniteTracingContainerTest(AmazonArm64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<AmazonArm64ContainerTestFixture>(fixture, output);
 
-//[Trait("Category", "x64")]
+//[Trait("Category", "amd64")]
 //public class FedoraX64InfiniteTracingContainerTest(FedoraX64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<FedoraX64ContainerTestFixture>(fixture, output);
 
