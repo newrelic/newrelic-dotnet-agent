@@ -81,7 +81,7 @@ jobs:
   
       - name: Build & Run x64 Linux Container Integration Tests
         env:
-          BUILD_ENV: x64
+          BUILD_ARCH: x64
         run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Category=x64
 
   run-arm64-linux-container-tests:
@@ -137,7 +137,7 @@ jobs:
   
       - name: Build & Run arm64 Linux Container Integration Tests
         env:
-          BUILD_ENV: arm64
+          BUILD_ARCH: arm64
         run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Category=arm64
 
         
