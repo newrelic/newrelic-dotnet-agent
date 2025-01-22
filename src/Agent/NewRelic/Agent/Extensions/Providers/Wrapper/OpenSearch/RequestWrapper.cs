@@ -1,17 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.OpenSearch

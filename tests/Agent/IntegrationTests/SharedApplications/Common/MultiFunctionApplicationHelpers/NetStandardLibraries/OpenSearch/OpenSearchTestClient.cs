@@ -11,7 +11,7 @@ using OpenSearch.Client;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.OpenSearch
 {
-    internal class OpenSearchTestClient
+    public class OpenSearchTestClient
     {
         protected const string IndexName = "flights";   // Must be lowercase!
 

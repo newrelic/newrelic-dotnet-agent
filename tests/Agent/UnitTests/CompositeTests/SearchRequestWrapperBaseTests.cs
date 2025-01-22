@@ -3,16 +3,13 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Threading.Tasks;
-using ICSharpCode.SharpZipLib.Tar;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
-using Telerik.JustMock.AutoMock.Ninject.Activation;
 
 namespace CompositeTests
 {
@@ -324,6 +321,13 @@ namespace CompositeTests
         }
 
         [Test]
+        public void GetOperationFromRequestParams_WithNull()
+        {
+            var operation = TestSearchRequestWrapper.GetOperationFromRequestParams(null);
+            Assert.That(operation, Is.EqualTo("Query"));
+        }
+
+        [Test]
         public void ValidTaskResponse()
         {
             var completedTask = Task.CompletedTask;
@@ -381,6 +385,11 @@ namespace CompositeTests
         public new void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
         {
             base.TryProcessResponse(agent, transaction, response, segment);
+        }
+
+        public new static string GetOperationFromRequestParams(object requestParams)
+        {
+            return SearchRequestWrapperBase.GetOperationFromRequestParams(requestParams);
         }
 
         public new static bool ValidTaskResponse(Task response)

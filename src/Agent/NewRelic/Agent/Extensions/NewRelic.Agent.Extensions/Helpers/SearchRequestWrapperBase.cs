@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             var typeOfResponse = response.GetType();
             var responseAssemblyName = typeOfResponse.Assembly.FullName;
             var apiCallDetailsPropertyName =
-                responseAssemblyName.Equals("OpenSearch.Net") || responseAssemblyName.Equals("Elastic.Clients.Elasticsearch")
+                responseAssemblyName.StartsWith("OpenSearch.Net") || responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
                 ? "ApiCallDetails" : "ApiCall";
 
             return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Extensions.Helpers
             return api.CapitalizeEachWord('_');
         }
 
-        private static string GetOperationFromRequestParams(object requestParams)
+        protected static string GetOperationFromRequestParams(object requestParams)
         {
             if (requestParams == null)
             {

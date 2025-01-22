@@ -1,12 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -38,7 +35,11 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             if (isAsync)
             {
                 transaction.AttachToAsync();
-                indexOfRequestParams = RequestParamsIndexAsync;
+                var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
+                if (parameterTypeNamesList[RequestParamsIndexAsync] == "Elasticsearch.Net.IRequestParameters")
+                {
+                    indexOfRequestParams = RequestParamsIndexAsync;
+                }
             }
 
             var segment = BuildSegment(indexOfRequestParams, instrumentedMethodCall, transaction);
