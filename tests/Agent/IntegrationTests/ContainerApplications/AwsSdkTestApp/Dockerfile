@@ -1,13 +1,11 @@
 ARG DOTNET_VERSION
 ARG DISTRO_TAG
-ARG TARGET_ARCH
-FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-${DISTRO_TAG} AS base
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-${DISTRO_TAG} AS base
 WORKDIR /app
 EXPOSE 80
 
-# build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
 ARG DOTNET_VERSION
-FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 

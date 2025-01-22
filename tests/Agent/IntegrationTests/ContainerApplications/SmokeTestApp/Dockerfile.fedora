@@ -1,13 +1,11 @@
 ARG DOTNET_VERSION
-ARG TARGET_ARCH
 # Uses a custom-built Fedora image with ASP.NET Core pre-installed, served from a private
 # container repository under the .NET Team Sandbox Azure subscription
-FROM --platform=${TARGET_ARCH} dotnetreg.azurecr.io/fedora-aspnet:${DOTNET_VERSION} AS base
+FROM dotnetreg.azurecr.io/fedora-aspnet:${DOTNET_VERSION} AS base
 WORKDIR /app
 EXPOSE 80
 
-# build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
-FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build 
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 COPY ["SmokeTestApp/SmokeTestApp.csproj", "SmokeTestApp/"]
