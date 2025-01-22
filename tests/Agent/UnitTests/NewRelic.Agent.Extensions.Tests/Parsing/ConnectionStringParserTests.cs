@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NUnit.Framework;
-using NewRelic.Agent.Extensions.Parsing;
 
 namespace ParsingTests
 {

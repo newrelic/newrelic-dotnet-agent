@@ -37,16 +37,9 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             if (host == null) return null;
 
             // Example of want we would need to process: win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS
-            try
-            {
-                var splitIndex = host.IndexOf(StringSeparators.CommaChar);
-                if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
-                host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
-            }
-            catch
-            {
-                return null;
-            }
+            var splitIndex = host.IndexOf(StringSeparators.CommaChar);
+            if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
+            host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
             var endOfHostname = host.IndexOf(StringSeparators.ColonChar);
             return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
         }
@@ -65,28 +58,20 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (portPathOrId == null) return null;
 
-            try
+            if (portPathOrId.IndexOf(StringSeparators.ColonChar) != -1)
             {
-                if (portPathOrId.IndexOf(StringSeparators.ColonChar) != -1)
-                {
-                    var startOfValue = portPathOrId.IndexOf(StringSeparators.ColonChar) + 1;
-                    var endOfValue = portPathOrId.Length;
-                    return (startOfValue > 0) ? portPathOrId.Substring(startOfValue, endOfValue - startOfValue) : null;
-                }
-                if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
-                {
-                    var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
-                    var endOfValue = portPathOrId.Contains(StringSeparators.BackslashChar)
-                        ? portPathOrId.IndexOf(StringSeparators.BackslashChar)
-                        : portPathOrId.Length;
-                    return (startOfValue > 0) ? portPathOrId.Substring(startOfValue, endOfValue - startOfValue) : null;
-                }
+                var startOfValue = portPathOrId.IndexOf(StringSeparators.ColonChar) + 1;
+                var endOfValue = portPathOrId.Length;
+                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
             }
-            catch
+            if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
             {
-                return null;
+                var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
+                var endOfValue = portPathOrId.Contains(StringSeparators.BackslashChar)
+                    ? portPathOrId.IndexOf(StringSeparators.BackslashChar)
+                    : portPathOrId.Length;
+                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
             }
-
             return "default";
         }
 
@@ -95,18 +80,11 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var instanceName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (instanceName == null) return null;
 
-            try
+            if (instanceName.IndexOf(StringSeparators.BackslashChar) != -1)
             {
-                if (instanceName.IndexOf(StringSeparators.BackslashChar) != -1)
-                {
-                    var startOfValue = instanceName.IndexOf(StringSeparators.BackslashChar) + 1;
-                    var endOfValue = instanceName.Length;
-                    return (startOfValue > 0) ? instanceName.Substring(startOfValue, endOfValue - startOfValue) : null;
-                }
-            }
-            catch
-            {
-                return null;
+                var startOfValue = instanceName.IndexOf(StringSeparators.BackslashChar) + 1;
+                var endOfValue = instanceName.Length;
+                return instanceName.Substring(startOfValue, endOfValue - startOfValue);
             }
 
             return null;
