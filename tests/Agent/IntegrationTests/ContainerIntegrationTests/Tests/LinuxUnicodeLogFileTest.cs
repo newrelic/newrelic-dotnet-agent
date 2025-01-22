@@ -4,8 +4,10 @@
 using System;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
+using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests
 {
@@ -16,6 +18,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
     /// would be created by the test application, with the profiler change, the test transaction should be
     /// created successfully.
     /// </summary>
+    [Trait("Category", "x64")]
     public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFileTestFixture>
     {
         private readonly LinuxUnicodeLogFileTestFixture _fixture;

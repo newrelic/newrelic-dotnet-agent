@@ -6,11 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
+using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
+[Trait("Category", "x64")]
 public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
 {
     private readonly AwsSdkContainerDynamoDBTestFixture _fixture;
