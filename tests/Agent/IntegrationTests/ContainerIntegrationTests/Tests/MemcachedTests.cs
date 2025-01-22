@@ -7,10 +7,8 @@ using System.Linq;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests
 {
@@ -130,7 +128,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
         }
     }
 
-    [Trait("Category", "amd64")]
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
     {
         public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -138,7 +136,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
         }
     }
 
-    [Trait("Category", "amd64")]
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet9Test : LinuxMemcachedTest<MemcachedDotNet9TestFixture>
     {
         public MemcachedDotNet9Test(MemcachedDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

@@ -5,14 +5,12 @@ using System;
 using System.Linq;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Trait("Category", "amd64")]
+[Trait("Architecture", "amd64")]
 public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
 {
     private readonly AwsSdkContainerMultiServiceTestFixture _fixture;

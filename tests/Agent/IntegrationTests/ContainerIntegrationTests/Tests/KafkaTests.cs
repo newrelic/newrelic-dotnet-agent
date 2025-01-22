@@ -9,10 +9,8 @@ using System.Text;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
@@ -124,7 +122,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
     }
 }
 
-[Trait("Category", "amd64")]
+[Trait("Architecture", "amd64")]
 public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 {
     public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -132,7 +130,7 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
     }
 }
 
-[Trait("Category", "amd64")]
+[Trait("Architecture", "amd64")]
 public class KafkaDotNet9Test : LinuxKafkaTest<KafkaDotNet9TestFixture>
 {
     public KafkaDotNet9Test(KafkaDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
