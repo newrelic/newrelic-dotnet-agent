@@ -66,6 +66,11 @@ namespace NewRelic.Agent.Extensions.Helpers
 
                     var value = property.GetValue(obj, null) ?? "null";
 
+                    if (value is string stringValue && string.IsNullOrWhiteSpace(stringValue))
+                    {
+                        value = "<empty>";
+                    }
+
                     if (propertyName.ToLower().Contains("license") || propertyName.ToLower().Contains("key") ||
                         propertyName.ToLower().Contains("accountid"))
                     {
@@ -74,7 +79,7 @@ namespace NewRelic.Agent.Extensions.Helpers
 
                     if (value == null || IsSimpleType(property.PropertyType))
                     {
-                        stringBuilder.AppendLine($"{indent}{propertyName}: {value}");
+                        stringBuilder.AppendLine($"{indent}{propertyName}: {value ?? "null"}");
                     }
                     else if (typeof(IEnumerable).IsAssignableFrom(property.PropertyType) &&
                              property.PropertyType != typeof(string))
@@ -84,10 +89,16 @@ namespace NewRelic.Agent.Extensions.Helpers
                             int index = 0;
                             foreach (var item in enumerable)
                             {
+                                var itemVal = item ?? "null";
+                                if (itemVal is string itemString && string.IsNullOrWhiteSpace(itemString))
+                                {
+                                    itemVal = "<empty>";
+                                }
+
                                 var itemIndent = new string(' ', (indentLevel + 1) * 2);
                                 if (IsSimpleType(item.GetType()))
                                 {
-                                    stringBuilder.AppendLine($"{itemIndent}{propertyName}[{index}]: {item}");
+                                    stringBuilder.AppendLine($"{itemIndent}{propertyName}[{index}]: {itemVal}");
                                 }
                                 else
                                 {
@@ -112,15 +123,20 @@ namespace NewRelic.Agent.Extensions.Helpers
 
                     var value = field.GetValue(obj) ?? "null";
 
+                    if (value is string stringValue && string.IsNullOrWhiteSpace(stringValue))
+                    {
+                        value = "<empty>";
+                    }
+
                     if (fieldName.ToLower().Contains("license") || fieldName.ToLower().Contains("key") ||
                         fieldName.ToLower().Contains("accountid"))
                     {
-                        value = ObfuscateValue(value?.ToString());
+                        value = ObfuscateValue(value.ToString());
                     }
 
                     if (value == null || IsSimpleType(field.FieldType))
                     {
-                        stringBuilder.AppendLine($"{indent}{fieldName}: {value}");
+                        stringBuilder.AppendLine($"{indent}{fieldName}: {value ?? "null"}");
                     }
                     else if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) &&
                              field.FieldType != typeof(string))
@@ -130,10 +146,16 @@ namespace NewRelic.Agent.Extensions.Helpers
                             int index = 0;
                             foreach (var item in enumerable)
                             {
+                                var itemVal = item ?? "null";
+                                if (itemVal is string itemString && string.IsNullOrWhiteSpace(itemString))
+                                {
+                                    itemVal = "<empty>";
+                                }
+
                                 var itemIndent = new string(' ', (indentLevel + 1) * 2);
                                 if (IsSimpleType(item.GetType()))
                                 {
-                                    stringBuilder.AppendLine($"{itemIndent}{fieldName}[{index}]: {item}");
+                                    stringBuilder.AppendLine($"{itemIndent}{fieldName}[{index}]: {itemVal}");
                                 }
                                 else
                                 {
