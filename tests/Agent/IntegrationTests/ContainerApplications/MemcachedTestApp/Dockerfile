@@ -1,5 +1,6 @@
 ARG DISTRO_TAG
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS base
+ARG BUILD_ARCH
+FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 RUN apt-get update \
@@ -10,7 +11,8 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y aspnetcore-runtime-8.0
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
+# build arch may be different from target arch (i.e., when running locally with QEMU)
+FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
 RUN apt-get update \
     && apt-get install -y wget \
     && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \

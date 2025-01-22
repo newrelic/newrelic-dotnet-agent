@@ -1,9 +1,12 @@
 ARG DOTNET_VERSION
-FROM quay.io/centos/centos:stream9 AS base
+ARG TARGET_ARCH
+ARG BUILD_ARCH
+FROM --platform=${TARGET_ARCH} quay.io/centos/centos:stream9 AS base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build 
+# build arch may be different from target arch (i.e., when running locally with QEMU)
+FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 COPY ["SmokeTestApp/SmokeTestApp.csproj", "SmokeTestApp/"]

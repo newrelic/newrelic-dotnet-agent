@@ -1,11 +1,13 @@
 ARG DOTNET_VERSION
 ARG DISTRO_TAG
-FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-${DISTRO_TAG} AS base
+ARG TARGET_ARCH
+ARG BUILD_ARCH
+FROM --platform=${TARGET_ARCH} mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-${DISTRO_TAG} AS base
 WORKDIR /app
 EXPOSE 80
 
-ARG DOTNET_VERSION
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
+# build arch may be different from target arch (i.e., when running locally with QEMU)
+FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 
