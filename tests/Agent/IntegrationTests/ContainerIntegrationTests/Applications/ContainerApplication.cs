@@ -199,10 +199,15 @@ public class ContainerApplication : RemoteApplication
         TestLogger?.WriteLine($"[{AppName}] Sending shutdown signal to {ContainerName} container.");
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
-        // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
+        // wait up to 20 seconds for the app to terminate gracefully before forcefully closing it
+        var proc = Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans -t 20");
 
-        Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
+        // wait for the process to complete
+        if (!proc.WaitForExit(30000))
+        {
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Timed out waiting for {ContainerName} container to stop.");
+            TestLogger?.WriteLine($"[{AppName}] Timed out waiting for {ContainerName} container to stop.");
+        }
     }
 
     private void CleanupContainer()
