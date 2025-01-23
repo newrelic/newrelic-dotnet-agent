@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.35.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.1...v10.35.0) (2025-01-21)
+
+
+### New features
+
+* Enable DynamoDB entity relationships ([#2923](https://github.com/newrelic/newrelic-dotnet-agent/issues/2923)) ([f70b64a](https://github.com/newrelic/newrelic-dotnet-agent/commit/f70b64aa20ac21e5b30dfa5d2f63ab59850bcf58))
+* Instrument Lambda invocations in AWS SDK ([#2901](https://github.com/newrelic/newrelic-dotnet-agent/issues/2901)) ([3b655e4](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b655e423de4d5bf77ba491d63eec38b3323ffda))
+* Use `SocketsHttpHandler` to configure `HttpClient` in .NET 6+. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
+
+### Fixes
+
+* Console logging is inconsistent between Agent and Profiler ([#2955](https://github.com/newrelic/newrelic-dotnet-agent/issues/2955)) ([7c42b33](https://github.com/newrelic/newrelic-dotnet-agent/commit/7c42b33279c948a69ea36aaf54630554ebf5a5e6))
+* Incorrect string comparison in the profiler caused constructor instrumentation to fail on Linux ([#2912](https://github.com/newrelic/newrelic-dotnet-agent/issues/2912)) ([49a71c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/49a71c50d43f2cb18e208dddb258a456aebb7e61))
+* Refactoring to reduce the likelihood of a deadlock in `HttpClient.SendAsync()`. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
 ## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
 
 

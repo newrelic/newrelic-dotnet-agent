@@ -7,55 +7,56 @@ SPDX-License-Identifier: Apache-2.0
 	<instrumentation>
 
     <!--7.x NEST/Elasticsearch.Net -->
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elasticsearch.Net" className="Elasticsearch.Net.Transport`1">
         <exactMethodMatcher methodName="Request" parameters="Elasticsearch.Net.HttpMethod,System.String,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elasticsearch.Net" className="Elasticsearch.Net.Transport`1">
         <exactMethodMatcher methodName="RequestAsync" parameters="Elasticsearch.Net.HttpMethod,System.String,System.Threading.CancellationToken,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters" />
       </match>
     </tracerFactory>
 
     <!--8.x Elastic.Clients.Elasticsearch -->
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
         <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
         <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
 
     <!--8.10.0+-->
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
         <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
         <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
 
     <!--8.12.1+-->
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DistributedTransport`1">
         <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="RequestWrapper">
+    <tracerFactory name="ElasticsearchRequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DistributedTransport`1">
         <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,Elastic.Transport.Diagnostics.OpenTelemetryData&amp;,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
+
   </instrumentation>
 </extension>
