@@ -428,6 +428,7 @@ namespace NewRelic.Agent.Core.DataTransport
             string serializedData = null;
             // TESTING ONLY -- retry loop is temporary
             var retryCount = 1;
+            var retried = false;
             while (retryCount >= 0)
             {
                 try
@@ -447,7 +448,14 @@ namespace NewRelic.Agent.Core.DataTransport
                     }
 
                     Thread.Sleep(1234); // delay a bit before retrying
+                    retried = true;
                 }
+            }
+
+            if (retried)
+            {
+                Log.Finest("Retry was successful but aborting this test anyway.");
+                throw new Exception("Retry was successful but we want to die anyway");
             }
 
             try
