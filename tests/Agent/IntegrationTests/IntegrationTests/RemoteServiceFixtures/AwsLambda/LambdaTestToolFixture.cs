@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
             string lambdaHandler, string lambdaName, string lambdaVersion, string lambdaExecutionEnvironment,
             bool setNewRelicLambdaHandlerEventVar) : base(remoteApplication)
         {
-            LambdaTestTool = new DotnetTool("Amazon.Lambda.TestTool-8.0", "lambda-test-tool-8.0", DestinationApplicationDirectoryPath);
+            LambdaTestTool = new DotnetTool("Amazon.Lambda.TestTool-9.0", "lambda-test-tool-9.0", DestinationApplicationDirectoryPath);
 
             if (string.IsNullOrWhiteSpace(newRelicLambdaHandler) && string.IsNullOrWhiteSpace(lambdaHandler))
             {
