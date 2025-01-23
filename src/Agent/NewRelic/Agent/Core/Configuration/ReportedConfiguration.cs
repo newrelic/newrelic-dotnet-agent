@@ -728,6 +728,15 @@ namespace NewRelic.Agent.Core.Configuration
             return _configuration.GetAppSettings();
         }
 
+        [JsonProperty("agent_control.enabled")]
+        public bool AgentControlEnabled => _configuration.AgentControlEnabled;
+
+        [JsonProperty("agent_control.health.delivery_location")]
+        public string HealthDeliveryLocation => _configuration.HealthDeliveryLocation;
+
+        [JsonProperty("agent_control.health.frequency")]
+        public int HealthFrequency => _configuration.HealthFrequency;
+
         #endregion
     }
 }

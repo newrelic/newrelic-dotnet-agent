@@ -17,6 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.IO;
+using System.Security.Policy;
+using System.Runtime.InteropServices;
+using Grpc.Core;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -38,10 +42,27 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
+        private readonly HealthCheck _healthCheck;
+
         public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
         {
+            _healthCheck = new()
+            {
+                IsHealthy = true,
+                Status = "Agent starting",
+                LastError = string.Empty
+            };
+
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
+
+            // Want this to start immediately and write out the first health check - only if enabled
+            if (_configuration.AgentControlEnabled)
+            {
+                Log.Info(">>>>>>>>>AgentHealthReporter: Starting health check");
+                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
+
             _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
@@ -258,9 +279,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
 #if NETSTANDARD2_0
 
-			bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
-			var metric =_metricBuilder.TryBuildLinuxOsMetric(isLinux);
-			TrySend(metric);
+            bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+            var metric = _metricBuilder.TryBuildLinuxOsMetric(isLinux);
+            TrySend(metric);
 #endif
         }
 
@@ -667,6 +688,72 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion
 
+        #region Agent Control
+
+        private void ReportIfAgentControlHealthEnabled()
+        {
+            if (_configuration.AgentControlEnabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAgentControlHealthEnabled);
+            }
+        }
+
+        public void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)
+        {
+            // Do nothing if agent control is not enabled
+            if (!_configuration.AgentControlEnabled)
+                return;
+
+            if (healthStatus.Equals(HealthCodes.AgentShutdownHealthy))
+            {
+                if (_healthCheck.IsHealthy)
+                {
+                    _healthCheck.TrySetHealth(healthStatus);
+                }
+            }
+            else
+            {
+                _healthCheck.TrySetHealth(healthStatus, statusParams);
+            }
+        }
+
+        public void PublishAgentControlHealthCheck()
+        {
+            if (!_configuration.AgentControlEnabled || _healthChecksFailed)
+                return;
+
+            var fileUri = new Uri(_configuration.HealthDeliveryLocation);
+            if (fileUri.Scheme != Uri.UriSchemeFile)
+            {
+                Log.Debug("The provided agent_control.health.delivery_location is not a file URL, skipping agent control health check: " + _configuration.HealthDeliveryLocation);
+                _healthChecksFailed = true;
+                return;
+            }
+
+            // Ensure the path is cleaned up for Windows by removing a possible leading slash
+            var cleanedPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? fileUri.LocalPath.TrimStart('/') : fileUri.LocalPath;
+            // verify the directory exists and is writeable
+            if (!Directory.Exists(cleanedPath))
+            {
+                Log.Warn("Agent Control is enabled but the path specified in agent_control.health.delivery_location does not exist.");
+                _healthChecksFailed = true;
+            }
+
+            try
+            {
+                using StreamWriter writer = new StreamWriter(Path.Combine(cleanedPath, _healthCheck.FileName));
+                writer.WriteAsync(_healthCheck.ToYaml()).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex, "Agent Control is enabled but the path specified in agent_control.health.delivery_location is not writeable.");
+                _healthChecksFailed = true;
+            }
+
+        }
+
+        #endregion
+
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
             TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
@@ -686,6 +773,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfInstrumentationIsDisabled();
             ReportIfGCSamplerV2IsEnabled();
             ReportIfAwsAccountIdProvided();
+            ReportIfAgentControlHealthEnabled();
         }
 
         public void CollectMetrics()
@@ -761,6 +849,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         private ConcurrentBag<DestinationInteractionSample> _externalApiDataUsageSamples = new ConcurrentBag<DestinationInteractionSample>();
+        private bool _healthChecksFailed;
 
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {

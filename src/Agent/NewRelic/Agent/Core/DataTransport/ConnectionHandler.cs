@@ -108,6 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
                 Log.Info("Agent fully connected.");
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.Healthy);
             }
 
             catch (Exception e)
@@ -443,9 +444,26 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Log.Debug("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
-                if (ex.StatusCode == HttpStatusCode.Gone)
+                if (ex.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    Log.Info("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.LicenseKeyInvalid);
+                }
+                else if (ex.StatusCode == HttpStatusCode.Gone)
+                {
+                    Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.ForceDisconnect);
+                }
+                else if (ex.StatusCode == HttpStatusCode.ProxyAuthenticationRequired)
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpProxyError, ex.StatusCode.ToString());
+                }
+                else if (method.Equals("connect"))
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.FailedToConnect, ex.StatusCode.ToString());
+                }
+                else
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, ex.StatusCode.ToString(), method);
                 }
 
                 throw;

@@ -243,7 +243,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 container.Resolve<AssemblyResolutionService>();
 
             container.Resolve<ITransactionFinalizer>();
-            container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
             // Start GCSampler on separate thread due to delay in collecting Instance Names,
             // which can stall application startup and cause the app start to timeout
