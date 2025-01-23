@@ -139,6 +139,12 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("APP_DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
         startInfo.EnvironmentVariables.Add("TARGET_ARCH", _targetArch);
+
+        // Workflow will set BUILD_ARCH if it's a CI build
+        // otherwise, assume it's a local build and set it to amd64
+        if (!startInfo.EnvironmentVariables.ContainsKey("BUILD_ARCH"))
+            startInfo.EnvironmentVariables.Add("BUILD_ARCH", "amd64");
+
         startInfo.EnvironmentVariables.Add("PLATFORM", _containerPlatform);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_LICENSE_KEY", testConfiguration.LicenseKey);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_HOST", testConfiguration.CollectorUrl);
