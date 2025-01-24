@@ -4514,6 +4514,71 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        [Test]
+        public void InvalidLicenseKey_SetsLicenseKeyMissing_AgentControlStatus()
+        {
+            // Arrange
+            var healthCheck = new HealthCheck();
+            Mock.Arrange(() => _agentHealthReporter.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()))
+                .DoInstead((ValueTuple<bool, string, string> healthStatus, string[] statusParams) =>
+                {
+                    healthCheck.TrySetHealth(healthStatus, statusParams);
+                });
+
+            CreateDefaultConfiguration();
+
+            // Act
+            var licenseKey = _defaultConfig.AgentLicenseKey;
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(licenseKey, Is.EqualTo(""));
+                Assert.That(healthCheck.IsHealthy, Is.False);
+                Assert.That(healthCheck.Status, Is.EqualTo("License key missing in configuration"));
+                Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-002"));
+            });
+        }
+
+        [Test]
+        public void MissingApplicationName_SetsApplicationNameMissing_AgentControlStatus()
+        {
+            var healthCheck = new HealthCheck();
+            Mock.Arrange(() => _agentHealthReporter.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()))
+                .DoInstead((ValueTuple<bool, string, string> healthStatus, string[] statusParams) =>
+                {
+                    healthCheck.TrySetHealth(healthStatus, statusParams);
+                });
+
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName))
+                .Returns<string>(null);
+
+            _localConfig.application.name = new List<string>();
+
+            Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+            Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns((string)null);
+
+            CreateDefaultConfiguration();
+
+            // Act
+            Assert.Throws<Exception>(() => _defaultConfig.ApplicationNames.ToList());
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(healthCheck.IsHealthy, Is.False);
+                Assert.That(healthCheck.Status, Is.EqualTo("Missing application name in agent configuration"));
+                Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-005"));
+            });
+
+        }
+
+
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
             var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };
@@ -4531,6 +4596,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
-        }
+        }   
     }
 }

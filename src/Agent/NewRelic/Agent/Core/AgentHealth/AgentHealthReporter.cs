@@ -973,5 +973,10 @@ namespace NewRelic.Agent.Core.AgentHealth
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityAwsAccountIdProvided);
             }
         }
+
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
+        public bool HealthCheckFailed => _healthChecksFailed;
     }
 }
