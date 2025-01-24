@@ -82,7 +82,14 @@ jobs:
       - name: Build & Run amd64 Linux Container Integration Tests
         env:
           BUILD_ARCH: amd64
-        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=amd64
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=amd64  --logger "console;verbosity=detailed" --logger "trx;verbosity=detailed" --results-directory ${{ env.test_results_path }}
+      
+      - name: Archive test results
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+            name: ContainerTestResults-amd64
+            path: ${{ env.test_results_path }} # Directory containing files to upload
+          
 
   run-arm64-linux-container-tests:
     name: Run arm64 Linux Container Integration Tests
@@ -94,7 +101,7 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
-  
+    
   
     steps:
       - name: Harden Runner
@@ -138,5 +145,10 @@ jobs:
       - name: Build & Run arm64 Linux Container Integration Tests
         env:
           BUILD_ARCH: arm64
-        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=arm64
-        
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=arm64 --logger "console;verbosidty=detailed" --logger "trx;verbosity=detailed" --results-directory ${{ env.test_results_path }} 
+      
+      - name: Archive test results
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+            name: ContainerTestResults-arm64
+            path: ${{ env.test_results_path }} # Directory containing files to upload
