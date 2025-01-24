@@ -2505,29 +2505,11 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Agent Control
 
-        public virtual bool AgentControlEnabled
-        {
-            get
-            {
-                return EnvironmentOverrides(_localConfiguration.agent_control.enabled, "NEW_RELIC_AGENT_CONTROL_ENABLED");
-            }
-        }
+        public bool AgentControlEnabled => _bootstrapConfiguration.AgentControlEnabled;
 
-        public virtual string HealthDeliveryLocation
-        {
-            get
-            {
-                return EnvironmentOverrides(_localConfiguration.agent_control.health.deliveryLocation, "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION");
-            }
-        }
+        public string HealthDeliveryLocation => _bootstrapConfiguration.HealthDeliveryLocation;
 
-        public virtual int HealthFrequency
-        {
-            get
-            {
-                return (int)EnvironmentOverrides(_localConfiguration.agent_control.health.frequency, "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY")!;
-            }
-        }
+        public int HealthFrequency => _bootstrapConfiguration.HealthFrequency;
 
         #endregion Agent Control
 
@@ -2900,6 +2882,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             if (_agentHealthReporter == null)
             {
+                Log.Debug("DefaultConfiguration: Unable to set Agent Control status {status} because agent health reporter has not been initialized.", healthStatus);
                 return;
             }
 

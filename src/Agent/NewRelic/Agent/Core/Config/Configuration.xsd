@@ -2072,52 +2072,6 @@
                         </xs:all>
                     </xs:complexType>
                 </xs:element>
-
-                <xs:element name="agent_control" minOccurs="0" maxOccurs="1">
-                    <xs:annotation>
-                        <xs:documentation>
-                            These configuration properties will be set via agent control (or one of its components) prior to agent startup.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="health" minOccurs="0" maxOccurs="1">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        These configuration properties will be set via agent control (or one of its components) prior to agent startup.
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:complexType>
-                                    <xs:attribute name="deliveryLocation" type="xs:string" use="optional" default="file:///newrelic/apm/health">
-                                        <xs:annotation>
-                                            <xs:documentation>
-                                                A "file:" URI that specifies the fully qualified directory path for health files to be written to. Default is "file:///newrelic/apm/health".
-                                            </xs:documentation>
-                                        </xs:annotation>
-                                    </xs:attribute>
-
-                                    <xs:attribute name="frequency" type="xs:int" default="5">
-                                        <xs:annotation>
-                                            <xs:documentation>
-                                                The interval, in seconds, of how often the health file is to be written.
-                                            </xs:documentation>
-                                        </xs:annotation>
-                                    </xs:attribute>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-
-                        <xs:attribute name="enabled" type="xs:boolean" default="false">
-                            <xs:annotation>
-                                <xs:documentation>
-                                    Set this to true to enable agent control. Agent control is disabled by default.
-                                </xs:documentation>
-                            </xs:annotation>
-                        </xs:attribute>
-
-                    </xs:complexType>
-                </xs:element>
-
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">

@@ -444,34 +444,52 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Log.Debug("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
-                if (ex.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.LicenseKeyInvalid);
-                }
-                else if (ex.StatusCode == HttpStatusCode.Gone)
-                {
+                if (ex.StatusCode == HttpStatusCode.Gone)
                     Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
-                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.ForceDisconnect);
-                }
-                else if (ex.StatusCode == HttpStatusCode.ProxyAuthenticationRequired)
-                {
-                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpProxyError, ex.StatusCode.ToString());
-                }
-                else if (method.Equals("connect"))
-                {
-                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.FailedToConnect, ex.StatusCode.ToString());
-                }
-                else
-                {
-                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, ex.StatusCode.ToString(), method);
-                }
+
+                SetAgentControlStatus(requestGuid, method, ex);
 
                 throw;
             }
             catch (Exception ex)
             {
                 Log.Debug("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex); // log message only since exception is rethrown
+
+                SetAgentControlStatus(requestGuid, method, null);
+
                 throw;
+            }
+        }
+
+        private void SetAgentControlStatus(Guid requestGuid, string method, HttpException httpException)
+        {
+            if (method.Equals("connect"))
+            {
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.FailedToConnect);
+            }
+            else
+            {
+                if (httpException == null) // this shouldn't happen, but...
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, "unknown", method);
+                    return;
+                }
+
+                switch (httpException.StatusCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.LicenseKeyInvalid);
+                        break;
+                    case HttpStatusCode.Gone:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.ForceDisconnect);
+                        break;
+                    case HttpStatusCode.ProxyAuthenticationRequired:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpProxyError, httpException.StatusCode.ToString());
+                        break;
+                    default:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, httpException.StatusCode.ToString(), method);
+                        break;
+                }
             }
         }
 

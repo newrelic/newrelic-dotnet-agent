@@ -97,8 +97,6 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCloud cloudField;
         
-        private configurationAgent_control agent_controlField;
-        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -122,7 +120,6 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
-            this.agent_controlField = new configurationAgent_control();
             this.cloudField = new configurationCloud();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
@@ -612,18 +609,6 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.cloudField = value;
-            }
-        }
-        
-        public configurationAgent_control agent_control
-        {
-            get
-            {
-                return this.agent_controlField;
-            }
-            set
-            {
-                this.agent_controlField = value;
             }
         }
         
@@ -6183,122 +6168,6 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationCloudAws Clone()
         {
             return ((configurationCloudAws)(this.MemberwiseClone()));
-        }
-        #endregion
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationAgent_control
-    {
-        
-        private configurationAgent_controlHealth healthField;
-        
-        private bool enabledField;
-        
-        /// <summary>
-        /// configurationAgent_control class constructor
-        /// </summary>
-        public configurationAgent_control()
-        {
-            this.healthField = new configurationAgent_controlHealth();
-            this.enabledField = false;
-        }
-        
-        public configurationAgent_controlHealth health
-        {
-            get
-            {
-                return this.healthField;
-            }
-            set
-            {
-                this.healthField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
-        public bool enabled
-        {
-            get
-            {
-                return this.enabledField;
-            }
-            set
-            {
-                this.enabledField = value;
-            }
-        }
-        
-        #region Clone method
-        /// <summary>
-        /// Create a clone of this configurationAgent_control object
-        /// </summary>
-        public virtual configurationAgent_control Clone()
-        {
-            return ((configurationAgent_control)(this.MemberwiseClone()));
-        }
-        #endregion
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationAgent_controlHealth
-    {
-        
-        private string deliveryLocationField;
-        
-        private int frequencyField;
-        
-        /// <summary>
-        /// configurationAgent_controlHealth class constructor
-        /// </summary>
-        public configurationAgent_controlHealth()
-        {
-            this.deliveryLocationField = "file:///newrelic/apm/health";
-            this.frequencyField = 5;
-        }
-        
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute("file:///newrelic/apm/health")]
-        public string deliveryLocation
-        {
-            get
-            {
-                return this.deliveryLocationField;
-            }
-            set
-            {
-                this.deliveryLocationField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(5)]
-        public int frequency
-        {
-            get
-            {
-                return this.frequencyField;
-            }
-            set
-            {
-                this.frequencyField = value;
-            }
-        }
-        
-        #region Clone method
-        /// <summary>
-        /// Create a clone of this configurationAgent_controlHealth object
-        /// </summary>
-        public virtual configurationAgent_controlHealth Clone()
-        {
-            return ((configurationAgent_controlHealth)(this.MemberwiseClone()));
         }
         #endregion
     }
