@@ -82,6 +82,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         Elasticsearch,
         OpenSearch,
         DynamoDB,
+        ODBC,
         Other
     }
 

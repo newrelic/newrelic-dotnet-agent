@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NUnit.Framework;
@@ -51,6 +50,15 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
 
+        // A lot of the following connection strings are contrived examples for code coverage purposes
+        [TestCase(DatastoreVendor.ODBC, "examplecluster.abc123xyz789.us-west-2.redshift.amazonaws.com", "5439", "dev", null, "Driver={Amazon Redshift (x64)};Server=examplecluster.abc123xyz789.us-west-2.redshift.amazonaws.com;Database=dev;UID=adminuser;PWD=secret;Port=5439")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "5439", "dev", null, "Driver={Amazon Redshift (x64)};Hostname=localhost;Database=dev;UID=adminuser;PWD=secret;Port=5439")]
+        [TestCase(DatastoreVendor.ODBC, "myServerAddress", "1234", "myDataBase", null, "Driver={Amazon Redshift ODBC Driver (x64)};Database=myDataBase;Data source=myServerAddress;Port=1234;Protocol=TCPIP;Uid=myUsername;Pwd=myPassword;")]
+        [TestCase(DatastoreVendor.ODBC, "mySequelServerHost", "1234", "myDataBase", "someInstance", "Driver={ODBC Driver for Sequel Server};Server=mySequelServerHost,1234\\someInstance;Database=myDataBase")]
+        [TestCase(DatastoreVendor.ODBC, "myReddishServerHost", "234", "unknown", null, "Driver={ODBC Driver for Reddish Server};Server=myReddishServerHost:234")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
+        [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
+
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
             var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString, "hostname_of_localhost");
@@ -85,6 +93,19 @@ namespace ParsingTests
             var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
             Assert.That(connectionInfo2, Is.Not.SameAs(connectionInfo1));
+        }
+
+        [Test]
+        public void ConnectionStringParser_UnknownVendor_EmptyResult()
+        {
+            var connectionString = @"Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=c:\txtFilesFolder\;Extensions=asc,csv,tab,txt;";
+
+            var connectionInfo = ConnectionInfoParser.FromConnectionString(DatastoreVendor.Other, connectionString, "localhost");
+
+            Assert.That(connectionInfo.Host, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.PortPathOrId, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.DatabaseName, Is.EqualTo("unknown"));
+            Assert.That(connectionInfo.InstanceName, Is.Null);
         }
     }
 }

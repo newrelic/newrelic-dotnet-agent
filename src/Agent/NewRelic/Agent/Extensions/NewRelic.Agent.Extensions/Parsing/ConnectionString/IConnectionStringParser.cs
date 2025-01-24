@@ -43,6 +43,8 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                     return new IbmDb2ConnectionStringParser(connectionString);
                 case DatastoreVendor.Redis:
                     return new StackExchangeRedisConnectionStringParser(connectionString);
+                case DatastoreVendor.ODBC:
+                    return new OdbcConnectionStringParser(connectionString);
                 default:
                     return null;
             }

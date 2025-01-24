@@ -13,6 +13,13 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
       </match>
+
+      <!-- .NET Core ODBC driver -->
+      <match assemblyName="System.Data.Odbc" className="System.Data.Odbc.OdbcCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
     </tracerFactory>
 
     <tracerFactory name="OleDbCommandTracer">
