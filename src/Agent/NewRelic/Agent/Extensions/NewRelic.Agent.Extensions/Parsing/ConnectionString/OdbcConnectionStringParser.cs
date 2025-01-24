@@ -1,21 +1,22 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Helpers;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
-using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
-    public class MsSqlConnectionStringParser : IConnectionStringParser
+    public class OdbcConnectionStringParser : IConnectionStringParser
     {
-        private static readonly List<string> _hostKeys = new List<string> { "server", "data source" };
-        private static readonly List<string> _databaseNameKeys = new List<string> { "database", "initial catalog" };
+        private static readonly List<string> _hostKeys = new List<string> { "server", "data source", "hostname" };
+        private static readonly List<string> _portKeys = new List<string> { "port" };
+        private static readonly List<string> _databaseNameKeys = new List<string> { "database" };
 
         private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-        public MsSqlConnectionStringParser(string connectionString)
+        public OdbcConnectionStringParser(string connectionString)
         {
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
@@ -39,14 +40,30 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var splitIndex = host.IndexOf(StringSeparators.CommaChar);
             if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
             host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
-            return host;
+            var endOfHostname = host.IndexOf(StringSeparators.ColonChar);
+            return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
         }
 
         private string ParsePortPathOrId()
         {
-            var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+            // Some ODBC drivers use the "port" key to specify the port number
+            var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
+            if (!string.IsNullOrWhiteSpace(portPathOrId))
+            {
+                return portPathOrId;
+
+            }
+
+            // Some ODBC drivers include the port in the "server" or "data source" key
+            portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (portPathOrId == null) return null;
 
+            if (portPathOrId.IndexOf(StringSeparators.ColonChar) != -1)
+            {
+                var startOfValue = portPathOrId.IndexOf(StringSeparators.ColonChar) + 1;
+                var endOfValue = portPathOrId.Length;
+                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
+            }
             if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
             {
                 var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
@@ -55,7 +72,6 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                     : portPathOrId.Length;
                 return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
             }
-
             return "default";
         }
 

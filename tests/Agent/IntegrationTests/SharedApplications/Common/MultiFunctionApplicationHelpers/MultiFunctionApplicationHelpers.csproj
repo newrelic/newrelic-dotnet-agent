@@ -48,6 +48,12 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
 
+    <!--System.Data.Odbc-->
+    <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />

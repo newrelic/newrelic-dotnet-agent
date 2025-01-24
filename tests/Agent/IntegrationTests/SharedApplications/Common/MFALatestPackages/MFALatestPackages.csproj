@@ -109,5 +109,8 @@
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" Condition="'$(TargetFramework)' == 'net9.0'" />
 
+    <PackageReference Include="System.Data.Odbc" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="System.Data.Odbc" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+
   </ItemGroup>
 </Project>
