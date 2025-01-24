@@ -8,24 +8,24 @@ using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Elasticsearch
+namespace NewRelic.Providers.Wrapper.OpenSearch
 {
-
     public class RequestWrapper : SearchRequestWrapperBase, IWrapper
     {
-        private const string WrapperName = "ElasticsearchRequestWrapper";
+        private const string WrapperName = "OpenSearchRequestWrapper";
         private const int RequestParamsIndex = 3;
         private const int RequestParamsIndexAsync = 4;
 
         private static Func<object, object> _apiCallDetailsGetter;
 
-        public override DatastoreVendor Vendor => DatastoreVendor.Elasticsearch;
+        public override DatastoreVendor Vendor => DatastoreVendor.OpenSearch;
 
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -38,11 +38,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             if (isAsync)
             {
                 transaction.AttachToAsync();
-                var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
-                if (parameterTypeNamesList[RequestParamsIndexAsync] == "Elasticsearch.Net.IRequestParameters")
-                {
-                    indexOfRequestParams = RequestParamsIndexAsync;
-                }
+                indexOfRequestParams = RequestParamsIndexAsync;
             }
 
             var segment = BuildSegment(indexOfRequestParams, instrumentedMethodCall, transaction);
@@ -83,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         {
             var typeOfResponse = response.GetType();
             var responseAssemblyName = typeOfResponse.Assembly.FullName;
-            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
+            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("OpenSearch.Net")
                 ? "ApiCallDetails" : "ApiCall";
 
             return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);

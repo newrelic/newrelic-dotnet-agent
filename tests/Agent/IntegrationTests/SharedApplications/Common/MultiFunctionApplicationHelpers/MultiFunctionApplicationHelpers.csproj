@@ -273,6 +273,12 @@
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.35" Condition="'$(TargetFramework)' == 'net48'" />
 
     <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.35" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <!-- OpenSearch -->
+    <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <!-- AWS SDK -->

@@ -124,6 +124,9 @@
         "ignoreReason": "net481 doesn't support v9.x"
     },
     {
+        "packageName": "opensearch.client"
+    },
+    {
         "packageName": "oracle.manageddataaccess"
     },
     {
