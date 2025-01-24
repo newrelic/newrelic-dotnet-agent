@@ -216,10 +216,9 @@ namespace NewRelic.Agent.Core.Configuration
                 _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
                                    ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
 
-                if (_agentLicenseKey != null)
-                    _agentLicenseKey = _agentLicenseKey.Trim();
+                _agentLicenseKey = _agentLicenseKey?.Trim();
 
-                if (_agentLicenseKey == null && !ServerlessModeEnabled)
+                if (string.IsNullOrEmpty(_agentLicenseKey) && !ServerlessModeEnabled)
                 {
                     TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
                 }

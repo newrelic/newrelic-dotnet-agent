@@ -32,22 +32,20 @@ namespace NewRelic.Agent.Core.AgentHealth
                     IsHealthy = healthStatus.IsHealthy;
                 }
 
-                if (!Status.Equals(healthStatus.Code, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(Status) || !Status.Equals(healthStatus.Code, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (statusParams != null && statusParams.Length > 0)
-                    {
-                        Status = string.Format(Status, statusParams);
-                    }
-                    else
-                    {
-                        Status = healthStatus.Status;
-                    }
+                    Status = statusParams is { Length: > 0 } ?
+                        string.Format(healthStatus.Status, statusParams)
+                        :
+                        healthStatus.Status;
                 }
 
-                if (!LastError.Equals(healthStatus.Code, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(LastError) || !LastError.Equals(healthStatus.Code, StringComparison.OrdinalIgnoreCase))
                 {
                     LastError = healthStatus.Code;
                 }
+
+                StatusTime = DateTime.UtcNow;
             }
         }
 
@@ -55,7 +53,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             lock (this)
             {
-                StatusTime = DateTime.UtcNow;
                 return
                     $"healthy: {IsHealthy}\nstatus: {Status}\nlast_error: {LastError}\nstart_time_unix_nano: {StartTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}\nstatus_time_unix_nano: {StatusTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}";
             }
