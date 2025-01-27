@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Core.Utilities
         string[] GetFiles(string readOnlyPath, string yml);
     }
 
+    [NrExcludeFromCodeCoverage]
     public class DirectoryWrapper : IDirectoryWrapper
     {
         public bool Exists(string path)

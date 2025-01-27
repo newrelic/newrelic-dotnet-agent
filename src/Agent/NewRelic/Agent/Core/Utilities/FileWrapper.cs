@@ -15,6 +15,7 @@ namespace NewRelic.Agent.Core.Utilities
         bool TryCreateFile(string path, bool deleteOnSuccess = true);
     }
 
+    [NrExcludeFromCodeCoverage]
     public class FileWrapper : IFileWrapper
     {
         public bool Exists(string path)
