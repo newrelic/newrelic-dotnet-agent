@@ -25,6 +25,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         private readonly string _asyncTableName;
         private readonly string _libraryName;
 
+        private readonly bool _isOdbc;
+
         public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, string libraryName) : base(fixture)
         {
             MsSqlWarmupHelper.WarmupMsSql();
@@ -38,6 +40,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             _tableName = Utilities.GenerateTableName();
             _asyncTableName = Utilities.GenerateTableName();
             _libraryName = libraryName;
+
+            //Some metrics (connection open and iteration) aren't available in the ODBC instrumentation
+            _isOdbc = excerciserName.Contains("Odbc");
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
             _fixture.AddCommand($"{excerciserName} CreateTable {_asyncTableName}");
@@ -59,6 +64,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
+
+                    configModifier.SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
@@ -90,9 +97,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
 
-                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 2 },
@@ -112,10 +116,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1, metricScope = _expectedAsyncTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedAsyncTransactionName}
             };
+
+            // The ODBC instrumentation does not instrument connection calls or iterations
+            if (! _isOdbc)
+            {
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedTransactionName });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedAsyncTransactionName });
+            }
+
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // The operation metric should not be scoped because the statement metric is scoped instead
@@ -149,13 +161,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
             var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
             {
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan" },
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "sql", parameterValue = $"SELECT * FROM NewRelic.dbo.TeamMembers WHERE {firstOrLastNameQueried} = ?"},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "port_path_or_id", parameterValue = "default"},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "database_name", parameterValue = "NewRelic"}
 
             };
+
+            // The ODBC instrumentation doesn't do explain plans
+            var sqlTracesShouldHaveExplainPlans = false;
+            if (!_isOdbc)
+            {
+                expectedTransactionTraceSegmentParameters.Add(new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan" });
+                sqlTracesShouldHaveExplainPlans = true;
+            }
 
 
             // There should be a total of 8 traces: 4 for the sync methods and 4 for the async methods.
@@ -167,7 +186,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?",
                     DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -175,7 +194,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = ?",
                     DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -183,7 +202,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"SELECT COUNT(*) FROM {_tableName} WITH(nolock)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/select",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -191,7 +210,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"SELECT COUNT(*) FROM {_asyncTableName} WITH(nolock)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/select",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -199,7 +218,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"INSERT INTO {_tableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/insert",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -207,7 +226,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"INSERT INTO {_asyncTableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/insert",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -215,7 +234,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"DELETE FROM {_tableName} WHERE Email = ?",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/delete",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans,
                 },
                 new Assertions.ExpectedSqlTrace
                 {
@@ -223,7 +242,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     Sql = $"DELETE FROM {_asyncTableName} WHERE Email = ?",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/delete",
 
-                    HasExplainPlan = true
+                    HasExplainPlan = sqlTracesShouldHaveExplainPlans
                 }
             };
 
@@ -248,6 +267,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+
+    #region System.Data.SqlClient
     [NetFrameworkTest]
     public class MsSqlTests_SystemData_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -260,6 +281,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         {
         }
     }
+    #endregion
+
+    #region Microsoft.Data.SqlClient
 
     [NetFrameworkTest]
     public class MsSqlTests_MicrosoftDataSqlClient_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
@@ -312,4 +336,63 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         {
         }
     }
+
+    #endregion
+
+    #region System.Data.Odbc
+
+    [NetFrameworkTest]
+    public class MsSqlTests_SystemDataOdbc_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MsSqlTests_SystemDataOdbc_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataOdbcExerciser",
+                  libraryName: "System.Data.Odbc")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MsSqlTests_SystemDataOdbc_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MsSqlTests_SystemDataOdbc_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataOdbcExerciser",
+                  libraryName: "System.Data.Odbc")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MsSqlTests_SystemDataOdbc_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MsSqlTests_SystemDataOdbc_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataOdbcExerciser",
+                  libraryName: "System.Data.Odbc")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MsSqlTests_SystemDataOdbc_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public MsSqlTests_SystemDataOdbc_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataOdbcExerciser",
+                  libraryName: "System.Data.Odbc")
+        {
+        }
+    }
+
+    #endregion
+
 }
