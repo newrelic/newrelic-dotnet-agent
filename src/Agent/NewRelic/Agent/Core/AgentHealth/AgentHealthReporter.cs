@@ -18,7 +18,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Text;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
+        private readonly IFileWrapper _fileWrapper;
+        private readonly IDirectoryWrapper _directoryWrapper;
         private readonly IList<string> _recurringLogData = new ConcurrentList<string>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
@@ -41,15 +43,28 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
         private HealthCheck _healthCheck;
+        private bool _healthChecksInitialized;
         private bool _healthChecksFailed;
         private string _healthCheckPath;
 
-        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
+        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper)
         {
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
+            _fileWrapper = fileWrapper;
+            _directoryWrapper = directoryWrapper;
 
-            InitializeHealthChecks();
+            if (!_configuration.AgentControlEnabled)
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+            else
+            {
+                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+
+                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
+
+                // schedule the health check and issue the first one immediately
+                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
 
             _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
@@ -62,60 +77,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             _payloadAcceptSuccessCounter = new InterlockedCounter();
             _traceContextAcceptSuccessCounter = new InterlockedCounter();
             _traceContextCreateSuccessCounter = new InterlockedCounter();
-        }
-
-        private void InitializeHealthChecks()
-        {
-            Log.Finest("Initializing Agent Control health checks");
-
-            if (!_configuration.AgentControlEnabled)
-            {
-                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
-                return;
-            }
-
-            _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
-
-            // make sure the delivery location is a file URI
-            var fileUri = new Uri(_configuration.HealthDeliveryLocation);
-            if (fileUri.Scheme != Uri.UriSchemeFile)
-            {
-                Log.Warn("Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
-                _healthChecksFailed = true;
-                return;
-            }
-
-            _healthCheckPath = fileUri.LocalPath;
-
-            // verify the directory exists
-            if (!Directory.Exists(_healthCheckPath))
-            {
-                Log.Warn("Agent Control is enabled but the path specified in agent_control.health.delivery_location does not exist. Health checks will be disabled.");
-                _healthChecksFailed = true;
-                return;
-            }
-
-            // verify the directory is writeable
-            try
-            {
-                var tempFileName = Path.GetRandomFileName();
-                using (var writer = new StreamWriter(Path.Combine(_healthCheckPath, tempFileName)))
-                {
-                    writer.Write("test");
-                }
-
-                File.Delete(Path.Combine(_healthCheckPath, tempFileName));
-            }
-            catch (Exception ex)
-            {
-                Log.Warn(ex, "Agent Control is enabled but the path specified in agent_control.health.delivery_location is not writeable. Health checks will be disabled.");
-                _healthChecksFailed = true;
-                return;
-            }
-
-            Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
-            // schedule the health check and issue the first one immediately
-            _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
         }
 
         public override void Dispose()
@@ -761,8 +722,17 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void PublishAgentControlHealthCheck()
         {
-            if (_healthChecksFailed)
+            if (!_healthChecksInitialized) // initialize on first invocation
+            {
+                InitializeHealthChecks();
+                _healthChecksInitialized = true;
+            }
+
+            if (_healthChecksFailed) // stop the scheduled task if health checks fail for any reason
+            {
+                _scheduler.StopExecuting(PublishAgentControlHealthCheck);
                 return;
+            }
 
             var healthCheckYaml = _healthCheck.ToYaml();
 
@@ -770,8 +740,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             try
             {
-                using StreamWriter writer = new StreamWriter(Path.Combine(_healthCheckPath, _healthCheck.FileName));
-                writer.Write(healthCheckYaml);
+                using var fs = _fileWrapper.OpenWrite(Path.Combine(_healthCheckPath, _healthCheck.FileName));
+                var payloadBytes = Encoding.UTF8.GetBytes(healthCheckYaml);
+                fs.Write(payloadBytes, 0, payloadBytes.Length);
+                fs.Flush();
             }
             catch (Exception ex)
             {
@@ -780,6 +752,43 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
+        private void InitializeHealthChecks()
+        {
+            if (!_configuration.AgentControlEnabled)
+            {
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+                return;
+            }
+
+            Log.Debug("Initializing Agent Control health checks");
+
+            // make sure the delivery location is a file URI
+            var fileUri = new Uri(_configuration.HealthDeliveryLocation);
+            if (fileUri.Scheme != Uri.UriSchemeFile)
+            {
+                Log.Warn(
+                    "Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
+                _healthChecksFailed = true;
+                return;
+            }
+
+            _healthCheckPath = fileUri.LocalPath;
+
+            // verify the directory exists
+            if (!_directoryWrapper.Exists(_healthCheckPath))
+            {
+                Log.Warn("Agent Control is enabled but the path specified in agent_control.health.delivery_location does not exist. Health checks will be disabled.");
+                _healthChecksFailed = true;
+            }
+
+            // verify we can write a file to the directory
+            var testFile = Path.Combine(_healthCheckPath, Path.GetRandomFileName());
+            if (!_fileWrapper.TryCreateFile(testFile))
+            {
+                Log.Warn("Agent Control is enabled but the agent is unable to create files in the directory specified in agent_control.health.delivery_location. Health checks will be disabled.");
+                _healthChecksFailed = true;
+            }
+        }
         #endregion
 
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)

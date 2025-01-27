@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth
@@ -36,7 +37,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
         }
