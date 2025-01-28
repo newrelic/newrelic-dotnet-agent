@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
@@ -21,6 +22,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         private AgentHealthReporter _agentHealthReporter;
         private ConfigurationAutoResponder _configurationAutoResponder;
         private List<MetricWireModel> _publishedMetrics;
+        private IScheduler _scheduler;
 
         private void Setup(bool agentControlEnabled, string deliveryLocation, int frequency, IFileWrapper fileWrapper = null, IDirectoryWrapper directoryWrapper = null)
         {
@@ -32,7 +34,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
             _publishedMetrics = new List<MetricWireModel>();
-            var scheduler = Mock.Create<IScheduler>();
+            _scheduler = Mock.Create<IScheduler>();
 
             if (fileWrapper == null)
             {
@@ -47,7 +49,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
             }
 
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, scheduler, fileWrapper, directoryWrapper);
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, _scheduler, fileWrapper, directoryWrapper);
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
         }
 
@@ -108,6 +110,19 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.That(parsedObject.last_error, Is.Empty);
             Assert.That(parsedObject.start_time_unix_nano, Is.Not.Empty);
             Assert.That(parsedObject.status_time_unix_nano, Is.Not.Empty);
+        }
+
+        [Test]
+        public void AgentControl_PublishAgentControlHealthCheckScheduledTaskIsStopped_WhenAgentControlDisabled()
+        {
+            // Arrange
+            Setup(false, "file://foo", 5);
+
+            // Act
+            _agentHealthReporter.PublishAgentControlHealthCheck();
+
+            //Assert
+            Mock.Assert(() => _scheduler.StopExecuting(_agentHealthReporter.PublishAgentControlHealthCheck, Arg.IsAny<TimeSpan?>()), Occurs.Once());
         }
 
         [Test]

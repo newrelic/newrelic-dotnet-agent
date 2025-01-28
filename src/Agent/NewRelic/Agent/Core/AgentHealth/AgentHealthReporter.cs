@@ -728,7 +728,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                 _healthChecksInitialized = true;
             }
 
-            if (_healthChecksFailed) // stop the scheduled task if health checks fail for any reason
+            // stop the scheduled task if agent control isn't enabled or health checks fail for any reason
+            if (!_configuration.AgentControlEnabled || _healthChecksFailed) 
             {
                 _scheduler.StopExecuting(PublishAgentControlHealthCheck);
                 return;
