@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environmentVariableHelper;
 
-        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper)
+        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper, ICollectorWire dataRequestWire = null)
         {
             _serializer = serializer;
             _collectorWireFactory = collectorWireFactory;
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _environmentVariableHelper = environmentVariableHelper;
 
             _connectionInfo = new ConnectionInfo(_configuration);
-            _dataRequestWire = new NoOpCollectorWire();
+            _dataRequestWire = dataRequestWire ??  new NoOpCollectorWire();
         }
 
         #region Public API
