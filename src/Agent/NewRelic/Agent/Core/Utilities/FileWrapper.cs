@@ -12,8 +12,10 @@ namespace NewRelic.Agent.Core.Utilities
     {
         bool Exists(string path);
         FileStream OpenWrite(string path);
+        bool TryCreateFile(string path, bool deleteOnSuccess = true);
     }
 
+    [NrExcludeFromCodeCoverage]
     public class FileWrapper : IFileWrapper
     {
         public bool Exists(string path)
@@ -27,5 +29,17 @@ namespace NewRelic.Agent.Core.Utilities
             return File.OpenWrite(path);
         }
 
+        public bool TryCreateFile(string path, bool deleteOnSuccess = true)
+        {
+            try
+            {
+                using var fs = File.Create(path, 1, deleteOnSuccess ? FileOptions.DeleteOnClose : FileOptions.None);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

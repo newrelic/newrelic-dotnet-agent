@@ -1106,7 +1106,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountSent = countSent;
                 });
 
-            var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
+            var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
 
             agentHealthReporter.RegisterPublishMetricHandler(metric => { });
 
