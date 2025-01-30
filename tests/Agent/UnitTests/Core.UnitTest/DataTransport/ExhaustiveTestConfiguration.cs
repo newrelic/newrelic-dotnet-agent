@@ -492,7 +492,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
         public string AzureFunctionRegion => "AzureFunctionRegion";
         public string AzureFunctionSubscriptionId => "AzureFunctionSubscriptionId";
-        public string AzureFunctionServiceName => "AzureFunctionServiceName";
+        public string AzureFunctionAppName => "AzureFunctionServiceName";
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";

@@ -4436,7 +4436,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
 
             // Act
-            var result = _defaultConfig.AzureFunctionServiceName;
+            var result = _defaultConfig.AzureFunctionAppName;
 
             // Assert
             Assert.That(result, Is.EqualTo("some-service-name"));
