@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Log Event harvest starting.");
+            Log.Finest("Log Event harvest starting.");
 
             var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
             var aggregatedEvents = originalLogEvents.Where(node => node != null).Select(node => node.Data).ToList();
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Debug("Log Event harvest finished.");
+            Log.Finest("Log Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

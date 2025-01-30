@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("SQL Trace harvest starting.");
+            Log.Finest("SQL Trace harvest starting.");
 
             IDictionary<long, SqlTraceWireModel> oldSqlTraces;
             lock (_sqlTraceLock)
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, slowestTraces);
             }
 
-            Log.Debug("SQL Trace harvest finished.");
+            Log.Finest("SQL Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
@@ -83,7 +83,6 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportSqlTracesSent(traces.Count);
-                    Log.Debug("Successfully sent {count} SQL traces.", traces.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     Retain(traces);

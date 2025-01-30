@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Transaction Trace harvest starting.");
+            Log.Finest("Transaction Trace harvest starting.");
 
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, traceSamples);
             }
 
-            Log.Debug("Transaction Trace harvest finished.");
+            Log.Finest("Transaction Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModelComponents> traceSamples)
@@ -79,7 +79,6 @@ namespace NewRelic.Agent.Core.Aggregators
             switch (responseStatus)
             {
                 case DataTransportResponseStatus.RequestSuccessful:
-                    Log.Debug("Successfully sent {count} transaction traces.", traceSamples.Count);
                     break;
 
                 case DataTransportResponseStatus.Retain:

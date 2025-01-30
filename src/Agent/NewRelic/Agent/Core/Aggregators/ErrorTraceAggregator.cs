@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Aggregators
         protected override void Harvest() => InternalHarvest();
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Error Trace harvest starting.");
+            Log.Finest("Error Trace harvest starting.");
 
             ICollection<ErrorTraceWireModel> errorTraceWireModels;
 
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, errorTraceWireModels);
             }
 
-            Log.Debug("Error Trace harvest finished.");
+            Log.Finest("Error Trace harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -145,7 +145,6 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
-                    Log.Debug("Successfully sent {count} error traces.", errorTraceWireModels.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     Retain(errorTraceWireModels);

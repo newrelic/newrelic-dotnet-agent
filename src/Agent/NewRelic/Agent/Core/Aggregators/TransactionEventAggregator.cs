@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Transaction Event harvest starting.");
+            Log.Finest("Transaction Event harvest starting.");
 
             IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> originalTransactionEvents;
             ConcurrentList<TransactionEventWireModel> originalSyntheticsTransactionEvents;
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Debug("Transaction Event harvest finished.");
+            Log.Finest("Transaction Event harvest finished.");
 
         }
 
@@ -150,7 +150,6 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportTransactionEventsSent(transactionEvents.Count);
-                    Log.Debug("Successfully sent {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(transactionEvents);

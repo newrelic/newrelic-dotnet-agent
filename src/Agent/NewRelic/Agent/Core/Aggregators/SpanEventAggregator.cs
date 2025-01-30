@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Span Event harvest starting.");
+            Log.Finest("Span Event harvest starting.");
 
             ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>> spanEventsPriorityQueue;
 
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, wireModels);
             }
 
-            Log.Debug("Span Event harvest finished.");
+            Log.Finest("Span Event harvest finished.");
         }
 
         private void ReduceReservoirSize(int newSize)
@@ -154,7 +154,6 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportSpanEventsSent(spanEvents.Count);
-                    Log.Debug("Successfully sent {count} span events.", spanEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(spanEvents);

@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Debug("Error Event harvest starting.");
+            Log.Finest("Error Event harvest starting.");
 
             ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> originalErrorEvents;
             ConcurrentList<ErrorEventWireModel> originalSyntheticsErrorEvents;
@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Debug("Error Event harvest finished.");
+            Log.Finest("Error Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -167,7 +167,6 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportErrorEventsSent(errorEvents.Count);
-                    Log.Debug("Successfully sent {count} error events.", errorEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(errorEvents);
