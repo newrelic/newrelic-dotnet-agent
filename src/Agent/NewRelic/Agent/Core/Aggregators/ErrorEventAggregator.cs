@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Finest($"Error Event harvest finished. {eventCount} event(s) sent.");
+            Log.Finest("Error Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -170,13 +170,16 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(errorEvents);
+                    Log.Debug("Retaining {count} error events.", errorEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(errorEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(errorEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} error events.", errorEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} transaction events.", errorEvents.Count);
                     break;
             }
         }

@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Finest($"Transaction Event harvest finished. {eventCount} event(s) sent.");
+            Log.Finest("Transaction Event harvest finished.");
 
         }
 
@@ -153,14 +153,16 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(transactionEvents);
+                    Log.Debug("Retaining {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(transactionEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
-                    break;
+                    Log.Debug("Discarding {count} transaction events.", transactionEvents.Count); break;
             }
         }
 

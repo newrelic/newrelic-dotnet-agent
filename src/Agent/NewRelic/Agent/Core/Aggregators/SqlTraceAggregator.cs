@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, slowestTraces);
             }
 
-            Log.Finest($"SQL Trace harvest finished. {traceCount} trace(s) sent.");
+            Log.Finest("SQL Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
@@ -86,10 +86,12 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     Retain(traces);
+                    Log.Debug("Retaining {count} SQL traces.", traces.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} SQL traces.", traces.Count);
                     break;
             }
         }

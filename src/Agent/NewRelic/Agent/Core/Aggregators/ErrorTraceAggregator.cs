@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, errorTraceWireModels);
             }
 
-            Log.Finest($"Error Trace harvest finished. {traceCount} trace(s) sent.");
+            Log.Finest("Error Trace harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -148,10 +148,12 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     Retain(errorTraceWireModels);
+                    Log.Debug("Retaining {count} error traces.", errorTraceWireModels.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} error traces.", errorTraceWireModels.Count);
                     break;
             }
         }
