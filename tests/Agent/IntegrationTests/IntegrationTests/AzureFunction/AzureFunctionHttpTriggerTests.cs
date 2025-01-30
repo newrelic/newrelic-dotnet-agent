@@ -45,7 +45,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
                 configModifier
                     .ForceTransactionTraces()
                     .ConfigureFasterTransactionTracesHarvestCycle(20)
-                    .ConfigureFasterMetricsHarvestCycle(15)
+                    .ConfigureFasterMetricsHarvestCycle(25)
                     .ConfigureFasterSpanEventsHarvestCycle(15)
                     .SetLogLevel("finest");
 
@@ -76,6 +76,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
                     _fixture.Get("api/httpTriggerFunctionUsingSimpleInvocation"); // make a second call to verify coldStart is not sent
                 }
                 _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
 
