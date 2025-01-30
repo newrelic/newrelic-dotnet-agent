@@ -58,7 +58,7 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         {
             { "faas.coldStart", true},
             //new("faas.invocation_id", "test_invocation_id"), This one is a random guid, not something we can specifically look for
-            { "faas.name", "QueueTriggerFunction" },
+            { "faas.name", "IntegrationTestAppName/QueueTriggerFunction" },
             { "faas.trigger", "datasource" },
             { "cloud.resource_id", "/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction" }
         };
@@ -92,7 +92,7 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
             Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction", cloudResourceIdValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("QueueTriggerFunction", faasNameValue);
+            Assert.Equal("IntegrationTestAppName/QueueTriggerFunction", faasNameValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("datasource", faasTriggerValue);
         }

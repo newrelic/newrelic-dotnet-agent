@@ -271,11 +271,11 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
-            if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionServiceName))
+            if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionAppName))
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
-                return new List<string> { AzureFunctionServiceName };
+                return new List<string> { AzureFunctionAppName };
             }
 
             appName = _environment.GetEnvironmentVariable("RoleName");
@@ -2185,7 +2185,7 @@ namespace NewRelic.Agent.Core.Configuration
                     return string.Empty;
                 }
 
-                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionServiceName) ? "unknown" : AzureFunctionServiceName)}";
+                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionAppName) ? "unknown" : AzureFunctionAppName)}";
             }
         }
 
@@ -2245,7 +2245,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public string AzureFunctionServiceName => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+        public string AzureFunctionAppName => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
         #endregion
 
         #endregion

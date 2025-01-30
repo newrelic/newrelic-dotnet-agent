@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Configuration
         string AzureFunctionResourceGroupName { get; }
         string AzureFunctionRegion { get; }
         string AzureFunctionSubscriptionId { get; }
-        string AzureFunctionServiceName { get; }
+        string AzureFunctionAppName { get; }
         string AzureFunctionResourceIdWithFunctionName(string functionName);
 
         bool UtilizationDetectAzureFunction { get; }

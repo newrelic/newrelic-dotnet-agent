@@ -713,7 +713,7 @@ namespace NewRelic.Agent.Core.Configuration
         public string AzureFunctionSubscriptionId => _configuration.AzureFunctionSubscriptionId;
 
         [JsonIgnore]
-        public string AzureFunctionServiceName => _configuration.AzureFunctionServiceName;
+        public string AzureFunctionAppName => _configuration.AzureFunctionAppName;
 
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => _configuration.AzureFunctionResourceIdWithFunctionName(functionName);
 
