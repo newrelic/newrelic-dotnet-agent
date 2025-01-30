@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
-            Log.Finest("Transaction Event harvest starting.");
+            Log.Debug("Transaction Event harvest starting.");
 
             IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> originalTransactionEvents;
             ConcurrentList<TransactionEventWireModel> originalSyntheticsTransactionEvents;
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Finest($"Transaction Event harvest finished. {eventCount} event(s) sent.");
+            Log.Debug("Transaction Event harvest finished.");
 
         }
 
@@ -150,17 +150,20 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportTransactionEventsSent(transactionEvents.Count);
+                    Log.Debug("Successfully sent {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(transactionEvents);
+                    Log.Debug("Retaining {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(transactionEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} transaction events.", transactionEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
-                    break;
+                    Log.Debug("Discarding {count} transaction events.", transactionEvents.Count); break;
             }
         }
 
