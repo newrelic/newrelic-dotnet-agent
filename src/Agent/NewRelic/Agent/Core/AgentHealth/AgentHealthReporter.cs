@@ -812,6 +812,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfGCSamplerV2IsEnabled();
             ReportIfAwsAccountIdProvided();
             ReportIfAgentControlHealthEnabled();
+            ReportIfAzureFunctionModeIsEnabled();
         }
 
         public void CollectMetrics()
@@ -981,6 +982,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             if (!string.IsNullOrEmpty(_configuration.AwsAccountId))
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityAwsAccountIdProvided);
+            }
+        }
+
+        private void ReportIfAzureFunctionModeIsEnabled()
+        {
+            if (_configuration.AzureFunctionModeEnabled && _configuration.AzureFunctionModeDetected)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionModeEnabled);
             }
         }
 
