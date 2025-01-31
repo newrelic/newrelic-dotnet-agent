@@ -386,11 +386,7 @@ try
         $file = resolve-path ".\applicationHost.xdt"
         WriteToInstallLog "Adding Azure Functions environment variables to applicationHost.xdt"
         AddXmlElements $file $xPaths
-
-        WriteToInstallLog "Removing <system.applicationHost> element from applicationHost.xdt"
-        RemoveXmlElements $file @("/configuration/system.applicationHost")
     }
-
 
 	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
 	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
