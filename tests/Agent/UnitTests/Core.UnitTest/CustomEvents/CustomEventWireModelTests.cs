@@ -10,6 +10,7 @@ using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.TestUtilities;
 using System;
+using NewRelic.Agent.Core.JsonConverters;
 
 namespace NewRelic.Agent.Core.CustomEvents.Tests
 {
@@ -140,7 +141,7 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
             var customEvent = new CustomEventWireModel(.5f, attribVals);
 
             var serialized = JsonConvert.SerializeObject(customEvent);
-            var expectedSerialized = JsonConvert.SerializeObject(expectedSerialization);
+            var expectedSerialized = JsonConvert.SerializeObject(expectedSerialization, converters: [new EventAttributesJsonConverter()]);
 
             Assert.That(serialized, Is.Not.Null);
             Assert.That(serialized, Is.EqualTo(expectedSerialized));
