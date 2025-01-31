@@ -175,17 +175,20 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRe
 	}
 }
 
-function RemoveXmlElement($file, $xPath)
+function RemoveXmlElements($file, $xPaths)
 {
     $xdoc = new-object System.Xml.XmlDocument
     $xdoc.load($file)
     $namespaceManager = new-object System.Xml.XmlNamespaceManager($xdoc.NameTable)
     $namespaceManager.AddNamespace("xdt", "http://schemas.microsoft.com/XML-Document-Transform")
 
-    $node = $xdoc.SelectSingleNode($xPath, $namespaceManager)
-    if ($node -ne $null)
+    foreach ($xPath in $xPaths)
     {
-        $node.ParentNode.RemoveChild($node)
+        $node = $xdoc.SelectSingleNode($xPath, $namespaceManager)
+        if ($node -ne $null)
+        {
+            $node.ParentNode.RemoveChild($node)
+        }
     }
     $xdoc.Save($file)
 }
@@ -385,7 +388,7 @@ try
         AddXmlElements $file $xPaths
 
         WriteToInstallLog "Removing <system.applicationHost> element from applicationHost.xdt"
-        RemoveXmlElement $file "/configuration/system.applicationHost"
+        RemoveXmlElements $file @("/configuration/system.applicationHost")
     }
 
 
