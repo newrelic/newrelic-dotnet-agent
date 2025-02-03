@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 ### Fixes
 
+## [1.6.0] - 2025-02-03
+### New Features
+* Azure Site Extension now supports deployment to Windows Azure Functions, with instrumentation enabled by default. (#2976)[https://github.com/newrelic/newrelic-dotnet-agent/pull/2976]
+
 ## [1.5.5] - 2023-02-07
 ### New Features
 * Adds a new environment variable to capture the app service name at startup. [#1377](https://github.com/newrelic/newrelic-dotnet-agent/pull/1377)
