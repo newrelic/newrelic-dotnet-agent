@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 ### Fixes
 
+## [1.6.0] - 2025-02-03
+### New Features
+* Azure Site Extension now supports deployment to Windows Azure Functions, with instrumentation enabled by default. (#2976)[https://github.com/newrelic/newrelic-dotnet-agent/pull/2976]
+
 ## [1.5.5] - 2023-02-07
 ### New Features
 * Adds a new environment variable to capture the app service name at startup. [#1377](https://github.com/newrelic/newrelic-dotnet-agent/pull/1377)
@@ -24,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes Issue [#399](https://github.com/newrelic/newrelic-dotnet-agent/issues/399): site extension did not clean up after installation ([#478](https://github.com/newrelic/newrelic-dotnet-agent/pull/478))
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.5...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.6.0...HEAD
+[1.6.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.5...AzureSiteExtension_v1.6.0
 [1.5.5]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.4...AzureSiteExtension_v1.5.5
 [1.5.4]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.3...AzureSiteExtension_v1.5.4
 [1.5.3]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.2...AzureSiteExtension_v1.5.3
