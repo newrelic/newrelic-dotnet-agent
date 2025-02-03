@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, metricsToSend);
             }
 
-            Log.Finest($"Metric harvest finished. {metricCount} metric(s) sent.");
+            Log.Finest("Metric harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         #endregion
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<MetricWireModel> unsuccessfulSendMetrics)
         {
             switch (responseStatus)
             {
@@ -106,10 +106,12 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainMetricData(unsuccessfulSendMetrics);
+                    Log.Debug("Retaining {count} metrics.", unsuccessfulSendMetrics.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} metrics.", unsuccessfulSendMetrics.Count);
                     break;
             }
         }

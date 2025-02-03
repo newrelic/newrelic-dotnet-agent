@@ -3,20 +3,18 @@
 
 using Grpc.Core;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth
@@ -39,7 +37,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
         }
@@ -63,6 +61,10 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
             Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
             Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
+
+            Mock.Arrange(() => configuration.AgentControlEnabled).Returns(true);
+            Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
+            Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
 
             return configuration;
         }
@@ -508,7 +510,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void IgnoredInstrumentationSupportabiltyMetricPresent()
+        public void IgnoredInstrumentationSupportabilityMetricPresent()
         {
             var expectedMetricName = new MetricNameWireModel("Supportability/Dotnet/IgnoredInstrumentation", null);
             var expectedMetricData = MetricDataWireModel.BuildGaugeValue(1);
@@ -522,7 +524,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void IgnoredInstrumentationSupportabiltyMetricMissing()
+        public void IgnoredInstrumentationSupportabilityMetricMissing()
         {
             _agentHealthReporter.CollectMetrics();
 
@@ -530,14 +532,14 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void GCSamplerV2EnabledSupportabiliityMetricPresent()
+        public void GCSamplerV2EnabledSupportabilityMetricPresent()
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/GCSamplerV2/Enabled"), Is.True);
         }
 
         [Test]
-        public void AwsAccountIdSupportabiliityMetricPresent()
+        public void AwsAccountIdSupportabilityMetricPresent()
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);

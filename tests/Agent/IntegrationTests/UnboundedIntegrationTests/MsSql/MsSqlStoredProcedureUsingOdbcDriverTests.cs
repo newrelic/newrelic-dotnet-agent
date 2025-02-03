@@ -29,7 +29,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOdbcDriver";
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/OdbcParameterizedStoredProcedure";
 
             _tableName = Utilities.GenerateTableName();
             var procedureName = Utilities.GenerateProcedureName();
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
-            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOdbcDriver {_procNameWith} {_procNameWithout}");
+            _fixture.AddCommand($"{excerciserName} OdbcParameterizedStoredProcedure {_procNameWith} {_procNameWithout}");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
             _fixture.AddActions
@@ -78,23 +78,23 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName},
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure",
-                $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure"
+                $"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure",
+                $"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure"
             };
 
             var expectedQueryParametersWith = DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
             var expectedQueryParametersWithout = DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
 
-            var expectedTransactionTraceQueryParametersWith = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure", QueryParameters = expectedQueryParametersWith };
-            var expectedTransactionTraceQueryParametersWithout = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure", QueryParameters = expectedQueryParametersWithout };
+            var expectedTransactionTraceQueryParametersWith = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", QueryParameters = expectedQueryParametersWith };
+            var expectedTransactionTraceQueryParametersWithout = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", QueryParameters = expectedQueryParametersWithout };
 
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
@@ -102,14 +102,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 {
                     TransactionName = _expectedTransactionName,
                     Sql = $"{{call {_procNameWith}({parameterPlaceholder})}}",
-                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatementWith}/ExecuteProcedure",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure",
                     QueryParameters = expectedQueryParametersWith
                 },
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = _expectedTransactionName,
                     Sql = $"{{call {_procNameWithout}({parameterPlaceholder})}}",
-                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatementWithout}/ExecuteProcedure",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure",
                     QueryParameters = expectedQueryParametersWithout
                 }
 
@@ -138,16 +138,26 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    // Only tests for System.Data in .NET Framework for ODBC, since the OdbcCommandWrapper is .NET Framework only,
-    // and the instrumentation.xml only matches System.Data as of 2022-10-20
     [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MsSqlStoredProcedureUsingOdbcDriverTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataExerciser")
+                  excerciserName: "SystemDataOdbcExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataOdbcExerciser")
         {
         }
     }

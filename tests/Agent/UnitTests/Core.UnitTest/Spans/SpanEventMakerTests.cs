@@ -29,6 +29,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Spans.UnitTest
 {
@@ -101,7 +102,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private ServerConfiguration _serverConfig;
         private IBootstrapConfiguration _bootstrapConfiguration;
         private configuration _localConfig;
-
+        private IAgentHealthReporter _agentHealthReporter;
 
         private void SetLocalConfigurationDefaults()
         {
@@ -123,7 +124,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private void PublishConfig()
         {
-            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             _config = config;
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
         }
@@ -138,7 +139,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
-            
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
 

@@ -1,4 +1,4 @@
-﻿[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/newrelic/dotnet-agent")]
+[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/newrelic/dotnet-agent")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
 namespace NewRelic.Api.Agent
 {
@@ -72,7 +72,7 @@ namespace NewRelic.Api.Agent
     public class SegmentWrapper : System.IDisposable
     {
         public void Dispose() { }
-        public static NewRelic.Api.Agent.SegmentWrapper GetDatastoreWrapper([System.Runtime.CompilerServices.Dynamic] object transaction, string vendor, string model, string operation, string? commandText, string? host, string? portPathOrID, string? databaseName) { }
+        public static NewRelic.Api.Agent.SegmentWrapper GetDatastoreWrapper(dynamic transaction, string vendor, string model, string operation, string? commandText, string? host, string? portPathOrID, string? databaseName) { }
     }
     [System.AttributeUsage(System.AttributeTargets.Method)]
     public class TraceAttribute : System.Attribute

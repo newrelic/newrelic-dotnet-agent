@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, wireModels);
             }
 
-            Log.Finest($"Span Event harvest finished. {eventCount} event(s) sent.");
+            Log.Finest("Span Event harvest finished.");
         }
 
         private void ReduceReservoirSize(int newSize)
@@ -157,13 +157,16 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(spanEvents);
+                    Log.Debug("Retaining {count} span events.", spanEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(spanEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(spanEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} span events.", spanEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} span events.", spanEvents.Count);
                     break;
             }
         }

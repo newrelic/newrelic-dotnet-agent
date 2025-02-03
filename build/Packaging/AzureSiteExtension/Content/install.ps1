@@ -177,17 +177,52 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRe
 
 function RemoveXmlElements($file, $xPaths)
 {
-	$xdoc = new-object System.Xml.XmlDocument
-	$xdoc.load($file)
-	foreach ($xPath in $xPaths)
-	{
-		$elementToBeRemoved = $xdoc.SelectSingleNode($xPath)
-		if($elementToBeRemoved -ne $null)
-		{
-			$elementToBeRemoved.ParentNode.RemoveChild($elementToBeRemoved)
-		}
-	}
-	$xdoc.Save($file)
+    $xdoc = new-object System.Xml.XmlDocument
+    $xdoc.load($file)
+    $namespaceManager = new-object System.Xml.XmlNamespaceManager($xdoc.NameTable)
+    $namespaceManager.AddNamespace("xdt", "http://schemas.microsoft.com/XML-Document-Transform")
+
+    foreach ($xPath in $xPaths)
+    {
+        $node = $xdoc.SelectSingleNode($xPath, $namespaceManager)
+        if ($node -ne $null)
+        {
+            $node.ParentNode.RemoveChild($node)
+        }
+    }
+    $xdoc.Save($file)
+}
+
+function AddXmlElements($file, $xPaths)
+{
+    $xdoc = new-object System.Xml.XmlDocument
+    $xdoc.load($file)
+    $namespaceManager = new-object System.Xml.XmlNamespaceManager($xdoc.NameTable)
+    $namespaceManager.AddNamespace("xdt", "http://schemas.microsoft.com/XML-Document-Transform")
+
+    foreach ($xPath in $xPaths)
+    {
+        $newElement = $xdoc.CreateElement($xPath.Name)
+        foreach ($attribute in $xPath.Attributes.GetEnumerator())
+        {
+            if ($attribute.Key -like "xdt:*")
+            {
+                $newAttribute = $xdoc.CreateAttribute($attribute.Key, $namespaceManager.LookupNamespace("xdt"))
+            }
+            else
+            {
+                $newAttribute = $xdoc.CreateAttribute($attribute.Key)
+            }
+            $newAttribute.Value = $attribute.Value
+            $newElement.Attributes.Append($newAttribute)
+        }
+        $parentNode = $xdoc.SelectSingleNode($xPath.ParentPath, $namespaceManager)
+        if ($parentNode -ne $null)
+        {
+            $parentNode.AppendChild($newElement)
+        }
+    }
+    $xdoc.Save($file)
 }
 
 function CopyAgentInfo($agentInfoDestination)
@@ -341,6 +376,17 @@ try
 		$file = resolve-path(".\applicationHost.xdt")
 		RemoveXmlElements $file $xPaths
 	}
+
+    if ($env:FUNCTIONS_WORKER_RUNTIME -ne $null) # for Azure Functions, enable azure function mode and remove <system.applicationHost>
+    {
+        $xPaths = @(
+            @{ Name = "add"; Attributes = @{ name = "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"; value = "1"; "xdt:Locator" = "Match(name)"; "xdt:Transform" = "InsertIfMissing" }; ParentPath = "/configuration/system.webServer/runtime/environmentVariables" },
+            @{ Name = "add"; Attributes = @{ name = "NEW_RELIC_LOG_DIRECTORY"; value = "%HOME%\LogFiles\NewRelic"; "xdt:Locator" = "Match(name)"; "xdt:Transform" = "InsertIfMissing" }; ParentPath = "/configuration/system.webServer/runtime/environmentVariables" }
+        )
+        $file = resolve-path ".\applicationHost.xdt"
+        WriteToInstallLog "Adding Azure Functions environment variables to applicationHost.xdt"
+        AddXmlElements $file $xPaths
+    }
 
 	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
 	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")

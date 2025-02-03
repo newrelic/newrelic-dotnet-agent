@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, aggregatedEvents);
             }
 
-            Log.Finest($"Log Event harvest finished. {eventCount} event(s) sent.");
+            Log.Finest("Log Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -155,16 +155,20 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportLoggingEventsSent(logEvents.Count);
+                    Log.Debug("Successfully sent {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(logEvents);
+                    Log.Debug("Retaining {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(logEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(logEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} log events.", logEvents.Count);
                     break;
             }
 

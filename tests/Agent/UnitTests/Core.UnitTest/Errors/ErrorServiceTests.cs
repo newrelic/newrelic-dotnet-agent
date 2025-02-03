@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Errors
 {
@@ -32,7 +33,7 @@ namespace NewRelic.Agent.Core.Errors
         [SetUp]
         public void SetUp()
         {
-            _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
+            _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>());
             _errorService = new ErrorService(_configurationService);
             _customAttributes = new Dictionary<string, object>() { { "custom.key", "custom.value" } };
 

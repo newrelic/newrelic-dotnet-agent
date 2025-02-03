@@ -277,6 +277,8 @@ namespace NewRelic.Agent.Core.Metrics
                 Assert.That(MetricNames.SupportabilityHtmlPageRendered, Is.EqualTo("Supportability/RUM/HtmlPage"));
 
                 Assert.That(MetricNames.SupportabilityThreadProfilingSampleCount, Is.EqualTo("Supportability/ThreadProfiling/SampleCount"));
+
+                Assert.That(MetricNames.SupportabilityAgentControlHealthEnabled, Is.EqualTo("Supportability/AgentControl/Health/enabled"));
             });
         }
 

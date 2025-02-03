@@ -415,7 +415,10 @@ namespace NewRelic.Agent.Core.DataTransport
                             "ai_monitoring.enabled": true,
                             "ai_monitoring.streaming.enabled": true,
                             "ai_monitoring.record_content.enabled": true,
-                            "gc_sampler_v2.enabled": true
+                            "gc_sampler_v2.enabled": true,
+                            "agent_control.enabled" : true,
+                            "agent_control.health.delivery_location": "file:///tmp/health",
+                            "agent_control.health.frequency": 5
                         },
                         "metadata": {
                             "hello": "there"

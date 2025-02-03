@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environmentVariableHelper;
 
-        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper)
+        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper, ICollectorWire dataRequestWire = null)
         {
             _serializer = serializer;
             _collectorWireFactory = collectorWireFactory;
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _environmentVariableHelper = environmentVariableHelper;
 
             _connectionInfo = new ConnectionInfo(_configuration);
-            _dataRequestWire = new NoOpCollectorWire();
+            _dataRequestWire = dataRequestWire ??  new NoOpCollectorWire();
         }
 
         #region Public API
@@ -108,6 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
                 Log.Info("Agent fully connected.");
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.Healthy);
             }
 
             catch (Exception e)
@@ -444,16 +445,51 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.Debug("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
                 if (ex.StatusCode == HttpStatusCode.Gone)
-                {
-                    Log.Info("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
-                }
+                    Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+
+                SetAgentControlStatus(requestGuid, method, ex);
 
                 throw;
             }
             catch (Exception ex)
             {
                 Log.Debug("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex); // log message only since exception is rethrown
+
+                SetAgentControlStatus(requestGuid, method, null);
+
                 throw;
+            }
+        }
+
+        private void SetAgentControlStatus(Guid requestGuid, string method, HttpException httpException)
+        {
+            if (method.Equals("connect"))
+            {
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.FailedToConnect);
+            }
+            else
+            {
+                if (httpException == null) // this shouldn't happen, but...
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, "unknown", method);
+                    return;
+                }
+
+                switch (httpException.StatusCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.LicenseKeyInvalid);
+                        break;
+                    case HttpStatusCode.Gone:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.ForceDisconnect);
+                        break;
+                    case HttpStatusCode.ProxyAuthenticationRequired:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpProxyError, httpException.StatusCode.ToString());
+                        break;
+                    default:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, httpException.StatusCode.ToString(), method);
+                        break;
+                }
             }
         }
 

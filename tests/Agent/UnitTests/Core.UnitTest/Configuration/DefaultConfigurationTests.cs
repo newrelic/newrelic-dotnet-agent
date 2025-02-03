@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -18,8 +19,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     internal class TestableDefaultConfiguration : DefaultConfiguration
     {
-        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
-            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
+            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter) { }
 
         public static void ResetStatics()
         {
@@ -42,6 +43,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         private IBootstrapConfiguration _bootstrapConfiguration;
         private DefaultConfiguration _defaultConfig;
         private IDnsStatic _dnsStatic;
+        private IAgentHealthReporter _agentHealthReporter;
 
         [SetUp]
         public void SetUp()
@@ -56,8 +58,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
             _dnsStatic = Mock.Create<IDnsStatic>();
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             TestableDefaultConfiguration.ResetStatics();
         }
@@ -94,7 +97,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void EveryConfigShouldGetNewVersionNumber()
         {
-            var newConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var newConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(newConfig.ConfigurationVersion - 1, Is.EqualTo(_defaultConfig.ConfigurationVersion));
         }
@@ -736,7 +739,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             var securityPolicies = new Dictionary<string, SecurityPolicyState> { { securityPolicyName, new SecurityPolicyState(securityPolicyEnabled, false) } };
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration(securityPolicies);
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
         }
 
         [TestCase(true, true, ExpectedResult = true)]
@@ -939,7 +942,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 localConfiguration = serializer.Deserialize(reader) as configuration;
             }
 
-            _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(new[] { "404", "500" }, Is.EquivalentTo(_defaultConfig.ExpectedErrorStatusCodesForAgentSettings));
 
@@ -1356,7 +1359,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 localConfiguration = serializer.Deserialize(reader) as configuration;
             }
 
-            _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(_defaultConfig.ThreadProfilingIgnoreMethods, Does.Contain("System.Threading.WaitHandle:WaitAny"));
         }
@@ -2172,7 +2175,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = functionModeEnabled.ToString() });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(functionModeEnabled);
 
@@ -2197,7 +2200,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _runTimeConfig.ApplicationNames = new List<string>();
 
             _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = "true" });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(true);
 
@@ -2238,7 +2241,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "true"
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.UseResourceBasedNamingForWCFEnabled, Is.True);
         }
@@ -2246,7 +2249,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void UseResourceBasedNamingIsDisabledByDefault()
         {
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             Assert.That(defaultConfig.UseResourceBasedNamingForWCFEnabled, Is.False);
         }
 
@@ -2315,7 +2318,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.crossApplicationTracer.enabled = true;
             _serverConfig = new ServerConfiguration();
             _serverConfig.CatId = "123#456";
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.True);
         }
@@ -2327,7 +2330,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.crossApplicationTracer.enabled = true;
             _serverConfig = ServerConfiguration.GetDefault();
             _serverConfig.CatId = "123#456";
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.False);
         }
@@ -2342,7 +2345,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.crossApplicationTracer.enabled = true;
             _serverConfig = new ServerConfiguration();
             _serverConfig.CatId = "123#456";
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.False);
         }
@@ -2362,7 +2365,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void DistributedTracingEnabledIsFalseByDefault()
         {
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(_defaultConfig.DistributedTracingEnabled, Is.False);
         }
@@ -2414,7 +2417,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.SamplingTarget, Is.EqualTo(10));
@@ -2436,7 +2439,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.SamplingTargetPeriodInSeconds, Is.EqualTo(60));
@@ -2450,7 +2453,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PRIMARY_APPLICATION_ID")).Returns("PrimaryApplicationIdValue");
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
@@ -2463,7 +2466,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_TRUSTED_ACCOUNT_KEY")).Returns("TrustedAccountKeyValue");
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
@@ -2476,7 +2479,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ACCOUNT_ID")).Returns("AccountIdValue");
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
@@ -2488,7 +2491,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("Unknown"));
@@ -2501,7 +2504,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.distributedTracing.primary_application_id = "PrimaryApplicationIdValue";
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
@@ -2514,7 +2517,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.distributedTracing.trusted_account_key = "TrustedAccountKeyValue";
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
@@ -2527,7 +2530,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.distributedTracing.account_id = "AccountIdValue";
 
             // Act
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Assert
             Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
@@ -2552,7 +2555,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.spanEvents.enabled = spanEventsEnabled;
             _localConfig.distributedTracing.enabled = distributedTracingEnabled;
 
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return _defaultConfig.SpanEventsEnabled;
         }
@@ -2647,7 +2650,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.infiniteTracing.span_events.queue_size = localConfigValue.Value;
             }
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingQueueSizeSpans;
         }
@@ -2680,7 +2683,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.appSettings.Add(new configurationAdd() { key = "InfiniteTracingTraceObserverSsl", value = localSsl });
             }
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             var expectedHost = envHost != null
                 ? envHost
@@ -2717,7 +2720,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutSend", value = appSettingsValue });
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingTraceTimeoutMsSendData;
         }
@@ -2735,7 +2738,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutConnect", value = appSettingsValue });
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingTraceTimeoutMsConnect;
         }
@@ -2757,7 +2760,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestFlaky", value = appSettingsValue });
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingTraceObserverTestFlaky;
         }
@@ -2780,7 +2783,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsBatchSize", value = appSettingVal });
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingBatchSizeSpans;
         }
@@ -2803,7 +2806,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsPartitionCount", value = appSettingVal });
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingPartitionCountSpans;
         }
@@ -2822,7 +2825,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestDelay", value = appSettingsValue });
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_DELAY")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingTraceObserverTestDelayMs;
         }
@@ -2847,7 +2850,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsStreamsCount", value = appSettingsValue });
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).Returns(envConfigVal);
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.InfiniteTracingTraceCountConsumers, Is.EqualTo(expectedResult));
         }
@@ -2866,7 +2869,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.infiniteTracing.compression = localConfigVal.Value;
             }
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.InfiniteTracingCompression;
         }
@@ -3574,7 +3577,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.securityPoliciesToken = localConfigValue;
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
                 .Returns(environmentValue);
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return _defaultConfig.SecurityPoliciesTokenExists;
         }
@@ -3588,7 +3591,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public bool AsyncHttpClientSegmentsDoNotCountTowardsParentExclusiveTimeTests(string localConfigValue)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "ForceSynchronousTimingCalculation.HttpClient", value = localConfigValue });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
         }
@@ -3600,7 +3603,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
         }
@@ -3670,7 +3673,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void HarvestCycleOverride_DefaultOrNotSet()
         {
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.Multiple(() =>
             {
@@ -3697,7 +3700,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.MetricsHarvestCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3715,7 +3718,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.TransactionTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3733,7 +3736,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.ErrorTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3751,7 +3754,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.SpanEventsHarvestCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3769,7 +3772,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.GetAgentCommandsCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3787,7 +3790,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.SqlTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3805,7 +3808,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = value
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds, Is.EqualTo(60));
         }
@@ -3820,7 +3823,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.MetricsHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3844,7 +3847,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.TransactionTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3868,7 +3871,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.ErrorTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3892,7 +3895,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.SpanEventsHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3916,7 +3919,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.GetAgentCommandsCycle.Seconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3940,7 +3943,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.SqlTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3964,7 +3967,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = expectedSeconds
             });
 
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             Assert.That(defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -4125,7 +4128,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void LlmTokenCountingCallbackComesFromRuntimeConfig()
         {
             var runtimeConfig = new RunTimeConfiguration(Enumerable.Empty<string>(), null, (s1, s2) => 42);
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, runtimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, runtimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             Assert.That(defaultConfig.LlmTokenCountingCallback("foo", "bar"), Is.EqualTo(42));
         }
         #endregion
@@ -4453,7 +4456,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")).Returns("some-service-name");
 
             // Act
-            var result = _defaultConfig.AzureFunctionServiceName;
+            var result = _defaultConfig.AzureFunctionAppName;
 
             // Assert
             Assert.That(result, Is.EqualTo("some-service-name"));
@@ -4531,6 +4534,71 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        [Test]
+        public void InvalidLicenseKey_SetsLicenseKeyMissing_AgentControlStatus()
+        {
+            // Arrange
+            var healthCheck = new HealthCheck();
+            Mock.Arrange(() => _agentHealthReporter.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()))
+                .DoInstead((ValueTuple<bool, string, string> healthStatus, string[] statusParams) =>
+                {
+                    healthCheck.TrySetHealth(healthStatus, statusParams);
+                });
+
+            CreateDefaultConfiguration();
+
+            // Act
+            var licenseKey = _defaultConfig.AgentLicenseKey;
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(licenseKey, Is.EqualTo(""));
+                Assert.That(healthCheck.IsHealthy, Is.False);
+                Assert.That(healthCheck.Status, Is.EqualTo("License key missing in configuration"));
+                Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-002"));
+            });
+        }
+
+        [Test]
+        public void MissingApplicationName_SetsApplicationNameMissing_AgentControlStatus()
+        {
+            var healthCheck = new HealthCheck();
+            Mock.Arrange(() => _agentHealthReporter.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()))
+                .DoInstead((ValueTuple<bool, string, string> healthStatus, string[] statusParams) =>
+                {
+                    healthCheck.TrySetHealth(healthStatus, statusParams);
+                });
+
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName))
+                .Returns<string>(null);
+
+            _localConfig.application.name = new List<string>();
+
+            Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+            Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns((string)null);
+
+            CreateDefaultConfiguration();
+
+            // Act
+            Assert.Throws<Exception>(() => _defaultConfig.ApplicationNames.ToList());
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(healthCheck.IsHealthy, Is.False);
+                Assert.That(healthCheck.Status, Is.EqualTo("Missing application name in agent configuration"));
+                Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-005"));
+            });
+
+        }
+
+
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
             var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };
@@ -4542,12 +4610,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 localConfiguration = serializer.Deserialize(reader) as configuration;
             }
 
-            return new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            return new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
         }
 
         private void CreateDefaultConfiguration()
         {
-            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        }
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+        }   
     }
 }
