@@ -242,7 +242,7 @@ namespace NewRelic.Agent.Core.Configuration
 
                 // If the key is the default value from newrelic.config, we return the default value
                 // AgentManager.AssertAgentEnabled() relies on this behavior and will throw an exception if the key is the default value
-                if (candidateKey.Value.Equals("REPLACE_WITH_LICENSE_KEY"))
+                if (candidateKey.Value.ToLower().Contains("license"))
                 {
                     // newrelic.config is the last place to look
                     return candidateKey.Value;
