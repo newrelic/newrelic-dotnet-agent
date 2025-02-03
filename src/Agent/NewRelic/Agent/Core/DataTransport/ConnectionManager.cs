@@ -156,6 +156,10 @@ namespace NewRelic.Agent.Core.DataTransport
                         Log.Info("401 GONE response received from the collector.");
                         shouldRestart = false;
                     }
+                    else if (httpEx.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        Log.Warn("Connection failed: Potential issue with license key based on HTTP status code 401 - Unauthorized.\n\tPlease verify the license key.");
+                    }
                     else
                         Log.Info("Connection failed: {0}", ex.Message);
                     break;
