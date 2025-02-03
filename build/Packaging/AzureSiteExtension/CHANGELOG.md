@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes Issue [#399](https://github.com/newrelic/newrelic-dotnet-agent/issues/399): site extension did not clean up after installation ([#478](https://github.com/newrelic/newrelic-dotnet-agent/pull/478))
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.5...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.6.0...HEAD
+[1.6.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.5...AzureSiteExtension_v1.6.0
 [1.5.5]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.4...AzureSiteExtension_v1.5.5
 [1.5.4]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.3...AzureSiteExtension_v1.5.4
 [1.5.3]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.2...AzureSiteExtension_v1.5.3
