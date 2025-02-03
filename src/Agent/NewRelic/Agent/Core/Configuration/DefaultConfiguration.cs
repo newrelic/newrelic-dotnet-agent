@@ -208,17 +208,60 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if (_agentLicenseKey != null)
-                    return _agentLicenseKey;
-
-                _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
-                                   ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
-
-                if (_agentLicenseKey != null)
-                    _agentLicenseKey = _agentLicenseKey.Trim();
-
-                return _agentLicenseKey;
+                return _agentLicenseKey ??= TryGetLicenseKey();
             }
+        }
+
+        private string TryGetLicenseKey()
+        {
+            // same order as old process - appsettings > env var(a/b) > newrelic.config
+            var candidateKeys = new Dictionary<string, string>
+            {
+                { "AppSettings", _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey) },
+                { "EnvironmentVariable", _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY") },
+                { "newrelic.config", _localConfiguration.service.licenseKey }
+            };
+
+            foreach (var candidateKey in candidateKeys)
+            {
+                // Did we find a key?
+                if (string.IsNullOrWhiteSpace(candidateKey.Value))
+                {
+                    continue;
+                }
+
+                // We found something, but is it a valid key?
+
+                // If the key is the default value from newrelic.config, we return the default value
+                // AgentManager.AssertAgentEnabled() relies on this behavior and will throw an exception if the key is the default value
+                if (candidateKey.Value.Equals("REPLACE_WITH_LICENSE_KEY"))
+                {
+                    // newrelic.config is the last place to look
+                    return candidateKey.Value;
+                }
+
+                // Keys are only 40 characters long, but we trim to be safe
+                var trimmedCandidateKey = candidateKey.Value.Trim();
+                if (trimmedCandidateKey.Length != 40)
+                {
+                    Log.Finest($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
+                    continue;
+                }
+
+                // Keys can only contain printable ASCII characters from 0x21 to 0x7E
+                if (!trimmedCandidateKey.All(c => c >= 0x21 && c <= 0x7E))
+                {
+                    Log.Finest($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
+                    continue;
+                }
+
+                Log.Finest($"License key from {candidateKey.Key} appears valid.");
+                return trimmedCandidateKey;
+            }
+
+            // return string.Empty instead of null to allow caching and prevent checking repeatedly
+            Log.Finest("No valid license key found.");
+            return null;
         }
 
         private IEnumerable<string> _applicationNames;

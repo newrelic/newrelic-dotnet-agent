@@ -1446,12 +1446,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CollectorHost;
         }
 
+        // all null returns null
         [TestCase(null, null, null, ExpectedResult = null)]
-        [TestCase(null, "foo", null, ExpectedResult = "foo")]
-        [TestCase("foo", null, null, ExpectedResult = "foo")]
-        [TestCase("foo", null, "foo", ExpectedResult = "foo")]
-        [TestCase("foo", "foo", null, ExpectedResult = "foo")]
-        [TestCase("foo", "foo", "bar", ExpectedResult = "foo")]
+        // AppSetting overrides environment and local
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, "bar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", "nar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        // Environment overrides local
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        // local on its own
+        [TestCase(null, null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, null, "REPLACE_WITH_LICENSE_KEY", ExpectedResult = "REPLACE_WITH_LICENSE_KEY")]
+        // Length must be 40
+        [TestCase("       foo1234567890abcdefghijklmnopqrstuvwxyz0         ", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = null)]
+        [TestCase("foo", null, null, ExpectedResult = null)]
+        // Allowed characters
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = null)]
+        // Bad keys skipped for lower priority keys
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
         public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string local)
         {
             _localConfig.service.licenseKey = local;
