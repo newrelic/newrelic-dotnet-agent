@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.36.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.35.0...v10.36.0) (2025-02-03)
+
+
+### New features
+
+* Add support for instrumenting OpenSearchClient requests. ([#2956](https://github.com/newrelic/newrelic-dotnet-agent/issues/2956)) ([4309938](https://github.com/newrelic/newrelic-dotnet-agent/commit/4309938c5d0593029398d7658a37b5ebe78c283c))
+
+
+### Fixes
+
+* Add Azure Function app name prefix to `faas.name` attribute in Azure Function transactions. ([#2973](https://github.com/newrelic/newrelic-dotnet-agent/issues/2973)) ([80d4c76](https://github.com/newrelic/newrelic-dotnet-agent/commit/80d4c7619cbe8876b0ceacbf561b55b458a1189b))
+* Custom attribute values of type float and decimal were not serialized correctly. ([#2975](https://github.com/newrelic/newrelic-dotnet-agent/issues/2975)) ([8812fe1](https://github.com/newrelic/newrelic-dotnet-agent/commit/8812fe1127270937fa869370443afff7aeb862e3))
+
 ## [10.35.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.1...v10.35.0) (2025-01-21)
 
 
