@@ -24,6 +24,13 @@ namespace NewRelic.Agent.Extensions.Caching
         {
             if (obj is WeakReferenceKey<T> otherKey)
             {
+                if (WeakReference.TryGetTarget(out var thisTarget) &&
+                    otherKey.WeakReference.TryGetTarget(out var otherTarget))
+                {
+                    return ReferenceEquals(thisTarget, otherTarget);
+                }
+
+                // if one of the targets has been garbage collected, we can still compare the hashcodes
                 return otherKey.GetHashCode() == _hashCode;
             }
 
@@ -32,7 +39,7 @@ namespace NewRelic.Agent.Extensions.Caching
 
         public override int GetHashCode()
         {
-            return _hashCode;
+            return WeakReference.TryGetTarget(out var target) ? target.GetHashCode() : _hashCode;
         }
 
         /// <summary>
