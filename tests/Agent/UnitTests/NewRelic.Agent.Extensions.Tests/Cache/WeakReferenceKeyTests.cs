@@ -94,24 +94,6 @@ namespace Agent.Extensions.Tests.Cache
         }
 
         [Test]
-        public async Task GetHashCode_ShouldReturnZeroIfTargetIsGarbageCollected()
-        {
-            // Arrange
-            var weakRefKey = GetWeakReferenceKey();
-
-            // Act
-            Assert.That(weakRefKey.Value, Is.Not.Null);
-            // force garbage collection
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            await Task.Delay(500);
-            GC.Collect(); // Force another collection
-
-            // Assert
-            Assert.That(weakRefKey.GetHashCode(), Is.EqualTo(0));
-        }
-
-        [Test]
         public async Task Value_ShouldReturnNullIfTargetIsGarbageCollected()
         {
             // Arrange
@@ -168,6 +150,26 @@ namespace Agent.Extensions.Tests.Cache
             Assert.That(weakRefKey1.Equals(weakRefKey2), Is.False);
         }
 
+        [Test]
+        public async Task GetHashCode_ShouldReturnOriginalHashcodeIfTargetIsGarbageCollected()
+        {
+            // Arrange
+            var weakRefKey = GetWeakReferenceKey();
+            var originalHashCode = weakRefKey.GetHashCode();
+
+            // Act
+            Assert.That(weakRefKey.Value, Is.Not.Null);
+
+            // force garbage collection
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            await Task.Delay(500);
+            GC.Collect(); // Force another collection
+
+            // Assert
+            Assert.That(weakRefKey.Value, Is.Null); // ensure GC really happened
+            Assert.That(weakRefKey.GetHashCode(), Is.EqualTo(originalHashCode));
+        }
         private class Foo
         {
             public string Bar { get; set; }
