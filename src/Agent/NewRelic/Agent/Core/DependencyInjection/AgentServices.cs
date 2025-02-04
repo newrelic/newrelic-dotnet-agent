@@ -129,9 +129,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
             else
             {
                 container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
-                container.Register<IFileWrapper, FileWrapper>();
                 container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
             }
+
+            container.Register<IFileWrapper, FileWrapper>();
+            container.Register<IDirectoryWrapper, DirectoryWrapper>();
 
             container.Register<IScheduler, Scheduler>();
             container.Register<ISystemInfo, SystemInfo>();
@@ -243,7 +245,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 container.Resolve<AssemblyResolutionService>();
 
             container.Resolve<ITransactionFinalizer>();
-            container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
             // Start GCSampler on separate thread due to delay in collecting Instance Names,
             // which can stall application startup and cause the app start to timeout

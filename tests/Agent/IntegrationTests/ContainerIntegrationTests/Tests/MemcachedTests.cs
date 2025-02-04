@@ -26,7 +26,6 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("debug");
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.LogToConsole();
                 },
                 exerciseApplication: () =>
                 {
@@ -129,12 +128,15 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
         }
     }
 
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
     {
         public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
+
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet9Test : LinuxMemcachedTest<MemcachedDotNet9TestFixture>
     {
         public MemcachedDotNet9Test(MemcachedDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

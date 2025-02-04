@@ -44,8 +44,8 @@ jobs:
 
       - name: Deploy New Relic Azure Site Extension to Nuget
         run: |
-          $packageName = Get-ChildItem ${{ github.workspace }}\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
-          $packagePath = Convert-Path ${{ github.workspace }}\AzureSiteExtension\$packageName
+          $packageName = Get-ChildItem ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\$packageName
           if ("${{ inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }

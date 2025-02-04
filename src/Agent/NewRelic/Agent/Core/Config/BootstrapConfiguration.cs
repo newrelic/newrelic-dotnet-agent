@@ -25,6 +25,10 @@ namespace NewRelic.Agent.Core.Config
         string ServerlessFunctionVersion { get; }
         bool AzureFunctionModeDetected { get; }
         bool GCSamplerV2Enabled { get; }
+
+        bool AgentControlEnabled { get; }
+        string HealthDeliveryLocation { get; }
+        int HealthFrequency { get; }
     }
 
     /// <summary>
@@ -139,6 +143,17 @@ namespace NewRelic.Agent.Core.Config
         public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
         public bool GCSamplerV2Enabled { get; private set;}
+        public bool AgentControlEnabled => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_ENABLED").TryToBoolean(out var enabled) && enabled;
+        public string HealthDeliveryLocation => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION");
+
+        public int HealthFrequency
+        {
+            get
+            {
+                var healthFrequencyString = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY");
+                return int.TryParse(healthFrequencyString, out var healthFrequency) ? healthFrequency : 5;
+            }
+        }
 
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {

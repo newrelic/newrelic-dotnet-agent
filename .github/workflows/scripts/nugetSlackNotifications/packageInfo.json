@@ -119,13 +119,18 @@
         "packageName": "nlog.extensions.logging"
     },
     {
-        "packageName": "nservicebus"
+        "packageName": "nservicebus",
+        "ignoreTFMs": "net481",
+        "ignoreReason": "net481 doesn't support v9.x"
     },
     {
-        "packageName": "orcacle.manageddataaccess"
+        "packageName": "opensearch.client"
     },
     {
-        "packageName": "orcacle.manageddataaccess.core"
+        "packageName": "oracle.manageddataaccess"
+    },
+    {
+        "packageName": "oracle.manageddataaccess.core"
     },
     {
         "packageName": "rabbitmq.client",
@@ -154,5 +159,8 @@
     },
     {
         "packageName": "stackexchange.redis"
+    },
+    {
+        "packageName": "system.data.odbc"
     }
 ]

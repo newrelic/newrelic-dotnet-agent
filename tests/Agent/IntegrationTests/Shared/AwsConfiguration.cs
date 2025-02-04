@@ -3,7 +3,7 @@
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
-    public class AwsBedrockConfiguration
+    public class AwsConfiguration
     {
         public static string AwsAccessKeyId
         {

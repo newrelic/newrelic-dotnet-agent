@@ -11,6 +11,8 @@ namespace NewRelic.Agent.Api
     {
         ISpan AddCustomAttribute(string key, object value);
 
+        ISpan AddCloudSdkAttribute(string key, object value);
+
         ISpan SetName(string name);
     }
 }

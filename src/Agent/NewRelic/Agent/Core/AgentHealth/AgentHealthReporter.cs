@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.IO;
+using System.Text;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -26,6 +28,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
+        private readonly IFileWrapper _fileWrapper;
+        private readonly IDirectoryWrapper _directoryWrapper;
         private readonly IList<string> _recurringLogData = new ConcurrentList<string>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
@@ -38,10 +42,30 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
-        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
+        private HealthCheck _healthCheck;
+        private bool _healthChecksInitialized;
+        private bool _healthChecksFailed;
+        private string _healthCheckPath;
+
+        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper)
         {
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
+            _fileWrapper = fileWrapper;
+            _directoryWrapper = directoryWrapper;
+
+            if (!_configuration.AgentControlEnabled)
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+            else
+            {
+                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+
+                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
+
+                // schedule the health check and issue the first one immediately
+                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
+
             _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
@@ -258,9 +282,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
 #if NETSTANDARD2_0
 
-			bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
-			var metric =_metricBuilder.TryBuildLinuxOsMetric(isLinux);
-			TrySend(metric);
+            bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+            var metric = _metricBuilder.TryBuildLinuxOsMetric(isLinux);
+            TrySend(metric);
 #endif
         }
 
@@ -667,6 +691,107 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion
 
+        #region Agent Control
+
+        private void ReportIfAgentControlHealthEnabled()
+        {
+            if (_configuration.AgentControlEnabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAgentControlHealthEnabled);
+            }
+        }
+
+        public void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)
+        {
+            // Do nothing if agent control is not enabled
+            if (!_configuration.AgentControlEnabled)
+                return;
+
+            if (healthStatus.Equals(HealthCodes.AgentShutdownHealthy))
+            {
+                if (_healthCheck.IsHealthy)
+                {
+                    _healthCheck.TrySetHealth(healthStatus);
+                }
+            }
+            else
+            {
+                _healthCheck.TrySetHealth(healthStatus, statusParams);
+            }
+        }
+
+        public void PublishAgentControlHealthCheck()
+        {
+            if (!_healthChecksInitialized) // initialize on first invocation
+            {
+                InitializeHealthChecks();
+                _healthChecksInitialized = true;
+            }
+
+            // stop the scheduled task if agent control isn't enabled or health checks fail for any reason
+            if (!_configuration.AgentControlEnabled || _healthChecksFailed) 
+            {
+                _scheduler.StopExecuting(PublishAgentControlHealthCheck);
+                return;
+            }
+
+            var healthCheckYaml = _healthCheck.ToYaml();
+
+            Log.Finest("Publishing Agent Control health check report: {HealthCheckYaml}", healthCheckYaml);
+
+            try
+            {
+                using var fs = _fileWrapper.OpenWrite(Path.Combine(_healthCheckPath, _healthCheck.FileName));
+                var payloadBytes = Encoding.UTF8.GetBytes(healthCheckYaml);
+                fs.Write(payloadBytes, 0, payloadBytes.Length);
+                fs.Flush();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex, "Failed to write Agent Control health check report. Health checks will be disabled.");
+                _healthChecksFailed = true;
+            }
+        }
+
+        private void InitializeHealthChecks()
+        {
+            if (!_configuration.AgentControlEnabled)
+            {
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+                return;
+            }
+
+            Log.Debug("Initializing Agent Control health checks");
+
+            // make sure the delivery location is a file URI
+            var fileUri = new Uri(_configuration.HealthDeliveryLocation);
+            if (fileUri.Scheme != Uri.UriSchemeFile)
+            {
+                Log.Warn(
+                    "Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
+                _healthChecksFailed = true;
+                return;
+            }
+
+            _healthCheckPath = fileUri.LocalPath;
+
+            // verify the directory exists
+            if (!_directoryWrapper.Exists(_healthCheckPath))
+            {
+                Log.Warn("Agent Control is enabled but the path specified in agent_control.health.delivery_location does not exist. Health checks will be disabled.");
+                _healthChecksFailed = true;
+            }
+
+            // verify we can write a file to the directory
+            var testFile = Path.Combine(_healthCheckPath, Path.GetRandomFileName());
+            if (!_fileWrapper.TryCreateFile(testFile))
+            {
+                Log.Warn("Agent Control is enabled but the agent is unable to create files in the directory specified in agent_control.health.delivery_location. Health checks will be disabled.");
+                _healthChecksFailed = true;
+            }
+        }
+        #endregion
+
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
             TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
@@ -685,6 +810,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
             ReportIfGCSamplerV2IsEnabled();
+            ReportIfAwsAccountIdProvided();
+            ReportIfAgentControlHealthEnabled();
+            ReportIfAzureFunctionModeIsEnabled();
         }
 
         public void CollectMetrics()
@@ -847,8 +975,27 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled);
             }
-            
         }
 
+        private void ReportIfAwsAccountIdProvided()
+        {
+            if (!string.IsNullOrEmpty(_configuration.AwsAccountId))
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAwsAccountIdProvided);
+            }
+        }
+
+        private void ReportIfAzureFunctionModeIsEnabled()
+        {
+            if (_configuration.AzureFunctionModeEnabled && _configuration.AzureFunctionModeDetected)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionModeEnabled);
+            }
+        }
+
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
+        public bool HealthCheckFailed => _healthChecksFailed;
     }
 }

@@ -45,7 +45,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
                 configModifier
                     .ForceTransactionTraces()
                     .ConfigureFasterTransactionTracesHarvestCycle(20)
-                    .ConfigureFasterMetricsHarvestCycle(15)
+                    .ConfigureFasterMetricsHarvestCycle(25)
                     .ConfigureFasterSpanEventsHarvestCycle(15)
                     .SetLogLevel("finest");
 
@@ -76,6 +76,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
                     _fixture.Get("api/httpTriggerFunctionUsingSimpleInvocation"); // make a second call to verify coldStart is not sent
                 }
                 _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
 
@@ -148,7 +149,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
             Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingSimpleInvocation", cloudResourceIdValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("HttpTriggerFunctionUsingSimpleInvocation", faasNameValue);
+            Assert.Equal("IntegrationTestAppName/HttpTriggerFunctionUsingSimpleInvocation", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
 
@@ -283,7 +284,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
             Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingAspNetCorePipeline", cloudResourceIdValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("HttpTriggerFunctionUsingAspNetCorePipeline", faasNameValue);
+            Assert.Equal("IntegrationTestAppName/HttpTriggerFunctionUsingAspNetCorePipeline", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
 

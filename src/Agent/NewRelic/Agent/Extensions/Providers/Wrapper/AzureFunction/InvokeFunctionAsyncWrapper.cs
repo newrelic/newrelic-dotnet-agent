@@ -76,7 +76,7 @@ public class InvokeFunctionAsyncWrapper : IWrapper
         }
 
         transaction.AddFaasAttribute("cloud.resource_id", agent.Configuration.AzureFunctionResourceIdWithFunctionName(functionDetails.FunctionName));
-        transaction.AddFaasAttribute("faas.name", functionDetails.FunctionName);
+        transaction.AddFaasAttribute("faas.name", $"{agent.Configuration.AzureFunctionAppName}/{functionDetails.FunctionName}");
         transaction.AddFaasAttribute("faas.trigger", functionDetails.Trigger);
         transaction.AddFaasAttribute("faas.invocation_id", functionDetails.InvocationId);
 

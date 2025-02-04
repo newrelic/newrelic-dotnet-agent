@@ -492,12 +492,16 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
         public string AzureFunctionRegion => "AzureFunctionRegion";
         public string AzureFunctionSubscriptionId => "AzureFunctionSubscriptionId";
-        public string AzureFunctionServiceName => "AzureFunctionServiceName";
+        public string AzureFunctionAppName => "AzureFunctionServiceName";
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
 
         public string AwsAccountId => "";
         public bool GCSamplerV2Enabled => true;
+
+        public bool AgentControlEnabled => true;
+        public string HealthDeliveryLocation => "file:///tmp/health";
+        public int HealthFrequency => 5;
     }
 }

@@ -18,6 +18,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
     [Library]
     public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
     {
+        private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+
 
         [LibraryMethod]
         [Transaction]
@@ -26,7 +28,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -76,7 +78,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
@@ -125,7 +127,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -156,7 +158,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var teamMembers = new List<string>();
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
@@ -192,7 +194,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             using (var command = new SqlCommand(procedureName, connection))
             {
                 connection.Open();
@@ -213,7 +215,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         public void CreateTable(string tableName)
         {
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -230,7 +232,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -246,7 +248,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
 
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
@@ -267,7 +269,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             var parameters = string.Join(", ", dbParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
             var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
-            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            using (var connection = new SqlConnection(_connectionString))
             using (var command = new SqlCommand(statement, connection))
             {
                 connection.Open();

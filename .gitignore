@@ -73,3 +73,7 @@ build/Linux/keys
 # Container Integration Tests
 /tests/Agent/IntegrationTests/LocalStack/volume
 /tests/Agent/IntegrationTests/ContainerApplications/volume/cache
+
+# Build artifacts
+/build/BuildArtifacts
+/build/_staging

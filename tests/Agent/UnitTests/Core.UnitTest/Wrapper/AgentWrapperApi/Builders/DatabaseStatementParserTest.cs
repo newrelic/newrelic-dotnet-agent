@@ -12,6 +12,7 @@ using NUnit.Framework;
 using System.Data;
 using System.Threading;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -88,7 +89,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                 Mock.Create<IProcessStatic>(),
                 Mock.Create<IHttpRuntimeStatic>(),
                 Mock.Create<IConfigurationManagerStatic>(),
-                Mock.Create<IDnsStatic>());
+                Mock.Create<IDnsStatic>(),
+                Mock.Create<IAgentHealthReporter>());
 
             const string sql1 = "select * from table1";
             const string sql2 = "select * from table2";

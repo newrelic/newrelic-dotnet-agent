@@ -97,8 +97,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 HandleResponse(responseStatus, customEvents);
             }
 
-            Log.Finest($"Custom Event harvest finished. {eventCount} event(s) sent.");
-
+            Log.Finest("Custom Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -123,14 +122,17 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(customEvents);
+                    Log.Debug("Retaining {count} custom events.", customEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     var newSize = (int)(customEvents.Count * ReservoirReductionSizeMultiplier);
                     ReduceReservoirSize(newSize);
                     RetainEvents(customEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} custom events.", customEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} custom events.", customEvents.Count);
                     break;
             }
         }

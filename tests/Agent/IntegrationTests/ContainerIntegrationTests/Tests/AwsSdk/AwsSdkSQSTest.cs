@@ -4,13 +4,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
+using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
+[Trait("Architecture", "amd64")]
 public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixture>
 {
     private readonly AwsSdkContainerSQSTestFixture _fixture;
@@ -40,8 +43,6 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                configModifier.LogToConsole();
-
             },
             exerciseApplication: () =>
             {
@@ -176,4 +177,3 @@ public class AwsSdkSQSTestNullCollections : AwsSdkSQSTestBase
     {
     }
 }
-

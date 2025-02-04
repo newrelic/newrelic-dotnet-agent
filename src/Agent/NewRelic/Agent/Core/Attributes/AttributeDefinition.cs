@@ -121,9 +121,10 @@ namespace NewRelic.Agent.Core.Attributes
                     case TypeCode.Int32:
                         return Convert.ToInt64(input);
 
+                    // don't convert Decimal and Single to double.
+                    // The value ends up getting serialized as a string, so there's no need for the conversion
                     case TypeCode.Decimal:
                     case TypeCode.Single:
-                        return Convert.ToDouble(input);
 
                     case TypeCode.Double:
                     case TypeCode.Int64:

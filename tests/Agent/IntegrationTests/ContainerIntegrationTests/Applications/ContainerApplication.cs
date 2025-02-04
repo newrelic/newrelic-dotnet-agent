@@ -139,6 +139,12 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("APP_DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
         startInfo.EnvironmentVariables.Add("TARGET_ARCH", _targetArch);
+
+        // Workflow will set BUILD_ARCH if it's a CI build
+        // otherwise, assume it's a local build and set it to amd64
+        if (!startInfo.EnvironmentVariables.ContainsKey("BUILD_ARCH"))
+            startInfo.EnvironmentVariables.Add("BUILD_ARCH", "amd64");
+
         startInfo.EnvironmentVariables.Add("PLATFORM", _containerPlatform);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_LICENSE_KEY", testConfiguration.LicenseKey);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_HOST", testConfiguration.CollectorUrl);
@@ -193,10 +199,15 @@ public class ContainerApplication : RemoteApplication
         TestLogger?.WriteLine($"[{AppName}] Sending shutdown signal to {ContainerName} container.");
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
-        // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
+        // wait up to 20 seconds for the app to terminate gracefully before forcefully closing it
+        var proc = Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans -t 20");
 
-        Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
+        // wait for the process to complete
+        if (!proc.WaitForExit(30000))
+        {
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Timed out waiting for {ContainerName} container to stop.");
+            TestLogger?.WriteLine($"[{AppName}] Timed out waiting for {ContainerName} container to stop.");
+        }
     }
 
     private void CleanupContainer()
