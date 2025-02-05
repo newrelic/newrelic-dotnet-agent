@@ -11,11 +11,13 @@ namespace NewRelic.Agent.Extensions.Caching
     /// <typeparam name="T"></typeparam>
     public class WeakReferenceKey<T> where T : class
     {
+        private readonly int _hashCode;
         private WeakReference<T> WeakReference { get; }
 
         public WeakReferenceKey(T cacheKey)
         {
             WeakReference = new WeakReference<T>(cacheKey);
+            _hashCode = cacheKey.GetHashCode(); // store the hashcode since we use it in the Equals method and the object could have been GC'd by the time we need to look for it
         }
 
         public override bool Equals(object obj)
@@ -27,6 +29,9 @@ namespace NewRelic.Agent.Extensions.Caching
                 {
                     return ReferenceEquals(thisTarget, otherTarget);
                 }
+
+                // if one of the targets has been garbage collected, we can still compare the hashcodes
+                return otherKey.GetHashCode() == _hashCode;
             }
 
             return false;
@@ -34,12 +39,7 @@ namespace NewRelic.Agent.Extensions.Caching
 
         public override int GetHashCode()
         {
-            if (WeakReference.TryGetTarget(out var target))
-            {
-                return target.GetHashCode();
-            }
-
-            return 0;
+            return WeakReference.TryGetTarget(out var target) ? target.GetHashCode() : _hashCode;
         }
 
         /// <summary>
