@@ -21,7 +21,8 @@ namespace NewRelic.Agent.Extensions.Llm
             string vendor,
             bool isError,
             IDictionary<string, string> headers,
-            LlmErrorData errorData)
+            LlmErrorData errorData,
+            string organization = null)
         {
             var completionId = Guid.NewGuid().ToString();
 
@@ -35,7 +36,6 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "request.max_tokens", maxTokens },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
-                //{ "response.organization", "not available" },
                 { "response.number_of_messages", numMessages },
                 { "response.choices.finish_reason", finishReason },
                 { "vendor", vendor },
@@ -54,6 +54,11 @@ namespace NewRelic.Agent.Extensions.Llm
             if (headers != null)
             {
                 AddHeaderAttributes(headers, attributes);
+            }
+
+            if (!string.IsNullOrEmpty(organization))
+            {
+                attributes.Add("response.organization", organization);
             }
 
             agent.RecordLlmEvent("LlmChatCompletionSummary", attributes);
@@ -183,6 +188,7 @@ namespace NewRelic.Agent.Extensions.Llm
 
             void TryAddHeaderAttribute<T>(string name)
             {
+                var headerName = "response.headers." + name;
                 if (!headers.TryGetValue(name, out var value))
                 {
                     return;
@@ -190,11 +196,11 @@ namespace NewRelic.Agent.Extensions.Llm
 
                 if (typeof(T) == typeof(int))
                 {
-                    attributes.Add(name, Convert.ToInt32(value));
+                    attributes.Add(headerName, Convert.ToInt32(value));
                 }
                 else // let it be a string
                 {
-                    attributes.Add(name, value);
+                    attributes.Add(headerName, value);
                 }
             }
         }

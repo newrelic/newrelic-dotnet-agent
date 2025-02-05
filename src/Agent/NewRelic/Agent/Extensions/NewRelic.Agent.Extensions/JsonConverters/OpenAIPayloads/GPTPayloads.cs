@@ -1,20 +1,17 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Extensions.Llm;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 {
-    public class GPTRequestPayload : IRequestPayload
+    public class OpenAiRequestPayload : IOpenAiRequestPayload
     {
-        [JsonProperty("messages")]
-        public MessageObj[] Messages { get; set; }
-
-        [JsonProperty("model")]
-        public string Model { get; set; }
+        public string Prompt { get; set; }
     }
 
-    public class GPTResponsePayload : IResponsePayload
+    public class OpenAiResponsePayload : IOpenAiResponsePayload
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -28,8 +25,8 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
         [JsonProperty("model")]
         public string Model { get; set; }
 
-        [JsonProperty("choices")]
-        public ChoicesObj[] Choices { get; set; }
+        //[JsonProperty("choices")]
+        //public ChoicesObj[] Choices { get; set; }
 
         [JsonProperty("usage")]
         public UsageObj Usage { get; set; }
@@ -38,32 +35,6 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
         public string SystemFingerprint { get; set; }
     }
 
-    public class ChoicesObj
-    {
-        [JsonProperty("index")]
-        public string Index { get; set; }
-
-        [JsonProperty("logprobs")]
-        public string LogProbs { get; set; }
-
-        [JsonProperty("finish_reason")]
-        public string FinishReason { get; set; }
-
-        [JsonProperty("message")]
-        public MessageObj Message { get; set; }
-    }
-
-    public class MessageObj
-    {
-        [JsonProperty("role")]
-        public string Role { get; set; }
-
-        [JsonProperty("content")]
-        public string Content { get; set; }
-
-        [JsonProperty("refusal")]
-        public string Refusal { get; set; }
-    }
 
     public class UsageObj
     {

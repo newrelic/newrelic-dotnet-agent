@@ -1,16 +1,16 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Extensions.Llm;
+
 namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 {
-    public interface IRequestPayload
+    public interface IOpenAiRequestPayload
     {
-        MessageObj[] Messages { get; set; }
-
-        string Model { get; set; }
+        string Prompt { get; set; }
     }
 
-    public interface IResponsePayload
+    public interface IOpenAiResponsePayload
     {
         string Id { get; set; }
 
@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Extensions.JsonConverters.OpenAIPayloads
 
         string Model { get; set; }
 
-        ChoicesObj[] Choices { get; set; }
+        //ChoicesObj[] Choices { get; set; }
 
         string SystemFingerprint { get; set; }
     }
