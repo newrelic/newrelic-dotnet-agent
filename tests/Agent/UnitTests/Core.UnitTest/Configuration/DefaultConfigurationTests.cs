@@ -4553,7 +4553,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(licenseKey, Is.EqualTo(""));
+                Assert.That(licenseKey, Is.Null);
                 Assert.That(healthCheck.IsHealthy, Is.False);
                 Assert.That(healthCheck.Status, Is.EqualTo("License key missing in configuration"));
                 Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-002"));
