@@ -1449,8 +1449,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CollectorHost;
         }
 
-        // all null returns null
-        [TestCase(null, null, null, ExpectedResult = null)]
+        // all null returns empty string
+        [TestCase(null, null, null, ExpectedResult = "")]
         // AppSetting overrides environment and local
         [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
         [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, "bar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
@@ -1464,10 +1464,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, null, "REPLACE_WITH_LICENSE_KEY", ExpectedResult = "REPLACE_WITH_LICENSE_KEY")]
         // Length must be 40
         [TestCase("       foo1234567890abcdefghijklmnopqrstuvwxyz0         ", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = null)]
-        [TestCase("foo", null, null, ExpectedResult = null)]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = "")]
+        [TestCase("foo", null, null, ExpectedResult = "")]
         // Allowed characters
-        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = null)]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = "")]
         // Bad keys skipped for lower priority keys
         [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
         [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
@@ -4553,7 +4553,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(licenseKey, Is.Null);
+                Assert.That(licenseKey, Is.EqualTo(string.Empty));
                 Assert.That(healthCheck.IsHealthy, Is.False);
                 Assert.That(healthCheck.Status, Is.EqualTo("License key missing in configuration"));
                 Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-002"));

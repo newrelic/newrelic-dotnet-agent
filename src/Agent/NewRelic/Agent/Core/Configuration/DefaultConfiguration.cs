@@ -211,7 +211,7 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 _agentLicenseKey ??= TryGetLicenseKey();
-                if (string.IsNullOrEmpty(_agentLicenseKey) && !ServerlessModeEnabled)
+                if (string.IsNullOrWhiteSpace(_agentLicenseKey) && !ServerlessModeEnabled)
                 {
                     TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
                 }
@@ -252,24 +252,24 @@ namespace NewRelic.Agent.Core.Configuration
                 var trimmedCandidateKey = candidateKey.Value.Trim();
                 if (trimmedCandidateKey.Length != 40)
                 {
-                    Log.Finest($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
+                    Log.Warn($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
                     continue;
                 }
 
                 // Keys can only contain printable ASCII characters from 0x21 to 0x7E
                 if (!trimmedCandidateKey.All(c => c >= 0x21 && c <= 0x7E))
                 {
-                    Log.Finest($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
+                    Log.Warn($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
                     continue;
                 }
 
-                Log.Finest($"License key from {candidateKey.Key} appears valid.");
+                Log.Info($"License key from {candidateKey.Key} appears to be in the correct format.");
                 return trimmedCandidateKey;
             }
 
             // return string.Empty instead of null to allow caching and prevent checking repeatedly
-            Log.Finest("No valid license key found.");
-            return null;
+            Log.Warn("No valid license key found.");
+            return string.Empty;
         }
 
         private IEnumerable<string> _applicationNames;
