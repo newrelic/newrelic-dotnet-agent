@@ -39,18 +39,18 @@ namespace Agent.Extensions.Tests.Llm
 
             var headers = new Dictionary<string, string>
             {
-                {"llmVersion", "1.0"},
-                {"ratelimitLimitRequests", "99"},
-                {"ratelimitLimitTokens", "99"},
-                {"ratelimitResetTokens", "ratelimitResetTokens"},
-                {"ratelimitResetRequests", "ratelimitResetRequests" },
-                {"ratelimitRemainingTokens", "99"},
-                {"ratelimitRemainingRequests", "99"},
-                {"ratelimitLimitTokensUsageBased", "99"},
-                {"ratelimitResetTokensUsageBased", "ratelimitResetTokensUsageBased"},
-                {"ratelimitRemainingTokensUsageBased", "99"},
-                {"header1", "value1"},
-                {"header2", "value2"}
+                { LLMConstants.Headers.LlmVersion, "1.0" },
+                { LLMConstants.Headers.RateLimitLimitRequests, "99" },
+                { LLMConstants.Headers.RateLimitLimitTokens, "99" },
+                { LLMConstants.Headers.RateLimitResetTokens, "ratelimitResetTokens" },
+                { LLMConstants.Headers.RateLimitResetRequests, "ratelimitResetRequests" },
+                { LLMConstants.Headers.RateLimitRemainingTokens, "99" },
+                { LLMConstants.Headers.RateLimitRemainingRequests, "99" },
+                { LLMConstants.Headers.RateLimitLimitTokensUsageBased, "99" },
+                { LLMConstants.Headers.RateLimitResetTokensUsageBased, "ratelimitResetTokensUsageBased" },
+                { LLMConstants.Headers.RateLimitRemainingTokensUsageBased, "99" },
+                { "header1", "value1" },
+                { "header2", "value2" }
             };
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(
@@ -324,18 +324,18 @@ namespace Agent.Extensions.Tests.Llm
 
             var headers = new Dictionary<string, string>
             {
-                {"llmVersion", "1.0"},
-                {"ratelimitLimitRequests", "99"},
-                {"ratelimitLimitTokens", "99"},
-                {"ratelimitResetTokens", "ratelimitResetTokens"},
-                {"ratelimitResetRequests", "ratelimitResetRequests" },
-                {"ratelimitRemainingTokens", "99"},
-                {"ratelimitRemainingRequests", "99"},
-                {"ratelimitLimitTokensUsageBased", "99"},
-                {"ratelimitResetTokensUsageBased", "ratelimitResetTokensUsageBased"},
-                {"ratelimitRemainingTokensUsageBased", "99"},
-                {"header1", "value1"},
-                {"header2", "value2"}
+                { LLMConstants.Headers.LlmVersion, "1.0" },
+                { LLMConstants.Headers.RateLimitLimitRequests, "99" },
+                { LLMConstants.Headers.RateLimitLimitTokens, "99" },
+                { LLMConstants.Headers.RateLimitResetTokens, "ratelimitResetTokens" },
+                { LLMConstants.Headers.RateLimitResetRequests, "ratelimitResetRequests" },
+                { LLMConstants.Headers.RateLimitRemainingTokens, "99" },
+                { LLMConstants.Headers.RateLimitRemainingRequests, "99" },
+                { LLMConstants.Headers.RateLimitLimitTokensUsageBased, "99" },
+                { LLMConstants.Headers.RateLimitResetTokensUsageBased, "ratelimitResetTokensUsageBased" },
+                { LLMConstants.Headers.RateLimitRemainingTokensUsageBased, "99" },
+                { "header1", "value1" },
+                { "header2", "value2" }
             };
 
             Mock.Arrange(() => _agent.GetLinkingMetadata()).Returns(

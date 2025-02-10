@@ -203,16 +203,16 @@ namespace NewRelic.Agent.Extensions.Llm
 
         private static void AddHeaderAttributes(IDictionary<string, string> headers, IDictionary<string, object> attributes)
         {
-            TryAddHeaderAttribute<string>("llmVersion");
-            TryAddHeaderAttribute<int>("ratelimitLimitRequests");
-            TryAddHeaderAttribute<int>("ratelimitLimitTokens");
-            TryAddHeaderAttribute<string>("ratelimitResetTokens");
-            TryAddHeaderAttribute<string>("ratelimitResetRequests");
-            TryAddHeaderAttribute<int>("ratelimitRemainingTokens");
-            TryAddHeaderAttribute<int>("ratelimitRemainingRequests");
-            TryAddHeaderAttribute<int>("ratelimitLimitTokensUsageBased");
-            TryAddHeaderAttribute<string>("ratelimitResetTokensUsageBased");
-            TryAddHeaderAttribute<int>("ratelimitRemainingTokensUsageBased");
+            TryAddHeaderAttribute<string>(LLMConstants.Headers.LlmVersion);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitLimitRequests);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitLimitTokens);
+            TryAddHeaderAttribute<string>(LLMConstants.Headers.RateLimitResetTokens);
+            TryAddHeaderAttribute<string>(LLMConstants.Headers.RateLimitResetRequests);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitRemainingTokens);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitRemainingRequests);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitLimitTokensUsageBased);
+            TryAddHeaderAttribute<string>(LLMConstants.Headers.RateLimitResetTokensUsageBased);
+            TryAddHeaderAttribute<int>(LLMConstants.Headers.RateLimitRemainingTokensUsageBased);
 
             void TryAddHeaderAttribute<T>(string name)
             {

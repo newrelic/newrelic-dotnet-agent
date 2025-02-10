@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using NewRelic.Agent.Extensions.Llm;
 
 namespace NewRelic.Providers.Wrapper.OpenAI
 {
@@ -15,25 +16,25 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                 switch (header.Key)
                 {
                     case "openai-version":
-                        llmHeaders.Add("llmVersion", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.LlmVersion, header.Value);
                         break;
                     case "x-ratelimit-limit-requests":
-                        llmHeaders.Add("ratelimitLimitRequests", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitLimitRequests, header.Value);
                         break;
                     case "x-ratelimit-limit-tokens":
-                        llmHeaders.Add("ratelimitLimitTokens", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitLimitTokens, header.Value);
                         break;
                     case "x-ratelimit-remaining-requests":
-                        llmHeaders.Add("ratelimitRemainingRequests", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitRemainingRequests, header.Value);
                         break;
                     case "x-ratelimit-remaining-tokens":
-                        llmHeaders.Add("ratelimitRemainingTokens", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitRemainingTokens, header.Value);
                         break;
                     case "x-ratelimit-reset-requests":
-                        llmHeaders.Add("ratelimitResetRequests", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitResetRequests, header.Value);
                         break;
                     case "x-ratelimit-reset-tokens":
-                        llmHeaders.Add("ratelimitResetTokens", header.Value);
+                        llmHeaders.Add(LLMConstants.Headers.RateLimitResetTokens, header.Value);
                         break;
                 }
             }
