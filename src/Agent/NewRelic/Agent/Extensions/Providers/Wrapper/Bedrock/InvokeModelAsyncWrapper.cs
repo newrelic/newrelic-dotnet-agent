@@ -13,6 +13,7 @@ using System.Net;
 using System.IO;
 using NewRelic.Agent.Extensions.JsonConverters;
 using NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
+using NewRelic.Agent.Extensions.Llm.Bedrock;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {

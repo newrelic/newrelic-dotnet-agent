@@ -9,6 +9,9 @@ namespace NewRelic.Agent.Extensions.Llm
 {
     public static class EventHelper
     {
+        /// <summary>
+        /// Creates a LlmChatCompletionSummary event.
+        /// </summary>
         public static string CreateChatCompletionEvent(IAgent agent,
             ISegment segment,
             string requestId,
@@ -80,6 +83,9 @@ namespace NewRelic.Agent.Extensions.Llm
             return completionId;
         }
 
+        /// <summary>
+        /// Creates a LlmChatCompletionMessage event.
+        /// </summary>
         public static void CreateChatMessageEvent(IAgent agent,
             ISegment segment,
             string requestId,
@@ -89,7 +95,8 @@ namespace NewRelic.Agent.Extensions.Llm
             int sequence,
             string completionId,
             bool isResponse,
-            string vendor)
+            string vendor,
+            int? tokenCount = null)
         {
             var attributes = new Dictionary<string, object>
             {
@@ -107,6 +114,11 @@ namespace NewRelic.Agent.Extensions.Llm
                 //{ "llm.<user_defined_metadata>", "Pulled from Transaction metadata in RecordLlmEvent" },
             };
 
+            if (tokenCount.HasValue)
+            {
+                attributes.Add("token_count", tokenCount.Value);
+            }
+
             if (isResponse)
             {
                 attributes.Add("is_response", true);
@@ -115,6 +127,9 @@ namespace NewRelic.Agent.Extensions.Llm
             agent.RecordLlmEvent("LlmChatCompletionMessage", attributes);
         }
 
+        /// <summary>
+        /// Creates a LlmEmbedding event.
+        /// </summary>
         public static void CreateEmbeddingEvent(IAgent agent,
             ISegment segment,
             string requestId,
@@ -124,7 +139,8 @@ namespace NewRelic.Agent.Extensions.Llm
             string vendor,
             bool isError,
             IDictionary<string, string> headers,
-            LlmErrorData errorData)
+            LlmErrorData errorData,
+            string organization = null)
         {
             var embeddingId = Guid.NewGuid().ToString();
 
@@ -137,7 +153,6 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "input", input },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
-                //{ "response.organization", "not available" },
                 { "vendor", vendor },
                 { "ingest_source", "DotNet" },
                 { "duration", (float)segment.DurationOrZero.TotalMilliseconds },
@@ -148,6 +163,11 @@ namespace NewRelic.Agent.Extensions.Llm
             if (isError)
             {
                 attributes.Add("error", isError);
+            }
+
+            if (!string.IsNullOrEmpty(organization))
+            {
+                attributes.Add("response.organization", organization);
             }
 
             // LLM headers
