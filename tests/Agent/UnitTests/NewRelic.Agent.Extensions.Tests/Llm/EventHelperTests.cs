@@ -25,12 +25,12 @@ namespace Agent.Extensions.Tests.Llm
         }
 
         [Test]
-        public void CreateChatCompletionEvent_ShouldRecordLlmChatCompletionSummaryEvent()
+        [TestCase(null, null, null)]
+        [TestCase(100, 0.5f, "organization")]
+        public void CreateChatCompletionEvent_ShouldRecordLlmChatCompletionSummaryEvent(int? maxTokens, float? temperature, string organization)
         {
             // Arrange
             var requestId = "123";
-            var temperature = 98.6f;
-            var maxTokens = 100;
             var requestModel = "model1";
             var responseModel = "model2";
             var numMessages = 5;
@@ -68,7 +68,7 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            var completionId = EventHelper.CreateChatCompletionEvent(_agent, _segment, requestId, temperature, maxTokens, requestModel, responseModel, numMessages, finishReason, vendor, false, headers, null);
+            var completionId = EventHelper.CreateChatCompletionEvent(_agent, _segment, requestId, temperature, maxTokens, requestModel, responseModel, numMessages, finishReason, vendor, false, headers, null, organization);
 
             // Assert
             Assert.That(completionId, Is.Not.Null);
@@ -76,17 +76,16 @@ namespace Agent.Extensions.Tests.Llm
             // assert that _agent.RecordLlmEvent was called one time
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionSummary", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
 
+            var expectedAttributeCount = 21;
+
             Assert.Multiple(() =>
             {
                 // assert that the attributes passed to _agent.RecordLlmEvent are correct
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(23));
                 Assert.That(llmAttributes["id"], Is.EqualTo(completionId));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
                 Assert.That(llmAttributes["trace_id"], Is.EqualTo(_agent.GetLinkingMetadata()["trace.id"]));
-                Assert.That(llmAttributes["request.temperature"], Is.EqualTo(temperature));
-                Assert.That(llmAttributes["request.max_tokens"], Is.EqualTo(maxTokens));
                 Assert.That(llmAttributes["request.model"], Is.EqualTo(requestModel));
                 Assert.That(llmAttributes["response.model"], Is.EqualTo(responseModel));
                 Assert.That(llmAttributes["response.number_of_messages"], Is.EqualTo(numMessages));
@@ -94,20 +93,53 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
                 Assert.That(llmAttributes["duration"], Is.EqualTo((float)_segment.DurationOrZero.TotalMilliseconds));
-                Assert.That(llmAttributes["llmVersion"], Is.EqualTo("1.0"));
-                Assert.That(llmAttributes["ratelimitLimitRequests"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitLimitTokens"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitResetTokens"], Is.EqualTo("ratelimitResetTokens"));
-                Assert.That(llmAttributes["ratelimitResetRequests"], Is.EqualTo("ratelimitResetRequests"));
-                Assert.That(llmAttributes["ratelimitRemainingTokens"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitRemainingRequests"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitLimitTokensUsageBased"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitResetTokensUsageBased"], Is.EqualTo("ratelimitResetTokensUsageBased"));
-                Assert.That(llmAttributes["ratelimitRemainingTokensUsageBased"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.llmVersion"], Is.EqualTo("1.0"));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitRequests"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitTokens"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitResetTokens"], Is.EqualTo("ratelimitResetTokens"));
+                Assert.That(llmAttributes["response.headers.ratelimitResetRequests"], Is.EqualTo("ratelimitResetRequests"));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingTokens"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingRequests"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitTokensUsageBased"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitResetTokensUsageBased"], Is.EqualTo("ratelimitResetTokensUsageBased"));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingTokensUsageBased"], Is.EqualTo(99));
 
                 Assert.That(llmAttributes, Does.Not.ContainKey("error"));
                 Assert.That(llmAttributes, Does.Not.ContainKey("header1"));
                 Assert.That(llmAttributes, Does.Not.ContainKey("header2"));
+
+                if (maxTokens.HasValue)
+                {
+                    Assert.That(llmAttributes["request.max_tokens"], Is.EqualTo(maxTokens));
+                    ++expectedAttributeCount;
+                }
+                else
+                {
+                    Assert.That(llmAttributes, Does.Not.ContainKey("request.max_tokens"));
+                }
+
+                if (temperature.HasValue)
+                {
+                    Assert.That(llmAttributes["request.temperature"], Is.EqualTo(temperature));
+                    ++expectedAttributeCount;
+                }
+                else
+                {
+                    Assert.That(llmAttributes, Does.Not.ContainKey("request.temperature"));
+                }
+
+                if (!string.IsNullOrEmpty(organization))
+                {
+                    Assert.That(llmAttributes["response.organization"], Is.EqualTo(organization));
+                    ++expectedAttributeCount;
+                }
+                else
+                {
+                    Assert.That(llmAttributes, Does.Not.ContainKey("response.organization"));
+                }
+
+                Assert.That(llmAttributes.Count, Is.EqualTo(expectedAttributeCount));
+
             });
         }
 
@@ -202,10 +234,10 @@ namespace Agent.Extensions.Tests.Llm
             });
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
         [Test]
-        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse)
+        [TestCase(false, null)]
+        [TestCase(true, 123)]
+        public void CreateChatMessageEvent_ShouldRecordLlmChatCompletionEvent(bool isResponse, int? tokenCount)
         {
             // Arrange
             var requestId = "123";
@@ -232,7 +264,10 @@ namespace Agent.Extensions.Tests.Llm
 
             // Act
             var responseId = Guid.NewGuid().ToString();
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseId, responseModel, content, role, sequence, completionId, isResponse, vendor);
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseId, responseModel, content, role, sequence, completionId, isResponse, vendor, tokenCount);
+
+
+            var expectedAttributeCount = 11;
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -241,7 +276,6 @@ namespace Agent.Extensions.Tests.Llm
             {
                 // assert that the attributes passed to _agent.RecordLlmEvent are correct
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(isResponse ? 12 : 11));
                 Assert.That(llmAttributes["id"], Is.EqualTo(responseId + "-" + sequence));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -253,17 +287,33 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["role"], Is.EqualTo(role));
                 Assert.That(llmAttributes["sequence"], Is.EqualTo(sequence));
                 Assert.That(llmAttributes["completion_id"], Is.EqualTo(completionId));
-            });
 
-            if (isResponse)
-                Assert.That(llmAttributes["is_response"], Is.True);
-            else
-                Assert.That(llmAttributes, Does.Not.ContainKey("is_response"));
+                if (isResponse)
+                {
+                    Assert.That(llmAttributes["is_response"], Is.True);
+                    ++expectedAttributeCount;
+                }
+                else
+                    Assert.That(llmAttributes, Does.Not.ContainKey("is_response"));
+
+                if (tokenCount.HasValue)
+                {
+                    Assert.That(llmAttributes["token_count"], Is.EqualTo(tokenCount));
+                    ++expectedAttributeCount;
+                }
+                else
+                    Assert.That(llmAttributes, Does.Not.ContainKey("token_count"));
+
+                Assert.That(llmAttributes.Count, Is.EqualTo(expectedAttributeCount));
+            });
 
         }
 
         [Test]
-        public void CreateEmbeddingEvent_ShouldRecordLlmEmbeddingEvent()
+        [TestCase("organization")]
+        [TestCase(null)]
+
+        public void CreateEmbeddingEvent_ShouldRecordLlmEmbeddingEvent(string organization)
         {
             // Arrange
             var requestId = "123";
@@ -303,15 +353,15 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, false, headers, null);
+            EventHelper.CreateEmbeddingEvent(_agent, _segment, requestId, input, requestModel, responseModel, vendor, false, headers, null, organization);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmEmbedding", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
 
+            var expectedAttributeCount = 20;
             Assert.Multiple(() =>
             {
                 Assert.That(llmAttributes, Is.Not.Null);
-                Assert.That(llmAttributes.Count, Is.EqualTo(20));
                 Assert.That(llmAttributes.ContainsKey("id"));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
@@ -322,22 +372,30 @@ namespace Agent.Extensions.Tests.Llm
                 Assert.That(llmAttributes["vendor"], Is.EqualTo(vendor));
                 Assert.That(llmAttributes["ingest_source"], Is.EqualTo("DotNet"));
                 Assert.That(llmAttributes["duration"], Is.EqualTo((float)_segment.DurationOrZero.TotalMilliseconds));
-                Assert.That(llmAttributes["llmVersion"], Is.EqualTo("1.0"));
+                Assert.That(llmAttributes["response.headers.llmVersion"], Is.EqualTo("1.0"));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitRequests"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitTokens"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitResetTokens"], Is.EqualTo("ratelimitResetTokens"));
+                Assert.That(llmAttributes["response.headers.ratelimitResetRequests"], Is.EqualTo("ratelimitResetRequests"));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingTokens"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingRequests"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitLimitTokensUsageBased"], Is.EqualTo(99));
+                Assert.That(llmAttributes["response.headers.ratelimitResetTokensUsageBased"], Is.EqualTo("ratelimitResetTokensUsageBased"));
+                Assert.That(llmAttributes["response.headers.ratelimitRemainingTokensUsageBased"], Is.EqualTo(99));
 
-                Assert.That(llmAttributes["ratelimitLimitRequests"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitLimitTokens"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitResetTokens"], Is.EqualTo("ratelimitResetTokens"));
-                Assert.That(llmAttributes["ratelimitResetRequests"], Is.EqualTo("ratelimitResetRequests"));
-                Assert.That(llmAttributes["ratelimitRemainingTokens"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitRemainingRequests"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitLimitTokensUsageBased"], Is.EqualTo(99));
-                Assert.That(llmAttributes["ratelimitResetTokensUsageBased"], Is.EqualTo("ratelimitResetTokensUsageBased"));
-                Assert.That(llmAttributes["ratelimitRemainingTokensUsageBased"], Is.EqualTo(99));
+                if (!string.IsNullOrEmpty(organization))
+                {
+                    Assert.That(llmAttributes["response.organization"], Is.EqualTo(organization));
+                    ++expectedAttributeCount;
+                }
+                else
+                    Assert.That(llmAttributes, Does.Not.ContainKey("response.organization"));
 
                 Assert.That(llmAttributes, Does.Not.ContainKey("error"));
                 Assert.That(llmAttributes, Does.Not.ContainKey("header1"));
                 Assert.That(llmAttributes, Does.Not.ContainKey("header2"));
 
+                Assert.That(llmAttributes.Count, Is.EqualTo(expectedAttributeCount));
             });
         }
 

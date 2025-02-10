@@ -17,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
                     case "openai-version":
                         llmHeaders.Add("llmVersion", header.Value);
                         break;
-                    case "x-ratelimit-limit-requests:":
+                    case "x-ratelimit-limit-requests":
                         llmHeaders.Add("ratelimitLimitRequests", header.Value);
                         break;
                     case "x-ratelimit-limit-tokens":
