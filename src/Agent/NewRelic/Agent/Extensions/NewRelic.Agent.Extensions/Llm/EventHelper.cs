@@ -15,8 +15,8 @@ namespace NewRelic.Agent.Extensions.Llm
         public static string CreateChatCompletionEvent(IAgent agent,
             ISegment segment,
             string requestId,
-            float temperature,
-            int maxTokens,
+            float? temperature,
+            int? maxTokens,
             string requestModel,
             string responseModel,
             int numMessages,
@@ -35,8 +35,6 @@ namespace NewRelic.Agent.Extensions.Llm
                 { "request_id", requestId },
                 { "span_id", segment.SpanId },
                 { "trace_id", agent.GetLinkingMetadata()["trace.id"] },
-                { "request.temperature", temperature },
-                { "request.max_tokens", maxTokens },
                 { "request.model", requestModel },
                 { "response.model", responseModel },
                 { "response.number_of_messages", numMessages },
@@ -51,6 +49,15 @@ namespace NewRelic.Agent.Extensions.Llm
             if (isError)
             {
                 attributes.Add("error", isError);
+            }
+
+            if (temperature.HasValue)
+            {
+                attributes.Add("request.temperature", temperature);
+            }
+            if (maxTokens.HasValue)
+            {
+                attributes.Add("request.max_tokens", maxTokens);
             }
 
             // LLM Metadata
@@ -89,6 +96,7 @@ namespace NewRelic.Agent.Extensions.Llm
         public static void CreateChatMessageEvent(IAgent agent,
             ISegment segment,
             string requestId,
+            string responseId,
             string responseModel,
             string content,
             string role,
@@ -100,7 +108,7 @@ namespace NewRelic.Agent.Extensions.Llm
         {
             var attributes = new Dictionary<string, object>
             {
-                { "id", requestId + "-" + sequence },
+                { "id", string.IsNullOrEmpty(responseId) ? Guid.NewGuid().ToString() : (responseId + "-" + sequence) },
                 { "request_id", requestId },
                 { "span_id", segment.SpanId },
                 { "trace_id", agent.GetLinkingMetadata()["trace.id"] },

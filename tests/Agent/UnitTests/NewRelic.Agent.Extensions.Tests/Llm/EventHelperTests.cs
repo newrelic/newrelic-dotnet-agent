@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Llm;
@@ -230,7 +231,8 @@ namespace Agent.Extensions.Tests.Llm
                 });
 
             // Act
-            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseModel, content, role, sequence, completionId, isResponse, vendor);
+            var responseId = Guid.NewGuid().ToString();
+            EventHelper.CreateChatMessageEvent(_agent, _segment, requestId, responseId, responseModel, content, role, sequence, completionId, isResponse, vendor);
 
             // Assert
             Mock.Assert(() => _agent.RecordLlmEvent("LlmChatCompletionMessage", Arg.IsAny<Dictionary<string, object>>()), Occurs.Once());
@@ -240,7 +242,7 @@ namespace Agent.Extensions.Tests.Llm
                 // assert that the attributes passed to _agent.RecordLlmEvent are correct
                 Assert.That(llmAttributes, Is.Not.Null);
                 Assert.That(llmAttributes.Count, Is.EqualTo(isResponse ? 12 : 11));
-                Assert.That(llmAttributes["id"], Is.EqualTo(requestId + "-" + sequence));
+                Assert.That(llmAttributes["id"], Is.EqualTo(responseId + "-" + sequence));
                 Assert.That(llmAttributes["request_id"], Is.EqualTo(requestId));
                 Assert.That(llmAttributes["span_id"], Is.EqualTo(_segment.SpanId));
                 Assert.That(llmAttributes["trace_id"], Is.EqualTo(_agent.GetLinkingMetadata()["trace.id"]));

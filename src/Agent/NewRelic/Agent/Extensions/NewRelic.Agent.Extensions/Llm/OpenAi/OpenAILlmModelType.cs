@@ -3,19 +3,20 @@
 
 namespace NewRelic.Agent.Extensions.Llm.OpenAi;
 
-/// <summary>
-/// The set of models supported by the OpenAI wrapper.
-/// </summary>
-public enum OpenAILlmModelType
-{
-    Unknown,
-    GPT,
-    ChatGPT,
-    O1,
-    O3,
-    DallE,
-    TTS,
-    Whisper,
-    TextEmbedding,
-    Moderation,
-}
+// unused but save for later
+///// <summary>
+///// The set of models supported by the OpenAI wrapper.
+///// </summary>
+//public enum OpenAILlmModelType
+//{
+//    Unknown,
+//    GPT,
+//    ChatGPT,
+//    O1,
+//    O3,
+//    DallE,
+//    TTS,
+//    Whisper,
+//    TextEmbedding,
+//    Moderation,
+//}

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -32,8 +31,7 @@ public class OpenAiChatWrapper : IWrapper
         return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
     }
 
-    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
-        IAgent agent, ITransaction transaction)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         // Don't do anything, including sending the version Supportability metric, if we're disabled
         if (!agent.Configuration.AiMonitoringEnabled)
@@ -41,9 +39,7 @@ public class OpenAiChatWrapper : IWrapper
             return Delegates.NoOp;
         }
 
-        _modelFieldAccessor ??=
-            VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(
-                instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "_model");
+        _modelFieldAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "_model");
 
         if (instrumentedMethodCall.IsAsync)
         {
@@ -68,21 +64,18 @@ public class OpenAiChatWrapper : IWrapper
         var completionType = chatMessages[chatMessages.Count - 1].Content[0].Kind.ToString();
         if (completionType != "Text")
         {
-            agent.Logger.Debug(
-                $"Ignoring chat completion: Only text completions are supported, but got {completionType}");
+            agent.Logger.Debug($"Ignoring chat completion: Only text completions are supported, but got {completionType}");
             return Delegates.NoOp;
         }
 
         dynamic chatCompletionOptions = instrumentedMethodCall.MethodCall.MethodArguments[1]; // may be null
 
         var operationType = "completion";
-        var methodMethodName =
-            $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
+        var methodMethodName = $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
         var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, methodMethodName);
 
         // required per spec
-        var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule
-            .Assembly.FullName);
+        var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
         agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
 
         string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
@@ -104,7 +97,6 @@ public class OpenAiChatWrapper : IWrapper
             ProcessResponse(segment, model, chatMessages, clientResult, chatCompletionOptions, agent);
         });
 
-
         void TryProcessAsyncResponse(Task responseTask)
         {
             segment.End();
@@ -115,12 +107,10 @@ public class OpenAiChatWrapper : IWrapper
                 return;
             }
 
-
             dynamic clientResult = GetTaskResult(responseTask);
             if (clientResult == null)
             {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn,
-                    $"Error processing response: Response payload is null");
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing response: Response payload is null");
                 return;
             }
 
@@ -140,29 +130,17 @@ public class OpenAiChatWrapper : IWrapper
             return null;
         }
 
-        var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(),
-            t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+        var getResponse = _getResultFromGenericTask.GetOrAdd(task.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
         return getResponse(task);
     }
 
 
-    private void ProcessResponse(ISegment segment, string model, dynamic chatMessages, dynamic clientResult,
-        dynamic chatCompletionOptions, IAgent agent)
+    private void ProcessResponse(ISegment segment, string model, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent)
     {
         dynamic chatCompletionResponse = clientResult.Value;
         string finishReason = chatCompletionResponse.FinishReason.ToString();
 
-        // normal completion -- other possible values are "Length", "ContentFilter", "ToolCalls" and "FunctionCall" -- not sure what those mean
-        // TODO: values other than "Stop" be treated as errors or just ignored (or passed through to HandleSuccess() to process without any response content)?
-        if (finishReason == "Stop")
-        {
-            HandleSuccess(segment, model, chatMessages, clientResult, chatCompletionOptions, agent,
-                chatCompletionResponse, finishReason);
-        }
-        else
-        {
-            agent.Logger.Debug($"Ignoring unsupported Finish reason: {finishReason}");
-        }
+        HandleSuccess(segment, model, chatMessages, clientResult, chatCompletionOptions, agent, chatCompletionResponse, finishReason);
     }
 
     private static void HandleSuccess(ISegment segment, string requestModel, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent, dynamic chatCompletionResponse, string finishReason)
@@ -173,35 +151,46 @@ public class OpenAiChatWrapper : IWrapper
         // typically there is only a single message in the outbound chat message list, but in a conversation, there can be multiple prompt and response message.
         // The last message is the most recent prompt
         // There can also be a refusal, which means there won't be a response message
-        string refusal = chatCompletionResponse.Refusal;
-        dynamic lastChatMessage = refusal ?? chatMessages[chatMessages.Count - 1];
+        dynamic lastChatMessage = chatMessages[chatMessages.Count - 1];
 
-        string promptRole = _rolePropertyAccessor(lastChatMessage).ToString();
-        string requestPrompt = lastChatMessage.Content[0].Text;
-        string responseRole = chatCompletionResponse.Role.ToString();
-        string chatCompletionId = chatCompletionResponse.Id;
+        string refusal = chatCompletionResponse.Refusal;
+        string requestPrompt = refusal ?? lastChatMessage.Content[0].Text;
+
+        // roles need to be lowercase, but we're pulling the enum members by name so we need to lowercase them
+        string requestRole = _rolePropertyAccessor(lastChatMessage).ToString().ToLower();
+        string responseRole = chatCompletionResponse.Role.ToString().ToLower();
+
+        string responseId = chatCompletionResponse.Id;
         string responseModel = chatCompletionResponse.Model;
 
         Dictionary<string, string> headersDictionary = GetResponseHeaders(clientResult);
         var llmHeaders = headersDictionary.GetOpenAiHeaders();
         string organization = headersDictionary.TryGetOpenAiOrganization();
+        string requestId = headersDictionary.TryGetRequestId();
 
-        int numMessages = 2;
+        var inputTokenCount = chatCompletionResponse.Usage.InputTokenCount;
+        var outputTokenCount = chatCompletionResponse.Usage.OutputTokenCount;
+
+        var temperature = chatCompletionOptions != null ? (float?)chatCompletionOptions.Temperature : null;
+        var maxOutputTokenCount = chatCompletionOptions != null ? (int?)chatCompletionOptions.MaxOutputTokenCount : null;
+
+        int numMessages = 1;
+
         // if finishReason = "Stop", then there is a response message
         // otherwise, there won't be any response message
         string responseContent = null;
         if (finishReason == "Stop")
         {
-            numMessages = 1;
+            numMessages = 2;
             responseContent = chatCompletionResponse.Content[0].Text;
         }
 
         string completionId = EventHelper.CreateChatCompletionEvent(
             agent,
             segment,
-            chatCompletionId,
-            chatCompletionOptions != null ? chatCompletionOptions.Temperature : 0,
-            chatCompletionOptions != null ? chatCompletionOptions.MaxOutputTokenCount : 0,
+            requestId,
+            temperature,
+            maxOutputTokenCount,
             requestModel,
             responseModel,
             numMessages,
@@ -217,29 +206,33 @@ public class OpenAiChatWrapper : IWrapper
         EventHelper.CreateChatMessageEvent(
             agent,
             segment,
-            chatCompletionId,
-            responseModel, // TODO: not sure why we send this in a prompt message but the spec says to
+            requestId,
+            responseId,
+            responseModel, // TODO: not sure why we send response model instead of request model here, but that's what the spec says
             requestPrompt,
-            promptRole,
+            requestRole,
             0,
             completionId,
             false,
-            VendorName);
+            VendorName,
+            inputTokenCount);
 
+        // Response
         if (finishReason == "Stop")
         {
-            // Response
             EventHelper.CreateChatMessageEvent(
                 agent,
                 segment,
-                chatCompletionResponse.Id,
+                requestId,
+                responseId,
                 responseModel,
                 responseContent,
                 responseRole,
                 1,
                 completionId,
                 true,
-                VendorName);
+                VendorName,
+                outputTokenCount);
         }
     }
 
@@ -293,7 +286,7 @@ public class OpenAiChatWrapper : IWrapper
         {
             HttpStatusCode = statusCode.ToString(),
             ErrorCode = null,
-            ErrorParam = null, // not available in AWS
+            ErrorParam = null, 
             ErrorMessage = errorMessage
         };
 
@@ -311,52 +304,5 @@ public class OpenAiChatWrapper : IWrapper
             true,
             null,
             errorData);
-    }
-}
-
-public static class OpenAiHeaderDictionaryHelper
-{
-    public static IDictionary<string, string> GetOpenAiHeaders(this IDictionary<string, string> headers)
-    {
-        var llmHeaders = new Dictionary<string, string>();
-        foreach (var header in headers)
-        {
-            switch (header.Key)
-            {
-                case "openai-version":
-                    llmHeaders.Add("llmVersion", header.Value);
-                    break;
-                case "x-ratelimit-limit-requests:":
-                    llmHeaders.Add("ratelimitLimitRequests", header.Value);
-                    break;
-                case "x-ratelimit-limit-tokens":
-                    llmHeaders.Add("ratelimitLimitTokens", header.Value);
-                    break;
-                case "x-ratelimit-remaining-requests":
-                    llmHeaders.Add("ratelimitRemainingRequests", header.Value);
-                    break;
-                case "x-ratelimit-remaining-tokens":
-                    llmHeaders.Add("ratelimitRemainingTokens", header.Value);
-                    break;
-                case "x-ratelimit-reset-requests":
-                    llmHeaders.Add("ratelimitResetRequests", header.Value);
-                    break;
-                case "x-ratelimit-reset-tokens":
-                    llmHeaders.Add("ratelimitResetTokens", header.Value);
-                    break;
-            }
-        }
-
-        return llmHeaders;
-    }
-
-    public static string TryGetOpenAiOrganization(this IDictionary<string, string> headers)
-    {
-        if (headers.TryGetValue("openai-organization", out var organization))
-        {
-            return organization;
-        }
-
-        return null;
     }
 }
