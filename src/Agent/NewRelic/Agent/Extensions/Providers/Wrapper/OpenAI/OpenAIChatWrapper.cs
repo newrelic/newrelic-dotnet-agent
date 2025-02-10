@@ -46,22 +46,24 @@ public class OpenAiChatWrapper : IWrapper
             transaction.AttachToAsync();
         }
 
-        dynamic chatMessages = instrumentedMethodCall.MethodCall.MethodArguments[0];
-        if (chatMessages == null || chatMessages.Count == 0)
+        Array chatMessages = instrumentedMethodCall.MethodCall.MethodArguments[0] as Array;
+        
+        if (chatMessages == null || chatMessages.Length == 0)
         {
             agent.Logger.Debug("Ignoring chat completion: No chat messages found");
             return Delegates.NoOp;
         }
 
-        if (chatMessages[chatMessages.Count - 1].Content == null ||
-            chatMessages[chatMessages.Count - 1].Content.Count == 0)
+        var lastMessage = ((dynamic)chatMessages.GetValue(chatMessages.Length - 1));
+        if (lastMessage.Content == null ||
+            lastMessage.Content.Count == 0)
         {
             agent.Logger.Debug("Ignoring chat completion: No content found in chat messages");
             return Delegates.NoOp;
         }
 
         // we only support text completions. Possible values are Text, Image and Refusal
-        var completionType = chatMessages[chatMessages.Count - 1].Content[0].Kind.ToString();
+        var completionType = lastMessage.Content[0].Kind.ToString();
         if (completionType != "Text")
         {
             agent.Logger.Debug($"Ignoring chat completion: Only text completions are supported, but got {completionType}");
@@ -151,7 +153,7 @@ public class OpenAiChatWrapper : IWrapper
         // typically there is only a single message in the outbound chat message list, but in a conversation, there can be multiple prompt and response message.
         // The last message is the most recent prompt
         // There can also be a refusal, which means there won't be a response message
-        dynamic lastChatMessage = chatMessages[chatMessages.Count - 1];
+        dynamic lastChatMessage = chatMessages[chatMessages.Length - 1];
 
         string refusal = chatCompletionResponse.Refusal;
         string requestPrompt = refusal ?? lastChatMessage.Content[0].Text;
