@@ -18,6 +18,7 @@ public class OpenAiChatWrapper : IWrapper
     private static Func<object, object> _rolePropertyAccessor;
     private static Func<object, string> _modelFieldAccessor;
     private static Func<object, object> _responseFieldGetter;
+    private static Func<object, object> _exceptionResponseFieldGetter;
 
     public bool IsTransactionRequired => true; // part of spec, only create events for transactions.
 
@@ -285,8 +286,8 @@ public class OpenAiChatWrapper : IWrapper
         string errorMessage = innerException.Message;
 
         // requestID is buried in the headers of the _response field
-        Func<object, object> exceptionResponseFieldGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(innerException.GetType(), "_response");
-        var exceptionResponseField = exceptionResponseFieldGetter(innerException);
+        _exceptionResponseFieldGetter ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(innerException.GetType(), "_response");
+        var exceptionResponseField = _exceptionResponseFieldGetter(innerException);
         var headers = exceptionResponseField.Headers;
         string requestId = null;
         foreach (var header in headers)
