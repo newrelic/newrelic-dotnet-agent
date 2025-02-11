@@ -210,21 +210,66 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if (_agentLicenseKey != null)
-                    return _agentLicenseKey;
-
-                _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
-                                   ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
-
-                _agentLicenseKey = _agentLicenseKey?.Trim();
-
-                if (string.IsNullOrEmpty(_agentLicenseKey) && !ServerlessModeEnabled)
+                _agentLicenseKey ??= TryGetLicenseKey();
+                if (string.IsNullOrWhiteSpace(_agentLicenseKey) && !ServerlessModeEnabled)
                 {
                     TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
                 }
 
                 return _agentLicenseKey;
             }
+        }
+
+        private string TryGetLicenseKey()
+        {
+            // same order as old process - appsettings > env var(a/b) > newrelic.config
+            var candidateKeys = new Dictionary<string, string>
+            {
+                { "AppSettings", _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey) },
+                { "EnvironmentVariable", _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY") },
+                { "newrelic.config", _localConfiguration.service.licenseKey }
+            };
+
+            foreach (var candidateKey in candidateKeys)
+            {
+                // Did we find a key?
+                if (string.IsNullOrWhiteSpace(candidateKey.Value))
+                {
+                    continue;
+                }
+
+                // We found something, but is it a valid key?
+
+                // If the key is the default value from newrelic.config, we return the default value
+                // AgentManager.AssertAgentEnabled() relies on this behavior and will throw an exception if the key is the default value
+                if (candidateKey.Value.ToLower().Contains("license"))
+                {
+                    // newrelic.config is the last place to look
+                    return candidateKey.Value;
+                }
+
+                // Keys are only 40 characters long, but we trim to be safe
+                var trimmedCandidateKey = candidateKey.Value.Trim();
+                if (trimmedCandidateKey.Length != 40)
+                {
+                    Log.Warn($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
+                    continue;
+                }
+
+                // Keys can only contain printable ASCII characters from 0x21 to 0x7E
+                if (!trimmedCandidateKey.All(c => c >= 0x21 && c <= 0x7E))
+                {
+                    Log.Warn($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
+                    continue;
+                }
+
+                Log.Info($"License key from {candidateKey.Key} appears to be in the correct format.");
+                return trimmedCandidateKey;
+            }
+
+            // return string.Empty instead of null to allow caching and prevent checking repeatedly
+            Log.Warn("No valid license key found.");
+            return string.Empty;
         }
 
         private IEnumerable<string> _applicationNames;
