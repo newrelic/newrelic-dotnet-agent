@@ -12,7 +12,7 @@ using NewRelic.Api.Agent;
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
 {
     [Library]
-    public class LLMExerciser
+    public class BedrockExerciser
     {
         private Dictionary<string, Func<string, bool, Task<string>>> _models =
             new Dictionary<string, Func<string, bool, Task<string>>>

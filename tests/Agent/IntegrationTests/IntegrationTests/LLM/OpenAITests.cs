@@ -12,63 +12,68 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
-    public abstract class OpenAITestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-where TFixture : ConsoleDynamicMethodFixture
+    public abstract class OpenAITestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
         // Prompts have spaces in them, which will not be parsed correctly
         private string _prompt = "In one sentence, what is a large-language model?";
-        private List<string> _openaiModelsToTest = new List<string>
-        {
-            "gpt-3.5-turbo"
-        };
 
-        private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
+        private Dictionary<string, LlmMessageTypes> _expectedAttributes = new()
         {
             {"id", LlmMessageTypes.All},
             {"request_id", LlmMessageTypes.All},
             {"span_id", LlmMessageTypes.All},
             {"trace_id", LlmMessageTypes.All},
-            {"request.temperature", LlmMessageTypes.LlmChatCompletionSummary},
-            {"request.max_tokens", LlmMessageTypes.LlmChatCompletionSummary},
             {"request.model", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
+            {"response.headers.llmVersion", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitLimitRequests", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitLimitTokens", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitResetRequests", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitResetTokens", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitRemainingRequests", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.headers.ratelimitRemainingTokens", LlmMessageTypes.LlmChatCompletionSummary},
             {"response.model", LlmMessageTypes.All},
             {"response.number_of_messages", LlmMessageTypes.LlmChatCompletionSummary},
             {"response.choices.finish_reason", LlmMessageTypes.LlmChatCompletionSummary},
+            {"response.organization", LlmMessageTypes.LlmChatCompletionSummary},
             {"vendor", LlmMessageTypes.All},
             {"ingest_source", LlmMessageTypes.All},
             {"duration", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
             {"content", LlmMessageTypes.LlmChatCompletionMessage},
             {"role", LlmMessageTypes.LlmChatCompletionMessage},
             {"sequence", LlmMessageTypes.LlmChatCompletionMessage},
+            {"token_count", LlmMessageTypes.LlmChatCompletionMessage},
             {"completion_id", LlmMessageTypes.LlmChatCompletionMessage},
             {"input", LlmMessageTypes.LlmEmbedding},
         };
 
-        public OpenAITestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected OpenAITestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
+
+            _fixture.AddCommand($"OpenAIExerciser CompleteChatAsync gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"OpenAIExerciser CompleteChat gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"OpenAIExerciser CompleteChatFailureAsync gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
+
+
             _fixture.AddActions(
                 setupConfiguration: () =>
                 {
                     new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                         .ForceTransactionTraces()
                         .EnableAiMonitoring()
+                        .ConfigureFasterTransactionTracesHarvestCycle(10)
+                        .ConfigureFasterMetricsHarvestCycle(12)
                         .SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), _openaiModelsToTest.Count);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
-
-            foreach (var model in _openaiModelsToTest)
-            {
-                _fixture.AddCommand($"LLMExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
-            }
 
             _fixture.Initialize();
         }
@@ -81,6 +86,7 @@ where TFixture : ConsoleDynamicMethodFixture
                 {
                     Assert.Fail($"{evt.Header.Type} is not a recognized LLM message type");
                 }
+
                 foreach (var pair in evt.Attributes)
                 {
                     if (_expectedAttributes.TryGetValue(pair.Key, out var expectedTypes))
@@ -100,7 +106,6 @@ where TFixture : ConsoleDynamicMethodFixture
                     }
                 }
             }
-
         }
 
         [Fact]
@@ -108,36 +113,53 @@ where TFixture : ConsoleDynamicMethodFixture
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/OpenAI/InvokeModelAsync", CallCountAllHarvests = _openaiModelsToTest.Count - 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/OpenAI/InvokeModelAsync", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync" },
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatAsync"},
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChat" },
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChat", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChat"},
+                new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
             };
 
-            var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
-            ValidateCommonAttributes(customEvents);
+            var customEventsSuccess = _fixture.AgentLog.GetCustomEvents().Where(ce => !ce.Attributes.Keys.Contains("error")).ToList();
+            var customEventFailure = _fixture.AgentLog.GetCustomEvents().SingleOrDefault(ce => ce.Attributes.Keys.Contains("error"));
+
+            var applicationErrorEvent = _fixture.AgentLog.GetErrorEvents().SingleOrDefault();
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            Assertions.MetricsExist(expectedMetrics, metrics);
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModel");
+            var transactionEventAsync = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatAsync");
+            var transactionEventSync = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChat");
 
-            Assert.NotNull(transactionEvent);
+            Assert.Multiple(() =>
+            {
+                Assertions.MetricsExist(expectedMetrics, metrics);
+                Assert.NotNull(transactionEventAsync);
+                Assert.NotNull(transactionEventSync);
+                ValidateCommonAttributes(customEventsSuccess);
+
+                Assert.NotNull(customEventFailure);
+                Assert.Equal(true, customEventFailure.Attributes["error"]);
+
+                Assert.NotNull(applicationErrorEvent);
+                Assert.Contains("completion_id", applicationErrorEvent.UserAttributes.Keys);
+                Assert.Contains("http.statusCode", applicationErrorEvent.UserAttributes.Keys);
+            });
         }
     }
 
     [NetCoreTest]
-    public class OpenAITests_Basic_CoreLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class OpenAITests_CoreLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public OpenAITests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public OpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class OpenAITests_Basic_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class OpenAITests_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public OpenAITests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public OpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

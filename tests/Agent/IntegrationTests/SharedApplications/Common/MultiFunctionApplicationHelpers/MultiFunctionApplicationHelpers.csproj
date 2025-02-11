@@ -92,7 +92,7 @@
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net48'" />
-    
+
     <!-- StackExchange.Redis .NET/Core references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.2.6" Condition="'$(TargetFramework)' == 'net8.0'" />
 
@@ -260,7 +260,7 @@
     <!-- Beginning with version 107.0.0 we rely on httpclient instrumentation to capture the appropriate
     data from RestSharp usage. -->
     <PackageReference Include="RestSharp" Version="107.3.0" Condition="'$(TargetFramework)' == 'net48'" />
-    
+
     <!-- Not testing these versions, but it simplfies the RestSharpExerciser class by not needing if directives -->
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -287,6 +287,14 @@
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.404.1" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.302" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.302" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
+  <!--OpenAI -->
+  <ItemGroup>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
   </ItemGroup>
 
   <ItemGroup>

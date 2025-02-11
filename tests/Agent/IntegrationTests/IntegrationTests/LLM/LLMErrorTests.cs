@@ -37,8 +37,8 @@ where TFixture : ConsoleDynamicMethodFixture
                 }
             );
 
-            _fixture.AddCommand($"LLMExerciser InvokeModel {_accessDeniedModel} {LLMHelpers.ConvertToBase64(_prompt)}");
-            _fixture.AddCommand($"LLMExerciser InvokeModelWithError {_badConfigModel} {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModel {_accessDeniedModel} {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModelWithError {_badConfigModel} {LLMHelpers.ConvertToBase64(_prompt)}");
 
             _fixture.Initialize();
         }
@@ -72,7 +72,7 @@ where TFixture : ConsoleDynamicMethodFixture
                 Assert.True((bool)evt.SafeGetAttribute("error"));
             }
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithError");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModelWithError");
 
             Assert.NotNull(transactionEvent);
         }
