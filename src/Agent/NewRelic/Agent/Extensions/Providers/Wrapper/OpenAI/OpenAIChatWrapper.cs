@@ -39,9 +39,19 @@ public class OpenAiChatWrapper : IWrapper
             return Delegates.NoOp;
         }
 
-        _modelFieldAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "_model");
+        var invocationTargetType = instrumentedMethodCall.MethodCall.InvocationTarget.GetType();
+        // Azure.OpenAI.ChatClient inherits from OpenAI.Chat.ChatClient, so we need to access the _model property from the base class
+        if (invocationTargetType.BaseType != null && invocationTargetType.BaseType.FullName == "OpenAI.Chat.ChatClient") 
+        {
+            agent.Logger.Debug("Instrumenting Azure.OpenAI.AzureChatClient.");
+            invocationTargetType = invocationTargetType.BaseType;
+        }
 
-        if (instrumentedMethodCall.IsAsync)
+        _modelFieldAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(invocationTargetType, "_model");
+
+        var isAsync = instrumentedMethodCall.IsAsync || instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName.EndsWith("Async");
+
+        if (isAsync)
         {
             transaction.AttachToAsync();
         }
@@ -81,8 +91,9 @@ public class OpenAiChatWrapper : IWrapper
         agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
 
         string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
+        string endpoint = _endpointFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget).ToString();
 
-        if (instrumentedMethodCall.IsAsync) // TODO: do we need to check the method name for an "Async" suffix?
+        if (isAsync)
         {
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
