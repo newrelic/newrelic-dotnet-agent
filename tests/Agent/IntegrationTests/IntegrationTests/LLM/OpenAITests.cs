@@ -156,6 +156,15 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
+    [NetCoreTest]
+    public class OpenAITests_CoreOldest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public OpenAITests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
     [NetFrameworkTest]
     public class OpenAITests_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {

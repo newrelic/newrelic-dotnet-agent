@@ -22,8 +22,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task CompleteChatAsync(string model, string base64Prompt)
         {
-            Debugger.Launch();
-
             ChatClient client = new(model, apiKey: OpenAIConfiguration.ApiKey);
 
             var bytes = Convert.FromBase64String(base64Prompt);
