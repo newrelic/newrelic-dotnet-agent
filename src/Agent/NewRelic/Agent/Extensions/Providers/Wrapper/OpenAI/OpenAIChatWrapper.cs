@@ -270,14 +270,13 @@ public class OpenAiChatWrapper : IWrapper
         string errorMessage = innerException.Message;
 
         // requestID is buried in the headers of the _response field
-        Func<object, object> exceptionResponseFieldGetter =
-            VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(innerException.GetType(), "_response");
+        Func<object, object> exceptionResponseFieldGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(innerException.GetType(), "_response");
         var exceptionResponseField = exceptionResponseFieldGetter(innerException);
         var headers = exceptionResponseField.Headers;
         string requestId = null;
         foreach (var header in headers)
         {
-            if (header.Key == "X-Request-ID")
+            if (((string)header.Key).ToLower() == "x-request-id")
             {
                 requestId = header.Value;
                 break;
