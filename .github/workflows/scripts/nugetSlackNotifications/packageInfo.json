@@ -39,6 +39,9 @@
         "packageName": "awssdk.dynamodbv2"
     },
     {
+        "packageName": "azure.ai.openai"
+    },
+    {
         "packageName": "confluent.kafka"
     },
     {
