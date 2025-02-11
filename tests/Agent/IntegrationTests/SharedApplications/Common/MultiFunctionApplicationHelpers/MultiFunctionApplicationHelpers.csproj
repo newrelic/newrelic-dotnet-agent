@@ -297,6 +297,14 @@
     <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
   </ItemGroup>
 
+  <!-- Azure.AI.OpenAI -->
+  <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />

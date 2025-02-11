@@ -24,7 +24,9 @@ public class OpenAiChatWrapper : IWrapper
     private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
     private static ConcurrentDictionary<string, string> _libraryVersions = new();
     private const string WrapperName = "OpenAiChat";
-    private const string VendorName = "openai";
+    private const string OpenAIVendorName = "openai";
+    private const string AzureOpenAIVendorName = "azureopenai";
+    private bool _isAzureOpenAI = false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
@@ -45,6 +47,7 @@ public class OpenAiChatWrapper : IWrapper
         {
             agent.Logger.Debug("Instrumenting Azure.OpenAI.AzureChatClient.");
             invocationTargetType = invocationTargetType.BaseType;
+            _isAzureOpenAI = true;
         }
 
         _modelFieldAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(invocationTargetType, "_model");
@@ -83,15 +86,14 @@ public class OpenAiChatWrapper : IWrapper
         dynamic chatCompletionOptions = instrumentedMethodCall.MethodCall.MethodArguments[1]; // may be null
 
         var operationType = "completion";
-        var methodMethodName = $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
+        var methodMethodName = $"Llm/{operationType}/{GetVendorName()}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
         var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, methodMethodName);
 
         // required per spec
         var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-        agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
+        agent.RecordSupportabilityMetric($"DotNet/ML/{GetVendorName()}/{version}");
 
         string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
-        string endpoint = _endpointFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget).ToString();
 
         if (isAsync)
         {
@@ -131,6 +133,8 @@ public class OpenAiChatWrapper : IWrapper
         }
     }
 
+    private string GetVendorName() => _isAzureOpenAI ? AzureOpenAIVendorName : OpenAIVendorName;
+
     private string GetOrAddLibraryVersion(string assemblyFullName)
     {
         return _libraryVersions.GetOrAdd(assemblyFullName, VersionHelpers.GetLibraryVersion(assemblyFullName));
@@ -156,7 +160,7 @@ public class OpenAiChatWrapper : IWrapper
         HandleSuccess(segment, model, chatMessages, clientResult, chatCompletionOptions, agent, chatCompletionResponse, finishReason);
     }
 
-    private static void HandleSuccess(ISegment segment, string requestModel, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent, dynamic chatCompletionResponse, string finishReason)
+    private void HandleSuccess(ISegment segment, string requestModel, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent, dynamic chatCompletionResponse, string finishReason)
     {
         _rolePropertyAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("OpenAI", "OpenAI.Chat.UserChatMessage", "Role");
         _responseFieldGetter ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>("System.ClientModel", "System.ClientModel.ClientResult", "_response");
@@ -208,7 +212,7 @@ public class OpenAiChatWrapper : IWrapper
             responseModel,
             numMessages,
             finishReason,
-            VendorName,
+            GetVendorName(),
             false,
             llmHeaders,
             null,
@@ -227,7 +231,7 @@ public class OpenAiChatWrapper : IWrapper
             0,
             completionId,
             false,
-            VendorName,
+            GetVendorName(),
             inputTokenCount);
 
         // Response
@@ -244,12 +248,12 @@ public class OpenAiChatWrapper : IWrapper
                 1,
                 completionId,
                 true,
-                VendorName,
+                GetVendorName(),
                 outputTokenCount);
         }
     }
 
-    private static Dictionary<string, string> GetResponseHeaders(dynamic clientResult)
+    private Dictionary<string, string> GetResponseHeaders(dynamic clientResult)
     {
         dynamic responseField = _responseFieldGetter(clientResult);
         var headers = responseField.Headers;
@@ -312,7 +316,7 @@ public class OpenAiChatWrapper : IWrapper
             null,
             0,
             null,
-            VendorName,
+            GetVendorName(),
             true,
             null,
             errorData);
