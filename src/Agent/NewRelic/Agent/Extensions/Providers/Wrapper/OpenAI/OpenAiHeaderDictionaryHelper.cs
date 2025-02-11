@@ -49,7 +49,7 @@ namespace NewRelic.Providers.Wrapper.OpenAI
 
         public static string TryGetRequestId(this Dictionary<string, string> headers)
         {
-            return headers.TryGetValue("X-Request-ID", out var requestId) ? requestId : null;
+            return headers.TryGetValue("x-request-id", out var requestId) ? requestId : null;
         }
     }
 }

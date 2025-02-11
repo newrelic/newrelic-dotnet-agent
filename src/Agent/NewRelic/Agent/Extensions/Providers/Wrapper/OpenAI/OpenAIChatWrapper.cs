@@ -246,9 +246,9 @@ public class OpenAiChatWrapper : IWrapper
         var headersDictionary = new Dictionary<string, string>();
         foreach (var header in headers)
         {
-            var headerKey = header.Key;
+            string headerKey = header.Key;
             var headerValue = header.Value as string;
-            headersDictionary.Add(headerKey, headerValue);
+            headersDictionary.Add(headerKey.ToLower(), headerValue);
         }
 
         return headersDictionary;
@@ -296,8 +296,8 @@ public class OpenAiChatWrapper : IWrapper
             agent,
             segment,
             requestId,
-            0,
-            0,
+            null,
+            null,
             model,
             null,
             0,
