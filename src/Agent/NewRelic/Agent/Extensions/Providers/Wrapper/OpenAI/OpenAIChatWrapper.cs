@@ -20,6 +20,8 @@ public class OpenAiChatWrapper : IWrapper
     private static Func<object, object> _responseFieldGetter;
     private static Func<object, object> _exceptionResponseFieldGetter;
 
+    private static ConcurrentDictionary<object, string> _roleEnumStringCache = new();
+
     public bool IsTransactionRequired => true; // part of spec, only create events for transactions.
 
     private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
@@ -174,9 +176,8 @@ public class OpenAiChatWrapper : IWrapper
         string refusal = chatCompletionResponse.Refusal;
         string requestPrompt = refusal ?? lastChatMessage.Content[0].Text;
 
-        // roles need to be lowercase, but we're pulling the enum members by name so we need to lowercase them
-        string requestRole = _rolePropertyAccessor(lastChatMessage).ToString().ToLower();
-        string responseRole = chatCompletionResponse.Role.ToString().ToLower();
+        string requestRole = GetRoleEnumString(_rolePropertyAccessor(lastChatMessage));
+        string responseRole = GetRoleEnumString(chatCompletionResponse.Role);
 
         string responseId = chatCompletionResponse.Id;
         string responseModel = chatCompletionResponse.Model;
@@ -192,10 +193,10 @@ public class OpenAiChatWrapper : IWrapper
         var temperature = chatCompletionOptions != null ? (float?)chatCompletionOptions.Temperature : null;
         var maxOutputTokenCount = chatCompletionOptions != null ? (int?)chatCompletionOptions.MaxOutputTokenCount : null;
 
-        int numMessages = 1;
 
         // if finishReason = "Stop", then there is a response message
         // otherwise, there won't be any response message
+        int numMessages = 1;
         string responseContent = null;
         if (finishReason == "Stop")
         {
@@ -226,7 +227,7 @@ public class OpenAiChatWrapper : IWrapper
             segment,
             requestId,
             responseId,
-            responseModel, // TODO: not sure why we send response model instead of request model here, but that's what the spec says
+            responseModel,
             requestPrompt,
             requestRole,
             0,
@@ -252,6 +253,12 @@ public class OpenAiChatWrapper : IWrapper
                 GetVendorName(),
                 outputTokenCount);
         }
+    }
+
+    private string GetRoleEnumString(dynamic roleEnumVal)
+    {
+        // roles need to be lowercase
+        return _roleEnumStringCache.GetOrAdd(roleEnumVal, roleEnumVal.ToString().ToLower());
     }
 
     private Dictionary<string, string> GetResponseHeaders(dynamic clientResult)
