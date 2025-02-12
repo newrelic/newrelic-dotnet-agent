@@ -186,6 +186,24 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
+        TEST_METHOD(should_instrument_azure_function_functions_worker_id_in_command_line)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+");
+
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
+
+            Assert::IsTrue(configuration.ShouldInstrument(L"SomeFW481FunctionApp.exe", L"", L"", L"blah blah blah --functions-worker-id FooBarBaz blah blah blah", false));
+        }
+
         TEST_METHOD(instrument_process)
         {
             ProcessesPtr processes(new Processes());
@@ -373,7 +391,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         TEST_METHOD(Azure_WebSites_background_application_pool_ignored)
         {
             std::wstring configurationXml(L"<?xml version=\"1.0\"?><configuration/>");
-            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", systemCalls);
             Assert::IsFalse(configuration.ShouldInstrument(L"w3wp.exe", L"", L"~Foo", L"", false));
         }
 
