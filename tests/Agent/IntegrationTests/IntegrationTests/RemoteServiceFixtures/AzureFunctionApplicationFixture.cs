@@ -23,8 +23,8 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Priority = "1.23456";
     private const string Timestamp = "1518469636025";
 
-    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode)
-        : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, true, true, enableAzureFunctionMode))
+    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true)
+        : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode))
     {
         CommandLineArguments = $"start --no-build --language-worker dotnet-isolated --dotnet-isolated --functions {functionNames} ";
 
@@ -69,6 +69,13 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", true)
+    {
+    }
+}
+
+public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureHttpTriggerFWLatest() : base("httpTriggerFunctionUsingSimpleInvocation", "net481", true, false)
     {
     }
 }
