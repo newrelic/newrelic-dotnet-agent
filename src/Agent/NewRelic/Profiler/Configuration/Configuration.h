@@ -680,11 +680,17 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
-            // look for -functions-uri in the command line and instrument if found
-            bool isFunctionsUri = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
-            if (isFunctionsUri)
+            // look for -functions-worker-id (or --worker-id, to instrument during local testing) in the command line and instrument if found
+            bool isFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
+            if (isFunctionsWorkerId)
             {
                 LogInfo(L"Command line contains --functions-worker-id. This process will be instrumented.");
+                return 1;
+            }
+            bool isLocalFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--worker-id"));
+            if (isLocalFunctionsWorkerId)
+            {
+                LogInfo(L"Command line contains --worker-id. This process will be instrumented.");
                 return 1;
             }
 
