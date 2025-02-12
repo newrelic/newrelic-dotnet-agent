@@ -11,6 +11,9 @@
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net9.0'" />
 
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'"/>
+
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net9.0'" />
     
@@ -76,6 +79,10 @@
     <!-- NServiceBus v9+ only supports .NET8+, so constrain FW target to the latest 8.x version -->
     <PackageReference Include="NServiceBus" Version="8.2.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="9.2.4" Condition="'$(TargetFramework)' == 'net9.0'" />
+
+    <!--OpenAI -->
+    <PackageReference Include="OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'"/>
 
     <!-- OpenSearch -->
     <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net481'" />

@@ -69,7 +69,7 @@ where TFixture : ConsoleDynamicMethodFixture
 
             foreach (var model in _bedrockModelsToTest)
             {
-                _fixture.AddCommand($"LLMExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
+                _fixture.AddCommand($"BedrockExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
             }
 
             _fixture.Initialize();
@@ -121,7 +121,7 @@ where TFixture : ConsoleDynamicMethodFixture
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             Assertions.MetricsExist(expectedMetrics, metrics);
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModel");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModel");
 
             Assert.NotNull( transactionEvent );
         }
