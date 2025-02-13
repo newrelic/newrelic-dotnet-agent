@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
         [Test]
         public void CustomEvents_UserAttributes_AllAttributeTypesSerializeCorrectly()
         {
-            var dateTime = DateTime.UtcNow;
+            var dateTime = DateTime.Parse("2025-02-13T20:15:14.4214979Z");
             var timestampVal = dateTime;
             var typeVal = $"CustomEvent";
 
