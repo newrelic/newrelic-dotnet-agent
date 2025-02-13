@@ -9,6 +9,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
@@ -17,139 +18,55 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
     {
         public const string VendorName = "Kinesis";
         public static readonly List<string> MessageBrokerRequestTypes = new List<string> { "GetRecordsRequest", "PutRecordsRequest", "PutRecordRequest" };
-        private static readonly ConcurrentHashSet<string> _unsupportedKinesisRequestTypes = [];
+        private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
 
-        // These lists are incomplete, don't want to throw them away yet though
-        //public static readonly List<string> RequestTypesWithARN =
-        //    new List<string> { "AddTagsToStreamRequest", "DecreaseStreamRetensionPeriodRequest", "DeleteResourcePolicyRequest",
-        //                       "DeleteStreamRequest", "DeregisterStreamConsumerRequest", "DescribeStreamConsumerRequest",
-        //                       "DescribeStreamRequest", "DescribeStreamSummaryRequest", "DisableEnhancedMonitoringRequest",
-        //                       "EnableEnhancedMonitoringRequest", "GetResourcePolicyRequest", "GetShardIteratorRequest"};
-        //public static readonly List<string> RequestTypesWithStreamName =
-        //    new List<string> { "CreateStreamRequest", "DecreaseStreamRetensionPeriodRequest", "DeleteStreamRequest", "DescribeStreamRequest",
-        //                       "DescribeStreamSummaryRequest", "DisableEnhancedMonitoringRequest", "EnableEnhancedMonitoringRequest",
-        //                       "GetShardIteratorRequest"};
-
-        private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
-        //private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
-
-        public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
             var requestType = request.GetType().Name as string;
 
-            // Only some Kinesis requests are treated as message queue operations (put records, get records).  The rest should be treated as ordinary external spans.
+            // Only some Kinesis requests are treated as message queue operations (put records, get records).  The rest should be treated as ordinary spans.
 
             // Not all request types have a stream name or a stream ARN
+
+            var streamName = GetStreamNameFromRequest(request);
+            string arn = GetArnFromRequest(request);
+            if (arn == null && streamName != null)
+            {
+                arn = builder.Build("kinesis", $"stream/{streamName}");
+            }
+
+            var operation = _operationNameCache.GetOrAdd(requestType, requestType.Replace("Request", string.Empty).ToSnakeCase());
+
             ISegment segment;
 
             if (MessageBrokerRequestTypes.Contains(requestType))
             {
                 var action = requestType.StartsWith("Put") ? MessageBrokerAction.Produce : MessageBrokerAction.Consume;
-                var streamARN = request.StreamARN as string;
-                // arn:aws:kinesis:us-west-2:342444490463:stream/AlexKinesisTesting
-                var arnParts = streamARN.Split(':');
 
-                var region = arnParts[3];
-                var accountId = arnParts[4];
-                var streamName = arnParts[arnParts.Length - 1];
-
-                segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: streamName, messagingSystemName: "aws_kinesis_data_streams", cloudAccountId: accountId, cloudRegion: region);
+                segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: streamName, messagingSystemName: "aws_kinesis_data_streams", cloudAccountId: builder.AccountId, cloudRegion: builder.Region);
                 segment.GetExperimentalApi().MakeLeaf();
             }
             else
             {
-                var operationName = "Kinesis/" + requestType.Replace("Request", "");
-                var arn = string.Empty;
-                // TODO: add stream name to end if it exists, e.g. "Kinesis/CreateStream/myStreamName"
-                if (request.GetType().GetProperty("StreamName") != null)
+                var operationName = requestType.Replace("Request", "");
+
+                if (streamName != null)
                 {
-                    operationName += "/" + request.StreamName as string;
-                }
-                if (request.GetType().GetProperty("StreamARN") != null)
-                {
-                    arn = request.StreamARN as string;
-                }
-                if (request.GetType().GetProperty("ResourceARN") != null)
-                {
-                    arn = request.ResourceARN as string;
+                    operationName += "/" + streamName;
                 }
 
-                if (arn != string.Empty)
-                {
-                    // URI is not available in any of the request types
-                    // Options: use ARN for URI (only works if the request type has an ARN)
-                    //          assume that the URI fits the pattern of "kinesis.$REGION.amazonaws.com" (need a region, seems fake)
-
-                    segment = transaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, new Uri(arn), operationName, isLeaf: true);
-                }
-                else
-                {
-                    if (!_unsupportedKinesisRequestTypes.Contains(requestType))  // log once per unsupported request type
-                    {
-                        agent.Logger.Debug($"AwsSdkPipelineWrapper: Kinesis Request type {requestType} is not supported. Returning NoOp delegate.");
-                        _unsupportedKinesisRequestTypes.Add(requestType);
-                    }
-
-                    return Delegates.NoOp;
-
-                }
-
+                segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "Kinesis", operationName, isLeaf: false);
 
             }
 
-            // DT stuff TODO figure this out
-
-            //ar dtHeaders = agent.GetConfiguredDTHeaders();
-
-            //switch (action)
-            //{
-            //    case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
-            //        {
-            //            if (request.MessageAttributes == null)
-            //            {
-            //                agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
-            //            }
-            //            else
-            //            {
-            //                SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
-            //            }
-
-            //            break;
-            //        }
-            //    case MessageBrokerAction.Produce:
-            //        {
-            //            if (requestType == "SendMessageBatchRequest")
-            //            {
-            //                // loop through each message in the batch and insert distributed trace headers
-            //                foreach (var message in request.Entries)
-            //                {
-            //                    if (message.MessageAttributes == null)
-            //                    {
-            //                        agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.Entries.MessageAttributes is null, unable to insert distributed trace headers.");
-            //                    }
-            //                    else
-            //                    {
-            //                        SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
-            //                    }
-            //                }
-            //            }
-
-            //            break;
-            //        }
-
-            //    // modify the request to ask for DT headers in the response message attributes.
-            //    case MessageBrokerAction.Consume:
-            //        {
-            //            // create a new list or clone the existing one so we don't modify the original list
-            //            request.MessageAttributeNames = request.MessageAttributeNames == null ? new List<string>() : new List<string>(request.MessageAttributeNames);
-
-            //            foreach (var header in dtHeaders)
-            //                request.MessageAttributeNames.Add(header);
-
-            //            break;
-            //        }
-            //}
+            if (arn != null)
+            {
+                segment.AddCloudSdkAttribute("cloud.resource_id", arn);
+            }
+            segment.AddCloudSdkAttribute("aws.operation", operation);
+            segment.AddCloudSdkAttribute("aws.region", builder.Region);
+            segment.AddCloudSdkAttribute("cloud.platform", "aws_kinesis_data_streams");
 
             return isAsync ?
                 Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, ProcessResponse, TaskContinuationOptions.ExecuteSynchronously)
@@ -158,42 +75,55 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
                     onComplete: segment.End,
                     onSuccess: () =>
                     {
-                        //if (action != MessageBrokerAction.Consume)
-                        //    return;
-
-                        //var ec = executionContext;
-                        //var response = ec.ResponseContext.Response; // response is a ReceiveMessageResponse
-
-                        //AcceptTracingHeadersIfSafe(transaction, response);
+                        return;
                     }
                 );
 
             void ProcessResponse(Task responseTask)
             {
-                //if (!ValidTaskResponse(responseTask) || segment == null || action != MessageBrokerAction.Consume)
-                //    return;
-
-                //// taskResult is a ReceiveMessageResponse
-                //var taskResultGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
-                //dynamic response = taskResultGetter(responseTask);
-
-                //AcceptTracingHeadersIfSafe(transaction, response);
-
+                return;
             }
         }
 
-        private static bool ValidTaskResponse(Task response)
+        private static string GetStreamNameFromRequest(dynamic request)
         {
-            return response?.Status == TaskStatus.RanToCompletion;
-        }
-
-        private static void AcceptTracingHeadersIfSafe(ITransaction transaction, dynamic response)
-        {
-            if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
+            try
             {
-                // accept distributed trace headers from the first message in the response
-                SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
+                var streamName = request.StreamName as string;
+                if (streamName != null)
+                {
+                    return streamName;
+                }
+                // if StreamName is null/unavailable, StreamARN may exist
+                var streamARN = GetArnFromRequest(request) as string;
+                if (streamARN != null)
+                {
+                    // arn:aws:kinesis:us-west-2:342444490463:stream/AlexKinesisTesting
+                    var arnParts = streamARN.Split(':');
+                    // TODO: cache name based on arn for performance?
+                    return arnParts[arnParts.Length - 1].Split('/')[1];
+                }
             }
+            catch
+            {
+            }
+            return null;
+        }
+
+        private static string GetArnFromRequest(dynamic request)
+        {
+            try
+            {
+                var streamARN = request.StreamARN as string;
+                if (streamARN != null)
+                {
+                    return streamARN;
+                }
+            }
+            catch
+            {
+            }
+            return null;
         }
 
     }
