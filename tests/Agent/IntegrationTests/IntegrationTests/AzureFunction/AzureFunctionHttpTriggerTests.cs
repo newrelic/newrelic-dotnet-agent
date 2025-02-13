@@ -357,3 +357,12 @@ public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerT
     {
     }
 }
+
+[NetFrameworkTest]
+public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
+{
+    public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, AzureFunctionHttpTriggerTestMode.SimpleInvocation)
+    {
+    }
+}

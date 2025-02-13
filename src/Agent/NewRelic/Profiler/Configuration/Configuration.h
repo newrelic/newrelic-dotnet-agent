@@ -183,6 +183,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool ShouldInstrument(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
         {
+            if (IsAzureFunction()) // valid for both .NET Framework and .NET Core
+            {
+                if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
+                {
+                    auto retVal = ShouldInstrumentAzureFunction(processPath, appPoolId, commandLine);
+                    if (retVal == 0) {
+                        return false;
+                    }
+                    if (retVal == 1) {
+                        return true;
+                    }
+                }
+            }
+
             if (isCoreClr)
             {
                 return ShouldInstrumentNetCore(processPath, parentProcessPath, appPoolId, commandLine);
@@ -610,20 +624,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return false;
             }
 
-            if (IsAzureFunction())
-            {
-                if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
-                {
-                    auto retVal = ShouldInstrumentAzureFunction(processPath, appPoolId, commandLine);
-                    if (retVal == 0) {
-                        return false;
-                    }
-                    if (retVal == 1) {
-                        return true;
-                    }
-                }
-            }
-
             if (IsW3wpProcess(processPath, parentProcessPath)) {
                 return ShouldInstrumentApplicationPool(appPoolId);
             }
@@ -678,6 +678,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             {
                 LogInfo(L"Func.exe is a tool for testing Azure functions locally. Not instrumenting this process.");
                 return 0;
+            }
+
+            // look for --functions-worker-id (or --worker-id, to instrument during local testing) in the command line and instrument if found
+            bool isFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
+            if (isFunctionsWorkerId)
+            {
+                LogInfo(L"Command line contains --functions-worker-id. This process will be instrumented.");
+                return 1;
+            }
+            bool isLocalFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--worker-id"));
+            if (isLocalFunctionsWorkerId)
+            {
+                LogInfo(L"Command line contains --worker-id. This process will be instrumented.");
+                return 1;
             }
 
             LogInfo("Couldn't determine whether this Azure Function process should be instrumented based on commandLine. Falling back to checking application pool");
