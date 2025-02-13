@@ -680,7 +680,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
-            // look for -functions-worker-id (or --worker-id, to instrument during local testing) in the command line and instrument if found
+            // look for --functions-worker-id (or --worker-id, to instrument during local testing) in the command line and instrument if found
             bool isFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
             if (isFunctionsWorkerId)
             {
