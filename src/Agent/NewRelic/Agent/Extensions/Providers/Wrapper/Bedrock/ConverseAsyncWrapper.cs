@@ -72,7 +72,7 @@ public class ConverseAsyncWrapper : IWrapper
             dynamic converseResponse = GetTaskResult(responseTask);
             if (converseResponse == null || converseResponse.HttpStatusCode >= HttpStatusCode.MultipleChoices)
             {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing Converse response for model {modelId}: Response {(converseResponse == null ? "is null" : $"has non-success HttpStatusCode: {converseResponse.HttpStatusCode}")}");
+                agent.Logger.Warn($"Error processing Converse response for model {modelId}: Response {(converseResponse == null ? "is null" : $"has non-success HttpStatusCode: {converseResponse.HttpStatusCode}")}");
                 return;
             }
 
@@ -87,13 +87,13 @@ public class ConverseAsyncWrapper : IWrapper
         var requestMessage = converseRequest?.Messages?[converseRequest.Messages.Count - 1];
         if (converseRequest == null || requestMessage == null || requestMessage.Content == null || requestMessage.Content.Count == 0 || requestMessage.Content[0].Text == null)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Unable to process Converse response for model {requestModelId}: request was null or message content was not Text");
+            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: request was null or message content was not Text");
             return;
         }
 
         if (converseResponse == null)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing Converse response for model {requestModelId}: response was null");
+            agent.Logger.Warn($"Error processing Converse response for model {requestModelId}: response was null");
             return;
         }
 
@@ -101,7 +101,7 @@ public class ConverseAsyncWrapper : IWrapper
         var responseMessage = converseResponse.Output?.Message;
         if (responseMessage == null || responseMessage.Content == null || responseMessage.Content.Count == 0 || responseMessage.Content[0].Text == null)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Unable to process Converse response for model {requestModelId}: response message content was not Text");
+            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: response was null or message content was not Text");
             return;
         }
 
@@ -168,12 +168,12 @@ public class ConverseAsyncWrapper : IWrapper
 
     private void HandleError(ISegment segment, dynamic converseRequest, Task responseTask, IAgent agent, string modelId)
     {
-        agent.Logger.Log(Agent.Extensions.Logging.Level.Info, $"Error processing Converse response for model {modelId}: {responseTask.Exception!.Message}");
+        agent.Logger.Info($"Error processing Converse response for model {modelId}: {responseTask.Exception!.Message}");
 
         dynamic bedrockException = responseTask.Exception!.InnerException;
         if (bedrockException == null)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing Converse response for model {modelId}: Task faulted but there was no inner exception");
+            agent.Logger.Warn($"Error processing Converse response for model {modelId}: Task faulted but there was no inner exception");
             return;
         }
 
@@ -181,7 +181,7 @@ public class ConverseAsyncWrapper : IWrapper
 
         if (converseRequest == null || requestMessage == null)
         {
-            agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing Converse response for model {modelId}: request Message was null");
+            agent.Logger.Warn($"Error processing Converse response for model {modelId}: request Message was null");
             return;
         }
 
