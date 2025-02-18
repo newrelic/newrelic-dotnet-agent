@@ -24,6 +24,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "amazonexpress", BedrockModels.InvokeAmazonExpressAsync },
                 { "cohere", BedrockModels.InvokeCohereAsync },
                 { "anthropic", BedrockModels.InvokeClaudeAsync },
+#if NET481 || NET9_0
+                { "converse", BedrockModels.ConverseNovaMicro },
+#endif
             };
 
         // Convert a flat string to a dictionary of key value pairs
@@ -37,6 +40,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 var elements = keyValue.Split('=');
                 dict[elements[0]] = elements[1];
             }
+
             return dict;
         }
 
@@ -76,6 +80,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 throw new ArgumentException($"{model} is not a valid model");
             }
         }
+
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -85,7 +90,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             {
                 var bytes = Convert.FromBase64String(base64Prompt);
                 var prompt = Encoding.UTF8.GetString(bytes);
-                var response =await func(prompt, false);
+                var response = await func(prompt, false);
                 Console.WriteLine(response);
 
                 var traceId = NewRelic.Api.Agent.NewRelic.GetAgent().GetLinkingMetadata()["trace.id"];
@@ -120,5 +125,43 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 throw new ArgumentException($"{model} is not a valid model");
             }
         }
+
+#if NET481 ||  NET9_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net9.0 tfms
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public async Task Converse(string base64Prompt)
+        {
+            if (_models.TryGetValue("converse", out var func))
+            {
+                var bytes = Convert.FromBase64String(base64Prompt);
+                var prompt = Encoding.UTF8.GetString(bytes);
+                var response = await func(prompt, false);
+                Console.WriteLine(response);
+            }
+            else
+            {
+                throw new ArgumentException("converse is not a valid model");
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public async Task ConverseWithError(string base64Prompt)
+        {
+            if (_models.TryGetValue("converse", out var func))
+            {
+                var bytes = Convert.FromBase64String(base64Prompt);
+                var prompt = Encoding.UTF8.GetString(bytes);
+                var response = await func(prompt, true);
+                Console.WriteLine(response);
+            }
+            else
+            {
+                throw new ArgumentException("converse is not a valid model");
+            }
+        }
+#endif
     }
 }
