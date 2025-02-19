@@ -12,18 +12,19 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 {
-    internal static class KinesisRequestHandler
+    internal static class FirehoseRequestHandler
     {
-        public const string VendorName = "Kinesis";
+        public const string VendorName = "Firehose";
         public static readonly List<string> MessageBrokerRequestTypes = new List<string> { "GetRecordsRequest", "PutRecordsRequest", "PutRecordRequest" };
         private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
 
-        public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
+        public static AfterWrappedMethodDelegate HandleFirehoseRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
             var requestType = request.GetType().Name as string;
 
-            // Only some Kinesis requests are treated as message queue operations (put records, get records).  The rest should be treated as ordinary spans.
+            // @TODO get clarification from spec reviewers as to whether we're doing this for Firehose or not
+            // Only some Firehose requests are treated as message queue operations (put records, get records).  The rest should be treated as ordinary spans.
 
             // Not all request types have a stream name or a stream ARN
 
@@ -31,7 +32,9 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             string arn = GetArnFromRequest(request);
             if (arn == null && streamName != null)
             {
-                arn = builder.Build("kinesis", $"stream/{streamName}");
+                //TODO fix this
+                //arn:aws:firehose:us-west-2:342444490463:deliverystream/AlexTestFirehoseStream
+                arn = builder.Build("firehose", $"deliverystream/{streamName}");
             }
 
             var operation = _operationNameCache.GetOrAdd(requestType, requestType.Replace("Request", string.Empty).ToSnakeCase());
@@ -42,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             {
                 var action = requestType.StartsWith("Put") ? MessageBrokerAction.Produce : MessageBrokerAction.Consume;
 
-                segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: streamName, messagingSystemName: "aws_kinesis_data_streams", cloudAccountId: builder.AccountId, cloudRegion: builder.Region);
+                segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: streamName, messagingSystemName: "aws_kinesis_delivery_streams", cloudAccountId: builder.AccountId, cloudRegion: builder.Region);
                 segment.GetExperimentalApi().MakeLeaf();
             }
             else
@@ -54,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
                     operationName += "/" + streamName;
                 }
 
-                segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "Kinesis", operationName, isLeaf: false);
+                segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, VendorName, operationName, isLeaf: false);
 
             }
 
@@ -64,7 +67,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             }
             segment.AddCloudSdkAttribute("aws.operation", operation);
             segment.AddCloudSdkAttribute("aws.region", builder.Region);
-            segment.AddCloudSdkAttribute("cloud.platform", "aws_kinesis_data_streams");
+            segment.AddCloudSdkAttribute("cloud.platform", "aws_kinesis_delivery_streams");
 
             return isAsync ?
                 Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, ProcessResponse, TaskContinuationOptions.ExecuteSynchronously)
@@ -87,7 +90,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
         {
             try
             {
-                var streamName = request.StreamName as string;
+                var streamName = request.DeliveryStreamName as string;
                 if (streamName != null)
                 {
                     return streamName;
@@ -112,7 +115,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
         {
             try
             {
-                var streamARN = request.StreamARN as string;
+                var streamARN = request.DeliveryStreamARN as string;
                 if (streamARN != null)
                 {
                     return streamARN;

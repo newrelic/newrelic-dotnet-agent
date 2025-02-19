@@ -120,7 +120,12 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
-            if (requestType.StartsWith("Amazon.Kinesis"))
+            if (requestType.StartsWith("Amazon.KinesisFirehose"))
+            {
+                return FirehoseRequestHandler.HandleFirehoseRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
+            }
+
+            if (requestType.StartsWith("Amazon.Kinesis."))
             {
                 return KinesisRequestHandler.HandleKinesisRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
