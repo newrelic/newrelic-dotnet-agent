@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.37.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.36.0...v10.37.0) (2025-02-19)
+
+
+### New features
+
+* Add AI Monitoring instrumentation for `AmazonBedrockRuntimeClient.ConverseAsync()` ([#2997](https://github.com/newrelic/newrelic-dotnet-agent/issues/2997)) ([cdc2f6c](https://github.com/newrelic/newrelic-dotnet-agent/commit/cdc2f6c6de6640a72ad2c729f8f3abe31a14289c))
+* Add AI Monitoring instrumentation for OpenAI and Azure.AI.OpenAI ([#2987](https://github.com/newrelic/newrelic-dotnet-agent/issues/2987)) ([aa06d9d](https://github.com/newrelic/newrelic-dotnet-agent/commit/aa06d9db633f12f345fdfa6a574dd9e1a8fbec85))
+* Add support for .NET Framework Azure Function Apps ([#2992](https://github.com/newrelic/newrelic-dotnet-agent/issues/2992)) ([5b077f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/5b077f3dc898f57a3637de01d5da4bf4a3b5e143))
+* Improve logging and validation for license keys. ([#2982](https://github.com/newrelic/newrelic-dotnet-agent/issues/2982)) ([19e8387](https://github.com/newrelic/newrelic-dotnet-agent/commit/19e8387a49e01d706691512dea1bb32e8d124b87))
+
 ## [10.36.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.35.0...v10.36.0) (2025-02-05)
 
 
