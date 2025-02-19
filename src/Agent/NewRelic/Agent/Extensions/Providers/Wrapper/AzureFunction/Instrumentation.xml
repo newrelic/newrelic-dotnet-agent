@@ -12,6 +12,13 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="InvokeFunctionAsync" />
       </match>
     </tracerFactory>
+
+    <!--<tracerFactory name="AzureFunction">
+      <match assemblyName="Microsoft.Azure.WebJobs.Host" className="Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker`2">
+        <exactMethodMatcher methodName="InvokeAsync" parameters="" />
+      </match>
+    </tracerFactory>-->
+                   
     
     <!-- Use a NoOpWrapper on HostBuilder.Build() to load the agent early in the startup cycle -->
     <tracerFactory name="NewRelic.Agent.Core.Wrapper.NoOpWrapper">
@@ -30,7 +37,6 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">
         <exactMethodMatcher methodName="TryHandleOutputBindingsHttpResult" />
       </match>
-      
     </tracerFactory>
   </instrumentation>
 </extension>
