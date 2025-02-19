@@ -12,8 +12,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
-    public abstract class BedrockTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-where TFixture : ConsoleDynamicMethodFixture
+    public abstract class BedrockInvokeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
@@ -48,7 +47,7 @@ where TFixture : ConsoleDynamicMethodFixture
             {"input", LlmMessageTypes.LlmEmbedding},
         };
 
-        public BedrockTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public BedrockInvokeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
@@ -128,18 +127,18 @@ where TFixture : ConsoleDynamicMethodFixture
     }
 
     [NetCoreTest]
-    public class BedrockTests_Basic_CoreLatest : BedrockTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class BedrockInvokeTests_Basic_CoreLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public BedrockTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public BedrockInvokeTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class BedrockTests_Basic_FWLatest : BedrockTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class BedrockInvokeTests_Basic_FWLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public BedrockTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public BedrockInvokeTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
