@@ -644,9 +644,18 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool IsAzureFunction() const
         {
-            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable to "dotnet-isolated" when running in the .NET worker.
+            // Azure Functions sets the FUNCTIONS_WORKER_RUNTIME environment variable when running in Azure Functions
             auto functionsWorkerRuntime = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
             return functionsWorkerRuntime != nullptr && functionsWorkerRuntime->length() > 0;
+        }
+
+        bool IsAzureFunctionInProcess() const
+        {
+            auto functionsWorkerRuntime = _systemCalls->TryGetEnvironmentVariable(_X("FUNCTIONS_WORKER_RUNTIME"));
+
+            // "dotnet" when running in in-process mode
+            // "dotnet-isolated" when running in isolated mode
+            return functionsWorkerRuntime != nullptr && Strings::AreEqualCaseInsensitive(*functionsWorkerRuntime, _X("dotnet"));
         }
 
         /// <summary>
@@ -655,6 +664,18 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         int ShouldInstrumentAzureFunction(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
         {
             LogInfo(_X("Azure function detected. Determining whether to instrument ") + commandLine);
+
+            if (IsAzureFunctionInProcess())
+            {
+                // appPoolName starts with "~" for Azure Functions background tasks (kudu / scm)
+                if (appPoolId.find(_X("~")) == 0) {
+                    LogInfo(_X("This application pool (") + appPoolId + _X(") has been identified as an in-process Azure Functions built-in background application and will be ignored."));
+                    return 0;
+                }
+
+                LogInfo(L"Function is running in-process. This process will be instrumented.");
+                return 1;
+            }
 
             bool isAzureWebJobsScriptWebHost = appPoolId.length() > 0  && NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
             if (isAzureWebJobsScriptWebHost)
