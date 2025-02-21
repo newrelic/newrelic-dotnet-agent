@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -15,7 +13,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
     internal static class FirehoseRequestHandler
     {
         public const string VendorName = "Firehose";
-        public static readonly List<string> MessageBrokerRequestTypes = new List<string> { "GetRecordsRequest", "PutRecordsRequest", "PutRecordRequest" };
         private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
 
 
@@ -23,8 +20,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
         {
             var requestType = request.GetType().Name as string;
 
-            // @TODO get clarification from spec reviewers as to whether we're doing this for Firehose or not
-            // Only some Firehose requests are treated as message queue operations (put records, get records).  The rest should be treated as ordinary spans.
+            // Unlike Kinesis Data Streams, all Firehose requests are instrumented with ordinary method segments
 
             // Not all request types have a stream name or a stream ARN
 
@@ -32,7 +28,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             string arn = GetArnFromRequest(request);
             if (arn == null && streamName != null)
             {
-                //TODO fix this
                 //arn:aws:firehose:us-west-2:342444490463:deliverystream/AlexTestFirehoseStream
                 arn = builder.Build("firehose", $"deliverystream/{streamName}");
             }
@@ -41,25 +36,15 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 
             ISegment segment;
 
-            if (MessageBrokerRequestTypes.Contains(requestType))
+            var operationName = requestType.Replace("Request", "");
+
+            if (streamName != null)
             {
-                var action = requestType.StartsWith("Put") ? MessageBrokerAction.Produce : MessageBrokerAction.Consume;
-
-                segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: streamName, messagingSystemName: "aws_kinesis_delivery_streams", cloudAccountId: builder.AccountId, cloudRegion: builder.Region);
-                segment.GetExperimentalApi().MakeLeaf();
+                operationName += "/" + streamName;
             }
-            else
-            {
-                var operationName = requestType.Replace("Request", "");
 
-                if (streamName != null)
-                {
-                    operationName += "/" + streamName;
-                }
+            segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, VendorName, operationName, isLeaf: false);
 
-                segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, VendorName, operationName, isLeaf: false);
-
-            }
 
             if (arn != null)
             {
@@ -99,7 +84,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
                 var streamARN = GetArnFromRequest(request) as string;
                 if (streamARN != null)
                 {
-                    // arn:aws:kinesis:us-west-2:342444490463:stream/AlexKinesisTesting
+                    //arn:aws:firehose:us-west-2:342444490463:deliverystream/AlexTestFirehoseStream
                     var arnParts = streamARN.Split(':');
                     // TODO: cache name based on arn for performance?
                     return arnParts[arnParts.Length - 1].Split('/')[1];
