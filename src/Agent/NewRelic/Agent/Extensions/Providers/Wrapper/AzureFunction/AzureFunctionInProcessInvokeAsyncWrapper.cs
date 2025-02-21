@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
@@ -33,10 +34,11 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
         // get the transaction and find an attribute called faas.trigger
         var trigger = transaction.GetFaasAttribute("faas.trigger") as string;
 
+        object[] args = (object[])instrumentedMethodCall.MethodCall.MethodArguments[1];
+
         bool handledHttpArg = false;
-        if (trigger == "http") // this is (currently) the only trigger we care about
+        if (trigger == "http")
         {
-            object[] args = (object[])instrumentedMethodCall.MethodCall.MethodArguments[1];
 
             // iterate each argument to find one with a type we can work with
             foreach (object arg in args)
@@ -50,6 +52,15 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             if (!handledHttpArg)
             {
                 agent.Logger.Info("Unable to set http-specific attributes on this transaction; could not find suitable function argument type.");
+            }
+        }
+        else if (trigger == "pubsub")
+        {
+            foreach (object arg in args)
+            {
+                var argType = arg?.GetType().FullName;
+                if (TryExtractServiceBusDTHeaders(arg, argType, transaction)) // TODO: remove this if/when AzureServiceBus instrumentation is released
+                    break;
             }
         }
 
@@ -70,9 +81,25 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                     return;
                 }
 
+                var result = GetTaskResult(responseTask);
+                if (result == null)
+                {
+                    return;
+                }
+
+                var resultType = result.GetType();
+                agent.Logger.Debug($"Azure Function response type: {resultType.FullName}");
+
+                if (trigger == "pubsub" && resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage")
+                {
+                    TryInsertServiceBusDTHeaders(transaction, result);
+                    return;
+                }
+
                 if (trigger == "http" && handledHttpArg) // don't try to set the response code if we didn't handle the http trigger arg
                 {
-                    TrySetHttpResponseStatusCode(responseTask, transaction, agent);
+                    TrySetHttpResponseStatusCode(result, resultType, transaction, agent);
+                    return;
                 }
             }
             catch (Exception ex)
@@ -83,11 +110,10 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
         }
     }
 
-    private bool TrySetHttpResponseStatusCode(Task responseTask, ITransaction transaction, IAgent agent)
+    private bool TrySetHttpResponseStatusCode(dynamic result, Type resultType,  ITransaction transaction, IAgent agent)
     {
-        var result = GetTaskResult(responseTask);
         // make sure there's a StatusCode property on the result object
-        var statusCodeProperty = result?.GetType().GetProperty("StatusCode");
+        var statusCodeProperty = resultType.GetProperty("StatusCode");
         if (statusCodeProperty != null)
         {
             var statusCode = statusCodeProperty.GetValue(result);
@@ -144,6 +170,59 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Extract ServiceBus DT headers from the ApplicationProperties collection, if available
+    /// </summary>
+    private bool TryExtractServiceBusDTHeaders(dynamic arg, string argTypeName, ITransaction transaction)
+    {
+        if (argTypeName == "Azure.Messaging.ServiceBus.ServiceBusReceivedMessage")
+        {
+            if (arg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+            {
+                transaction.AcceptDistributedTraceHeaders(applicationProperties, GetServiceBusDTHeaders, TransportType.Queue);
+                return true;
+            }
+        }
+
+        return false;
+
+        IEnumerable<string> GetServiceBusDTHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+        {
+            var headerValues = new List<string>();
+            foreach (var item in applicationProperties)
+            {
+                if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
+                    headerValues.Add(item.Value as string);
+                }
+            }
+
+            return headerValues;
+        }
+    }
+
+    /// <summary>
+    /// Insert ServiceBus DT headers into the ApplicationProperties collection
+    /// </summary>
+    private bool TryInsertServiceBusDTHeaders(ITransaction transaction, object result)
+    {
+        // inject distributed tracing headers into the response message
+        dynamic serviceBusMessage = result;
+        if (serviceBusMessage.ApplicationProperties is IDictionary<string, object> applicationProperties)
+        {
+            transaction.InsertDistributedTraceHeaders(applicationProperties, SetServiceBusDTHeaders);
+            return true;
+        }
+
+        return false;
+
+        void SetServiceBusDTHeaders(IDictionary<string, object> applicationProperties, string key, string value)
+        {
+            applicationProperties.Add(key, value);
+        }
+
     }
 
     private IEnumerable<string> GetHeaderValueFromIEnumerable(IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers, string key)
