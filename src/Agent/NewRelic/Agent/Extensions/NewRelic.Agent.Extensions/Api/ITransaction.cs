@@ -315,5 +315,6 @@ namespace NewRelic.Agent.Api
         void AddLambdaAttribute(string name, object value);
 
         void AddFaasAttribute(string name, object value);
+        object GetFaasAttribute(string name);
     }
 }

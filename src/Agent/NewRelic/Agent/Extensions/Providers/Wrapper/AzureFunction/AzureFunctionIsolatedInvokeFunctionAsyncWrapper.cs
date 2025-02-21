@@ -11,11 +11,10 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
 
-public class InvokeFunctionAsyncWrapper : IWrapper
+public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
 {
     private static MethodInfo _getInvocationResultMethod;
     private static bool _loggedDisabledMessage;
-    private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
 
     private static bool _coldStart = true;
     private static bool IsColdStart => _coldStart && !(_coldStart = false);
@@ -26,7 +25,7 @@ public class InvokeFunctionAsyncWrapper : IWrapper
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(AzureFunctionIsolatedInvokeAsyncWrapper).Equals(methodInfo.RequestedWrapperName));
     }
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
@@ -47,14 +46,14 @@ public class InvokeFunctionAsyncWrapper : IWrapper
 
         if (functionContext == null)
         {
-            agent.Logger.Debug($"{WrapperName}: FunctionContext is null, can't instrument this invocation.");
+            agent.Logger.Debug($"{nameof(AzureFunctionIsolatedInvokeAsyncWrapper)}: FunctionContext is null, can't instrument this invocation.");
             throw new ArgumentNullException("functionContext");
         }
 
-        var functionDetails = new FunctionDetails(functionContext, agent);
+        var functionDetails = new IsolatedFunctionDetails(functionContext, agent);
         if (!functionDetails.IsValid())
         {
-            agent.Logger.Debug($"{WrapperName}: FunctionDetails are invalid, can't instrument this invocation.");
+            agent.Logger.Debug($"{nameof(AzureFunctionIsolatedInvokeAsyncWrapper)}: FunctionDetails are invalid, can't instrument this invocation.");
             throw new Exception("FunctionDetails are missing some require information.");
         }
 

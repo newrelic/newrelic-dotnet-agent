@@ -10,13 +10,11 @@ namespace NewRelic.Providers.Wrapper.AzureFunction;
 
 public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 {
-    private const string WrapperName = "FunctionsHttpProxyingMiddlewareWrapper";
-
     public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(FunctionsHttpProxyingMiddlewareWrapper).Equals(methodInfo.RequestedWrapperName));
     }
 
     /// <summary>

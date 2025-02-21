@@ -7,25 +7,32 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
 
-    <tracerFactory name="AzureFunctionInvokeAsyncWrapper">
+    <tracerFactory name="AzureFunctionIsolatedInvokeAsyncWrapper">
       <match assemblyName="Microsoft.Azure.Functions.Worker.Core" className="Microsoft.Azure.Functions.Worker.FunctionsApplication">
         <exactMethodMatcher methodName="InvokeFunctionAsync" />
       </match>
     </tracerFactory>
 
-    <!--<tracerFactory name="AzureFunction">
+    <tracerFactory name="AzureFunctionInProcessInvokeAsyncWrapper">
       <match assemblyName="Microsoft.Azure.WebJobs.Host" className="Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker`2">
-        <exactMethodMatcher methodName="InvokeAsync" parameters="" />
+        <exactMethodMatcher methodName="InvokeAsync" parameters="System.Object,System.Object[]" />
       </match>
-    </tracerFactory>-->
-                   
-    
-    <!-- Use a NoOpWrapper on HostBuilder.Build() to load the agent early in the startup cycle -->
+    </tracerFactory>
+
+    <tracerFactory name="AzureFunctionInProcessTryExecuteAsyncWrapper">
+      <match assemblyName="Microsoft.Azure.WebJobs.Host" className="Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor">
+        <exactMethodMatcher methodName="ExecuteWithWatchersAsync" parameters="Microsoft.Azure.WebJobs.Host.Executors.IFunctionInstanceEx,ParameterHelper,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationTokenSource" />
+      </match>
+    </tracerFactory>
+
+    <!-- For Isolated functions, use a NoOpWrapper on HostBuilder.Build() to load the agent early in the startup cycle -->
     <tracerFactory name="NewRelic.Agent.Core.Wrapper.NoOpWrapper">
       <match assemblyName="Microsoft.Extensions.Hosting" className="Microsoft.Extensions.Hosting.HostBuilder">
         <exactMethodMatcher methodName="Build" />
       </match>
-    </tracerFactory>    
+    </tracerFactory>
+    
+    <!-- TODO: can we early-load the agent for in-proc functions? -->
 
     <tracerFactory name="FunctionsHttpProxyingMiddlewareWrapper">
       <match assemblyName="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" className="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware">

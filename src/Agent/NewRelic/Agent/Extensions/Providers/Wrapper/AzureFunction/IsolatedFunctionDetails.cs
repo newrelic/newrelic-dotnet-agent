@@ -13,7 +13,7 @@ using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
 
-internal class FunctionDetails
+internal class IsolatedFunctionDetails
 {
     private static MethodInfo _bindFunctionInputAsync;
     private static MethodInfo _genericFunctionInputBindingFeatureGetter;
@@ -27,7 +27,7 @@ internal class FunctionDetails
     private const string AspNetCoreExtensionsAssemblyName = "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore";
     private const string IFunctionInputBindingFeatureTypeName = "Microsoft.Azure.Functions.Worker.Context.Features.IFunctionInputBindingFeature";
 
-    public FunctionDetails(dynamic functionContext, IAgent agent)
+    public IsolatedFunctionDetails(dynamic functionContext, IAgent agent)
     {
         try
         {
