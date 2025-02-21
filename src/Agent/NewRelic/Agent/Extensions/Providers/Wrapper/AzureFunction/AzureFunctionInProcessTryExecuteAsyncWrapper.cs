@@ -83,7 +83,28 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, inProcessFunctionDetails.FunctionName);
 
-        return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+        return Delegates.GetAsyncDelegateFor<Task>(
+            agent,
+            segment,
+            false,
+            InvokeFunctionAsyncResponse,
+            TaskContinuationOptions.ExecuteSynchronously);
+
+        void InvokeFunctionAsyncResponse(Task responseTask)
+        {
+            try
+            {
+                if (responseTask.IsFaulted)
+                {
+                    transaction.NoticeError(responseTask.Exception);
+                }
+            }
+            finally
+            {
+                segment.End();
+                transaction.End();
+            }
+        }
     }
 
     private InProcessFunctionDetails GetInProcessFunctionDetails(string functionClassAndMethodName)
