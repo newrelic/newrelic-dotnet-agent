@@ -81,6 +81,21 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         transaction.AddFaasAttribute("faas.trigger", inProcessFunctionDetails.TriggerType);
         transaction.AddFaasAttribute("faas.invocation_id", invocationId);
 
+        // TODO: Verify it's ok to start 2 segments in the same transaction. Will they be nested?
+        ISegment mbSegment =  null;
+        if (inProcessFunctionDetails.ServiceBusTriggerDetails != null)
+        {
+            agent.Logger.Debug($"Starting MessageBroker segment for {inProcessFunctionDetails.ServiceBusTriggerDetails.QueueName ?? inProcessFunctionDetails.ServiceBusTriggerDetails.TopicName}");
+            mbSegment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destinationType: inProcessFunctionDetails.ServiceBusTriggerDetails.DestinationType == ServiceBusDestinationType.Queue ? MessageBrokerDestinationType.Queue : MessageBrokerDestinationType.Topic,
+                operation: MessageBrokerAction.Consume,
+                brokerVendorName: "AzureServiceBus",
+                destinationName: inProcessFunctionDetails.ServiceBusTriggerDetails.QueueName ?? inProcessFunctionDetails.ServiceBusTriggerDetails.TopicName
+                // can't get the server name, the value we get from the trigger is an app setting name, not the actual connection string
+            );
+        }
+
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, inProcessFunctionDetails.FunctionName);
 
         return Delegates.GetAsyncDelegateFor<Task>(
@@ -101,6 +116,8 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
             }
             finally
             {
+                mbSegment?.End();
+
                 segment.End();
                 transaction.End();
             }
@@ -115,7 +132,7 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         // get the type for functionClassName from any loaded assembly, since it's not in the current assembly
         // TODO: is there a better way to do this?
         Type functionClassType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).FirstOrDefault(t => t.FullName == functionClassName);
-        
+
         MethodInfo functionMethod = functionClassType?.GetMethod(functionMethodName);
         var functionNameAttribute = functionMethod?.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "FunctionNameAttribute");
         string functionName = functionNameAttribute?.GetType().GetProperty("Name")?.GetValue(functionNameAttribute) as string;
@@ -125,10 +142,24 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         string triggerAttributeName = triggerAttribute?.GetType().Name;
         string triggerType = triggerAttributeName?.ResolveTriggerType();
 
-        return new InProcessFunctionDetails
+        var inProcessFunctionDetails = new InProcessFunctionDetails
         {
             TriggerType = triggerType,
             FunctionName = functionName,
         };
+
+        if (triggerType == "pubsub" && triggerAttributeName == "ServiceBusTrigger") // add service bus trigger details if it's a service bus trigger
+        {
+            dynamic serviceBusTriggerAttribute = triggerAttribute;
+            inProcessFunctionDetails.ServiceBusTriggerDetails = new ServiceBusTriggerDetails
+            {
+                QueueName = serviceBusTriggerAttribute.QueueName,
+                TopicName = serviceBusTriggerAttribute.TopicName,
+                SubscriptionName = serviceBusTriggerAttribute.SubscriptionName,
+                Connection = serviceBusTriggerAttribute.Connection
+            };
+        }
+
+        return inProcessFunctionDetails;
     }
 }
