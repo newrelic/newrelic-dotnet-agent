@@ -45,6 +45,8 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
             return Delegates.NoOp;
         }
 
+        agent.Logger.Debug("Instrumenting Azure Function in-process invocation.");
+
         object functionInstance = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
         _functionDescriptorGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionInstance.GetType(), "FunctionDescriptor");

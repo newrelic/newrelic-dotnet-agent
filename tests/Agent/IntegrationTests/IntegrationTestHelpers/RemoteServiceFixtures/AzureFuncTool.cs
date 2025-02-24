@@ -11,11 +11,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     public class AzureFuncTool : RemoteService
     {
         private readonly bool _enableAzureFunctionMode;
+        private readonly bool _inProc;
 
-        public AzureFuncTool(string applicationDirectoryName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true)
-            : base(applicationDirectoryName, "AzureFunctionApplication.exe", targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
+        public AzureFuncTool(string applicationDirectoryName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true, bool inProc = false)
+            : base(applicationDirectoryName, inProc ? "AzureFunctionInProcApplication.dll" : "AzureFunctionApplication.exe", targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
         {
             _enableAzureFunctionMode = enableAzureFunctionMode;
+            _inProc = inProc;
         }
 
         public override void CopyToRemote()
@@ -114,7 +116,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", _enableAzureFunctionMode.ToString());
 
             // environment variables needed by azure function instrumentation
-            startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated");
+            startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", _inProc ? "dotnet" : "dotnet-isolated");
+            if (_inProc)
+                startInfo.Environment.Add("FUNCTIONS_INPROC_NET8_ENABLED", "1");
+
+            startInfo.Environment.Add("FUNCTIONS_EXTENSION_VERSION", "~4");
             startInfo.Environment.Add("WEBSITE_RESOURCE_GROUP", "my_resource_group");
             startInfo.Environment.Add("REGION_NAME", "my_azure_region");
             startInfo.Environment.Add("WEBSITE_SITE_NAME", AppName); // really should be the azure function app name, but for testing, this is preferred
@@ -122,6 +128,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             //  set a custom environment variable so the azure func app can build the correct eventWaitHandle name
             startInfo.Environment.Add("AZURE_FUNCTION_APP_EVENT_HANDLE_PORT", Port.ToString());
+
+            // shorter wait time for the event handle to get triggered
+            startInfo.Environment.Add("TEST_MINUTES_TO_WAIT", "2");
 
             if (AdditionalEnvironmentVariables != null)
             {

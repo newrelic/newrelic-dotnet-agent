@@ -23,10 +23,21 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Priority = "1.23456";
     private const string Timestamp = "1518469636025";
 
-    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true)
-        : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode))
+    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
+        : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
     {
-        CommandLineArguments = $"start --no-build --language-worker dotnet-isolated --dotnet-isolated --functions {functionNames} ";
+        CommandLineArguments = $"start --no-build --functions {functionNames} ";
+
+        if (inProc)
+        {
+            // for inproc, --language-worker dotnet --runtime inproc8
+            CommandLineArguments += $"--language-worker dotnet ";
+        }
+        else
+        {
+            // for isolated, --language-worker dotnet-isolated --runtime default
+            CommandLineArguments += $"--language-worker dotnet-isolated --runtime default ";
+        }
 
 #if DEBUG
         // set a long timeout if you're going to debug into the function
@@ -66,6 +77,14 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
     {
     }
 }
+
+public class AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", "net8.0", true, inProc: true)
+    {
+    }
+}
+
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", true)
