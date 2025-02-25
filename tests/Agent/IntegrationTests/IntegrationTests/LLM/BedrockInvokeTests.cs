@@ -111,7 +111,8 @@ namespace NewRelic.Agent.IntegrationTests.LLM
             {
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
+                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}
             };
 
             var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
