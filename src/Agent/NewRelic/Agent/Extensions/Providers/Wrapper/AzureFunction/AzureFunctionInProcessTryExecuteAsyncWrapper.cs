@@ -83,22 +83,7 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         transaction.AddFaasAttribute("faas.trigger", inProcessFunctionDetails.TriggerType);
         transaction.AddFaasAttribute("faas.invocation_id", invocationId);
 
-        // TODO: Verify it's ok to start 2 segments in the same transaction. Will they be nested?
-        ISegment mbSegment =  null;
-        if (inProcessFunctionDetails.ServiceBusTriggerDetails != null)
-        {
-            agent.Logger.Debug($"Starting MessageBroker segment for {inProcessFunctionDetails.ServiceBusTriggerDetails.QueueName ?? inProcessFunctionDetails.ServiceBusTriggerDetails.TopicName}");
-            mbSegment = transaction.StartMessageBrokerSegment(
-                instrumentedMethodCall.MethodCall,
-                destinationType: inProcessFunctionDetails.ServiceBusTriggerDetails.DestinationType == ServiceBusDestinationType.Queue ? MessageBrokerDestinationType.Queue : MessageBrokerDestinationType.Topic,
-                operation: MessageBrokerAction.Consume,
-                brokerVendorName: "AzureServiceBus",
-                destinationName: inProcessFunctionDetails.ServiceBusTriggerDetails.QueueName ?? inProcessFunctionDetails.ServiceBusTriggerDetails.TopicName
-                // can't get the server name, the value we get from the trigger is an app setting name, not the actual connection string
-            );
-        }
-
-        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, inProcessFunctionDetails.FunctionName);
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "Azure In-Proc Pipeline");
 
         return Delegates.GetAsyncDelegateFor<Task>(
             agent,
@@ -118,8 +103,6 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
             }
             finally
             {
-                mbSegment?.End();
-
                 segment.End();
                 transaction.End();
             }
@@ -150,7 +133,7 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
             FunctionName = functionName,
         };
 
-        if (triggerType == "pubsub" && triggerAttributeName == "ServiceBusTrigger") // add service bus trigger details if it's a service bus trigger
+        if (triggerType == "pubsub" && triggerAttributeName == "ServiceBusTriggerAttribute") // add service bus trigger details if it's a service bus trigger
         {
             dynamic serviceBusTriggerAttribute = triggerAttribute;
             inProcessFunctionDetails.ServiceBusTriggerDetails = new ServiceBusTriggerDetails

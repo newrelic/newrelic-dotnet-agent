@@ -31,15 +31,15 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             return Delegates.NoOp;
         }
 
-        // get the transaction and find an attribute called faas.trigger
         var trigger = transaction.GetFaasAttribute("faas.trigger") as string;
+        var name = transaction.GetFaasAttribute("faas.name") as string;
+        var functionName = name?.Substring(name.LastIndexOf('/') + 1);
 
         object[] args = (object[])instrumentedMethodCall.MethodCall.MethodArguments[1];
 
         bool handledHttpArg = false;
         if (trigger == "http")
         {
-
             // iterate each argument to find one with a type we can work with
             foreach (object arg in args)
             {
@@ -48,25 +48,22 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                 if (handledHttpArg)
                     break;
             }
-
-            if (!handledHttpArg)
-            {
-                agent.Logger.Info("Unable to set http-specific attributes on this transaction; could not find suitable function argument type.");
-            }
         }
         else if (trigger == "pubsub")
         {
             foreach (object arg in args)
             {
                 var argType = arg?.GetType().FullName;
-                if (TryExtractServiceBusDTHeaders(arg, argType, transaction)) // TODO: remove this if/when AzureServiceBus instrumentation is released
+                if (TryExtractServiceBusDTHeaders(arg, argType, transaction))
                     break;
             }
         }
 
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionName);
+
         return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
-                transaction.CurrentSegment,
+                segment,
                 false,
                 InvokeFunctionAsyncResponse,
                 TaskContinuationOptions.ExecuteSynchronously);
@@ -90,16 +87,17 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                 var resultType = result.GetType();
                 agent.Logger.Debug($"Azure Function response type: {resultType.FullName}");
 
-                if (trigger == "pubsub" && resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage")
+                // insert DT headers if the response object is a ServiceBusMessage
+                if (resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage") 
                 {
                     TryInsertServiceBusDTHeaders(transaction, result);
                     return;
                 }
 
-                if (trigger == "http" && handledHttpArg) // don't try to set the response code if we didn't handle the http trigger arg
+                // if the trigger is HTTP, try to set the StatusCode
+                if (trigger == "http" && handledHttpArg) 
                 {
                     TrySetHttpResponseStatusCode(result, resultType, transaction, agent);
-                    return;
                 }
             }
             catch (Exception ex)

@@ -10,6 +10,7 @@ public class InProcessFunctionDetails
     public string FunctionName { get; set; }
     public ServiceBusTriggerDetails ServiceBusTriggerDetails { get; set; }
 }
+
 public  class ServiceBusTriggerDetails
 {
     public string QueueName { get; set; }
