@@ -44,9 +44,15 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             foreach (object arg in args)
             {
                 var argType = arg?.GetType().FullName;
-                handledHttpArg = TryHandleHttpTrigger(arg, argType, transaction);
+                handledHttpArg = TryHandleHttpTrigger(arg, argType, transaction, agent);
                 if (handledHttpArg)
                     break;
+            }
+
+            if (!handledHttpArg)
+            {
+                var argTypeNames = string.Join(", ", args.Select(a => a?.GetType().FullName));
+                agent.Logger.Debug($"Unable to extract HttpTrigger attributes from request argument(s): {argTypeNames}");
             }
         }
         else if (trigger == "pubsub")
@@ -121,15 +127,12 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                 return true;
             }
         }
-        else
-        {
-            agent.Logger.Debug($"Could not find StatusCode property on response object type {result?.GetType().FullName}");
-        }
 
+        agent.Logger.Debug($"Could not find StatusCode property on response object type {result?.GetType().FullName}");
         return false;
     }
 
-    private bool TryHandleHttpTrigger(dynamic arg, string argTypeName, ITransaction transaction)
+    private bool TryHandleHttpTrigger(dynamic arg, string argTypeName, ITransaction transaction, IAgent agent)
     {
         if (arg is System.Net.Http.HttpRequestMessage httpTriggerArg)
         {
@@ -164,7 +167,6 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             {
                 transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValueFromIDictionary, TransportType.HTTP);
             }
-            return true;
         }
 
         return false;

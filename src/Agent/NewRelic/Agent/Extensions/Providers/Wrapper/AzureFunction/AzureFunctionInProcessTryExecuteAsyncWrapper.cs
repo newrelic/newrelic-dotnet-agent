@@ -45,8 +45,6 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
             return Delegates.NoOp;
         }
 
-        agent.Logger.Debug("Instrumenting Azure Function in-process invocation.");
-
         object functionInstance = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
         _functionDescriptorGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(functionInstance.GetType(), "FunctionDescriptor");
@@ -60,6 +58,8 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
 
         _idGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Guid>(functionInstance.GetType(), "Id");
         string invocationId = _idGetter(functionInstance).ToString();
+
+        agent.Logger.Debug($"Instrumenting in-process Azure Function: {inProcessFunctionDetails.FunctionName} / invocation ID {invocationId} / Trigger {inProcessFunctionDetails.TriggerType}.");
 
         transaction = agent.CreateTransaction(
             isWeb: inProcessFunctionDetails.IsWebTrigger,

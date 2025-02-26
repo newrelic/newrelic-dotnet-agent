@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -566,11 +567,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected void PostJson(string address, string payload)
+        protected void PostJson(string address, string payload, List<KeyValuePair<string, string>> headers = null)
         {
             var content = new StringContent(payload);
 
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            if (headers != null && headers.Any())
+            {
+                foreach(var header in headers)
+                {
+                    content.Headers.Add(header.Key, header.Value);
+                }
+            }
 
             var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
 
