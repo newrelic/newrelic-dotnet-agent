@@ -97,6 +97,7 @@ public class OpenAiChatWrapper : IWrapper
         agent.RecordSupportabilityMetric($"DotNet/ML/{GetVendorName()}/{version}");
 
         string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
+        SupportabilityHelpers.CreateModelIdSupportabilityMetrics(model, agent);
 
         if (isAsync)
         {

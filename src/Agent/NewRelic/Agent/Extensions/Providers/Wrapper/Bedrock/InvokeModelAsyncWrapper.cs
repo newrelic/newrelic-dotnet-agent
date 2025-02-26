@@ -23,7 +23,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
         private static ConcurrentDictionary<string, string> _libraryVersions  = new();
-        private static ConcurrentDictionary<string, object> _seenModels = new();
         private const string WrapperName = "BedrockInvokeModelAsync";
         private const string VendorName = "Bedrock";
 
@@ -46,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            CreateModelIdSupportabilityMetrics((string)invokeModelRequest.ModelId, agent);
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics((string)invokeModelRequest.ModelId, agent);
             var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
@@ -264,42 +263,6 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                         completionId,
                         false,
                         VendorName);
-            }
-        }
-
-        private static void CreateModelIdSupportabilityMetrics(string model, IAgent agent)
-        {
-            // Only want to send this metric once-ish per model
-            if (!_seenModels.TryAdd(model, null))
-            {
-                return;
-            }
-
-            try
-            {
-                // Example modelId: anthropic.claude-3-5-sonnet-20241022-v2:0
-                // Vendor: anthropic
-                // Model Id: claude-3-5-sonnet-20241022-v2
-                // Amazon version?: :0
-                var modelDetails = model.Split('.');
-                if (modelDetails.Length != 2)
-                {
-                    return;
-                }
-
-                var modelIdDetails = modelDetails[1].Split(':')[0].Split('-');
-                if (modelIdDetails[0] == "nova" || modelIdDetails[0] == "titan" || modelIdDetails[0] == "claude") // first 2 - capture some extra details to narrow down support
-                {
-                    agent.RecordSupportabilityMetric("DotNet/LLM/" + modelDetails[0] + "/" + modelIdDetails[0] + "-" + modelIdDetails[1]);
-                }
-                else // first only - any model that doesn't need the above extra details
-                {
-                    agent.RecordSupportabilityMetric("DotNet/LLM/" + modelDetails[0] + "/" + modelIdDetails[0]);
-                }
-            }
-            catch (Exception ex) // if there is a problem, this will also only happen once-ish per model
-            {
-                agent.Logger.Finest($"Error creating model supportability metric for {model}: {ex.Message}");
             }
         }
 
