@@ -3,7 +3,6 @@
     <TargetFrameworks>net481;net8.0;net9.0</TargetFrameworks>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.Development.json" />
@@ -38,12 +37,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
   </ItemGroup>
  
 </Project>

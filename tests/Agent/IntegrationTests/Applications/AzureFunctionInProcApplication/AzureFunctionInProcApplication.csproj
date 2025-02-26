@@ -2,12 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.13.7" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.ServiceBus" Version="5.16.4" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.3.2" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup>
@@ -18,12 +16,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
  
 </Project>

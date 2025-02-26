@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
@@ -13,11 +17,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         private readonly bool _enableAzureFunctionMode;
         private readonly bool _inProc;
 
-        public AzureFuncTool(string applicationDirectoryName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true, bool inProc = false)
-            : base(applicationDirectoryName, inProc ? "AzureFunctionInProcApplication.dll" : "AzureFunctionApplication.exe", targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
+        public AzureFuncTool(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true, bool inProc = false)
+            : base(applicationDirectoryName, executableName, targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
         {
             _enableAzureFunctionMode = enableAzureFunctionMode;
             _inProc = inProc;
+
+            CaptureStandardOutput = false; // since we kill the process after each test, we don't need to capture the output
         }
 
         public override void CopyToRemote()
@@ -55,7 +61,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 RedirectStandardInput = RedirectStandardInput
             };
 
-            Console.WriteLine($"[{DateTime.Now}] RemoteService.Start(): FileName=func, Arguments={arguments}, WorkingDirectory={DestinationApplicationDirectoryPath}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
+            TestLogger?.WriteLine($"[{DateTime.Now}] RemoteService.Start(): FileName=func, Arguments={arguments}, WorkingDirectory={DestinationApplicationDirectoryPath}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
 
             startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER");
@@ -126,12 +132,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.Environment.Add("WEBSITE_SITE_NAME", AppName); // really should be the azure function app name, but for testing, this is preferred
             startInfo.Environment.Add("WEBSITE_OWNER_NAME", "subscription_id+my_resource_group-my_azure_region-Linux");
 
-            //  set a custom environment variable so the azure func app can build the correct eventWaitHandle name
-            startInfo.Environment.Add("AZURE_FUNCTION_APP_EVENT_HANDLE_PORT", Port.ToString());
-
-            // shorter wait time for the event handle to get triggered
-            startInfo.Environment.Add("TEST_MINUTES_TO_WAIT", "2");
-
             if (AdditionalEnvironmentVariables != null)
             {
                 foreach (var kp in AdditionalEnvironmentVariables)
@@ -166,11 +166,69 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             WaitForAppServerToStartListening(RemoteProcess, captureStandardOutput);
         }
 
-        public override void Shutdown(bool force = false)
+        protected override void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
         {
-            base.Shutdown();
+            // When this URL returns a 200 and has "state":"Running" in the body, the app is ready
+            var url = $"http://{ DestinationServerName}:{ Port}/admin/host/status";
+            
+            Console.WriteLine("[" + DateTime.Now + "] Waiting for Azure function host to become ready ... ");
+            var expectedBodyContent = "\"state\":\"Running\"";
+            var status = WaitForUrlToRespond(url, 200, expectedBodyContent, 20, 1000);
+            if (status)
+                return;
 
-            // the actual azure function is shutdown at this point, but the func tool is still running. We can kill it here safely.
+            if (!process.HasExited)
+            {
+                try
+                {
+                    //We need to attempt to clean up the process that did not successfully start.
+                    process.Kill();
+                }
+                catch (Exception)
+                {
+                    TestLogger?.WriteLine("[RemoteService]: WaitForAppServerToStartListening could not kill hung remote process.");
+                }
+            }
+
+            if (captureStandardOutput)
+            {
+                CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
+            }
+
+            Assert.Fail("Timed out waiting for Azure function host to become ready.");
+
+        }
+
+        private bool WaitForUrlToRespond(string url, int expectedStatusCode, string expectedBodyContent, int maxAttempts, int delayBetweenAttemptsMs)
+        {
+            for (var i = 0; i < maxAttempts; i++)
+            {
+                try
+                {
+                    using var client = new HttpClient();
+                    var response = client.GetAsync(url).Result;
+                    if (response.StatusCode == (HttpStatusCode)expectedStatusCode)
+                    {
+                        // check the body for "state" : "Running"
+                        var body = response.Content.ReadAsStringAsync().Result;
+                        if (body.Contains(expectedBodyContent))
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] Azure function host is ready.");
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignored
+                }
+                Thread.Sleep(delayBetweenAttemptsMs);
+            }
+            return false;
+        }
+
+        public override void Shutdown(bool _)
+        {
             try
             {
                 if (RemoteProcess is { HasExited: false })

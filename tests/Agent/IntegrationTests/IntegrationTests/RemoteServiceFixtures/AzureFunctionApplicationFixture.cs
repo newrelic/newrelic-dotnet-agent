@@ -8,7 +8,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
 public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
 {
-    private const string ApplicationDirectoryName = @"AzureFunctionApplication";
+    private const string ApplicationDirectoryName = "AzureFunctionApplication";
+    private const string ExecutableName = "AzureFunctionApplication.exe";
+
+    private const string InProcApplicationDirectoryName = "AzureFunctionInProcApplication";
+    private const string InProcExecutableName = "AzureFunctionInProcApplication.dll";
+
     private const string TestTraceId = "12345678901234567890123456789012";
     private const string TestTraceParent = "1234567890123456";
     private const string TestTracingVendors = "rojo,congo";
@@ -24,24 +29,15 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Timestamp = "1518469636025";
 
     protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
-        : base(new AzureFuncTool(ApplicationDirectoryName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
+        : base(new AzureFuncTool(inProc ? InProcApplicationDirectoryName : ApplicationDirectoryName, inProc ? InProcExecutableName : ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
     {
-        CommandLineArguments = $"start --no-build --functions {functionNames} ";
+        CommandLineArguments = $"start --no-build --functions {functionNames} --language-worker ";
 
-        if (inProc)
-        {
-            // for inproc, --language-worker dotnet --runtime inproc8
-            CommandLineArguments += $"--language-worker dotnet ";
-        }
-        else
-        {
-            // for isolated, --language-worker dotnet-isolated --runtime default
-            CommandLineArguments += $"--language-worker dotnet-isolated --runtime default ";
-        }
+        CommandLineArguments += inProc ? "dotnet --dotnet " : "dotnet-isolated --dotnet-isolated ";
 
 #if DEBUG
         // set a long timeout if you're going to debug into the function
-        CommandLineArguments += "--timeout 600 ";
+        CommandLineArguments += "--timeout 600 --verbose ";
 #endif
 
         AzureFunctionModeEnabled = enableAzureFunctionMode;
