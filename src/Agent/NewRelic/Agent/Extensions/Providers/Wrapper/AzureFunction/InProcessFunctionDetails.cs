@@ -5,8 +5,9 @@ namespace NewRelic.Providers.Wrapper.AzureFunction;
 
 public class InProcessFunctionDetails
 {
-    public string TriggerType { get; set; }
-    public bool IsWebTrigger => TriggerType == "http";
+    public string Trigger { get; set; }
+    public string TriggerTypeName { get; set; }
+    public bool IsWebTrigger => Trigger == "http";
     public string FunctionName { get; set; }
     public ServiceBusTriggerDetails ServiceBusTriggerDetails { get; set; }
 }

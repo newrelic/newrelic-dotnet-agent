@@ -76,6 +76,10 @@ internal class IsolatedFunctionDetails
 
                     var triggerTypeName = triggerAttribute.GetType().Name;
                     Trigger = triggerTypeName.ResolveTriggerType();
+
+                    // strip out the `TriggerAttribute` suffix
+                    TriggerTypeName = triggerTypeName.Replace("TriggerAttribute", string.Empty);
+
                     foundTrigger = true;
                     break;
                 }
@@ -98,6 +102,11 @@ internal class IsolatedFunctionDetails
             {
                 ParseHttpTriggerParameters(agent, functionContext);
             }
+            // save for later
+            //else if (TriggerTypeName == "ServiceBus")
+            //{
+            //    ParseServiceBusParameters(agent, functionContext);
+            //}
         }
         catch (Exception ex)
         {
@@ -105,6 +114,20 @@ internal class IsolatedFunctionDetails
             throw;
         }
     }
+
+    // save for later
+    //private void ParseServiceBusParameters(IAgent agent, dynamic functionContext)
+    //{
+    //    if (functionContext?.BindingContext?.BindingData is IReadOnlyDictionary<string, object> bindingData)
+    //    {
+    //        if (bindingData.TryGetValue("ApplicationProperties", out var value))
+    //        {
+    //            // The headers are stored as a JSON blob.
+    //            var headersJson = value.ToString();
+    //            Headers = DictionaryHelpers.FromJson(headersJson);
+    //        }
+    //    }
+    //}
 
     private void ParseHttpTriggerParameters(IAgent agent, dynamic functionContext)
     {
@@ -179,11 +202,14 @@ internal class IsolatedFunctionDetails
             }
         }
 
-        if (functionContext?.BindingContext?.BindingData is IReadOnlyDictionary<string, object> bindingData && bindingData.ContainsKey("Headers"))
+        if (functionContext?.BindingContext?.BindingData is IReadOnlyDictionary<string, object> bindingData)
         {
-            // The headers are stored as a JSON blob.
-            var headersJson = bindingData["Headers"].ToString();
-            Headers = DictionaryHelpers.FromJson(headersJson);
+            if (bindingData.ContainsKey("Headers"))
+            {
+                // The headers are stored as a JSON blob.
+                var headersJson = bindingData["Headers"].ToString();
+                Headers = DictionaryHelpers.FromJson(headersJson);
+            }
         }
     }
 
@@ -194,7 +220,15 @@ internal class IsolatedFunctionDetails
 
     public string FunctionName { get; }
 
+    /// <summary>
+    /// The otel semantic convention trigger type. (pubsub, http, timer, etc.)
+    /// </summary>
     public string Trigger { get; }
+
+    /// <summary>
+    /// The actual trigger type (like Http, Timer, etc.)
+    /// </summary>
+    public string TriggerTypeName { get; }
     public string InvocationId { get; }
     public bool IsWebTrigger => Trigger == "http";
     public string RequestMethod { get; private set; }

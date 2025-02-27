@@ -12,7 +12,7 @@ using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
 
-public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
+public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
 {
     private static ConcurrentDictionary<string, InProcessFunctionDetails> _functionDetailsCache = new();
     private static Func<object, string> _fullNameGetter;
@@ -29,7 +29,7 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
-        return new CanWrapResponse(nameof(AzureFunctionInProcessTryExecuteAsyncWrapper).Equals(instrumentedMethodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(AzureFunctionInProcessExecuteWithWatchersAsyncWrapper).Equals(instrumentedMethodInfo.RequestedWrapperName));
     }
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -59,7 +59,10 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         _idGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Guid>(functionInstance.GetType(), "Id");
         string invocationId = _idGetter(functionInstance).ToString();
 
-        agent.Logger.Debug($"Instrumenting in-process Azure Function: {inProcessFunctionDetails.FunctionName} / invocation ID {invocationId} / Trigger {inProcessFunctionDetails.TriggerType}.");
+        agent.Logger.Debug($"Instrumenting in-process Azure Function: {inProcessFunctionDetails.FunctionName} / invocation ID {invocationId} / Trigger {inProcessFunctionDetails.Trigger}.");
+
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/InProcess");
+        agent.RecordSupportabilityMetric($"DotNet/Supportability/AzureFunction/Trigger/{inProcessFunctionDetails.TriggerTypeName ?? "unknown"}");
 
         transaction = agent.CreateTransaction(
             isWeb: inProcessFunctionDetails.IsWebTrigger,
@@ -80,7 +83,7 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
 
         transaction.AddFaasAttribute("cloud.resource_id", agent.Configuration.AzureFunctionResourceIdWithFunctionName(inProcessFunctionDetails.FunctionName));
         transaction.AddFaasAttribute("faas.name", $"{agent.Configuration.AzureFunctionAppName}/{inProcessFunctionDetails.FunctionName}");
-        transaction.AddFaasAttribute("faas.trigger", inProcessFunctionDetails.TriggerType);
+        transaction.AddFaasAttribute("faas.trigger", inProcessFunctionDetails.Trigger);
         transaction.AddFaasAttribute("faas.invocation_id", invocationId);
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "Azure In-Proc Pipeline");
@@ -115,7 +118,6 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
         string functionMethodName = functionClassAndMethodName.Substring(functionClassAndMethodName.LastIndexOf('.') + 1);
 
         // get the type for functionClassName from any loaded assembly, since it's not in the current assembly
-        // TODO: is there a better way to do this?
         Type functionClassType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).FirstOrDefault(t => t.FullName == functionClassName);
 
         MethodInfo functionMethod = functionClassType?.GetMethod(functionMethodName);
@@ -129,7 +131,8 @@ public class AzureFunctionInProcessTryExecuteAsyncWrapper : IWrapper
 
         var inProcessFunctionDetails = new InProcessFunctionDetails
         {
-            TriggerType = triggerType,
+            Trigger = triggerType,
+            TriggerTypeName = triggerAttributeName?.Replace("TriggerAttribute", string.Empty),
             FunctionName = functionName,
         };
 

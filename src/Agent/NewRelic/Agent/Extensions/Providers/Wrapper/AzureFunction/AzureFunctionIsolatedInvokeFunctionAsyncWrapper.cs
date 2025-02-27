@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -57,6 +58,9 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
             throw new Exception("FunctionDetails are missing some require information.");
         }
 
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/Isolated");
+        agent.RecordSupportabilityMetric($"DotNet/Supportability/AzureFunction/Trigger/{functionDetails.TriggerTypeName ?? "unknown"}");
+
         transaction = agent.CreateTransaction(
             isWeb: functionDetails.IsWebTrigger,
             category: "AzureFunction",
@@ -89,6 +93,14 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
                 transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.HTTP);
             }
         }
+        // save for later
+        //else if (functionDetails.TriggerTypeName == "ServiceBus")
+        //{
+        //    if (functionDetails.Headers?.Count != 0)
+        //    {
+        //        transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.Queue);
+        //    }
+        //}
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionDetails.FunctionName);
 
@@ -109,21 +121,20 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
                     return;
                 }
 
+                if (_getInvocationResultMethod == null)
+                {
+                    // GetInvocationResult is a static extension method
+                    // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
+                    Type type = functionContext.GetType().Assembly.GetType(FunctionContextBindingFeatureExtensionsTypeName);
+                    _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
+                }
+                dynamic invocationResult = _getInvocationResultMethod.Invoke(null, new[] { functionContext });
+                var result = invocationResult?.Value;
+
                 // only pull response status code here if it's a web trigger and the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is not loaded.
                 if (functionDetails.IsWebTrigger && functionDetails.HasAspNetCoreExtensionReference != null && !functionDetails.HasAspNetCoreExtensionReference.Value)
                 {
-                    if (_getInvocationResultMethod == null)
-                    {
-                        // GetInvocationResult is a static extension method
-                        // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
-                        Type type = functionContext.GetType().Assembly.GetType(FunctionContextBindingFeatureExtensionsTypeName);
-                        _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
-                    }
-
-                    dynamic invocationResult = _getInvocationResultMethod.Invoke(null, new[] { functionContext });
-                    var result = invocationResult?.Value;
-
-                    if (result != null && result.StatusCode != null) 
+                    if (result != null && result.StatusCode != null)
                     {
                         var statusCode = result.StatusCode;
                         transaction.SetHttpResponseStatusCode((int)statusCode);

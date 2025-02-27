@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-    <tracerFactory name="AzureFunctionInProcessTryExecuteAsyncWrapper">
+    <tracerFactory name="AzureFunctionInProcessExecuteWithWatchersAsyncWrapper">
       <match assemblyName="Microsoft.Azure.WebJobs.Host" className="Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor">
         <exactMethodMatcher methodName="ExecuteWithWatchersAsync" parameters="Microsoft.Azure.WebJobs.Host.Executors.IFunctionInstanceEx,ParameterHelper,Microsoft.Extensions.Logging.ILogger,System.Threading.CancellationTokenSource" />
       </match>
