@@ -62,7 +62,7 @@ public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
         agent.Logger.Debug($"Instrumenting in-process Azure Function: {inProcessFunctionDetails.FunctionName} / invocation ID {invocationId} / Trigger {inProcessFunctionDetails.Trigger}.");
 
         agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/InProcess");
-        agent.RecordSupportabilityMetric($"DotNet/Supportability/AzureFunction/Trigger/{inProcessFunctionDetails.TriggerTypeName ?? "unknown"}");
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Trigger/{inProcessFunctionDetails.TriggerTypeName ?? "unknown"}");
 
         transaction = agent.CreateTransaction(
             isWeb: inProcessFunctionDetails.IsWebTrigger,

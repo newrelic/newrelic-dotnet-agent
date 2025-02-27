@@ -127,7 +127,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
-            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" } };
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
+                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
+            };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
             Assertions.MetricsExist(simpleExpectedMetrics, metrics);
@@ -182,6 +187,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         }
         else
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+            };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsDoNotExist(simpleExpectedMetrics, metrics);
             Assert.Null(transactionSample);
 
@@ -238,7 +249,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
-            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() {new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" }};
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
+                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
+            };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
             Assertions.MetricsExist(pipelineExpectedMetrics, metrics);
@@ -296,6 +312,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         }
         else
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+            };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsDoNotExist(pipelineExpectedMetrics, metrics);
             Assertions.MetricsDoNotExist(simpleExpectedMetrics, metrics);
             Assert.Null(transactionSample);
@@ -356,7 +378,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
-            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" } };
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/InProcess" },
+                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http" }
+            };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
             Assertions.MetricsExist(simpleExpectedMetrics, metrics);
@@ -411,6 +438,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         }
         else
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+            };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsDoNotExist(simpleExpectedMetrics, metrics);
             Assert.Null(transactionSample);
 

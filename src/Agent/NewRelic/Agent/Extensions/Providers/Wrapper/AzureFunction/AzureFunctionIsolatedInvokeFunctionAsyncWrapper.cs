@@ -59,7 +59,7 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
         }
 
         agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/Isolated");
-        agent.RecordSupportabilityMetric($"DotNet/Supportability/AzureFunction/Trigger/{functionDetails.TriggerTypeName ?? "unknown"}");
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Trigger/{functionDetails.TriggerTypeName ?? "unknown"}");
 
         transaction = agent.CreateTransaction(
             isWeb: functionDetails.IsWebTrigger,
