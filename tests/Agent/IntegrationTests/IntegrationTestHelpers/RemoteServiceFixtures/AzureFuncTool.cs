@@ -111,7 +111,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             startInfo.EnvironmentVariables.Add("NEW_RELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
-            startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", _enableAzureFunctionMode.ToString());
+            if (!_enableAzureFunctionMode) // enabled by default, only set the environment variable if it's disabled
+                startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", _enableAzureFunctionMode.ToString());
 
             // environment variables needed by azure function instrumentation
             startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated");
