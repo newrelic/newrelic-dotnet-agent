@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Llm;
@@ -9,6 +10,7 @@ using Telerik.JustMock;
 
 namespace Agent.Extensions.Tests.Llm
 {
+    // When creating tests, make sure to not use duplicate model name since CreateModelIdSupportabilityMetrics only creates the metric once. 
     [TestFixture]
     public class SupportabilityHelpersTests
     {
@@ -46,15 +48,16 @@ namespace Agent.Extensions.Tests.Llm
             Assert.That(actualMetric == expectedMetric, $"Model: '{fullModel}', Actual: '{actualMetric}', Expected: '{expectedMetric}'");
         }
 
-        [Test]
-        public void EmptyModel_NoMetricTest()
+        [TestCase("")]
+        [TestCase("bad.model.more.than.four.sections")]
+        public void BadModel_NoMetricTest(string model)
         {
             // Supportability/DotNet/LLM/{vendor}/{model}
             var actualMetric = string.Empty;
             Mock.Arrange(() => _agent.RecordSupportabilityMetric(Arg.AnyString, Arg.AnyLong))
                 .DoInstead((string m, long c) => actualMetric = $"Supportability/{m}");
 
-            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(string.Empty, _agent);
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(model, _agent);
 
             Assert.That(actualMetric == string.Empty);
         }
@@ -77,6 +80,26 @@ namespace Agent.Extensions.Tests.Llm
 
             Assert.That(actualMetrics.Count == 1);
             Assert.That(actualMetrics[0] == expectedMetric, $"Model: '{fullModel}', Actual: '{actualMetrics[0]}', Expected: '{expectedMetric}'");
+        }
+
+        [Test]
+        public void Exception_Test()
+        {
+            var fullModel = "meta.llama3-1-70b-instruct-v1:0";
+            var exception = new Exception("Test exception");
+            var expectedExceptionMessage = $"Error creating model supportability metric for {fullModel}: {exception.Message}";
+
+            // Supportability/DotNet/LLM/{vendor}/{model}
+            Mock.Arrange(() => _agent.RecordSupportabilityMetric(Arg.AnyString, Arg.AnyLong))
+                .Throws(exception);
+
+            var exceptionMessage = string.Empty;
+            Mock.Arrange(() => _agent.Logger.Finest(Arg.AnyString))
+                .DoInstead((string m) => exceptionMessage = m);
+
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+
+            Assert.That(exceptionMessage == expectedExceptionMessage, message: exceptionMessage);
         }
     }
 }
