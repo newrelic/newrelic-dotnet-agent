@@ -3062,6 +3062,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             return _defaultConfig.UtilizationDetectAzureFunction;
         }
+
+        [Test]
+        public void AzureFunctionModeEnabledByDefault()
+        {
+            Assert.That(_defaultConfig.AzureFunctionModeEnabled, Is.True, "AzureFunctionMode should be enabled by default");
+        }
         #endregion
 
         #region Log Metrics and Events
