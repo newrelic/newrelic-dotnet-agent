@@ -167,6 +167,8 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             {
                 transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValueFromIDictionary, TransportType.HTTP);
             }
+
+            return true;
         }
 
         return false;
