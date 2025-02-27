@@ -16,8 +16,6 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
     where TFixture : AzureFunctionApplicationFixture
 {
     const string TestTraceId = "12345678901234567890123456789012";
-    const string SpanId = "27ddd2d8890283b4";
-    const string TransactionId = "5569065a5b1313bd";
     const bool Sampled = true;
     const string Priority = "1.23456";
 
@@ -84,7 +82,7 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
         var receiveServiceBusMessageTransaction = transactionEvents.SingleOrDefault(e => e.IntrinsicAttributes["name"].ToString() == receiveMessageTransactionName);
 
         // verify the expected metrics
-        var metrics = _fixture.AgentLog.GetMetrics();
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
         var expectedMetrics = new List<Assertions.ExpectedMetric> {
             new() { metricName = "DotNet/HttpTrigger_SendServiceBusMessage"},
             new() { metricName = "DotNet/HttpTrigger_SendServiceBusMessage", metricScope = sendMessageTransactionName},
@@ -94,18 +92,16 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
             new() { metricName = receiveMessageTransactionName},
         };
 
-        Assert.Multiple(
-            () => Assert.NotEmpty(transactionEvents),
-            () => Assert.NotNull(sendServiceBusMessageTransaction),
-            () => Assert.NotNull(receiveServiceBusMessageTransaction),
-            () =>
-            {
-                Assert.True(receiveServiceBusMessageTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
-                Assert.Equal("pubsub", faasTriggerValue);
-            },
-            () => Assert.NotEmpty(metrics),
-            () => Assertions.MetricsExist(expectedMetrics, metrics)
-        );
+        Assert.NotEmpty(transactionEvents);
+        Assert.NotEmpty(metrics);
+
+        Assert.NotNull(sendServiceBusMessageTransaction);
+        Assert.NotNull(receiveServiceBusMessageTransaction);
+
+        Assert.True(receiveServiceBusMessageTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
+        Assert.Equal("pubsub", faasTriggerValue);
+
+        Assertions.MetricsExist(expectedMetrics, metrics);
     }
 
     [Fact]
@@ -115,6 +111,9 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
         var transactionEvents = _fixture.AgentLog.GetTransactionEvents();
         var spanEvents = _fixture.AgentLog.GetSpanEvents();
 
+        Assert.NotEmpty(transactionEvents);
+        Assert.NotEmpty(spanEvents);
+
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = "Supportability/DistributedTrace/CreatePayload/Success"},
@@ -122,38 +121,32 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
             new() { metricName = "Supportability/TraceContext/Accept/Success"},
         };
 
+        Assertions.MetricsExist(expectedMetrics, _fixture.AgentLog.GetMetrics());
 
-        Assert.Multiple(
-            () => Assert.NotEmpty(transactionEvents),
-            () => Assert.NotEmpty(spanEvents),
+        Assert.All(transactionEvents, transactionEvent =>
+        {
+            Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+            Assert.Equal(TestTraceId, actualTraceId);
 
-            () => Assert.All(transactionEvents, transactionEvent =>
-            {
-                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
-                Assert.Equal(TestTraceId, actualTraceId);
+            Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+            Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
 
-                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
+            Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+            Assert.Equal(Sampled, actualSampled);
+        });
 
-                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
-                Assert.Equal(Sampled, actualSampled);
-            }),
+        // get the span events and verify that all of them have the expected DT attributes
+        Assert.All(spanEvents, spanEvent =>
+        {
+            Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+            Assert.Equal(TestTraceId, actualTraceId);
 
-            // get the span events and verify that all of them have the expected DT attributes
-            () => Assert.All(spanEvents, spanEvent =>
-            {
-                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
-                Assert.Equal(TestTraceId, actualTraceId);
+            Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+            Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
 
-                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
-
-                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
-                Assert.Equal(Sampled, actualSampled);
-            }),
-
-            () => Assertions.MetricsExist(expectedMetrics, _fixture.AgentLog.GetMetrics())
-        );
+            Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+            Assert.Equal(Sampled, actualSampled);
+        });
     }
 }
 

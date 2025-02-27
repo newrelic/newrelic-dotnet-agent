@@ -425,6 +425,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
     }
 }
 
+#region Isolated model tests
 // the net8 target builds the function app without the aspnetcore pipeline package included
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
@@ -445,7 +446,17 @@ public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerT
     }
 }
 
-// tests the in-proc hosting model
+[NetFrameworkTest]
+public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
+{
+    public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, AzureFunctionHttpTriggerTestMode.SimpleInvocation)
+    {
+    }
+}
+#endregion
+
+#region InProc model tests
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsInProcCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest>
 {
@@ -455,11 +466,4 @@ public class AzureFunctionHttpTriggerTestsInProcCoreOldest : AzureFunctionHttpTr
     }
 }
 
-[NetFrameworkTest]
-public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
-{
-    public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, AzureFunctionHttpTriggerTestMode.SimpleInvocation)
-    {
-    }
-}
+#endregion

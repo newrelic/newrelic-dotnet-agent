@@ -94,27 +94,26 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                 agent.Logger.Debug($"Azure Function response type: {resultType.FullName}");
 
                 // insert DT headers if the response object is a ServiceBusMessage
-                if (resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage") 
+                if (resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage")
                 {
                     TryInsertServiceBusDTHeaders(transaction, result);
                     return;
                 }
 
                 // if the trigger is HTTP, try to set the StatusCode
-                if (trigger == "http" && handledHttpArg) 
+                if (trigger == "http" && handledHttpArg)
                 {
                     TrySetHttpResponseStatusCode(result, resultType, transaction, agent);
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                agent.Logger.Warn(ex, "Error processing Azure Function response.");
-                throw;
+                segment.End();
             }
         }
     }
 
-    private bool TrySetHttpResponseStatusCode(dynamic result, Type resultType,  ITransaction transaction, IAgent agent)
+    private bool TrySetHttpResponseStatusCode(dynamic result, Type resultType, ITransaction transaction, IAgent agent)
     {
         // make sure there's a StatusCode property on the result object
         var statusCodeProperty = resultType.GetProperty("StatusCode");
