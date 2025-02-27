@@ -66,6 +66,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
             Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
 
+            Mock.Arrange(() => configuration.AzureFunctionModeDetected).Returns(true);
+            Mock.Arrange(() => configuration.AzureFunctionModeEnabled).Returns(true);
+
             return configuration;
         }
 
@@ -543,6 +546,13 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
+        }
+
+        [Test]
+        public void AzureFunctionModeSupportabilityMetricPresent()
+        {
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AzureFunctionMode/Enabled/1"), Is.True);
         }
     }
 }

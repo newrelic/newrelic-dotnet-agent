@@ -136,7 +136,7 @@ public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
             FunctionName = functionName,
         };
 
-        if (triggerType == "pubsub" && triggerAttributeName == "ServiceBusTriggerAttribute") // add service bus trigger details if it's a service bus trigger
+        if (inProcessFunctionDetails.TriggerTypeName == "ServiceBus") // add service bus trigger details if it's a service bus trigger
         {
             dynamic serviceBusTriggerAttribute = triggerAttribute;
             inProcessFunctionDetails.ServiceBusTriggerDetails = new ServiceBusTriggerDetails
