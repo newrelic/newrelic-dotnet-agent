@@ -275,7 +275,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public void WaitForExit()
         {
-            RemoteProcess.WaitForExit();
+            if (!RemoteProcess.HasExited)
+            {
+                RemoteProcess.WaitForExit();
+            }
         }
 
         public bool WaitForExit(int milliseconds)
