@@ -25,7 +25,7 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
     /// </summary>
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        if (agent.Configuration.AzureFunctionModeEnabled)
+        if (agent.Configuration.AzureFunctionModeDetected && agent.Configuration.AzureFunctionModeEnabled)
         {
             dynamic httpContext;
             switch (instrumentedMethodCall.MethodCall.Method.MethodName)

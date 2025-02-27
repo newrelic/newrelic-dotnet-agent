@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IVendorModel GetAzureFunctionVendorInfo()
         {
-            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
+            if (!_configuration.AzureFunctionModeDetected)
                 return null;
 
             var appName = _configuration.AzureFunctionResourceId;
