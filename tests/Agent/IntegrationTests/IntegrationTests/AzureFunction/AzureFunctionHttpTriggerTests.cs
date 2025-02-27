@@ -127,6 +127,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" } };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsExist(simpleExpectedMetrics, metrics);
 
             Assert.NotNull(transactionSample);
@@ -235,6 +238,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() {new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" }};
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsExist(pipelineExpectedMetrics, metrics);
             Assertions.MetricsExist(simpleExpectedMetrics, metrics);
 
@@ -320,7 +326,12 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         var secondTransactionUnexpectedTransactionEventIntrinsicAttributes = new List<string> { "faas.coldStart" };
 
-        var expectedAgentAttributes = new Dictionary<string, object> { { "request.uri", "/api/httpTriggerFunction" }, { "request.method", "GET" }, { "http.statusCode", 200 } };
+        var expectedAgentAttributes = new Dictionary<string, object>
+        {
+            { "request.uri", "/api/httpTriggerFunction" },
+            { "request.method", "GET" },
+            { "http.statusCode", 200 }
+        };
 
         var simpleTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunction";
         var simpleExpectedMetrics = new List<Assertions.ExpectedMetric> {
@@ -328,7 +339,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             new() { metricName = "DotNet/HttpTriggerFunction", metricScope = simpleTransactionName, CallCountAllHarvests = 2 },
             new() { metricName = "DotNet/Azure In-Proc Pipeline", CallCountAllHarvests = 2 },
             new() { metricName = "DotNet/Azure In-Proc Pipeline", metricScope = simpleTransactionName, CallCountAllHarvests = 2 },
-            new() { metricName = simpleTransactionName, CallCountAllHarvests = 2 }, };
+            new() { metricName = simpleTransactionName, CallCountAllHarvests = 2 },
+        };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(simpleTransactionName);
 
@@ -344,6 +356,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
         if (_fixture.AzureFunctionModeEnabled)
         {
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled" } };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assertions.MetricsExist(simpleExpectedMetrics, metrics);
 
             Assert.NotNull(transactionSample);

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -71,7 +73,39 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
     [Fact]
     public void ServiceBusTriggerFunctionTest()
     {
+        // other tests are verifying the expected Azure function attributes; we just need to make sure that we have a transaction
+        // for sending the service bus message and a transaction for receiving the service bus message
+        var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
 
+        var sendMessageTransactionName = "WebTransaction/AzureFunction/HttpTrigger_SendServiceBusMessage";
+        var receiveMessageTransactionName = "OtherTransaction/AzureFunction/ServiceBusTriggerFunction";
+
+        var sendServiceBusMessageTransaction = transactionEvents.SingleOrDefault(e => e.IntrinsicAttributes["name"].ToString() == sendMessageTransactionName);
+        var receiveServiceBusMessageTransaction = transactionEvents.SingleOrDefault(e => e.IntrinsicAttributes["name"].ToString() == receiveMessageTransactionName);
+
+        // verify the expected metrics
+        var metrics = _fixture.AgentLog.GetMetrics();
+        var expectedMetrics = new List<Assertions.ExpectedMetric> {
+            new() { metricName = "DotNet/HttpTrigger_SendServiceBusMessage"},
+            new() { metricName = "DotNet/HttpTrigger_SendServiceBusMessage", metricScope = sendMessageTransactionName},
+            new() { metricName = "DotNet/ServiceBusTriggerFunction"},
+            new() { metricName = "DotNet/ServiceBusTriggerFunction", metricScope = receiveMessageTransactionName},
+            new() { metricName = sendMessageTransactionName},
+            new() { metricName = receiveMessageTransactionName},
+        };
+
+        Assert.Multiple(
+            () => Assert.NotEmpty(transactionEvents),
+            () => Assert.NotNull(sendServiceBusMessageTransaction),
+            () => Assert.NotNull(receiveServiceBusMessageTransaction),
+            () =>
+            {
+                Assert.True(receiveServiceBusMessageTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
+                Assert.Equal("pubsub", faasTriggerValue);
+            },
+            () => Assert.NotEmpty(metrics),
+            () => Assertions.MetricsExist(expectedMetrics, metrics)
+        );
     }
 
     [Fact]
@@ -80,6 +114,14 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
         // get the transaction events and verify that all of them have the expected DT attributes
         var transactionEvents = _fixture.AgentLog.GetTransactionEvents();
         var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new() { metricName = "Supportability/DistributedTrace/CreatePayload/Success"},
+            new() { metricName = "Supportability/TraceContext/Create/Success"},
+            new() { metricName = "Supportability/TraceContext/Accept/Success"},
+        };
+
 
         Assert.Multiple(
             () => Assert.NotEmpty(transactionEvents),
@@ -95,9 +137,6 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
 
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
                 Assert.Equal(Sampled, actualSampled);
-
-                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("parentId", out var actualTraceParent));
-                Assert.Equal(TransactionId, actualTraceParent);
             }),
 
             // get the span events and verify that all of them have the expected DT attributes
@@ -111,10 +150,11 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
 
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
                 Assert.Equal(Sampled, actualSampled);
-            })
+            }),
+
+            () => Assertions.MetricsExist(expectedMetrics, _fixture.AgentLog.GetMetrics())
         );
     }
-
 }
 
 [NetCoreTest]
