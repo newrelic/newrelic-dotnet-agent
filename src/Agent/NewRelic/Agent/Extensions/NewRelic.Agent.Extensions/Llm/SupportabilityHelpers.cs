@@ -16,6 +16,11 @@ namespace NewRelic.Agent.Extensions.Llm
 
         public static void CreateModelIdSupportabilityMetrics(string model, IAgent agent)
         {
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                return;
+            }
+
             // Only want to send this metric once-ish per model
             if (!_seenModels.TryAdd(model, null))
             {
@@ -42,9 +47,10 @@ namespace NewRelic.Agent.Extensions.Llm
                 }
 
                 // if there is a region, it will be the first part of the model id
-                var vendor = modelDetails.Length == 2 ? modelDetails[0] : modelDetails[1];
+                var vendorIndex = modelDetails.Length == 2 ? 0 : 1;
+                var vendor = modelDetails[vendorIndex];
 
-                var modelIdDetails = modelDetails[1].Split(':')[0].Split('-');
+                var modelIdDetails = modelDetails[vendorIndex + 1].Split(':')[0].Split('-');
                 if (modelIdDetails[0] == "nova" || modelIdDetails[0] == "titan" || modelIdDetails[0] == "claude") // first 2 - capture some extra details to narrow down support
                 {
                     agent.RecordSupportabilityMetric("DotNet/LLM/" + vendor + "/" + modelIdDetails[0] + "-" + modelIdDetails[1]);

@@ -1,0 +1,82 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System.Collections.Generic;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Llm;
+using NUnit.Framework;
+using Telerik.JustMock;
+
+namespace Agent.Extensions.Tests.Llm
+{
+    [TestFixture]
+    public class SupportabilityHelpersTests
+    {
+        private IAgent _agent;
+
+        [SetUp]
+        public void Setup()
+        {
+            _agent = Mock.Create<IAgent>();
+        }
+
+        [TestCase("o3-mini", "openai", "o3-mini")]
+        [TestCase("gpt-4o-2024-11-20", "openai", "gpt-4o")]
+        [TestCase("anthropic.claude-3-sonnet-20240229-v1:0", "anthropic", "claude-3")]
+        [TestCase("us.anthropic.claude-3-sonnet-20240229-v1:0", "anthropic", "claude-3")]
+        [TestCase("apac.anthropic.claude-3-sonnet-20240229-v1:0", "anthropic", "claude-3")]
+        [TestCase("meta.llama3-2-3b-instruct-v1:0", "meta", "llama3")]
+        [TestCase("us.meta.llama3-2-3b-instruct-v1:0", "meta", "llama3")]
+        [TestCase("amazon.nova-lite-v1:0", "amazon", "nova-lite")]
+        [TestCase("eu.amazon.nova-lite-v1:0", "amazon", "nova-lite")]
+        [TestCase("amazon.titan-embed-text-v1", "amazon", "titan-embed")]
+        [TestCase("us.amazon.titan-embed-text-v1", "amazon", "titan-embed")]
+        [TestCase("ai21.jamba-1-5-large-v1:0", "ai21", "jamba")]
+        [TestCase("apac.ai21.jamba-1-5-large-v1:0", "ai21", "jamba")]
+        public void ModelFormatsTests(string fullModel, string vendor, string model)
+        {
+            // Supportability/DotNet/LLM/{vendor}/{model}
+            var expectedMetric = $"Supportability/DotNet/LLM/{vendor}/{model}";
+            var actualMetric = string.Empty;
+            Mock.Arrange(() => _agent.RecordSupportabilityMetric(Arg.AnyString, Arg.AnyLong))
+                .DoInstead((string m, long c) => actualMetric = $"Supportability/{m}");
+
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+
+            Assert.That(actualMetric == expectedMetric, $"Model: '{fullModel}', Actual: '{actualMetric}', Expected: '{expectedMetric}'");
+        }
+
+        [Test]
+        public void EmptyModel_NoMetricTest()
+        {
+            // Supportability/DotNet/LLM/{vendor}/{model}
+            var actualMetric = string.Empty;
+            Mock.Arrange(() => _agent.RecordSupportabilityMetric(Arg.AnyString, Arg.AnyLong))
+                .DoInstead((string m, long c) => actualMetric = $"Supportability/{m}");
+
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(string.Empty, _agent);
+
+            Assert.That(actualMetric == string.Empty);
+        }
+
+        [Test]
+        public void DuplicateModels_OnlyOneMetricTest()
+        {
+            var fullModel = "gpt-4o";
+
+            // Supportability/DotNet/LLM/{vendor}/{model}
+            var expectedMetric = $"Supportability/DotNet/LLM/openai/gpt-4o";
+            var actualMetrics = new List<string>();
+            Mock.Arrange(() => _agent.RecordSupportabilityMetric(Arg.AnyString, Arg.AnyLong))
+                .DoInstead((string m, long c) => actualMetrics.Add($"Supportability/{m}"));
+
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+            SupportabilityHelpers.CreateModelIdSupportabilityMetrics(fullModel, _agent);
+
+            Assert.That(actualMetrics.Count == 1);
+            Assert.That(actualMetrics[0] == expectedMetric, $"Model: '{fullModel}', Actual: '{actualMetrics[0]}', Expected: '{expectedMetric}'");
+        }
+    }
+}
