@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Extensions.Llm
 
         private static readonly ConcurrentDictionary<string, object> _seenModels = new();
 
-        public static void CreateModelIdSupportabilityMetrics(string model, IAgent agent)
+        public static void CreateModelIdSupportabilityMetricsForOpenAi(string model, IAgent agent)
         {
             if (string.IsNullOrWhiteSpace(model))
             {
@@ -29,18 +29,54 @@ namespace NewRelic.Agent.Extensions.Llm
 
             try
             {
-                // Example standard bedrock: anthropic.claude-3-5-sonnet-20241022-v2:0
-                // Example infrerence bedrock: us.anthropic.claude-3-5-sonnet-20241022-v2:0
-                // Example alias openai: gpt-4o
-                // Example direct openai: gpt-4o-2024-11-20
-                var modelDetails = model.Split('.');
-                if (modelDetails.Length == 1) // OpenAI
+                // Example openai: o1
+                // Example openai: gpt-4o-2024-11-20
+                var noDateModel = Regex.Replace(model, OpenAiDateRemovalPattern, string.Empty);
+                var modelIdDetails = noDateModel.Split('-');
+                if (modelIdDetails.Length == 1)
                 {
-                    agent.RecordSupportabilityMetric("DotNet/LLM/openai/" + Regex.Replace(model, OpenAiDateRemovalPattern, string.Empty));
+                    agent.RecordSupportabilityMetric("DotNet/LLM/openai/" + modelIdDetails[0]);
                     return;
                 }
 
-                // Not OpenAI, checking for bedrock
+                agent.RecordSupportabilityMetric("DotNet/LLM/openai/" + modelIdDetails[0] + "-" + modelIdDetails[1]);
+            }
+            catch (Exception ex) // if there is a problem, this will also only happen once-ish per model
+            {
+                agent.Logger.Finest($"Error creating model supportability metric for {model}: {ex.Message}");
+            }
+        }
+
+        public static void CreateModelIdSupportabilityMetricsForBedrock(string model, IAgent agent)
+        {
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                return;
+            }
+
+            // Only want to send this metric once-ish per model
+            if (!_seenModels.TryAdd(model, null))
+            {
+                return;
+            }
+
+            try
+            {
+                // Example foundation bedrock: anthropic.claude-3-5-sonnet-20241022-v2:0
+                // Example inference bedrock: us.anthropic.claude-3-5-sonnet-20241022-v2:0
+                // Example bedrock marketplace: deepseek-llm-r1
+                var modelDetails = model.Split('.');
+                if (modelDetails.Length == 1) // bedrock marketplace
+                {
+                    // Format the bedrock marketplace model id into one that can be used by the standard logic.
+                    var marketplaceDetails = modelDetails[0].Split('-');
+                    modelDetails =
+                    [
+                        marketplaceDetails[0],
+                        string.Join("-", marketplaceDetails, 1, marketplaceDetails.Length - 1)
+                    ];
+                }
+
                 if (modelDetails.Length != 2 && modelDetails.Length != 3)
                 {
                     return;
