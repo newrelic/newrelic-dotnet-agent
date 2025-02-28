@@ -47,6 +47,7 @@ namespace Agent.Extensions.Tests.Llm
             Assert.That(actualMetric == expectedMetric, $"Model: '{fullModel}', Actual: '{actualMetric}', Expected: '{expectedMetric}'");
         }
 
+        [TestCase("o1", "openai", "o1")]
         [TestCase("o3-mini", "openai", "o3-mini")]
         [TestCase("gpt-4o-2024-11-20", "openai", "gpt-4o")]
         public void OpenAi_ModelFormatsTests(string fullModel, string vendor, string model)
