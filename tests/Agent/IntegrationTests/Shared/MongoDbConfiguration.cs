@@ -9,7 +9,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     public class MongoDbConfiguration
     {
         private static string _mongoDb3_2ConnectionString;
-        private static string _mongoDb6_0ConnectionString;
+        private static string _MongoDbLatestConnectionString;
 
         // example: "mongodb://1.2.3.4:4444"
         public static string MongoDb3_2ConnectionString
@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDBTests");
+                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDB32Tests");
                         _mongoDb3_2ConnectionString = testConfiguration["ConnectionString"];
                     }
                     catch (Exception ex)
@@ -33,25 +33,24 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
-        public static string MongoDb6_0ConnectionString
+        public static string MongoDbLatestConnectionString
         {
             get
             {
-                if (_mongoDb6_0ConnectionString == null)
+                if (_MongoDbLatestConnectionString == null)
                 {
                     try
                     {
-                        // The name "MongoDB26Tests" is cruft leftover from when the associated tests only tested version 2.6 of the client driver
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDB26Tests");
-                        _mongoDb6_0ConnectionString = testConfiguration["ConnectionString"];
+                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDBLatestTests");
+                        _MongoDbLatestConnectionString = testConfiguration["ConnectionString"];
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception("MongoDb3_6ConnectionString configuration is invalid.", ex);
+                        throw new Exception("MongoDbLatestConnectionString configuration is invalid.", ex);
                     }
                 }
 
-                return _mongoDb6_0ConnectionString;
+                return _MongoDbLatestConnectionString;
             }
         }
 

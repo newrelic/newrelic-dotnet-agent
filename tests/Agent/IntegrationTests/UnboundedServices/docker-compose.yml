@@ -1,7 +1,7 @@
 services:
 
     cosmosdb:
-        build: ./cosmosdb
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
         ports:
             - "8081:8081"
             - "10251-10254:10251-10254"
@@ -29,7 +29,7 @@ services:
         container_name: RabbitmqServer
 
     mongodb32:
-        build: ./mongodb32
+        image: mongo:3.2
         ports:
             - "27017:27017"
         environment:
@@ -37,17 +37,17 @@ services:
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
         container_name: MongoDB32Server
 
-    mongodb60:
-        build: ./mongodb60
+    mongodb:
+        image: mongo:7
         ports:
             - "27018:27017"
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
-        container_name: MongoDB60Server
+        container_name: MongoDBServer
 
     redis:
-        build: ./redis
+        image: redis:7
         command: redis-server --requirepass ${REDIS_PASSWORD:-RedisPassword}
         ports:
             - "6379:6379"

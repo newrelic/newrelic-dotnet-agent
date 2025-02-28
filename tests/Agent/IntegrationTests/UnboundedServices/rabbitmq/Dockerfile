@@ -1,4 +1,4 @@
-FROM rabbitmq:3.9.5
+FROM rabbitmq:latest
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 

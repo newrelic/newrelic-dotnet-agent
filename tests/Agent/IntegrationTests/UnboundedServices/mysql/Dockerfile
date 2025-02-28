@@ -1,3 +1,3 @@
-FROM mysql:8.0.28
+FROM mysql:lts
 
 COPY database.sql /docker-entrypoint-initdb.d
