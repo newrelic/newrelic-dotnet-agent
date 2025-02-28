@@ -636,7 +636,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             auto azureFunctionModeEnabled = _systemCalls->TryGetEnvironmentVariable(_X("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"));
 
             if (azureFunctionModeEnabled == nullptr || azureFunctionModeEnabled->length() == 0) {
-                return false;
+                return true; // enabled by default if environment variable isn't specified
             }
 
             return Strings::AreEqualCaseInsensitive(*azureFunctionModeEnabled, _X("true")) || Strings::AreEqualCaseInsensitive(*azureFunctionModeEnabled, _X("1"));
