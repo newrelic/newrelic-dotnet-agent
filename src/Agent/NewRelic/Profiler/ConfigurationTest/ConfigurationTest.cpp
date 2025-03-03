@@ -73,10 +73,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(configuration.ShouldInstrument(L"foo.exe", L"", L"", L"", false));
         }
 
-        // tests to verify that "legacy" behavior (before azure function support) is retained.
-        // If NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
-        // we should behave as if no azure function support has been added.
-        TEST_METHOD(azure_function_should_behave_as_legacy_if_azure_function_mode_not_specified)
+        TEST_METHOD(azure_function_should_instrument_functions_net_host_if_azure_function_mode_not_specified)
         {
             std::wstring configurationXml(L"\
     <?xml version=\"1.0\"?>\
@@ -93,10 +90,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
-        // tests to verify that "legacy" behavior (before azure function support) is retained.
-        // If NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED environment variable is not set or is set to false,
-        // we should behave as if no azure function support has been added.
-        TEST_METHOD(isolated_azure_function_should_behave_as_legacy_if_azure_function_mode_disabled)
+        TEST_METHOD(isolated_azure_function_should_instrument_functions_net_host_if_azure_function_mode_disabled)
         {
             std::wstring configurationXml(L"\
     <?xml version=\"1.0\"?>\
@@ -113,7 +107,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Assert::IsTrue(configuration.ShouldInstrument(L"functionsnethost.exe", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
         }
-        TEST_METHOD(in_proc_azure_function_should_behave_as_legacy_if_azure_function_mode_disabled)
+        TEST_METHOD(in_proc_azure_function_should_instrument_functions_net_host_if_azure_function_mode_disabled)
         {
             std::wstring configurationXml(L"\
     <?xml version=\"1.0\"?>\
