@@ -277,7 +277,7 @@ namespace NewRelic { namespace Profiler {
                 return S_OK;
             }
             catch (...) {
-                LogError(L"An exception was thrown while initializing the profiler.");
+                LogError(L"An exception was thrown while initializing the profiler. The profiler will be detached now.");
                 return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
             }
         }
