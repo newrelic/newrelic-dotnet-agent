@@ -32,7 +32,7 @@ public class InvokeFunctionAsyncWrapper : IWrapper
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
         ITransaction transaction)
     {
-        if (!agent.Configuration.AzureFunctionModeEnabled) // bail early if azure function mode isn't enabled
+        if (!(agent.Configuration.AzureFunctionModeDetected && agent.Configuration.AzureFunctionModeEnabled) ) // bail early if azure function mode isn't enabled
         {
             if (!_loggedDisabledMessage)
             {

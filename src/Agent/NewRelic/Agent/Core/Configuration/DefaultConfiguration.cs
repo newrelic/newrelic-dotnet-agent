@@ -2216,7 +2216,7 @@ namespace NewRelic.Agent.Core.Configuration
         private bool? _azureFunctionModeEnabled;
         public bool AzureFunctionModeEnabled =>
             _azureFunctionModeEnabled ??
-            (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", false), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
+            (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", true), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
 
         public string AzureFunctionResourceId
         {
