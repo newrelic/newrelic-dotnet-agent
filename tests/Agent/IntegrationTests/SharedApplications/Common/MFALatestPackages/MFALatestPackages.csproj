@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.412.13" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.412.13" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.413.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.413.4" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -26,8 +26,8 @@
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" Condition="'$(TargetFramework)' == 'net9.0'" />
     
-    <PackageReference Include="log4net" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="log4net" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="log4net" Version="3.0.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net" Version="3.0.4" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -35,8 +35,8 @@
     <PackageReference Include="MassTransit" Version="8.3.6" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="8.3.6" Condition="'$(TargetFramework)' == 'net9.0'" />
 
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.2" Condition="'$(TargetFramework)' == 'net9.0'" />
 
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
