@@ -813,6 +813,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfAwsAccountIdProvided();
             ReportIfAgentControlHealthEnabled();
             ReportIfAzureFunctionModeIsEnabled();
+            ReportIfAspNetCore6PlusIsEnabled();
         }
 
         public void CollectMetrics()
@@ -990,6 +991,18 @@ namespace NewRelic.Agent.Core.AgentHealth
             if (_configuration.AzureFunctionModeEnabled && _configuration.AzureFunctionModeDetected)
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionModeEnabled);
+            }
+        }
+
+        private void ReportIfAspNetCore6PlusIsEnabled()
+        {
+            if (_configuration.EnableAspNetCore6PlusBrowserInjection)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjectionEnabled);
+            }
+            else
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjectionDisabled);
             }
         }
 

@@ -840,6 +840,8 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
         public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPs + "AwsAccountId/Config";
         public const string SupportabilityAzureFunctionModeEnabled = SupportabilityDotnetPs + "AzureFunctionMode/Enabled";
+        public const string SupportabilityAspNetCore6PlusBrowserInjectionEnabled = SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection/Enabled";
+        public const string SupportabilityAspNetCore6PlusBrowserInjectionDisabled = SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection/Disabled";
 
         #endregion Supportability
 
