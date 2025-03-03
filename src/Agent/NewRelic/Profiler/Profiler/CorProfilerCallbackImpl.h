@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+7// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -180,7 +180,6 @@ namespace NewRelic { namespace Profiler {
         virtual HRESULT __stdcall Initialize(IUnknown* pICorProfilerInfoUnk) override
         {
 #ifdef DEBUG
-            cout << "New Relic .NET Profiler: Attach debugger now." << std::endl;
             DelayProfilerAttach();
 #endif
 
