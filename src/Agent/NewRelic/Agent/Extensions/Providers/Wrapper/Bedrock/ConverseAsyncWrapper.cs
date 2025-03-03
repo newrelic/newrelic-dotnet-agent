@@ -42,7 +42,7 @@ public class ConverseAsyncWrapper : IWrapper
 
         dynamic converseRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
         string modelId = converseRequest.ModelId.ToLower();
-
+        SupportabilityHelpers.CreateModelIdSupportabilityMetricsForBedrock(modelId, agent);
         var operationType = "completion"; // Converse doesn't support embedding
         var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}");
 
