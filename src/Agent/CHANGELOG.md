@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.38.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.37.0...v10.38.0) (2025-03-04)
+
+
+### New features
+
+* Add support for PackageReference with NewRelic.Azure.WebSites packages. ([#3001](https://github.com/newrelic/newrelic-dotnet-agent/issues/3001)) ([8fb397f](https://github.com/newrelic/newrelic-dotnet-agent/commit/8fb397fe4d7b8c11f5939182119ce00097ae0640))
+* Azure Function instrumentation is enabled by default ([#3007](https://github.com/newrelic/newrelic-dotnet-agent/issues/3007)) ([8eba1bf](https://github.com/newrelic/newrelic-dotnet-agent/commit/8eba1bf0da15d8efdb606bd49ffdb881c8c0549f))
+
 ## [10.37.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.36.0...v10.37.0) (2025-02-19)
 
 
