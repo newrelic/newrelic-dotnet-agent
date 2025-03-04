@@ -138,7 +138,8 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IVendorModel GetAzureFunctionVendorInfo()
         {
-            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
+            // per the spec, only report Azure Function metadata if the agent is running in an Azure Function mode and instrumentation is enabled
+            if (!(_configuration.AzureFunctionModeEnabled &&_configuration.AzureFunctionModeDetected))
                 return null;
 
             var appName = _configuration.AzureFunctionResourceId;

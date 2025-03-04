@@ -33,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         public async Task Invoke(HttpContext context)
         {
             // if we're in Azure function mode, we don't want to do execute this wrapper
-            if (_agent.Configuration.AzureFunctionModeEnabled)
+            if (_agent.Configuration.AzureFunctionModeDetected && _agent.Configuration.AzureFunctionModeEnabled)
             {
                 if (!_loggedDisabledMessage)
                 {

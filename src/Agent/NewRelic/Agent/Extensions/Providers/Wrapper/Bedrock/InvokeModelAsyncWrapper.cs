@@ -45,6 +45,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            SupportabilityHelpers.CreateModelIdSupportabilityMetricsForBedrock((string)invokeModelRequest.ModelId, agent);
             var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
