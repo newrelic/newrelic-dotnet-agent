@@ -59,7 +59,7 @@ public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
         _idGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Guid>(functionInstance.GetType(), "Id");
         string invocationId = _idGetter(functionInstance).ToString();
 
-        agent.Logger.Debug($"Instrumenting in-process Azure Function: {inProcessFunctionDetails.FunctionName} / invocation ID {invocationId} / Trigger {inProcessFunctionDetails.Trigger}.");
+        agent.Logger.Finest("Instrumenting in-process Azure Function: {FunctionName} / invocation ID {invocationId} / Trigger {Trigger}.", inProcessFunctionDetails.FunctionName, invocationId, inProcessFunctionDetails.Trigger);
 
         agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/InProcess");
         agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Trigger/{inProcessFunctionDetails.TriggerTypeName ?? "unknown"}");

@@ -989,7 +989,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             if (_configuration.AzureFunctionModeDetected)
             {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionModeEnabled + $"/{(_configuration.AzureFunctionModeEnabled ? "1" : "0")}");
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionMode(_configuration.AzureFunctionModeEnabled));
             }
         }
 
