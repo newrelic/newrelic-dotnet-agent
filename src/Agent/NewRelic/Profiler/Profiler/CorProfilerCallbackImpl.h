@@ -277,7 +277,7 @@ namespace NewRelic { namespace Profiler {
                 return S_OK;
             }
             catch (...) {
-                LogError(L"An exception was thrown while initializing the profiler.");
+                LogError(L"An exception was thrown while initializing the profiler. The profiler will be detached now.");
                 return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
             }
         }
@@ -1125,7 +1125,6 @@ namespace NewRelic { namespace Profiler {
                     // Imbue with locale and codecvt facet is used to allow the log file to write non-ascii chars to the log
                     nrlog::StdLog.get_dest().imbue(std::locale(std::locale::classic(), new std::codecvt_utf8<wchar_t>));
                     nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
-                    LogInfo("Logger initialized.");
                 }
                 catch (...) {
                     // If we fail to create a log file, there's no sense in trying to log going forward.
@@ -1133,6 +1132,9 @@ namespace NewRelic { namespace Profiler {
                     nrlog::StdLog.SetEnabled(false);
                 }
             }
+
+            nrlog::StdLog.SetInitalized();
+            LogInfo("Logger initialized.");
         }
 
         std::shared_ptr<Configuration::Configuration> InitializeConfigAndSetLogLevel()
@@ -1147,7 +1149,6 @@ namespace NewRelic { namespace Profiler {
             nrlog::StdLog.SetAzureFunctionMode(_systemCalls->IsAzureFunction());
             nrlog::StdLog.SetAzureFunctionLogLevelOverride(_systemCalls->IsAzureFunctionLogLevelOverrideEnabled());
             nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
-            nrlog::StdLog.SetInitalized();
 
             if (nrlog::StdLog.GetEnabled())
             {
