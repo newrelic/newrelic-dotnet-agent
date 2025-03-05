@@ -26,12 +26,14 @@ namespace NewRelic.Agent.Core.AgentHealth
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
         private bool _enableLogging;
+        private bool _enableAspNetCore6PlusBrowserInjection;
         private List<IDictionary<string, string>> _ignoredInstrumentation;
 
         [SetUp]
         public void SetUp()
         {
             _enableLogging = true;
+            _enableAspNetCore6PlusBrowserInjection = true;
             _ignoredInstrumentation = new List<IDictionary<string, string>>();
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
@@ -61,7 +63,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
             Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
             Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
-
+            Mock.Arrange(() => configuration.EnableAspNetCore6PlusBrowserInjection).Returns(_enableAspNetCore6PlusBrowserInjection);
             Mock.Arrange(() => configuration.AgentControlEnabled).Returns(true);
             Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
             Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
@@ -543,6 +545,20 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
+        }
+
+        public void AspNetCore6PlusBrowserInjectionEnabledMetricPresent()
+        {
+            _enableAspNetCore6PlusBrowserInjection = true;
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/Enabled"), Is.True);
+        }
+
+        public void AspNetCore6PlusBrowserInjectionDisabledMetricPresent()
+        {
+            _enableAspNetCore6PlusBrowserInjection = false;
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/Disabled"), Is.True);
         }
     }
 }
