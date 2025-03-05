@@ -555,6 +555,21 @@ public class TransactionTests
         Assert.That(attributeValue, Is.EqualTo(value));
     }
 
+    [Test]
+    public void GetFaasAttribute_ReturnsExpectedValue()
+    {
+        // Arrange
+        var key = "TestAttribute";
+        var value = "TestValue";
+
+        // Act
+        _transaction.AddFaasAttribute(key, value);
+        var result = _transaction.GetFaasAttribute(key);
+
+        // Assert
+        Assert.That(result, Is.EqualTo(value));
+    }
+
     [TestCase("   ")]
     [TestCase("")]
     [TestCase(null)]

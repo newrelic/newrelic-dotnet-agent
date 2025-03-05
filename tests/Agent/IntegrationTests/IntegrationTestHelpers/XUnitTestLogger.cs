@@ -30,5 +30,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
         }
+
+        public void WriteFormattedOutput(string formattedOutput)
+        {
+            _xunitOutput?.WriteLine(formattedOutput);
+        }
     }
 }
