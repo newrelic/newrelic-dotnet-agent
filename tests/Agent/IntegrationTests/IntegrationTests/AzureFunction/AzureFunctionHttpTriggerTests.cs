@@ -129,7 +129,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
                 new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
                 new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
             };
@@ -189,7 +189,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/disabled" }
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
@@ -251,7 +251,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
                 new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
                 new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
             };
@@ -314,7 +314,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/disabled" }
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
@@ -380,7 +380,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/1" },
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
                 new() { metricName = "Supportability/DotNet/AzureFunction/Worker/InProcess" },
                 new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http" }
             };
@@ -440,7 +440,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/Enabled/0" }
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/disabled" }
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
