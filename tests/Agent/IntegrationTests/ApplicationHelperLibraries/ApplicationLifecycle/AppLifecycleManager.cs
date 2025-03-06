@@ -25,7 +25,15 @@ namespace ApplicationLifecycle
 
         private const string DefaultPort = "5001";
 
-        private const int MinutesToWait = 5;
+        private static int MinutesToWait
+        {
+            get
+            {
+                // look for TEST_MINUTES_TO_WAIT env var, default to 5 minutes if not found
+                var minutes = Environment.GetEnvironmentVariable("TEST_MINUTES_TO_WAIT");
+                return string.IsNullOrEmpty(minutes) ? 5 : int.Parse(minutes);
+            }
+        }
 
         private static string _applicationName;
 
@@ -100,6 +108,7 @@ namespace ApplicationLifecycle
                 {
                     using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
                     {
+                        Log($"Waiting for shutdown event handle: {ShutdownChannelPrefix + port}");
                         if (!eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait)))
                             Log("Timed out waiting for shutdown event handle to be signaled.");
                     }
@@ -124,9 +133,10 @@ namespace ApplicationLifecycle
                 file.WriteLine(pid);
             }
 
+            Log("PID File created: " + pidFilePath);
         }
 
-        private static void Log(string message)
+        public static void Log(string message)
         {
             Console.WriteLine($"[{ApplicationName}] {message}");
         }
