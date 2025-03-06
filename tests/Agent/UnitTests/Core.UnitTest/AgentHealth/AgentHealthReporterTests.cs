@@ -551,14 +551,14 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _enableAspNetCore6PlusBrowserInjection = true;
             _agentHealthReporter.CollectMetrics();
-            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/Enabled"), Is.True);
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/enabled"), Is.True);
         }
 
         public void AspNetCore6PlusBrowserInjectionDisabledMetricPresent()
         {
             _enableAspNetCore6PlusBrowserInjection = false;
             _agentHealthReporter.CollectMetrics();
-            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/Disabled"), Is.True);
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/disabled"), Is.True);
         }
     }
 }

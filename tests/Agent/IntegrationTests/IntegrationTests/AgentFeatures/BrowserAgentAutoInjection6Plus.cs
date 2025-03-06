@@ -87,7 +87,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             var agentDisabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorLogLinePrefixRegex + "Unexpected exception. Browser injection will be disabled. *?");
             Assert.Null(agentDisabledLogLine);
 
-            var expectedMetric = new Assertions.ExpectedMetric { metricName = $@"Supportability/Dotnet/AspNetCore6PlusBrowserInjection/{(_browserInjectionEnabled ? "Enabled" : "Disabled")}" };
+            var expectedMetric = new Assertions.ExpectedMetric { metricName = $@"Supportability/Dotnet/AspNetCore6PlusBrowserInjection/{(_browserInjectionEnabled ? "enabled" : "disabled")}" };
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             Assertions.MetricExists(expectedMetric, metrics);
 

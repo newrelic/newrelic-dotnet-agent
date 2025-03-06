@@ -996,14 +996,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void ReportIfAspNetCore6PlusIsEnabled()
         {
-            if (_configuration.EnableAspNetCore6PlusBrowserInjection)
-            {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjectionEnabled);
-            }
-            else
-            {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjectionDisabled);
-            }
+            MetricNames.SupportabilityAspNetCore6PlusBrowserInjection(_configuration.EnableAspNetCore6PlusBrowserInjection);
         }
 
         /// <summary>
