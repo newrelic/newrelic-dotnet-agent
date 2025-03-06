@@ -812,6 +812,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfGCSamplerV2IsEnabled();
             ReportIfAwsAccountIdProvided();
             ReportIfAgentControlHealthEnabled();
+            ReportIfAspNetCore6PlusIsEnabled();
             ReportIfAzureFunctionModeIsDetected();
         }
 
@@ -991,6 +992,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityAzureFunctionMode(_configuration.AzureFunctionModeEnabled));
             }
+        }
+
+        private void ReportIfAspNetCore6PlusIsEnabled()
+        {
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjection(_configuration.EnableAspNetCore6PlusBrowserInjection));
         }
 
         /// <summary>

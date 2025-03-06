@@ -845,6 +845,11 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityDotnetPs + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);
         }
 
+        public static string SupportabilityAspNetCore6PlusBrowserInjection(bool enabled)
+        {
+            return SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
+
         #endregion Supportability
 
         #region Distributed Trace Metrics
