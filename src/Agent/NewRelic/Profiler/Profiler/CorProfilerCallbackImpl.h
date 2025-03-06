@@ -222,7 +222,7 @@ namespace NewRelic { namespace Profiler {
                     configFailed = true;
                 }
 
-                // ...then we initialize the log
+                // ...then we initialize the log file 
                 InitializeLogging();
 
                 // If we failed to load the config file, try again. Not because we expect it
@@ -230,7 +230,8 @@ namespace NewRelic { namespace Profiler {
                 // first time because the logger hadn't been initialized yet
                 if (configFailed)
                 {
-                    configuration = InitializeConfigAndSetLogLevel();
+                    nrlog::StdLog.SetInitalized(); // Ensure the logger is marked as initialized
+                    configuration = InitializeConfigAndSetLogLevel(); // this will throw an exception that we want to log
                 }
 
                 LogTrace(_productName);
@@ -1132,9 +1133,6 @@ namespace NewRelic { namespace Profiler {
                     nrlog::StdLog.SetEnabled(false);
                 }
             }
-
-            nrlog::StdLog.SetInitalized();
-            LogInfo("Logger initialized.");
         }
 
         std::shared_ptr<Configuration::Configuration> InitializeConfigAndSetLogLevel()
@@ -1149,6 +1147,7 @@ namespace NewRelic { namespace Profiler {
             nrlog::StdLog.SetAzureFunctionMode(_systemCalls->IsAzureFunction());
             nrlog::StdLog.SetAzureFunctionLogLevelOverride(_systemCalls->IsAzureFunctionLogLevelOverrideEnabled());
             nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
+            nrlog::StdLog.SetInitalized();
 
             if (nrlog::StdLog.GetEnabled())
             {
