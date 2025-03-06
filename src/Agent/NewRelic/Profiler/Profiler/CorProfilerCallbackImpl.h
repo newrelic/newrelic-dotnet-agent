@@ -222,7 +222,7 @@ namespace NewRelic { namespace Profiler {
                     configFailed = true;
                 }
 
-                // ...then we initialize the log
+                // ...then we initialize the log file 
                 InitializeLogging();
 
                 // If we failed to load the config file, try again. Not because we expect it
@@ -230,7 +230,8 @@ namespace NewRelic { namespace Profiler {
                 // first time because the logger hadn't been initialized yet
                 if (configFailed)
                 {
-                    configuration = InitializeConfigAndSetLogLevel();
+                    nrlog::StdLog.SetInitalized(); // Ensure the logger is marked as initialized
+                    configuration = InitializeConfigAndSetLogLevel(); // this will throw an exception that we want to log
                 }
 
                 LogTrace(_productName);
@@ -277,7 +278,7 @@ namespace NewRelic { namespace Profiler {
                 return S_OK;
             }
             catch (...) {
-                LogError(L"An exception was thrown while initializing the profiler.");
+                LogError(L"An exception was thrown while initializing the profiler. The profiler will be detached now.");
                 return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
             }
         }
