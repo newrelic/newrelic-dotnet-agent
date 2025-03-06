@@ -544,5 +544,35 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
         }
+
+        [Test]
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void AzureFunctionModeSupportabilityMetricPresent_OnlyWhenAzureFunctionModeDetected(bool azureFunctionModeDetected, bool enableAzureFunctionMode)
+        {
+            // ARRANGE
+            var configuration = GetDefaultConfiguration();
+            Mock.Arrange(() => configuration.AzureFunctionModeDetected).Returns(azureFunctionModeDetected);
+            Mock.Arrange(() => configuration.AzureFunctionModeEnabled).Returns(enableAzureFunctionMode);
+
+            _configurationAutoResponder.Dispose();
+            _agentHealthReporter.Dispose();
+            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+            var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+            _publishedMetrics = new List<MetricWireModel>();
+            _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+            // ACT
+            _agentHealthReporter.CollectMetrics();
+
+            // ASSERT
+            if (enableAzureFunctionMode)
+                Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AzureFunctionMode/enabled"), azureFunctionModeDetected ? Is.True : Is.False);
+            else
+                Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AzureFunctionMode/disabled"), azureFunctionModeDetected ? Is.True : Is.False);
+        }
     }
 }
