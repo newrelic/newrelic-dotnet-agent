@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
             Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
             Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
-            Mock.Arrange(() => configuration.EnableAspNetCore6PlusBrowserInjection).Returns(_enableAspNetCore6PlusBrowserInjection);
+            Mock.Arrange(() => configuration.EnableAspNetCore6PlusBrowserInjection).Returns(() => _enableAspNetCore6PlusBrowserInjection);
             Mock.Arrange(() => configuration.AgentControlEnabled).Returns(true);
             Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
             Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
@@ -547,6 +547,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
         }
 
+        [Test]
         public void AspNetCore6PlusBrowserInjectionEnabledMetricPresent()
         {
             _enableAspNetCore6PlusBrowserInjection = true;
@@ -554,6 +555,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/enabled"), Is.True);
         }
 
+        [Test]
         public void AspNetCore6PlusBrowserInjectionDisabledMetricPresent()
         {
             _enableAspNetCore6PlusBrowserInjection = false;
