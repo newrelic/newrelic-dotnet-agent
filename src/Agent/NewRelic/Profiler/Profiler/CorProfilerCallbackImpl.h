@@ -1126,6 +1126,7 @@ namespace NewRelic { namespace Profiler {
                     // Imbue with locale and codecvt facet is used to allow the log file to write non-ascii chars to the log
                     nrlog::StdLog.get_dest().imbue(std::locale(std::locale::classic(), new std::codecvt_utf8<wchar_t>));
                     nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
+                    LogInfo("Logger initialized.");
                 }
                 catch (...) {
                     // If we fail to create a log file, there's no sense in trying to log going forward.
