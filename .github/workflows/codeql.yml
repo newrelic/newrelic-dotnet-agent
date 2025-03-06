@@ -5,8 +5,8 @@ on:
     branches:
       - main
       - "feature/**"
-    paths-ignore:
-      - ".github/**" # skip changes to the .github folder (workflows, etc.)
+    paths:
+      - "src/**" # CodeQL only needs to scan the src directory
       
   schedule:
     - cron: '20 3 * * 1'
@@ -55,17 +55,15 @@ jobs:
       uses: github/codeql-action/init@b56ba49b26e50535fa1e7f7db0f4f7b4bf65d80d # v3.28.10
       with:
         languages: csharp
+        config-file: ./.github/codeql/codeql-config.yml
 
-    - name: Build .NET Agent Solution
-      run: |
-        dotnet build ${{ env.fullagent_solution_path }}
-      shell: powershell
-   
+    # build is not required for .NET projects
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@b56ba49b26e50535fa1e7f7db0f4f7b4bf65d80d # v3.28.10
       with:
         category: "/language:csharp"
-
+        
   analyze-cpp:
     name: Analyze C++
     needs: check-modified-files
@@ -90,6 +88,7 @@ jobs:
       uses: github/codeql-action/init@b56ba49b26e50535fa1e7f7db0f4f7b4bf65d80d # v3.28.10
       with:
         languages: c-cpp
+        config-file: ./.github/codeql/codeql-config.yml
 
     - name: Add msbuild to PATH for Profiler build
       uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
