@@ -7,56 +7,76 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NUnit.Framework;
 
 namespace CompositeTests.CrossAgentTests.HybridAgent
 {
     public class NewRelicAgentOperations
     {
-        //[Transaction]
-        public static void DoWorkInTransaction(string transactionName, Action work)
+        private IAgent _agent;
+
+        public NewRelicAgentOperations(IAgent agent)
         {
-            //NewRelic.Api.Agent.NewRelic.SetTransactionName("Custom", transactionName);
-            work();
+            _agent = agent;
         }
 
-        //[Trace]
-        public static void DoWorkInSegment(string segmentName, Action work)
+        public void DoWorkInTransaction(string transactionName, Action work)
         {
-            //NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.CurrentSpan.SetName(segmentName);
-            work();
+            var transaction = _agent.CreateTransaction(isWeb:false, "Custom", transactionName, doNotTrackAsUnitOfWork: true);
+
+            try
+            {
+                work();
+            }
+            finally
+            {
+                transaction.End();
+            }
         }
 
-        public static void AssertNotValidTransaction()
+        public void DoWorkInSegment(string segmentName, Action work)
         {
-            // The .net agent public API does not provide a way to check if a transaction is active or valid.
-            // This is a no-op for now.
+            var segment = _agent.StartCustomSegmentOrThrow(segmentName);
+            segment.SetName(segmentName);
+
+            try
+            {
+                work();
+            }
+            finally
+            {
+                segment.End();
+            }
         }
 
-        public static object GetCurrentTraceId()
+        public void AssertNotValidTransaction()
         {
-            //return NewRelic.Api.Agent.NewRelic.GetAgent().TraceMetadata.TraceId;
-            return string.Empty;
+            Assert.That( _agent.CurrentTransaction.IsValid, Is.False, "Transaction found when none was expected.");
         }
 
-        public static object GetCurrentSpanId()
+        public object GetCurrentTraceId()
         {
-            //return NewRelic.Api.Agent.NewRelic.GetAgent().TraceMetadata.SpanId;
-            return string.Empty;
+            return _agent.TraceMetadata.TraceId;
         }
 
-        public static bool GetCurrentIsSampledFlag()
+        public object GetCurrentSpanId()
         {
-            //return NewRelic.Api.Agent.NewRelic.GetAgent().TraceMetadata.IsSampled;
-            return false;
+            return _agent.TraceMetadata.SpanId;
         }
 
-        public static void InjectHeaders(Action work)
+        public bool GetCurrentIsSampledFlag()
+        {
+            return _agent.TraceMetadata.IsSampled;
+        }
+
+        public void InjectHeaders(Action work)
         {
             var externalCall = SimulatedOperations.GetCurrentExternalCall()!;
 
-            //var transactionApi = NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction;
+            var transactionApi = _agent.CurrentTransaction;
 
-            //transactionApi.InsertDistributedTraceHeaders(externalCall, (ExternalCallLibrary call, string headerName, string headerValue) => call.Headers[headerName] = headerValue);
+            transactionApi.InsertDistributedTraceHeaders(externalCall, (ExternalCallLibrary call, string headerName, string headerValue) => call.Headers[headerName] = headerValue);
 
             work();
         }

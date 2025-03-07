@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         // the desired tags (requires activity.AllDataRequested to be true).
         //
         // Generates code similar to the following.
-        // activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded;
+        // activityListener.Sample = (ref ActivityCreationOptions<ActivityContext> options) => ShouldSampleActivity((int)options.Kind, options.Parent) ? ActivitySamplingResult.AllDataAndRecorded : ActivitySamplingResult.None;
         private void ConfigureSampleCallback(object activityListener, Type activityListenerType, Assembly assembly)
         {
             var sampleProperty = activityListenerType.GetProperty("Sample");
@@ -114,10 +114,41 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var parameterType = activityCreationOptionsType.MakeGenericType(activityContextType).MakeByRefType();
             var optionsParameter = Expression.Parameter(parameterType, "options");
             // Converting the enum types here by using the int representation of the enum value (we can't use the ilrepacked enum type directly).
-            var samplingValue = Expression.Convert(Expression.Constant((int)ActivitySamplingResult.AllDataAndRecorded), activitySamplingResultType);
-            var sampleLambda = Expression.Lambda(sampleProperty.PropertyType, samplingValue, optionsParameter);
+            var allDataAndRecordedValue = Expression.Convert(Expression.Constant((int)ActivitySamplingResult.AllDataAndRecorded), activitySamplingResultType);
+            var noneValue = Expression.Convert(Expression.Constant((int)ActivitySamplingResult.None), activitySamplingResultType);
+
+            //var optionsKindProperty = activityCreationOptionsType.GetProperty("Kind");
+            //var optionsParentProperty = activityCreationOptionsType.GetProperty("Parent");
+            var shouldSampleActivityMethod = typeof(ActivityBridge).GetMethod(nameof(ShouldSampleActivity), BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var kindExpression = Expression.Convert(Expression.Property(optionsParameter, "Kind"), typeof(int));
+            var parentExpression = Expression.Convert(Expression.Property(optionsParameter, "Parent"), typeof(object));
+            var shouldSampleActivityCall = Expression.Call(Expression.Constant(this), shouldSampleActivityMethod, kindExpression, parentExpression);
+
+            var resultExpression = Expression.Condition(shouldSampleActivityCall, allDataAndRecordedValue, noneValue);
+
+            var sampleLambda = Expression.Lambda(sampleProperty.PropertyType, resultExpression, optionsParameter);
 
             sampleProperty.SetValue(activityListener, sampleLambda.Compile());
+        }
+
+        private bool ShouldSampleActivity(int kind, object activityContext)
+        {
+            // If there is a transaction already in progress, we should sample the activity.
+            var transaction = _agent.CurrentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished)
+            {
+                return true;
+            }
+
+            var activityKind = (ActivityKind)kind;
+            dynamic dynamicActivityContext = activityContext;
+            if ((activityContext != null && (bool)dynamicActivityContext.IsRemote) || activityKind == ActivityKind.Server || activityKind == ActivityKind.Consumer)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static void ConfigureActivityStartedAndStoppedCallbacks(object activityListener, Type activityListenerType, Assembly assembly, IAgent agent)
@@ -162,17 +193,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 dynamic activity = originalActivity;
                 var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
                 var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
-                var segment = transaction.StartCustomSegment(methodCall, activity.DisplayName);
-
-                activity.SetCustomProperty("NewRelicSegment", segment);
+                _ = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity));
             }
         }
 
         private static void ActivityStopped(object originalActivity, IAgent agent)
         {
             // This method will be called when an activity is stopped. This is where we would end a segment or transaction.
-            dynamic activity = originalActivity;
-            var segment = activity.GetCustomProperty("NewRelicSegment") as ISegment;
+            var segment = RuntimeNewRelicActivity.GetSegmentFromActivity(originalActivity);
 
             if (segment != null)
             {
@@ -181,8 +209,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
     }
 
-    public class NewRelicActivitySourceProxy : IDisposable
+    public class NewRelicActivitySourceProxy
     {
+        public const string SegmentCustomPropertyName = "NewRelicSegment";
+
         private const string ActivitySourceName = "NewRelic.Agent";
         private static INewRelicActivitySource _activitySource = CreateDefaultActivitySource();
         private static int _usingRuntimeActivitySource = 0;
@@ -202,11 +232,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var originalActivitySource = Interlocked.Exchange(ref _activitySource, new RuntimeActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion, activitySourceType, activityKindType)) as IDisposable;
             originalActivitySource?.Dispose();
-        }
-
-        public void Dispose()
-        {
-            _activitySource?.Dispose();
         }
 
         public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
@@ -277,13 +302,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
     }
 
-    public interface INewRelicActivity : IDisposable
-    {
-        string SpanId { get; }
-        bool IsStopped { get; }
-        void Stop();
-    }
-
     public class DefaultNewRelicActivity : INewRelicActivity
     {
         private readonly Activity _activity;
@@ -297,9 +315,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public string SpanId => _activity == default ? null : _activity.SpanId.ToString();
 
+        public ISegment Segment
+        {
+            get => _activity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
+            set => _activity.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
+        }
+
         public void Dispose()
         {
-            _activity?.Dispose();
+            _activity.Dispose();
         }
 
         public void Stop()
@@ -321,6 +345,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public string SpanId => (string)((dynamic)_activity)?.SpanId.ToString();
 
+        public ISegment Segment
+        {
+            get => GetSegmentFromActivity(_activity);
+            set => ((dynamic)_activity).SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
+        }
+
         public void Dispose()
         {
             dynamic dynamicActivity = _activity;
@@ -330,7 +360,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public void Stop()
         {
             dynamic dynamicActivity = _activity;
-            dynamicActivity?.Stop();
+            dynamicActivity.Stop();
+        }
+
+        public static ISegment GetSegmentFromActivity(object activity)
+        {
+            return ((dynamic)activity).GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
         }
     }
 }

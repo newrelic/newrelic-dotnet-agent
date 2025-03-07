@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -197,17 +198,19 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        private Segment StartSegmentImpl(MethodCall methodCall, bool createActivity = true)
+        private Segment StartSegmentImpl(MethodCall methodCall, INewRelicActivity activity = null)
         {
             var methodCallData = GetMethodCallData(methodCall);
             var segment = new Segment(this, methodCallData);
 
             // This is temporary. We should only do this if the segment was not created from an activity
-            if (createActivity)
+            if (activity == null)
             {
                 // TODO: Create and start an activity for the segment here, and pass the activity to the segment
-                var activity = Agent.ActivitySourceProxy.StartActivity("temp segment name", ActivityKind.Internal);
+                activity = Agent.ActivitySourceProxy.StartActivity("temp segment name", ActivityKind.Internal);
             }
+
+            activity.Segment = segment;
 
             return segment;
         }
@@ -220,6 +223,15 @@ namespace NewRelic.Agent.Core.Transactions
             return new Segment(this, methodCallData, relativeStartTime, relativeEndTime);
         }
 
+        public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
+        {
+            var segment = StartSegmentImpl(methodCall, activity);
+
+            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+
+            return segment;
+        }
+
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
         {
             if (Ignored)
@@ -227,8 +239,7 @@ namespace NewRelic.Agent.Core.Transactions
             if (segmentName == null)
                 throw new ArgumentNullException(nameof(segmentName));
 
-            // TODO: The create activity parameter is temporary for the proof of concept
-            var segment = StartSegmentImpl(methodCall, createActivity: false);
+            var segment = StartSegmentImpl(methodCall);
             var customSegmentData = CreateCustomSegmentData(segmentName);
 
             segment.SetSegmentData(customSegmentData);

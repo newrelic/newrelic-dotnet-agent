@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
 
 namespace CompositeTests.CrossAgentTests.HybridAgent
 {
@@ -81,10 +82,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
         public static void AssertNotValidSpan()
         {
-            if (Activity.Current != null)
-            {
-                throw new Exception("Expected no active span, but found one.");
-            }
+            Assert.That(Activity.Current, Is.Null, "Expected no active span, but found one.");
         }
 
         public static object GetCurrentTraceId()

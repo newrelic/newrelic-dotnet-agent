@@ -40,6 +40,8 @@ namespace NewRelic.Agent.Api
         /// </summary>
         void End(bool captureResponseTime = true);
 
+        ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity);
+
         /// <summary>
         /// Creates a segment for a datastore operation.
         /// </summary>
@@ -315,5 +317,14 @@ namespace NewRelic.Agent.Api
         void AddLambdaAttribute(string name, object value);
 
         void AddFaasAttribute(string name, object value);
+    }
+
+    // TODO: Move to separate file
+    public interface INewRelicActivity : IDisposable
+    {
+        string SpanId { get; }
+        bool IsStopped { get; }
+        ISegment Segment { get; set; }
+        void Stop();
     }
 }

@@ -40,6 +40,14 @@ namespace NewRelic.Agent.Core.Transactions
         {
         }
 
+        public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
+        {
+#if DEBUG
+            Log.Finest("Skipping StartActivitySegment outside of a transaction");
+#endif
+            return Segment.NoOpSegment;
+        }
+
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
         {
 #if DEBUG

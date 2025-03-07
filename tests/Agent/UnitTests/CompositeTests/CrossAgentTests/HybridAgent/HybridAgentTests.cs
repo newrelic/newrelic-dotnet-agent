@@ -10,6 +10,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -22,17 +25,27 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
+        private NewRelicAgentOperations _newRelicAgentOperations;
+        private ActivityBridge _activityBridge;
 
         [SetUp]
         public void Setup()
         {
             _compositeTestAgent = new CompositeTestAgent();
             _agent = _compositeTestAgent.GetAgent();
+            _newRelicAgentOperations = new NewRelicAgentOperations(_agent);
+
+            Console.WriteLine("OTel activity source is ready", OpenTelemetryOperations.TestAppActivitySource.Name);
+
+            _activityBridge = new ActivityBridge(_agent);
+            _activityBridge.Start();
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
+            _newRelicAgentOperations = null;
+            _activityBridge.Dispose();
             _compositeTestAgent.Dispose();
         }
 
@@ -49,7 +62,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             ValidateTelemetryFromHarvest(test.Telemetry);
         }
 
-        private static void PerformOperation(Operation operation, int nestedLevel = 0)
+        private void PerformOperation(Operation operation, int nestedLevel = 0)
         {
             List<Action> childActions = new() {
                 () => Console.WriteLine($"{new string(' ', nestedLevel * 2)}Performing operation: {operation.Command}")
@@ -69,7 +82,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             action(() => childActions.ForEach(childAction => childAction()));
         }
 
-        private static Action<Action> GetActionForOperation(Operation operation)
+        private Action<Action> GetActionForOperation(Operation operation)
         {
             switch (operation)
             {
@@ -83,11 +96,11 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                     return (Action work) => OpenTelemetryOperations.DoWorkInSpanWithInboundContext(GetSpanKindForOperation(operation), GetInboundContextForOperation(operation), work);
 
                 case { Command: "DoWorkInTransaction" }:
-                    return (Action work) => NewRelicAgentOperations.DoWorkInTransaction(GetTransactionNameForOperation(operation), work);
+                    return (Action work) => _newRelicAgentOperations.DoWorkInTransaction(GetTransactionNameForOperation(operation), work);
 
                 case { Command: "DoWorkInSegment" }:
                     var segmentName = operation.Parameters!["segmentName"] as string;
-                    return (Action work) => NewRelicAgentOperations.DoWorkInSegment(segmentName!, work);
+                    return (Action work) => _newRelicAgentOperations.DoWorkInSegment(segmentName!, work);
 
                 case { Command: "AddOTelAttribute" }:
                     var name = operation.Parameters!["name"] as string;
@@ -106,7 +119,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                     return (Action work) => OpenTelemetryOperations.InjectHeaders(work);
 
                 case { Command: "NRInjectHeaders" }:
-                    return (Action work) => NewRelicAgentOperations.InjectHeaders(work);
+                    return (Action work) => _newRelicAgentOperations.InjectHeaders(work);
 
                 default:
                     throw new Exception($"{operation.Command} is not supported.");
@@ -145,7 +158,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             return (string)operation.Parameters!["transactionName"];
         }
 
-        private static Action GetActionForAssertion(Assertion assertion, int nestedLevel)
+        private Action GetActionForAssertion(Assertion assertion, int nestedLevel)
         {
             List<Action> childActions = new() {
                 () => Console.WriteLine($"{new string(' ', nestedLevel * 2)}Performing assertion: {assertion.Description}")
@@ -161,23 +174,23 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                             childActions.Add(OpenTelemetryOperations.AssertNotValidSpan);
                             break;
                         case "currentTransaction":
-                            childActions.Add(NewRelicAgentOperations.AssertNotValidTransaction);
+                            childActions.Add(_newRelicAgentOperations.AssertNotValidTransaction);
                             break;
                         default:
                             throw new Exception($"{operand} is not supported for {assertion.Rule!.Operator}.");
                     }
                     break;
                 case { Operator: "Equals" }:
-                    var lhs = GetGetterForObject(assertion.Rule!.Parameters!["left"]);
-                    var rhs = GetGetterForObject(assertion.Rule!.Parameters!["right"]);
+                    var lhsName = (string)assertion.Rule!.Parameters!["left"];
+                    var rhsName = (string)assertion.Rule!.Parameters!["right"];
+                    var lhs = GetGetterForObject(lhsName);
+                    var rhs = GetGetterForObject(rhsName);
                     childActions.Add(() =>
                     {
                         var left = lhs();
                         var right = rhs();
-                        if (!left.Equals(right))
-                        {
-                            throw new Exception($"{left} does not equal {right}");
-                        }
+
+                        Assert.That(left, Is.EqualTo(right), $"{lhsName}({left}) does not equal {rhsName}({right})");
                     });
                     break;
                 case { Operator: "Matches" }:
@@ -187,10 +200,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                     childActions.Add(() =>
                     {
                         var actualValue = (string)objectGetter();
-                        if (!string.Equals(actualValue, expectedValue, StringComparison.OrdinalIgnoreCase))
-                        {
-                            throw new Exception($"{actualValue} does not match {expectedValue}");
-                        }
+                        Assert.That(actualValue, Is.EqualTo(expectedValue).IgnoreCase, $"{objectName}({actualValue}) does not match {expectedValue}");
                     });
                     break;
                 default:
@@ -199,26 +209,19 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
             return () =>
             {
-                try
-                {
-                    childActions.ForEach(a => a());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Caught exception {0}", e);
-                }
+                childActions.ForEach(a => a());
             };
         }
 
-        private static Func<object> GetGetterForObject(object objectName)
+        private Func<object> GetGetterForObject(object objectName)
         {
             return objectName switch
             {
                 "currentOTelSpan.traceId" => OpenTelemetryOperations.GetCurrentTraceId,
-                "currentTransaction.traceId" => NewRelicAgentOperations.GetCurrentTraceId,
+                "currentTransaction.traceId" => _newRelicAgentOperations.GetCurrentTraceId,
                 "currentOTelSpan.spanId" => OpenTelemetryOperations.GetCurrentSpanId,
-                "currentSegment.spanId" => NewRelicAgentOperations.GetCurrentSpanId,
-                "currentTransaction.sampled" => () => NewRelicAgentOperations.GetCurrentIsSampledFlag(),
+                "currentSegment.spanId" => _newRelicAgentOperations.GetCurrentSpanId,
+                "currentTransaction.sampled" => () => _newRelicAgentOperations.GetCurrentIsSampledFlag(),
                 "injected.traceId" => SimulatedOperations.GetInjectedTraceId,
                 "injected.spanId" => SimulatedOperations.GetInjectedSpanId,
                 "injected.sampled" => () => SimulatedOperations.GetInjectedSampledFlag(),
@@ -226,12 +229,12 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             };
         }
 
-        private static void TriggerOrWaitForHarvestCycle()
+        private void TriggerOrWaitForHarvestCycle()
         {
-            Console.WriteLine("This is a simulated agent harvest.");
+            _compositeTestAgent.Harvest();
         }
 
-        private static void ValidateTelemetryFromHarvest(AgentOutput telemetry)
+        private void ValidateTelemetryFromHarvest(AgentOutput telemetry)
         {
             if (telemetry == null)
             {
@@ -240,39 +243,22 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
             if (telemetry.Transactions != null)
             {
-                try
-                {
-                    ValidateTransactions(telemetry.Transactions);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Caught exception {0}", e);
-                }
+                ValidateTransactions(telemetry.Transactions);
             }
 
             if (telemetry.Spans != null)
             {
-                try
-                {
-                    ValidateSpans(telemetry.Spans);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Caught exception {0}", e);
-                }
+                ValidateSpans(telemetry.Spans);
             }
         }
 
-        private static void ValidateTransactions(IEnumerable<Transaction> transactionsToCheck)
+        private void ValidateTransactions(IEnumerable<Transaction> transactionsToCheck)
         {
-            var actualTansactionEvents = GetTransactionEventsFromHarvest();
+            var actualTransactionEvents = GetTransactionEventsFromHarvest();
 
             if (!transactionsToCheck.Any())
             {
-                if (actualTansactionEvents.Any())
-                {
-                    throw new Exception("Expected no transactions, but found some.");
-                }
+                Assert.That(actualTransactionEvents, Is.Empty, "Expected no transactions but found some.");
 
                 return;
             }
@@ -280,23 +266,22 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             foreach (var expectedTransaction in transactionsToCheck)
             {
                 // find the actual transaction that matches the expected transaction
-                var actualTransaction = actualTansactionEvents.FirstOrDefault(t => t.Name!.Contains(expectedTransaction.Name!));
-                if (actualTransaction == null)
-                {
-                    throw new Exception($"Expected transaction {expectedTransaction.Name} not found.");
-                }
+                Assert.That(actualTransactionEvents, Has.One.Matches<TransactionEventWireModel>(t => TransactionEventHasName(t, expectedTransaction.Name!)), $"Expected transaction {expectedTransaction.Name} not found.");
             }
         }
 
-        private static void ValidateSpans(IEnumerable<Span> spansToCheck)
+        private static bool TransactionEventHasName(TransactionEventWireModel transactionEvent, string name)
+        {
+            var transactionName = (string)transactionEvent.IntrinsicAttributes()["name"];
+            return transactionName.Contains(name);
+        }
+
+        private void ValidateSpans(IEnumerable<Span> spansToCheck)
         {
             var actualSpanEvents = GetSpanEventsFromHarvest();
             if (!spansToCheck.Any())
             {
-                if (actualSpanEvents.Any())
-                {
-                    throw new Exception("Expected no spans, but found some.");
-                }
+                Assert.That(actualSpanEvents, Is.Empty, "Expected no spans but found some.");
 
                 return;
             }
@@ -304,50 +289,58 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             foreach (var expectedSpan in spansToCheck)
             {
                 // find the actual span that matches the expected span
-                var actualSpan = actualSpanEvents.FirstOrDefault(s => s.Name!.Contains(expectedSpan.Name!));
-                if (actualSpan == null)
+                Assert.That(actualSpanEvents, Has.One.Matches<ISpanEventWireModel>(s => SpanEventHasName(s, expectedSpan.Name!)), $"Expected span {expectedSpan.Name} not found.");
+
+                var actualSpan = actualSpanEvents.FirstOrDefault(s => SpanEventHasName(s, expectedSpan.Name!));
+
+                if (expectedSpan.EntryPoint != null)
                 {
-                    throw new Exception($"Expected span {expectedSpan.Name} not found.");
+                    var entryPoint = actualSpan.IntrinsicAttributes()["nr.entryPoint"];
+                    Assert.That(entryPoint, Is.EqualTo(expectedSpan.EntryPoint), $"Expected entry point {expectedSpan.EntryPoint} does not match actual entry point {entryPoint}.");
                 }
 
-                if (expectedSpan.EntryPoint != null && expectedSpan.EntryPoint != actualSpan.EntryPoint)
+                if (expectedSpan.Category != null)
                 {
-                    throw new Exception($"Expected entry point {expectedSpan.EntryPoint} does not match actual entry point {actualSpan.EntryPoint}.");
+                    var category = actualSpan.IntrinsicAttributes()["category"];
+                    Assert.That(category, Is.EqualTo(expectedSpan.Category), $"Expected category {expectedSpan.Category} does not match actual category {category}.");
                 }
 
-                if (expectedSpan.Category != null && expectedSpan.Category != actualSpan.Category)
+                if (expectedSpan.ParentName != null)
                 {
-                    throw new Exception($"Expected category {expectedSpan.Category} does not match actual category {actualSpan.Category}.");
-                }
+                    var parentId = (string)actualSpan.IntrinsicAttributes()["parentId"];
+                    var parent = actualSpanEvents.Single(s => (string)s.IntrinsicAttributes()["guid"] == parentId);
+                    var parentName = (string)parent.IntrinsicAttributes()["name"];
 
-                if (expectedSpan.ParentName != null && !actualSpan.ParentName!.Contains(expectedSpan.ParentName))
-                {
-                    throw new Exception($"Expected parent name {expectedSpan.ParentName} does not match actual parent name {actualSpan.ParentName}.");
+                    Assert.That(parentName, Is.EqualTo(expectedSpan.ParentName), $"Expected parent name {expectedSpan.ParentName} does not match actual parent name {parentName}.");
                 }
 
                 if (expectedSpan.Attributes != null && expectedSpan.Attributes.Any())
                 {
                     foreach (var attribute in expectedSpan.Attributes)
                     {
-                        if (!actualSpan.Attributes!.ContainsKey(attribute.Key) || actualSpan.Attributes[attribute.Key] != attribute.Value)
-                        {
-                            throw new Exception($"Expected attribute {attribute.Key} with value {attribute.Value} not found.");
-                        }
+                        var allAttributes = actualSpan.GetAllAttributeValuesDic();
+
+                        Assert.That(allAttributes, Contains.Key(attribute.Key), $"Expected attribute {attribute.Key} not found.");
+                        Assert.That(allAttributes[attribute.Key], Is.EqualTo(attribute.Value), $"Expected attribute {attribute.Key} with value {attribute.Value} does not match actual value {allAttributes[attribute.Key]}.");
                     }
                 }
             }
         }
 
-        private static IEnumerable<Transaction> GetTransactionEventsFromHarvest()
+        private static bool SpanEventHasName(ISpanEventWireModel spanEvent, string name)
         {
-            // This is a simulated method to get transaction events from the agent.
-            return Enumerable.Empty<Transaction>();
+            var spanName = (string)spanEvent.IntrinsicAttributes()["name"];
+            return spanName.Contains(name);
         }
 
-        private static IEnumerable<Span> GetSpanEventsFromHarvest()
+        private IEnumerable<TransactionEventWireModel> GetTransactionEventsFromHarvest()
         {
-            // This is a simulated method to get span events from the agent.
-            return Enumerable.Empty<Span>();
+            return _compositeTestAgent.TransactionEvents;
+        }
+
+        private IEnumerable<ISpanEventWireModel> GetSpanEventsFromHarvest()
+        {
+            return _compositeTestAgent.SpanEvents;
         }
 
         private static List<TestCaseData> GetHybridAgentTestData()
