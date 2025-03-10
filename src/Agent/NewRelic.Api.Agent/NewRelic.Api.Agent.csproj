@@ -8,11 +8,12 @@
     <IntermediateOutputPath>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <Nullable>enable</Nullable>
+    <DisableDiagnosticTracing>true</DisableDiagnosticTracing>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

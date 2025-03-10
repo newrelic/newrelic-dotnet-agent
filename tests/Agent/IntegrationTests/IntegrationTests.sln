@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{EE939277-76B4-4099-B3D6-300C8D70F3C1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{01291327-B0E8-4EAB-929B-D6B796BF1D7C} = {01291327-B0E8-4EAB-929B-D6B796BF1D7C}
+		{05078BA6-DADF-4DDE-3339-62C1D9924642} = {05078BA6-DADF-4DDE-3339-62C1D9924642}
 		{07FC6D0B-0638-4B73-80D1-05E17EF89183} = {07FC6D0B-0638-4B73-80D1-05E17EF89183}
 		{0BD4D452-1466-43E0-BFE9-8B15B53BB11E} = {0BD4D452-1466-43E0-BFE9-8B15B53BB11E}
 		{1B7BED7D-156F-4789-ABAA-AC5D982F57DE} = {1B7BED7D-156F-4789-ABAA-AC5D982F57DE}
@@ -191,6 +192,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreWebApiLambdaApplication", "Applications\AspNetCoreWebApiLambdaApplication\AspNetCoreWebApiLambdaApplication.csproj", "{D7E78459-8139-4CB4-B830-E8914454CD60}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunctionApplication", "Applications\AzureFunctionApplication\AzureFunctionApplication.csproj", "{79BB2AEE-39BF-4855-8270-71BFD35BC397}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionInProcApplication", "Applications\AzureFunctionInProcApplication\AzureFunctionInProcApplication.csproj", "{05078BA6-DADF-4DDE-3339-62C1D9924642}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -438,6 +441,10 @@ Global
 		{79BB2AEE-39BF-4855-8270-71BFD35BC397}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79BB2AEE-39BF-4855-8270-71BFD35BC397}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79BB2AEE-39BF-4855-8270-71BFD35BC397}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -496,6 +503,7 @@ Global
 		{78C0CA57-4E16-4E3E-B0CF-E8C9259BA1F2} = {30CF078E-E531-441E-83AB-24AB9B1C179F}
 		{D7E78459-8139-4CB4-B830-E8914454CD60} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{79BB2AEE-39BF-4855-8270-71BFD35BC397} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{05078BA6-DADF-4DDE-3339-62C1D9924642} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}

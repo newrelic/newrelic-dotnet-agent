@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,11 +12,10 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AzureFunction;
 
-public class InvokeFunctionAsyncWrapper : IWrapper
+public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
 {
     private static MethodInfo _getInvocationResultMethod;
     private static bool _loggedDisabledMessage;
-    private const string WrapperName = "AzureFunctionInvokeAsyncWrapper";
 
     private static bool _coldStart = true;
     private static bool IsColdStart => _coldStart && !(_coldStart = false);
@@ -26,13 +26,13 @@ public class InvokeFunctionAsyncWrapper : IWrapper
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(AzureFunctionIsolatedInvokeAsyncWrapper).Equals(methodInfo.RequestedWrapperName));
     }
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
         ITransaction transaction)
     {
-        if (!agent.Configuration.AzureFunctionModeEnabled) // bail early if azure function mode isn't enabled
+        if (!(agent.Configuration.AzureFunctionModeDetected && agent.Configuration.AzureFunctionModeEnabled) ) // bail early if azure function mode isn't enabled
         {
             if (!_loggedDisabledMessage)
             {
@@ -47,16 +47,19 @@ public class InvokeFunctionAsyncWrapper : IWrapper
 
         if (functionContext == null)
         {
-            agent.Logger.Debug($"{WrapperName}: FunctionContext is null, can't instrument this invocation.");
+            agent.Logger.Debug($"{nameof(AzureFunctionIsolatedInvokeAsyncWrapper)}: FunctionContext is null, can't instrument this invocation.");
             throw new ArgumentNullException("functionContext");
         }
 
-        var functionDetails = new FunctionDetails(functionContext, agent);
+        var functionDetails = new IsolatedFunctionDetails(functionContext, agent);
         if (!functionDetails.IsValid())
         {
-            agent.Logger.Debug($"{WrapperName}: FunctionDetails are invalid, can't instrument this invocation.");
+            agent.Logger.Debug($"{nameof(AzureFunctionIsolatedInvokeAsyncWrapper)}: FunctionDetails are invalid, can't instrument this invocation.");
             throw new Exception("FunctionDetails are missing some require information.");
         }
+
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Worker/Isolated");
+        agent.RecordSupportabilityMetric($"DotNet/AzureFunction/Trigger/{functionDetails.TriggerTypeName ?? "unknown"}");
 
         transaction = agent.CreateTransaction(
             isWeb: functionDetails.IsWebTrigger,
@@ -90,6 +93,14 @@ public class InvokeFunctionAsyncWrapper : IWrapper
                 transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.HTTP);
             }
         }
+        // save for later
+        //else if (functionDetails.TriggerTypeName == "ServiceBus")
+        //{
+        //    if (functionDetails.Headers?.Count != 0)
+        //    {
+        //        transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.Queue);
+        //    }
+        //}
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionDetails.FunctionName);
 
@@ -110,21 +121,20 @@ public class InvokeFunctionAsyncWrapper : IWrapper
                     return;
                 }
 
+                if (_getInvocationResultMethod == null)
+                {
+                    // GetInvocationResult is a static extension method
+                    // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
+                    Type type = functionContext.GetType().Assembly.GetType(FunctionContextBindingFeatureExtensionsTypeName);
+                    _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
+                }
+                dynamic invocationResult = _getInvocationResultMethod.Invoke(null, new[] { functionContext });
+                var result = invocationResult?.Value;
+
                 // only pull response status code here if it's a web trigger and the Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore assembly is not loaded.
                 if (functionDetails.IsWebTrigger && functionDetails.HasAspNetCoreExtensionReference != null && !functionDetails.HasAspNetCoreExtensionReference.Value)
                 {
-                    if (_getInvocationResultMethod == null)
-                    {
-                        // GetInvocationResult is a static extension method
-                        // there are multiple GetInvocationResult methods in this type; we want the one without any generic parameters
-                        Type type = functionContext.GetType().Assembly.GetType(FunctionContextBindingFeatureExtensionsTypeName);
-                        _getInvocationResultMethod = type.GetMethods().Single(m => m.Name == "GetInvocationResult" && !m.ContainsGenericParameters);
-                    }
-
-                    dynamic invocationResult = _getInvocationResultMethod.Invoke(null, new[] { functionContext });
-                    var result = invocationResult?.Value;
-
-                    if (result != null && result.StatusCode != null) 
+                    if (result != null && result.StatusCode != null)
                     {
                         var statusCode = result.StatusCode;
                         transaction.SetHttpResponseStatusCode((int)statusCode);

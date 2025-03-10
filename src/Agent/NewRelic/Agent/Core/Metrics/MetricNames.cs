@@ -839,7 +839,16 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
         public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
         public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPs + "AwsAccountId/Config";
-        public const string SupportabilityAzureFunctionModeEnabled = SupportabilityDotnetPs + "AzureFunctionMode/Enabled";
+
+        public static string SupportabilityAzureFunctionMode(bool enabled)
+        {
+            return SupportabilityDotnetPs + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
+
+        public static string SupportabilityAspNetCore6PlusBrowserInjection(bool enabled)
+        {
+            return SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
 
         #endregion Supportability
 

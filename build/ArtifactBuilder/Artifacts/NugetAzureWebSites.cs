@@ -21,34 +21,46 @@ namespace ArtifactBuilder.Artifacts
         private readonly AgentComponents _frameworkAgentComponents;
         private string _nuGetPackageName;
 
-        private string RootDirectory => $@"{StagingDirectory}\content\newrelic";
-
         protected override void InternalBuild()
         {
+            var rootDirectory = $@"{StagingDirectory}\content\newrelic";
             _frameworkAgentComponents.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
+
             _frameworkAgentComponents.CopyComponents($@"{package.ContentDirectory}\newrelic");
+            _frameworkAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "net462")}\newrelic");
             package.CopyToLib(_frameworkAgentComponents.AgentApiDll);
+
             package.CopyAll(PackageDirectory);
-            TransformNewRelicConfig();
             var agentInfo = new AgentInfo
             {
                 InstallType = $"NugetAzureWebsites{Platform}"
             };
 
-            agentInfo.WriteToDisk(RootDirectory);
+            var newRelicConfigPaths = new[]
+            {
+                $@"{rootDirectory}\newrelic.config",
+                $@"{StagingDirectory}\contentFiles\any\net462\newrelic\newrelic.config",
+            };
+
+            foreach (var newRelicConfigPath in newRelicConfigPaths)
+            {
+                TransformNewRelicConfig(newRelicConfigPath);
+                agentInfo.WriteToDisk(Path.GetDirectoryName(newRelicConfigPath));
+            }
+
             package.SetVersion(_frameworkAgentComponents.Version);
+
             _nuGetPackageName = package.Pack();
         }
 
-        private void TransformNewRelicConfig()
+        private static void TransformNewRelicConfig(string newRelicConfigPath)
         {
-            var path = $@"{RootDirectory}\newrelic.config";
             var xml = new System.Xml.XmlDocument();
 
             // Update the 'newrelic.config' file
-            xml.Load(path);
+            xml.Load(newRelicConfigPath);
             var ns = new System.Xml.XmlNamespaceManager(xml.NameTable);
             ns.AddNamespace("x", "urn:newrelic-config");
 
@@ -63,7 +75,7 @@ namespace ArtifactBuilder.Artifacts
 
             // Set the 'directory' attribute
             nodeLog.SetAttribute("directory", @"c:\Home\LogFiles\NewRelic");
-            xml.Save(path);
+            xml.Save(newRelicConfigPath);
         }
 
         /// <summary>
@@ -112,6 +124,10 @@ namespace ArtifactBuilder.Artifacts
             // content folder - framework agent
             AddFullAgentComponents(expectedComponents, Path.Combine(installedFilesRoot, "content", "newrelic"));
 
+            // contentFiles folder - all agents
+            var contentFilesRoot = Path.Combine(installedFilesRoot, "contentFiles", "any");
+            AddFullAgentComponents(expectedComponents, Path.Combine(contentFilesRoot, "net462", "newrelic"));
+
             // lib folder - agent api
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, "lib"), _frameworkAgentComponents.AgentApiDll);
 
@@ -132,6 +148,7 @@ namespace ArtifactBuilder.Artifacts
         private static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
         {
             var unpackedComponents = ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "content"));
+            unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "contentFiles")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "lib")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "images")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "tools")));

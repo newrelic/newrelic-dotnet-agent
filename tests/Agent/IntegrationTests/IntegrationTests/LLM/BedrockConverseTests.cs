@@ -12,21 +12,14 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
-    public abstract class BedrockTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-where TFixture : ConsoleDynamicMethodFixture
+    public abstract class BedrockConverseTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
         // Prompts have spaces in them, which will not be parsed correctly
         private string _prompt = "In one sentence, what is a large-language model?";
-        private List<string> _bedrockModelsToTest = new List<string>
-        {
-            "amazonembed",
-            "amazonexpress",
-            "anthropic"
-        };
 
-        private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
+        private Dictionary<string, LlmMessageTypes> _expectedAttributes = new()
         {
             {"id", LlmMessageTypes.All},
             {"request_id", LlmMessageTypes.All},
@@ -48,7 +41,7 @@ where TFixture : ConsoleDynamicMethodFixture
             {"input", LlmMessageTypes.LlmEmbedding},
         };
 
-        public BedrockTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected BedrockConverseTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
@@ -63,14 +56,12 @@ where TFixture : ConsoleDynamicMethodFixture
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), _bedrockModelsToTest.Count);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
                 }
             );
 
-            foreach (var model in _bedrockModelsToTest)
-            {
-                _fixture.AddCommand($"LLMExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
-            }
+            _fixture.AddCommand($"BedrockExerciser Converse {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"BedrockExerciser ConverseWithError {LLMHelpers.ConvertToBase64(_prompt)}");
 
             _fixture.Initialize();
         }
@@ -106,40 +97,52 @@ where TFixture : ConsoleDynamicMethodFixture
         }
 
         [Fact]
-        public void BedrockTest()
+        public void ConverseTest()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
+                new() { metricName = @"Custom/Llm/completion/Bedrock/ConverseAsync", CallCountAllHarvests = 2 },
+                new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
+                new() { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true} // Supportability/DotNet/LLM/{vendor}/{model}
             };
 
-            var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
-            ValidateCommonAttributes(customEvents);
+            var customEventsSuccess = _fixture.AgentLog.GetCustomEvents().Where(ce => !ce.Attributes.Keys.Contains("error")).ToList();
+            var customEventFailure = _fixture.AgentLog.GetCustomEvents().SingleOrDefault(ce => ce.Attributes.Keys.Contains("error"));
+
+            ValidateCommonAttributes(customEventsSuccess);
+            Assert.NotNull(customEventFailure);
+            Assert.Equal(true, customEventFailure.Attributes["error"]);
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             Assertions.MetricsExist(expectedMetrics, metrics);
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModel");
-
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/Converse");
             Assert.NotNull( transactionEvent );
+
+            var transactionEventError = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/ConverseWithError");
+            Assert.NotNull(transactionEventError);
+
+            var applicationErrorEvent = _fixture.AgentLog.GetErrorEvents().SingleOrDefault();
+            Assert.NotNull(applicationErrorEvent);
+            Assert.Contains("completion_id", applicationErrorEvent.UserAttributes.Keys);
+            Assert.Contains("http.statusCode", applicationErrorEvent.UserAttributes.Keys);
+            Assert.Contains("error.code", applicationErrorEvent.UserAttributes.Keys);
         }
     }
 
     [NetCoreTest]
-    public class BedrockTests_Basic_CoreLatest : BedrockTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class BedrockConverseTests_Basic_CoreLatest : BedrockConverseTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public BedrockTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public BedrockConverseTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class BedrockTests_Basic_FWLatest : BedrockTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class BedrockConverseTests_Basic_FWLatest : BedrockConverseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public BedrockTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public BedrockConverseTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

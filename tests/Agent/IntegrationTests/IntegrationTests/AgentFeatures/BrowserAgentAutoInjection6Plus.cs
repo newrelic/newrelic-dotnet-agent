@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -85,6 +86,11 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             // verify that the browser injecting stream wrapper didn't catch an exception and disable itself
             var agentDisabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorLogLinePrefixRegex + "Unexpected exception. Browser injection will be disabled. *?");
             Assert.Null(agentDisabledLogLine);
+
+            var expectedMetric = new Assertions.ExpectedMetric { metricName = $@"Supportability/Dotnet/AspNetCore6PlusBrowserInjection/{(_browserInjectionEnabled ? "enabled" : "disabled")}" };
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            Assertions.MetricExists(expectedMetric, metrics);
+
         }
     }
 

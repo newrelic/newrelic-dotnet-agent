@@ -21,7 +21,6 @@ internal class Program
 
     private const string NerdGraphQueryJson = "{ \"query\": \"{ docs { agentReleases(agentName: DOTNET) { version eolDate } } }\" }";
 
-
     static async Task<int> Main(string[] args)
     {
         try
@@ -38,19 +37,18 @@ internal class Program
 
             var nerdGraphResponse = await QueryNerdGraphAsync(options.ApiKey, NewRelicUrl);
 
-            var agentReleases = ParseNerdGraphResponse(DateTime.UtcNow,  nerdGraphResponse);
-            if (agentReleases.Any())
+            var deprecatedAgentReleases = GetDeprecatedAgentReleasesFromNerdGraphResponse(DateTime.UtcNow,  nerdGraphResponse);
+            if (deprecatedAgentReleases.Any())
             {
                 List<PackageDeprecationInfo> packagesToDeprecate = new();
-
                 foreach (var package in configuration.Packages)
                 {
-                    packagesToDeprecate.AddRange(await GetPackagesToDeprecateAsync(package, agentReleases));
+                    packagesToDeprecate.AddRange(await GetPackagesToDeprecateAsync(package, deprecatedAgentReleases));
                 }
 
                 if (packagesToDeprecate.Any())
                 {
-                    var message = ReportPackagesToDeprecate(packagesToDeprecate, agentReleases);
+                    var message = ReportPackagesToDeprecate(packagesToDeprecate, deprecatedAgentReleases);
                     Console.WriteLine(message);
 
                     if (!options.TestMode)
@@ -62,7 +60,10 @@ internal class Program
                             return -1;
                         }
                     }
-
+                }
+                else
+                {
+                    Console.WriteLine("No releases are ready to deprecate.");
                 }
             }
             else
@@ -106,7 +107,7 @@ internal class Program
         return response.Content;
     }
 
-    private static List<AgentRelease> ParseNerdGraphResponse(DateTime releaseDate, string nerdGraphResponse)
+    private static List<AgentRelease> GetDeprecatedAgentReleasesFromNerdGraphResponse(DateTime releaseDate, string nerdGraphResponse)
     {
         // parse the NerdGraph response -- we want to deserialize data.docs.agentReleases into an array of AgentRelease
         var parsedResponse = JObject.Parse(nerdGraphResponse);

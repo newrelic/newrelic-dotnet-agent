@@ -1449,12 +1449,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CollectorHost;
         }
 
-        [TestCase(null, null, null, ExpectedResult = null)]
-        [TestCase(null, "foo", null, ExpectedResult = "foo")]
-        [TestCase("foo", null, null, ExpectedResult = "foo")]
-        [TestCase("foo", null, "foo", ExpectedResult = "foo")]
-        [TestCase("foo", "foo", null, ExpectedResult = "foo")]
-        [TestCase("foo", "foo", "bar", ExpectedResult = "foo")]
+        // all null returns empty string
+        [TestCase(null, null, null, ExpectedResult = "")]
+        // AppSetting overrides environment and local
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", null, "bar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", "nar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        // Environment overrides local
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", "bar1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        // local on its own
+        [TestCase(null, null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, null, "REPLACE_WITH_LICENSE_KEY", ExpectedResult = "REPLACE_WITH_LICENSE_KEY")]
+        // Length must be 40
+        [TestCase("       foo1234567890abcdefghijklmnopqrstuvwxyz0         ", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = "")]
+        [TestCase("foo", null, null, ExpectedResult = "")]
+        // Allowed characters
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = "")]
+        // Bad keys skipped for lower priority keys
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+        [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
         public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string local)
         {
             _localConfig.service.licenseKey = local;
@@ -3042,6 +3062,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             return _defaultConfig.UtilizationDetectAzureFunction;
         }
+
+        [Test]
+        public void AzureFunctionModeEnabledByDefault()
+        {
+            Assert.That(_defaultConfig.AzureFunctionModeEnabled, Is.True, "AzureFunctionMode should be enabled by default");
+        }
         #endregion
 
         #region Log Metrics and Events
@@ -3576,8 +3602,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
         }
 
-        [TestCase(null, ExpectedResult = false)]
-        [TestCase("not a bool", ExpectedResult = false)]
+        [TestCase(null, ExpectedResult = true)]
+        [TestCase("not a bool", ExpectedResult = true)]
         [TestCase("false", ExpectedResult = false)]
         [TestCase("true", ExpectedResult = true)]
         public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
@@ -4533,7 +4559,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(licenseKey, Is.EqualTo(""));
+                Assert.That(licenseKey, Is.EqualTo(string.Empty));
                 Assert.That(healthCheck.IsHealthy, Is.False);
                 Assert.That(healthCheck.Status, Is.EqualTo("License key missing in configuration"));
                 Assert.That(healthCheck.LastError, Is.EqualTo("NR-APM-002"));

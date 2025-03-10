@@ -56,6 +56,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll",
@@ -85,6 +86,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml",
@@ -122,7 +124,7 @@ namespace ArtifactBuilder
                 NewRelicConfig,
                 NewRelicXsd
             };
-            
+
             if (!string.IsNullOrWhiteSpace(WindowsProfiler))
             {
                 agentHomeDirFiles.Add(WindowsProfiler);
@@ -142,11 +144,11 @@ namespace ArtifactBuilder
             AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
             LinuxProfiler = null;
-            if (Platform == "x64") 
+            if (Platform == "x64")
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so";
-            } 
-            else if (Platform == "arm64") 
+            }
+            else if (Platform == "arm64")
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libNewRelicProfiler.so";
             }

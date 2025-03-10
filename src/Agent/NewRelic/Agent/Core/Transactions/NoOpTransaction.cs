@@ -332,6 +332,11 @@ namespace NewRelic.Agent.Core.Transactions
             return;
         }
 
+        public object GetFaasAttribute(string name)
+        {
+            return null;
+        }
+
         public void AddCloudSdkAttribute(string name, object value)
         {
             return;
