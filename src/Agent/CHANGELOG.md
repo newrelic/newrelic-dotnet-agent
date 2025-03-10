@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.39.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.38.0...v10.39.0) (2025-03-10)
+
+
+### Notice
+
+* Automatic browser agent injection for ASP.NET Core v6+ web applications has been enabled by default. If you experience any issues with this feature, please see item 2 on [this page](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent/#enable_netcore6plus) for a setting that can be set to `false` to disable the feature and [contact us for support](https://docs.newrelic.com/docs/new-relic-solutions/solve-common-issues/find-help-use-support-portal/). ([051ceab](https://github.com/newrelic/newrelic-dotnet-agent/commit/051ceab6e2747209c965dc7d9156d9cf59dbf9e2))
+
+
+### New features
+
+* Enable ASP.NET Core browser auto-injection by default. ([051ceab](https://github.com/newrelic/newrelic-dotnet-agent/commit/051ceab6e2747209c965dc7d9156d9cf59dbf9e2))
+* Instrument In-Process Azure Function invocations, with distributed tracing support for Http and Service Bus triggers. ([#3003](https://github.com/newrelic/newrelic-dotnet-agent/issues/3003)) ([47d22a1](https://github.com/newrelic/newrelic-dotnet-agent/commit/47d22a11321f160084d230785b8d6475181e77c7))
+
+
+### Fixes
+
+* Remove diagnostics tracing output from agent API calls ([#3029](https://github.com/newrelic/newrelic-dotnet-agent/issues/3029)) ([be7b7f4](https://github.com/newrelic/newrelic-dotnet-agent/commit/be7b7f4b3b57a5d056313c940026c4681243b038))
+* Set Profiler logger to initialized when configuration load fails. ([#3015](https://github.com/newrelic/newrelic-dotnet-agent/issues/3015)) ([7ab30d7](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ab30d712ab59901d21c434019b8d28eb95f7280))
+
 ## [10.38.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.37.0...v10.38.0) (2025-03-04)
 
 
