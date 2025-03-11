@@ -315,6 +315,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public string SpanId => _activity == default ? null : _activity.SpanId.ToString();
 
+        public string TraceId => _activity == default ? null : _activity.TraceId.ToString();
+
+        public string DisplayName => _activity == default ? "unknown" : _activity.DisplayName;
+
         public ISegment Segment
         {
             get => _activity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
@@ -344,6 +348,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public bool IsStopped => (bool?)((dynamic)_activity)?.IsStopped ?? true;
 
         public string SpanId => (string)((dynamic)_activity)?.SpanId.ToString();
+
+        public string TraceId => (string)((dynamic)_activity)?.TraceId.ToString();
+
+        public string DisplayName => (string)((dynamic)_activity)?.DisplayName;
 
         public ISegment Segment
         {

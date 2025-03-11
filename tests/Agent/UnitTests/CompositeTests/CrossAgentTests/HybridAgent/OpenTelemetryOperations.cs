@@ -15,25 +15,25 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
     {
         public static ActivitySource TestAppActivitySource = new("TestApp activity source");
 
-        public static void DoWorkInSpan(ActivityKind activityKind, Action work)
+        public static void DoWorkInSpan(string spanName, ActivityKind activityKind, Action work)
         {
-            using var activity = TestAppActivitySource.StartActivity("DoWorkInSpan", activityKind);
+            using var activity = TestAppActivitySource.StartActivity(spanName, activityKind);
 
             work();
         }
 
-        public static void DoWorkInSpanWithRemoteParent(ActivityKind activityKind, Action work)
+        public static void DoWorkInSpanWithRemoteParent(string spanName, ActivityKind activityKind, Action work)
         {
             var parentContext = new ActivityContext(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(), ActivityTraceFlags.Recorded, isRemote: true);
-            using var activity = TestAppActivitySource.StartActivity("DoWorkInSpan", activityKind, parentContext);
+            using var activity = TestAppActivitySource.StartActivity(spanName, activityKind, parentContext);
 
             work();
         }
 
-        public static void DoWorkInSpanWithInboundContext(ActivityKind activityKind, InboundContext inboundContext, Action work)
+        public static void DoWorkInSpanWithInboundContext(string spanName, ActivityKind activityKind, InboundContext inboundContext, Action work)
         {
             var parentContext = GetActivityContextFromInboundContext(inboundContext);
-            using var activity = TestAppActivitySource.StartActivity("DoWorkInSpan", activityKind, parentContext);
+            using var activity = TestAppActivitySource.StartActivity(spanName, activityKind, parentContext);
 
             work();
         }

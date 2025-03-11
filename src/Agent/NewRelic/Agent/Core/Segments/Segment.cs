@@ -143,6 +143,16 @@ namespace NewRelic.Agent.Core.Segments
             }
         }
 
+        public string TryGetActivityTraceId()
+        {
+            if (_activity == null)
+            {
+                return null;
+            }
+
+            return _activity.TraceId;
+        }
+
         public void End()
         {
             // this segment may have already been forced to end

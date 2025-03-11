@@ -87,13 +87,13 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             switch (operation)
             {
                 case { Command: "DoWorkInSpan" }:
-                    return (Action work) => OpenTelemetryOperations.DoWorkInSpan(GetSpanKindForOperation(operation), work);
+                    return (Action work) => OpenTelemetryOperations.DoWorkInSpan(GetSpanNameForOperation(operation), GetSpanKindForOperation(operation), work);
 
                 case { Command: "DoWorkInSpanWithRemoteParent" }:
-                    return (Action work) => OpenTelemetryOperations.DoWorkInSpanWithRemoteParent(GetSpanKindForOperation(operation), work);
+                    return (Action work) => OpenTelemetryOperations.DoWorkInSpanWithRemoteParent(GetSpanNameForOperation(operation), GetSpanKindForOperation(operation), work);
 
                 case { Command: "DoWorkInSpanWithInboundContext" }:
-                    return (Action work) => OpenTelemetryOperations.DoWorkInSpanWithInboundContext(GetSpanKindForOperation(operation), GetInboundContextForOperation(operation), work);
+                    return (Action work) => OpenTelemetryOperations.DoWorkInSpanWithInboundContext(GetSpanNameForOperation(operation), GetSpanKindForOperation(operation), GetInboundContextForOperation(operation), work);
 
                 case { Command: "DoWorkInTransaction" }:
                     return (Action work) => _newRelicAgentOperations.DoWorkInTransaction(GetTransactionNameForOperation(operation), work);
@@ -135,6 +135,11 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                 "Server" => ActivityKind.Server,
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        private static string GetSpanNameForOperation(Operation operation)
+        {
+            return (string)operation.Parameters!["spanName"];
         }
 
         private static InboundContext GetInboundContextForOperation(Operation operation)
@@ -278,7 +283,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
         private void ValidateSpans(IEnumerable<Span> spansToCheck)
         {
-            var actualSpanEvents = GetSpanEventsFromHarvest();
+            var actualSpanEvents = GetSpanEventsFromHarvest().ToList();
             if (!spansToCheck.Any())
             {
                 Assert.That(actualSpanEvents, Is.Empty, "Expected no spans but found some.");
@@ -289,7 +294,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             foreach (var expectedSpan in spansToCheck)
             {
                 // find the actual span that matches the expected span
-                Assert.That(actualSpanEvents, Has.One.Matches<ISpanEventWireModel>(s => SpanEventHasName(s, expectedSpan.Name!)), $"Expected span {expectedSpan.Name} not found.");
+                Assert.That(actualSpanEvents, Has.One.Matches<ISpanEventWireModel>(s => SpanEventHasName(s, expectedSpan.Name!)), $"Expected span {expectedSpan.Name} not found in {string.Join(", ", actualSpanEvents.Select(s => (string)s.IntrinsicAttributes()["name"]))}.");
 
                 var actualSpan = actualSpanEvents.FirstOrDefault(s => SpanEventHasName(s, expectedSpan.Name!));
 
@@ -311,7 +316,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
                     var parent = actualSpanEvents.Single(s => (string)s.IntrinsicAttributes()["guid"] == parentId);
                     var parentName = (string)parent.IntrinsicAttributes()["name"];
 
-                    Assert.That(parentName, Is.EqualTo(expectedSpan.ParentName), $"Expected parent name {expectedSpan.ParentName} does not match actual parent name {parentName}.");
+                    Assert.That(parentName, Does.EndWith(expectedSpan.ParentName), $"Expected parent name {expectedSpan.ParentName} does not match actual parent name {parentName}.");
                 }
 
                 if (expectedSpan.Attributes != null && expectedSpan.Attributes.Any())

@@ -79,7 +79,23 @@ namespace NewRelic.Agent.Core.Transactions
 
         public string TraceId
         {
-            get => (TracingState != null && TracingState.TraceId != null) ? TracingState.TraceId : _traceId;
+            get
+            {
+                if (TracingState != null && TracingState.TraceId != null)
+                {
+                    return TracingState.TraceId;
+                }
+                else if (Segments.Count > 0)
+                {
+                    var firstSegment = Segments[0];
+                    var activityTraceId = firstSegment?.TryGetActivityTraceId();
+                    if (activityTraceId != null)
+                    {
+                        return activityTraceId;
+                    }
+                }
+                return _traceId;
+            }
 
             internal set => _traceId = value;
         }
@@ -206,10 +222,10 @@ namespace NewRelic.Agent.Core.Transactions
             // This is temporary. We should only do this if the segment was not created from an activity
             if (activity == null)
             {
-                // TODO: Create and start an activity for the segment here, and pass the activity to the segment
                 activity = Agent.ActivitySourceProxy.StartActivity("temp segment name", ActivityKind.Internal);
             }
 
+            segment.SetActivity(activity);
             activity.Segment = segment;
 
             return segment;
@@ -226,6 +242,9 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
         {
             var segment = StartSegmentImpl(methodCall, activity);
+            var segmentData = new SimpleSegmentData(activity.DisplayName);
+
+            segment.SetSegmentData(segmentData);
 
             if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
 

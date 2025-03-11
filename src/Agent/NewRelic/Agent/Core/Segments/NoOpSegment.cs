@@ -26,6 +26,8 @@ namespace NewRelic.Agent.Core.Segments
         public bool IsExternal => false;
         public string SpanId => null;
 
+        public string TryGetTraceIdFromActivity() => null;
+
         public ISegmentData SegmentData => _noOpSegmentData;
 
         public IAttributeDefinitions AttribDefs => _attribDefs;

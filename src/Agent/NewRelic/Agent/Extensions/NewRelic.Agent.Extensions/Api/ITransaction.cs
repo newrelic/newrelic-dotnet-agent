@@ -323,6 +323,8 @@ namespace NewRelic.Agent.Api
     public interface INewRelicActivity : IDisposable
     {
         string SpanId { get; }
+        string TraceId { get; }
+        string DisplayName { get; }
         bool IsStopped { get; }
         ISegment Segment { get; set; }
         void Stop();
