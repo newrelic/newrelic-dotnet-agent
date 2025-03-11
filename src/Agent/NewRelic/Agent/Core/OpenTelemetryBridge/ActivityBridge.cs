@@ -204,7 +204,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (segment != null)
             {
+                AddActivityTagsToSegment(originalActivity, segment);
                 segment.End();
+            }
+        }
+
+        private static void AddActivityTagsToSegment(object originalActivity, ISegment segment)
+        {
+            dynamic activity = originalActivity;
+            foreach (var tag in activity.TagObjects)
+            {
+                // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
+                // the ones that we map to intrinsic or agent attributes.
+                segment.AddCustomAttribute(tag.Key, tag.Value);
             }
         }
     }
