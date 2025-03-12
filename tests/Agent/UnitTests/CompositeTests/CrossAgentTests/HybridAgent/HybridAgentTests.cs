@@ -7,8 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
@@ -17,7 +15,6 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace CompositeTests.CrossAgentTests.HybridAgent
 {
@@ -33,6 +30,9 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
         public void Setup()
         {
             _compositeTestAgent = new CompositeTestAgent();
+            // Used for the DT tests to identify the correct tracestate header component
+            _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "1";
+
             _agent = _compositeTestAgent.GetAgent();
             _newRelicAgentOperations = new NewRelicAgentOperations(_agent);
 
