@@ -70,7 +70,6 @@
     <!-- .NET Framework needs to use the legacy gRPC library -->
     <PackageReference Include="Grpc" Version="2.46.6" />
     <PackageReference Include="Grpc.Core" Version="2.46.6" />
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.0" />
   </ItemGroup>
 
@@ -122,7 +121,6 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Buffers'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.InteropServices.RuntimeInformation'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Threading.Tasks.Extensions'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.ValueTuple'" />
     </ItemGroup>
@@ -137,7 +135,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">20</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">19</ILRepackIncludeCount>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">17</ILRepackIncludeCount>
     </PropertyGroup>
 
