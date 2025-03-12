@@ -272,14 +272,19 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             foreach (var expectedTransaction in transactionsToCheck)
             {
                 // find the actual transaction that matches the expected transaction
-                Assert.That(actualTransactionEvents, Has.One.Matches<TransactionEventWireModel>(t => TransactionEventHasName(t, expectedTransaction.Name!)), $"Expected transaction {expectedTransaction.Name} not found.");
+                Assert.That(actualTransactionEvents, Has.One.Matches<TransactionEventWireModel>(t => TransactionEventHasName(t, expectedTransaction.Name!)), $"Expected transaction {expectedTransaction.Name} not found in {string.Join(", ", actualTransactionEvents.Select(GetTransactionNameFromTransactionEvent))}.");
             }
         }
 
         private static bool TransactionEventHasName(TransactionEventWireModel transactionEvent, string name)
         {
-            var transactionName = (string)transactionEvent.IntrinsicAttributes()["name"];
+            var transactionName = GetTransactionNameFromTransactionEvent(transactionEvent);
             return transactionName.Contains(name);
+        }
+
+        private static string GetTransactionNameFromTransactionEvent(TransactionEventWireModel transactionEvent)
+        {
+            return (string)transactionEvent.IntrinsicAttributes()["name"];
         }
 
         private void ValidateSpans(IEnumerable<Span> spansToCheck)

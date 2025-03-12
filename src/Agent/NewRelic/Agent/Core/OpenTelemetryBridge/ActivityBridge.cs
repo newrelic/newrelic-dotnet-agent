@@ -7,12 +7,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
@@ -197,15 +196,103 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static void ActivityStarted(object originalActivity, IAgent agent)
         {
+            // TODO: Much of this code was copied from the WrapperService, can we share this code between the two classes?
+
             // This method will be called when an activity is started. This is where we would start a segment or transaction.
             var transaction = agent.CurrentTransaction;
-            if (transaction.IsValid && !transaction.IsFinished)
+            var existingTransactionRequired = IsTransactionRequiredForActivity(originalActivity);
+            dynamic activity = originalActivity;
+
+            if (transaction.IsFinished)
             {
-                dynamic activity = originalActivity;
-                var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
-                var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
-                _ = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity));
+                if (Log.IsFinestEnabled)
+                {
+                    if (existingTransactionRequired)
+                    {
+                        transaction.LogFinest($"Transaction has already ended, skipping activity {activity.Id}.");
+                    }
+                    else
+                    {
+                        transaction.LogFinest("Transaction has already ended, detaching from transaction storage context.");
+                    }
+                }
+
+                transaction.Detach();
+                transaction = agent.CurrentTransaction;
+
+                if (existingTransactionRequired)
+                {
+                    return;
+                }
             }
+
+            if (existingTransactionRequired)
+            {
+                if (!transaction.IsValid)
+                {
+                    if (Log.IsFinestEnabled)
+                    {
+                        transaction.LogFinest($"No transaction, skipping activity {activity.Id}.");
+                    }
+
+                    return;
+                }
+
+                if (transaction.CurrentSegment.IsLeaf)
+                {
+                    if (Log.IsFinestEnabled)
+                    {
+                        transaction.LogFinest($"Parent segment is a leaf segment, skipping activity {activity.Id}.");
+                    }
+                    return;
+                }
+            }
+
+            bool shouldStartTransaction = ShouldStartTransactionForActivity(originalActivity);
+            if (shouldStartTransaction)
+            {
+                transaction = StartTransactionForActivity(originalActivity, agent);
+
+                // Add the transaction to the activity so that it can be accessed later so that the transaction
+                // can end when the activity ends.
+            }
+
+            var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
+            var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
+            var segment = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) as IHybridAgentSegment;
+
+            if (segment != null)
+            {
+                segment.ActivityStartedTransaction = shouldStartTransaction;
+            }
+        }
+
+        private static bool IsTransactionRequiredForActivity(object originalActivity)
+        {
+            // TODO: Determine if this is the right thing to do. Our wrapper service separates these concepts.
+            return !ShouldStartTransactionForActivity(originalActivity);
+        }
+
+        private static readonly List<int> _activityKindsThatStartATransaction = new List<int>
+        {
+            (int)ActivityKind.Server,
+            (int)ActivityKind.Consumer
+        };
+
+        private static bool ShouldStartTransactionForActivity(object originalActivity)
+        {
+            dynamic activity = originalActivity;
+            
+            return (bool)activity.HasRemoteParent || _activityKindsThatStartATransaction.Contains((int)activity.Kind);
+        }
+
+        private static ITransaction StartTransactionForActivity(object originalActivity, IAgent agent)
+        {
+            dynamic activity = originalActivity;
+
+            bool isWeb = (int)activity.Kind == (int)ActivityKind.Server;
+
+            return agent.CreateTransaction(isWeb, "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
         }
 
         private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
@@ -218,6 +305,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 AddActivityTagsToSegment(originalActivity, segment);
                 AddExceptionEventInformationToSegment(originalActivity, segment, errorService);
                 segment.End();
+            }
+
+            var hybridAgentSegment = segment as IHybridAgentSegment;
+            if (hybridAgentSegment != null && hybridAgentSegment.ActivityStartedTransaction)
+            {
+                if (hybridAgentSegment.TryGetTransactionFromSegment(out var transaction))
+                {
+                    transaction.End();
+                }
             }
         }
 
