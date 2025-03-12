@@ -37,7 +37,7 @@ using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Transactions
 {
-    public class Transaction : IInternalTransaction, ITransactionSegmentState
+    public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybridAgentTransaction
     {
         private static readonly int MaxSegmentLength = 255;
 
@@ -746,7 +746,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var errorData = _errorService.FromException(exception);
 
                 TransactionMetadata.TransactionErrorState.AddExceptionData(errorData);
-                TryNoticeErrorOnCurrentSpan(errorData);
+                TryNoticeErrorOnSegment(errorData, CurrentSegment);
             }
             else
             {
@@ -756,15 +756,19 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(ErrorData errorData)
         {
-
-            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
-            TryNoticeErrorOnCurrentSpan(errorData);
+            NoticeErrorOnTransactionAndSegment(errorData, CurrentSegment);
         }
 
-        private void TryNoticeErrorOnCurrentSpan(ErrorData errorData)
+        public void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment)
         {
-            var currentSpan = CurrentSegment as IInternalSpan;
-            if (currentSpan != null) currentSpan.ErrorData = errorData;
+            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
+            TryNoticeErrorOnSegment(errorData, segment);
+        }
+
+        private void TryNoticeErrorOnSegment(ErrorData errorData, ISegment segment)
+        {
+            var internalSpan = segment as IInternalSpan;
+            if (internalSpan != null) internalSpan.ErrorData = errorData;
         }
 
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
@@ -1431,5 +1435,11 @@ namespace NewRelic.Agent.Core.Transactions
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
         }
+    }
+
+    // TODO: Find a better name for this interface or add the members to an existing interface.
+    public interface IHybridAgentTransaction
+    {
+        void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment);
     }
 }

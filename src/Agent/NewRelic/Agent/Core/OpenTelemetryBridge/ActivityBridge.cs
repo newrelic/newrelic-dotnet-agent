@@ -11,6 +11,7 @@ using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -370,10 +371,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
                         // TODO: In the future consider using the span status to determine if the exception is expected or not.
                         var errorData = errorService.FromMessage(exceptionMessage, (IDictionary<string, object>)null, false);
-                        var span = (IInternalSpan)segment;
-                        span.ErrorData = errorData;
+                        //var span = (IInternalSpan)segment;
+                        //span.ErrorData = errorData;
 
                         // TODO: Record the errorData on the transaction.
+                        var hybridAgentSegment = segment as IHybridAgentSegment;
+                        if (hybridAgentSegment != null && hybridAgentSegment.TryGetTransactionFromSegment(out var transaction))
+                        {
+                            var internalTransaction = (IHybridAgentTransaction)transaction;
+                            internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
+                        }
                     }
 
                     // Short circuiting the loop after finding the first exception event.
