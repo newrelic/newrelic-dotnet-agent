@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
@@ -18,12 +20,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class ActivityBridge : IDisposable
     {
         private IAgent _agent;
+        private IErrorService _errorService;
 
         private dynamic _activityListener;
 
-        public ActivityBridge(IAgent agent)
+        public ActivityBridge(IAgent agent, IErrorService errorService)
         {
             _agent = agent;
+            _errorService = errorService;
         }
 
         public void Start()
@@ -57,6 +61,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // that is applied to the activity. It's possible for activities that we do not intend to smaple with our listener, to be sampled
             // because of a decision made by another listener outside of our control.
             ConfigureSampleCallback(_activityListener, activityListenerType, assembly);
+
+            // Consider creating and registering an ExcpetionRecorder callback to capture exceptions recorded on activities.
+            // It is possible to record exceptions on activities in a way that will not trigger the ExceptionRecorder delegate,
+            // so we may prefer enumerating the events on an activity to look for events weith an eventName
+            // of "exception" and record those exceptions as well. The behavior of recording exceptions on Spans will likely
+            // change in the future, and the exceptions will no longer be stored as events on the span.
 
             // Enable the listener
             var addActivityListenerMethod = activitySourceType.GetMethod("AddActivityListener", [activityListenerType]);
@@ -151,11 +161,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return false;
         }
 
-        private static void ConfigureActivityStartedAndStoppedCallbacks(object activityListener, Type activityListenerType, Assembly assembly, IAgent agent)
+        private void ConfigureActivityStartedAndStoppedCallbacks(object activityListener, Type activityListenerType, Assembly assembly, IAgent agent)
         {
             var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
             ConfigureActivityStartedCallback(activityListener, activityListenerType, activityType, agent);
-            ConfigureActivityStoppedCallback(activityListener, activityListenerType, activityType, agent);
+            ConfigureActivityStoppedCallback(activityListener, activityListenerType, activityType);
         }
 
         private static void ConfigureActivityStartedCallback(object activityListener, Type activityListenerType, Type activityType, IAgent agent)
@@ -171,14 +181,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             activityStartedProperty.SetValue(activityListener, activityStartedLambda.Compile());
         }
 
-        private static void ConfigureActivityStoppedCallback(object activityListener, Type activityListenerType, Type activityType, IAgent agent)
+        private void ConfigureActivityStoppedCallback(object activityListener, Type activityListenerType, Type activityType)
         {
             var activityStoppedProperty = activityListenerType.GetProperty("ActivityStopped");
             var activityStoppedMethod = typeof(ActivityBridge).GetMethod(nameof(ActivityStopped), BindingFlags.NonPublic | BindingFlags.Static);
 
             var activityParameter = Expression.Parameter(activityType, "activity");
-            var agentInstance = Expression.Constant(agent);
-            var activityStoppedCall = Expression.Call(null, activityStoppedMethod, activityParameter, agentInstance);
+            var agentInstance = Expression.Constant(_agent);
+            var errorServiceInstance = Expression.Constant(_errorService);
+            var activityStoppedCall = Expression.Call(null, activityStoppedMethod, activityParameter, agentInstance, errorServiceInstance);
             var activityStoppedLambda = Expression.Lambda(activityStoppedProperty.PropertyType, activityStoppedCall, activityParameter);
 
             activityStoppedProperty.SetValue(activityListener, activityStoppedLambda.Compile());
@@ -197,7 +208,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
         }
 
-        private static void ActivityStopped(object originalActivity, IAgent agent)
+        private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
         {
             // This method will be called when an activity is stopped. This is where we would end a segment or transaction.
             var segment = RuntimeNewRelicActivity.GetSegmentFromActivity(originalActivity);
@@ -205,6 +216,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             if (segment != null)
             {
                 AddActivityTagsToSegment(originalActivity, segment);
+                AddExceptionEventInformationToSegment(originalActivity, segment, errorService);
                 segment.End();
             }
         }
@@ -217,6 +229,60 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
                 // the ones that we map to intrinsic or agent attributes.
                 segment.AddCustomAttribute(tag.Key, tag.Value);
+            }
+        }
+
+        private static void AddExceptionEventInformationToSegment(object originalActivity, ISegment segment, IErrorService errorService)
+        {
+            // Exceptions recorded during an activity are currently added as events on the activity. Not every way of recording
+            // an exception will trigger the ExceptionRecorder callback, so we need to enumerate the events on the activity
+            // to look for events with an eventName of "exception" and record the available exception information.
+
+            dynamic activity = originalActivity;
+            foreach (var activityEvent in activity.Events)
+            {
+                if (activityEvent.Name == "exception")
+                {
+                    string exceptionMessage = null;
+                    //string exceptionType = null;
+                    //string exceptionStacktrace = null;
+
+                    foreach (var tag in activityEvent.Tags)
+                    {
+                        if (tag.Key == "exception.message")
+                        {
+                            exceptionMessage = tag.Value?.ToString();
+                        }
+                        //else if (tag.Key == "exception.type")
+                        //{
+                        //    exceptionType = tag.Value?.ToString();
+                        //}
+                        //else if (tag.Key == "exception.stacktrace")
+                        //{
+                        //    exceptionStacktrace = tag.Value?.ToString();
+                        //}
+
+                        // Add all of the original attributes to the segment.
+                        segment.AddCustomAttribute(tag.Key, tag.Value);
+                    }
+
+                    if (exceptionMessage != null)
+                    {
+
+                        // TODO: The agent does not support ignoring errors by message, but if a type is available we could
+                        // consider ignoring the error based on the type.
+
+                        // TODO: In the future consider using the span status to determine if the exception is expected or not.
+                        var errorData = errorService.FromMessage(exceptionMessage, (IDictionary<string, object>)null, false);
+                        var span = (IInternalSpan)segment;
+                        span.ErrorData = errorData;
+
+                        // TODO: Record the errorData on the transaction.
+                    }
+
+                    // Short circuiting the loop after finding the first exception event.
+                    return;
+                }
             }
         }
     }

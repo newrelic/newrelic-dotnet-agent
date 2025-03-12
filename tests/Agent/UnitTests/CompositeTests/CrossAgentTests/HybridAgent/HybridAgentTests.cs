@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.WireModels;
@@ -37,7 +38,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
             Console.WriteLine("OTel activity source is ready", OpenTelemetryOperations.TestAppActivitySource.Name);
 
-            _activityBridge = new ActivityBridge(_agent);
+            _activityBridge = new ActivityBridge(_agent, _compositeTestAgent.Container.Resolve<IErrorService>());
             _activityBridge.Start();
         }
 
