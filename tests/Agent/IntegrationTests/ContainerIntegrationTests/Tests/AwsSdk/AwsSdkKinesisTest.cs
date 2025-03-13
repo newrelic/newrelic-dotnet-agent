@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -21,7 +20,7 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
     private readonly string _consumerName = $"TestConsumer-{Guid.NewGuid()}";
     private readonly string _recordData = "MyRecordData";
 
-    private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkKinesisExerciser
+    private const string _accountId = "520198777664"; // matches the account ID parsed from the fake access key used in AwsSdkKinesisExerciser
 
     public AwsSdkKinesisTest(AwsSdkContainerKinesisTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -102,34 +101,25 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
         };
 
-        //var expectedOperations = new[] { "create_table", "describe_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
-        //var expectedOperationsCount = expectedOperations.Length;
-
-        //string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_streamName}";
-        //var expectedAwsAgentAttributes = new string[]
-        //{
-        //    "aws.operation", "aws.requestId", "aws.region", "cloud.resource_id",
-        //};
+        string expectedArn = $"arn:aws:kinesis:(unknown):{_accountId}:stream/{_streamName}";
+        var expectedAwsAgentAttributes = new string[]
+        {
+            "aws.operation", "aws.region", "cloud.resource_id"
+        };
 
 
-        //// get all datastore span events so we can verify counts and operations
-        //var datastoreSpanEvents = _fixture.AgentLog.GetSpanEvents()
-        //    .Where(se => (string)se.IntrinsicAttributes["category"] == "datastore")
-        //    .ToList();
+        // get all kinesis span events so we can verify counts and operations
+        var spanEvents = _fixture.AgentLog.GetSpanEvents();
 
-        //// select the set of AgentAttributes values with a key of "aws.operation"
-        //var awsOperations = datastoreSpanEvents.Select(se => (string)se.AgentAttributes["aws.operation"]).ToList();
-
+        var kinesisSpanEvents = spanEvents.Where(se => se.IntrinsicAttributes["name"].ToString().StartsWith("DotNet/Kinesis"))
+            .ToList();
 
         Assert.Multiple(
             () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
             () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
 
-            //() => Assert.Equal(expectedOperationsCount, datastoreSpanEvents.Count),
-            //() => Assert.Equal(expectedOperationsCount, awsOperations.Intersect(expectedOperations).Count()),
-
-            //() => Assert.All(datastoreSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
-            //() => Assert.All(datastoreSpanEvents, se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"])),
+            () => Assert.All(kinesisSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
+            () => Assert.All(kinesisSpanEvents, se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"])),
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );

@@ -9,7 +9,6 @@ using Amazon.Kinesis;
 using Amazon.Kinesis.Model;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {
