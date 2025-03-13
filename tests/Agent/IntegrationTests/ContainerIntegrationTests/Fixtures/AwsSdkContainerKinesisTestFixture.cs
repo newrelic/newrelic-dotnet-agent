@@ -22,9 +22,43 @@ public class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
     {
         GetAndAssertStatusCode($"{BaseUrl}/CreateStreamAsync?streamName={streamName}", System.Net.HttpStatusCode.OK);
     }
+    public void DeleteStreamAsync(string streamName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/DeleteStreamAsync?streamName={streamName}", System.Net.HttpStatusCode.OK);
+    }
+
     public void ListStreamsAsync()
     {
         GetAndAssertStatusCode($"{BaseUrl}/ListStreamsAsync", System.Net.HttpStatusCode.OK);
     }
 
+    public void RegisterStreamConsumerAsync(string streamName, string consumerName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/RegisterStreamConsumerAsync?streamName={streamName}&consumerName={consumerName}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void DeregisterStreamConsumerAsync(string streamName, string consumerName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/DeregisterStreamConsumerAsync?streamName={streamName}&consumerName={consumerName}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void ListStreamConsumersAsync(string streamNAme)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/ListStreamConsumersAsync?streamName={streamNAme}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void PutRecordAsync(string streamName, string data)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/PutRecordAsync?streamName={streamName}&data={data}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void PutRecordsAsync(string streamName, string data)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/PutRecordsAsync?streamName={streamName}&data={data}", System.Net.HttpStatusCode.OK);
+    }
+
+    public void GetRecordsAsync(string streamName)
+    {
+        GetAndAssertStatusCode($"{BaseUrl}/GetRecordsAsync?streamName={streamName}", System.Net.HttpStatusCode.OK);
+    }
 }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -17,8 +18,8 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
     private readonly AwsSdkContainerKinesisTestFixture _fixture;
 
     private readonly string _streamName = $"TestStream-{Guid.NewGuid()}";
-    //private readonly string _title = "Ghost";
-    //private readonly string _year = "1990";
+    private readonly string _consumerName = $"TestConsumer-{Guid.NewGuid()}";
+    private readonly string _recordData = "MyRecordData";
 
     private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkKinesisExerciser
 
@@ -43,6 +44,13 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
                 _fixture.CreateStreamAsync(_streamName);
                 _fixture.ListStreamsAsync();
+                _fixture.RegisterStreamConsumerAsync(_streamName, _consumerName);
+                _fixture.ListStreamConsumersAsync(_streamName);
+                _fixture.PutRecordAsync(_streamName, _recordData);
+                _fixture.PutRecordsAsync(_streamName, _recordData);
+                _fixture.GetRecordsAsync(_streamName);
+                _fixture.DeregisterStreamConsumerAsync(_streamName, _consumerName);
+                _fixture.DeleteStreamAsync(_streamName);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -64,13 +72,13 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
         var metricScopeBase = "WebTransaction/MVC/AwsSdkKinesis/";
         var createStreamScope = metricScopeBase + "CreateStream/{streamName}";
         var listStreamsScope = metricScopeBase + "ListStreams";
-        //var scanScope = metricScopeBase + "Scan/{tableName}";
-        //var deleteTableScope = metricScopeBase + "DeleteTable/{tableName}";
-        //var putItemScope = metricScopeBase + "PutItem/{tableName}/{title}/{year}";
-        //var getItemScope = metricScopeBase + "GetItem/{tableName}/{title}/{year}";
-        //var updateItemScope = metricScopeBase + "UpdateItem/{tableName}/{title}/{year}";
-        //var deleteItemScope = metricScopeBase + "DeleteItem/{tableName}/{title}/{year}";
-        //var queryScope = metricScopeBase + "Query/{tableName}/{title}/{year}";
+        var registerStreamConsumerScope = metricScopeBase + "RegisterStreamConsumer/{streamName}/{consumerName}";
+        var listStreamConsumersScope = metricScopeBase + "ListStreamConsumers/{streamName}";
+        var putRecordScope = metricScopeBase + "PutRecord/{streamName}/{data}";
+        var putRecordsScope = metricScopeBase + "PutRecords/{streamName}/{data}";
+        var getRecordsScope = metricScopeBase + "GetRecords/{streamName}";
+        var deregisterStreamConsumerScope = metricScopeBase + "DeregisterStreamConsumer/{streamName}/{consumerName}";
+        var deleteStreamScope = metricScopeBase + "DeleteStream/{streamName}";
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -78,20 +86,19 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
             new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", callCount = 1, metricScope = createStreamScope},
             new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1},
             new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1, metricScope = listStreamsScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/put_item", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/put_item", callCount = 1, metricScope = putItemScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/get_item", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/get_item", callCount = 1, metricScope = getItemScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/update_item", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/update_item", callCount = 1, metricScope = updateItemScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/delete_item", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/delete_item", callCount = 1, metricScope = deleteItemScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/query", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/query", callCount = 1, metricScope = queryScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/scan", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/scan", callCount = 1, metricScope = scanScope},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/delete_table", callCount = 1},
-            //new() { metricName = $"Datastore/statement/Kinesis/{_streamName}/delete_table", callCount = 1, metricScope = deleteTableScope},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer", callCount = 1, metricScope = registerStreamConsumerScope},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers", callCount = 1, metricScope = listStreamConsumersScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 2}, // one for PutRecordAsync and one for PutRecordsAsync
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordsScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Temp", callCount = 1}, //TODO why is this named Temp instead of _streamName?
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Temp", callCount = 1, metricScope = getRecordsScope},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer", callCount = 1, metricScope = deregisterStreamConsumerScope},
+            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1, metricScope = deleteStreamScope},
 
         };
 
