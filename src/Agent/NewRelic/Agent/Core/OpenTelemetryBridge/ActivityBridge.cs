@@ -557,4 +557,59 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return ((dynamic)activity).GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
         }
     }
+
+    // This implementation will only be compatible with W3C trace context and will not support the older New Relic format or
+    // the CAT format.
+    public class NewRelicDistributedTracingPropator : DistributedContextPropagator
+    {
+        // This will be the default propagator used by the agent because this class is using the ILRepacked version of the
+        // DistributedContextPropagator class.
+        private static DistributedContextPropagator DefaultContextPropagator = Current;
+
+        public override IReadOnlyCollection<string> Fields { get; } = DefaultContextPropagator.Fields;
+
+        public override void Inject(Activity activity, object carrier, PropagatorSetterCallback setter)
+        {
+            if (activity is null || setter is null)
+            {
+                return;
+            }
+
+            string id = activity.Id;
+            if (id is null)
+            {
+                return;
+            }
+
+            // TODO: Get the transaction from the activity and use the transaction to get the traceparent and tracestate values.
+            // Use the provided carrier and setter to set the traceparent and tracestate values.
+            return;
+        }
+
+        public override void ExtractTraceIdAndState(object carrier, PropagatorGetterCallback getter, out string traceId, out string traceState)
+        {
+            DefaultContextPropagator.ExtractTraceIdAndState(carrier, getter, out traceId, out traceState);
+
+            // TODO: Use the agent api to accept the traceparent and tracestate headers.
+        }
+
+        public override IEnumerable<KeyValuePair<string, string>> ExtractBaggage(object carrier, PropagatorGetterCallback getter)
+        {
+            return DefaultContextPropagator.ExtractBaggage(carrier, getter);
+        }
+    }
+
+    // TODO: Need to inject a type that implements the DistributedContextPropagator abstract class defined in the application's
+    // version of the library. The class will need to have a similar structure to the NewRelicDistributedTracingPropagator class.
+    // This class will be a wrapper class around NewRelicDistributedTracingPropagator and will be used to bridge the OpenTelemetry
+    // API to the New Relic API.
+    // The new class should have a static field that will hold the instance of the NewRelicDistributedTracingPropagator class.
+    // The Fields property can just return the Fields property of the NewRelicDistributedTracingPropagator instance.
+    // The Inject, ExtractTraceIdAndState, and ExtractBaggage methods should call the corresponding methods on the
+    // NewRelicDistributedTracingPropagator instance. These methods may need to have a dynamically generated translation method
+    // for the getter and setter delegates.
+    // To dynamically generate the classes, we can use the System.Reflection.Emit namespace to generate the classes at runtime in
+    // a similar way to how we use that namespace to implement the VisibilityBypasser.
+    // The example in https://learn.microsoft.com/en-us/dotnet/api/system.reflection.emit.typebuilder.definemethodoverride
+    // shows how we could potential define the type and the necessary abstract method overrides.
 }
