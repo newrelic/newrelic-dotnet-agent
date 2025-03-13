@@ -16,7 +16,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
     {
         public const string VendorName = "Kinesis";
         public static readonly List<string> MessageBrokerRequestTypes = new List<string> { "GetRecordsRequest", "PutRecordsRequest", "PutRecordRequest" };
-        private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
+        private static ConcurrentDictionary<string, string> _operationNameCache = new();
 
 
         public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
@@ -27,8 +27,8 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 
             // Not all request types have a stream name or a stream ARN
 
-            var streamName = GetStreamNameFromRequest(request);
-            string arn = GetArnFromRequest(request);
+            var streamName = KinesisHelper.GetStreamNameFromRequest(request);
+            string arn = KinesisHelper.GetStreamArnFromRequest(request);
             if (arn == null && streamName != null)
             {
                 arn = builder.Build("kinesis", $"stream/{streamName}");
@@ -81,47 +81,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             {
                 return;
             }
-        }
-
-        private static string GetStreamNameFromRequest(dynamic request)
-        {
-            try
-            {
-                var streamName = request.StreamName as string;
-                if (streamName != null)
-                {
-                    return streamName;
-                }
-                // if StreamName is null/unavailable, StreamARN may exist
-                var streamARN = GetArnFromRequest(request) as string;
-                if (streamARN != null)
-                {
-                    // arn:aws:kinesis:us-west-2:342444490463:stream/AlexKinesisTesting
-                    var arnParts = streamARN.Split(':');
-                    // TODO: cache name based on arn for performance?
-                    return arnParts[arnParts.Length - 1].Split('/')[1];
-                }
-            }
-            catch
-            {
-            }
-            return null;
-        }
-
-        private static string GetArnFromRequest(dynamic request)
-        {
-            try
-            {
-                var streamARN = request.StreamARN as string;
-                if (streamARN != null)
-                {
-                    return streamARN;
-                }
-            }
-            catch
-            {
-            }
-            return null;
         }
 
     }

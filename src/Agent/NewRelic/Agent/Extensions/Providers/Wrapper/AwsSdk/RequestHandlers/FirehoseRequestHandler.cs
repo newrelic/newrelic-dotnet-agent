@@ -13,8 +13,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
     internal static class FirehoseRequestHandler
     {
         public const string VendorName = "Firehose";
-        private static readonly ConcurrentDictionary<string, string> _operationNameCache = new();
-
+        private static ConcurrentDictionary<string, string> _operationNameCache = new();
 
         public static AfterWrappedMethodDelegate HandleFirehoseRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
         {
@@ -24,11 +23,11 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
 
             // Not all request types have a stream name or a stream ARN
 
-            var streamName = GetStreamNameFromRequest(request);
-            string arn = GetArnFromRequest(request);
+            var streamName = KinesisHelper.GetDeliveryStreamNameFromRequest(request);
+            string arn = KinesisHelper.GetDeliveryStreamArnFromRequest(request);
             if (arn == null && streamName != null)
             {
-                //arn:aws:firehose:us-west-2:342444490463:deliverystream/AlexTestFirehoseStream
+                //arn:aws:firehose:us-west-2:111111111111:deliverystream/FirehoseStreamName
                 arn = builder.Build("firehose", $"deliverystream/{streamName}");
             }
 
@@ -71,46 +70,6 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
             }
         }
 
-        private static string GetStreamNameFromRequest(dynamic request)
-        {
-            try
-            {
-                var streamName = request.DeliveryStreamName as string;
-                if (streamName != null)
-                {
-                    return streamName;
-                }
-                // if StreamName is null/unavailable, StreamARN may exist
-                var streamARN = GetArnFromRequest(request) as string;
-                if (streamARN != null)
-                {
-                    //arn:aws:firehose:us-west-2:342444490463:deliverystream/AlexTestFirehoseStream
-                    var arnParts = streamARN.Split(':');
-                    // TODO: cache name based on arn for performance?
-                    return arnParts[arnParts.Length - 1].Split('/')[1];
-                }
-            }
-            catch
-            {
-            }
-            return null;
-        }
-
-        private static string GetArnFromRequest(dynamic request)
-        {
-            try
-            {
-                var streamARN = request.DeliveryStreamARN as string;
-                if (streamARN != null)
-                {
-                    return streamARN;
-                }
-            }
-            catch
-            {
-            }
-            return null;
-        }
 
     }
 }
