@@ -376,6 +376,9 @@ namespace NewRelic.Agent.Core.Configuration
             var appPoolId = _environment.GetEnvironmentVariable("APP_POOL_ID");
             if (!string.IsNullOrEmpty(appPoolId)) return appPoolId;
 
+            appPoolId = _environment.GetEnvironmentVariable("ASPNETCORE_IIS_APP_POOL_ID");
+            if (!string.IsNullOrEmpty(appPoolId)) return appPoolId;
+
             var isW3wp = _processStatic.GetCurrentProcess().ProcessName?.Equals("w3wp", StringComparison.InvariantCultureIgnoreCase);
             if (!isW3wp.HasValue || !isW3wp.Value) return appPoolId;
 

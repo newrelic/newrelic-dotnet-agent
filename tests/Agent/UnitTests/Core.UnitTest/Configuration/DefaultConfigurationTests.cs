@@ -1898,7 +1898,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesPullsMultipleNamesFromIisExpressSitenameEnvironmentVariaible()
+        public void ApplicationNamesPullsMultipleNamesFromIisExpressSitenameEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
@@ -1918,7 +1918,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesPullsSingleNameFromRoleNameEnvironmentVariaible()
+        public void ApplicationNamesPullsSingleNameFromRoleNameEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
 
@@ -1941,7 +1941,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesPullsMultipleNamesFromRoleNameEnvironmentVariaible()
+        public void ApplicationNamesPullsMultipleNamesFromRoleNameEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
 
@@ -1988,7 +1988,29 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesPullsSingleNameFromAppPoolIdEnvironmentVariaible()
+        public void ApplicationNamesPullsNameFromAspNetCoreIISAppPool_IfAppPoolId_IsNotAvailable()
+        {
+            _runTimeConfig.ApplicationNames = new List<string>();
+
+            //Sets to default return null for all calls unless overriden by later arrange.
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
+
+            _localConfig.application.name = new List<string>();
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("ASPNETCORE_IIS_APP_POOL_ID")).Returns("MyAppName");
+            Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+            Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
+
+            NrAssert.Multiple(
+                () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+                () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyAppName")),
+                () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Application Pool"))
+            );
+        }
+
+        [Test]
+        public void ApplicationNamesPullsSingleNameFromAppPoolIdEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
 
@@ -2010,7 +2032,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationNamesPullsMultipleNamesFromAppPoolIdEnvironmentVariaible()
+        public void ApplicationNamesPullsMultipleNamesFromAppPoolIdEnvironmentVariable()
         {
             _runTimeConfig.ApplicationNames = new List<string>();
 
