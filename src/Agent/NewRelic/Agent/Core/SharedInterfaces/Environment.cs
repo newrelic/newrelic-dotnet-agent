@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         public string GetEnvironmentVariableFromList(params string[] variables)
         {
             var envValue = (variables ?? Enumerable.Empty<string>())
-                .Select(System.Environment.GetEnvironmentVariable)
+                .Select(GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
             return envValue == string.Empty ? null : envValue;

@@ -86,7 +86,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual std::unique_ptr<xstring_t> GetAppPoolId()
         {
-            return TryGetEnvironmentVariable(_X("APP_POOL_ID"));
+            return GetEnvironmentVariableWithFallback(_X("APP_POOL_ID"), _X("ASPNETCORE_IIS_APP_POOL_ID"));
         }
 
         virtual bool GetLoggingEnabled(bool fallback)

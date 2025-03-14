@@ -243,9 +243,28 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual(L"info", logLevel->c_str());
         }
 
-        TEST_METHOD(GetAppPoolId_ReturnsExpectedValue)
+        TEST_METHOD(GetAppPoolId_ReturnsExpectedValue_WhenAppPoolIdIsDefined)
         {
             _systemCalls.environmentVariables[_X("APP_POOL_ID")] = _X("MyAppPool");
+
+            auto appPoolId = _systemCalls.GetAppPoolId();
+            Assert::IsNotNull(appPoolId.get());
+            Assert::AreEqual(L"MyAppPool", appPoolId->c_str());
+        }
+
+        TEST_METHOD(GetAppPoolId_ReturnsExpectedValue_WhenAspNetCore_IIS_App_Pool_Id_IsDefined)
+        {
+            _systemCalls.environmentVariables[_X("ASPNETCORE_IIS_APP_POOL_ID")] = _X("MyAppPool");
+
+            auto appPoolId = _systemCalls.GetAppPoolId();
+            Assert::IsNotNull(appPoolId.get());
+            Assert::AreEqual(L"MyAppPool", appPoolId->c_str());
+        }
+
+        TEST_METHOD(GetAppPoolId_ReturnsAppPoolId_WhenBothAreDefined)
+        {
+            _systemCalls.environmentVariables[_X("APP_POOL_ID")] = _X("MyAppPool");
+            _systemCalls.environmentVariables[_X("ASPNETCORE_IIS_APP_POOL_ID")] = _X("NotMyAppPool");
 
             auto appPoolId = _systemCalls.GetAppPoolId();
             Assert::IsNotNull(appPoolId.get());
