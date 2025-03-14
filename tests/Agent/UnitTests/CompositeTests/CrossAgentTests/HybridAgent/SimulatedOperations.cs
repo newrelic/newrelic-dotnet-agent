@@ -81,7 +81,7 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
 
         public string GetTraceStateHeader()
         {
-            var sampledString = Sampled ? "0" : "1";
+            var sampledString = Sampled ? "1" : "0";
             return $"1@nr=0-0-1-123456-{SpanId}-e8b91a159289ff74-{sampledString}-{sampledString}.23456-1518469636035";
         }
     }

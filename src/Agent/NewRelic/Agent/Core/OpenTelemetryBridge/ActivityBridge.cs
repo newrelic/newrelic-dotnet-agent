@@ -254,8 +254,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 transaction = StartTransactionForActivity(originalActivity, agent);
 
-                // Add the transaction to the activity so that it can be accessed later so that the transaction
-                // can end when the activity ends.
+                // We need to accept the distributed tracing context before we start any segments in the transaction
+                // so that OTel view tracing and the New Relic view of the transaction are consistent.
+                transaction.AcceptDistributedTraceHeaders(originalActivity, GetTraceContextHeadersFromActivity, TransportType.Unknown);
             }
 
             var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
@@ -294,6 +295,20 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             bool isWeb = (int)activity.Kind == (int)ActivityKind.Server;
 
             return agent.CreateTransaction(isWeb, "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
+        }
+
+        private static IEnumerable<string> GetTraceContextHeadersFromActivity(object originalActivity, string headerName)
+        {
+            dynamic activity = originalActivity;
+            switch (headerName)
+            {
+                case "traceparent":
+                    return [(string)activity.ParentId];
+                case "tracestate":
+                    return [(string)activity.TraceStateString ?? string.Empty];
+                default:
+                    return Enumerable.Empty<string>();
+            }
         }
 
         private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
@@ -566,6 +581,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         // DistributedContextPropagator class.
         private static DistributedContextPropagator DefaultContextPropagator = Current;
 
+        private IAgent _agent;
+
+        public NewRelicDistributedTracingPropator(IAgent agent)
+        {
+            _agent = agent;
+        }
+
         public override IReadOnlyCollection<string> Fields { get; } = DefaultContextPropagator.Fields;
 
         public override void Inject(Activity activity, object carrier, PropagatorSetterCallback setter)
@@ -581,16 +603,29 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return;
             }
 
-            // TODO: Get the transaction from the activity and use the transaction to get the traceparent and tracestate values.
-            // Use the provided carrier and setter to set the traceparent and tracestate values.
+            var transaction = _agent.CurrentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished)
+            {
+                transaction.InsertDistributedTraceHeaders(carrier, InjectHeader);
+            }
+
+            // TODO: Supoprt injecting baggage items. The method is internal in the base class, so we cannot directly reuse it.
+            //InjectBaggage(carrier, activity.Baggage, setter);
             return;
+
+            void InjectHeader(object c, string key, string value)
+            {
+                setter(c, key, value);
+            }
         }
 
         public override void ExtractTraceIdAndState(object carrier, PropagatorGetterCallback getter, out string traceId, out string traceState)
         {
+            // We only need the default propagator logic here, because the New Relic API requires a transaction to be
+            // available before the trace context can be accepted, but there will not be a transaction yet.
+            // The ActivityStarted callback will be used to accept the trace context by pulling it from the activity ParentId
+            // and updating the transaction with the trace context.
             DefaultContextPropagator.ExtractTraceIdAndState(carrier, getter, out traceId, out traceState);
-
-            // TODO: Use the agent api to accept the traceparent and tracestate headers.
         }
 
         public override IEnumerable<KeyValuePair<string, string>> ExtractBaggage(object carrier, PropagatorGetterCallback getter)
