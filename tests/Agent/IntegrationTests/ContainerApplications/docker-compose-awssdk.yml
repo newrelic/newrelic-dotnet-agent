@@ -30,7 +30,8 @@ services:
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       - DEBUG=${DEBUG:-0}
-      - SERVICES=sqs,sns,ses,kinesis,firehose # http://localhost:4566/_localstack/health to see the entire list of possible services and their status
+      # firehose depends on s3
+      - SERVICES=sqs,sns,ses,kinesis,firehose,s3 # http://localhost:4566/_localstack/health to see the entire list of possible services and their status
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
