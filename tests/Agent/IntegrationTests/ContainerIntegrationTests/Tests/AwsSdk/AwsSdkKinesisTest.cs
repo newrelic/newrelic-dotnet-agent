@@ -20,8 +20,6 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
     private readonly string _consumerName = $"TestConsumer-{Guid.NewGuid()}";
     private readonly string _recordData = "MyRecordData";
 
-    private const string _accountId = "520198777664"; // matches the account ID parsed from the fake access key used in AwsSdkKinesisExerciser
-
     public AwsSdkKinesisTest(AwsSdkContainerKinesisTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -85,41 +83,47 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
             new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", callCount = 1, metricScope = createStreamScope},
             new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1},
             new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1, metricScope = listStreamsScope},
-            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer", callCount = 1, metricScope = registerStreamConsumerScope},
-            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers", callCount = 1, metricScope = listStreamConsumersScope},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1, metricScope = registerStreamConsumerScope},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1, metricScope = listStreamConsumersScope},
             new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 2}, // one for PutRecordAsync and one for PutRecordsAsync
             new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordScope},
             new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordsScope},
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Temp", callCount = 1}, //TODO why is this named Temp instead of _streamName?
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Temp", callCount = 1, metricScope = getRecordsScope},
-            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer", callCount = 1, metricScope = deregisterStreamConsumerScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1}, // The instrumentation is unable to get the stream name from GetRecords requests
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1, metricScope = getRecordsScope},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1, metricScope = deregisterStreamConsumerScope},
             new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1},
             new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1, metricScope = deleteStreamScope},
 
         };
 
-        string expectedArn = $"arn:aws:kinesis:(unknown):{_accountId}:stream/{_streamName}";
+        // working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
+        // others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
+        string expectedArnRegex = "arn:aws:kinesis:(.+?):([0-9]{12}):stream/" + _streamName;
         var expectedAwsAgentAttributes = new string[]
         {
-            "aws.operation", "aws.region", "cloud.resource_id"
+            "aws.operation", "aws.region", "cloud.resource_id", "cloud.platform"
         };
 
 
         // get all kinesis span events so we can verify counts and operations
         var spanEvents = _fixture.AgentLog.GetSpanEvents();
 
-        var kinesisSpanEvents = spanEvents.Where(se => se.IntrinsicAttributes["name"].ToString().StartsWith("DotNet/Kinesis"))
-            .ToList();
+        // ListStreams does not have a stream name or an arn, so there is no way to build the cloud.resource_id attribute for that request type
+        // Same for get_records (sadface)
+        var kinesisSpanEvents = spanEvents.Where(se => se.AgentAttributes.ContainsKey("cloud.platform") &&
+                                                 (string)se.AgentAttributes["cloud.platform"] == "aws_kinesis_data_streams" &&
+                                                 (string)se.AgentAttributes["aws.operation"] != "list_streams" &&
+                                                 (string)se.AgentAttributes["aws.operation"] != "get_records").ToList();
 
         Assert.Multiple(
             () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
             () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
 
             () => Assert.All(kinesisSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
-            () => Assert.All(kinesisSpanEvents, se => Assert.Equal(expectedArn, se.AgentAttributes["cloud.resource_id"])),
+            () => Assert.All(kinesisSpanEvents, se => Assert.Matches(expectedArnRegex, (string)se.AgentAttributes["cloud.resource_id"])),
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
