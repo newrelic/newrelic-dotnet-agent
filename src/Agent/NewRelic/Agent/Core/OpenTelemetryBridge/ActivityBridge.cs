@@ -101,6 +101,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         // This is used to ensure a consistent trace id is used whenever an activity is created as a direct child of
         // of a transaction (when no other parent activity or parent activity context is provided).
+        // Creates a Func<ActivityTraceId> using expression syntax trees based on the following code.
+        // Activity.TraceIdGenerator = () => {
+        //    var currentTraceId = TryGetCurrentTraceId();
+        //    if (currentTraceId.Length > 0)
+        //    {
+        //        return ActivityTraceId.CreateFromString(currentTraceId);
+        //    }
+        //    return ActivityTraceId.CreateRandom();
+        // };
         private void ConfigureTraceIdGenerator(Type activityType, Type activityTraceIdType)
         {
             var traceIdGeneratorPropertyInfo = activityType.GetProperty("TraceIdGenerator", BindingFlags.Public | BindingFlags.Static);
