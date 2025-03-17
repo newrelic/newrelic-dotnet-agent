@@ -24,6 +24,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private dynamic _activityListener;
 
+        private static Action<object, bool> _activityTraceFlagsSetter = null;
+
         public ActivityBridge(IAgent agent, IErrorService errorService)
         {
             _agent = agent;
@@ -45,6 +47,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 return;
             }
+
+            var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
+            var activityTraceIdType = assembly.GetType("System.Diagnostics.ActivityTraceId", throwOnError: false);
+            SetDefaultActivityIdFormat(activityType);
+            ConfigureTraceIdGenerator(activityType, activityTraceIdType);
+            CreateActivityTraceFlagsSetter(activityType);
 
             _activityListener = Activator.CreateInstance(activityListenerType);
 
@@ -80,6 +88,77 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public void Dispose()
         {
             _activityListener?.Dispose();
+        }
+
+        // Only .net 5 and newer libraries and applications will use the W3C id format by default.
+        // We need to set the default id format to W3C to ensure that the activities we create are created
+        // with the expected format.
+        private static void SetDefaultActivityIdFormat(Type activityType)
+        {
+            var defaultIdFormatPropertyInfo = activityType.GetProperty("DefaultIdFormat", BindingFlags.Public | BindingFlags.Static);
+            defaultIdFormatPropertyInfo.SetValue(null, ActivityIdFormat.W3C);
+        }
+
+        // This is used to ensure a consistent trace id is used whenever an activity is created as a direct child of
+        // of a transaction (when no other parent activity or parent activity context is provided).
+        private void ConfigureTraceIdGenerator(Type activityType, Type activityTraceIdType)
+        {
+            var traceIdGeneratorPropertyInfo = activityType.GetProperty("TraceIdGenerator", BindingFlags.Public | BindingFlags.Static);
+
+            var callTryGetCurrentTraceIdMethod = typeof(ActivityBridge).GetMethod(nameof(TryGetCurrentTraceId), BindingFlags.NonPublic | BindingFlags.Instance);
+            var currentTraceIdVariable = Expression.Variable(typeof(ReadOnlySpan<char>), "currentTraceId");
+            var assignCurrentTraceIdExpression = Expression.Assign(currentTraceIdVariable, Expression.Call(Expression.Constant(this), callTryGetCurrentTraceIdMethod));
+
+            var hasCurrentTraceIdExpression = Expression.GreaterThan(Expression.Property(currentTraceIdVariable, "Length"), Expression.Constant(0));
+
+            var generateRandomTraceIdMethod = activityTraceIdType.GetMethod("CreateRandom", BindingFlags.Public | BindingFlags.Static);
+            var generateNewTraceIdExpression = Expression.Call(null, generateRandomTraceIdMethod);
+
+            var parseTraceIdMethod = activityTraceIdType.GetMethod("CreateFromString", BindingFlags.Public | BindingFlags.Static);
+            var parseTraceIdExpression = Expression.Call(null, parseTraceIdMethod, currentTraceIdVariable);
+
+            var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, parseTraceIdExpression, generateNewTraceIdExpression);
+
+            var lambdaBodyExpression = Expression.Block([currentTraceIdVariable], assignCurrentTraceIdExpression, getOrCreateTraceIdExpression);
+
+            var traceIdGenerator = Expression.Lambda(traceIdGeneratorPropertyInfo.PropertyType, lambdaBodyExpression).Compile();
+            traceIdGeneratorPropertyInfo.SetValue(null, traceIdGenerator);
+        }
+
+        private ReadOnlySpan<char> TryGetCurrentTraceId()
+        {
+            var transaction = _agent.CurrentTransaction;
+            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished && hybridAgentTransaction != null)
+            {
+                return hybridAgentTransaction.TraceId.AsSpan();
+            }
+            return default;
+        }
+
+        private static void CreateActivityTraceFlagsSetter(Type activityType)
+        {
+            if (_activityTraceFlagsSetter != null)
+            {
+                return;
+            }
+
+            var traceFlagsPropertyInfo = activityType.GetProperty("ActivityTraceFlags", BindingFlags.Public | BindingFlags.Instance);
+
+            var sampledParameter = Expression.Parameter(typeof(bool), "sampled");
+            var activityParameter = Expression.Parameter(typeof(object), "activity");
+
+            var typedActivity = Expression.Convert(activityParameter, activityType);
+            var traceFlagsExpression = Expression.Property(typedActivity, traceFlagsPropertyInfo);
+
+            var traceFlagsInt = Expression.Condition(sampledParameter, Expression.Constant((int)ActivityTraceFlags.Recorded), Expression.Constant((int)ActivityTraceFlags.None));
+            var typedTraceFlagsValue = Expression.Convert(traceFlagsInt, traceFlagsPropertyInfo.PropertyType);
+
+            var traceFlagsAssignment = Expression.Assign(traceFlagsExpression, typedTraceFlagsValue);
+
+            var traceFlagsSetterLambda = Expression.Lambda<Action<object, bool>>(traceFlagsAssignment, activityParameter, sampledParameter);
+
+            _activityTraceFlagsSetter = traceFlagsSetterLambda.Compile();
         }
 
         // Generates code similar to the following.
@@ -259,13 +338,29 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 transaction.AcceptDistributedTraceHeaders(originalActivity, GetTraceContextHeadersFromActivity, TransportType.Unknown);
             }
 
-            var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
-            var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
-            var segment = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) as IHybridAgentSegment;
-
-            if (segment != null)
+            // TODO: We need a better way to detect activities created by a segment.
+            if (activity.DisplayName != "temp segment name")
             {
-                segment.ActivityStartedTransaction = shouldStartTransaction;
+                var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
+                var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
+                var segment = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) as IHybridAgentSegment;
+
+                if (segment != null)
+                {
+                    segment.ActivityStartedTransaction = shouldStartTransaction;
+                }
+            }
+
+            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
+            if (hybridAgentTransaction != null)
+            {
+                // Update the activity to contain the expected trace flags and trace state that the New Relic
+                // data model expects.
+                if (hybridAgentTransaction.TryGetTraceFlagsAndState(out var sampled, out var traceStateString))
+                {
+                    activity.TraceStateString = traceStateString;
+                    SetTraceFlags(activity, sampled);
+                }
             }
         }
 
@@ -309,6 +404,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 default:
                     return Enumerable.Empty<string>();
             }
+        }
+
+        private static void SetTraceFlags(object activity, bool sampled)
+        {
+            _activityTraceFlagsSetter(activity, sampled);
         }
 
         private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
@@ -415,6 +515,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static INewRelicActivitySource CreateDefaultActivitySource()
         {
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
             return new DefaultActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion);
         }
 
@@ -430,15 +531,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             originalActivitySource?.Dispose();
         }
 
-        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        public INewRelicActivity CreateActivity(string activityName, ActivityKind kind)
         {
-            return _activitySource.StartActivity(activityName, kind);
+            return _activitySource.CreateActivity(activityName, kind);
         }
     }
 
     public interface INewRelicActivitySource : IDisposable
     {
-        INewRelicActivity StartActivity(string activityName, ActivityKind kind);
+        INewRelicActivity CreateActivity(string activityName, ActivityKind kind);
     }
 
     public class DefaultActivitySource : INewRelicActivitySource
@@ -454,9 +555,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _activitySource.Dispose();
         }
 
-        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        public INewRelicActivity CreateActivity(string activityName, ActivityKind kind)
         {
-            var activity = _activitySource.StartActivity(activityName, kind);
+            var activity = _activitySource.CreateActivity(activityName, kind);
             return new DefaultNewRelicActivity(activity);
         }
     }
@@ -464,12 +565,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class RuntimeActivitySource : INewRelicActivitySource
     {
         private readonly dynamic _activitySource;
-        private readonly Func<string, int, object> _startActivityMethod;
+        private readonly Func<string, int, object> _createActivityMethod;
 
         public RuntimeActivitySource(string name, string version, Type activitySourceType, Type activityKindType)
         {
             _activitySource = Activator.CreateInstance(activitySourceType, name, version);
-            _startActivityMethod = CreateStartActivityMethod(activitySourceType, activityKindType);
+            _createActivityMethod = CreateCreateActivityMethod(activitySourceType, activityKindType);
         }
 
         public void Dispose()
@@ -477,13 +578,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _activitySource?.Dispose();
         }
 
-        public INewRelicActivity StartActivity(string activityName, ActivityKind kind)
+        public INewRelicActivity CreateActivity(string activityName, ActivityKind kind)
         {
-            var activity = _startActivityMethod(activityName, (int)kind);
+            var activity = _createActivityMethod(activityName, (int)kind);
             return new RuntimeNewRelicActivity(activity);
         }
 
-        private Func<string, int, object> CreateStartActivityMethod(Type activitySourceType, Type activityKindType)
+        private Func<string, int, object> CreateCreateActivityMethod(Type activitySourceType, Type activityKindType)
         {
             var activityNameParameter = Expression.Parameter(typeof(string), "activityName");
             var activityKindParameter = Expression.Parameter(typeof(int), "kind");
@@ -491,7 +592,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var typedActivityKind = Expression.Convert(activityKindParameter, activityKindType);
             var activitySourceInstance = Expression.Constant(_activitySource, activitySourceType);
 
-            var startActivityMethod = activitySourceType.GetMethod("StartActivity", new Type[] { typeof(string), activityKindType });
+            var startActivityMethod = activitySourceType.GetMethod("CreateActivity", [typeof(string), activityKindType]);
             var startActivityCall = Expression.Call(activitySourceInstance, startActivityMethod, activityNameParameter, typedActivityKind);
             var startActivityLambda = Expression.Lambda<Func<string, int, object>>(startActivityCall, activityNameParameter, activityKindParameter);
             return startActivityLambda.Compile();
@@ -524,6 +625,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public void Dispose()
         {
             _activity.Dispose();
+        }
+
+        public void Start()
+        {
+            _activity.Start();
         }
 
         public void Stop()
@@ -559,6 +665,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             dynamic dynamicActivity = _activity;
             dynamicActivity?.Dispose();
+        }
+
+        public void Start()
+        {
+            dynamic dynamicActivity = _activity;
+            dynamicActivity.Start();
         }
 
         public void Stop()

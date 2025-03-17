@@ -219,14 +219,25 @@ namespace NewRelic.Agent.Core.Transactions
             var methodCallData = GetMethodCallData(methodCall);
             var segment = new Segment(this, methodCallData);
 
-            // This is temporary. We should only do this if the segment was not created from an activity
+            // We should only do this if the segment was not created from an activity
+            bool shouldStartActivity = false;
             if (activity == null)
             {
-                activity = Agent.ActivitySourceProxy.StartActivity("temp segment name", ActivityKind.Internal);
+                // We cannot start the new Activity until the segment and activity are associated with each other
+                activity = Agent.ActivitySourceProxy.CreateActivity("temp segment name", ActivityKind.Internal);
+
+                // Delay starting the activity until the segment is associated with it
+                shouldStartActivity = true;
             }
 
+            // Associate the segment and activity with each other
             segment.SetActivity(activity);
             activity.Segment = segment;
+
+            if (shouldStartActivity)
+            {
+                activity.Start();
+            }
 
             return segment;
         }
@@ -1312,6 +1323,19 @@ namespace NewRelic.Agent.Core.Transactions
             _wrapperToken = wrapperToken;
         }
 
+        public bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString)
+        {
+            if (!_configuration.DistributedTracingEnabled)
+            {
+                sampled = false;
+                traceStateString = null;
+                return false;
+            }
+
+            _distributedTracePayloadHandler.GetTraceFlagsAndState(this, out sampled, out traceStateString);
+            return true;
+        }
+
         public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
         {
             if (_configuration.DistributedTracingEnabled)
@@ -1440,6 +1464,8 @@ namespace NewRelic.Agent.Core.Transactions
     // TODO: Find a better name for this interface or add the members to an existing interface.
     public interface IHybridAgentTransaction
     {
+        string TraceId { get; }
         void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment);
+        bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString);
     }
 }

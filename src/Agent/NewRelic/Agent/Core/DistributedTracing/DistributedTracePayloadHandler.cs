@@ -31,6 +31,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
         ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, DateTime transactionStartTime);
 
         void InsertDistributedTraceHeaders<T>(IInternalTransaction transaction, T carrier, Action<T, string, string> setter);
+
+        void GetTraceFlagsAndState(IInternalTransaction transaction, out bool sampled, out string traceStateString);
     }
 
     public class DistributedTracePayloadHandler : IDistributedTracePayloadHandler
@@ -248,6 +250,13 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
 
             return new DistributedTraceApiModel(encodedPayload);
+        }
+
+        public void GetTraceFlagsAndState(IInternalTransaction transaction,  out bool sampled, out string traceStateString)
+        {
+            transaction.SetSampled(_adaptiveSampler);
+            traceStateString = BuildTracestate(transaction, DateTime.UtcNow);
+            sampled = transaction.Sampled.Value;
         }
 
         #endregion Outgoing/Create

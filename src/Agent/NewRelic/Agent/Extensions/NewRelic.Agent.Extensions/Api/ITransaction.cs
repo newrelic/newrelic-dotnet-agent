@@ -327,6 +327,9 @@ namespace NewRelic.Agent.Api
         string DisplayName { get; }
         bool IsStopped { get; }
         ISegment Segment { get; set; }
+
+        void Start();
+
         void Stop();
     }
 }
