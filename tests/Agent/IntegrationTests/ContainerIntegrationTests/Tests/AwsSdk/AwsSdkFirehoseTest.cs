@@ -84,31 +84,30 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
         };
 
-        //// working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
-        //// others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
-        //string expectedArnRegex = "arn:aws:kinesis:(.+?):([0-9]{12}):stream/" + _streamName;
-        //var expectedAwsAgentAttributes = new string[]
-        //{
-        //    "aws.operation", "aws.region", "cloud.resource_id", "cloud.platform"
-        //};
+        // working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
+        // others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
+        string expectedArnRegex = "arn:aws:firehose:(.+?):([0-9]{12}):deliverystream/" + _streamName;
+        var expectedAwsAgentAttributes = new string[]
+        {
+            "aws.operation", "aws.region", "cloud.resource_id", "cloud.platform"
+        };
 
 
-        //// get all kinesis span events so we can verify counts and operations
-        //var spanEvents = _fixture.AgentLog.GetSpanEvents();
+        // get all kinesis span events so we can verify counts and operations
+        var spanEvents = _fixture.AgentLog.GetSpanEvents();
 
-        //// ListStreams does not have a stream name or an arn, so there is no way to build the cloud.resource_id attribute for that request type
-        //// Same for get_records (sadface)
-        //var kinesisSpanEvents = spanEvents.Where(se => se.AgentAttributes.ContainsKey("cloud.platform") &&
-        //                                         (string)se.AgentAttributes["cloud.platform"] == "aws_kinesis_data_streams" &&
-        //                                         (string)se.AgentAttributes["aws.operation"] != "list_streams" &&
-        //                                         (string)se.AgentAttributes["aws.operation"] != "get_records").ToList();
+        // ListStreams does not have a stream name or an arn, so there is no way to build the cloud.resource_id attribute for that request type
+        // Same for get_records (sadface)
+        var firehoseSpanEvents = spanEvents.Where(se => se.AgentAttributes.ContainsKey("cloud.platform") &&
+                                                 (string)se.AgentAttributes["cloud.platform"] == "aws_kinesis_delivery_streams" &&
+                                                 (string)se.AgentAttributes["aws.operation"] != "list_delivery_streams").ToList();
 
         Assert.Multiple(
             () => Assert.Equal(0, _fixture.AgentLog.GetWrapperExceptionLineCount()),
             () => Assert.Equal(0, _fixture.AgentLog.GetApplicationErrorLineCount()),
 
-            //() => Assert.All(kinesisSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
-            //() => Assert.All(kinesisSpanEvents, se => Assert.Matches(expectedArnRegex, (string)se.AgentAttributes["cloud.resource_id"])),
+            () => Assert.All(firehoseSpanEvents, se => Assert.Contains(expectedAwsAgentAttributes, key => se.AgentAttributes.ContainsKey(key))),
+            () => Assert.All(firehoseSpanEvents, se => Assert.Matches(expectedArnRegex, (string)se.AgentAttributes["cloud.resource_id"])),
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
