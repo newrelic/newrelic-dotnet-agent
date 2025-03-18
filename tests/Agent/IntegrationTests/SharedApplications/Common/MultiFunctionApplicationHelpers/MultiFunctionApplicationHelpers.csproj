@@ -291,18 +291,18 @@
 
   <!--OpenAI -->
   <ItemGroup>
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <!-- Azure.AI.OpenAI -->
   <ItemGroup>
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <ItemGroup>

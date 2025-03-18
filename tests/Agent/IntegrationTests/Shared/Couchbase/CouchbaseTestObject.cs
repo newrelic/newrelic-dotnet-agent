@@ -39,6 +39,24 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Couchbase
             }
         }
 
+        public static string Username
+        {
+            get
+            {
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CouchbaseTests");
+                return testConfiguration["Username"];
+            }
+        }
+
+        public static string Password
+        {
+            get
+            {
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CouchbaseTests");
+                return testConfiguration["Password"];
+            }
+        }
+
         public string Name { get; set; }
     }
 }
