@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.Kinesis" Version="3.7.402.88" />
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.402.27" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.415.17" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
