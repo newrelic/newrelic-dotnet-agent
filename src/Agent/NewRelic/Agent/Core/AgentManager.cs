@@ -350,8 +350,11 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
-
+#if NETSTANDARD
                 Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
+#else
+                Log.Debug($".NET Runtime Version: {AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName}");
+#endif
             }
 
 #if NETFRAMEWORK

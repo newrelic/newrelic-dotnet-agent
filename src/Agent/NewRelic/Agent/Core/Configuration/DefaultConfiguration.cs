@@ -373,11 +373,13 @@ namespace NewRelic.Agent.Core.Configuration
 
         private string GetAppPoolId()
         {
-            var appPoolId = _environment.GetEnvironmentVariable("APP_POOL_ID");
-            if (!string.IsNullOrEmpty(appPoolId)) return appPoolId;
+            var appPoolId = _environment.GetEnvironmentVariableFromList("APP_POOL_ID", "ASPNETCORE_IIS_APP_POOL_ID");
+            if (!string.IsNullOrEmpty(appPoolId))
+                return appPoolId;
 
             var isW3wp = _processStatic.GetCurrentProcess().ProcessName?.Equals("w3wp", StringComparison.InvariantCultureIgnoreCase);
-            if (!isW3wp.HasValue || !isW3wp.Value) return appPoolId;
+            if (!isW3wp.HasValue || !isW3wp.Value)
+                return null;
 
             var commandLineArgs = _environment.GetCommandLineArgs();
             const string appPoolCommandLineArg = "-ap";

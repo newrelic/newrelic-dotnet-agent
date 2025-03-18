@@ -62,6 +62,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.StackExchangeRedi
                 db.SetRemove("myset", "cool");
                 db.SetPop("myset");
 
+                db.LockTake(key, "mylock", TimeSpan.FromSeconds(1));
+                db.LockRelease(key, "mylock");
+
                 db.Publish(new RedisChannel("mychannel", RedisChannel.PatternMode.Literal), "cable"); // 31
             }
 
@@ -113,6 +116,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.StackExchangeRedi
                 await db.SetRandomMemberAsync("myset");
                 await db.SetRemoveAsync("myset", "cool");
                 await db.SetPopAsync("myset");
+
+                await db.LockTakeAsync(key, "mylock", TimeSpan.FromSeconds(1));
+                await db.LockReleaseAsync(key, "mylock");
 
                 await db.PublishAsync(new RedisChannel("mychannel", RedisChannel.PatternMode.Literal), "cable"); // 31
             }
