@@ -54,6 +54,10 @@
     <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="System.Data.Odbc" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
+    <!-- EnterpriseLibrary - only one version to test -->
+    <PackageReference Include="EnterpriseLibrary.Common" Version="6.0.1304" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="EnterpriseLibrary.Data" Version="6.0.1304" Condition="'$(TargetFramework)' == 'net462'" />
+
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />
