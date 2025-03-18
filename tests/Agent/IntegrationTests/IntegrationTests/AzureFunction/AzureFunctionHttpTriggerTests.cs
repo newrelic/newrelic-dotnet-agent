@@ -130,8 +130,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
                 new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
-                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
-                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/Isolated"},
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/Http"}
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
@@ -252,8 +252,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
                 new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
-                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/Isolated"},
-                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http"}
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/Isolated"},
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/Http"}
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 
@@ -381,8 +381,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
             {
                 new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
-                new() { metricName = "Supportability/DotNet/AzureFunction/Worker/InProcess" },
-                new() { metricName = "Supportability/DotNet/AzureFunction/Trigger/Http" }
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/InProcess" },
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/Http" }
             };
             Assertions.MetricsExist(supportabilityMetrics, metrics);
 

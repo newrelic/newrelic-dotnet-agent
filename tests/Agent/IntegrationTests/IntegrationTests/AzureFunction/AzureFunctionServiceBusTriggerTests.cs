@@ -92,6 +92,14 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
             new() { metricName = receiveMessageTransactionName},
         };
 
+        var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+        {
+            new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
+            new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/InProcess" },
+            new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/ServiceBus" }
+        };
+        Assertions.MetricsExist(supportabilityMetrics, metrics);
+
         Assert.NotEmpty(transactionEvents);
         Assert.NotEmpty(metrics);
 
