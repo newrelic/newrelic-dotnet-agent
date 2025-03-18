@@ -58,7 +58,7 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
             throw new Exception("FunctionDetails are missing some require information.");
         }
 
-        agent.RecordSupportabilityMetric($"Dotnet/AzureFunction/Worker/Isolated");
+        agent.RecordSupportabilityMetric("Dotnet/AzureFunction/Worker/Isolated");
         agent.RecordSupportabilityMetric($"Dotnet/AzureFunction/Trigger/{functionDetails.TriggerTypeName ?? "unknown"}");
 
         transaction = agent.CreateTransaction(
