@@ -18,7 +18,7 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
     private readonly string _streamName = $"TestStream-{Guid.NewGuid()}";
     private readonly string _bucketName = $"test-bucket-{Guid.NewGuid()}"; // s3 bucket names can't have capital letters
-    //private readonly string _recordData = "MyRecordData";
+    private readonly string _recordData = "EtaoinShrdlu";
 
     public AwsSdkFirehoseTest(AwsSdkContainerFirehoseTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -40,14 +40,10 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
                 _fixture.Delay(5);
 
                 _fixture.CreateDeliveryStreamAsync(_streamName, _bucketName);
-                //_fixture.ListStreamsAsync();
-                //_fixture.RegisterStreamConsumerAsync(_streamName, _consumerName);
-                //_fixture.ListStreamConsumersAsync(_streamName);
-                //_fixture.PutRecordAsync(_streamName, _recordData);
-                //_fixture.PutRecordsAsync(_streamName, _recordData);
-                //_fixture.GetRecordsAsync(_streamName);
-                //_fixture.DeregisterStreamConsumerAsync(_streamName, _consumerName);
-                //_fixture.DeleteStreamAsync(_streamName);
+                _fixture.ListDeliveryStreamsAsync();
+                _fixture.PutRecordAsync(_streamName, _recordData);
+                _fixture.PutRecordBatchAsync(_streamName, _recordData);
+                _fixture.DeleteDeliveryStreamAsync(_streamName);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -68,34 +64,23 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
         var metricScopeBase = "WebTransaction/MVC/AwsSdkFirehose/";
         var createDeliveryStreamScope = metricScopeBase + "CreateDeliveryStream/{streamName}/{bucketName}";
-        //var listStreamsScope = metricScopeBase + "ListStreams";
-        //var registerStreamConsumerScope = metricScopeBase + "RegisterStreamConsumer/{streamName}/{consumerName}";
-        //var listStreamConsumersScope = metricScopeBase + "ListStreamConsumers/{streamName}";
-        //var putRecordScope = metricScopeBase + "PutRecord/{streamName}/{data}";
-        //var putRecordsScope = metricScopeBase + "PutRecords/{streamName}/{data}";
-        //var getRecordsScope = metricScopeBase + "GetRecords/{streamName}";
-        //var deregisterStreamConsumerScope = metricScopeBase + "DeregisterStreamConsumer/{streamName}/{consumerName}";
-        //var deleteStreamScope = metricScopeBase + "DeleteStream/{streamName}";
+        var listDeliveryStreamsScope = metricScopeBase + "ListDeliveryStreams";
+        var putRecordScope = metricScopeBase + "PutRecord/{streamName}/{data}";
+        var putRecordBatchScope = metricScopeBase + "PutRecordBatch/{streamName}/{data}";
+        var deleteDeliveryStreamScope = metricScopeBase + "DeleteDeliveryStream/{streamName}";
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", callCount = 1},
             new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", callCount = 1, metricScope = createDeliveryStreamScope},
-            //new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1},
-            //new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1, metricScope = listStreamsScope},
-            //new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1},
-            //new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1, metricScope = registerStreamConsumerScope},
-            //new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1},
-            //new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1, metricScope = listStreamConsumersScope},
-            //new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 2}, // one for PutRecordAsync and one for PutRecordsAsync
-            //new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordScope},
-            //new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordsScope},
-            //new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1}, // The instrumentation is unable to get the stream name from GetRecords requests
-            //new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1, metricScope = getRecordsScope},
-            //new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1},
-            //new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1, metricScope = deregisterStreamConsumerScope},
-            //new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1},
-            //new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1, metricScope = deleteStreamScope},
+            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", callCount = 1},
+            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", callCount = 1, metricScope = listDeliveryStreamsScope},
+            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", callCount = 1, metricScope = putRecordScope},
+            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", callCount = 1, metricScope = putRecordBatchScope},
+            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", callCount = 1},
+            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", callCount = 1, metricScope = deleteDeliveryStreamScope},
 
         };
 

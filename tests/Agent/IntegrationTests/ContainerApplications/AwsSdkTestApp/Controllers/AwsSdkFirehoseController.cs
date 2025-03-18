@@ -33,94 +33,49 @@ namespace AwsSdkTestApp.Controllers
             _logger.LogInformation("Finished CreateDeliveryStreamAsync for {streamName} {bucketName}", streamName, bucketName);
         }
 
-        //[HttpGet("DeleteStreamAsync")]
-        //public async Task DeleteStreamAsync([Required] string streamName)
-        //{
-        //    _logger.LogInformation("Starting Kinesis DeleteStreamAsync {streamName}", streamName);
+        [HttpGet("DeleteDeliveryStreamAsync")]
+        public async Task DeleteDeliveryStreamAsync([Required] string streamName)
+        {
+            _logger.LogInformation("Starting Firehose DeleteDeliveryStreamAsync {streamName}", streamName);
 
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
+            using var awsSdkFirehoseExerciser = new AwsSdkFirehoseExerciser();
 
-        //    await awsSdkKinesisExerciser.DeleteStreamAsync(streamName);
-        //    _logger.LogInformation("Finished DeleteStreamAsync for {streamName}", streamName);
-        //}
+            await awsSdkFirehoseExerciser.DeleteDeliveryStreamAsync(streamName);
+            _logger.LogInformation("Finished DeleteDeliveryStreamAsync for {streamName}", streamName);
+        }
 
-        //[HttpGet("ListStreamsAsync")]
-        //public async Task ListStreamsAsync()
-        //{
-        //    _logger.LogInformation("Starting Kinesis ListStreamsAsync");
+        [HttpGet("ListDeliveryStreamsAsync")]
+        public async Task ListDeliveryStreamsAsync()
+        {
+            _logger.LogInformation("Starting Firehose ListDeliveryStreamsAsync");
 
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
+            using var awsSdkFirehoseExerciser = new AwsSdkFirehoseExerciser();
 
-        //    await awsSdkKinesisExerciser.ListStreamsAsync();
-        //    _logger.LogInformation("Finished ListStreamsAsync");
-        //}
+            await awsSdkFirehoseExerciser.ListDeliveryStreamsAsync();
+            _logger.LogInformation("Finished ListDeliveryStreamsAsync");
+        }
 
-        //[HttpGet("RegisterStreamConsumerAsync")]
-        //public async Task RegisterStreamConsumerAsync([Required] string streamName, [Required] string consumerName)
-        //{
-        //    _logger.LogInformation("Starting Kinesis RegisterStreamConsumerAsync {streamName} {consumerName}", streamName, consumerName);
+        [HttpGet("PutRecordAsync")]
+        public async Task PutRecordAsync([Required] string streamName, [Required] string data)
+        {
+            _logger.LogInformation("Starting Firehose PutRecordAsync {streamName} {data}", streamName, data);
 
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
+            using var awsSdkFirehoseExerciser = new AwsSdkFirehoseExerciser();
 
-        //    await awsSdkKinesisExerciser.RegisterStreamConsumerAsync(streamName, consumerName);
-        //    _logger.LogInformation("Finished RegisterStreamConsumerAsync");
-        //}
+            await awsSdkFirehoseExerciser.PutRecordAsync(streamName, data);
+            _logger.LogInformation("Finished PutRecordAsync");
+        }
 
-        //[HttpGet("DeregisterStreamConsumerAsync")]
-        //public async Task DeregisterStreamConsumerAsync([Required] string streamName, [Required] string consumerName)
-        //{
-        //    _logger.LogInformation("Starting Kinesis DeregisterStreamConsumerAsync {streamName} {consumerName}", streamName, consumerName);
+        [HttpGet("PutRecordBatchAsync")]
+        public async Task PutRecordBatchAsync([Required] string streamName, [Required] string data)
+        {
+            _logger.LogInformation("Starting Firehose PutRecordBatchAsync {streamName} {data}", streamName, data);
 
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
+            using var awsSdkFirehoseExerciser = new AwsSdkFirehoseExerciser();
 
-        //    await awsSdkKinesisExerciser.DeregisterStreamConsumerAsync(streamName, consumerName);
-        //    _logger.LogInformation("Finished DeregisterStreamConsumerAsync");
-        //}
-
-        //[HttpGet("ListStreamConsumersAsync")]
-        //public async Task ListStreamConsumersAsync([Required] string streamName)
-        //{
-        //    _logger.LogInformation("Starting Kinesis ListStreamConsumersAsync {streamName}", streamName);
-
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
-
-        //    await awsSdkKinesisExerciser.ListStreamConsumersAsync(streamName);
-        //    _logger.LogInformation("Finished ListStreamConsumersAsync");
-        //}
-
-        //[HttpGet("PutRecordAsync")]
-        //public async Task PutRecordAsync([Required] string streamName, [Required] string data)
-        //{
-        //    _logger.LogInformation("Starting Kinesis PutRecordAsync {streamName} {data}", streamName, data);
-
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
-
-        //    await awsSdkKinesisExerciser.PutRecordAsync(streamName, data);
-        //    _logger.LogInformation("Finished PutRecordAsync");
-        //}
-
-        //[HttpGet("PutRecordsAsync")]
-        //public async Task PutRecordsAsync([Required] string streamName, [Required] string data)
-        //{
-        //    _logger.LogInformation("Starting Kinesis PutRecordsAsync {streamName} {data}", streamName, data);
-
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
-
-        //    await awsSdkKinesisExerciser.PutRecordsAsync(streamName, data);
-        //    _logger.LogInformation("Finished PutRecordsAsync");
-        //}
-
-        //[HttpGet("GetRecordsAsync")]
-        //public async Task GetRecordsAsync([Required] string streamName)
-        //{
-        //    _logger.LogInformation("Starting Kinesis GetRecordsAsync {streamName}", streamName);
-
-        //    using var awsSdkKinesisExerciser = new AwsSdkKinesisExerciser();
-
-        //    await awsSdkKinesisExerciser.GetRecordsAsync(streamName);
-        //    _logger.LogInformation("Finished GetRecordsAsync");
-        //}
-
+            await awsSdkFirehoseExerciser.PutRecordBatchAsync(streamName, data);
+            _logger.LogInformation("Finished PutRecordBatchAsync");
+        }
 
     }
 }

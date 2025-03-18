@@ -9,6 +9,7 @@ using Amazon.KinesisFirehose;
 using Amazon.KinesisFirehose.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
+using System.Text;
 
 namespace AwsSdkTestApp.AwsSdkExercisers
 {
@@ -66,8 +67,6 @@ namespace AwsSdkTestApp.AwsSdkExercisers
 
             if (createS3BucketResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
             {
-                // might need to wait for the bucket to finish creating
-                //System.Threading.Thread.Sleep(30000);
                 var s3DestinationConfiguration = new ExtendedS3DestinationConfiguration
                 {
                     BucketARN = "arn:aws:s3:::" + bucketName,
@@ -118,229 +117,64 @@ namespace AwsSdkTestApp.AwsSdkExercisers
             }
         }
 
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> DeleteStreamAsync(string name)
-        //{
-        //    var response = await _amazonKinesisClient.DeleteStreamAsync(new DeleteStreamRequest
-        //    {
-        //        StreamName = name,
-        //        EnforceConsumerDeletion = true
-        //    });
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> DeleteDeliveryStreamAsync(string name)
+        {
+            var response = await _amazonKinesisFirehoseClient.DeleteDeliveryStreamAsync(new DeleteDeliveryStreamRequest
+            {
+                DeliveryStreamName = name,
+                AllowForceDelete = true
+            });
 
-        //    return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        //}
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
 
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> ListStreamsAsync()
-        //{
-        //    var response = await _amazonKinesisClient.ListStreamsAsync(new ListStreamsRequest());
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> ListDeliveryStreamsAsync()
+        {
+            var response = await _amazonKinesisFirehoseClient.ListDeliveryStreamsAsync(new ListDeliveryStreamsRequest());
 
-        //    if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        response.StreamNames.ForEach(s => Console.WriteLine($"Found stream name: {s}"));
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
+            if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            {
+                response.DeliveryStreamNames.ForEach(s => Console.WriteLine($"Found stream name: {s}"));
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> RegisterStreamConsumerAsync(string streamName, string consumerName)
-        //{
-        //    var response = await _amazonKinesisClient.DescribeStreamAsync(new DescribeStreamRequest
-        //    {
-        //        StreamName = streamName
-        //    });
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> PutRecordAsync(string streamName, string data)
+        {
+            var response = await _amazonKinesisFirehoseClient.PutRecordAsync(new PutRecordRequest
+            {
+                DeliveryStreamName = streamName,
+                Record = new Record
+                {
+                    Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data))
+                }
+            });
 
-        //    if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        var streamArn = response.StreamDescription.StreamARN;
-        //        var registerConsumerResponse = await _amazonKinesisClient.RegisterStreamConsumerAsync(new RegisterStreamConsumerRequest
-        //        {
-        //            StreamARN = streamArn,
-        //            ConsumerName = consumerName
-        //        });
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
 
-        //        if (registerConsumerResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //        {
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<bool> PutRecordBatchAsync(string streamName, string data)
+        {
+            var response = await _amazonKinesisFirehoseClient.PutRecordBatchAsync(new PutRecordBatchRequest
+            {
+                DeliveryStreamName = streamName,
+                Records = new System.Collections.Generic.List<Record>
+                {
+                    new Record { Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data)) },
+                    new Record { Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data)) }
+                }
+            });
 
-        //            ConsumerStatus status = registerConsumerResponse.Consumer.ConsumerStatus;
-        //            var consumerArn = registerConsumerResponse.Consumer.ConsumerARN;
-
-        //            // Wait until the consumer is ACTIVE and then report success.
-        //            Console.Write("Waiting for consumer to finish being created...");
-
-        //            int sleepDuration = 2000;
-
-        //            var startTime = DateTime.Now;
-        //            do
-        //            {
-        //                await Task.Delay(sleepDuration);
-
-        //                var describeStreamConsumerResponse = await _amazonKinesisClient.DescribeStreamConsumerAsync(new DescribeStreamConsumerRequest
-        //                {
-        //                    StreamARN = streamArn,
-        //                    ConsumerName = consumerName
-
-        //                });
-
-        //                status = describeStreamConsumerResponse.ConsumerDescription.ConsumerStatus;
-
-        //                Console.Write(".");
-        //            }
-        //            while (status != "ACTIVE" && DateTime.Now - startTime < TimeSpan.FromMinutes(2));
-
-        //            return status == ConsumerStatus.ACTIVE;
-        //        }
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
-
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> DeregisterStreamConsumerAsync(string streamName, string consumerName)
-        //{
-        //    var streamArn = await GetStreamArn(streamName);
-        //    if (streamArn != null)
-        //    {
-        //        var registerConsumerResponse = await _amazonKinesisClient.DeregisterStreamConsumerAsync(new DeregisterStreamConsumerRequest
-        //        {
-        //            StreamARN = streamArn,
-        //            ConsumerName = consumerName
-        //        });
-
-        //        return registerConsumerResponse.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        //    }
-        //    return false;
-        //}
-
-        //private async Task<string> GetStreamArn(string streamName)
-        //{
-        //    var response = await _amazonKinesisClient.DescribeStreamAsync(new DescribeStreamRequest
-        //    {
-        //        StreamName = streamName
-        //    });
-
-        //    if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        return response.StreamDescription.StreamARN;
-        //    }
-        //    return null;
-        //}
-
-        //    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> ListStreamConsumersAsync(string streamName)
-        //{
-        //    var streamArn = await GetStreamArn(streamName);
-        //    if (streamArn != null)
-        //    {
-        //        var response = await _amazonKinesisClient.ListStreamConsumersAsync(new ListStreamConsumersRequest
-        //        {
-        //            MaxResults = 10,
-        //            StreamARN = streamArn
-        //        });
-
-        //        if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //        {
-        //            response.Consumers.ForEach(c => Console.WriteLine($"Found consumer name: {c.ConsumerName}"));
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            return false;
-        //        }
-        //    }
-        //    return false;
-
-        //}
-
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> PutRecordAsync(string streamName, string data)
-        //{
-        //    var response = await _amazonKinesisClient.PutRecordAsync(new PutRecordRequest
-        //    {
-        //        StreamName = streamName,
-        //        PartitionKey = "nrtest",
-        //        Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data))
-        //    });
-
-        //    return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        //}
-
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> PutRecordsAsync(string streamName, string data)
-        //{
-        //    var response = await _amazonKinesisClient.PutRecordsAsync(new PutRecordsRequest
-        //    {
-        //        StreamName = streamName,
-        //        Records = new System.Collections.Generic.List<PutRecordsRequestEntry>
-        //        {
-        //            new PutRecordsRequestEntry { PartitionKey = "nrtest", Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data)) },
-        //            new PutRecordsRequestEntry { PartitionKey = "nrtest", Data = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(data)) }
-        //        }
-        //    });
-
-        //    return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        //}
-
-        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //public async Task<bool> GetRecordsAsync(string streamName)
-        //{
-        //    //Step #1 - describe stream to find out the shards it contains
-        //    DescribeStreamRequest describeRequest = new DescribeStreamRequest();
-        //    describeRequest.StreamName = streamName;
-
-        //    var describeResponse = await _amazonKinesisClient.DescribeStreamAsync(describeRequest);
-        //    List<Shard> shards = describeResponse.StreamDescription.Shards;
-        //    foreach (Shard s in shards)
-        //    {
-        //        Console.WriteLine("shard: " + s.ShardId);
-        //    }
-
-        //    //grab the only shard ID in this stream
-        //    string primaryShardId = shards[0].ShardId;
-
-        //    //Step #2 - get iterator for this shard
-        //    var shardIteratorRequest = new GetShardIteratorRequest
-        //    {
-        //        StreamName = streamName,
-        //        ShardId = primaryShardId,
-        //        ShardIteratorType = ShardIteratorType.TRIM_HORIZON
-        //    };
-        //    var response = await _amazonKinesisClient.GetShardIteratorAsync(shardIteratorRequest);
-        //    var iterator = response.ShardIterator;
-
-        //    var request = new GetRecordsRequest
-        //    {
-        //        ShardIterator = iterator,
-        //        Limit = 10
-        //    };
-
-        //    var getResponse = await _amazonKinesisClient.GetRecordsAsync(request);
-        //    if (getResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        string nextIterator = getResponse.NextShardIterator;
-        //        //retrieve records
-        //        List<Record> records = getResponse.Records;
-
-        //        //print out each record's data value
-        //        foreach (Record r in records)
-        //        {
-        //            //pull out (JSON) data in this record
-        //            string s = Encoding.UTF8.GetString(r.Data.ToArray());
-        //            Console.WriteLine("Record: " + s);
-        //            Console.WriteLine("Partition Key: " + r.PartitionKey);
-        //        }
-        //    }
-
-        //    return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
-        //}
-
+            return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+        }
 
         public void Dispose()
         {
