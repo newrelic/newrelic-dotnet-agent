@@ -30,7 +30,7 @@ class Couchbase3Exerciser
     // - IncrementAsync
     // - DecrementAsync
 
-    private async Task<(ICluster, IBucket)> InitializeAsync()
+    private async Task<(ICluster Cluster, IBucket Bucket)> InitializeAsync()
     {
         // Initialize the Couchbase cluster
         var clusterOptions = new ClusterOptions
@@ -53,7 +53,9 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Get()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
@@ -69,7 +71,6 @@ class Couchbase3Exerciser
             var result = await t;
             result.Dispose();
         }
-        using var getResult3 = await collection.GetAndTouchAsync("0", TimeSpan.FromSeconds(10));
     }
 
     [LibraryMethod]
@@ -77,7 +78,10 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task GetAndLockAndUnlock()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
@@ -94,7 +98,10 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Exists()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
@@ -107,12 +114,15 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task InsertUpsertReplaceAndRemove()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
 
-        var key = "my-document-key";
+        var key = Guid.NewGuid().ToString();
 
         // insert a document
         await collection.InsertAsync(key, new { Name = "Ted", Age = 31 });
@@ -132,10 +142,14 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Mutate()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         var inventoryScope = await bucket.ScopeAsync("inventory");
         var hotelCollection = await inventoryScope.CollectionAsync("hotel");
-        var mutateInResult = await hotelCollection.MutateInAsync("hotel_10025",
+
+        using var mutateInResult = await hotelCollection.MutateInAsync("hotel_10025",
             specs => specs.Upsert("pets_ok", true)
         );
     }
@@ -145,18 +159,21 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Lookup()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
 
         // lookup a document
-        await collection.LookupInAsync("0", [LookupInSpec.Get("credit_cards")]);
-        await collection.LookupInAnyReplicaAsync("0", [LookupInSpec.Get("credit_cards")]);
+        using var result1 = await collection.LookupInAsync("0", [LookupInSpec.Get("credit_cards")]);
+        using var result2 = await collection.LookupInAnyReplicaAsync("0", [LookupInSpec.Get("credit_cards")]);
         var results = collection.LookupInAllReplicasAsync("0", [LookupInSpec.Get("credit_cards")]);
         await foreach (var result in results)
         {
-            // process the result
+            result.Dispose();
         }
     }
 
@@ -165,10 +182,14 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Scan()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
+
         // scan the collection
         var results = collection.ScanAsync(new RangeScan());
         await foreach (var result in results)
@@ -182,13 +203,22 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Touch()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
         // get a user-defined collection reference
         var scope = await bucket.ScopeAsync("tenant_agent_00");
         var collection = await scope.CollectionAsync("users");
+
+        // insert a new document so we can touch it and let it expire
+        var key = Guid.NewGuid().ToString();
+        await collection.InsertAsync(key, new { Name = "Ted", Age = 32 });
+
         // update the expiry of a document
-        await collection.TouchAsync("0", TimeSpan.FromSeconds(10));
-        await collection.TouchWithCasAsync("0", TimeSpan.FromSeconds(10));
+        using var getResult3 = await collection.GetAndTouchAsync(key, TimeSpan.FromSeconds(10));
+        await collection.TouchAsync(key, TimeSpan.FromSeconds(5));
+        await collection.TouchWithCasAsync(key, TimeSpan.FromSeconds(2));
     }
 
     [LibraryMethod]
@@ -196,10 +226,12 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ScopeQuery()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
 
         var inventoryScope = await bucket.ScopeAsync("inventory");
-        var queryResult = await inventoryScope.QueryAsync<dynamic>("SELECT * FROM airline WHERE id = 10");
+        using var queryResult = await inventoryScope.QueryAsync<dynamic>("SELECT * FROM airline WHERE id = 10");
 
     }
 
@@ -208,7 +240,9 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ClusterQuery()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
 
         try
         {
@@ -216,12 +250,12 @@ class Couchbase3Exerciser
             options.IgnoreIfExists(true);
             await cluster.QueryIndexes.CreatePrimaryIndexAsync("`travel-sample`", options);
         }
-        catch (IndexExistsException) // ignore
+        catch (IndexExistsException) // ignore, it might already exist
         {
         }
 
         // requires a primary index
-        var clusterQueryResult = await cluster.QueryAsync<dynamic>(
+        using var clusterQueryResult = await cluster.QueryAsync<dynamic>(
             "SELECT t.* FROM `travel-sample` t WHERE t.type=$type",
             options => options.Parameter("type", "landmark")
         );
@@ -232,7 +266,9 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ScopeSearch()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
 
         var inventoryScope = await bucket.ScopeAsync("inventory");
         var searchResult = await inventoryScope.SearchAsync("index-hotel-description", SearchRequest.Create(new MatchQuery("swanky")), new SearchOptions().Limit(2));
@@ -243,7 +279,9 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ClusterSearch()
     {
-        var (cluster, bucket) = await InitializeAsync();
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
 
         var clusterSearchResult = await cluster.SearchAsync("hotels", SearchRequest.Create(new MatchQuery("swanky")), new SearchOptions().Limit(2));
     }
