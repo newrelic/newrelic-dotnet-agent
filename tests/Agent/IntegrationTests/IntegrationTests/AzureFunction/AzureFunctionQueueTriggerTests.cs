@@ -71,7 +71,6 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
             new() {metricName = transactionName, callCount = 1},
         };
 
-
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -81,6 +80,15 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         if (_fixture.AzureFunctionModeEnabled)
         {
             Assertions.MetricsExist(expectedMetrics, metrics);
+
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/Isolated" },
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/Queue" }
+            };
+
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
 
             Assert.NotNull(transactionSample);
             Assert.NotNull(transaction);
@@ -99,6 +107,11 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         else
         {
             Assertions.MetricsDoNotExist(expectedMetrics, metrics);
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/disabled" }
+            };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
             Assert.Null(transactionSample);
 
             Assert.Null(transaction);

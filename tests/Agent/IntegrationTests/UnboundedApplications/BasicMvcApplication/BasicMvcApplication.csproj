@@ -62,10 +62,10 @@
       <Version>2.3.8</Version>
     </PackageReference>
     <PackageReference Include="EnterpriseLibrary.Common">
-      <Version>6.0.1304.0</Version>
+      <Version>6.0.1304</Version>
     </PackageReference>
     <PackageReference Include="EnterpriseLibrary.Data">
-      <Version>6.0.1304.0</Version>
+      <Version>6.0.1304</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.Mvc">
       <Version>5.2.0</Version>
@@ -127,7 +127,6 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\CouchbaseController.cs" />
     <Compile Include="Controllers\OracleController.cs" />
-    <Compile Include="Controllers\MsSqlController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
