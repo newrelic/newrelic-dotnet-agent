@@ -1,2 +1,7 @@
 # NuGet packages
 packages
+
+# Container integration tests
+
+# LocalStack assets
+ContainerApplications/volume
