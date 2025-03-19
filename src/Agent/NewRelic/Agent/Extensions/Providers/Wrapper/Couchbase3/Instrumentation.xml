@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 		<tracerFactory name="Couchbase3CollectionWrapper">
 			<match assemblyName="Couchbase.NetClient" className="Couchbase.KeyValue.CouchbaseCollection" minVersion="3.0.0.0">
+        <!-- ICouchbaseCollection methods -->
 				<exactMethodMatcher methodName="ExistsAsync"/>
         <exactMethodMatcher methodName="GetAllReplicasAsync"/>
         <exactMethodMatcher methodName="GetAndLockAsync"/>
@@ -27,6 +28,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="UnlockAsync"/>
         <exactMethodMatcher methodName="UpsertAsync"/>
 
+        <!-- IBinaryCollection methods -->
         <exactMethodMatcher methodName="AppendAsync"/>
         <exactMethodMatcher methodName="PrependAsync"/>
         <exactMethodMatcher methodName="IncrementAsync"/>
@@ -36,11 +38,13 @@ SPDX-License-Identifier: Apache-2.0
 
     <tracerFactory name ="Couchbase3QueryWrapper">
       <match assemblyName="Couchbase.NetClient" className="Couchbase.KeyValue.Scope" minVersion="3.0.0.0">
+        <!-- IScope methods -->
         <exactMethodMatcher methodName="AnalyticsQueryAsync"/>
         <exactMethodMatcher methodName="QueryAsync"/>
         <exactMethodMatcher methodName="SearchAsync"/>
       </match>
       <match assemblyName="Couchbase.NetClient" className="Couchbase.Cluster" minVersion="3.0.0.0">
+        <!-- ICluster methods -->
         <exactMethodMatcher methodName="AnalyticsQueryAsync"/>
         <exactMethodMatcher methodName="QueryAsync"/>
         <exactMethodMatcher methodName="SearchAsync"/>

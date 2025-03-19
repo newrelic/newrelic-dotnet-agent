@@ -1,21 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Wrapper.Couchbase3</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.Couchbase3</RootNamespace>
-    <Description>Couchbase v3+ Wrapper Provider for New Relic .NET Agent</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="Instrumentation.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
 </Project>
