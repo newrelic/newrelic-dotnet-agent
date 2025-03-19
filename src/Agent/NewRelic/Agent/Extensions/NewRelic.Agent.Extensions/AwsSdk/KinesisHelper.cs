@@ -61,12 +61,12 @@ namespace NewRelic.Agent.Extensions.AwsSdk
 
         public static string GetStreamArnFromRequest(dynamic request)
         {
-            return GetPropertyFromDynamic(request, "StreamArn");
+            return GetPropertyFromDynamic(request, "StreamARN");
         }
 
         public static string GetDeliveryStreamArnFromRequest(dynamic request)
         {
-            return GetPropertyFromDynamic(request, "DeliveryStreamArn");
+            return GetPropertyFromDynamic(request, "DeliveryStreamARN");
         }
 
         private static string GetPropertyFromDynamic(dynamic request, string propertyName)

@@ -35,7 +35,7 @@ namespace Agent.Extensions.Tests.Helpers
         {
             dynamic request = new MockKinesisDataStreamRequest();
             request.StreamName = streamName;
-            request.StreamArn = streamArn;
+            request.StreamARN = streamArn;
 
             // Act
             var streamNameFromHelper = KinesisHelper.GetStreamNameFromRequest(request) as string;
@@ -53,7 +53,7 @@ namespace Agent.Extensions.Tests.Helpers
         {
             dynamic request = new MockKinesisFirehoseRequest();
             request.DeliveryStreamName = streamName;
-            request.DeliveryStreamArn = streamArn;
+            request.DeliveryStreamARN = streamArn;
 
             // Act
             var streamNameFromHelper = KinesisHelper.GetDeliveryStreamNameFromRequest(request) as string;
@@ -96,13 +96,13 @@ namespace Aws.Kinesis.Models
     public class MockKinesisDataStreamRequest
     {
         public string StreamName { get; set; }
-        public string StreamArn { get; set; }
+        public string StreamARN { get; set; }
     }
 
     public class MockKinesisFirehoseRequest
     {
         public string DeliveryStreamName { get; set; }
-        public string DeliveryStreamArn { get; set; }
+        public string DeliveryStreamARN { get; set; }
     }
 
     public class MockUnknownRequest
