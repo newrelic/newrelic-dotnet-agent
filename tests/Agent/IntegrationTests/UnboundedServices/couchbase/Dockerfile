@@ -1,6 +1,5 @@
-FROM couchbase/server:enterprise-4.5.1
-
-RUN apt-get update && apt-get install -y jq
+# sandbox image with travel-sample bucket pre-installed
+FROM couchbase/server-sandbox:7.6.5  
 
 COPY configure-server.sh /opt/couchbase
 CMD ["/opt/couchbase/configure-server.sh"]
