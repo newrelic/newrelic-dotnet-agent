@@ -198,9 +198,9 @@
     <!-- Requires Serilog 2.8.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
 
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
     <!-- Requires Serilog 2.8.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
@@ -304,6 +304,12 @@
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
+
+  <!-- Couchbase -->
+  <ItemGroup>
+    <PackageReference Include="CouchbaseNetClient" Version="3.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />

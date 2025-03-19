@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET9_0
+#if NET8_0 || NET9_0
 
 using System;
 using System.Linq;

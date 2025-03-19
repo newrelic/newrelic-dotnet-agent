@@ -157,6 +157,15 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
 }
 
 [NetCoreTest]
+public class Couchbase3TestsCoreOldest : Couchbase3TestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public Couchbase3TestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+[NetCoreTest]
 public class Couchbase3TestsCoreLatest : Couchbase3TestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Couchbase3TestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
