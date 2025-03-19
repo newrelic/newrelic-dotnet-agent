@@ -8,21 +8,17 @@ SPDX-License-Identifier: Apache-2.0
 
 		<tracerFactory name="Couchbase3CollectionWrapper">
 			<match assemblyName="Couchbase.NetClient" className="Couchbase.KeyValue.CouchbaseCollection" minVersion="3.0.0.0">
-        <exactMethodMatcher methodName="AppendAsync"/>
-        <exactMethodMatcher methodName="DecrementAsync"/>
 				<exactMethodMatcher methodName="ExistsAsync"/>
         <exactMethodMatcher methodName="GetAllReplicasAsync"/>
         <exactMethodMatcher methodName="GetAndLockAsync"/>
         <exactMethodMatcher methodName="GetAndTouchAsync"/>
         <exactMethodMatcher methodName="GetAnyReplicaAsync"/>
 				<exactMethodMatcher methodName="GetAsync"/>
-        <exactMethodMatcher methodName="IncrementAsync"/>
 				<exactMethodMatcher methodName="InsertAsync"/>
         <exactMethodMatcher methodName="LookupInAllReplicasAsync"/>
         <exactMethodMatcher methodName="LookupInAnyReplicaAsync"/>
         <exactMethodMatcher methodName="LookupInAsync"/>
         <exactMethodMatcher methodName="MutateInAsync"/>
-        <exactMethodMatcher methodName="PrependAsync"/>
         <exactMethodMatcher methodName="RemoveAsync"/>
         <exactMethodMatcher methodName="ReplaceAsync"/>
         <exactMethodMatcher methodName="ScanAsync"/>
@@ -31,6 +27,10 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="UnlockAsync"/>
         <exactMethodMatcher methodName="UpsertAsync"/>
 
+        <exactMethodMatcher methodName="AppendAsync"/>
+        <exactMethodMatcher methodName="PrependAsync"/>
+        <exactMethodMatcher methodName="IncrementAsync"/>
+        <exactMethodMatcher methodName="DecrementAsync"/>
       </match>
 		</tracerFactory>
 
