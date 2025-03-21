@@ -15,10 +15,12 @@ using Couchbase.KeyValue.RangeScan;
 
 using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
+using LibGit2Sharp;
+using Microsoft.Identity.Client;
 using NewRelic.Agent.IntegrationTests.Shared.Couchbase;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-
+using Newtonsoft.Json;
 using CouchbaseManagement = Couchbase.Management;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase;
@@ -49,22 +51,51 @@ class Couchbase3Exerciser
     }
 
     [LibraryMethod]
+    public async Task InsertTestDocument(string scopeName, string collectionName, string documentId, string base64EncodedSerializedDocument)
+    {
+        var serializedDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedDocument));
+        var document = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedDocument);
+
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+
+        // get a user-defined collection reference
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
+
+
+        await collection.InsertAsync(documentId, document);
+    }
+
+    [LibraryMethod]
+    public async Task RemoveTestDocument(string scopeName, string collectionName, string documentId)
+    {
+        var initResponse = await InitializeAsync();
+        await using var cluster = initResponse.Cluster;
+        await using var bucket = initResponse.Bucket;
+        // get a user-defined collection reference
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
+
+        await collection.RemoveAsync(documentId);
+    }
+
+    [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task Get()
+    public async Task Get(string scopeName, string collectionName, string documentId)
     {
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
-        var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // get a document
-        using var getResult1 = await collection.GetAsync("0");
-        using var getResult2 = await collection.GetAnyReplicaAsync("0");
+        using var getResult1 = await collection.GetAsync(documentId);
+        using var getResult2 = await collection.GetAnyReplicaAsync(documentId);
         // for some reason, this fails if one of the previous 2 methods isn't called first.
-        var result = await Task.WhenAll(collection.GetAllReplicasAsync("0"));
+        var result = await Task.WhenAll(collection.GetAllReplicasAsync(documentId));
         foreach (var r in result)
             r.Dispose();
     }
@@ -72,62 +103,64 @@ class Couchbase3Exerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task GetAndLockAndUnlock()
+    public async Task GetAndLockAndUnlock(string scopeName, string collectionName, string documentId)
     {
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
-        var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // get a document and lock it
-        using var result = await collection.GetAndLockAsync("0", TimeSpan.FromSeconds(10));
+        using var result = await collection.GetAndLockAsync(documentId, TimeSpan.FromSeconds(10));
 
         // unlock the document
-        await collection.UnlockAsync("0", result.Cas);
+        await collection.UnlockAsync(documentId, result.Cas);
     }
 
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task Exists()
+    public async Task Exists(string scopeName, string collectionName, string documentId)
     {
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
-        var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
         // check if a document exists
-        await collection.ExistsAsync("0");
+        await collection.ExistsAsync(documentId);
     }
 
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task InsertUpsertReplaceAndRemove()
+    public async Task InsertUpsertReplaceAndRemove(string scopeName, string collectionName, string documentId, string base64EncodedSerializedInsertDocument, string base64EncodedSerializedUpsertDocument, string base64EncodedSerializedReplaceDocument)
     {
+        var serializedInsertDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedInsertDocument));
+        var serializedUpsertDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedUpsertDocument));
+        var serializedReplaceDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedReplaceDocument));
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
-        var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
-
-        var key = Guid.NewGuid().ToString();
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // insert a document
-        await collection.InsertAsync(key, new { Name = "Ted", Age = 31 });
+        await collection.InsertAsync(documentId, JsonConvert.DeserializeObject(serializedInsertDocument));
 
         // upsert a document
-        await collection.UpsertAsync(key, new { Name = "Ted", Age = 32 });
+        await collection.UpsertAsync(documentId, JsonConvert.DeserializeObject(serializedUpsertDocument));
 
         // replace a document
-        await collection.ReplaceAsync(key, new { Name = "Bill", Age = 33 });
+        await collection.ReplaceAsync(documentId, JsonConvert.DeserializeObject(serializedReplaceDocument));
 
         // delete the document
-        await collection.RemoveAsync(key);
+        await collection.RemoveAsync(documentId);
     }
 
     [LibraryMethod]
@@ -154,26 +187,26 @@ class Couchbase3Exerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task Lookup()
+    public async Task Lookup(string scopeName, string collectionName, string documentId)
     {
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
 
         // get a user-defined collection reference
-        var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
+        var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // lookup a document
 #if NET481_OR_GREATER || NET
-        using var result1 = await collection.LookupInAsync("0", [LookupInSpec.Get("credit_cards")]);
-        using var result2 = await collection.LookupInAnyReplicaAsync("0", [LookupInSpec.Get("credit_cards")]);
-        var results = collection.LookupInAllReplicasAsync("0", [LookupInSpec.Get("credit_cards")]);
+        using var result1 = await collection.LookupInAsync(documentId, [LookupInSpec.Get("credit_cards")]);
+        using var result2 = await collection.LookupInAnyReplicaAsync(documentId, [LookupInSpec.Get("credit_cards")]);
+        var results = collection.LookupInAllReplicasAsync(documentId, [LookupInSpec.Get("credit_cards")]);
         await foreach (var result in results)
         {
             result.Dispose();
         }
 #else
-        await collection.LookupInAsync("0", [LookupInSpec.Get("credit_cards")]);
+        await collection.LookupInAsync(documentId, [LookupInSpec.Get("credit_cards")]);
 #endif
     }
 

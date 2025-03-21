@@ -3,8 +3,10 @@
 
 
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -24,26 +26,77 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture = fixture;
         _fixture.TestLogger = output;
 
-        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        string testScope = "tenant_agent_00";
+        string testCollection = "users";
+        string testDocumentId = Guid.NewGuid().ToString();
+        var serializedTestUser = """
+                                 {
+                                   "name": "Keon Hoppe",
+                                   "addresses": [
+                                     {
+                                       "type": "home",
+                                       "address": "222 Sauer Neck",
+                                       "city": "London",
+                                       "country": "United Kingdom"
+                                     },
+                                     {
+                                       "type": "work",
+                                       "address": "6913 Rau Crossing",
+                                       "city": "London",
+                                       "country": "United Kingdom"
+                                     }
+                                   ],
+                                   "driving_licence": "8d3931b5-51c5-58c8-9cf7-bc8ce9049558",
+                                   "passport": "95bfb372-04e8-5865-9331-d3ec66ca631b",
+                                   "preferred_email": "keonhoppe@vujojgo.nz",
+                                   "preferred_phone": "(688) 606-2841",
+                                   "preferred_airline": "inventory.airline.airline_2607",
+                                   "preferred_airport": "inventory.airport.airport_507",
+                                   "credit_cards": [
+                                     {
+                                       "type": "Mastercard",
+                                       "number": "5161395257291763",
+                                       "expiration": "2021-11"
+                                     },
+                                     {
+                                       "type": "Visa",
+                                       "number": "4986258227926866",
+                                       "expiration": "2021-07"
+                                     }
+                                   ],
+                                   "created": "2020-10-20",
+                                   "updated": "2021-02-19"
+                                 }
+                                 """;
 
-        _fixture.AddCommand("Couchbase3Exerciser Get");
-        _fixture.AddCommand("Couchbase3Exerciser GetAndLockAndUnlock");
-        _fixture.AddCommand("Couchbase3Exerciser Exists");
-        _fixture.AddCommand("Couchbase3Exerciser InsertUpsertReplaceAndRemove");
-        _fixture.AddCommand("Couchbase3Exerciser Mutate");
-        _fixture.AddCommand("Couchbase3Exerciser Lookup");
-        _fixture.AddCommand("Couchbase3Exerciser Touch");
-        _fixture.AddCommand("Couchbase3Exerciser ClusterQuery");
-        _fixture.AddCommand("Couchbase3Exerciser ScopeQuery");
-        _fixture.AddCommand("Couchbase3Exerciser ScopeAnalytics");
-        _fixture.AddCommand("Couchbase3Exerciser ClusterAnalytics");
+        _fixture.AddCommand($"Couchbase3Exerciser InsertTestDocument {testScope} {testCollection} {testDocumentId} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))}"); // not in a transaction
+
+
+        _fixture.AddCommand($"Couchbase3Exerciser Exists {testScope} {testCollection} {testDocumentId}");
+        _fixture.AddCommand($"Couchbase3Exerciser Get {testScope} {testCollection} {testDocumentId}");
+        _fixture.AddCommand($"Couchbase3Exerciser GetAndLockAndUnlock {testScope} {testCollection} {testDocumentId}");
+        _fixture.AddCommand($"Couchbase3Exerciser Lookup {testScope} {testCollection} {testDocumentId}");
+
+        _fixture.AddCommand($"Couchbase3Exerciser RemoveTestDocument {testScope} {testCollection} {testDocumentId}"); // not in a transaction
+
+        string insertUpsertReplaceDocumentId = Guid.NewGuid().ToString();
+        var serializedUpsertTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Ted", Age = 35 });
+        var serializedReplaceTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Bob", Age = 47 });
+        _fixture.AddCommand($"Couchbase3Exerciser InsertUpsertReplaceAndRemove {testScope} {testCollection} {insertUpsertReplaceDocumentId}, {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestUser))}");
+
+        _fixture.AddCommand("Couchbase3Exerciser Mutate"); // non params required
+        _fixture.AddCommand("Couchbase3Exerciser Touch"); // no params required
+        _fixture.AddCommand("Couchbase3Exerciser ClusterQuery"); // no params required
+        _fixture.AddCommand("Couchbase3Exerciser ScopeQuery"); // no params required
+        _fixture.AddCommand("Couchbase3Exerciser ScopeAnalytics"); // no params required
+        _fixture.AddCommand("Couchbase3Exerciser ClusterAnalytics"); // no params required
 
         if (_fixture is not (ConsoleDynamicMethodFixtureFW462 or ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
         {
-            _fixture.AddCommand("Couchbase3Exerciser Scan");
+            _fixture.AddCommand("Couchbase3Exerciser Scan"); // no params required
 
-            _fixture.AddCommand("Couchbase3Exerciser ScopeSearch");
-            _fixture.AddCommand("Couchbase3Exerciser ClusterSearch");
+            _fixture.AddCommand("Couchbase3Exerciser ScopeSearch"); // no params required
+            _fixture.AddCommand("Couchbase3Exerciser ClusterSearch"); // no params required
         }
 
         _fixture.AddActions
@@ -52,20 +105,20 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                configModifier.ConfigureFasterErrorTracesHarvestCycle(15);
-                configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
 
                 configModifier.ForceTransactionTraces();
                 configModifier.ForceSqlTraces();
 
                 configModifier.SetLogLevel("finest");
+
+                configModifier.ConfigureFasterMetricsHarvestCycle(30);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2), 2);
             }
         );
 
