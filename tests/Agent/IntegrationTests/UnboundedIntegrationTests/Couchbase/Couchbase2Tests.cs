@@ -25,49 +25,10 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
         string testDocumentId1 = Guid.NewGuid().ToString();
         string testDocumentId2 = Guid.NewGuid().ToString();
-        var serializedTestUser = """
-                                 {
-                                   "name": "Keon Hoppe",
-                                   "addresses": [
-                                     {
-                                       "type": "home",
-                                       "address": "222 Sauer Neck",
-                                       "city": "London",
-                                       "country": "United Kingdom"
-                                     },
-                                     {
-                                       "type": "work",
-                                       "address": "6913 Rau Crossing",
-                                       "city": "London",
-                                       "country": "United Kingdom"
-                                     }
-                                   ],
-                                   "driving_licence": "8d3931b5-51c5-58c8-9cf7-bc8ce9049558",
-                                   "passport": "95bfb372-04e8-5865-9331-d3ec66ca631b",
-                                   "preferred_email": "keonhoppe@vujojgo.nz",
-                                   "preferred_phone": "(688) 606-2841",
-                                   "preferred_airline": "inventory.airline.airline_2607",
-                                   "preferred_airport": "inventory.airport.airport_507",
-                                   "credit_cards": [
-                                     {
-                                       "type": "Mastercard",
-                                       "number": "5161395257291763",
-                                       "expiration": "2021-11"
-                                     },
-                                     {
-                                       "type": "Visa",
-                                       "number": "4986258227926866",
-                                       "expiration": "2021-07"
-                                     }
-                                   ],
-                                   "created": "2020-10-20",
-                                   "updated": "2021-02-19"
-                                 }
-                                 """;
+        var serializedTestAirline = """{"id":10,"type":"airline","name":"40-Mile Air","iata":"Q5","icao":"MLA","callsign":"MILE-AIR","country":"United States"}""";
 
-        _fixture.AddCommand($"Couchbase2Exerciser InsertTestDocument {testDocumentId1} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))}"); // not in a transaction
-        _fixture.AddCommand($"Couchbase2Exerciser InsertTestDocument {testDocumentId2} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))}"); // not in a transaction
-
+        _fixture.AddCommand($"Couchbase2Exerciser InsertTestDocument {testDocumentId1} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestAirline))}"); // not in a transaction
+        _fixture.AddCommand($"Couchbase2Exerciser InsertTestDocument {testDocumentId2} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestAirline))}"); // not in a transaction
 
         _fixture.AddCommand($"Couchbase2Exerciser Exists {testDocumentId1}");
         _fixture.AddCommand($"Couchbase2Exerciser Get {testDocumentId1}");
@@ -79,9 +40,11 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture.AddCommand($"Couchbase2Exerciser RemoveTestDocument {testDocumentId2}"); // not in a transaction
 
         string insertUpsertReplaceDocumentId = Guid.NewGuid().ToString();
-        var serializedUpsertTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Ted", Age = 35 });
-        var serializedReplaceTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Bob", Age = 47 });
-        _fixture.AddCommand($"Couchbase2Exerciser InsertUpsertReplaceAndRemove {insertUpsertReplaceDocumentId}, {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestUser))}");
+        var serializedUpsertTestAirline =
+            """{ "id":10748,"type":"airline","name":"Locair","iata":"ZQ","icao":"LOC","callsign":"LOCAIR","country":"United States"}""";
+        var serializedReplaceTestAirline =
+                """{"id":10748,"type":"airline","name":"Locair","iata":"ZQ","icao":"LOC","callsign":"LOCAIR","country":"United States"}""";
+        _fixture.AddCommand($"Couchbase2Exerciser InsertUpsertReplaceAndRemove {insertUpsertReplaceDocumentId}, {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestAirline))}");
 
         _fixture.AddCommand("Couchbase2Exerciser Touch"); // no params required
         _fixture.AddCommand("Couchbase2Exerciser BucketQuery"); // no params required
@@ -116,17 +79,9 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
     [Fact]
     public void Test()
     {
-        int expectedCallCountAllHarvest = 0;
+        int expectedCallCountAllHarvest = 99;
 
-        if (_fixture is ConsoleDynamicMethodFixtureFW471)
-            expectedCallCountAllHarvest = 21;
-        else if (_fixture is ConsoleDynamicMethodFixtureFW48)
-            expectedCallCountAllHarvest = 21;
-        else if (_fixture is ConsoleDynamicMethodFixtureCoreOldest or ConsoleDynamicMethodFixtureCoreLatest)
-            expectedCallCountAllHarvest = 31;
-
-        Assert.True(expectedCallCountAllHarvest > 0, $"Unexpected test fixture TFM: {_fixture.GetType().Name}");
-
+        // TODO: Needs lots of cleanup
         var expectedMetrics = new List<Assertions.ExpectedMetric>()
         {
             new() { metricName = "Datastore/all", CallCountAllHarvests = expectedCallCountAllHarvest},
@@ -167,27 +122,19 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
             new() { metricName = "Datastore/statement/Couchbase/users/UpsertAsync", CallCountAllHarvests = 1},
             new() { metricName = "Datastore/statement/Couchbase/travel-sample/AnalyticsQueryAsync", CallCountAllHarvests = 1},
             new() { metricName = "Datastore/statement/Couchbase/travel-sample/QueryAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/LookupInAllReplicasAsync", CallCountAllHarvests = 1 },
+            new() { metricName = "Datastore/operation/Couchbase/LookupInAnyReplicaAsync", CallCountAllHarvests = 1 },
+            new() { metricName = "Datastore/operation/Couchbase/ScanAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/SearchAsync", CallCountAllHarvests = 4},
+            new() { metricName = "Datastore/operation/Couchbase/SearchQueryAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/TouchWithCasAsync", CallCountAllHarvests = 2},
+
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/SearchAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/users/LookupInAllReplicasAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/users/LookupInAnyReplicaAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/users/ScanAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/users/TouchWithCasAsync", CallCountAllHarvests = 2},
         };
-
-
-        if (_fixture is not (ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
-        {
-            expectedMetrics.AddRange(new List<Assertions.ExpectedMetric>
-            {
-                new() { metricName = "Datastore/operation/Couchbase/LookupInAllReplicasAsync", CallCountAllHarvests = 1 },
-                new() { metricName = "Datastore/operation/Couchbase/LookupInAnyReplicaAsync", CallCountAllHarvests = 1 },
-                new() { metricName = "Datastore/operation/Couchbase/ScanAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/operation/Couchbase/SearchAsync", CallCountAllHarvests = 4},
-                new() { metricName = "Datastore/operation/Couchbase/SearchQueryAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/operation/Couchbase/TouchWithCasAsync", CallCountAllHarvests = 2},
-
-                new() { metricName = "Datastore/statement/Couchbase/travel-sample/SearchAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/statement/Couchbase/users/LookupInAllReplicasAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/statement/Couchbase/users/LookupInAnyReplicaAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/statement/Couchbase/users/ScanAsync", CallCountAllHarvests = 1},
-                new() { metricName = "Datastore/statement/Couchbase/users/TouchWithCasAsync", CallCountAllHarvests = 2},
-            });
-        }
 
         var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
         {
