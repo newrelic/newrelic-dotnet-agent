@@ -1,6 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
+#if !NET462 || NET
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -359,3 +359,4 @@ class Couchbase3Exerciser
     }
 
 }
+#endif

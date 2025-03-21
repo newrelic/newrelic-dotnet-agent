@@ -100,5 +100,17 @@ SPDX-License-Identifier: Apache-2.0
 			</match>
 		</tracerFactory>
 
+    <tracerFactory name="CouchbaseLookupInBuilderWrapper">
+      <match assemblyName="Couchbase.NetClient" className="Couchbase.Core.LookupInBuilder" maxVersion="3.0.0.0">
+        <exactMethodMatcher methodName="Execute"/>
+        <exactMethodMatcher methodName="ExecuteAsync"/>
+      </match>
+    </tracerFactory>
+    <tracerFactory name="CouchbaseMutateInBuilderWrapper">
+      <match assemblyName="Couchbase.NetClient" className="Couchbase.Core.MutateInBuilder" maxVersion="3.0.0.0">
+        <exactMethodMatcher methodName="Execute"/>
+        <exactMethodMatcher methodName="ExecuteAsync"/>
+      </match>
+    </tracerFactory>
 	</instrumentation>
 </extension>
