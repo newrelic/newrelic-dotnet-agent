@@ -7,20 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 	<instrumentation>
 
 		<tracerFactory>
-			<match assemblyName="Couchbase" className="Couchbase.CouchbaseClient">
-				<exactMethodMatcher methodName="ExecuteRemove" parameters="System.String,Couchbase.Operations.PersistTo,Couchbase.Operations.ReplicateTo" />
-				<exactMethodMatcher methodName="Get" parameters="Couchbase.IView" />
-				<exactMethodMatcher methodName="PerformConcatenate"/>
-				<exactMethodMatcher methodName="PerformMutate"/>
-				<exactMethodMatcher methodName="PerformRemove"/>
-				<exactMethodMatcher methodName="PerformStore" />
-				<exactMethodMatcher methodName="PerformTryGet" />
-				<exactMethodMatcher methodName="PerformTryGetAndTouch"/>
-				<exactMethodMatcher methodName="PerformTryGetWithLock"/>
-				<exactMethodMatcher methodName="Touch" />
-				<exactMethodMatcher methodName="Unlock"/>
-			</match>
-			<match assemblyName="Couchbase.NetClient" className="Couchbase.CouchbaseBucket">
+			<match assemblyName="Couchbase.NetClient" className="Couchbase.CouchbaseBucket" maxVersion="3.0.0.0">
 				<exactMethodMatcher methodName="Append"/>
 				<exactMethodMatcher methodName="AppendAsync"/>
 				<exactMethodMatcher methodName="Decrement" parameters="System.String,System.UInt64,System.UInt64,System.UInt32" />
