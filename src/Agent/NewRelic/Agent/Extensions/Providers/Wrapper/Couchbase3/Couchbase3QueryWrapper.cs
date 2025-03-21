@@ -36,8 +36,7 @@ public class Couchbase3QueryWrapper : IWrapper
         var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
         string model = GetBucketName(instrumentedMethodCall.MethodCall.InvocationTarget); 
 
-        // TODO: for SearchAsync / SearchQueryAsync, this is just the name of the index. Should commandText just be null in that case?
-        string commandText = instrumentedMethodCall.MethodCall.MethodArguments[0] as string;
+        string commandText = operation.StartsWith("Search") ? null : instrumentedMethodCall.MethodCall.MethodArguments[0] as string;
 
         var segment = transaction.StartDatastoreSegment(
             instrumentedMethodCall.MethodCall,
