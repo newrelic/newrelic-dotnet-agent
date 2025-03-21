@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Parsing;
@@ -25,10 +26,9 @@ public class Couchbase3CollectionWrapper: IWrapper
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        if (instrumentedMethodCall.IsAsync)
-        {
-            transaction.AttachToAsync();
-        }
+        var isAsync = instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName != "GetAllReplicasAsync"; // this is the only non-async method in ICouchbaseCollection
+        if (isAsync) 
+            transaction.AttachToAsync(); // all methods are async
 
         var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 
@@ -38,7 +38,7 @@ public class Couchbase3CollectionWrapper: IWrapper
             instrumentedMethodCall.MethodCall,
             new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 
-        return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+        return isAsync ? Delegates.GetAsyncDelegateFor<Task>(agent, segment) : Delegates.GetDelegateFor(segment);
     }
 
 }
