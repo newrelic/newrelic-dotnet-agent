@@ -57,7 +57,7 @@ services:
     couchbase:
         build: ./couchbase
         ports:
-            - "8091-8094:8091-8094"
+            - "8091-8095:8091-8095"
             - "11210:11210"
         environment:
             # These credentials are used to configure the Couchbase container 
