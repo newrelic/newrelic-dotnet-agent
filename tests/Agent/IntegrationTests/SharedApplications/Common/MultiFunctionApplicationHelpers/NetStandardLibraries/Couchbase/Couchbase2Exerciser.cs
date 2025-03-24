@@ -80,6 +80,8 @@ class Couchbase2Exerciser
         // get a document
         var getResult1 = await bucket.GetAsync<dynamic>(documentId);
         var getResult2 = await bucket.GetDocumentAsync<dynamic>(documentId);
+
+        var getResult3 = bucket.Get<dynamic>(documentId);
     }
 
     [LibraryMethod]
@@ -95,6 +97,7 @@ class Couchbase2Exerciser
 #pragma warning disable CS0618 // Type or member is obsolete
         var getResults1 = bucket.Get<dynamic>(ids);
 #pragma warning restore CS0618 // Type or member is obsolete
+        var getResults2 = await bucket.GetDocumentsAsync<dynamic>(ids);
     }
 
     [LibraryMethod]
@@ -193,8 +196,8 @@ class Couchbase2Exerciser
         using var bucket = initResponse.Bucket;
         var result = await bucket.QueryAsync(new SearchQuery
         {
-            Index = "idx_travel_content",
-            Query = new MatchQuery("New Relic"),
+            Index = "hotels",
+            Query = new MatchQuery("Apex"),
             SearchParams = new SearchParams().Limit(10).Timeout(TimeSpan.FromMilliseconds(10000))
         });
     }
