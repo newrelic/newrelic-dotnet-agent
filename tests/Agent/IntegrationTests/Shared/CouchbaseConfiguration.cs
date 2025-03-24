@@ -4,9 +4,9 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared.Couchbase
+namespace NewRelic.Agent.IntegrationTests.Shared
 {
-    public class CouchbaseTestObject
+    public class CouchbaseConfiguration
     {
         private static string _couchbaseServerUrl;
         private static string _couchbaseTestBucket;
@@ -36,6 +36,24 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Couchbase
                 }
 
                 return _couchbaseTestBucket;
+            }
+        }
+
+        public static string Username
+        {
+            get
+            {
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CouchbaseTests");
+                return testConfiguration["Username"];
+            }
+        }
+
+        public static string Password
+        {
+            get
+            {
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CouchbaseTests");
+                return testConfiguration["Password"];
             }
         }
 

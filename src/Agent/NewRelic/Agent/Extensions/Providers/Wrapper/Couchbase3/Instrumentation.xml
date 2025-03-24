@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <tracerFactory name="Couchbase3CollectionWrapper">
+      <match assemblyName="Couchbase.NetClient" className="Couchbase.KeyValue.CouchbaseCollection" minVersion="3.0.0.0">
+        <!-- ICouchbaseCollection methods -->
+        <exactMethodMatcher methodName="ExistsAsync" parameters="System.String,Couchbase.KeyValue.ExistsOptions"/>
+        <exactMethodMatcher methodName="GetAllReplicasAsync" parameters="System.String,Couchbase.KeyValue.GetAllReplicasOptions"/>
+        <exactMethodMatcher methodName="GetAndLockAsync" parameters="System.String,System.TimeSpan,Couchbase.KeyValue.GetAndLockOptions"/>
+        <exactMethodMatcher methodName="GetAndTouchAsync" parameters="System.String,System.TimeSpan,Couchbase.KeyValue.GetAndTouchOptions"/>
+        <exactMethodMatcher methodName="GetAnyReplicaAsync" parameters="System.String,Couchbase.KeyValue.GetAnyReplicaOptions"/>
+        <exactMethodMatcher methodName="GetAsync" parameters="System.String,Couchbase.KeyValue.GetOptions"/>
+        <exactMethodMatcher methodName="InsertAsync" parameters="System.String,!!0,Couchbase.KeyValue.InsertOptions"/>
+        <exactMethodMatcher methodName="LookupInAllReplicasAsync" parameters="System.String,System.Collections.Generic.IEnumerable`1[Couchbase.KeyValue.LookupInSpec],Couchbase.KeyValue.LookupInAllReplicasOptions"/>
+        <exactMethodMatcher methodName="LookupInAnyReplicaAsync" parameters="System.String,System.Collections.Generic.IEnumerable`1[Couchbase.KeyValue.LookupInSpec],Couchbase.KeyValue.LookupInAnyReplicaOptions"/>
+        <exactMethodMatcher methodName="LookupInAsync" parameters="System.String,System.Collections.Generic.IEnumerable`1[Couchbase.KeyValue.LookupInSpec],Couchbase.KeyValue.LookupInOptions"/>
+        <exactMethodMatcher methodName="MutateInAsync" parameters="System.String,System.Collections.Generic.IEnumerable`1[Couchbase.KeyValue.MutateInSpec],Couchbase.KeyValue.MutateInOptions"/>
+        <exactMethodMatcher methodName="RemoveAsync" parameters="System.String,Couchbase.KeyValue.RemoveOptions"/>
+        <exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,Couchbase.KeyValue.ReplaceOptions"/>
+        <exactMethodMatcher methodName="ScanAsync" parameters="Couchbase.KeyValue.RangeScan.IScanType,Couchbase.KeyValue.RangeScan.ScanOptions"/>"
+        <exactMethodMatcher methodName="TouchAsync" parameter="System.String,System.TimeSpan,Couchbase.KeyValue.TouchOptions"/>
+        <exactMethodMatcher methodName="TouchWithCasAsync" parameter="System.String,System.TimeSpan,Couchbase.KeyValue.TouchOptions"/>
+        <exactMethodMatcher methodName="UnlockAsync" parameters="System.String,System.UInt64,Couchbase.KeyValue.UnlockOptions"/>
+        <exactMethodMatcher methodName="UpsertAsync" parameters="System.String,!!0,Couchbase.KeyValue.UpsertOptions"/>
+
+        <!-- IBinaryCollection methods -->
+        <exactMethodMatcher methodName="AppendAsync" parameters="System.String,System.Byte[],Couchbase.KeyValue.AppendOptions"/>
+        <exactMethodMatcher methodName="PrependAsync" parameters="System.String,System.Byte[],Couchbase.KeyValue.PrependOptions"/>
+        <exactMethodMatcher methodName="IncrementAsync" parameters="System.String,Couchbase.KeyValue.IncrementOptions"/>
+        <exactMethodMatcher methodName="DecrementAsync" parameters="System.String,Couchbase.KeyValue.DecrementOptions"/>
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name ="Couchbase3QueryWrapper">
+      <match assemblyName="Couchbase.NetClient" className="Couchbase.KeyValue.Scope" minVersion="3.0.0.0">
+        <!-- IScope methods -->
+        <exactMethodMatcher methodName="AnalyticsQueryAsync" parameters="System.String,Couchbase.Analytics.AnalyticsOptions"/>
+        <exactMethodMatcher methodName="QueryAsync" parameters="System.String,Couchbase.Query.QueryOptions"/>
+        <exactMethodMatcher methodName="SearchAsync" parameters="System.String,Couchbase.Search.SearchRequest,Couchbase.Search.SearchOptions"/>
+      </match>
+      <match assemblyName="Couchbase.NetClient" className="Couchbase.Cluster" minVersion="3.0.0.0">
+        <!-- ICluster methods -->
+        <exactMethodMatcher methodName="AnalyticsQueryAsync" parameters="System.String,Couchbase.Analytics.AnalyticsOptions"/>
+        <exactMethodMatcher methodName="QueryAsync" parameters="System.String,Couchbase.Query.QueryOptions"/>
+        <exactMethodMatcher methodName="SearchAsync" parameters="System.String,Couchbase.Search.SearchRequest,Couchbase.Search.SearchOptions"/>
+        <exactMethodMatcher methodName="SearchQueryAsync" parameters="System.String,Couchbase.Search.ISearchQuery,Couchbase.Search.SearchOptions"/>
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

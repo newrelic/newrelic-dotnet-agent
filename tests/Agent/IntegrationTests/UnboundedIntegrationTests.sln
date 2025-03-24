@@ -5,7 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnboundedIntegrationTests", "UnboundedIntegrationTests\UnboundedIntegrationTests.csproj", "{1E17AA8A-B8BA-4A64-892C-B58151293142}"
 	ProjectSection(ProjectDependencies) = postProject
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C} = {5350D3F3-CE09-4992-9756-ACCC92A9129C}
 		{5CF71C91-EE5E-4F8D-8FEE-AE497A32BF8B} = {5CF71C91-EE5E-4F8D-8FEE-AE497A32BF8B}
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0} = {8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}
+		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61} = {A8308E64-6659-4EFB-A9C4-0C48D4C99A61}
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53} = {EA98CDD2-655D-4239-9B9F-44EB806DEE53}
 	EndProjectSection
 EndProject
@@ -140,7 +143,7 @@ Global
 		{C544A8F0-A222-42AF-91C8-9F556C293C11} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
+		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 	EndGlobalSection
 EndGlobal

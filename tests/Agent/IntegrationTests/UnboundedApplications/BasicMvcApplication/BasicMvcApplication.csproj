@@ -58,9 +58,6 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient">
-      <Version>2.3.8</Version>
-    </PackageReference>
     <PackageReference Include="EnterpriseLibrary.Common">
       <Version>6.0.1304</Version>
     </PackageReference>
@@ -125,7 +122,6 @@
   <ItemGroup>
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Controllers\CouchbaseController.cs" />
     <Compile Include="Controllers\OracleController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
