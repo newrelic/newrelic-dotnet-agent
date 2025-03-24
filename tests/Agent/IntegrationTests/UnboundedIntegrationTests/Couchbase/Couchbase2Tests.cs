@@ -34,7 +34,6 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture.AddCommand($"Couchbase2Exerciser Get {testDocumentId1}");
         _fixture.AddCommand($"Couchbase2Exerciser GetMultiple {testDocumentId1},{testDocumentId2}");
         _fixture.AddCommand($"Couchbase2Exerciser GetAndLockAndUnlock {testDocumentId1}");
-        _fixture.AddCommand($"Couchbase2Exerciser Lookup {testDocumentId1}");
 
         _fixture.AddCommand($"Couchbase2Exerciser RemoveTestDocument {testDocumentId1}"); // not in a transaction
         _fixture.AddCommand($"Couchbase2Exerciser RemoveTestDocument {testDocumentId2}"); // not in a transaction
@@ -79,7 +78,7 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
     [Fact]
     public void Test()
     {
-        int expectedCallCountAllHarvest = 99;
+        int expectedCallCountAllHarvest = 26;
 
         // TODO: Needs lots of cleanup
         var expectedMetrics = new List<Assertions.ExpectedMetric>()
@@ -88,61 +87,40 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
             new() { metricName = "Datastore/allOther", CallCountAllHarvests = expectedCallCountAllHarvest},
             new() { metricName = "Datastore/Couchbase/all", CallCountAllHarvests = expectedCallCountAllHarvest},
             new() { metricName = "Datastore/Couchbase/allOther", CallCountAllHarvests = expectedCallCountAllHarvest},
+            new() { metricName = "Datastore/instance/Couchbase/unknown/unknown", CallCountAllHarvests = expectedCallCountAllHarvest},
 
-            new() { metricName = "Datastore/operation/Couchbase/ExistsAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/GetAllReplicasAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/GetAndLockAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/GetAndTouchAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/GetAnyReplicaAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/GetAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/ExistsAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/operation/Couchbase/Get", CallCountAllHarvests = 9},
+            new() { metricName = "Datastore/operation/Couchbase/GetMultiple", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/UnlockAsync", CallCountAllHarvests = 2},
             new() { metricName = "Datastore/operation/Couchbase/InsertAsync", CallCountAllHarvests = 2},
-            new() { metricName = "Datastore/operation/Couchbase/LookupInAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/MutateInAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/RemoveAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/ReplaceAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/TouchAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/UnlockAsync", CallCountAllHarvests = 1},
             new() { metricName = "Datastore/operation/Couchbase/UpsertAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/ReplaceAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/operation/Couchbase/RemoveAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/operation/Couchbase/TouchAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/operation/Couchbase/Query", CallCountAllHarvests = 1 },
             new() { metricName = "Datastore/operation/Couchbase/QueryAsync", CallCountAllHarvests = 3 },
-            new() { metricName = "Datastore/operation/Couchbase/AnalyticsQueryAsync", CallCountAllHarvests = 3}, // Scope.AnalyticsQueryAsync calls Cluster.AnalyticsQueryAsync
 
-            new() { metricName = "Datastore/statement/Couchbase/hotel/MutateInAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/ExistsAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/GetAllReplicasAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/GetAndLockAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/GetAndTouchAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/GetAnyReplicaAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/GetAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/InsertAsync", CallCountAllHarvests = 2},
-            new() { metricName = "Datastore/statement/Couchbase/users/LookupInAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/RemoveAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/ReplaceAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/TouchAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/UnlockAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/UpsertAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/travel-sample/AnalyticsQueryAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/travel-sample/QueryAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/LookupInAllReplicasAsync", CallCountAllHarvests = 1 },
-            new() { metricName = "Datastore/operation/Couchbase/LookupInAnyReplicaAsync", CallCountAllHarvests = 1 },
-            new() { metricName = "Datastore/operation/Couchbase/ScanAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/SearchAsync", CallCountAllHarvests = 4},
-            new() { metricName = "Datastore/operation/Couchbase/SearchQueryAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/operation/Couchbase/TouchWithCasAsync", CallCountAllHarvests = 2},
-
-            new() { metricName = "Datastore/statement/Couchbase/travel-sample/SearchAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/LookupInAllReplicasAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/LookupInAnyReplicaAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/ScanAsync", CallCountAllHarvests = 1},
-            new() { metricName = "Datastore/statement/Couchbase/users/TouchWithCasAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/ExistsAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/Get", CallCountAllHarvests = 9},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/GetMultiple", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/UnlockAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/InsertAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/UpsertAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/ReplaceAsync", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/RemoveAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/TouchAsync", CallCountAllHarvests = 2},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/Query", CallCountAllHarvests = 1},
+            new() { metricName = "Datastore/statement/Couchbase/travel-sample/QueryAsync", CallCountAllHarvests = 3},
         };
 
         var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
         {
             new Assertions.ExpectedSqlTrace
             {
-                TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase.Couchbase2Exerciser/ScopeAnalytics",
-                Sql = "SELECT VALUE ap FROM airport_view ap limit ?;",
-                DatastoreMetricName = $"Datastore/statement/Couchbase/travel-sample/AnalyticsQueryAsync"
+                TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase.Couchbase2Exerciser/BucketQuery",
+                Sql = "SELECT t.* FROM ? t LIMIT ?",
+                DatastoreMetricName = $"Datastore/statement/Couchbase/travel-sample/Query"
             }
         };
 

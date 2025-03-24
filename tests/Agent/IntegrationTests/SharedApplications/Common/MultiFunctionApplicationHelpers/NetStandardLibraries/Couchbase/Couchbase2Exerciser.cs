@@ -71,7 +71,7 @@ class Couchbase2Exerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task GetAsync(string documentId)
+    public async Task Get(string documentId)
     {
         var initResponse = await InitializeAsync();
         using var cluster = initResponse.Cluster;
@@ -81,7 +81,9 @@ class Couchbase2Exerciser
         var getResult1 = await bucket.GetAsync<dynamic>(documentId);
         var getResult2 = await bucket.GetDocumentAsync<dynamic>(documentId);
 
+#pragma warning disable VSTHRD103
         var getResult3 = bucket.Get<dynamic>(documentId);
+#pragma warning restore VSTHRD103
     }
 
     [LibraryMethod]
