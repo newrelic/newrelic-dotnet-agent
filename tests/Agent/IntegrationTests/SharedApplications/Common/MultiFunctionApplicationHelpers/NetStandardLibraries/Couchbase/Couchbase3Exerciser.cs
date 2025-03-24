@@ -1,6 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
+#if !NET462 || NET
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,7 +17,7 @@ using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
 using LibGit2Sharp;
 using Microsoft.Identity.Client;
-using NewRelic.Agent.IntegrationTests.Shared.Couchbase;
+using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using Newtonsoft.Json;
@@ -39,13 +39,13 @@ class Couchbase3Exerciser
         // Initialize the Couchbase cluster
         var clusterOptions = new ClusterOptions
         {
-            ConnectionString = CouchbaseTestObject.CouchbaseServerUrl,
-            UserName = CouchbaseTestObject.Username,
-            Password = CouchbaseTestObject.Password
+            ConnectionString = CouchbaseConfiguration.CouchbaseServerUrl,
+            UserName = CouchbaseConfiguration.Username,
+            Password = CouchbaseConfiguration.Password
         };
 
         var cluster = await Cluster.ConnectAsync(clusterOptions);
-        var bucket = await cluster.BucketAsync(CouchbaseTestObject.CouchbaseTestBucket);
+        var bucket = await cluster.BucketAsync(CouchbaseConfiguration.CouchbaseTestBucket);
 
         return (cluster, bucket);
     }
@@ -359,3 +359,4 @@ class Couchbase3Exerciser
     }
 
 }
+#endif
