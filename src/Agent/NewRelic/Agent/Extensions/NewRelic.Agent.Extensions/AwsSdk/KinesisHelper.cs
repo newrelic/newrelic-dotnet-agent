@@ -3,8 +3,9 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using NewRelic.Reflection;
 
 namespace NewRelic.Agent.Extensions.AwsSdk
 {
@@ -12,68 +13,49 @@ namespace NewRelic.Agent.Extensions.AwsSdk
     {
 
         private static readonly ConcurrentDictionary<string, string> _streamNameCache = new();
-        private static readonly ConcurrentDictionary<Type, List<string>> _propertyInfoCache = new();
+        private static readonly ConcurrentDictionary<string, Func<object, string>> _propertyGetterCache = new();
 
-        public static string GetStreamNameFromRequest(dynamic request)
+        public static string GetStreamNameFromRequest(object request)
         {
-            try
+            var streamName = GetPropertyFromRequest(request, "StreamName");
+            if (streamName != null)
             {
-                var streamName = GetPropertyFromDynamic(request, "StreamName");
-                if (streamName != null)
-                {
-                    return streamName;
-                }
-                // if StreamName is null/unavailable, StreamARN may exist
-                var streamARN = GetStreamArnFromRequest(request);
-                if (streamARN != null)
-                {
-                    return GetStreamNameFromArn(streamARN);
-                }
+                return streamName;
             }
-            catch
+            // if StreamName is null/unavailable, StreamARN may exist
+            var streamARN = GetStreamArnFromRequest(request);
+            if (streamARN != null)
             {
+                return GetStreamNameFromArn(streamARN);
             }
             return null;
         }
 
 
-        public static string GetDeliveryStreamNameFromRequest(dynamic request)
+        public static string GetDeliveryStreamNameFromRequest(object request)
         {
-            try
+            var streamName = GetPropertyFromRequest(request, "DeliveryStreamName");
+            if (streamName != null)
             {
-                var streamName = GetPropertyFromDynamic(request, "DeliveryStreamName");
-                if (streamName != null)
-                {
-                    return streamName;
-                }
-                // if StreamName is null/unavailable, StreamARN may exist
-                var streamARN = GetDeliveryStreamArnFromRequest(request);
-                if (streamARN != null)
-                {
-                    return GetStreamNameFromArn(streamARN);
-                }
+                return streamName;
             }
-            catch
+            // if StreamName is null/unavailable, StreamARN may exist
+            var streamARN = GetDeliveryStreamArnFromRequest(request);
+            if (streamARN != null)
             {
+                return GetStreamNameFromArn(streamARN);
             }
             return null;
         }
 
-        public static string GetStreamArnFromRequest(dynamic request)
+        public static string GetStreamArnFromRequest(object request)
         {
-            return GetPropertyFromDynamic(request, "StreamARN");
+            return GetPropertyFromRequest(request, "StreamARN");
         }
 
-        public static string GetDeliveryStreamArnFromRequest(dynamic request)
+        public static string GetDeliveryStreamArnFromRequest(object request)
         {
-            return GetPropertyFromDynamic(request, "DeliveryStreamARN");
-        }
-
-        private static string GetPropertyFromDynamic(dynamic request, string propertyName)
-        {
-            Type type = request.GetType();
-            List<string> properties = _propertyInfoCache.ContainsKey(type) ? _propertyInfoCache[type] : _propertyInfoCache[type] = type.GetProperties().Select(p => p.Name).ToList();
-            return properties.Contains(propertyName) ? type.GetProperty(propertyName).GetValue(request) : null;
+            return GetPropertyFromRequest(request, "DeliveryStreamARN");
         }
 
         public static string GetStreamNameFromArn(string streamARN)
@@ -96,6 +78,28 @@ namespace NewRelic.Agent.Extensions.AwsSdk
                     }
                 }
                 return null;
+            }
+        }
+
+        private static string GetPropertyFromRequest(object request, string propertyName)
+        {
+            Type type = request.GetType();
+            var key = type.Name + propertyName;
+            var getter = _propertyGetterCache.GetOrAdd(key, GetPropertyAccessor(type, propertyName));
+            return getter(request);
+        }
+
+        private static Func<object, string> GetPropertyAccessor(Type type, string propertyName)
+        {
+            try
+            {
+                return VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(Assembly.GetAssembly(type).FullName, type.FullName, propertyName);
+            }
+            catch
+            {
+                // if the attempt to generate the property accessor fails, that means that the requested property name does not exist for this particular
+                // Kinesis/Firehose request type.  Return a delegate that always returns null for any object input 
+                return (o) => null;
             }
         }
 

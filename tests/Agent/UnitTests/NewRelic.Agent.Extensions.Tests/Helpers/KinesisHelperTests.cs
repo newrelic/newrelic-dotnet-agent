@@ -33,7 +33,7 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase(null, null, null)]
         public void GetStreamNameFromRequest(string streamName, string streamArn, string expectedStreamName)
         {
-            dynamic request = new MockKinesisDataStreamRequest();
+            var request = new MockKinesisDataStreamRequest();
             request.StreamName = streamName;
             request.StreamARN = streamArn;
 
@@ -51,12 +51,12 @@ namespace Agent.Extensions.Tests.Helpers
         [TestCase(null, null, null)]
         public void GetDeliveryStreamNameFromRequest(string streamName, string streamArn, string expectedStreamName)
         {
-            dynamic request = new MockKinesisFirehoseRequest();
+            var request = new MockKinesisFirehoseRequest();
             request.DeliveryStreamName = streamName;
             request.DeliveryStreamARN = streamArn;
 
             // Act
-            var streamNameFromHelper = KinesisHelper.GetDeliveryStreamNameFromRequest(request) as string;
+            var streamNameFromHelper = KinesisHelper.GetDeliveryStreamNameFromRequest(request);
 
             // Assert
             Assert.That(streamNameFromHelper.IsEqualTo(expectedStreamName));
@@ -65,11 +65,11 @@ namespace Agent.Extensions.Tests.Helpers
         [Test]
         public void GetStreamNameFromRequest_UnknownRequestType_ReturnsNull()
         {
-            dynamic request = new MockUnknownRequest();
+            var request = new MockUnknownRequest();
             request.NotTheDroidsYoureLookingFor = "Daleks";
 
             // Act
-            var streamNameFromHelper = KinesisHelper.GetStreamNameFromRequest(request) as string;
+            var streamNameFromHelper = KinesisHelper.GetStreamNameFromRequest(request);
 
             // Assert
             Assert.That(streamNameFromHelper.IsEqualTo(null));
@@ -78,11 +78,11 @@ namespace Agent.Extensions.Tests.Helpers
         [Test]
         public void GetDeliveryStreamNameFromRequest_UnknownRequestType_ReturnsNull()
         {
-            dynamic request = new MockUnknownRequest();
+            var request = new MockUnknownRequest();
             request.NotTheDroidsYoureLookingFor = "Lore";
 
             // Act
-            var streamNameFromHelper = KinesisHelper.GetDeliveryStreamNameFromRequest(request) as string;
+            var streamNameFromHelper = KinesisHelper.GetDeliveryStreamNameFromRequest(request);
 
             // Assert
             Assert.That(streamNameFromHelper.IsEqualTo(null));

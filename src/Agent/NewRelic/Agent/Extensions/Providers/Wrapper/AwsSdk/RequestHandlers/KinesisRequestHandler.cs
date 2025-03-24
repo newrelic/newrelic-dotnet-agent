@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
         private static ConcurrentDictionary<string, string> _operationNameCache = new();
 
 
-        public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
+        public static AfterWrappedMethodDelegate HandleKinesisRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, object request, bool isAsync, ArnBuilder builder)
         {
             var requestType = request.GetType().Name as string;
 

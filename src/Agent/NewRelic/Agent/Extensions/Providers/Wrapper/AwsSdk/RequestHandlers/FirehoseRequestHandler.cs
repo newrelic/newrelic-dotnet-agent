@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
         public const string VendorName = "Firehose";
         private static ConcurrentDictionary<string, string> _operationNameCache = new();
 
-        public static AfterWrappedMethodDelegate HandleFirehoseRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, ArnBuilder builder)
+        public static AfterWrappedMethodDelegate HandleFirehoseRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, object request, bool isAsync, ArnBuilder builder)
         {
             var requestType = request.GetType().Name as string;
 
