@@ -120,6 +120,16 @@ namespace NewRelic.Providers.Wrapper.AwsSdk
                 return DynamoDbRequestHandler.HandleDynamoDbRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
             }
 
+            if (requestType.StartsWith("Amazon.KinesisFirehose"))
+            {
+                return FirehoseRequestHandler.HandleFirehoseRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
+            }
+
+            if (requestType.StartsWith("Amazon.Kinesis."))
+            {
+                return KinesisRequestHandler.HandleKinesisRequest(instrumentedMethodCall, agent, transaction, request, isAsync, builder);
+            }
+
             if (!_unsupportedRequestTypes.Contains(requestType))  // log once per unsupported request type
             {
                 agent.Logger.Debug($"AwsSdkPipelineWrapper: Unsupported request type: {requestType}. Returning NoOp delegate.");
