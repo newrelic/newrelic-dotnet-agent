@@ -13,7 +13,7 @@ using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
-using NewRelic.Agent.IntegrationTests.Shared.Couchbase;
+using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using Newtonsoft.Json;
@@ -32,19 +32,20 @@ class Couchbase2Exerciser
         var config = new ClientConfiguration();
         config.Servers = new List<Uri>()
         {
-            new Uri(CouchbaseTestObject.CouchbaseServerUrl)
+            new Uri(CouchbaseConfiguration.CouchbaseServerUrl)
         };
         config.UseSsl = false;
-        var authenticator = new PasswordAuthenticator(CouchbaseTestObject.Username, CouchbaseTestObject.Password);
+        var authenticator = new PasswordAuthenticator(CouchbaseConfiguration.Username, CouchbaseConfiguration.Password);
 
         ClusterHelper.Initialize(config, authenticator);
         var cluster = ClusterHelper.Get();
 
-        var bucket = await cluster.OpenBucketAsync(CouchbaseTestObject.CouchbaseTestBucket);
+        var bucket = await cluster.OpenBucketAsync(CouchbaseConfiguration.CouchbaseTestBucket);
 
         return (cluster, bucket);
     }
 
+    // for test setup
     [LibraryMethod]
     public async Task InsertTestDocument(string documentId, string base64EncodedSerializedDocument)
     {
@@ -58,6 +59,7 @@ class Couchbase2Exerciser
         await bucket.InsertAsync(documentId, document);
     }
 
+    // for test cleanup
     [LibraryMethod]
     public async Task RemoveTestDocument(string documentId)
     {

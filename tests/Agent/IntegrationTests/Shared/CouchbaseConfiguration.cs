@@ -4,9 +4,9 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared.Couchbase
+namespace NewRelic.Agent.IntegrationTests.Shared
 {
-    public class CouchbaseTestObject
+    public class CouchbaseConfiguration
     {
         private static string _couchbaseServerUrl;
         private static string _couchbaseTestBucket;

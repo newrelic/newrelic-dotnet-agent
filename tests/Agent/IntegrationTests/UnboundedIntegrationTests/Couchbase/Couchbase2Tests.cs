@@ -43,7 +43,7 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
             """{ "id":10748,"type":"airline","name":"Locair","iata":"ZQ","icao":"LOC","callsign":"LOCAIR","country":"United States"}""";
         var serializedReplaceTestAirline =
                 """{"id":10748,"type":"airline","name":"Locair","iata":"ZQ","icao":"LOC","callsign":"LOCAIR","country":"United States"}""";
-        _fixture.AddCommand($"Couchbase2Exerciser InsertUpsertReplaceAndRemove {insertUpsertReplaceDocumentId}, {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestAirline))}");
+        _fixture.AddCommand($"Couchbase2Exerciser InsertUpsertReplaceAndRemove {insertUpsertReplaceDocumentId} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestAirline))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestAirline))}");
 
         _fixture.AddCommand("Couchbase2Exerciser Touch"); // no params required
         _fixture.AddCommand("Couchbase2Exerciser BucketQuery"); // no params required
@@ -80,7 +80,6 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
     {
         int expectedCallCountAllHarvest = 26;
 
-        // TODO: Needs lots of cleanup
         var expectedMetrics = new List<Assertions.ExpectedMetric>()
         {
             new() { metricName = "Datastore/all", CallCountAllHarvests = expectedCallCountAllHarvest},
