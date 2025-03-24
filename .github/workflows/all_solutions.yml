@@ -427,7 +427,7 @@ jobs:
         namespace:
           [
             CosmosDB,
-            Couchbase3,
+            Couchbase,
             Elasticsearch,
             MongoDB,
             Msmq,
