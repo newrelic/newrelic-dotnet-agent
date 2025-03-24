@@ -1,4 +1,4 @@
-name: Check for new core technologies
+name: Dotty - Check for new core technologies
 
 on:
   schedule:
@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 jobs:
-  nuget-slack-notifications:
+  run-dotty:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
     permissions:
@@ -30,8 +30,8 @@ jobs:
     continue-on-error: false
     
     env:
-      scan-tool-path: ${{ github.workspace }}/.github/workflows/scripts/nugetSlackNotifications
-      scan-tool-publish-path: ${{ github.workspace }}/publish
+      dotty-path: ${{ github.workspace }}/build/Dotty
+      dotty-publish-path: ${{ github.workspace }}/publish
 
     steps:
       - name: Harden Runner
@@ -44,18 +44,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Add agent via nuget and then build the tool
+      - name: Add agent via nuget and then build Dotty
         run: |
-          cd ${{ env.scan-tool-path }}
-          dotnet add nugetSlackNotifications.csproj package NewRelic.Agent
-          dotnet publish -o ${{ env.scan-tool-publish-path }}
+          cd ${{ env.dotty-path }}
+          dotnet add Dotty.csproj package NewRelic.Agent
+          dotnet publish -o ${{ env.dotty-publish-path }}
 
       - name: Find timestamp of most recent run of this workflow and set as an environment variable
         if: inputs.daysToSearch == '0' || github.event_name == 'schedule'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-           echo "LAST_RUN_TIMESTAMP=$(gh run list --workflow nuget_slack_notifications.yml --branch main --status completed --limit 1 --json updatedAt | jq -r '.[0].updatedAt')" >> $GITHUB_ENV
+           echo "LAST_RUN_TIMESTAMP=$(gh run list --workflow dotty.yml --branch main --status completed --limit 1 --json updatedAt | jq -r '.[0].updatedAt')" >> $GITHUB_ENV
         shell: bash
 
       - name: Check for updates to core technology packages
@@ -63,9 +63,9 @@ jobs:
           DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
           DOTTY_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           CORECLR_ENABLE_PROFILING: 1
-          CORECLR_NEW_RELIC_HOME: ${{ env.scan-tool-publish-path }}/newrelic
+          CORECLR_NEW_RELIC_HOME: ${{ env.dotty-publish-path }}/newrelic
           CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
-          CORECLR_PROFILER_PATH: ${{ env.scan-tool-publish-path }}/newrelic/libNewRelicProfiler.so
+          CORECLR_PROFILER_PATH: ${{ env.dotty-publish-path }}/newrelic/libNewRelicProfiler.so
           NEW_RELIC_APP_NAME: Dotty
           NEW_RELIC_HOST: staging-collector.newrelic.com
           NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
@@ -79,7 +79,7 @@ jobs:
           if [ "${{ inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
-          cd ${{ env.scan-tool-publish-path }}
-          dotnet ./nugetSlackNotifications.dll
+          cd ${{ env.dotty-publish-path }}
+          dotnet ./Dotty.dll
         shell: bash
         

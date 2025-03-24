@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace nugetSlackNotifications
+namespace Dotty
 {
     public class PackageInfo
     {

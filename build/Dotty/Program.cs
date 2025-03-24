@@ -16,7 +16,7 @@ using NuGet.Protocol.Core.Types;
 using Repository = NuGet.Protocol.Core.Types.Repository;
 using System.IO;
 
-namespace nugetSlackNotifications
+namespace Dotty
 {
     public class Program
     {
