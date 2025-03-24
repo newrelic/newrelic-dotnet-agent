@@ -15,7 +15,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase3;
+namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase;
 
 public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
@@ -26,9 +26,9 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture = fixture;
         _fixture.TestLogger = output;
 
-        string testScope = "tenant_agent_00";
-        string testCollection = "users";
-        string testDocumentId = Guid.NewGuid().ToString();
+        var testScope = "tenant_agent_00";
+        var testCollection = "users";
+        var testDocumentId = Guid.NewGuid().ToString();
         var serializedTestUser = """
                                  {
                                    "name": "Keon Hoppe",
@@ -79,7 +79,7 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
         _fixture.AddCommand($"Couchbase3Exerciser RemoveTestDocument {testScope} {testCollection} {testDocumentId}"); // not in a transaction
 
-        string insertUpsertReplaceDocumentId = Guid.NewGuid().ToString();
+        var insertUpsertReplaceDocumentId = Guid.NewGuid().ToString();
         var serializedUpsertTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Ted", Age = 35 });
         var serializedReplaceTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Bob", Age = 47 });
         _fixture.AddCommand($"Couchbase3Exerciser InsertUpsertReplaceAndRemove {testScope} {testCollection} {insertUpsertReplaceDocumentId} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestUser))}");
@@ -91,7 +91,7 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture.AddCommand("Couchbase3Exerciser ScopeAnalytics"); // no params required
         _fixture.AddCommand("Couchbase3Exerciser ClusterAnalytics"); // no params required
 
-        if (_fixture is not (ConsoleDynamicMethodFixtureFW462 or ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
+        if (_fixture is not (ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
         {
             _fixture.AddCommand("Couchbase3Exerciser Scan"); // no params required
 
@@ -128,9 +128,9 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
     [Fact]
     public void Test()
     {
-        int expectedCallCountAllHarvest = 0;
+        var expectedCallCountAllHarvest = 0;
 
-        if (_fixture is ConsoleDynamicMethodFixtureFW462)
+        if (_fixture is ConsoleDynamicMethodFixtureFW471)
             expectedCallCountAllHarvest = 21;
         else if (_fixture is ConsoleDynamicMethodFixtureFW48)
             expectedCallCountAllHarvest = 21;
@@ -182,7 +182,7 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
         };
 
 
-        if (_fixture is not (ConsoleDynamicMethodFixtureFW462 or ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
+        if (_fixture is not (ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
         {
             expectedMetrics.AddRange(new List<Assertions.ExpectedMetric>
             {
@@ -258,9 +258,9 @@ public class Couchbase3TestsFW48 : Couchbase3TestsBase<ConsoleDynamicMethodFixtu
 }
 
 [NetFrameworkTest]
-public class Couchbase3TestsFW462 : Couchbase3TestsBase<ConsoleDynamicMethodFixtureFW462>
+public class Couchbase3TestsFW471 : Couchbase3TestsBase<ConsoleDynamicMethodFixtureFW471>
 {
-    public Couchbase3TestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+    public Couchbase3TestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
