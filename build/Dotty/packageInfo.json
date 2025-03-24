@@ -33,6 +33,12 @@
         "packageName": "awssdk.bedrockruntime"
     },
     {
+        "packageName": "awssdk.kinesis"
+    },
+    {
+        "packageName": "awssdk.kinesisfirehose"
+    },
+    {
         "packageName": "awssdk.sqs"
     },
     {
