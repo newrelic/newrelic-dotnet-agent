@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net462;net471;net48;net481</TargetFrameworks>
@@ -202,9 +202,9 @@
     <!-- Requires Serilog 2.8.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
 
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
     <!-- Requires Serilog 2.8.0+ -->
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
@@ -295,19 +295,28 @@
 
   <!--OpenAI -->
   <ItemGroup>
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
+    <PackageReference Include="OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <!-- Azure.AI.OpenAI -->
   <ItemGroup>
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'"/>
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'"/>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
+
+  <!-- Couchbase -->
+  <ItemGroup>
+    <PackageReference Include="CouchbaseNetClient" Version="3.2.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="CouchbaseNetClient" Version="3.5.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="CouchbaseNetClient" Version="3.4.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="CouchbaseNetClient" Version="3.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
