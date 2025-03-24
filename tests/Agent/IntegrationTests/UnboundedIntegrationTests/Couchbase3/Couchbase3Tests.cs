@@ -82,7 +82,7 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
         string insertUpsertReplaceDocumentId = Guid.NewGuid().ToString();
         var serializedUpsertTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Ted", Age = 35 });
         var serializedReplaceTestUser = Newtonsoft.Json.JsonConvert.SerializeObject(new { Name = "Bob", Age = 47 });
-        _fixture.AddCommand($"Couchbase3Exerciser InsertUpsertReplaceAndRemove {testScope} {testCollection} {insertUpsertReplaceDocumentId}, {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestUser))}");
+        _fixture.AddCommand($"Couchbase3Exerciser InsertUpsertReplaceAndRemove {testScope} {testCollection} {insertUpsertReplaceDocumentId} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedUpsertTestUser))} {Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedReplaceTestUser))}");
 
         _fixture.AddCommand("Couchbase3Exerciser Mutate"); // non params required
         _fixture.AddCommand("Couchbase3Exerciser Touch"); // no params required
