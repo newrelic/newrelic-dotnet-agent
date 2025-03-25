@@ -18,17 +18,22 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
     [Library]
     public class MongoDBLegacyExerciser
     {
-        private const string DatabaseName = "myDb";
+        private readonly string DatabaseName = Guid.NewGuid().ToString();
         private const string CollectionName = "myCollection";
 
         private MongoDatabase _db;
 
         [LibraryMethod]
+        [Transaction]
         public void SetupClient()
         {
             var client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb3_2ConnectionString));
             var server = client.GetServer();
             _db = server.GetDatabase(DatabaseName);
+            if (!_db.CollectionExists(CollectionName))
+            {
+                _db.CreateCollection(CollectionName);
+            }
         }
 
 
@@ -38,9 +43,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public void Insert()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Genghis Khan" });
         }
@@ -49,9 +51,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string OrderedBulkInsert()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             var orderedBulkOperation = collection.InitializeOrderedBulkOperation();
             orderedBulkOperation.Insert(new CustomMongoDbEntity(ObjectId.GenerateNewId(DateTime.Now), "Winston Churchill"));
@@ -64,9 +63,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string UnorderedBulkInsert()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             var unorderedBulkOperation = collection.InitializeUnorderedBulkOperation();
             unorderedBulkOperation.Insert(new CustomMongoDbEntity(ObjectId.GenerateNewId(DateTime.Now), "Stephen Jay Gould"));
@@ -80,9 +76,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string Update()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Jules Verne" });
             var result = collection.Update(Query<CustomMongoDbEntity>.EQ(e => e.Name, "Jules Verne"),
@@ -94,9 +87,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string Remove()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alpha" });
             var result = collection.Remove(Query<CustomMongoDbEntity>.EQ(e => e.Name, "Alpha"));
@@ -107,9 +97,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string RemoveAll()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Beta" });
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Gamma" });
@@ -121,9 +108,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string Drop()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Hawking" });
             var result = collection.Drop();
@@ -138,9 +122,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public IEnumerable FindAll()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var cursor = _db.GetCollection(CollectionName).FindAll();
             return cursor;
         }
@@ -149,9 +130,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public MongoCursor<CustomMongoDbEntity> Find()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Genghis Khan" });
             var cursor = collection.Find(Query<CustomMongoDbEntity>.EQ(e => e.Name, "Genghis Khan"));
@@ -162,9 +140,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public CustomMongoDbEntity FindOne()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Julius Caesar" });
             var entity = collection.FindOne(Query<CustomMongoDbEntity>.EQ(e => e.Name, "Julius Caesar"));
@@ -175,9 +150,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public CustomMongoDbEntity FindOneById()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var id = ObjectId.GenerateNewId(DateTime.Now);
 
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
@@ -190,9 +162,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public BsonDocument FindOneAs()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Julius Caesar" });
             var bsonDocument = collection.FindOneAs<BsonDocument>();
@@ -232,9 +201,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string FindAndRemove()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
             collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Jules Verne" });
 
@@ -284,18 +250,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return enumerator;
         }
 
-        [LibraryMethod]
-        [Transaction]
-        public bool CursorMoveNext()
-        {
-            MongoCollection<CustomMongoDbEntity> collection = new MongoCollection<CustomMongoDbEntity>(_db, CollectionName, new MongoCollectionSettings());
-            collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Genghis Khan" });
-            var cursor = collection.Find(Query<CustomMongoDbEntity>.EQ(e => e.Name, "Genghis Khan"));
-            var enumerator = new MongoCursorEnumerator<CustomMongoDbEntity>(cursor);
-            return enumerator.MoveNext();
-        }
-
-
         #endregion
 
         #region Index API
@@ -304,9 +258,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string CreateIndex()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var result = _db.GetCollection(CollectionName).CreateIndex("keyname");
             return result.ToString();
         }
@@ -315,9 +266,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string GetIndexes()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var result = _db.GetCollection(CollectionName).GetIndexes();
             return result.ToString();
         }
@@ -326,9 +274,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string IndexExistsByName()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var result = _db.GetCollection(CollectionName).IndexExistsByName("keyname");
             return result.ToString();
         }
@@ -341,21 +286,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string Aggregate()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var result = _db.GetCollection(CollectionName).Aggregate(new AggregateArgs { Pipeline = new[] { new BsonDocument(new BsonElement("name", new BsonInt32(1))) } });
-            return result.ToString();
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        public string AggregateExplain()
-        {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
-            var result = _db.GetCollection(CollectionName).AggregateExplain(new AggregateArgs { Pipeline = new[] { new BsonDocument(new BsonElement("name", new BsonInt32(1))) } });
             return result.ToString();
         }
 
@@ -368,9 +299,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string Validate()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var result = _db.GetCollection(CollectionName).Validate();
             return result.ToString();
         }
@@ -379,20 +307,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [Transaction]
         public string ParallelScanAs()
         {
-            if (!_db.CollectionExists(CollectionName))
-                _db.CreateCollection(CollectionName);
-
             var readOnlyCollection = _db.GetCollection(CollectionName).ParallelScanAs<CustomMongoDbEntity>(new ParallelScanArgs());
             return readOnlyCollection.ToString();
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        public string CreateCollection()
-        {
-            var collectionName = string.Format("collection-{0}", Guid.NewGuid().ToString());
-            var result = _db.CreateCollection(collectionName);
-            return result.ToString();
         }
 
         #endregion
