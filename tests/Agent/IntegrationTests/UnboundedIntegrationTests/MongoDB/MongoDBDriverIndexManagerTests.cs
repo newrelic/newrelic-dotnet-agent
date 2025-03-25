@@ -110,16 +110,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
     }
 
-    [NetFrameworkTest]
-    public class MongoDBDriverIndexManagerTestsFW462 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public MongoDBDriverIndexManagerTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
-            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString)
-        {
-        }
-    }
-
     [NetCoreTest]
     public class MongoDBDriverIndexManagerTestsCoreLatest : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
