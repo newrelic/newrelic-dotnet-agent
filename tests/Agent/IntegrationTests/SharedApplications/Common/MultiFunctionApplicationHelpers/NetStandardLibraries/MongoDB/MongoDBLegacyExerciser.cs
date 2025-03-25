@@ -36,6 +36,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             }
         }
 
+        [LibraryMethod]
+        public void CleanupClient()
+        {
+            _db.Drop();
+        }
 
         #region Insert Update Remove API
 
@@ -172,30 +177,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 
         #region FindAnd API
 
-        // Assembly is not loading or being detected correctly.
-        // MongoDB.Driver.Builders.Update.Set is not work - can't find the "Driver" part of the namespace
-        //
-        //[LibraryMethod]
-        //[Transaction]
-        //public string FindAndModify()
-        //{
-        //    if (!_db.CollectionExists(CollectionName))
-        //        _db.CreateCollection(CollectionName);
+        [LibraryMethod]
+        [Transaction]
+        public string FindAndModify()
+        {
+            if (!_db.CollectionExists(CollectionName))
+                _db.CreateCollection(CollectionName);
 
-        //    var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
-        //    collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Jules Verne" });
+            var collection = _db.GetCollection<CustomMongoDbEntity>(CollectionName);
+            collection.Insert(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Jules Verne" });
 
-        //    var query = Query<CustomMongoDbEntity>.EQ(e => e.Name, "Jules Verne");
+            var query = Query<CustomMongoDbEntity>.EQ(e => e.Name, "Jules Verne");
 
-        //    var result = collection.FindAndModify(
-        //       new FindAndModifyArgs()
-        //       {
-        //           Query = query,
-        //           Update = MongoDB.Driver.Builders.Update.Set("Name", "Olaf Stapledon")
-        //       });
+            var result = collection.FindAndModify(
+               new FindAndModifyArgs()
+               {
+                   Query = query,
+                   Update = new UpdateBuilder().Set("Name", "Olaf Stapledon")
+               });
 
-        //    return result.ToString();
-        //}
+            return result.ToString();
+        }
 
         [LibraryMethod]
         [Transaction]

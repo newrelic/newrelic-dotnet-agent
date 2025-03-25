@@ -43,8 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand($"MongoDBLegacyExerciser Update");
             _fixture.AddCommand($"MongoDBLegacyExerciser Remove");
             _fixture.AddCommand($"MongoDBLegacyExerciser RemoveAll");
-            _fixture.AddCommand($"MongoDBLegacyExerciser Drop");
-            // _fixture.AddCommand($"MongoDBLegacyExerciser FindAndModify"); The backing method is not being detected properly in VS.
+            _fixture.AddCommand($"MongoDBLegacyExerciser FindAndModify");
             _fixture.AddCommand($"MongoDBLegacyExerciser FindAndRemove");
             _fixture.AddCommand($"MongoDBLegacyExerciser CreateIndex");
             _fixture.AddCommand($"MongoDBLegacyExerciser GetIndexes");
@@ -52,6 +51,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand($"MongoDBLegacyExerciser Aggregate");
             _fixture.AddCommand($"MongoDBLegacyExerciser Validate");
             _fixture.AddCommand($"MongoDBLegacyExerciser ParallelScanAs");
+            _fixture.AddCommand($"MongoDBLegacyExerciser Drop");
+            _fixture.AddCommand($"MongoDBLegacyExerciser CleanupClient");
 
             _fixture.AddActions
             (
@@ -73,7 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [Fact]
         public void Test()
         {
-            var expectedDatastoreCallCount = 53;
+            var expectedDatastoreCallCount = 55;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -95,8 +96,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Update", metricScope = $"{TransactionRoot}/Update" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Remove", metricScope = $"{TransactionRoot}/Remove" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/RemoveAll", metricScope = $"{TransactionRoot}/RemoveAll" },
-                new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Drop", metricScope = $"{TransactionRoot}/Drop" },
-                //new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/FindAndModify", metricScope = $"{TransactionRoot}/FindAndModify" },
+                new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/FindAndModify", metricScope = $"{TransactionRoot}/FindAndModify" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/FindAndRemove", metricScope = $"{TransactionRoot}/FindAndRemove" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/CreateIndex", metricScope = $"{TransactionRoot}/CreateIndex" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/GetIndexes", metricScope = $"{TransactionRoot}/GetIndexes" },
@@ -104,6 +104,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Aggregate", metricScope = $"{TransactionRoot}/Aggregate" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Validate", metricScope = $"{TransactionRoot}/Validate" },
                 new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/ParallelScanAs", metricScope = $"{TransactionRoot}/ParallelScanAs" },
+                new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Drop", metricScope = $"{TransactionRoot}/Drop" },
 
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/CreateCollection" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Insert" },
@@ -118,7 +119,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Update" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Remove" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/RemoveAll" },
-                new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Drop" },
+                new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/FindAndModify" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/FindAndRemove" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/CreateIndex" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/GetIndexes" },
@@ -126,6 +127,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Aggregate" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Validate" },
                 new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/ParallelScanAs" },
+                new Assertions.ExpectedMetric { metricName = $@"{OperationRoot}/Drop" },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
