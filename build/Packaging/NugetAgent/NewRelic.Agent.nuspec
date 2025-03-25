@@ -10,6 +10,7 @@
     <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <readme>README.md</readme>
     <description>Make sure you go to New Relic first to sign up and get your license key at https://newrelic.com. Performance monitoring will never be the same after you do!  
             The package is available through your NuGet package manager and on the web at https://nuget.org/packages/NewRelic.Agent
 
@@ -28,6 +29,7 @@
   <files>
     <file src="**\newrelic\**\*" target="." />
     <file src="tools\**" target="tools" />
+    <file src="README.md" target="." />
     <file src="..\..\icon.png" target="images\" />
   </files>
 </package>

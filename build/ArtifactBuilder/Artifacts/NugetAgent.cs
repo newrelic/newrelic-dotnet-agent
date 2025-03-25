@@ -142,6 +142,8 @@ namespace ArtifactBuilder.Artifacts
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, toolsFolder, "install.ps1");
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, toolsFolder, "NewRelicHelper.psm1");
 
+            // README
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "README.md");
             // content folder - framework agent (x64 and x86)
             AddAllFrameworkAgentComponents(expectedComponents, Path.Combine(installedFilesRoot, "content", "newrelic"));
 
@@ -194,6 +196,7 @@ namespace ArtifactBuilder.Artifacts
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "contentFiles")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "images")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "tools")));
+            unpackedComponents.Add(Path.Combine(installedFilesRoot, "README.md"));
 
             return unpackedComponents;
         }
