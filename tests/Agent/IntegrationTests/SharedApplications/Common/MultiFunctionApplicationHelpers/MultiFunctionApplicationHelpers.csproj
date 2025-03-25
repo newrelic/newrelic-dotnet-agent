@@ -68,7 +68,7 @@
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- mongocsharpdriver Legacy MongoDB driver references -->
-    <PackageReference Include="mongocsharpdriver" Version="1.1.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="mongocsharpdriver" Version="1.10.0" Condition="'$(TargetFramework)' == 'net462'" />
 
     <!-- MongoDB.Driver .NET Framework references -->
     <!-- 2.3.0 is the oldest version we support, 2.17.1 is the newest version as of October 2022 -->
