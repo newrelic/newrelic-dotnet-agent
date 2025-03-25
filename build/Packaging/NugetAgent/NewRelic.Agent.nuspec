@@ -11,16 +11,7 @@
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <readme>README.md</readme>
-    <description>Make sure you go to New Relic first to sign up and get your license key at https://newrelic.com. Performance monitoring will never be the same after you do!  
-            The package is available through your NuGet package manager and on the web at https://nuget.org/packages/NewRelic.Agent
-
-            Run: Install-Package NewRelic.Agent
-
-            Note: If you want to instrument more than one project in your solution, simply change the "Default project" in the package manager console and install the package.
-
-            Visit https://one.newrelic.com after your package deploy is complete to see your performance metrics.
-    </description>
-    <summary>Includes the latest New Relic .NET Agent artifacts for deployment to your application's build output directory.</summary>
+    <description>Includes the latest New Relic .NET Agent artifacts for deployment to your application's build output directory.</description>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
     <contentFiles>
       <files include="**/newrelic/**/*.*" buildAction="None" copyToOutput="true" flatten="false" />
