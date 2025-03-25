@@ -427,7 +427,7 @@ jobs:
         namespace:
           [
             CosmosDB,
-#            Couchbase,  TEMPORARILY DISABLED
+            Couchbase,
             Elasticsearch,
             MongoDB,
             Msmq,
@@ -483,7 +483,7 @@ jobs:
 
       - name: Install HostableWebCore Feature
         if: | # only install for the required namespaces
-          matrix.namespace == 'Couchbase' || matrix.namespace == 'MongoDB' || matrix.namespace == 'MsSql' || matrix.namespace == 'Oracle'
+          matrix.namespace == 'MongoDB' || matrix.namespace == 'MsSql' || matrix.namespace == 'Oracle'
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
         shell: powershell
