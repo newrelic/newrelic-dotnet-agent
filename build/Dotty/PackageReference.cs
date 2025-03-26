@@ -2,7 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
-namespace nugetSlackNotifications
+namespace Dotty
 {
     public class PackageReference
     {

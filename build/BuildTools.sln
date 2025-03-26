@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReleaseNotesBuilder", "Rele
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetVersionDeprecator", "NugetVersionDeprecator\NugetVersionDeprecator.csproj", "{77685AF5-5FD7-483E-B589-BDE4E2F1769C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nugetSlackNotifications", "..\.github\workflows\scripts\nugetSlackNotifications\nugetSlackNotifications.csproj", "{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dotty", "Dotty\Dotty.csproj", "{3BFD6F0E-1B3E-4D5D-BFD7-465743CE0A3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
