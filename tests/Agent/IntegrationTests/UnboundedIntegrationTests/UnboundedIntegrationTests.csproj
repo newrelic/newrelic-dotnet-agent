@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <RootNamespace>NewRelic.Agent.UnboundedIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.UnboundedIntegrationTests</AssemblyName>
     <TargetFrameworks>net481</TargetFrameworks>
@@ -51,14 +52,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
     <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" />
-    <PackageReference Include="xunit" version="2.9.3" />
-    <PackageReference Include="xunit.assert" Version="2.9.3" />
-    <PackageReference Include="xunit.core" Version="2.9.3" />
+    <PackageReference Include="xunit.v3" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.assert" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.core" Version="2.0.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
   </ItemGroup>
   
   <ItemGroup>

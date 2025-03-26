@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,11 +15,11 @@
     <PackageReference Include="xunit.v3" Version="2.0.0" />
     <PackageReference Include="xunit.v3.assert" Version="2.0.0" />
     <PackageReference Include="xunit.v3.core" Version="2.0.0" />
-    <PackageReference Include="xunit.runner.console" Version="2.9.3">
+    <PackageReference Include="xunit.v3.runner.console" Version="2.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" version="3.0.1">
+    <PackageReference Include="xunit.runner.visualstudio" version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

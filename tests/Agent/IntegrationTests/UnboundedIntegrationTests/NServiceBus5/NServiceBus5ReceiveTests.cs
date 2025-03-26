@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
+
 using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5

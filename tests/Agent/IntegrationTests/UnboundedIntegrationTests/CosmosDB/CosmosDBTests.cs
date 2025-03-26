@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 {
