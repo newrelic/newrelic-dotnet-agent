@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Serilog;
 
-namespace nugetSlackNotifications
+namespace Dotty
 {
     public class CsprojHandler
     {

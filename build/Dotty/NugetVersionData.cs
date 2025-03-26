@@ -1,6 +1,6 @@
 using System;
 
-namespace nugetSlackNotifications
+namespace Dotty
 {
     public class NugetVersionData
     {
