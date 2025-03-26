@@ -3,7 +3,7 @@
 
 
 using Xunit;
-using Xunit.Abstractions;
+
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Linq;
 using NewRelic.Testing.Assertions;

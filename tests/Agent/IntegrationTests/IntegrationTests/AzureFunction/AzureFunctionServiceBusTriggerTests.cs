@@ -8,7 +8,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 

@@ -6,7 +6,7 @@ using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {

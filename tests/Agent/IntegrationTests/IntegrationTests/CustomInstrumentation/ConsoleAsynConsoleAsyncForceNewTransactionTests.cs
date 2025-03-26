@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {

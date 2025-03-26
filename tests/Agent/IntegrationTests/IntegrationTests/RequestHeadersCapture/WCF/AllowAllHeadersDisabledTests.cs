@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTests.WCF;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {

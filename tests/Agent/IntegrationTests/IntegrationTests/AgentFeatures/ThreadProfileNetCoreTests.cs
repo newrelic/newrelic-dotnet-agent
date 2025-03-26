@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using System.Threading;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {

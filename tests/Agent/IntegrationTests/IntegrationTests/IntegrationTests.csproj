@@ -3,6 +3,7 @@
     <RootNamespace>NewRelic.Agent.IntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.IntegrationTests</AssemblyName>
     <TargetFrameworks>net481;net9.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net481'">
     <PublishIEDriver>true</PublishIEDriver>
@@ -42,11 +43,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Selenium.Support" Version="4.25.0" />
     <PackageReference Include="Selenium.WebDriver" Version="4.25.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.abstractions" Version="2.0.3" />
-    <PackageReference Include="xunit.assert" Version="2.9.3" />
-    <PackageReference Include="xunit.core" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.console" Version="2.9.3">
+    <PackageReference Include="xunit.v3" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.assert" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.core" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.runner.console" Version="2.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -54,7 +54,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
     <Reference Include="System" />
