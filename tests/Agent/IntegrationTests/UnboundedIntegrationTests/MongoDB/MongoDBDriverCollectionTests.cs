@@ -188,7 +188,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW471 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverCollectionTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
+            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
