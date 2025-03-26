@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -124,7 +125,7 @@ namespace NewRelic.Agent.Core.WireModels
                     return false;
                 }
 
-                if (!File.Exists(location))
+                if (!FileWrapper.Instance.Exists(location))
                 {
                     sha1FileHash = null;
                     sha512FileHash = null;
