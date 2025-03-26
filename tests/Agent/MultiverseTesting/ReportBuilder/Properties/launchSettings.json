@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "main": {
-      "commandName": "Project",
-      "commandLineArgs": "10.0.0\r\n.\\reports.yml\r\nC:\\IntegrationTestWorkingDirectory\\docs\\mvs"
-    }
-  }
-}
