@@ -9,6 +9,7 @@
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>
+    <readme>README.md</readme>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
     <icon>images\icon.png</icon>
     <copyright>New Relic, Inc., 2022</copyright>
@@ -20,5 +21,6 @@
   <files>
     <file src="content\**\*.*" target="content" />
     <file src="..\..\icon.png" target="images\" />
+    <file src="README.md" target="." />
   </files>
 </package>

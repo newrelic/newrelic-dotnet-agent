@@ -116,6 +116,9 @@ namespace ArtifactBuilder.Artifacts
             // images folder - New Relic icon
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, "images"), "icon.png");
 
+            // README
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "README.md");
+
             // tools folder - Install scripts
             var toolsFolder = Path.Combine(installedFilesRoot, "tools");
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, toolsFolder, "install.ps1");
@@ -152,6 +155,7 @@ namespace ArtifactBuilder.Artifacts
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "lib")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "images")));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "tools")));
+            unpackedComponents.Add(Path.Combine(installedFilesRoot, "README.md"));
 
             return unpackedComponents;
         }
