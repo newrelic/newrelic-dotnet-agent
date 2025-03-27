@@ -2,12 +2,7 @@
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.UnboundedIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.UnboundedIntegrationTests</AssemblyName>
-    <TargetFrameworks>net481</TargetFrameworks>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
-    <IsCodedUITest>False</IsCodedUITest>
-    <TestProjectType>UnitTest</TestProjectType>
+    <TargetFrameworks>net9.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,31 +21,14 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <None Remove="RemoteServiceFixtures\MSMQBasicMVCApplicationFixture.cs" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Content Include="xunit.runner.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
+<ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MySqlConnector" Version="2.2.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
-    <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" />
     <PackageReference Include="xunit" version="2.9.3" />
     <PackageReference Include="xunit.assert" Version="2.9.3" />
     <PackageReference Include="xunit.core" Version="2.9.3" />
@@ -60,27 +38,10 @@
     </PackageReference>
     <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Test.targets" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
-
 </Project>

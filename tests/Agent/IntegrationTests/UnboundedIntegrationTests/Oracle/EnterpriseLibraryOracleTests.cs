@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
-    [NetFrameworkTest]
+    [NetCoreTest]
     public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
@@ -43,15 +43,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 },
                 exerciseApplication: () =>
                 {
+                    _fixture.CreateTable();
+
                     _fixture.GetEnterpriseLibraryOracle();
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+
+                    _fixture.DropTable();
                 }
             );
 
             _fixture.Initialize();
-        }
 
+        }
         [Fact]
         public void Test()
         {

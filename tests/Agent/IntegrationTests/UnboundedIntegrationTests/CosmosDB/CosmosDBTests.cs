@@ -3,7 +3,6 @@
 
 
 using Azure;
-using Couchbase.Core;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -15,7 +14,6 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.PeerToPeer.Collaboration;
 using System.Reflection;
-using System.Windows.Forms;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;

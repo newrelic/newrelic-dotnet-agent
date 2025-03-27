@@ -22,8 +22,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMySql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
 
