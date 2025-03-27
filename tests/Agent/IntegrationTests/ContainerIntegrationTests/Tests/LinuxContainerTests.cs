@@ -5,7 +5,6 @@ using System;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 

@@ -1,6 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <RootNamespace>NewRelic.Agent.ContainerIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.ContainerIntegrationTests</AssemblyName>
     <TargetFramework>net9.0</TargetFramework>
@@ -10,12 +11,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.console" Version="2.9.3">
+    <PackageReference Include="xunit.v3" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.assert" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.core" Version="2.0.0" />
+    <PackageReference Include="xunit.v3.runner.console" Version="2.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1">
+    <PackageReference Include="xunit.runner.visualstudio" version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
