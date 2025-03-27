@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net481;net9.0</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.Tests.TestSerializationHelpers.Tests</RootNamespace>
   </PropertyGroup>
 

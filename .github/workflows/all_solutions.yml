@@ -299,7 +299,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net481
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net9.0
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
@@ -397,6 +397,7 @@ jobs:
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
