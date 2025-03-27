@@ -94,6 +94,8 @@ copy C:\workspace\newrelic-dotnet-agent\src\Agent\_profilerBuild\x64-Release\New
 copy C:\workspace\newrelic-dotnet-agent\src\Agent\_profilerBuild\linux-x64-release\libNewRelicProfiler.so C:\workspace\newrelic-dotnet-agent\src\Agent\newrelichome_x64_coreclr_linux\
 ```
 
+Note that if you rebuild the agent solution after copying locally-build profiler files to the agent home dirs, the profiler files will be overwritten with the NuGet package version, and you'll need to copy the local profile files to the home dirs again. 
+
 ## Testing
 
 * Unit tests use the NUnit framework and are contained in the solutions. Run them using the Visual Studio Test Explorer.
