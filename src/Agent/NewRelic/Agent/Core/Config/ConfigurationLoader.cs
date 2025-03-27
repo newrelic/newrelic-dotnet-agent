@@ -64,8 +64,8 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetAppDomainName = InternalGetAppDomainName;
 #endif
 
-        public static Func<string, bool> FileExists = FileWrapper.Instance.Exists;
-        public static Func<string, string> FileReadAllText = FileWrapper.Instance.ReadAllText;
+        public static Func<string, bool> FileExists = File.Exists;
+        public static Func<string, string> FileReadAllText = File.ReadAllText;
 
         public static Func<string, string> PathGetDirectoryName = Path.GetDirectoryName;
         public static Func<string, string> GetEnvironmentVar = System.Environment.GetEnvironmentVariable;
@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core.Config
                     }
                 }
 
-                var currentDirectory = DirectoryWrapper.Instance.GetCurrentDirectory();
+                var currentDirectory = Directory.GetCurrentDirectory();
                 filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
                 if (FileExists(filename))
                 {

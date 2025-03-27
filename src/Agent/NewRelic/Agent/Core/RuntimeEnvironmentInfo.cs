@@ -127,9 +127,9 @@ namespace NewRelic.Agent.Core
 
             try
             {
-                if (FileWrapper.Instance.Exists("/etc/os-release"))
+                if (File.Exists("/etc/os-release"))
                 {
-                    var lines = FileWrapper.Instance.ReadAllLines("/etc/os-release");
+                    var lines = File.ReadAllLines("/etc/os-release");
                     result = new DistroInfo();
                     foreach (var line in lines)
                     {

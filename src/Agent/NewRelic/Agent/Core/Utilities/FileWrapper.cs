@@ -23,8 +23,6 @@ namespace NewRelic.Agent.Core.Utilities
     [NrExcludeFromCodeCoverage]
     public class FileWrapper : IFileWrapper
     {
-        public static IFileWrapper Instance { get; } = new FileWrapper();
-        
         public bool Exists(string path)
         {
             return File.Exists(path);

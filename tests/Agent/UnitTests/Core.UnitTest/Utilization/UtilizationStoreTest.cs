@@ -18,12 +18,14 @@ namespace NewRelic.Agent.Core.Utilization
         private IDnsStatic _dnsStatic;
         private IAgentHealthReporter _agentHealthReporter;
         private IConfiguration _configuration;
+        private IFileWrapper _fileWrapper;
 
         [SetUp]
         public void Setup()
         {
             _systemInfo = Mock.Create<ISystemInfo>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+            _fileWrapper = Mock.Create<IFileWrapper>();
 
             Mock.Arrange(() => _systemInfo.GetTotalLogicalProcessors()).Returns(6);
             Mock.Arrange(() => _systemInfo.GetTotalPhysicalMemoryBytes()).Returns((ulong)16000 * 1024 * 1024);
@@ -39,7 +41,7 @@ namespace NewRelic.Agent.Core.Utilization
         public void when_calling_utilization_logical_cores_are_calculated_accurately()
         {
             _configuration = Mock.Create<IConfiguration>();
-            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
+            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper);
             var settings = service.GetUtilizationSettings();
 
             Assert.That(settings.LogicalProcessors, Is.EqualTo(6), string.Format("Expected {0}, but was {1}", 8, settings.LogicalProcessors));
@@ -49,7 +51,7 @@ namespace NewRelic.Agent.Core.Utilization
         public void when_calling_utilization_total_ram_is_calculated_accurately()
         {
             _configuration = Mock.Create<IConfiguration>();
-            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
+            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper);
             var settings = service.GetUtilizationSettings();
 
             Assert.That(settings.TotalRamMebibytes, Is.EqualTo(16000), string.Format("Expected {0}, but was {1}", 16000, settings.TotalRamMebibytes));
@@ -60,7 +62,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             _configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _configuration.UtilizationHostName).Returns("Host-Name");
-            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
+            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper);
             var settings = service.GetUtilizationSettings();
 
             Assert.That(settings.Hostname, Is.EqualTo("Host-Name"), string.Format("Expected {0}, but was {1}", "Host-Name", settings.Hostname));
@@ -71,7 +73,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             _configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _configuration.UtilizationFullHostName).Returns("Host-Name.Domain");
-            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
+            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper);
             var settings = service.GetUtilizationSettings();
 
             Assert.That(settings.FullHostName, Is.EqualTo("Host-Name.Domain"), string.Format("Expected {0}, but was {1}", "Host-Name.Domain", settings.FullHostName));
@@ -82,7 +84,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             _configuration = Mock.Create<IConfiguration>();
 
-            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
+            var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper);
             var settings = service.GetUtilizationSettings();
 
             Assert.That(settings.IpAddress, Has.Count.EqualTo(2));
