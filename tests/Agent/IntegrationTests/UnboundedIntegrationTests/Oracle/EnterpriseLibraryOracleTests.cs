@@ -19,7 +19,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
     {
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
 
-        public EnterpriseLibraryOracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public EnterpriseLibraryOracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -45,11 +45,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 {
                     _fixture.CreateTable();
 
-                    _fixture.GetEnterpriseLibraryOracle();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
-
-                    _fixture.DropTable();
+                    try
+                    {
+                        _fixture.GetEnterpriseLibraryOracle();
+                        _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex,
+                            TimeSpan.FromMinutes(1));
+                        _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex,
+                            TimeSpan.FromMinutes(1));
+                    }
+                    finally
+                    {
+                        _fixture.DropTable();
+                    }
                 }
             );
 
