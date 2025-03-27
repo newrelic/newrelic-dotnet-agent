@@ -9,7 +9,7 @@
     * C++ ATL for v142 build tools (x86 & x64)
 * Optional installs:
   * [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) for building the native Linux binaries, as well as running containerized integration tests.
-  * [WiX Toolset 3.11](https://wixtoolset.org/releases/) and the WiX Toolset Visual Studio 2022 Extension for building the Windows MSI installer.
+  * [HeatWave](https://www.firegiant.com/heatwave/) is a Visual Studio extension that enables building the [agent MSI installer solution](../src/Agent/MsiInstaller/MsiInstaller.sln).
 
 ## Building
 
@@ -26,6 +26,7 @@ To get started quickly, this is the only solution you need to build. Building th
 | .NET Core | Windows | x64 | src/Agent/newrelichome_x64_coreclr |
 | .NET Core | Windows | x86 | src/Agent/newrelichome_x86_coreclr |
 | .NET Core | Linux | x64 | src/Agent/newrelichome_x64_coreclr_linux |
+| .NET Core | Linux | arm64 | src/Agent/newrelichome_arm64_coreclr_linux |
 
 These home directories can be used to run and test the agent in your development environment.
 
@@ -51,9 +52,9 @@ CORECLR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
 
 ### Profiler.sln
 
-The Profiler.sln builds the native profiler component of the .NET agent. The profiler implements interfaces defined by the unmanaged [.NET Profiling API](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/) that enable the agent to attach to and monitor a .NET process.
+The Profiler.sln builds the native profiler component of the .NET agent. The profiler implements interfaces defined by the unmanaged [.NET Profiling API](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/) that enable the agent to attach to and monitor a .NET process.  See [the profiler README](../src/Agent/NewRelic/Profiler/README.md) for more details.
 
-As mentioned above, this solution does not need to be built if you will only be working with the agent's managed C# code. Pre-built versions of the profiler for both Windows (x86 and x64) and Linux (x64) are checked into the repository (src/Agent/_profilerBuild) and are used for creating the home directories built by the FullAgent.sln. These pre-built versions are for development purposes only, and should be updated if you do work on the profiler.
+As mentioned above, this solution does not need to be built if you will only be working with the agent's managed C# code. The profiler is [available as a NuGet package](https://www.nuget.org/packages/NewRelic.Agent.Internal.Profiler) and is referenced by the full agent solution from NuGet [here](https://github.com/newrelic/newrelic-dotnet-agent/blob/1f446c282811a0f2ccd71a088b35397a29d961a0/src/Agent/NewRelic/Home/Home.csproj#L16).  
 
 You can use a Powershell [script](../src/Agent/NewRelic/Profiler/build/build.ps1) to build the profiler.
 
@@ -76,6 +77,21 @@ build.ps1 -Platform linux
 #### Building in release mode for all target platforms (requires Docker Desktop for building the Linux binary)
 ```
 build.ps1
+```
+
+#### Local profiler testing
+
+In order to integrate local profiler changes with local builds of the FullAgent solution:
+
+1. First, build the FullAgent solution from Visual Studio (creating the various agent home dirs in `src/Agent`).
+2. Build the profiler for all platforms and architectures: `build.ps1` (which places the profiler artifacts in `src/Agent/_profilerBuild`)
+3. Copy the relevant profiler .dll (Windows) or .so (Linux) to the appropriate agent home folder on your system, overwriting the version pulled from NuGet:
+```
+# Example shown for the Windows 64-bit profiler, testing with the Windows CoreCLR (.NET Core/.NET) version of the agent
+copy C:\workspace\newrelic-dotnet-agent\src\Agent\_profilerBuild\x64-Release\NewRelic.Profiler.dll C:\workspace\newrelic-dotnet-agent\src\Agent\newrelichome_x64_coreclr\
+
+# Example shown for the Linux profiler and Linux
+copy C:\workspace\newrelic-dotnet-agent\src\Agent\_profilerBuild\linux-x64-release\libNewRelicProfiler.so C:\workspace\newrelic-dotnet-agent\src\Agent\newrelichome_x64_coreclr_linux\
 ```
 
 ## Testing

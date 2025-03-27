@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
 
     build:
@@ -17,7 +15,7 @@ services:
         privileged: true
         volumes: 
             - .:/profiler
-            - $CORECLR_NEW_RELIC_HOME:/agent
+            - ${CORECLR_NEW_RELIC_HOME:-/workspace/src/Agent/NewRelic/newrelichome_x64_coreclr_linux}:/agent
         working_dir: /profiler/linux/
     build_arm64:
         platform: linux/arm64/v8
