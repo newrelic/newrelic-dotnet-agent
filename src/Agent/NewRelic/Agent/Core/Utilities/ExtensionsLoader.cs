@@ -158,12 +158,12 @@ namespace NewRelic.Agent.Core.Utilities
 
         private static List<string> GetAssemblyFilesFromFolder(string folder)
         {
-            if (folder == null || !Directory.Exists(folder))
+            if (folder == null || !DirectoryWrapper.Instance.Exists(folder))
             {
                 return new List<string>();
             }
 
-            var assemblyPaths = Directory.GetFiles(folder, "*.dll", SearchOption.TopDirectoryOnly);
+            var assemblyPaths = DirectoryWrapper.Instance.GetFiles(folder, "*.dll", SearchOption.TopDirectoryOnly);
 
             return assemblyPaths.ToList();
         }

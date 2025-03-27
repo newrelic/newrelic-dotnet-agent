@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IDictionary<string, IVendorModel> GetVendorSettings()
         {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SharedInterfaces.Environment(), new VendorHttpApiRequestor());
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SharedInterfaces.Environment(), new VendorHttpApiRequestor(), FileWrapper.Instance);
             return vendorInfo.GetVendors();
         }
 

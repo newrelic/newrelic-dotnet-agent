@@ -15,15 +15,17 @@ namespace NewRelic.Agent.Core.Utilities
     public class SystemInfo : ISystemInfo
     {
         private IDnsStatic _dnsStatic;
+        private readonly IFileWrapper _fileWrapper;
 
         private const int ExpectedBootIdLength = 36;
 
         private const int AsciiMaxValue = 127;
 
 
-        public SystemInfo(IDnsStatic dnsStatic)
+        public SystemInfo(IDnsStatic dnsStatic, IFileWrapper fileWrapper)
         {
             _dnsStatic = dnsStatic;
+            _fileWrapper = fileWrapper;
         }
 
         public ulong? GetTotalPhysicalMemoryBytes()
@@ -36,7 +38,7 @@ namespace NewRelic.Agent.Core.Utilities
             {
                 try
                 {
-                    var memInfo = File.ReadAllText("/proc/meminfo");
+                    var memInfo = _fileWrapper.ReadAllText("/proc/meminfo");
                     var memTotalRegex = new Regex(@"MemTotal\:\s*(\d+)\ kB");
                     var match = memTotalRegex.Match(memInfo);
                     if (match.Success)
@@ -99,7 +101,7 @@ namespace NewRelic.Agent.Core.Utilities
 
 				try
 				{
-					var lines = File.ReadAllLines("/proc/sys/kernel/random/boot_id");
+					var lines = FileWrapper.Instance.ReadAllLines("/proc/sys/kernel/random/boot_id");
 					bootId = lines.Length > 0 ? lines[0] : null;
 				}
 				catch (Exception ex)

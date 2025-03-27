@@ -9,7 +9,7 @@ using Serilog;
 using Serilog.Core;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
-
+using NewRelic.Agent.Core.Utilities;
 using Serilog.Events;
 #if NETSTANDARD2_0
 using System.Runtime.InteropServices;
@@ -260,9 +260,9 @@ namespace NewRelic.Agent.Core
             {
                 // Create the directory if necessary
                 var directory = Path.GetDirectoryName(fileName);
-                if (!Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
-                using (File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write)) { }
+                if (!DirectoryWrapper.Instance.Exists(directory))
+                    DirectoryWrapper.Instance.CreateDirectory(directory);
+                using (FileWrapper.Instance.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write)) { }
             }
             catch (Exception exception)
             {

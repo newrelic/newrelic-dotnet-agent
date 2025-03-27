@@ -64,7 +64,9 @@ namespace NewRelic.Agent.Core.Config
         public static Func<string> GetAppDomainName = InternalGetAppDomainName;
 #endif
 
-        public static Func<string, bool> FileExists = File.Exists;
+        public static Func<string, bool> FileExists = FileWrapper.Instance.Exists;
+        public static Func<string, string> FileReadAllText = FileWrapper.Instance.ReadAllText;
+
         public static Func<string, string> PathGetDirectoryName = Path.GetDirectoryName;
         public static Func<string, string> GetEnvironmentVar = System.Environment.GetEnvironmentVariable;
 
@@ -164,7 +166,7 @@ namespace NewRelic.Agent.Core.Config
             try
             {
                 var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                 {
                     return null;
                 }
@@ -208,16 +210,16 @@ namespace NewRelic.Agent.Core.Config
                 {
                     var directory = Path.GetDirectoryName(entryAssembly.Location);
                     filename = Path.Combine(directory, NewRelicConfigFileName);
-                    if (File.Exists(filename))
+                    if (FileExists(filename))
                     {
                         Log.Info("Configuration file found in app/web root directory: {0}", filename);
                         return filename;
                     }
                 }
 
-                var currentDirectory = Directory.GetCurrentDirectory();
+                var currentDirectory = DirectoryWrapper.Instance.GetCurrentDirectory();
                 filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
-                if (File.Exists(filename))
+                if (FileExists(filename))
                 {
                     Log.Info("Configuration file found in app/web root directory: {0}", filename);
                     return filename;
@@ -482,7 +484,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 var home = AgentInstallConfiguration.NewRelicHome;
                 var xsdFile = Path.Combine(home, "newrelic.xsd");
-                configSchemaContents = File.ReadAllText(xsdFile);
+                configSchemaContents = FileReadAllText(xsdFile);
             }
             catch (Exception ex)
             {
