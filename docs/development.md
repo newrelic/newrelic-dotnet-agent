@@ -1,15 +1,15 @@
 # Development
 
 ## Requirements
-* [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
+* [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
   * Workloads
     * .NET desktop development
     * Desktop development with C++
   * Individual components
     * C++ ATL for v142 build tools (x86 & x64)
 * Optional installs:
-  * [Docker Desktop for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows/) for building the native Linux binaries.
-  * [WiX Toolset 3.11](https://wixtoolset.org/releases/) and the WiX Toolset Visual Studio 2019 Extension for building the Windows MSI installer.
+  * [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) for building the native Linux binaries, as well as running containerized integration tests.
+  * [WiX Toolset 3.11](https://wixtoolset.org/releases/) and the WiX Toolset Visual Studio 2022 Extension for building the Windows MSI installer.
 
 ## Building
 
