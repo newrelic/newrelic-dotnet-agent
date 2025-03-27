@@ -23,7 +23,7 @@ Install the "ASP.NET and web development" workload in the "Web & Cloud" category
 Depending on which version of Visual Studio you are using, you may have to install some or all of the following:
 
 * .NET 8
-* .NET 8
+* .NET 9
 * .NET Framework 4.7.1 targeting pack
 * .NET Framework 4.8.0 targeting pack
 * .NET Framework 4.8.1 targeting pack
