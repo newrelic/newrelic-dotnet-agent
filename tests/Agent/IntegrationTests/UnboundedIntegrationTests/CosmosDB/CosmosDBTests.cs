@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Azure;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
