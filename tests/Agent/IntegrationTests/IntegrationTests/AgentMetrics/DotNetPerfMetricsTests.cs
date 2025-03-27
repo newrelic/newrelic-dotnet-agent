@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -168,7 +169,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
             Fixture.AddCommand($"PerformanceMetrics Test {THREADPOOL_WORKER_MAX} {THREADPOOL_COMPLETION_MAX}");
 
-            Fixture.Actions
+            Fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -178,6 +179,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
                     if (_gcSamplerV2Enabled)
                         Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(true);
+                },
+                exerciseApplication: () =>
+                {
+                    Fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
