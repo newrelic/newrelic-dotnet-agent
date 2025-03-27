@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Configuration
             catch (AppDomainUnloadedException)
             {
                 // Fall back to previous behavior of agents <=8.35.0
-                applicationDirectory = Directory.GetCurrentDirectory();
+                applicationDirectory = DirectoryWrapper.Instance.GetCurrentDirectory();
             }
 
             // add default appsettings.json files to config builder

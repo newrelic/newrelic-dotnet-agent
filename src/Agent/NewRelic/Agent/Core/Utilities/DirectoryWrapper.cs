@@ -11,20 +11,21 @@ namespace NewRelic.Agent.Core.Utilities
     public interface IDirectoryWrapper
     {
         bool Exists(string path);
-        string[] GetFiles(string readOnlyPath, string yml);
+        string[] GetFiles(string readOnlyPath, string pattern, SearchOption searchOption = SearchOption.TopDirectoryOnly);
+        string GetCurrentDirectory();
+        DirectoryInfo CreateDirectory(string path);
     }
 
     [NrExcludeFromCodeCoverage]
     public class DirectoryWrapper : IDirectoryWrapper
     {
-        public bool Exists(string path)
-        {
-            return Directory.Exists(path);
-        }
+        public static IDirectoryWrapper Instance { get; } = new DirectoryWrapper();
 
-        public string[] GetFiles(string path, string searchPattern)
-        {
-            return Directory.GetFiles(path, searchPattern);
-        }
+        public bool Exists(string path) => Directory.Exists(path);
+
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => Directory.GetFiles(path, searchPattern, searchOption);
+
+        public string GetCurrentDirectory() => Directory.GetCurrentDirectory();
+        public DirectoryInfo CreateDirectory(string path) => Directory.CreateDirectory(path);
     }
 }

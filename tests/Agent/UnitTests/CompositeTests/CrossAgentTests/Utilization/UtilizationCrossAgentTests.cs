@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using NewRelic.Agent.Core.Utilities;
 
 namespace CompositeTests.CrossAgentTests.Utilization
 {
@@ -32,7 +33,7 @@ namespace CompositeTests.CrossAgentTests.Utilization
         {
             _compositeTestAgent = new CompositeTestAgent();
             _agent = _compositeTestAgent.GetAgent();
-            _vendorInfo = new VendorInfo(null, null, new NewRelic.Agent.Core.SharedInterfaces.Environment(), null);
+            _vendorInfo = new VendorInfo(null, null, new NewRelic.Agent.Core.SharedInterfaces.Environment(), null, FileWrapper.Instance);
         }
 
         [TearDown]

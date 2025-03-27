@@ -7,6 +7,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -22,8 +23,9 @@ namespace NewRelic.Agent.Core.Config
         private DateTime _lastWriteTime;
 
         private readonly INativeMethods _nativeMethods;
+        private readonly IFileWrapper _fileWrapper;
 
-        public ConfigurationTracker(IConfigurationService configurationService, INativeMethods nativeMethods)
+        public ConfigurationTracker(IConfigurationService configurationService, INativeMethods nativeMethods, IFileWrapper fileWrapper)
         {
             if (configurationService.Configuration.DisableFileSystemWatcher)
             {
@@ -32,17 +34,18 @@ namespace NewRelic.Agent.Core.Config
             }
 
             _nativeMethods = nativeMethods;
+            _fileWrapper = fileWrapper;
             var fileName = configurationService.Configuration.NewRelicConfigFilePath;
             if (fileName == null)
                 return;
 
             Log.Info("Reading configuration from \"{0}\"", fileName);
 
-            _lastWriteTime = File.GetLastWriteTimeUtc(fileName);
+            _lastWriteTime = _fileWrapper.GetLastWriteTimeUtc(fileName);
 
             _timer = Scheduler.CreateExecuteEveryTimer(() =>
             {
-                var lastWriteTime = File.GetLastWriteTimeUtc(fileName);
+                var lastWriteTime = _fileWrapper.GetLastWriteTimeUtc(fileName);
                 if (lastWriteTime > _lastWriteTime)
                 {
                     Log.Debug("newrelic.config file changed, reloading.");
