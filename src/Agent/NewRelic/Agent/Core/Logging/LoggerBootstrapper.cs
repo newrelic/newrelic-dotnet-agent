@@ -260,9 +260,9 @@ namespace NewRelic.Agent.Core
             {
                 // Create the directory if necessary
                 var directory = Path.GetDirectoryName(fileName);
-                if (!DirectoryWrapper.Instance.Exists(directory))
-                    DirectoryWrapper.Instance.CreateDirectory(directory);
-                using (FileWrapper.Instance.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write)) { }
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                using (File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write)) { }
             }
             catch (Exception exception)
             {

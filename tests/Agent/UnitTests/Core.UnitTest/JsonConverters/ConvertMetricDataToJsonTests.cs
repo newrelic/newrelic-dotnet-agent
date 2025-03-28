@@ -29,9 +29,10 @@ namespace NewRelic.Agent.Core.JsonConverters
         [SetUp]
         public void Setup()
         {
+            var fileWrapper = Mock.Create<IFileWrapper>();
             Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
             _connectionHandler = new ConnectionHandler(new JsonSerializer(), Mock.Create<ICollectorWireFactory>(), Mock.Create<IProcessStatic>(), Mock.Create<IDnsStatic>(),
-                Mock.Create<ILabelsService>(), Mock.Create<Environment>(), Mock.Create<ISystemInfo>(), Mock.Create<IAgentHealthReporter>(), Mock.Create<IEnvironment>());
+                Mock.Create<ILabelsService>(), Mock.Create<Environment>(), Mock.Create<ISystemInfo>(), Mock.Create<IAgentHealthReporter>(), Mock.Create<IEnvironment>(), fileWrapper);
 
             var validScopedMetric = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "WebTransaction/DotNet/name",
                 MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3.0), TimeSpan.FromSeconds(2.0)));
