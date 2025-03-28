@@ -20,6 +20,7 @@
   <files>
     <file src="**\newrelic\**\*" target="." />
     <file src="tools\**" target="tools" />
+    <file src="build\**" target="build" />
     <file src="README.md" target="." />
     <file src="..\..\icon.png" target="images\" />
   </files>
