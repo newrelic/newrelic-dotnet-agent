@@ -103,11 +103,7 @@
         "packageName": "microsoft.net.http"
     },
     {
-        "packageName": "mongodb.driver",
-        "ignorePatch": true,
-        "ignoreMinor": true,
-        "ignoreMajor": true,
-        "ignoreReason": "Breaking since at least 2.25.0. See https://new-relic.atlassian.net/browse/NR-281915"
+        "packageName": "mongodb.driver"
     },
     {
         "packageName": "mysql.data"
