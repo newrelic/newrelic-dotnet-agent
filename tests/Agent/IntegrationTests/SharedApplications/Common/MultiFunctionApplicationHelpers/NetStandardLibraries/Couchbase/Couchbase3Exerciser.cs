@@ -216,6 +216,7 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Scan()
     {
+        Console.WriteLine("Scan : Started");
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -223,12 +224,9 @@ class Couchbase3Exerciser
         // get a user-defined collection reference
         var collection = await GetCollectionAsync(bucket, "tenant_agent_00", "users");
 
-        // scan the collection
-        var results = collection.ScanAsync(new RangeScan());
-        await foreach (var result in results)
-        {
-            // process the result
-        }
+        // scan the collection - we don't care about processing the result
+        var _ = collection.ScanAsync(new RangeScan());
+        Console.WriteLine("Scan : Finished");
     }
 #endif
 
