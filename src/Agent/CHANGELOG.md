@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.40.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.39.0...v10.40.0) (2025-03-28)
+
+
+### New features
+
+* Add Couchbase 3.x instrumentation ([#3048](https://github.com/newrelic/newrelic-dotnet-agent/issues/3048)) ([7ef0c82](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ef0c82be230438f99e1398b81455de7d2b88e48))
+* Add support for MongoDB.Driver 3.x and above. ([#3065](https://github.com/newrelic/newrelic-dotnet-agent/issues/3065)) ([c8acbc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/c8acbc5b3767402b08544e550a771712c802f24a))
+
 ## [10.39.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.38.0...v10.39.0) (2025-03-19)
 
 
