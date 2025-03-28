@@ -4,11 +4,14 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.ComponentModel.Design;
 using System.Net;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
+using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.MongoDb26
 {
@@ -31,16 +34,20 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
         private static Func<object, string> _getHost;
         private static Func<object, int> _getPort;
 
+        private static readonly Version _mongo3Version = Version.Parse("3.0.0.0");
+        private static Version _version;
 
         public static string GetCollectionName(object collectionNamespace)
         {
-            var getter = _getCollectionName ?? (_getCollectionName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "CollectionName"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(collectionNamespace.GetType().AssemblyQualifiedName));
+            var getter = _version >= _mongo3Version ? GetCollectionNameV3(collectionNamespace) : GetCollectionNameV2(collectionNamespace);
             return getter(collectionNamespace);
         }
 
         public static string GetDatabaseNameFromCollectionNamespace(object collectionNamespace)
         {
-            var databaseNamespaceGetter = _getDatabaseNamespaceFromCollectionNamespace ?? (_getDatabaseNamespaceFromCollectionNamespace = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "DatabaseNamespace"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(collectionNamespace.GetType().AssemblyQualifiedName));
+            var databaseNamespaceGetter = _version >= _mongo3Version ? GetDatabaseNameFromCollectionNamespaceV3(collectionNamespace) : GetDatabaseNameFromCollectionNamespaceV2(collectionNamespace);
             var databaseNamespace = databaseNamespaceGetter(collectionNamespace);
 
             return GetDatabaseNameFromDatabaseNamespace(databaseNamespace);
@@ -48,7 +55,8 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
         public static string GetDatabaseNameFromDatabase(object database)
         {
-            var databaseNamespaceGetter = _getDatabaseNamespaceFromDatabase ?? (_getDatabaseNamespaceFromDatabase = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "DatabaseNamespace"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(database.GetType().AssemblyQualifiedName));
+            var databaseNamespaceGetter = _version >= _mongo3Version ? GetDatabaseNameFromDatabaseV3(database) : GetDatabaseNameFromDatabaseV2(database);
             var databaseNamespace = databaseNamespaceGetter(database);
 
             return GetDatabaseNameFromDatabaseNamespace(databaseNamespace);
@@ -56,13 +64,15 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
         private static string GetDatabaseNameFromDatabaseNamespace(object databaseNamespace)
         {
-            var databaseNameGetter = _getDatabaseName ?? (_getDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.DatabaseNamespace", "DatabaseName"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(databaseNamespace.GetType().AssemblyQualifiedName));
+            var databaseNameGetter = _version >= _mongo3Version ? GetDatabaseNameFromDatabaseNamespaceV3(databaseNamespace) : GetDatabaseNameFromDatabaseNamespaceV2(databaseNamespace);
             return databaseNameGetter(databaseNamespace);
         }
 
         private static EndPoint GetEndPoint(object owner)
         {
-            var getter = _getEndPoint ?? (_getEndPoint = VisibilityBypasser.Instance.GeneratePropertyAccessor<EndPoint>("MongoDB.Driver.Core", "MongoDB.Driver.Core.Servers.Server", "EndPoint"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(owner.GetType().AssemblyQualifiedName));
+            var getter = _version >= _mongo3Version ? GetEndPointV3(owner) : GetEndPointV2(owner);
             return getter(owner);
         }
 
@@ -151,9 +161,10 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
         private static IList GetServersFromDatabase(object database)
         {
-            var clientGetter = _getClient ?? (_getClient = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "Client"));
-            var settingsGetter = _getSettings ?? (_getSettings = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Settings"));
-            var serversGetter = _getServers ?? (_getServers = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.MongoClientSettings", "_servers"));
+            _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(database.GetType().AssemblyQualifiedName));
+            var clientGetter = _version >= _mongo3Version ? GetClientFromDatabaseV3(database) : GetClientFromDatabaseV2(database);
+            var settingsGetter = _getSettings ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Settings");
+            var serversGetter = _getServers ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.MongoClientSettings", "_servers");
 
             var client = clientGetter(database);
             var settings = settingsGetter(client);
@@ -162,12 +173,80 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
         private static void GetHostAndPortFromServer(object server, out string host, out int port)
         {
-            var hostGetter = _getHost ?? (_getHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Host"));
-            var portGetter = _getPort ?? (_getPort = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Port"));
+            var hostGetter = _getHost ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Host");
+            var portGetter = _getPort ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<int>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Port");
 
             host = hostGetter(server);
             port = portGetter(server);
         }
 
+
+        #region Client V2
+
+        private static Func<object, string> GetCollectionNameV2(object collectionNamespace)
+        {
+            return _getCollectionName ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "CollectionName");
+        }
+
+        private static Func<object, object> GetDatabaseNameFromCollectionNamespaceV2(object collectionNamespace)
+        {
+            return _getDatabaseNamespaceFromCollectionNamespace ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "DatabaseNamespace");
+        }
+
+        private static Func<object, object> GetDatabaseNameFromDatabaseV2(object database)
+        {
+            return _getDatabaseNamespaceFromDatabase ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "DatabaseNamespace");
+        }
+
+        private static Func<object, string> GetDatabaseNameFromDatabaseNamespaceV2(object databaseNamespace)
+        {
+            return _getDatabaseName ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.DatabaseNamespace", "DatabaseName");
+        }
+
+        private static Func<object, EndPoint> GetEndPointV2(object owner)
+        {
+            return _getEndPoint ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<EndPoint>("MongoDB.Driver.Core", "MongoDB.Driver.Core.Servers.Server", "EndPoint");
+        }
+
+        private static Func<object, object> GetClientFromDatabaseV2(object database)
+        {
+            return _getClient ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "Client");
+        }
+
+        #endregion
+
+        #region Client V3
+
+        private static Func<object, string> GetCollectionNameV3(object collectionNamespace)
+        {
+            return _getCollectionName ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.CollectionNamespace", "CollectionName");
+        }
+
+        private static Func<object, object> GetDatabaseNameFromCollectionNamespaceV3(object collectionNamespace)
+        {
+            return _getDatabaseNamespaceFromCollectionNamespace ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.CollectionNamespace", "DatabaseNamespace");
+        }
+
+        private static Func<object, object> GetDatabaseNameFromDatabaseV3(object database)
+        {
+            return _getDatabaseNamespaceFromDatabase ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabase", "DatabaseNamespace");
+        }
+
+        private static Func<object, string> GetDatabaseNameFromDatabaseNamespaceV3(object databaseNamespace)
+        {
+            return _getDatabaseName ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.DatabaseNamespace", "DatabaseName");
+        }
+
+        private static Func<object, EndPoint> GetEndPointV3(object owner)
+        {
+            return _getEndPoint ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<EndPoint>("MongoDB.Driver", "MongoDB.Driver.Core.Servers.Server", "EndPoint");
+        }
+
+        private static Func<object, object> GetClientFromDatabaseV3(object database)
+        {
+            return _getClient ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabase", "Client");
+        }
+
+        #endregion
     }
 }
