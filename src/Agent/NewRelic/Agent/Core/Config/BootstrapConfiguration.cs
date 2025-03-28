@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Config
         private BootstrapConfiguration()
         {
             _agentEnabledWithProvenance = new ValueWithProvenance<bool>(true, "Default value");
-            LogConfig = new BootstrapLogConfig(new configurationLog(), new ProcessStatic(), DirectoryWrapper.Instance.Exists, Path.GetFullPath);
+            LogConfig = new BootstrapLogConfig(new configurationLog(), new ProcessStatic(), Directory.Exists, Path.GetFullPath);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="localConfiguration">The local configuration object to use.</param>
         /// <param name="configurationFileName">The name and path of the local configuration file.</param>
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName)
-            : this(localConfiguration, configurationFileName, ConfigurationLoader.GetWebConfigAppSetting, new ConfigurationManagerStatic(), new ProcessStatic(), DirectoryWrapper.Instance.Exists, Path.GetFullPath)
+            : this(localConfiguration, configurationFileName, ConfigurationLoader.GetWebConfigAppSetting, new ConfigurationManagerStatic(), new ProcessStatic(), Directory.Exists, Path.GetFullPath)
         { }
 
         /// <summary>

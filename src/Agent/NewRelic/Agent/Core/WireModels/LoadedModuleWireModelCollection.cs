@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.WireModels
                     return false;
                 }
 
-                if (!FileWrapper.Instance.Exists(location))
+                if (!File.Exists(location))
                 {
                     sha1FileHash = null;
                     sha512FileHash = null;

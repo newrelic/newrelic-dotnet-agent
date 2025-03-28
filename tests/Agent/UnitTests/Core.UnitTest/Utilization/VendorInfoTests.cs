@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Utilization
         private IAgentHealthReporter _agentHealthReporter;
         private IEnvironment _environment;
         private VendorHttpApiRequestor _vendorHttpApiRequestor;
+        private IFileWrapper _fileWrapper;
 
         private const string PcfInstanceGuid = @"CF_INSTANCE_GUID";
         private const string PcfInstanceIp = @"CF_INSTANCE_IP";
@@ -39,6 +40,7 @@ namespace NewRelic.Agent.Core.Utilization
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _environment = Mock.Create<IEnvironment>();
             _vendorHttpApiRequestor = Mock.Create<VendorHttpApiRequestor>();
+            _fileWrapper = Mock.Create<IFileWrapper>();
         }
 
         [Test]
@@ -51,7 +53,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
             Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(true);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
             Assert.That(vendors.Any(), Is.False);
         }
@@ -59,7 +61,7 @@ namespace NewRelic.Agent.Core.Utilization
         [Test]
         public void GetVendors_Returns_Empty_Dictionary_When_Detect_False()
         {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
             Assert.That(vendors.Any(), Is.False);
         }
@@ -71,7 +73,7 @@ namespace NewRelic.Agent.Core.Utilization
         [TestCase("10.96.0.1", "kubernetes_service_host", "kubernetes", "10.96.0.1")]
         public void GetVendors_NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName, string expectedResponse)
         {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var result = vendorInfo.NormalizeAndValidateMetadata(metadataValue, metadataField, vendorName);
 
             if (expectedResponse == null)
@@ -93,7 +95,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
             Assert.That(model, Is.Not.Null);
@@ -113,7 +115,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.$micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -128,7 +130,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = vendorInfo.ParseAwsVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -144,7 +146,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
             Assert.That(model, Is.Not.Null);
@@ -166,7 +168,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmId"": ""5c08b38e-4d57-4c23-ac45-aca61037f084""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -183,7 +185,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -199,7 +201,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""zone"": ""projects/492690098729/zones/us-central1-c""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
             Assert.That(model, Is.Not.Null);
@@ -221,7 +223,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""name"": ""aef-default-20170501t160547-7gh8?""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -237,7 +239,7 @@ namespace NewRelic.Agent.Core.Utilization
 							I'm not valid json. Deal with it.
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
             Assert.That(model, Is.Null);
@@ -250,7 +252,7 @@ namespace NewRelic.Agent.Core.Utilization
             SetEnvironmentVariable(PcfInstanceIp, "10.10.147.130", EnvironmentVariableTarget.Process);
             SetEnvironmentVariable(PcfMemoryLimit, "1024m", EnvironmentVariableTarget.Process);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
             Assert.That(model, Is.Not.Null);
@@ -269,7 +271,7 @@ namespace NewRelic.Agent.Core.Utilization
             SetEnvironmentVariable(PcfInstanceIp, null, EnvironmentVariableTarget.Process);
             SetEnvironmentVariable(PcfMemoryLimit, null, EnvironmentVariableTarget.Process);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
             Assert.That(model, Is.Null);
@@ -281,7 +283,7 @@ namespace NewRelic.Agent.Core.Utilization
             var serviceHost = "10.96.0.1";
             SetEnvironmentVariable(KubernetesServiceHost, serviceHost, EnvironmentVariableTarget.Process);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
             Assert.That(model, Is.Not.Null);
@@ -293,7 +295,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             SetEnvironmentVariable(KubernetesServiceHost, null, EnvironmentVariableTarget.Process);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
             Assert.That(model, Is.Null);
@@ -559,7 +561,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri, EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
 
             var ecsModel = vendors["ecs"];
@@ -630,7 +632,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
 
             var model = vendors["ecs"];
@@ -700,7 +702,7 @@ namespace NewRelic.Agent.Core.Utilization
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri, EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
             Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
 
             var ecsModel = vendors["ecs"];
@@ -719,7 +721,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
 
             Assert.That(vendors, Is.Empty);
@@ -785,7 +787,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Not.Null);
@@ -832,7 +834,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
             SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Not.Null);
@@ -848,7 +850,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Null);
@@ -863,7 +865,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
             SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Null);
@@ -878,7 +880,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
             SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Null);
@@ -893,7 +895,7 @@ namespace NewRelic.Agent.Core.Utilization
             var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
             SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}", EnvironmentVariableTarget.Process);
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Null);
@@ -903,7 +905,7 @@ namespace NewRelic.Agent.Core.Utilization
         public void GetVendors_GetEcsVendorInfo_Returns_Null()
         {
             Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
 
             var model = vendorInfo.GetEcsVendorInfo();
             Assert.That(model, Is.Null);
@@ -919,7 +921,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(enableAzureFunctionUtilization);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var vendors = vendorInfo.GetVendors();
 
             if (enableAzureFunctionUtilization)
@@ -944,7 +946,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
             Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
 
             if (expectNull)
@@ -968,7 +970,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns((string)null);
             Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
 
             Assert.That(model, Is.Null);
@@ -982,7 +984,7 @@ namespace NewRelic.Agent.Core.Utilization
             Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
             Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns((string)null);
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
 
             Assert.That(model, Is.Null);

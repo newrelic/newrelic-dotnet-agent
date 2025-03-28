@@ -163,7 +163,7 @@ namespace NewRelic.Agent.Core
         private static string GetNewRelicHome()
         {
             var newRelicHome = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
-            if (newRelicHome != null && DirectoryWrapper.Instance.Exists(newRelicHome)) return Path.GetFullPath(newRelicHome);
+            if (newRelicHome != null && Directory.Exists(newRelicHome)) return Path.GetFullPath(newRelicHome);
 #if NETFRAMEWORK
 			var key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
 			if (key != null) newRelicHome = (string)key.GetValue("NewRelicHome");
@@ -177,7 +177,7 @@ namespace NewRelic.Agent.Core
             if (newRelicInstallPath != null)
             {
                 newRelicInstallPath = Path.Combine(newRelicInstallPath, RuntimeDirectoryName);
-                if (DirectoryWrapper.Instance.Exists(newRelicInstallPath)) return newRelicInstallPath;
+                if (Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
             }
 
             newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
@@ -194,11 +194,11 @@ namespace NewRelic.Agent.Core
 
             var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
 
-            if (FileWrapper.Instance.Exists(agentInfoPath))
+            if (File.Exists(agentInfoPath))
             {
                 try
                 {
-                    return JsonConvert.DeserializeObject<AgentInfo>(FileWrapper.Instance.ReadAllText(agentInfoPath));
+                    return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
                 }
                 catch (Exception e)
                 {

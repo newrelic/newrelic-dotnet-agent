@@ -19,15 +19,17 @@ namespace NewRelic.Agent.Core.Utilization
         private readonly IConfiguration _configuration;
 
         private readonly IAgentHealthReporter _agentHealthReporter;
+        private readonly IFileWrapper _fileWrapper;
 
         private const int MaxBootIdLength = 128;
 
-        public UtilizationStore(ISystemInfo systemInfo, IDnsStatic dnsStatic, IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
+        public UtilizationStore(ISystemInfo systemInfo, IDnsStatic dnsStatic, IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IFileWrapper fileWrapper)
         {
             _systemInfo = systemInfo;
             _dnsStatic = dnsStatic;
             _configuration = configuration;
             _agentHealthReporter = agentHealthReporter;
+            _fileWrapper = fileWrapper;
         }
 
         public UtilizationSettingsModel GetUtilizationSettings()
@@ -58,7 +60,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IDictionary<string, IVendorModel> GetVendorSettings()
         {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SharedInterfaces.Environment(), new VendorHttpApiRequestor(), FileWrapper.Instance);
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SharedInterfaces.Environment(), new VendorHttpApiRequestor(), _fileWrapper);
             return vendorInfo.GetVendors();
         }
 

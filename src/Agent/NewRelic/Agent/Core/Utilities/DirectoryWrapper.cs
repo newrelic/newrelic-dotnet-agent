@@ -19,8 +19,6 @@ namespace NewRelic.Agent.Core.Utilities
     [NrExcludeFromCodeCoverage]
     public class DirectoryWrapper : IDirectoryWrapper
     {
-        public static IDirectoryWrapper Instance { get; } = new DirectoryWrapper();
-
         public bool Exists(string path) => Directory.Exists(path);
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => Directory.GetFiles(path, searchPattern, searchOption);

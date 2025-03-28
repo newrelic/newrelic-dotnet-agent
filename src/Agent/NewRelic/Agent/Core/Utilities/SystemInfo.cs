@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Utilities
 
 				try
 				{
-					var lines = FileWrapper.Instance.ReadAllLines("/proc/sys/kernel/random/boot_id");
+					var lines = File.ReadAllLines("/proc/sys/kernel/random/boot_id");
 					bootId = lines.Length > 0 ? lines[0] : null;
 				}
 				catch (Exception ex)
