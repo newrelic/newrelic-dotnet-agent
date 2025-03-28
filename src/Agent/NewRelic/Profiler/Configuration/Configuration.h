@@ -509,7 +509,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         {
             auto isIis = Strings::EndsWith(processName, _X("W3WP.EXE")) || Strings::EndsWith(parentProcessName, _X("W3WP.EXE"));
 
-            LogInfo(_X("Process ") + processName + _X(" with parent process ") + parentProcessName + (isIis ? _X(" is") : _X(" is not")) + _X(" IIS."));
+            LogInfo(_X("Process ") + processName + (parentProcessName == _X("") ? _X("") : _X(" with parent process ") + parentProcessName) + (isIis ? _X(" is") : _X(" is not")) + _X(" IIS."));
 
             return isIis;
         }
