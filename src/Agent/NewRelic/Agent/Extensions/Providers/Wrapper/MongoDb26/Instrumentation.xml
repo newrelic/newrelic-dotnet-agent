@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
 
     <tracerFactory name="AsyncCursorWrapper">
-      <match assemblyName="MongoDB.Driver.Core" className="MongoDB.Driver.Core.Operations.AsyncCursor`1" maxVersion="2.999.0">
+      <match assemblyName="MongoDB.Driver.Core" className="MongoDB.Driver.Core.Operations.AsyncCursor`1" maxVersion="3.0.0">
         <exactMethodMatcher methodName="GetNextBatch"/>
         <exactMethodMatcher methodName="GetNextBatchAsync"/>
       </match>
@@ -51,7 +51,7 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
 
     <tracerFactory name="MongoDatabaseWrapper">
-      <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl"  maxVersion="2.999.0">
+      <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl"  maxVersion="3.0.0">
         <exactMethodMatcher methodName="Aggregate"/>
         <exactMethodMatcher methodName="AggregateToCollection"/>
         <exactMethodMatcher methodName="CreateCollection"/>

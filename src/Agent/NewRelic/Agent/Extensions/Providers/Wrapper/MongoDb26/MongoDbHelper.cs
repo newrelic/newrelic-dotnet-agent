@@ -4,14 +4,11 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.ComponentModel.Design;
 using System.Net;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
-using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.MongoDb26
 {
