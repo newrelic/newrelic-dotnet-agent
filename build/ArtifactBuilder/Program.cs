@@ -83,7 +83,10 @@ namespace ArtifactBuilder
         private static void BuildNugetAgent(string[] args)
         {
             var configuration = args[1];
-            var c = new NugetAgent(configuration);
+            string versionOverride = null;
+            if (args.Length > 2)
+                versionOverride = args[2];
+            var c = new NugetAgent(configuration, versionOverride);
             c.Build();
         }
 
