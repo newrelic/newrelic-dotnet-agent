@@ -32,7 +32,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
                 // only inject the middleware if browser injection is enabled and the request is not a gRPC request.
                 builder.UseWhen(
-                    context => _agent.Configuration.BrowserMonitoringAutoInstrument && _agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request.ContentType?.ToLower() != "application/grpc",
+                    context => _agent.Configuration.BrowserMonitoringAutoInstrument && _agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request?.ContentType?.ToLower() != "application/grpc",
                     b => b.UseMiddleware<BrowserInjectionMiddleware>(_agent));
 
                 next(builder);
