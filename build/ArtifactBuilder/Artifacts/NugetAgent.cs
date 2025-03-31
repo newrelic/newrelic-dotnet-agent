@@ -13,10 +13,11 @@ namespace ArtifactBuilder.Artifacts
         private readonly AgentComponents _coreAgentX86Components;
         private string _nuGetPackageName;
 
-        public NugetAgent(string configuration)
+        public NugetAgent(string configuration, string versionOverride = null)
             : base(nameof(NugetAgent))
         {
             Configuration = configuration;
+            VersionOverride = versionOverride;
             ValidateContentAction = ValidateContent;
 
             _frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
@@ -27,6 +28,7 @@ namespace ArtifactBuilder.Artifacts
         }
 
         public string Configuration { get; }
+        public string VersionOverride { get; }
 
         protected override void InternalBuild()
         {
@@ -75,7 +77,7 @@ namespace ArtifactBuilder.Artifacts
                 agentInfo.WriteToDisk(Path.GetDirectoryName(newRelicConfigPath));
             }
 
-            package.SetVersion(_frameworkAgentComponents.Version);
+            package.SetVersion(VersionOverride ?? _frameworkAgentComponents.Version);
 
             _nuGetPackageName = package.Pack();
         }
