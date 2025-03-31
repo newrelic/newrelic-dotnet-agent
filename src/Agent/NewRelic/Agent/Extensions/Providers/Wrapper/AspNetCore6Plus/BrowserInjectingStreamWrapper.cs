@@ -158,6 +158,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 // * UTF-8 formatted (either explicitly or no charset defined)
                 var responseContentType = _context.Response.ContentType;
                 _isHtmlResponse =
+                    !string.IsNullOrEmpty(responseContentType) && 
                     responseContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                     (responseContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                      !responseContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
@@ -188,8 +189,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private void LogExceptionAndDisable(Exception e)
         {
-            _agent.Logger.Log(Level.Error,
-                $"Unexpected exception. Browser injection will be disabled. Exception: {e.Message}: {e.StackTrace}");
+            _agent.Logger.Log(Level.Error, e, "Unexpected exception. Browser injection will be disabled.");
 
             Disabled = true;
         }
