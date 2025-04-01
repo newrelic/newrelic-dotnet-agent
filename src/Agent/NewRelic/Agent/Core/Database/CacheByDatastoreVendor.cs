@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Database
             {
                 var oldCapacity = Capacity;
                 Capacity = capacity;
-                Log.Info($"The capacity of cache type ({GetType()}) has been modified from {oldCapacity} to {Capacity}. Agent's memory allocation will be affected by this change so use with precaution.");
+                Log.Info($"The capacity of cache type ({GetType()}) has been modified from {oldCapacity} to {Capacity}. Agent's memory allocation will be affected by this change so use with caution.");
             }
         }
 
