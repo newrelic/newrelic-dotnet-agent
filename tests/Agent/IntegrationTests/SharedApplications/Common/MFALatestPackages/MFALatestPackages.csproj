@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup> <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.414.6" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.414.6" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.416" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.416" Condition="'$(TargetFramework)' == 'net9.0'" />
     
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.20" Condition="'$(TargetFramework)' == 'net9.0'" />
