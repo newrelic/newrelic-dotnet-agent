@@ -52,14 +52,19 @@ namespace NewRelic.Agent.Core.Segments
         public ExplainPlan ExplainPlan => _explainPlan;
 
         private readonly IDatabaseService _databaseService;
-        private readonly IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
+        private static CacheByDatastoreVendor<string, string> _failedExplainPlanQueryCacheByDatastoreVendor;
 
-        public DatastoreSegmentData(IDatabaseService databaseService, IFailedExplainPlanQueryCacheService failedExplainPlanQueryCacheService,
+        static DatastoreSegmentData()
+        {
+            _failedExplainPlanQueryCacheByDatastoreVendor = new CacheByDatastoreVendor<string, string>("FailedExplainPlanQueryCache");
+            _failedExplainPlanQueryCacheByDatastoreVendor.SetCapacity(1000);
+        }
+
+        public DatastoreSegmentData(IDatabaseService databaseService,
             ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null,
             IDictionary<string, IConvertible> queryParameters = null)
         {
             _databaseService = databaseService;
-            _failedExplainPlanQueryCacheService = failedExplainPlanQueryCacheService;
             _connectionInfo = connectionInfo ?? EmptyConnectionInfo;
             _parsedSqlStatement = parsedSqlStatement;
             CommandText = commandText;
@@ -128,7 +133,7 @@ namespace NewRelic.Agent.Core.Segments
         public void ExecuteExplainPlan(SqlObfuscator obfuscator)
         {
             // don't attempt to generate an explain plan if this query has failed previously
-            if (_failedExplainPlanQueryCacheService.FailedExplainPlanQueryCache.Contains(DatastoreVendorName, CommandText))
+            if (_failedExplainPlanQueryCacheByDatastoreVendor.Contains(DatastoreVendorName, CommandText))
                 return;
 
             // Don't re-run an explain plan if one already exists
@@ -159,7 +164,7 @@ namespace NewRelic.Agent.Core.Segments
             {
                 Log.Debug(exception, "Unable to execute explain plan for query: {Query}. This query will be ignored on future explain plan execution.",
                     obfuscator.GetObfuscatedSql(CommandText, DatastoreVendorName));
-                _failedExplainPlanQueryCacheService.FailedExplainPlanQueryCache.TryAdd(DatastoreVendorName, CommandText, () => string.Empty); // all we really want to cache is the query text
+                _failedExplainPlanQueryCacheByDatastoreVendor.TryAdd(DatastoreVendorName, CommandText, () => string.Empty); // all we really want to cache is the query text
             }
         }
 
