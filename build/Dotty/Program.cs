@@ -267,7 +267,15 @@ namespace Dotty
 
                 // create PR
                 var newPr = new NewPullRequest(commitMessage, branchName, "main");
-                newPr.Body = "Dotty updated the following for your convenience.\n\n" + updateLog + "\n\n**Don't forget to update the .NET Compatibility docs:memo: with the new versions!**\n";
+                newPr.Body = 
+$@"Dotty updated the following for your convenience.
+
+{updateLog}
+
+Developer checklist:
+- [ ] Verify all integration tests complete successfully
+- [ ] Update .NET agent compatibility / requirements documentation to reflect the latest supported versions";
+
                 var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
                 Log.Information($"Successfully created PR for {branchName} at {pullRequest.HtmlUrl}");
 
