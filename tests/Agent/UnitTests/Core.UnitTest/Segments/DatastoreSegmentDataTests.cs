@@ -80,6 +80,28 @@ public class DatastoreSegmentDataTests
     }
 
     [Test]
+    public void IsCombinableWith_ReturnsFalseForDifferentVendor()
+    {
+        var segmentData1 = new DatastoreSegmentData(_databaseService, _parsedSqlStatement);
+        var segmentData2 = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.MongoDB, "model", "operation"));
+
+        var result = segmentData1.IsCombinableWith(segmentData2);
+
+        Assert.That(result, Is.False);
+    }
+
+    [Test]
+    public void IsCombinableWith_ReturnsFalseForDifferentModel()
+    {
+        var segmentData1 = new DatastoreSegmentData(_databaseService, _parsedSqlStatement);
+        var segmentData2 = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.Other, "different_model", "operation"));
+
+        var result = segmentData1.IsCombinableWith(segmentData2);
+
+        Assert.That(result, Is.False);
+    }
+
+    [Test]
     public void GetTransactionTraceName_ReturnsExpectedName()
     {
         var segmentData = new DatastoreSegmentData(_databaseService, _parsedSqlStatement);
@@ -127,5 +149,34 @@ public class DatastoreSegmentDataTests
         segmentData.GenerateExplainPlan = _ => new ExplainPlan([], [], []); // reset so it doesn't throw if called
         success = segmentData.ExecuteExplainPlan(obfuscator);
         Assert.That(success, Is.False);
+    }
+
+    [Test]
+    public void ExecuteExplainPlan_DoesNotReRun_WhenExplainPlan_IsNotNull()
+    {
+        var query = "SELECT * FROM table";
+        var segmentData = new DatastoreSegmentData(_databaseService, _parsedSqlStatement, query);
+        var obfuscator = Mock.Create<SqlObfuscator>();
+
+        segmentData.DoExplainPlanCondition = () => true;
+        segmentData.GenerateExplainPlan = _ => new ExplainPlan(new List<string>(), new List<List<object>>(), new List<int>());
+
+        Mock.Arrange(() => obfuscator.GetObfuscatedSql(Arg.IsAny<string>(), Arg.IsAny<DatastoreVendor>()))
+            .Returns("obfuscated_sql");
+
+        // First call to ExecuteExplainPlan should generate the explain plan
+        var result = segmentData.ExecuteExplainPlan(obfuscator);
+        Assert.That(result, Is.True);
+
+        // Verify that the explain plan is not null
+        Assert.That(segmentData.ExplainPlan, Is.Not.Null);
+
+        // Second call to ExecuteExplainPlan should not attempt to generate the explain plan again
+        segmentData.GenerateExplainPlan = _ => throw new Exception("Test exception");
+        result = segmentData.ExecuteExplainPlan(obfuscator);
+        Assert.That(result, Is.False);
+
+        // Verify that the explain plan is still not null
+        Assert.That(segmentData.ExplainPlan, Is.Not.Null);
     }
 }
