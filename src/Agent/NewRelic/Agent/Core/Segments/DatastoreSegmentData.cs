@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core.Segments
             }
             catch (Exception exception)
             {
-                Log.Debug(exception, "Unable to execute explain plan for query: {Query}. This query will be ignored on future explain plan execution.",
+                Log.Debug(exception, "Unable to execute explain plan for query: {Query}. This query will be ignored for future explain plan execution.",
                     obfuscator.GetObfuscatedSql(CommandText, DatastoreVendorName));
                 _failedExplainPlanQueryCacheByDatastoreVendor.TryAdd(DatastoreVendorName, CommandText, () => string.Empty); // all we really want to cache is the query text
             }
