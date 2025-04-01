@@ -61,6 +61,7 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly ISimpleTimerFactory _timerFactory;
         private readonly ICallStackManagerFactory _callStackManagerFactory;
         private readonly IDatabaseService _databaseService;
+        private readonly IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
         private readonly ITracePriorityManager _tracePriorityManager;
         private readonly IDatabaseStatementParser _databaseStatementParser;
         private readonly IErrorService _errorService;
@@ -68,7 +69,7 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly IAttributeDefinitionService _attribDefSvc;
         private readonly IAdaptiveSampler _adaptiveSampler;
 
-        public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
+        public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, IFailedExplainPlanQueryCacheService failedExplainPlanQueryCacheService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
             IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, IAdaptiveSampler adaptiveSampler)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
@@ -76,6 +77,7 @@ namespace NewRelic.Agent.Core.Transactions
             _timerFactory = timerFactory;
             _callStackManagerFactory = callStackManagerFactory;
             _databaseService = databaseService;
+            _failedExplainPlanQueryCacheService = failedExplainPlanQueryCacheService;
             _tracePriorityManager = tracePriorityManager;
             _databaseStatementParser = databaseStatementParser;
             _errorService = errorService;
@@ -163,7 +165,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             var priority = _tracePriorityManager.Create();
             var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(),
-                DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
+                DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, _failedExplainPlanQueryCacheService, priority,
                 _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
             _adaptiveSampler.StartTransaction();
             try

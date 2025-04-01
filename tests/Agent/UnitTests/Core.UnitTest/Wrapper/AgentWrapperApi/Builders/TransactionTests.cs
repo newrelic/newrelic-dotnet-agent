@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         private const float Priority = 0.5f;
         private object _wrapperToken;
+        private IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
 
         [SetUp]
         public void SetUp()
@@ -47,10 +48,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
             _databaseService = new DatabaseService();
+            _failedExplainPlanQueryCacheService = new FailedExplainPlanQueryCacheService();
             _errorService = new ErrorService(configurationService);
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, _failedExplainPlanQueryCacheService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             _publishedEvent = null;
             _eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
             _wrapperToken = new object();
@@ -65,6 +67,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             _eventSubscription = null;
             _attribDefSvc.Dispose();
             _databaseService.Dispose();
+            _failedExplainPlanQueryCacheService.Dispose();
 
             GC.Collect();
             GC.WaitForFullGCComplete();
@@ -187,7 +190,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var transactionName = TransactionName.ForWebTransaction("WebTransaction", "Test");
 
 
-            var transaction = new Transaction(_configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, _failedExplainPlanQueryCacheService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
             for (int i = 0; i < segmentCount; i++)
             {
@@ -215,6 +218,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                 Arg.IsAny<DateTime>(),
                 Arg.IsAny<ICallStackManager>(),
                 Arg.IsAny<IDatabaseService>(),
+                Arg.IsAny<IFailedExplainPlanQueryCacheService>(),
                 Arg.IsAny<float>(),
                 Arg.IsAny<IDatabaseStatementParser>(),
                 Arg.IsAny<IDistributedTracePayloadHandler>(),
@@ -238,7 +242,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var timer = Mock.Create<ISimpleTimer>();
             var callStackManager = Mock.Create<ICallStackManager>();
             var sqlObfuscator = Mock.Create<IDatabaseService>();
-            var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var failedExplainPlanQueryCacheService = Mock.Create<IFailedExplainPlanQueryCacheService>();
+            var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, failedExplainPlanQueryCacheService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
             // Assert
             Assert.That(tx.Guid, Is.Not.Null);

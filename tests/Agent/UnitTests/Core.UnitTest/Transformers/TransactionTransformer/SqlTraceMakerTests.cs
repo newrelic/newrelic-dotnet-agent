@@ -32,12 +32,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IErrorService _errorService;
 
         private IAttributeDefinitionService _attribDefSvc;
+        private IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
 
         [SetUp]
         public void SetUp()
         {
             _databaseService = Mock.Create<IDatabaseService>();
+            _failedExplainPlanQueryCacheService = Mock.Create<IFailedExplainPlanQueryCacheService>();
             Mock.Arrange(() => _databaseService.GetObfuscatedSql(Arg.AnyString, Arg.IsAny<DatastoreVendor>())).Returns((string sql) => sql);
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
@@ -53,6 +55,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             _attribDefSvc.Dispose();
             _databaseService.Dispose();
+            _failedExplainPlanQueryCacheService.Dispose();
         }
 
         [Test]
@@ -164,7 +167,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private Segment BuildSegment(DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
-            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText,
+            var data = new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, new ParsedSqlStatement(vendor, model, null), commandText,
                 new ConnectionInfo(host, portPathOrId, databaseName));
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 

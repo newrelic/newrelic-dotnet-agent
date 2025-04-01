@@ -71,6 +71,7 @@ namespace NewRelic.Agent.Core.WireModels
             var guid = Guid.NewGuid().ToString();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
             var databaseService = new DatabaseService();
+            var failedExplainPlanQueryCacheService = new FailedExplainPlanQueryCacheService();
             var configurationService = Mock.Create<IConfigurationService>();
             var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
@@ -83,7 +84,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             foreach (string query in queries)
             {
-                var data = new DatastoreSegmentData(databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
+                var data = new DatastoreSegmentData(databaseService, failedExplainPlanQueryCacheService, new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
                 var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("typeName", "methodName", 1));
                 segment.SetSegmentData(data);
 

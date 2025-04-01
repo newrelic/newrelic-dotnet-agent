@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => timer.Duration).Returns(time);
 
             var priority = 0.5f;
-            var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), Mock.Create<IFailedExplainPlanQueryCacheService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
             if (queueTime != null)
             {

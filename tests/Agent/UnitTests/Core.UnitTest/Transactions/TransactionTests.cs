@@ -44,7 +44,7 @@ public class TransactionTests
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 
         _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(),
-            DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
+            DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), Mock.Create<IFailedExplainPlanQueryCacheService>(),
             _priority, _databaseStatementParser, _distributedTracePayloadHandler, Mock.Create<IErrorService>(), AttribDefs);
     }
 

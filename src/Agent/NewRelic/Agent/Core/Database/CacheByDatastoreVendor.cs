@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.Database
 {
     public class CacheByDatastoreVendor<TKey, TValue> where TValue : class
     {
-        // The capcity defaults to 1000 but can be configured using the SqlStatementCacheMaxSize setting in the local newrelic.config.
+        // The capacity defaults to 1000 but can be configured using the SqlStatementCacheMaxSize setting in the local newrelic.config.
         private int _capacity = 1000;
         private readonly SimpleCache<TKey, TValue>[] _caches;
 
@@ -29,13 +29,22 @@ namespace NewRelic.Agent.Core.Database
             return _caches[(int)vendor].GetOrAdd(key, valueFunc);
         }
 
+        public bool TryAdd(DatastoreVendor vendor, TKey key, Func<TValue> valueFunc)
+        {
+            return _caches[(int)vendor].TryAdd(key, valueFunc);
+        }
+        public bool Contains(DatastoreVendor vendor, TKey key)
+        {
+            return _caches[(int)vendor].Contains(key);
+        }
+
         public void SetCapacity(int capacity)
         {
             if (capacity != Capacity)
             {
                 var oldCapacity = Capacity;
                 Capacity = capacity;
-                Log.Info($"The capcity of cache type ({GetType()}) has been modified from {oldCapacity} to {Capacity}. Agent's memory allocation will be affected by this change so use with precaution.");
+                Log.Info($"The capacity of cache type ({GetType()}) has been modified from {oldCapacity} to {Capacity}. Agent's memory allocation will be affected by this change so use with precaution.");
             }
         }
 

@@ -29,6 +29,7 @@ namespace NewRelic.Agent.Core.Configuration
     {
         private const int DefaultSslPort = 443;
         private const int DefaultSqlStatementCacheCapacity = 1000;
+        private const int DefaultFailedExplainPlanQueryCacheCapacity = 1000;
 
         public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
         public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
@@ -3063,6 +3064,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int DatabaseStatementCacheCapacity => _databaseStatementCacheCapacity ?? (_databaseStatementCacheCapacity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
+
+        private int? _failedExplainPlanQueryCacheCapacity = null;
+        public int FailedExplainPlanQueryCacheCapacity => _failedExplainPlanQueryCacheCapacity ?? (_failedExplainPlanQueryCacheCapacity =
+            TryGetAppSettingAsIntWithDefault("FailedExplainPlanQueryCacheCapacity", DefaultFailedExplainPlanQueryCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;
 
