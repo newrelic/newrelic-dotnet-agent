@@ -25,7 +25,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     public static class TestTransactions
     {
         private static IDatabaseService _databaseService = new DatabaseService();
-        private static IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService = new FailedExplainPlanQueryCacheService();
         private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
         public static IConfiguration GetDefaultConfiguration()
@@ -69,7 +68,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var errorService = configurationService != null ? new ErrorService(configurationService) : new ErrorService(Mock.Create<IConfigurationService>());
 
             var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
-                _databaseService, _failedExplainPlanQueryCacheService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
+                _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
                 errorService, _attribDefSvc.AttributeDefs);
 
             if (exception != null)
@@ -119,7 +118,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 txSegmentState = TransactionSegmentStateHelpers.GetItransactionSegmentState();
 
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            var data = new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
             var segment = new Segment(txSegmentState, methodCallData);
             segment.SetSegmentData(data);
 

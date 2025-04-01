@@ -103,7 +103,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private IBootstrapConfiguration _bootstrapConfiguration;
         private configuration _localConfig;
         private IAgentHealthReporter _agentHealthReporter;
-        private FailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
 
         private void SetLocalConfigurationDefaults()
         {
@@ -161,7 +160,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             _spanEventMaker = new SpanEventMaker(_attribDefSvc, _configurationService);
             _databaseService = new DatabaseService();
-            _failedExplainPlanQueryCacheService = new FailedExplainPlanQueryCacheService();
 
             _transactionEventMaker =  new TransactionEventMaker(_attribDefSvc);
 
@@ -185,7 +183,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
             _baseDatastoreSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
-            _baseDatastoreSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, _parsedSqlStatement, ShortQuery, _connectionInfo));
+            _baseDatastoreSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, _parsedSqlStatement, ShortQuery, _connectionInfo));
 
             // Http Segments
             _baseHttpSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
@@ -227,7 +225,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _attribDefSvc.Dispose();
             _configAutoResponder?.Dispose();
             _databaseService.Dispose();
-            _failedExplainPlanQueryCacheService.Dispose();
             _metricNameSvc.Dispose();
         }
 
@@ -650,7 +647,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         public void Do_Not_Generate_DbCollection_Attribute_When_Model_IsNullOrEmpty()
         {
             var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
-            testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService,
+            testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
                 parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
                 connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
 
@@ -704,7 +701,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 // ARRANGE
                 var longSqlStatement = new ParsedSqlStatement(DatastoreVendor.MSSQL, customerStmt[i], "select");
                 var longDatastoreSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
-                longDatastoreSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, longSqlStatement, customerStmt[i], _connectionInfo));
+                longDatastoreSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, longSqlStatement, customerStmt[i], _connectionInfo));
 
                 var segments = new List<Segment>()
                                 {

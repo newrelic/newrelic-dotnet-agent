@@ -587,9 +587,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.database_statement_cache_capacity")]
         public int DatabaseStatementCacheCapacity => _configuration.DatabaseStatementCacheCapacity;
 
-        [JsonProperty("transaction_tracer.failed_explain_plan_query_cache_capacity")]
-        public int FailedExplainPlanQueryCacheCapacity => _configuration.FailedExplainPlanQueryCacheCapacity;
-
         [JsonProperty("agent.force_synchronous_timing_calculation_for_http_client")]
         public bool ForceSynchronousTimingCalculationHttpClient => _configuration.ForceSynchronousTimingCalculationHttpClient;
 

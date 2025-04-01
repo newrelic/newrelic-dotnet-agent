@@ -187,7 +187,6 @@ namespace NewRelic.Agent.Configuration
         bool PayloadSuccessMetricsEnabled { get; }
         string ProcessHostDisplayName { get; }
         int DatabaseStatementCacheCapacity { get; }
-        int FailedExplainPlanQueryCacheCapacity { get; }
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }

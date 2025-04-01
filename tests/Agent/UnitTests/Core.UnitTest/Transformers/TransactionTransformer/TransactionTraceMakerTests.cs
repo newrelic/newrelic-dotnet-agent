@@ -30,7 +30,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IConfigurationService _configurationService;
 
         private IAttributeDefinitionService _attribDefSvc;
-        private IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
         [SetUp]
@@ -38,8 +37,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             _databaseService = Mock.Create<IDatabaseService>();
             Mock.Arrange(() => _databaseService.GetObfuscatedSql(Arg.IsAny<string>(), Arg.IsAny<DatastoreVendor>())).Returns((string sql) => "Obfuscated " + sql);
-
-            _failedExplainPlanQueryCacheService = Mock.Create<IFailedExplainPlanQueryCacheService>();
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
@@ -56,7 +53,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             _attribDefSvc.Dispose();
             _databaseService.Dispose();
-            _failedExplainPlanQueryCacheService.Dispose();
         }
 
         [Test]
@@ -342,7 +338,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-            var data = new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"), "SELECT * FROM test_table");
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"), "SELECT * FROM test_table");
 
             var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
@@ -356,7 +352,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-            var data = new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"),
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"),
                 "SELECT * FROM test_table",
                 new ConnectionInfo("My Host", "My Port", "My Database"));
 

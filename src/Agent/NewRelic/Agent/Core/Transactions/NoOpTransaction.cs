@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Transactions
         private object _wrapperToken;
 
         private static readonly IExternalSegmentData _noOpExternalSegmentData = new ExternalSegmentData(new Uri("https://www.newrelic.com/"), string.Empty);
-        private static readonly IDatastoreSegmentData _noOpDatastoreSegmentData = new DatastoreSegmentData(new DatabaseService(), new FailedExplainPlanQueryCacheService(), new ParsedSqlStatement(DatastoreVendor.Other, string.Empty, string.Empty));
+        private static readonly IDatastoreSegmentData _noOpDatastoreSegmentData = new DatastoreSegmentData(new DatabaseService(), new ParsedSqlStatement(DatastoreVendor.Other, string.Empty, string.Empty));
 
         public void End(bool captureResponseTime = true)
         {

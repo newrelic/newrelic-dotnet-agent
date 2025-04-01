@@ -206,7 +206,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
             var priority = 0.5f;
-            var transaction = new Transaction(configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), Mock.Create<IFailedExplainPlanQueryCacheService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            var transaction = new Transaction(configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
             SetGuid(transaction, testCase.TransactionGuid);
 

@@ -211,7 +211,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
             container.Register<ConfigurationTracker, ConfigurationTracker>();
             container.Register<IDatabaseService, DatabaseService>();
-            container.Register<IFailedExplainPlanQueryCacheService, FailedExplainPlanQueryCacheService>();
             container.Register<IErrorService, ErrorService>();
 
             container.Register<IInstrumentationService, InstrumentationService>();

@@ -367,7 +367,7 @@ namespace NewRelic.Agent.Core.Transactions
                 parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, null, null);
             }
 
-            return new DatastoreSegmentData(_databaseService, _failedExplainPlanQueryCacheService, parsedSqlStatement, commandText, connectionInfo, GetNormalizedQueryParameters(queryParameters));
+            return new DatastoreSegmentData(_databaseService, parsedSqlStatement, commandText, connectionInfo, GetNormalizedQueryParameters(queryParameters));
         }
 
         private static MethodCallData GetMethodCallData(MethodCall methodCall)
@@ -992,7 +992,6 @@ namespace NewRelic.Agent.Core.Transactions
         public ICallStackManager CallStackManager { get; }
 
         private readonly IDatabaseService _databaseService;
-        private readonly IFailedExplainPlanQueryCacheService _failedExplainPlanQueryCacheService;
         private readonly IDatabaseStatementParser _databaseStatementParser;
 
         public IErrorService ErrorService => _errorService;
@@ -1010,7 +1009,7 @@ namespace NewRelic.Agent.Core.Transactions
         private volatile string _traceId;
 
         public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
-            ISimpleTimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService, IFailedExplainPlanQueryCacheService failedExplainPlanQueryCacheService,
+            ISimpleTimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
             float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
             IErrorService errorService, IAttributeDefinitions attribDefs)
         {
@@ -1028,7 +1027,6 @@ namespace NewRelic.Agent.Core.Transactions
             _unitOfWorkCount = 1;
             _databaseService = databaseService;
             _databaseStatementParser = databaseStatementParser;
-            _failedExplainPlanQueryCacheService = failedExplainPlanQueryCacheService;
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefs = attribDefs;

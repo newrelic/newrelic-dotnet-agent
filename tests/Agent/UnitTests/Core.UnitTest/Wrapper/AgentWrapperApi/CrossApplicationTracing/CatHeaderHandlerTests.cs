@@ -380,7 +380,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             IAttributeDefinitionService attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
             var priority = 0.5f;
-            var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), Mock.Create<IFailedExplainPlanQueryCacheService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs);
+            var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs);
             tx.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
             tx.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(referrerGuid);
             tx.TransactionMetadata.SetCrossApplicationReferrerTripId(referrerTripId);

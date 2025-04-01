@@ -407,7 +407,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public string ProcessHostDisplayName => "ProcessHostDisplayName";
 
         public int DatabaseStatementCacheCapacity => 1234;
-        public int FailedExplainPlanQueryCacheCapacity => 1234;
 
         public bool ForceSynchronousTimingCalculationHttpClient => true;
 
