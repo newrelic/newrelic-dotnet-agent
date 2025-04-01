@@ -130,15 +130,15 @@ namespace NewRelic.Agent.Core.Segments
         }
 
 
-        public void ExecuteExplainPlan(SqlObfuscator obfuscator)
+        public bool ExecuteExplainPlan(SqlObfuscator obfuscator)
         {
             // don't attempt to generate an explain plan if this query has failed previously
             if (_failedExplainPlanQueryCacheByDatastoreVendor.Contains(DatastoreVendorName, CommandText))
-                return;
+                return false;
 
             // Don't re-run an explain plan if one already exists
             if (_explainPlan != null)
-                return;
+                return false;
 
             try
             {
@@ -159,12 +159,15 @@ namespace NewRelic.Agent.Core.Segments
                         _explainPlan = new ExplainPlan(explainPlan.ExplainPlanHeaders, explainPlan.ExplainPlanDatas, explainPlan.ObfuscatedHeaders);
                     }
                 }
+
+                return true;
             }
             catch (Exception exception)
             {
                 Log.Debug(exception, "Unable to execute explain plan for query: {Query}. This query will be ignored for future explain plan execution.",
                     obfuscator.GetObfuscatedSql(CommandText, DatastoreVendorName));
                 _failedExplainPlanQueryCacheByDatastoreVendor.TryAdd(DatastoreVendorName, CommandText, () => string.Empty); // all we really want to cache is the query text
+                return false;
             }
         }
 
@@ -254,6 +257,18 @@ namespace NewRelic.Agent.Core.Segments
         public void SetConnectionInfo(ConnectionInfo connInfo)
         {
             _connectionInfo = connInfo;
+        }
+
+        // FOR UNIT TESTING ONLY
+        public static void ClearFailedExplainPlanCache()
+        {
+            _failedExplainPlanQueryCacheByDatastoreVendor.Reset();
+        }
+
+        // FOR UNIT TESTING ONLY
+        public CacheByDatastoreVendor<string, string> GetFailedExplainPlanCache()
+        {
+            return _failedExplainPlanQueryCacheByDatastoreVendor;
         }
     }
 }

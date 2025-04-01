@@ -60,5 +60,13 @@ namespace NewRelic.Agent.Core.Database
                 }
             }
         }
+
+        public void Reset()
+        {
+            for (var i = 0; i < Enum.GetValues(typeof(DatastoreVendor)).Length; i++)
+            {
+                _caches[i].Reset();
+            }
+        }
     }
 }
