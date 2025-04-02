@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.40.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.39.0...v10.40.0) (2025-04-01)
+
+
+### New features
+
+* Add Couchbase 3.x instrumentation ([#3048](https://github.com/newrelic/newrelic-dotnet-agent/issues/3048)) ([7ef0c82](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ef0c82be230438f99e1398b81455de7d2b88e48))
+* Add instrumentation for AWS Kinesis Data Streams and Kinesis Delivery Streams (Firehose) ([7b52a67](https://github.com/newrelic/newrelic-dotnet-agent/commit/7b52a67c65f9f3fdb78e0ac194b608c75726090a))
+* Add support for MongoDB.Driver 3.x and above. ([#3065](https://github.com/newrelic/newrelic-dotnet-agent/issues/3065)) ([c8acbc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/c8acbc5b3767402b08544e550a771712c802f24a))
+
+
+### Fixes
+
+* Add more null checks to Asp.NET Core 6+ browser instrumentation logic ([#3070](https://github.com/newrelic/newrelic-dotnet-agent/issues/3070)) ([5f5cf12](https://github.com/newrelic/newrelic-dotnet-agent/commit/5f5cf12703264fde15ef0bd332734329dc3355a3))
+* In-process Azure Function publishes Nuget agent DLLs to the wrong folder ([#3068](https://github.com/newrelic/newrelic-dotnet-agent/issues/3068)) ([ee04d25](https://github.com/newrelic/newrelic-dotnet-agent/commit/ee04d257a2dbddb40bce0c6c2601a53fa90a7364))
+* Profiler should not log "with parent process" unless parent process is non-empty ([#3066](https://github.com/newrelic/newrelic-dotnet-agent/issues/3066)) ([a6c6d7d](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6c6d7d15f516ae65671d0146af3d7785334a190))
+
 ## [10.39.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.38.0...v10.39.0) (2025-03-19)
 
 
