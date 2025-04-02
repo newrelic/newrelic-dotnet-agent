@@ -259,13 +259,17 @@ namespace NewRelic.Agent.Core.Segments
             _connectionInfo = connInfo;
         }
 
-        // FOR UNIT TESTING ONLY
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
         public static void ClearFailedExplainPlanCache()
         {
             _failedExplainPlanQueryCacheByDatastoreVendor.Reset();
         }
 
-        // FOR UNIT TESTING ONLY
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
         public CacheByDatastoreVendor<string, string> GetFailedExplainPlanCache()
         {
             return _failedExplainPlanQueryCacheByDatastoreVendor;
