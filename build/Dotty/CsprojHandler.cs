@@ -49,7 +49,9 @@ namespace Dotty
 
                             // look for a condition attribute and parse the tfm if found
                             var condition = packageReference.Condition;
-                            var tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
+                            string tfm = null;
+                            if (condition?.StartsWith("'$(TargetFramework)'") ?? false)
+                                tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
 
                             if (version.AsVersion() < versionData.NewVersion.AsVersion() &&
                                 !string.IsNullOrEmpty(versionData.IgnoreTfMs) &&

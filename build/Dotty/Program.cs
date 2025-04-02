@@ -148,9 +148,11 @@ namespace Dotty
                     {
                         var packageName = packageReference.Include;
                         var version = packageReference.Metadata.FirstOrDefault(m => m.Name == "Version")?.Value;
-                        // look for a condition attribute and parse the tfm if found
                         var condition = packageReference.Condition;
-                        var tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
+                        string tfm = null;
+                        if (condition?.StartsWith("'$(TargetFramework)'") ?? false)
+                            tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
+
                         if (version != null)
                         {
                             Log.Information($"Found package {packageName} with version {version}{(!string.IsNullOrEmpty(tfm) ? $" targeting {tfm}" : "")}");
