@@ -1,0 +1,45 @@
+name: Ensure PR title has correct prefix
+
+on:
+  pull_request:
+    branches:
+      - main
+  
+permissions:
+  contents: read
+
+jobs:
+  check-pr-summary:
+    name: Check if PR title has a good prefix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check PR title
+        env:
+            PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Pull request title='${PR_TITLE}'"
+          good_prefixes="feat fix security notice chore docs ci test"
+          good_prefix_arr=($good_prefixes)
+          if [[ "${PR_TITLE}" =~ ^(.+?)\:.+ ]]; then
+              prefix=${BASH_REMATCH[1]}
+              echo "prefix: ${prefix}"
+              prefix_without_parens=$(echo "${prefix}" |cut -d'(' -f1)
+              echo "prefix without parens = ${prefix_without_parens}"
+              for good_prefix in "${good_prefix_arr[@]}"
+              do
+                  if [[ "${prefix_without_parens}" == "${good_prefix}" ]]; then
+                      echo "prefix is good"
+                      exit 0
+                  fi
+              done
+              echo "Commit title prefix ${prefix_without_parens} is not valid"
+              echo "Prefix must be one of ${good_prefixes}"
+              exit 1
+          else
+              echo "Invalid PR title.  Must begin with a prefix (e.g. "feat: blah blah"), and the prefix must be one of ${good_prefixes}"
+              exit 1
+          fi
+        shell: bash
