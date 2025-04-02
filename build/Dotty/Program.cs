@@ -54,6 +54,12 @@ namespace Dotty
             foreach (var projectInfo in projectInfos)
             {
                 var projectFile = Path.Combine(_searchRootPath, projectInfo.ProjectFile);
+                if (!File.Exists(projectFile))
+                {
+                    Log.Warning($"Could not find {projectFile}, make sure projectFile path is relative.");
+                    continue;
+                }
+
                 var currentPackageVersions = ParsePackageVersions(projectFile);
                 if (currentPackageVersions != null)
                     projectPackages.Add(projectInfo, currentPackageVersions);
@@ -103,7 +109,9 @@ namespace Dotty
                     continue;
                 }
 
-                var projectLog = await CsprojHandler.UpdatePackageReferences(projectFile, _newVersions);
+                var currentProjectPackages = projectPackages[projectInfo];
+
+                var projectLog = CsprojHandler.UpdatePackageReferences(projectFile, currentProjectPackages, _newVersions);
                 if (projectLog.Count > 0)
                 {
                     updateLog.Add($"**{projectInfo.ProjectFile}**");
@@ -120,9 +128,14 @@ namespace Dotty
             //await CreateGithubIssuesForNewVersions();
         }
 
+        /// <summary>
+        /// Parses the current package versions from a project file.
+        /// </summary>
+        /// <param name="projectFilePath"></param>
+        /// <returns>A list of <see cref="ProjectPackageInfo"/> or null if the project couldn't be parsed</returns>
         private static List<ProjectPackageInfo> ParsePackageVersions(string projectFilePath)
         {
-            Log.Information($"Parsing project file {projectFilePath}");
+            Log.Information($"Parsing {Path.GetFileName(projectFilePath)}");
             var projectRootElement = ProjectRootElement.Open(projectFilePath);
             if (projectRootElement != null)
             {
@@ -140,8 +153,7 @@ namespace Dotty
                         var tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
                         if (version != null)
                         {
-                            Log.Information(
-                                $"Found package {packageName} with version {version}{(!string.IsNullOrEmpty(tfm) ? $" targeting {tfm}" : "")}");
+                            Log.Information($"Found package {packageName} with version {version}{(!string.IsNullOrEmpty(tfm) ? $" targeting {tfm}" : "")}");
                             packageVersions.Add(new ProjectPackageInfo
                             {
                                 PackageName = packageName, PackageVersion = version, Tfm = tfm
