@@ -1,9 +1,6 @@
 name: Ensure PR title has a valid prefix
 
 on:
-  pull_request:
-    branches:
-      - main
   pull_request_target:
     types:
       - opened
@@ -11,6 +8,11 @@ on:
       - synchronize
       - labeled
       - unlabeled
+    branches:
+      - main
+
+permissions:
+  read-all
 
 jobs:
   check:
