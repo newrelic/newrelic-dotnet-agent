@@ -12,6 +12,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Threading;
+using System;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
@@ -264,6 +265,63 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         {
             Thread.Sleep(millisecondsTimeOut);
         }
+
+#if NET9_0
+        [LibraryMethod]
+        public async Task MsSqlCreateStoredProcWithTempTable(string procedureName)
+        {
+            var createProcedure = $@"
+                CREATE OR ALTER PROCEDURE {procedureName}
+                AS
+                BEGIN
+                    -- Create a temporary table and insert data into it using SELECT INTO
+                    SELECT 
+                        Id,
+                        FirstName
+                    INTO #TempTable
+                    FROM 
+                        TeamMembers;
+
+                    -- Select all rows from the temporary table
+                    SELECT * FROM #TempTable;
+                END;";
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new SqlCommand(createProcedure, connection);
+            await command.ExecuteNonQueryAsync();
+
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task MsSqlStoredProcWithTempTable(string procedureName)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = procedureName;
+            command.CommandType = System.Data.CommandType.StoredProcedure;
+
+            // execute the command
+            await using var reader = await command.ExecuteReaderAsync();
+
+        }
+
+        [LibraryMethod]
+        public async Task MsSqlDropStoredProcWithTempTable(string procedureName)
+        {
+            var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new SqlCommand(dropProcedureSql, connection);
+            await command.ExecuteNonQueryAsync();
+        }
+#endif
 
         private void EnsureProcedure(string procedureName, DbParameter[] dbParameters)
         {
