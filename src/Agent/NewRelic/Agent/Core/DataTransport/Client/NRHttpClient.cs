@@ -27,7 +27,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _timeout = TimeSpan.FromMilliseconds((int)configuration.CollectorTimeout);
             _httpMethod = configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
 
-            // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
             var httpHandler = GetHttpHandler(proxy);
 
             var httpClient = new HttpClient(httpHandler, true) { Timeout = _timeout };
@@ -44,9 +43,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     var pooledConnectionLifetime = TimeSpan.FromMinutes(5); // an in-use connection will be closed and recycled after 5 minutes
                     var pooledConnectionIdleTimeout = TimeSpan.FromMinutes(1); // a connection that is idle for 1 minute will be closed and recycled
 
-                    Log.Info($"Creating a SocketsHttpHandler with PooledConnectionLifetime {pooledConnectionLifetime}, PooledConnectionIdleTimeout {pooledConnectionIdleTimeout} and ConnectTimeout {_timeout}");
+                    Log.Info("Creating a SocketsHttpHandler with PooledConnectionLifetime {ConnectionLifetime}, PooledConnectionIdleTimeout {ConnectionIdleTimeout} and ConnectTimeout {ConnectTimeout}", pooledConnectionLifetime, pooledConnectionIdleTimeout, _timeout);
 
-                    // use reflection to create a SocketsHttpHandler instance and set the PooledConnectionLifetime to 1 minute
+                    // use reflection to create a SocketsHttpHandler instance and set the timeout values
                     var assembly = Assembly.Load("System.Net.Http");
                     var handlerType = assembly.GetType("System.Net.Http.SocketsHttpHandler");
                     dynamic handler = Activator.CreateInstance(handlerType);
@@ -57,18 +56,18 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
                     handler.Proxy = proxy;
 
-                    Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {0}", handler.SslOptions.EnabledSslProtocols);
+                    Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {SslOptions}", handler.SslOptions.EnabledSslProtocols);
                     return handler;
                 }
                 catch (Exception e)
                 {
-                    Log.Info(e, "Application is running .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpHandler.");
+                    Log.Info(e, "Application runtime is .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpHandler.");
                 }
             }
 
             // if the application is not running .NET 6 or later, use the default HttpClientHandler
-            var httpClientHandler = new HttpClientHandler { Proxy = proxy };
-            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpClientHandler.SslProtocols.ToString());
+            var httpClientHandler = new HttpClientHandler { Proxy = proxy};
+            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {SslProtocols}", httpClientHandler.SslProtocols.ToString());
 
             return httpClientHandler;
         }
