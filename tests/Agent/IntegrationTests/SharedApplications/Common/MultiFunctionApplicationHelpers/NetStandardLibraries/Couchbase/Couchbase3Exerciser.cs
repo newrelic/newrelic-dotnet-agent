@@ -53,6 +53,8 @@ class Couchbase3Exerciser
     [LibraryMethod]
     public async Task InsertTestDocument(string scopeName, string collectionName, string documentId, string base64EncodedSerializedDocument)
     {
+        using var logger = new ConsoleLogger();
+
         var serializedDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedDocument));
         var document = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedDocument);
 
@@ -70,6 +72,8 @@ class Couchbase3Exerciser
     [LibraryMethod]
     public async Task RemoveTestDocument(string scopeName, string collectionName, string documentId)
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -84,6 +88,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Get(string scopeName, string collectionName, string documentId)
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -92,9 +98,12 @@ class Couchbase3Exerciser
         var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // get a document
+        logger.LogToConsole("GetAsync");
         using var getResult1 = await collection.GetAsync(documentId);
+        logger.LogToConsole("GetAnyReplicaAsync");
         using var getResult2 = await collection.GetAnyReplicaAsync(documentId);
         // for some reason, this fails if one of the previous 2 methods isn't called first.
+        logger.LogToConsole("GetAllReplicasAsync");
         var result = await Task.WhenAll(collection.GetAllReplicasAsync(documentId));
         foreach (var r in result)
             r.Dispose();
@@ -105,6 +114,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task GetAndLockAndUnlock(string scopeName, string collectionName, string documentId)
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -113,10 +124,12 @@ class Couchbase3Exerciser
         var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // get a document and lock it
+        logger.LogToConsole("GetAndLockAsync");
         using var result = await collection.GetAndLockAsync(documentId, TimeSpan.FromSeconds(10));
 
         // unlock the document
-        await collection.UnlockAsync(documentId, result.Cas);
+        logger.LogToConsole("UnlockAsync");
+        await collection.UnlockAsync(documentId, result.Cas, options => { options.Timeout(TimeSpan.FromSeconds(15));} );
     }
 
     [LibraryMethod]
@@ -124,6 +137,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Exists(string scopeName, string collectionName, string documentId)
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -139,6 +154,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task InsertUpsertReplaceAndRemove(string scopeName, string collectionName, string documentId, string base64EncodedSerializedInsertDocument, string base64EncodedSerializedUpsertDocument, string base64EncodedSerializedReplaceDocument)
     {
+        using var logger = new ConsoleLogger();
+
         var serializedInsertDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedInsertDocument));
         var serializedUpsertDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedUpsertDocument));
         var serializedReplaceDocument = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64EncodedSerializedReplaceDocument));
@@ -151,15 +168,19 @@ class Couchbase3Exerciser
         var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // insert a document
+        logger.LogToConsole("InsertAsync");
         await collection.InsertAsync(documentId, JsonConvert.DeserializeObject(serializedInsertDocument));
 
         // upsert a document
+        logger.LogToConsole("UpsertAsync");
         await collection.UpsertAsync(documentId, JsonConvert.DeserializeObject(serializedUpsertDocument));
 
         // replace a document
+        logger.LogToConsole("ReplaceAsync");
         await collection.ReplaceAsync(documentId, JsonConvert.DeserializeObject(serializedReplaceDocument));
 
         // delete the document
+        logger.LogToConsole("RemoveAsync");
         await collection.RemoveAsync(documentId);
     }
 
@@ -168,6 +189,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Mutate()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -189,6 +212,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Lookup(string scopeName, string collectionName, string documentId)
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -197,9 +222,12 @@ class Couchbase3Exerciser
         var collection = await GetCollectionAsync(bucket, scopeName, collectionName);
 
         // lookup a document
+        logger.LogToConsole("LookupInAsync");
 #if NET481_OR_GREATER || NET
         using var result1 = await collection.LookupInAsync(documentId, [LookupInSpec.Get("credit_cards")]);
+        logger.LogToConsole("LookupInAnyReplicaAsync");
         using var result2 = await collection.LookupInAnyReplicaAsync(documentId, [LookupInSpec.Get("credit_cards")]);
+        logger.LogToConsole("LookupInAllReplicasAsync");
         var results = collection.LookupInAllReplicasAsync(documentId, [LookupInSpec.Get("credit_cards")]);
         await foreach (var result in results)
         {
@@ -216,7 +244,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Scan()
     {
-        Console.WriteLine("Scan : Started");
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -226,7 +255,6 @@ class Couchbase3Exerciser
 
         // scan the collection - we don't care about processing the result
         var _ = collection.ScanAsync(new RangeScan());
-        Console.WriteLine("Scan : Finished");
     }
 #endif
 
@@ -235,6 +263,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task Touch()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -247,9 +277,12 @@ class Couchbase3Exerciser
         await collection.InsertAsync(key, new { Name = "Ted", Age = 32 });
 
         // update the expiry of a document
+        logger.LogToConsole("GetAndTouchAsync");
         using var getResult3 = await collection.GetAndTouchAsync(key, TimeSpan.FromSeconds(10));
+        logger.LogToConsole("TouchAsync");
         await collection.TouchAsync(key, TimeSpan.FromSeconds(5));
 #if NET481_OR_GREATER || NET
+        logger.LogToConsole("TouchWithCasAsync");
         await collection.TouchWithCasAsync(key, TimeSpan.FromSeconds(2));
 #endif
     }
@@ -259,6 +292,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ScopeQuery()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -273,6 +308,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ClusterQuery()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -300,6 +337,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ScopeSearch()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -314,6 +353,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ClusterSearch()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -328,6 +369,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ClusterAnalytics()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -340,6 +383,8 @@ class Couchbase3Exerciser
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task ScopeAnalytics()
     {
+        using var logger = new ConsoleLogger();
+
         var initResponse = await InitializeAsync();
         await using var cluster = initResponse.Cluster;
         await using var bucket = initResponse.Bucket;
@@ -355,6 +400,26 @@ class Couchbase3Exerciser
 
         return await Task.FromResult(collection);
     }
+}
 
+public class ConsoleLogger : IDisposable
+{
+    private readonly string _callerMemberName;
+
+    public ConsoleLogger([CallerMemberName] string callerMemberName = "")
+    {
+        _callerMemberName = callerMemberName;
+
+        LogToConsole("Starting");
+    }
+
+    public void LogToConsole(string message)
+    {
+        Console.WriteLine($"--> {DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} Couchbase3Exerciser.{_callerMemberName}: {message}");
+    }
+    public void Dispose()
+    {
+        LogToConsole("Complete");
+    }
 }
 #endif
