@@ -1,9 +1,6 @@
 name: Ensure PR title has a valid prefix
 
 on:
-  pull_request:
-    branches:
-      - main
   pull_request_target:
     types:
       - opened
@@ -11,10 +8,13 @@ on:
       - synchronize
       - labeled
       - unlabeled
+    branches:
+      - main
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions: read-all
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
