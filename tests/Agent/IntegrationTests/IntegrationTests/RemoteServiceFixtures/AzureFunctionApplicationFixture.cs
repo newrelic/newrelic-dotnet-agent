@@ -89,6 +89,7 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
     }
 }
 
+// TODO: will need to update this for net10.0
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", true)

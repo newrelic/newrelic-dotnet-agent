@@ -24,7 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "amazonexpress", BedrockModels.InvokeAmazonExpressAsync },
                 { "cohere", BedrockModels.InvokeCohereAsync },
                 { "anthropic", BedrockModels.InvokeClaudeAsync },
-#if NET481 || NET9_0
+#if NET481 || NET10_0
                 { "converse", BedrockModels.ConverseNovaMicro },
 #endif
             };
@@ -126,7 +126,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             }
         }
 
-#if NET481 ||  NET9_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net9.0 tfms
+#if NET481 ||  NET10_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net9.0 tfms
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoInlining)]
