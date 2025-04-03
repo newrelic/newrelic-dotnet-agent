@@ -18,18 +18,20 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     /// </summary>
     public class NRHttpClient : HttpClientBase
     {
-        private readonly IConfiguration _configuration;
         private IHttpClientWrapper _httpClientWrapper;
+        private readonly TimeSpan _timeout;
+        private readonly HttpMethod _httpMethod;
 
         public NRHttpClient(IWebProxy proxy, IConfiguration configuration) : base(proxy)
         {
-            _configuration = configuration;
+            _timeout = TimeSpan.FromMilliseconds((int)configuration.CollectorTimeout);
+            _httpMethod = configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
 
             // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
             var httpHandler = GetHttpHandler(proxy);
 
-            var httpClient = new HttpClient(httpHandler, true) { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
-            _httpClientWrapper = new HttpClientWrapper(httpClient, (int)configuration.CollectorTimeout);
+            var httpClient = new HttpClient(httpHandler, true) { Timeout = _timeout };
+            _httpClientWrapper = new HttpClientWrapper(httpClient, (int)_timeout.TotalMilliseconds);
         }
 
         private dynamic GetHttpHandler(IWebProxy proxy)
@@ -42,7 +44,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     var pooledConnectionLifetime = TimeSpan.FromMinutes(5); // an in-use connection will be closed and recycled after 5 minutes
                     var pooledConnectionIdleTimeout = TimeSpan.FromMinutes(1); // a connection that is idle for 1 minute will be closed and recycled
 
-                    Log.Info($"Creating a SocketsHttpHandler with PooledConnectionLifetime set to {pooledConnectionLifetime} and PooledConnectionIdleTimeout set to {pooledConnectionIdleTimeout}");
+                    Log.Info($"Creating a SocketsHttpHandler with PooledConnectionLifetime {pooledConnectionLifetime}, PooledConnectionIdleTimeout {pooledConnectionIdleTimeout} and ConnectTimeout {_timeout}");
 
                     // use reflection to create a SocketsHttpHandler instance and set the PooledConnectionLifetime to 1 minute
                     var assembly = Assembly.Load("System.Net.Http");
@@ -51,6 +53,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
                     handler.PooledConnectionLifetime = pooledConnectionLifetime;
                     handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
+                    handler.ConnectTimeout = _timeout;
 
                     handler.Proxy = proxy;
 
@@ -77,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 using var req = new HttpRequestMessage();
                 req.RequestUri = request.Uri;
-                req.Method = _configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
+                req.Method = _httpMethod;
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
