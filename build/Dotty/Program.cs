@@ -1,3 +1,4 @@
+using Microsoft.Build;
 using NewRelic.Api.Agent;
 using Octokit;
 using Serilog;
@@ -15,6 +16,8 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using Repository = NuGet.Protocol.Core.Types.Repository;
 using System.IO;
+using Microsoft.Build.Construction;
+using NuGet.Versioning;
 
 namespace Dotty
 {
@@ -44,6 +47,23 @@ namespace Dotty
             var searchTime = _lastRunTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.UtcNow.Date.AddDays(-_daysToSearch) : _lastRunTimestamp;
 
             Log.Information($"Searching for package updates since {searchTime.ToUniversalTime():s}Z.");
+
+            var projectInfoJson = await File.ReadAllTextAsync(ProjectsJsonFilename);
+            var projectInfos = JsonSerializer.Deserialize<ProjectInfo[]>(projectInfoJson);
+            Dictionary<ProjectInfo, List<ProjectPackageInfo>> projectPackages = new();
+            foreach (var projectInfo in projectInfos)
+            {
+                var projectFile = Path.Combine(_searchRootPath, projectInfo.ProjectFile);
+                if (!File.Exists(projectFile))
+                {
+                    Log.Warning($"Could not find {projectFile}, make sure projectFile path is relative.");
+                    continue;
+                }
+
+                var currentPackageVersions = ParsePackageVersions(projectFile);
+                if (currentPackageVersions != null)
+                    projectPackages.Add(projectInfo, currentPackageVersions);
+            }
 
             // initialize nuget repo
             var ps = new PackageSource("https://api.nuget.org/v3/index.json");
@@ -80,8 +100,6 @@ namespace Dotty
             }
 
             var updateLog = new List<string>();
-            var projectInfoJson = await File.ReadAllTextAsync(ProjectsJsonFilename);
-            var projectInfos = JsonSerializer.Deserialize<ProjectInfo[]>(projectInfoJson);
             foreach (var projectInfo in projectInfos)
             {
                 var projectFile = Path.Combine(_searchRootPath, projectInfo.ProjectFile);
@@ -91,7 +109,9 @@ namespace Dotty
                     continue;
                 }
 
-                var projectLog = await CsprojHandler.UpdatePackageReferences(projectFile, _newVersions);
+                var currentProjectPackages = projectPackages[projectInfo];
+
+                var projectLog = CsprojHandler.UpdatePackageReferences(projectFile, currentProjectPackages, _newVersions);
                 if (projectLog.Count > 0)
                 {
                     updateLog.Add($"**{projectInfo.ProjectFile}**");
@@ -106,6 +126,48 @@ namespace Dotty
             // Currently don'y want to create issues, but may in the future
             // If/When we do, this shuold be moved above the PR creation so we can link issues to the PR
             //await CreateGithubIssuesForNewVersions();
+        }
+
+        /// <summary>
+        /// Parses the current package versions from a project file.
+        /// </summary>
+        /// <param name="projectFilePath"></param>
+        /// <returns>A list of <see cref="ProjectPackageInfo"/> or null if the project couldn't be parsed</returns>
+        private static List<ProjectPackageInfo> ParsePackageVersions(string projectFilePath)
+        {
+            Log.Information($"Parsing {Path.GetFileName(projectFilePath)}");
+            var projectRootElement = ProjectRootElement.Open(projectFilePath);
+            if (projectRootElement != null)
+            {
+                List<ProjectPackageInfo> packageVersions = new();
+
+                foreach (var itemGroup in projectRootElement.ItemGroups)
+                {
+                    var packageReferences = itemGroup.Items.Where(i => i.ItemType == "PackageReference").ToList();
+                    foreach (var packageReference in packageReferences)
+                    {
+                        var packageName = packageReference.Include;
+                        var version = packageReference.Metadata.FirstOrDefault(m => m.Name == "Version")?.Value;
+                        var condition = packageReference.Condition;
+                        string tfm = null;
+                        if (condition?.StartsWith("'$(TargetFramework)'") ?? false)
+                            tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
+
+                        if (version != null)
+                        {
+                            Log.Information($"Found package {packageName} with version {version}{(!string.IsNullOrEmpty(tfm) ? $" targeting {tfm}" : "")}");
+                            packageVersions.Add(new ProjectPackageInfo
+                            {
+                                PackageName = packageName, PackageVersion = version, Tfm = tfm
+                            });
+                        }
+                    }
+                }
+
+                return packageVersions;
+            }
+
+            return null;
         }
 
         [Transaction]
