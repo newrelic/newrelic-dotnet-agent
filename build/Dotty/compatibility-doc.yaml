@@ -1,0 +1,128 @@
+- name: Log4Net
+  category: Logging
+  notes: 
+  packageName: log4net
+  nugetUrl: https://www.nuget.org/packages/log4net
+  compatibility:
+    framework:
+      latestVerifiedVersion: 2.0.8
+      minimumSupportedVersion: 2.0.8
+    net:
+      latestVerifiedVersion: 2.0.8
+      minimumSupportedVersion: 2.0.8
+
+- name: MongoDB Driver
+  category: Datastores
+  notes: 
+    "Beginning in agent version 10.12.0, the following methods added in version 2.7.0 are supported: 
+    *  `IMongoCollection.CountDocuments[Async]`
+    *  `IMongoCollection.EstimatedDocumentCountAsync`
+    *  `IMongoCollection.AggregateToCollection[Async]`
+    *  `IMongoDatabase.ListCollectionNames[Async]`
+    *  `IMongoDatabase.Aggregate[Async]`
+    *  `IMongoDatabase.AggregateToCollection[Async]`
+    *  `IMongoDatabase.Watch[Async]`"
+  packageName: mongodb.driver
+  nugetUrl: https://www.nuget.org/packages/mongodb.driver
+  compatibility:
+    framework:
+      latestVerifiedVersion: 2.29.0
+      minimumSupportedVersion: 2.3.0
+    net:
+      latestVerifiedVersion: 2.29.0
+      minimumSupportedVersion: 2.3.0
+
+- name: MySql.Data
+  category: Datastores
+  packageName: mysql.data
+  nugetUrl: https://www.nuget.org/packages/mysql.data
+  compatibility:
+    framework:
+      latestVerifiedVersion: 9.2.0
+      minimumSupportedVersion: 6.10.7
+    net:
+      latestVerifiedVersion: 8.0.33
+      minimumSupportedVersion: 8.0.33
+      minimumAgentVersion: 8.16.0
+
+- name: MySqlConnector
+  category: Datastores
+  packageName: mysql.connector
+  nugetUrl: https://www.nuget.org/packages/mysql.connector
+  compatibility:
+    framework:
+      latestVerifiedVersion: 2.4.0
+      minimumSupportedVersion: 1.0.1
+    net:
+      latestVerifiedVersion: 2.4.0
+      minimumSupportedVersion: 1.0.1
+
+- name: Elasticsearch.Net
+  category: Datastores
+  packageName: elasticsearch.net
+  nugetUrl: https://www.nuget.org/packages/elasticsearch.net
+  compatibility:
+    framework:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+    net:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+
+- name: Nest
+  category: Datastores
+  packageName: nest
+  nugetUrl: https://www.nuget.org/packages/nest
+  compatibility:
+    framework:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+    net:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+
+- name: Elasticsearch.Net
+  category: Datastores
+  packageName: elasticsearch.net
+  nugetUrl: https://www.nuget.org/packages/elasticsearch.net
+  compatibility:
+    framework:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+    net:
+      latestVerifiedVersion: 7.17.5
+      minimumSupportedVersion: 7.0.0
+
+- name: DynamoDB
+  category: Datastores
+  packageName: awssdk.dynamodbv2
+  nugetUrl: https://www.nuget.org/packages/AWSSDK.DynamoDBv2
+  compatibility:
+    framework:
+      latestVerifiedVersion: 3.7.405.31
+      minimumAgentVersion: 10.33.0
+    net:
+      latestVerifiedVersion: 3.7.405.31
+      minimumAgentVersion: 10.33.0
+
+- name: System.Data.ODBC
+  category: Datastores
+  packageName: system.data.odbc
+  nugetUrl: https://www.nuget.org/packages/system.data.odbc
+  compatibility:
+    framework:
+      latestVerifiedVersion: 9.0.2
+      minimumSupportedVersion: 8.0.0
+      minimumAgentVersion: 10.35.0
+    net:
+      latestVerifiedVersion: 9.0.2
+      minimumSupportedVersion: 8.0.0
+      minimumAgentVersion: 10.35.0
+  notes:
+    "The following features supported for ODBC datastore calls in .NET Framework (using the built-in `System.Data` namesapce)
+    are not support for .NET 8+:
+    * `Connection.Open`, `Connection.OpenAsync`
+    * `SqlDataReader.Read`, `SqlDataReader.NextResult`
+    * Slow SQL traces"
+
+
