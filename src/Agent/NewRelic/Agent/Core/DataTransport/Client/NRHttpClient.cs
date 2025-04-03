@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -33,6 +34,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             _httpClientWrapper = new HttpClientWrapper(httpClient, (int)_timeout.TotalMilliseconds);
         }
 
+        [NrExcludeFromCodeCoverage]
         private dynamic GetHttpHandler(IWebProxy proxy)
         {
             // check whether the application is running .NET 6 or later
