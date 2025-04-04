@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   check:
+    name: Ensure PR title has a valid prefix
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
