@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -18,20 +19,22 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     /// </summary>
     public class NRHttpClient : HttpClientBase
     {
-        private readonly IConfiguration _configuration;
         private IHttpClientWrapper _httpClientWrapper;
+        private readonly TimeSpan _timeout;
+        private readonly HttpMethod _httpMethod;
 
         public NRHttpClient(IWebProxy proxy, IConfiguration configuration) : base(proxy)
         {
-            _configuration = configuration;
+            _timeout = TimeSpan.FromMilliseconds((int)configuration.CollectorTimeout);
+            _httpMethod = configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
 
-            // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
             var httpHandler = GetHttpHandler(proxy);
 
-            var httpClient = new HttpClient(httpHandler, true) { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
-            _httpClientWrapper = new HttpClientWrapper(httpClient, (int)configuration.CollectorTimeout);
+            var httpClient = new HttpClient(httpHandler, true) { Timeout = _timeout };
+            _httpClientWrapper = new HttpClientWrapper(httpClient, (int)_timeout.TotalMilliseconds);
         }
 
+        [NrExcludeFromCodeCoverage]
         private dynamic GetHttpHandler(IWebProxy proxy)
         {
             // check whether the application is running .NET 6 or later
@@ -42,30 +45,31 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     var pooledConnectionLifetime = TimeSpan.FromMinutes(5); // an in-use connection will be closed and recycled after 5 minutes
                     var pooledConnectionIdleTimeout = TimeSpan.FromMinutes(1); // a connection that is idle for 1 minute will be closed and recycled
 
-                    Log.Info($"Creating a SocketsHttpHandler with PooledConnectionLifetime set to {pooledConnectionLifetime} and PooledConnectionIdleTimeout set to {pooledConnectionIdleTimeout}");
+                    Log.Info("Creating a SocketsHttpHandler with PooledConnectionLifetime {ConnectionLifetime}, PooledConnectionIdleTimeout {ConnectionIdleTimeout} and ConnectTimeout {ConnectTimeout}", pooledConnectionLifetime, pooledConnectionIdleTimeout, _timeout);
 
-                    // use reflection to create a SocketsHttpHandler instance and set the PooledConnectionLifetime to 1 minute
+                    // use reflection to create a SocketsHttpHandler instance and set the timeout values
                     var assembly = Assembly.Load("System.Net.Http");
                     var handlerType = assembly.GetType("System.Net.Http.SocketsHttpHandler");
                     dynamic handler = Activator.CreateInstance(handlerType);
 
                     handler.PooledConnectionLifetime = pooledConnectionLifetime;
                     handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
+                    handler.ConnectTimeout = _timeout;
 
                     handler.Proxy = proxy;
 
-                    Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {0}", handler.SslOptions.EnabledSslProtocols);
+                    Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {SslOptions}", handler.SslOptions.EnabledSslProtocols);
                     return handler;
                 }
                 catch (Exception e)
                 {
-                    Log.Info(e, "Application is running .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpHandler.");
+                    Log.Info(e, "Application runtime is .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpHandler.");
                 }
             }
 
             // if the application is not running .NET 6 or later, use the default HttpClientHandler
-            var httpClientHandler = new HttpClientHandler { Proxy = proxy };
-            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpClientHandler.SslProtocols.ToString());
+            var httpClientHandler = new HttpClientHandler { Proxy = proxy};
+            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {SslProtocols}", httpClientHandler.SslProtocols.ToString());
 
             return httpClientHandler;
         }
@@ -77,7 +81,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             {
                 using var req = new HttpRequestMessage();
                 req.RequestUri = request.Uri;
-                req.Method = _configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post;
+                req.Method = _httpMethod;
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
