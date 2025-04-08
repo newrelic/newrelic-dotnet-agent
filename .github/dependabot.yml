@@ -36,6 +36,9 @@ updates:
       nuget-agent:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "WixToolset*"
+        versions: [ ">=6.0.0" ] # WIX 6.0+ requires payment for commerical projects, avoiding upgrade for now
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
