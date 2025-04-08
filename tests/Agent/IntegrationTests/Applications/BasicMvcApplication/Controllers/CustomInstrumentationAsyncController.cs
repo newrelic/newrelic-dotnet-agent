@@ -23,7 +23,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static async Task<string> CustomMethodDefaultWrapperAsync()
+        private static async Task<string> CustomMethodDefaultWrapperAsync() //custom inst
         {
             return await Task.FromResult("Worked");
         }
@@ -70,14 +70,14 @@ namespace BasicMvcApplication.Controllers
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static async Task<string> CustomSegmentTransactionSegmentWrapper(string segmentName)
+        private static async Task<string> CustomSegmentTransactionSegmentWrapper(string segmentName) // custom inst
         {
             var str = await Task.Run(() => JustSleepAndReturnParamString(segmentName));
             return str;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static async Task<string> CustomSegmentAlternateParameterNamingTheSegment(int x, string segmentName)
+        private static async Task<string> CustomSegmentAlternateParameterNamingTheSegment(int x, string segmentName) // custom inst
         {
             x++;
             var str = await Task.Run(() => JustSleepAndReturnParamString(segmentName));

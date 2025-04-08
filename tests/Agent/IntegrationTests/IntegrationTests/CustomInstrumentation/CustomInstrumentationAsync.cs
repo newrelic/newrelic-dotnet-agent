@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
 
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentationAsync.xml");
 
@@ -38,6 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 exerciseApplication: () =>
                 {
                     _fixture.GetCustomInstrumentationAsync();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -46,6 +49,9 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         [Fact]
         public void Test()
         {
+            var shouldNotExist = _fixture.AgentLog.TryGetLogLine(AgentLogFile.TransactionEndedByGCFinalizerLogLineRegEx);
+            Assert.False(shouldNotExist.Success, "Transaction should not be garbage collected!");
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
@@ -75,7 +81,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 .FirstOrDefault();
 
             NrAssert.Multiple(
-                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionSample), // here
                 () => Assert.NotNull(transactionEvent)
                 );
 

@@ -56,8 +56,9 @@ namespace NewRelic.Agent.Core.Transactions
     public class TransactionService : ConfigurationBasedService, ITransactionService
     {
         private const string TransactionContextKey = "NewRelic.Transaction";
-        private readonly IEnumerable<IContextStorage<IInternalTransaction>> _sortedPrimaryContexts;
-        private readonly IContextStorage<IInternalTransaction> _asyncContext;
+        private readonly IEnumerable<IContextStorage<IInternalTransaction>> _onlyContext;
+        //private readonly IEnumerable<IContextStorage<IInternalTransaction>> _sortedPrimaryContexts;
+        //private readonly IContextStorage<IInternalTransaction> _asyncContext;
         private readonly ISimpleTimerFactory _timerFactory;
         private readonly ICallStackManagerFactory _callStackManagerFactory;
         private readonly IDatabaseService _databaseService;
@@ -71,8 +72,9 @@ namespace NewRelic.Agent.Core.Transactions
         public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
             IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, IAdaptiveSampler adaptiveSampler)
         {
-            _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
-            _asyncContext = GetAsyncTransactionContext(factories);
+            _onlyContext = GetOnlyTransactionContext(factories);
+            //_sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
+            //_asyncContext = GetAsyncTransactionContext(factories);
             _timerFactory = timerFactory;
             _callStackManagerFactory = callStackManagerFactory;
             _databaseService = databaseService;
@@ -84,7 +86,8 @@ namespace NewRelic.Agent.Core.Transactions
             _adaptiveSampler = adaptiveSampler;
         }
 
-        public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
+        //public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
+        public bool IsAttachedToAsyncStorage => true; // Always true now
 
         public float CreatePriority()
         {
@@ -93,32 +96,44 @@ namespace NewRelic.Agent.Core.Transactions
 
         #region Private Helpers
 
-        private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
+        private static IEnumerable<IContextStorage<IInternalTransaction>> GetOnlyTransactionContext(IEnumerable<IContextStorageFactory> factories)
         {
-            var list = factories
-                .Where(factory => factory != null)
-                .Where(factory => !factory.IsAsyncStorage)
-                .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
-                .Where(transactionContext => transactionContext != null)
-                .ToList(); //ToList() is important to force evaluation only once
-
-            list.Add(new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction"));
-
-            return list
-                .OrderByDescending(transactionContext => transactionContext.Priority).ToList();
-        }
-
-        private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
-        {
+            // Will return only AsyncLocal storage
+            // Keeping IEnumerable<IContextStorage<IInternalTransaction>> for now, but it should be a single instance
             return factories
-                .Where(factory => factory != null)
-                .Where(factory => factory.IsAsyncStorage)
-                .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
-                .Where(transactionContext => transactionContext != null)
-                .Where(transactionContext => transactionContext.CanProvide)
-                .OrderByDescending(transactionContext => transactionContext.Priority)
-                .FirstOrDefault();
+                    .Where(factory => factory != null)
+                    .Where(factory => factory.Type == ContextStorageType.AsyncLocal)
+                    .Select(factory => factory.CreateContext<IInternalTransaction>(TransactionContextKey))
+                    .Where(transactionContext => transactionContext != null)
+                    .ToList();
         }
+
+        //private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
+        //{
+        //    var list = factories
+        //        .Where(factory => factory != null)
+        //        //.Where(factory => !factory.IsAsyncStorage)
+        //        .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
+        //        .Where(transactionContext => transactionContext != null)
+        //        .ToList(); //ToList() is important to force evaluation only once
+
+        //    //list.Add(new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction"));
+
+        //    return list
+        //        .OrderByDescending(transactionContext => transactionContext.Priority).ToList();
+        //}
+
+        //private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
+        //{
+        //    return factories
+        //        .Where(factory => factory != null)
+        //        .Where(factory => factory.IsAsyncStorage)
+        //        .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
+        //        .Where(transactionContext => transactionContext != null)
+        //        .Where(transactionContext => transactionContext.CanProvide)
+        //        .OrderByDescending(transactionContext => transactionContext.Priority)
+        //        .FirstOrDefault();
+        //}
 
         private IInternalTransaction TryGetInternalTransaction(IContextStorage<IInternalTransaction> transactionContext)
         {
@@ -140,14 +155,16 @@ namespace NewRelic.Agent.Core.Transactions
 
         private IContextStorage<IInternalTransaction> GetFirstActivePrimaryContext()
         {
-            foreach (var context in _sortedPrimaryContexts)
-            {
-                if (context.CanProvide)
-                {
-                    return context;
-                }
-            }
-            return null;
+            return _onlyContext.FirstOrDefault();
+
+            //foreach (var context in _sortedPrimaryContexts)
+            //{
+            //    if (context.CanProvide)
+            //    {
+            //        return context;
+            //    }
+            //}
+            //return null;
         }
 
         private IInternalTransaction CreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate)
@@ -207,39 +224,66 @@ namespace NewRelic.Agent.Core.Transactions
 
         public IInternalTransaction GetCurrentInternalTransaction()
         {
-            IInternalTransaction transaction;
-            foreach (var context in _sortedPrimaryContexts)
-            {
-                transaction = TryGetInternalTransaction(context);
-                if (transaction != null)
-                {
-                    if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {context.ToString()}");
-                    return transaction;
-                }
-            }
-
-            transaction = TryGetInternalTransaction(_asyncContext);
+            var context = GetFirstActivePrimaryContext();
+            var transaction = TryGetInternalTransaction(context);
             if (transaction != null)
             {
-                if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {_asyncContext.ToString()}");
+                if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {context.ToString()}");
+                return transaction;
             }
+
+            //Log.Finest($"WARNING: No transaction found in {context.ToString()}!");
             return transaction;
+
+            //IInternalTransaction transaction;
+            //foreach (var context in _sortedPrimaryContexts)
+            //{
+            //    transaction = TryGetInternalTransaction(context);
+            //    if (transaction != null)
+            //    {
+            //        if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {context.ToString()}");
+            //        return transaction;
+            //    }
+            //}
+
+            //transaction = TryGetInternalTransaction(_asyncContext);
+            //if (transaction != null)
+            //{
+            //    if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {_asyncContext.ToString()}");
+            //}
+            //return transaction;
         }
 
         public bool SetTransactionOnAsyncContext(IInternalTransaction transaction)
         {
-            if (_asyncContext == null)
+            var context = GetFirstActivePrimaryContext();
+            if (context == null)
             {
+                if(Log.IsFinestEnabled) transaction.LogFinest($"WARNING: ONLY context was NULL!");
                 return false;
             }
 
-            if (_asyncContext.GetData() == null)
+            if (context.GetData() == null)
             {
-                _asyncContext.SetData(transaction);
-                if (Log.IsFinestEnabled) transaction.LogFinest($"Attached to {_asyncContext}");
+                context.SetData(transaction);
+                if (Log.IsFinestEnabled) transaction.LogFinest($"Attached to {context}");
             }
 
+            Log.Finest($"Finished attaching to {context}");
             return true;
+
+            //if (_asyncContext == null)
+            //{
+            //    return false;
+            //}
+
+            //if (_asyncContext.GetData() == null)
+            //{
+            //    _asyncContext.SetData(transaction);
+            //    if (Log.IsFinestEnabled) transaction.LogFinest($"Attached to {_asyncContext}");
+            //}
+
+            //return true;
         }
 
         public IInternalTransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, bool doNotTrackAsUnitOfWork = true)
@@ -282,15 +326,17 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void RemoveOutstandingInternalTransactions(bool removeAsync, bool removePrimary)
         {
-            if (removePrimary)
-            {
-                TryClearContexts(_sortedPrimaryContexts);
-            }
+            TryClearContexts(_onlyContext);
 
-            if (removeAsync)
-            {
-                _asyncContext?.Clear();
-            }
+            //if (removePrimary)
+            //{
+            //    TryClearContexts(_sortedPrimaryContexts);
+            //}
+
+            //if (removeAsync)
+            //{
+            //    _asyncContext?.Clear();
+            //}
         }
 
         #endregion

@@ -65,14 +65,14 @@ namespace NewRelic.Agent.Core.CallStack
                 return new AsyncCallStackManagerFactory(asyncLocalFactory);
             }
 
-            var callContextLogicalDataFactory = listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.CallContextLogicalData);
-            if (callContextLogicalDataFactory != null)
-            {
-                Log.Debug("Using async storage {0} for call stack with AsyncCallStackManagerFactory", callContextLogicalDataFactory.GetType().FullName);
-                return new AsyncCallStackManagerFactory(callContextLogicalDataFactory);
-            }
+            //var callContextLogicalDataFactory = listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.CallContextLogicalData);
+            //if (callContextLogicalDataFactory != null)
+            //{
+            //    Log.Debug("Using async storage {0} for call stack with AsyncCallStackManagerFactory", callContextLogicalDataFactory.GetType().FullName);
+            //    return new AsyncCallStackManagerFactory(callContextLogicalDataFactory);
+            //}
 
-            listOfFactories.Add(GetThreadLocalContextStorageFactory());
+            //listOfFactories.Add(GetThreadLocalContextStorageFactory());
 
             Log.Debug("No specialized async storage found. Using standard factories with CallStackManagerFactory.");
             return new CallStackManagerFactory(listOfFactories);

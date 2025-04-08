@@ -754,8 +754,8 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void DetachFromPrimary()
         {
-            Agent.Detach(false, true);
-            if (Log.IsFinestEnabled) LogFinest($"Detaching from primary storage contexts.");
+            //Agent.Detach(false, true);
+            //if (Log.IsFinestEnabled) LogFinest($"Detaching from primary storage contexts.");
         }
 
         public void ProcessInboundResponse(IEnumerable<KeyValuePair<string, string>> headers, ISegment segment)

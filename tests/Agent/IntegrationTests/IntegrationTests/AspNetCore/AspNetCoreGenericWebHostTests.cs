@@ -85,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                 () => Assert.True(errorTraces.Any(), "No error trace found."),
                 () => Assert.True(errorTraces.Count == 1, $"Expected 1 errors traces but found {errorTraces.Count}"),
                 () => Assert.Equal("WebTransaction/MVC/Home/ThrowException", errorTraces[0].Path),
-                () => Assert.Equal("System.Exception", errorTraces[0].ExceptionClassName),
+                () => Assert.Equal("System.Exception", errorTraces[0].ExceptionClassName), // this
                 () => Assert.Equal("ExceptionMessage", errorTraces[0].Message),
                 () => Assert.NotEmpty(errorTraces[0].Attributes.StackTrace),
                 () => Assert.Single(errorEvents),
