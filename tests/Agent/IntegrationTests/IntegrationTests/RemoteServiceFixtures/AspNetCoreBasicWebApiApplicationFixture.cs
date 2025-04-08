@@ -13,7 +13,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public AspNetCoreBasicWebApiApplicationFixture() :
             base(new RemoteService("AspNetCoreBasicWebApiApplication",
                 "AspNetCoreBasicWebApiApplication.exe",
-                "net9.0",
+                "net10.0",
                 ApplicationType.Bounded,
                 true,
                 true,

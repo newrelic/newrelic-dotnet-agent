@@ -126,7 +126,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
             }
         }
 
-#if NET481 ||  NET10_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net9.0 tfms
+#if NET481 ||  NET10_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net10.0 tfms
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoInlining)]

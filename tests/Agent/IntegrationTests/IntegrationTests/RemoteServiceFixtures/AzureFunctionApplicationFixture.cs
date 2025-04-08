@@ -92,7 +92,7 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
 // TODO: will need to update this for net10.0
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", true)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
     {
     }
 }
@@ -106,7 +106,7 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
 
 public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net9.0", false)
+    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", false)
     {
     }
 }
@@ -120,7 +120,7 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreOldest : AzureFuncti
 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net9.0", true)
+    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net10.0", true)
     {
     }
 }

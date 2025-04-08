@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NET481_OR_GREATER && !NET9_0_OR_GREATER
+#if !NET481_OR_GREATER && !NET10_0_OR_GREATER
 #define MASSTRANSIT7
 #endif
 

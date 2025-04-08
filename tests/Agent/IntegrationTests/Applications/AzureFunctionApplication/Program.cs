@@ -10,7 +10,7 @@ internal class Program
     {
         var host = new HostBuilder()
             // the net481 and net8 target uses the "basic" azure function configuration
-            // the net9 target uses the aspnetcore azure function configuration
+            // the net10 target uses the aspnetcore azure function configuration
 #if NETFRAMEWORK || NET8_0
             .ConfigureFunctionsWorkerDefaults()
 #elif NET9_0

@@ -98,13 +98,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
     }
 
-    public class ConsoleDynamicMethodFixtureCore90 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore90() : base("net10.0")
-        {
-        }
-    }
-
     public class ConsoleDynamicMethodFixtureCore100 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore100() : base("net10.0")
@@ -141,7 +134,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for AIM Account level disabled tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestAIM : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatestAIM : ConsoleDynamicMethodFixtureCoreLatest
     {
         public override string TestSettingCategory { get { return "AIM"; } }
         public ConsoleDynamicMethodFixtureCoreLatestAIM()
@@ -153,7 +146,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for High Security Mode tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore80
+    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCoreLatest
     {
         public override string TestSettingCategory { get { return "HSM"; } }
         public ConsoleDynamicMethodFixtureCoreLatestHSM()
@@ -165,7 +158,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore90
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCoreLatest
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureCoreLatestCSP()

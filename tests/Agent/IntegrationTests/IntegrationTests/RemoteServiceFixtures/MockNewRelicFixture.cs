@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"MockNewRelic";
         private const string ExecutableName = @"MockNewRelic.exe";
-        private const string TargetFramework = "net9.0";
+        private const string TargetFramework = "net10.0";
 
         public RemoteService MockNewRelicApplication { get; set; }
 
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                     MockNewRelicApplication.CopyToRemote();
                     MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);
 
-#if !NET9_0_OR_GREATER
+#if !NET10_0_OR_GREATER
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     ServicePointManager.ServerCertificateValidationCallback = delegate
                     {
