@@ -74,11 +74,13 @@ jobs:
         run: |
           echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
 
-      - name: Install .NET 9
+      - name: Install .NET 10 Preview
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
-          dotnet-version: '9.0.x'
-  
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+    
+    
       - name: Build & Run amd64 Linux Container Integration Tests
         env:
           BUILD_ARCH: amd64
@@ -137,11 +139,12 @@ jobs:
         run: |
           echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
 
-      - name: Install .NET 9
+      - name: Install .NET 10 Preview
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
-          dotnet-version: '9.0.x'
-  
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+    
       - name: Build & Run arm64 Linux Container Integration Tests
         env:
           BUILD_ARCH: arm64
