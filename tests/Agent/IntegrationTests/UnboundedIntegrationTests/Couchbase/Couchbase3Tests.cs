@@ -93,10 +93,10 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
         if (_fixture is not (ConsoleDynamicMethodFixtureFW48 or ConsoleDynamicMethodFixtureFW471))
         {
-            _fixture.AddCommand("Couchbase3Exerciser Scan"); // no params required
-
             _fixture.AddCommand("Couchbase3Exerciser ScopeSearch"); // no params required
             _fixture.AddCommand("Couchbase3Exerciser ClusterSearch"); // no params required
+
+            _fixture.AddCommand("Couchbase3Exerciser Scan"); // no params required
         }
 
         _fixture.AddActions

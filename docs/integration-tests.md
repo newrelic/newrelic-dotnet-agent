@@ -8,9 +8,9 @@ These tests execute against valid New Relic accounts and test a variety of featu
 
 ## Testing on Windows with Visual Studio
 
-Visual Studio 2022 or greater preferred.
+Visual Studio 2022 or greater required.
 
-Visual Studio 2019 may work with .NET 6 additionally installed.
+All generally available and supported .NET runtimes should be installed (e.g. .NET 8 and .NET 9 as of March 2025)
 
 ### Additional install requirements
 
@@ -22,8 +22,8 @@ Install the "ASP.NET and web development" workload in the "Web & Cloud" category
 
 Depending on which version of Visual Studio you are using, you may have to install some or all of the following:
 
-* .NET 6
-* .NET 7
+* .NET 8
+* .NET 9
 * .NET Framework 4.7.1 targeting pack
 * .NET Framework 4.8.0 targeting pack
 * .NET Framework 4.8.1 targeting pack
@@ -196,7 +196,7 @@ See the test secrets section above on configuring an appropriate account.
 
 #### Selenium tests
 
-We currently have one test that executes a JavaScript ajax request via Selenium. This requires Internet Explorer to be installed and does not yet work with Edge.
+We currently have one test that executes a JavaScript ajax request via Selenium. This requires Chrome to be installed.
 
 * NewRelic.Agent.IntegrationTests.BasicInstrumentation.BasicAspWebService.Test
 
@@ -226,7 +226,7 @@ For more on metric normalization rules see: https://docs.newrelic.com/docs/new-r
 
 #### W3C validation tests
 
-The W3C validation tests requiring installing Python 3.x and a dependency. See the "Python and dependencies" section above.
+The W3C validation tests requiring installing Python 3.x and a dependency (`aiohttp`). See the "Python and dependencies" section above.
 
 #### Distributed Tracing tests
 
@@ -259,20 +259,9 @@ We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to 
 
 ### Linux system setup
 
-You will need to install the .NET SDKs for .NET Core 3.1, .NET 5, .NET 6, and .NET 7.
+You will need to install the .NET SDKs for currently available and supported .NET runtimes (e.g. .NET 8 and .NET 9 as of March 2025).
 
-```
-sudo apt-get update -q -y && sudo apt-get install -q -y curl
-sudo mkdir -p /usr/share/dotnet
-
-sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-sudo curl -sSL https://builds.dotnet.microsoft.com/dotnet/Sdk/7.0.100/dotnet-sdk-7.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
-
-sudo ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
-dotnet --list-sdks
-```
+See Microsoft's documentation for how to install the required SDKs for your particular Linux distro and hardware platform: https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual
 
 ### Set up test secrets
 
@@ -285,12 +274,12 @@ Refer to the section above in the Windows setup instructions regarding configuri
 As previously mentioned, the agent solution needs to be built on Windows.  If you are using an Ubuntu VM in WSL, you can use this workflow to run the agent integration tests on Linux:
 
 1. Build the FullAgent.sln in Visual Studio.
-2. Copy the agent repo to the Ubuntu VM.  The VM's filesystem can be accessed from the Windows host using this path: `\\wsl$\Ubuntu-20.04` (replace `Ubuntu-20.04` with the name of your VM if it's different).
+2. Copy the agent repo to the Ubuntu VM.  The VM's filesystem can be accessed from the Windows host using this path: `\\wsl$\Ubuntu-24.04` (replace `Ubuntu-24.04` with the name of your VM if it's different).
 3. In the VM, from the shell:
 
 ```
 cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
-sudo dotnet test -f netcoreapp3.1 -c Release --filter RuntimeFramework=NetCore
+sudo dotnet test -f net9.0 -c Release --filter RuntimeFramework=NetCore
 ```
 
 For more details on how to use dotnet test, see https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-test.

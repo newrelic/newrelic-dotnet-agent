@@ -29,8 +29,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, string libraryName) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMsSql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSql";

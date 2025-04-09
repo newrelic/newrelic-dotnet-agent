@@ -22,8 +22,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         public MySqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, bool asyncOpen) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMySql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
 

@@ -31,6 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport.Tests
         private IConfiguration _configuration;
         private ConnectionHandler _connectionHandler;
         private ICollectorWire _dataRequestWire;
+        private IFileWrapper _fileWrapper;
 
         [SetUp]
         public void SetUp()
@@ -46,6 +47,7 @@ namespace NewRelic.Agent.Core.DataTransport.Tests
             _environmentVariableHelper = Mock.Create<IEnvironment>();
             _configuration = Mock.Create<IConfiguration>();
             _dataRequestWire = Mock.Create<ICollectorWire>();
+            _fileWrapper = Mock.Create<IFileWrapper>();
 
             Mock.Arrange(() => _configuration.SecurityPoliciesTokenExists).Returns(false);
             Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
@@ -63,6 +65,7 @@ namespace NewRelic.Agent.Core.DataTransport.Tests
                 _systemInfo,
                 _agentHealthReporter,
                 _environmentVariableHelper,
+                _fileWrapper,
                 _dataRequestWire
             );
 

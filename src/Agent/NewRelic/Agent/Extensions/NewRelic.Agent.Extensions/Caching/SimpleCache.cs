@@ -70,6 +70,11 @@ namespace NewRelic.Agent.Extensions.Caching
         }
 
         /// <summary>
+        /// Checks whether the specified key exists in the cache without updating stats or affecting the priority of items in the cache.
+        /// </summary>
+        public bool Contains(TKey key) => PeekInternal(key) != null;
+
+        /// <summary>
         /// Allows searching of the cache.  If found, returns the existing item and updates the statistics.
         /// If not found, returns NULL.
         /// </summary>
@@ -104,6 +109,17 @@ namespace NewRelic.Agent.Extensions.Caching
             var result = Get(key);
 
             return result ?? _cacheMap.GetOrAdd(key, x => valueFx());
+        }
+
+        /// <summary>
+        /// Attempts to add an item to the cache.  If the item already exists, returns false. Otherwise, returns true.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="valueFunc">Function to call to obtain the value if the key is not present in the cache.</param>
+        /// <returns></returns>
+        public bool TryAdd(TKey key, Func<TValue> valueFunc)
+        {
+            return _cacheMap.TryAdd(key, valueFunc());
         }
 
         /// <summary>

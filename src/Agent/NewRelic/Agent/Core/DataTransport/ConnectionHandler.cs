@@ -50,8 +50,9 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly Environment _environment;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environmentVariableHelper;
+        private readonly IFileWrapper _fileWrapper;
 
-        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper, ICollectorWire dataRequestWire = null)
+        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper, IFileWrapper fileWrapper, ICollectorWire dataRequestWire = null)
         {
             _serializer = serializer;
             _collectorWireFactory = collectorWireFactory;
@@ -62,6 +63,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _systemInfo = systemInfo;
             _agentHealthReporter = agentHealthReporter;
             _environmentVariableHelper = environmentVariableHelper;
+            _fileWrapper = fileWrapper;
 
             _connectionInfo = new ConnectionInfo(_configuration);
             _dataRequestWire = dataRequestWire ??  new NoOpCollectorWire();
@@ -314,7 +316,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 identifier,
                 _labelsService.Labels,
                 metadata ?? new Dictionary<string, string>(),
-                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
+                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper).GetUtilizationSettings(),
                 _configuration.CollectorSendEnvironmentInfo ? _environment : null,
                 _configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
                 new EventHarvestConfigModel(_configuration),

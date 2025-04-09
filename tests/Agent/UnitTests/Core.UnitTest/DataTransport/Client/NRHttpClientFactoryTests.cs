@@ -27,6 +27,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns("12345");
             Mock.Arrange(() => _mockConfiguration.AgentRunId).Returns("123");
             Mock.Arrange(() => _mockConfiguration.CollectorMaxPayloadSizeInBytes).Returns(int.MaxValue);
+            Mock.Arrange(() => _mockConfiguration.CollectorTimeout).Returns(12345);
 
             _mockProxy = Mock.Create<IWebProxy>();
 

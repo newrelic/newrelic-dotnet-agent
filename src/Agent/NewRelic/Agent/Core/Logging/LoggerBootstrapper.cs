@@ -9,7 +9,7 @@ using Serilog;
 using Serilog.Core;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
-
+using NewRelic.Agent.Core.Utilities;
 using Serilog.Events;
 #if NETSTANDARD2_0
 using System.Runtime.InteropServices;

@@ -86,6 +86,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
         public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
 
+        // explain plan failure
+        public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;
