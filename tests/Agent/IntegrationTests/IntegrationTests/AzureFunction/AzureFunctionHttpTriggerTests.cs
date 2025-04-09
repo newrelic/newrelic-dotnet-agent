@@ -470,6 +470,7 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
 }
 
 // the net9 target builds the function app with the aspnetcore pipeline package
+// TODO: Update to net10 when Azure functions supports it
 [NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCore90 : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {

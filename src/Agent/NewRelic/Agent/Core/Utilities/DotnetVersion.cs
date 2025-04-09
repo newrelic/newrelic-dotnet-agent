@@ -35,6 +35,7 @@ namespace NewRelic.Agent.Core.Utilities
         net7,
         net8,
         net9,
+        net10,
         Other
     }
 
@@ -101,6 +102,11 @@ namespace NewRelic.Agent.Core.Utilities
             if (envVer.Major == 3 && envVer.Minor == 1)
             {
                 return DotnetCoreVersion.netcoreapp31;
+            }
+
+            if (envVer.Major == 10)
+            {
+                return DotnetCoreVersion.net10;
             }
 
             if (envVer.Major == 9)

@@ -13,7 +13,7 @@ internal class Program
             // the net10 target uses the aspnetcore azure function configuration
 #if NETFRAMEWORK || NET8_0
             .ConfigureFunctionsWorkerDefaults()
-#elif NET9_0
+#elif  // TODO: Update to NET10_0 when Azure functions supports
             .ConfigureFunctionsWebApplication()
 #endif
             .Build();
