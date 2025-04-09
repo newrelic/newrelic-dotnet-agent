@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.ContainerIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.ContainerIntegrationTests</AssemblyName>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <Import Project="Test.targets" />

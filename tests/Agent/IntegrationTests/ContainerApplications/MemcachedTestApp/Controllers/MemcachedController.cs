@@ -37,7 +37,7 @@ namespace MemcachedTestApp.Controllers
             await GetAsyncGen();
             Increment();
             Decrement();
-#if NET9_0
+#if NET10_0
             await TouchAsync();
 #endif
             GetMany();
@@ -89,7 +89,7 @@ namespace MemcachedTestApp.Controllers
 #pragma warning disable CS0618 // Type or member is obsolete
 #if NET8_0
             var posts = await _memcachedClient.GetAsync<object>("GetAsync");
-#elif NET9_0
+#elif NET10_0
             var posts = await _memcachedClient.GetAsync("GetAsync");
 #endif
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -119,7 +119,7 @@ namespace MemcachedTestApp.Controllers
             var posts = _memcachedClient.Decrement("Decrement", 1, 1, 1);
         }
 
-#if NET9_0
+#if NET10_0
         private async Task TouchAsync()
         {
             var value = _blogPostService.GetRecent(2);

@@ -131,9 +131,9 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 }
 
 [Trait("Architecture", "amd64")]
-public class KafkaDotNet9Test : LinuxKafkaTest<KafkaDotNet9TestFixture>
+public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>
 {
-    public KafkaDotNet9Test(KafkaDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNet10Test(KafkaDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

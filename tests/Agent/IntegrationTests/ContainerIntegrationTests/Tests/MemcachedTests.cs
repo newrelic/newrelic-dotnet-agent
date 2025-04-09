@@ -97,7 +97,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                 expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 11 });
                 expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, callCount = 11, metricScope = transactionName });
             }
-            else if (_fixture.DotnetVer == "9.0") // EnyimMemcachedCore 3.x
+            else if (_fixture.DotnetVer == "10.0") // EnyimMemcachedCore 3.x
             {
                 expectedMetrics.Add(new() { metricName = datastoreAll, callCount = 22 });
                 expectedMetrics.Add(new() { metricName = datastoreAllOther, callCount = 22 });
@@ -137,9 +137,9 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
     }
 
     [Trait("Architecture", "amd64")]
-    public class MemcachedDotNet9Test : LinuxMemcachedTest<MemcachedDotNet9TestFixture>
+    public class MemcachedDotNet10Test : LinuxMemcachedTest<MemcachedDotNet10TestFixture>
     {
-        public MemcachedDotNet9Test(MemcachedDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        public MemcachedDotNet10Test(MemcachedDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

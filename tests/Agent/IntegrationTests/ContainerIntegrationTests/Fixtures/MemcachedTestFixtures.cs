@@ -40,17 +40,17 @@ public class MemcachedDotNet8TestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
+    private const string DistroTag = "trixie-slim";
     private const string DotnetVersion = "8.0";
 
     public MemcachedDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
-public class MemcachedDotNet9TestFixture : MemcachedTestFixtureBase
+public class MemcachedDotNet10TestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
-    private const string DotnetVersion = "9.0";
+    private const string DistroTag = "trixie-slim";
+    private const string DotnetVersion = "10.0";
 
-    public MemcachedDotNet9TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public MemcachedDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
