@@ -19,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.DeleteXmlFileTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitDeleteFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture:AspNetCoreReJitMvcApplicationFixture
     {

@@ -20,7 +20,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.AddNodeTest.xml
     /// </summary>
-    [NetCoreTest]
     public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreReJitMvcApplicationFixture>
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;

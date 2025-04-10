@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETFRAMEWORK
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Testing.Assertions;
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
             WCFInvocationMethod.TAPAsync
         };
 
-        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
+        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, WCFLegacyTracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
             : base(fixture, output, bindingToTest, new[] { WCFInvocationMethod.Sync }, _instrumentedSvcInvocMethods, tracingTestOption, hostingModelOption, aspCompatModeOption, logHelpersImpl)
         {
         }
@@ -193,7 +192,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
         [Fact]
         public override void DistributedTracing_Metrics()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -292,7 +291,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
 
 
-            if (_tracingTestOption == TracingTestOption.CAT)
+            if (_tracingTestOption == WCFLegacyTracingTestOption.CAT)
             {
                 NrAssert.Multiple(
                     () => Assertions.MetricsExist(expectedMetrics, LogHelpers.MetricValues),
@@ -347,7 +346,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
         [Fact]
         public override void DistributedTracing_SpanEvents()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -485,4 +484,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
     }
 }
-#endif

@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class CustomInstrumentationAsync : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class BasicWebForms : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebFormsApplication>
     {
 

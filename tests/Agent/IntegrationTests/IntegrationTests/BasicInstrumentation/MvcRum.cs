@@ -9,7 +9,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class MvcRum : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
 {
-    [NetCoreTest]
     public abstract class AwsLambdaAPIGatewayProxyRequestTest<T> : NewRelicIntegrationTest<T> where T : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
         private readonly LambdaAPIGatewayProxyRequestTriggerFixtureBase _fixture;

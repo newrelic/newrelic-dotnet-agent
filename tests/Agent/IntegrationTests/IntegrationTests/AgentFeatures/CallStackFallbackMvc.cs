@@ -11,7 +11,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class CallStackFallbackMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

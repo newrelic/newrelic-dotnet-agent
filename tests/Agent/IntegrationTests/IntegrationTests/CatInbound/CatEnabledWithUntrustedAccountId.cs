@@ -11,7 +11,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
-    [NetFrameworkTest]
     public class CatEnabledWithUntrustedAccountId : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
