@@ -131,10 +131,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
-            //We cannot run dotnet publish against the same directory concurrently.
-            //Doing so causes the publish job to fail because it can't obtain a lock on files in the obj and bin directories.
-            lock (GetPublishLockObjectForCoreApp())
+            // create a named semaphore to synchronize dotnet publish access for a given application
+            var semaphore = new Semaphore(1, 1, ApplicationDirectoryName);
+            semaphore.WaitOne();
+            try
             {
+                TestLogger?.WriteLine($"[RemoteService]: Semaphore acquired; Publishing {ApplicationDirectoryName} to {deployPath}.");
+
                 process.Start();
 
                 var processOutput = new ProcessOutput(TestLogger, process, true);
@@ -174,10 +177,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
                     throw new Exception(failedToPublishMessage);
                 }
-            }
 
-            sw.Stop();
-            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
+                sw.Stop();
+                Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         private object GetPublishLockObjectForCoreApp()
