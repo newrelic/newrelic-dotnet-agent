@@ -386,15 +386,15 @@ jobs:
 
           Write-Host "Run tests"
 
-          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
-          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
-          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          #   $json.parallelizeAssembly = $true
-          #   $json.parallelizeTestCollections = $true
-          # }
-          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
+          # # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          # $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
+          # $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
+          # # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+          # #   $json.parallelizeAssembly = $true
+          # #   $json.parallelizeTestCollections = $true
+          # # }
+          # $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
