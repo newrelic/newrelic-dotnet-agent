@@ -190,6 +190,8 @@ namespace NewRelic.Agent.Configuration
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
+        string RemoteParentSampledBehavior { get; }
+        string RemoteParentNotSampledBehavior { get; }
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }
         bool LogEventCollectorEnabled { get; }
