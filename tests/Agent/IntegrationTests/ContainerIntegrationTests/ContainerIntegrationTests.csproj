@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <RootNamespace>NewRelic.Agent.ContainerIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.ContainerIntegrationTests</AssemblyName>
     <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <Import Project="Test.targets" />
@@ -18,7 +18,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" version="3.0.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
