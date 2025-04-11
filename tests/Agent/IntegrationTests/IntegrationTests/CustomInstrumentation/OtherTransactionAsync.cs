@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class OtherTransactionAsync : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

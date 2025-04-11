@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
-    [NetFrameworkTest]
     public class CatDisabledHeaderPresent : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

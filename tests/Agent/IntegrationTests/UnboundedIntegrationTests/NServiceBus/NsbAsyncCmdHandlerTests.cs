@@ -83,7 +83,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbAsyncCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -92,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbAsyncCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,7 +99,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncCmdHandlerTestsFWLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NsbAsyncCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -110,7 +107,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbAsyncCmdHandlerTestsCoreOldest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NsbAsyncCmdHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -119,7 +115,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbAsyncCmdHandlerTestsCoreLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbAsyncCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

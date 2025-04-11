@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
 {
-    [NetCoreTest]
     public abstract class AwsLambdaCustomParametersTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomParametersFixtureBase
     {
         private readonly string _expectedTransactionName;

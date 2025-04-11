@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class GetBrowserTimingHeader : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

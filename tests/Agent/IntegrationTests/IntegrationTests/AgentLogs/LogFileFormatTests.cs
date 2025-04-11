@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
-    [NetFrameworkTest]
     public class LogFileFormatTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

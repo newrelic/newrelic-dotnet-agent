@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
 {
-    [NetCoreTest]
     public abstract class AwsLambdaSesEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaSesEventTriggerFixtureBase
     {
         private readonly LambdaSesEventTriggerFixtureBase _fixture;

@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
-    [NetCoreTest]
     public abstract class AwsLambdaContextOnlyParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaContextOnlyParameterFixtureBase
     {
         private readonly LambdaContextOnlyParameterFixtureBase _fixture;

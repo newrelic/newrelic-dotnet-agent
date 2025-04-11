@@ -142,7 +142,6 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
 }
 
-[NetFrameworkTest]
 public class Couchbase2TestsFW462 : Couchbase2TestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Couchbase2TestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

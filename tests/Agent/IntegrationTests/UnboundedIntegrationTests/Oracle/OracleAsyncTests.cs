@@ -170,7 +170,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleAsyncTestsFramework462 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public OracleAsyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -178,7 +177,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleAsyncTestsFramework471 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public OracleAsyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -186,7 +184,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleAsyncTestsFrameworkLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public OracleAsyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -194,7 +191,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetCoreTest]
     public class OracleAsyncTestsCoreLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public OracleAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

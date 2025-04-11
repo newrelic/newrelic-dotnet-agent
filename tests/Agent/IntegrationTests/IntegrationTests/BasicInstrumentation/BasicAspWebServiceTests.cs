@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +13,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class BasicAspWebServiceTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspWebServiceFixture>
     {
 
@@ -91,4 +89,3 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         }
     }
 }
-#endif

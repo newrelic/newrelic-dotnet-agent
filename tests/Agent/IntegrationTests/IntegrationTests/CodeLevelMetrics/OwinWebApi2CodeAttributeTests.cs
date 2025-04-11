@@ -13,7 +13,6 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
-    [NetFrameworkTest]
     public abstract class OwinWebApi2CodeAttributeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {

@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class HighSecurityModeNoTransactionAgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAgentApiExecutor>
     {
 

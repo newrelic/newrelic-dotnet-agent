@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class DisableBrowserAutoInjectionWhenGetBrowserTimingHeaderIsCalled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

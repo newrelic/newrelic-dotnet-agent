@@ -15,7 +15,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
-    [NetCoreTest]
     public class AspNetCoreDistTraceRequestChainTests : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;

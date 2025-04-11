@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
-    [NetCoreTest]
     public abstract class AwsLambdaSmokeTestBase<T> : NewRelicIntegrationTest<T> where T : LambdaSnsEventTriggerFixtureBase
     {
         private readonly LambdaSnsEventTriggerFixtureBase _fixture;

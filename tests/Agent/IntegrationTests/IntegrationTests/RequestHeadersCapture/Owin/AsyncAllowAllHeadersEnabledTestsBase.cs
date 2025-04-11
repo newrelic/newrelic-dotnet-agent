@@ -13,7 +13,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
 {
-    [NetFrameworkTest]
     public abstract class AsyncAllowAllHeadersEnabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {

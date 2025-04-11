@@ -10,7 +10,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHandling
 {
-    [NetFrameworkTest]
     public class WebApi2NotFoundAndOptionsTests : NotFoundAndOptionsTests<WebApiAsyncFixture>
     {
         public WebApi2NotFoundAndOptionsTests(WebApiAsyncFixture fixture, ITestOutputHelper output)

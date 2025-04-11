@@ -13,7 +13,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
-    [NetFrameworkTest]
     public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
     {
         private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;

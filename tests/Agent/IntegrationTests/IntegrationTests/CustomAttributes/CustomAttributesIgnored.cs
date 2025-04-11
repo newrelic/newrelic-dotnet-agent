@@ -14,7 +14,6 @@ using Xunit;
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 
 {
-    [NetFrameworkTest]
     public class CustomAttributesIgnored : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
     {
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;

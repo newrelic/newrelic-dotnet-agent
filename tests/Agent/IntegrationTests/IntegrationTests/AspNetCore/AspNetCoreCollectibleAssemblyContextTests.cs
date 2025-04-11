@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
-    [NetCoreTest]
     public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;

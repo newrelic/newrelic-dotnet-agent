@@ -77,21 +77,18 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetFrameworkTest]
     public class LogLevelAndDirectoryEnvironmentTestsFrameworkLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LogLevelAndDirectoryEnvironmentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
-    [NetCoreTest]
     public class LogLevelAndDirectoryEnvironmentTestsCoreOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public LogLevelAndDirectoryEnvironmentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
-    [NetCoreTest]
     public class LogLevelAndDirectoryEnvironmentTestsCoreLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LogLevelAndDirectoryEnvironmentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

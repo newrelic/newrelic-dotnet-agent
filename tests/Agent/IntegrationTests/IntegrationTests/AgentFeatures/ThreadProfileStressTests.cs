@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class ThreadProfileStressTests : NewRelicIntegrationTest<ThreadProfileStressTestWithCollectorFixture>
     {
         private string _threadProfileString;

@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.AutoInstrumentation;
 
-[NetCoreTest]
 public abstract class AwsLambdaAPIGatewayRequestAutoInstrumentationTest<T> : NewRelicIntegrationTest<T> where T : AspNetCoreWebApiLambdaFixtureBase
 {
     private readonly T _fixture;

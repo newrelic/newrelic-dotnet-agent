@@ -76,7 +76,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetFrameworkTest]
     public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -85,7 +84,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

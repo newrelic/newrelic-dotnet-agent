@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
 {
-    [NetCoreTest]
     public abstract class AwsLambdaCustomEventsTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomEventsTriggerFixtureBase
     {
         private readonly LambdaCustomEventsTriggerFixtureBase _fixture;

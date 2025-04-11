@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
-    [NetCoreTest]
     public abstract class AwsLambdaOutOfOrderParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaOutOfOrderParameterFixtureBase
     {
         private const string ExpectedTransactionName = "OtherTransaction/Lambda/OutOfOrderParameters";

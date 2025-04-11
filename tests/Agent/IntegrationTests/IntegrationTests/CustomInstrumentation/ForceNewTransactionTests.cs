@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class GloballyForceNewTransactionEnabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
     {
         public GloballyForceNewTransactionEnabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -21,7 +20,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class GloballyForceNewTransactionEnabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public GloballyForceNewTransactionEnabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -30,7 +28,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetFrameworkTest]
     public class GloballyForceNewTransactionDisabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
     {
         public GloballyForceNewTransactionDisabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -39,7 +36,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class GloballyForceNewTransactionDisabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public GloballyForceNewTransactionDisabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

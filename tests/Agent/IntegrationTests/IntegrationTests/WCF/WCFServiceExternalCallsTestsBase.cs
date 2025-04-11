@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -13,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Service
 {
-    [NetFrameworkTest]
     public abstract class WCFServiceExternalCallsTestsBase : WCFEmptyTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public WCFServiceExternalCallsTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModelOption)
@@ -48,4 +45,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
         }
     }
 }
-#endif

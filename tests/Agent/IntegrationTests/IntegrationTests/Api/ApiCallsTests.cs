@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {
-    [NetFrameworkTest]
     public class ApiCallsTestsFWLatest : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ApiCallsTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -20,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class ApiCallsTestsCoreLatest : ApiCallsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ApiCallsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

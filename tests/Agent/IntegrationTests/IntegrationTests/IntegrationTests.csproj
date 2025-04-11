@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.IntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.IntegrationTests</AssemblyName>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>

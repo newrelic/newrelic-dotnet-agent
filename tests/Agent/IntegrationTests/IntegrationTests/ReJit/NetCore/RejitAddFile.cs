@@ -20,7 +20,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture:AspNetCoreReJitMvcApplicationFixture
     {

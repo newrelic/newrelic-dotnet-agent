@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sqs
 {
-    [NetCoreTest]
     public abstract class AwsLambdaSqsEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaSqsEventTriggerFixtureBase
     {
         private readonly LambdaSqsEventTriggerFixtureBase _fixture;

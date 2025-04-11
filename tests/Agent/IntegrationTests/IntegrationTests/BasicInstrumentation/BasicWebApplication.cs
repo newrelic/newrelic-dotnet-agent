@@ -11,7 +11,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class BasicWebApplication : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebApplication>
     {
 

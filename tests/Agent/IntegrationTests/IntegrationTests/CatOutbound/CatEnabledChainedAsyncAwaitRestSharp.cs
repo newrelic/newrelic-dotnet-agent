@@ -15,7 +15,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
-    [NetFrameworkTest]
     public class CatEnabledChainedAsyncAwaitRestSharp : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

@@ -13,7 +13,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetCoreTest]
     public class AspNetCoreHSMEnabledWithCustomAttributesTests : NewRelicIntegrationTest<HSMAspNetCoreWebApiCustomAttributesFixture>
     {
         private readonly HSMAspNetCoreWebApiCustomAttributesFixture _fixture;

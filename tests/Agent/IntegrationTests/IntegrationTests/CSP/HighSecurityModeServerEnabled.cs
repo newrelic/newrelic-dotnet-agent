@@ -8,7 +8,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMOwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;

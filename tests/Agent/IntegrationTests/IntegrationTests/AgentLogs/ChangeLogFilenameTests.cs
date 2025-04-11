@@ -9,7 +9,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
-    [NetFrameworkTest]
     public abstract class ChangeLogFilenameTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

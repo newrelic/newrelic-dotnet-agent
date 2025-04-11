@@ -83,7 +83,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbCmdHandlerTestsFW471 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -92,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbCmdHandlerTestsFW48 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,7 +99,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbCmdHandlerTestsFWLatest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NsbCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -110,7 +107,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbCmdHandlerTestsCoreOldest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NsbCmdHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -119,7 +115,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbCmdHandlerTestsCoreLatest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

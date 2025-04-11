@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    [NetFrameworkTest]
     public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW462>
     {
         private const string CollectionName = "myCollection";

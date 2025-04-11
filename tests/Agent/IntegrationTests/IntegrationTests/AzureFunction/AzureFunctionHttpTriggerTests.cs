@@ -459,7 +459,6 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
 #region Isolated model tests
 // the net8 target builds the function app without the aspnetcore pipeline package included
-[NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsCoreOldest(AzureFunctionApplicationFixtureHttpTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -469,7 +468,6 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
 }
 
 // the net9 target builds the function app with the aspnetcore pipeline package
-[NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {
     public AzureFunctionHttpTriggerTestsCoreLatest(AzureFunctionApplicationFixtureHttpTriggerCoreLatest fixture, ITestOutputHelper output)
@@ -478,7 +476,6 @@ public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerT
     }
 }
 
-[NetFrameworkTest]
 public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
 {
     public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
@@ -489,7 +486,6 @@ public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTes
 #endregion
 
 #region InProc model tests
-[NetCoreTest]
 public class AzureFunctionHttpTriggerTestsInProcCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsInProcCoreOldest(AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest fixture, ITestOutputHelper output)

@@ -61,7 +61,6 @@ where TFixture : ConsoleDynamicMethodFixture
 
         }
     }
-    [NetCoreTest]
     public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmDisabledTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -70,7 +69,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmDisabledTest_FWLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

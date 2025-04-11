@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
-    [NetFrameworkTest]
     public class ErrorTraceWebService : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebService>
     {
         private const string ExpectedExceptionType = "System.Exception";

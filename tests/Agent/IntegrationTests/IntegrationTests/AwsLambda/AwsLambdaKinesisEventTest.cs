@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
 {
-    [NetCoreTest]
     public abstract class AwsLambdaKinesisEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaKinesisEventTriggerFixtureBase
     {
         private readonly LambdaKinesisEventTriggerFixtureBase _fixture;

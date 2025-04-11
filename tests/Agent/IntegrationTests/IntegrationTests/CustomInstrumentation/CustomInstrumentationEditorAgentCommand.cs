@@ -13,7 +13,6 @@ using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class CustomInstrumentationEditorAgentCommand : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;

@@ -8,7 +8,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
-[NetCoreTest]
 public class AzureFunctionInstrumentationDisabledTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest>
 {
     public AzureFunctionInstrumentationDisabledTestsCoreLatest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest fixture, ITestOutputHelper output)

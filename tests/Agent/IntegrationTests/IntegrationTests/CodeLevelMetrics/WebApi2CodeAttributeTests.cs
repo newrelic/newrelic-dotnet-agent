@@ -14,7 +14,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
-    [NetFrameworkTest]
     public class WebApi2CodeAttributeTests : NewRelicIntegrationTest<WebApiAsyncFixture>
     {
         private readonly WebApiAsyncFixture _fixture;

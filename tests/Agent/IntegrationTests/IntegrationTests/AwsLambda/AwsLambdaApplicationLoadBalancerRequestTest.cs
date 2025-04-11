@@ -12,7 +12,6 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
 {
-    [NetCoreTest]
     public abstract class AwsLambdaApplicationLoadBalancerRequestTest<T> : NewRelicIntegrationTest<T> where T : LambdaApplicationLoadBalancerRequestTriggerFixtureBase
     {
         private readonly LambdaApplicationLoadBalancerRequestTriggerFixtureBase _fixture;

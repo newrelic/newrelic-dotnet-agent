@@ -84,7 +84,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetFrameworkTest]
     public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ContextDataNotSupportedFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -93,7 +92,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetCoreTest]
     public class ContextDataNotSupportedNetCoreLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ContextDataNotSupportedNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -102,7 +100,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetCoreTest]
     public class ContextDataNotSupportedNetCoreOldestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ContextDataNotSupportedNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
