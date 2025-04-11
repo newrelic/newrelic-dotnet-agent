@@ -269,7 +269,7 @@ jobs:
           Errors, 
           HttpClientInstrumentation, 
           InfiniteTracing,
-          LLM
+          LLM,
           Logging.AuditLog,
           Logging.ContextData, 
           Logging.HsmAndCsp, 
