@@ -83,8 +83,8 @@ jobs:
         env:
           BUILD_ARCH: amd64
         run: |
-          dotnet build ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --configuration Debug
-          ./tests/Agent/IntegrationTests/ContainerIntegrationTests/bin/Debug/net9.0/NewRelic.Agent.ContainerIntegrationTests.exe -trait "Architecture=amd64"  -trx ${{ env.test_results_path }}
+          dotnet build ${{ github.workspace }}/tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --configuration Debug
+          ${{ github.workspace }}/tests/Agent/IntegrationTests/ContainerIntegrationTests/bin/Debug/net9.0/NewRelic.Agent.ContainerIntegrationTests.exe -trait "Architecture=amd64"  -trx ${{ env.test_results_path }}
       
       - name: Archive test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -148,8 +148,8 @@ jobs:
         env:
           BUILD_ARCH: arm64
         run: |
-          dotnet build ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --configuration Debug
-          ./tests/Agent/IntegrationTests/ContainerIntegrationTests/bin/Debug/net9.0/NewRelic.Agent.ContainerIntegrationTests.exe -trait "Architecture=arm64"  -trx ${{ env.test_results_path }}
+          dotnet build ${{ github.workspace }}/tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --configuration Debug
+          ${{ github.workspace }}/tests/Agent/IntegrationTests/ContainerIntegrationTests/bin/Debug/net9.0/NewRelic.Agent.ContainerIntegrationTests.exe -trait "Architecture=arm64"  -trx ${{ env.test_results_path }}
       
       - name: Archive test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
