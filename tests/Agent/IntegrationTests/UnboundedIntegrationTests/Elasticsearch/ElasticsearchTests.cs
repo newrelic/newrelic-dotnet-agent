@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 {
@@ -90,31 +90,31 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.Initialize();
         }
 
-        [SkippableFact]
+        [Fact]
         public void Index()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Index");
         }
 
-        [SkippableFact]
+        [Fact]
         public void Search()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Search");
         }
 
-        [SkippableFact]
+        [Fact]
         public void IndexMany()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("IndexMany");
         }
 
-        [SkippableFact]
+        [Fact]
         public void MultiSearch()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("MultiSearch");
         }
 

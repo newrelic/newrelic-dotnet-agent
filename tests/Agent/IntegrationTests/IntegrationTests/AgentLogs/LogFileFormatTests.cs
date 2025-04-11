@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {

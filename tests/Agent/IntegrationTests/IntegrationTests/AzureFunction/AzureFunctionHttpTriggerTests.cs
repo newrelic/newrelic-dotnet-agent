@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
@@ -92,10 +91,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         _fixture.Initialize();
     }
 
-    [SkippableFact()]
+    [Fact]
     public void Test_SimpleInvocationMode()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.SimpleInvocation, "This test is for the Simple Invocation mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.SimpleInvocation, "This test is for the Simple Invocation mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {
@@ -207,10 +206,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
     }
 
 
-    [SkippableFact]
+    [Fact]
     public void Test_PipelineMode()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline, "This test is for the Pipeline mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline, "This test is for the Pipeline mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {
@@ -332,10 +331,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.NotNull(disabledLogLine);
         }
     }
-    [SkippableFact]
+    [Fact]
     public void Test_InProcess()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.InProcess, "This test is for In-Process mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.InProcess, "This test is for In-Process mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {

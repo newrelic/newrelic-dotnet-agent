@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 using System.IO;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation

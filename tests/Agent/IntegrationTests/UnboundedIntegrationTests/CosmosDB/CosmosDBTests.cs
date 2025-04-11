@@ -15,7 +15,7 @@ using System.Net.PeerToPeer.Collaboration;
 using System.Reflection;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 {

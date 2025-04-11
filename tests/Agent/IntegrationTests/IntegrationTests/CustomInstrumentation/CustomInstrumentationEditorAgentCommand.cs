@@ -9,7 +9,6 @@ using Xunit;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Testing.Assertions;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {

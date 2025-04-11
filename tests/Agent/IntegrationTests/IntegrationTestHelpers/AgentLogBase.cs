@@ -12,7 +12,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
