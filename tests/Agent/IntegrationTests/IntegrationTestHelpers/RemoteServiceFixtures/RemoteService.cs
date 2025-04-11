@@ -108,8 +108,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private void PublishWithDotnetExe(string framework)
         {
-            var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
-                ApplicationDirectoryName + ".csproj");
+            var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,                ApplicationDirectoryName + ".csproj");
             var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
@@ -131,62 +130,81 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
-            //We cannot run dotnet publish against the same directory concurrently.
-            //Doing so causes the publish job to fail because it can't obtain a lock on files in the obj and bin directories.
-            lock (GetPublishLockObjectForCoreApp())
+            // create a named semaphore to synchronize dotnet publish access for a given application
+            var semaphore = new Semaphore(1, 1, ApplicationDirectoryName);
+
+            // attempt to publish up to 3 times - even with the semaphore, we still occasionally run into problems with file locks on dependent projects
+            var maxRetries = 3;
+            var publishAttempt = 1;
+            do
             {
-                process.Start();
-
-                var processOutput = new ProcessOutput(TestLogger, process, true);
-
-                // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
-                // 10 minutes may or may not be extreme but stabilizes these failures.
-                const int timeoutInMilliseconds = 10 * 60 * 1000;
-                if (!process.WaitForExit(timeoutInMilliseconds))
+                semaphore.WaitOne();
+                try
                 {
-                    TestLogger?.WriteLine($"[RemoteService]: PublishCoreApp timed out while waiting for {ApplicationDirectoryName} to publish after {timeoutInMilliseconds} milliseconds.");
-                    try
+                    TestLogger?.WriteLine($"[RemoteService]: Semaphore acquired; Publishing {ApplicationDirectoryName} to {deployPath}.");
+
+                    process.Start();
+
+                    var processOutput = new ProcessOutput(TestLogger, process, true);
+
+                    // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
+                    // 10 minutes may or may not be extreme but stabilizes these failures.
+                    const int timeoutInMilliseconds = 10 * 60 * 1000;
+                    if (!process.WaitForExit(timeoutInMilliseconds))
                     {
-                        //This usually happens because another publishing job has a lock on the file(s) being copied.
-                        //We send a termination request because we no longer want dotnet publish to continue to copy files
-                        //when there's a good chance that at least some of the files are missing.
-                        //We can only use "kill" to request termination here, because there isn't a "close" option for non-GUI apps.
-                        process.Kill();
+                        TestLogger?.WriteLine($"[RemoteService]: PublishCoreApp timed out while waiting for {ApplicationDirectoryName} to publish after {timeoutInMilliseconds} milliseconds.");
+                        try
+                        {
+                            //This usually happens because another publishing job has a lock on the file(s) being copied.
+                            //We send a termination request because we no longer want dotnet publish to continue to copy files
+                            //when there's a good chance that at least some of the files are missing.
+                            //We can only use "kill" to request termination here, because there isn't a "close" option for non-GUI apps.
+                            process.Kill();
+                        }
+                        catch (Exception e)
+                        {
+                            TestLogger?.WriteLine($"======[RemoteService]: PublishCoreApp failed to kill process that publishes {ApplicationDirectoryName} with exception =====");
+                            TestLogger?.WriteLine(e.ToString());
+                            TestLogger?.WriteLine($"-----[RemoteService]: PublishCoreApp failed to kill process that publishes {ApplicationDirectoryName} end of exception -----");
+                        }
                     }
-                    catch (Exception e)
+                    else
                     {
-                        TestLogger?.WriteLine($"======[RemoteService]: PublishCoreApp failed to kill process that publishes {ApplicationDirectoryName} with exception =====");
-                        TestLogger?.WriteLine(e.ToString());
-                        TestLogger?.WriteLine($"-----[RemoteService]: PublishCoreApp failed to kill process that publishes {ApplicationDirectoryName} end of exception -----");
+                        TestLogger?.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
                     }
+
+                    if (process.HasExited && process.ExitCode == 0)
+                    {
+
+                        sw.Stop();
+                        processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp SUCCESS");
+                        TestLogger?.WriteLine($"[{DateTime.Now}] Successfully published {ApplicationDirectoryName} to {deployPath} in {sw.Elapsed}");
+                        break;
+                    }
+
+                    processOutput.WriteProcessOutputToLog($"[RemoteService]: PublishCoreApp FAILED on attempt {publishAttempt} of {maxRetries}");
+                    TestLogger?.WriteLine($"[{DateTime.Now}] {ApplicationDirectoryName}  publish failed. Retrying...");
                 }
-                else
+                finally
                 {
-                    Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
-                }
-
-                processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
-
-                if (!process.HasExited || process.ExitCode != 0)
-                {
-                    var failedToPublishMessage = "Failed to publish Core application";
-
-                    TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
-                    throw new Exception(failedToPublishMessage);
+                    semaphore.Release();
                 }
             }
+            while (publishAttempt++ < maxRetries);
 
-            sw.Stop();
-            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
+            if (publishAttempt == maxRetries)
+            {
+                var failedToPublishMessage = $"{projectFile} publish failed after {maxRetries} attempts.";
+
+                TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
+                throw new Exception(failedToPublishMessage);
+            }
         }
 
         private object GetPublishLockObjectForCoreApp()
         {
             return PublishCoreAppLocks.GetOrAdd(ApplicationDirectoryName, _ => new object());
         }
-
-
-
 
         public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
