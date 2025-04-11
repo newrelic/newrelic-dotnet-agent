@@ -16,7 +16,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Test W3C support when chaining multiple requests by using HttpClient.
     /// Instrumentations occur in this test are Owin and HttpClient.
     /// </summary>
-    [NetFrameworkTest]
     public class HttpClientW3CTests : W3CTestBase<OwinTracingChainFixture>
     {
         public HttpClientW3CTests(OwinTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)

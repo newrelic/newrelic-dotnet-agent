@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.IntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.IntegrationTests</AssemblyName>
-    <TargetFrameworks>net481;net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net481'">
     <PublishIEDriver>true</PublishIEDriver>

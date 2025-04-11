@@ -16,7 +16,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     /// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Core. In particular, we really care
     /// about testing the behavior of removing the transaction data from AsyncLocal storage.
     /// </summary>
-    [NetCoreTest]
     public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;

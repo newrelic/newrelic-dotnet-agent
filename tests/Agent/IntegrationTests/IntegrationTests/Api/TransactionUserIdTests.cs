@@ -62,7 +62,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetFrameworkTest]
     public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public TransactionUserIdTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -71,7 +70,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

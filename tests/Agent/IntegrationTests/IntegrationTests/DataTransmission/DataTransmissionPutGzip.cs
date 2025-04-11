@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
-    [NetFrameworkTest]
     public class DataTransmissionPutGzip : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;

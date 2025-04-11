@@ -83,7 +83,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbAsyncEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -92,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbAsyncEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,7 +99,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbAsyncEventHandlerTestsFWLatest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NsbAsyncEventHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -110,7 +107,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbAsyncEventHandlerTestsCoreOldest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NsbAsyncEventHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -119,7 +115,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbAsyncEventHandlerTestsCoreLatest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbAsyncEventHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

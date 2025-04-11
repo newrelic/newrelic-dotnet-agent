@@ -95,7 +95,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationCATFWLatest : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public RestSharpInstrumentationCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -104,7 +103,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationCATFW48 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW48>
     {
         public RestSharpInstrumentationCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -113,7 +111,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationCATFW471 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RestSharpInstrumentationCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -122,7 +119,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationCATFW462 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW462>
     {
         public RestSharpInstrumentationCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

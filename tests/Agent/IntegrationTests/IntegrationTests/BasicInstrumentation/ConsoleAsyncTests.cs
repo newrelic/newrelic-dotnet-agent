@@ -14,7 +14,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class ConsoleAsyncTests : NewRelicIntegrationTest<ConsoleAsyncFixture>
     {
         private readonly ConsoleAsyncFixture _fixture;

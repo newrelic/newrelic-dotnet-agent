@@ -10,7 +10,6 @@ using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>
     {
         private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture _fixture;
@@ -58,7 +57,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore>
     {
         private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore _fixture;

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETFRAMEWORK
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
@@ -35,4 +34,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service.Self
             : base(fixture, output, HostingModel.Self) { }
     }
 }
-#endif

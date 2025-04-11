@@ -211,7 +211,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.OpenSearch
     }
 
     #region OpenSearchClient
-    [NetFrameworkTest]
     public class OpenSearchClientTestsFWLatest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public OpenSearchClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -220,7 +219,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.OpenSearch
         }
     }
 
-    [NetFrameworkTest]
     public class OpenSearchClientTestsFW462 : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public OpenSearchClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -229,7 +227,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.OpenSearch
         }
     }
 
-    [NetCoreTest]
     public class OpenSearchClientTestsCoreLatest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public OpenSearchClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -238,7 +235,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.OpenSearch
         }
     }
 
-    [NetCoreTest]
     public class OpenSearchClientTestsCoreOldest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public OpenSearchClientTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

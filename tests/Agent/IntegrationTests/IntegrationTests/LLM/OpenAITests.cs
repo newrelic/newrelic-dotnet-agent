@@ -148,7 +148,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class OpenAITests_CoreLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public OpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -157,7 +156,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class OpenAITests_CoreOldest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public OpenAITests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -166,7 +164,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetFrameworkTest]
     public class OpenAITests_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public OpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

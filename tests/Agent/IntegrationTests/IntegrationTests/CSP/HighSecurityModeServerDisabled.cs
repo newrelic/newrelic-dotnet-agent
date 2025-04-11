@@ -8,7 +8,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class HighSecurityModeServerDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
     {
 

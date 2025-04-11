@@ -57,7 +57,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    [NetFrameworkTest]
     public class ConnectSetApplicationNameFWLatestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ConnectSetApplicationNameFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -66,7 +65,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    [NetFrameworkTest]
     public class ConnectSetApplicationNameFW462Tests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ConnectSetApplicationNameFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -75,7 +73,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    [NetCoreTest]
     public class ConnectSetApplicationNameCoreLatestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ConnectSetApplicationNameCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -84,7 +81,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    [NetCoreTest]
     public class ConnectSetApplicationNameCoreOldestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ConnectSetApplicationNameCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

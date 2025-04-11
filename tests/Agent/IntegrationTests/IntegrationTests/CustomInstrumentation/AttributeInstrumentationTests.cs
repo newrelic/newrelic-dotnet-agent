@@ -13,7 +13,6 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class AttributeInstrumentationTestsFW462 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW462>
     {
         public AttributeInstrumentationTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -22,7 +21,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class AttributeInstrumentationTestsCoreOldest : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public AttributeInstrumentationTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

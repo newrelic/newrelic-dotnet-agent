@@ -77,7 +77,6 @@ where TFixture : ConsoleDynamicMethodFixture
             Assert.NotNull(transactionEvent);
         }
     }
-    [NetCoreTest]
     public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmErrorTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -86,7 +85,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmErrorTests_FWLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

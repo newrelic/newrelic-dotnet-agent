@@ -124,7 +124,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetFrameworkTest]
     public class StackExchangeRedisTestsFW462 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public StackExchangeRedisTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -133,7 +132,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetFrameworkTest]
     public class StackExchangeRedisTestsFW471 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public StackExchangeRedisTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -142,7 +140,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetFrameworkTest]
     public class StackExchangeRedisTestsFW48 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public StackExchangeRedisTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -151,7 +148,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetFrameworkTest]
     public class StackExchangeRedisTestsFWLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public StackExchangeRedisTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -160,7 +156,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetCoreTest]
     public class StackExchangeRedisTestsCoreOldest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public StackExchangeRedisTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -169,7 +164,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
         }
     }
 
-    [NetCoreTest]
     public class StackExchangeRedisTestsCoreLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public StackExchangeRedisTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -46,7 +46,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Testing was done and python does appear to follow the proper exit code procedures.
     /// This makes troubleshooting a bit more difficult since you have to dig through the output for the test and find the failures.
     /// </summary>
-    [NetFrameworkTest]
     public class W3CValidation : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         protected readonly ConsoleDynamicMethodFixtureFWLatest _fixture;

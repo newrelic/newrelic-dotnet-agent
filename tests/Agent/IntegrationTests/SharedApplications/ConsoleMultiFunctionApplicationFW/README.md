@@ -1,4 +1,4 @@
-﻿# Console Multifunction Application and Test Fixture
+# Console Multifunction Application and Test Fixture
 This is a console application that accepts input as a series of commands/exercies to run.  It is analagous to a controller actions in an MVC/WebAPI app.  
 
 
@@ -142,11 +142,9 @@ public abstract class DotNetPerfMetricsTests<TFixture> : IClassFixture<TFixture>
 	{ ... }
 }
 
-[NetCoreTest]
 public class DotNetPerfMetricsTestsCore : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore>
 {}
 
-[NetFrameworkTest]
 public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFW>
 {}
 

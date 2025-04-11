@@ -13,7 +13,6 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
-    [NetFrameworkTest]
     public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
     {
         private readonly OwinTracingChainFixture _fixture;

@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture>
     {
         private const string QueryStringParameterValue = @"my thing";

@@ -122,7 +122,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public PostgresSqlSimpleQueryAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -131,7 +130,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlSimpleQueryAsyncTestsFW471 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public PostgresSqlSimpleQueryAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -140,7 +138,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlSimpleQueryAsyncTestsFW48 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public PostgresSqlSimpleQueryAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -149,7 +146,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlSimpleQueryAsyncTestsFWLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public PostgresSqlSimpleQueryAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -158,7 +154,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlSimpleQueryAsyncTestsCoreOldest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public PostgresSqlSimpleQueryAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -167,7 +162,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlSimpleQueryAsyncTestsCoreLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public PostgresSqlSimpleQueryAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

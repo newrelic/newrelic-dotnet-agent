@@ -14,7 +14,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicIntegrationTest<SecurityPoliciesCustomAttributesWebApi>
     {
         private readonly SecurityPoliciesCustomAttributesWebApi _fixture;

@@ -267,7 +267,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
 
     #region System.Data.SqlClient
-    [NetFrameworkTest]
     public class MsSqlTests_SystemData_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -283,7 +282,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region Microsoft.Data.SqlClient
 
-    [NetFrameworkTest]
     public class MsSqlTests_MicrosoftDataSqlClient_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -296,7 +294,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlTests_MicrosoftDataSqlClient_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -309,7 +306,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlTests_MicrosoftDataSqlClient_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MsSqlTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -322,7 +318,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -339,7 +334,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region System.Data.Odbc
 
-    [NetFrameworkTest]
     public class MsSqlTests_SystemDataOdbc_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlTests_SystemDataOdbc_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -352,7 +346,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlTests_SystemDataOdbc_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlTests_SystemDataOdbc_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -365,7 +358,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlTests_SystemDataOdbc_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlTests_SystemDataOdbc_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -378,7 +370,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlTests_SystemDataOdbc_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MsSqlTests_SystemDataOdbc_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

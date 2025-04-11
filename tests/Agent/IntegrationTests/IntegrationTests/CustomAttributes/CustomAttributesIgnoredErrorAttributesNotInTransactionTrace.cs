@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
-    [NetFrameworkTest]
     public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
     {
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;

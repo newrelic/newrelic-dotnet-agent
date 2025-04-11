@@ -71,7 +71,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
     #region log4net
 
-    [NetFrameworkTest]
     public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public Log4netHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -80,7 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetFrameworkTest]
     public class Log4netCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public Log4netCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
@@ -89,7 +87,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -98,7 +95,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public Log4netCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
@@ -111,7 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
     #region MicrosoftLogging
 
-    [NetCoreTest]
     public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -119,7 +114,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         {
         }
     }
-    [NetCoreTest]
     public class MicrosoftLoggingCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public MicrosoftLoggingCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
@@ -128,7 +122,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetFrameworkTest]
     public class MicrosoftLoggingCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public MicrosoftLoggingCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -141,7 +134,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public SerilogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -150,7 +142,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public SerilogCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
@@ -159,7 +150,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public SerilogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -168,7 +158,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public SerilogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
@@ -181,7 +170,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
     #region NLog
 
-    [NetFrameworkTest]
     public class NLogHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public NLogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -190,7 +178,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetFrameworkTest]
     public class NLogCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public NLogCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
@@ -199,7 +186,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public NLogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -208,7 +194,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetCoreTest]
     public class NLogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public NLogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
@@ -221,7 +206,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
     #region Sitecore
 
-    [NetFrameworkTest]
     public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public SitecoreHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -230,7 +214,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
-    [NetFrameworkTest]
     public class SitecoreCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public SitecoreCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)

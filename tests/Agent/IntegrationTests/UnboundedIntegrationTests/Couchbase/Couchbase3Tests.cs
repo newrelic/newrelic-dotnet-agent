@@ -230,7 +230,6 @@ public abstract class Couchbase3TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
 }
 
-[NetCoreTest]
 public class Couchbase3TestsCoreOldest : Couchbase3TestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public Couchbase3TestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -239,7 +238,6 @@ public class Couchbase3TestsCoreOldest : Couchbase3TestsBase<ConsoleDynamicMetho
     }
 }
 
-[NetCoreTest]
 public class Couchbase3TestsCoreLatest : Couchbase3TestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Couchbase3TestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -248,7 +246,6 @@ public class Couchbase3TestsCoreLatest : Couchbase3TestsBase<ConsoleDynamicMetho
     }
 }
 
-[NetFrameworkTest]
 public class Couchbase3TestsFW48 : Couchbase3TestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public Couchbase3TestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -257,7 +254,6 @@ public class Couchbase3TestsFW48 : Couchbase3TestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
-[NetFrameworkTest]
 public class Couchbase3TestsFW471 : Couchbase3TestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Couchbase3TestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

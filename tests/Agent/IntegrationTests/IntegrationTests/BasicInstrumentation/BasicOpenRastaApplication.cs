@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class BasicOpenRastaApplication : NewRelicIntegrationTest<RemoteServiceFixtures.BasicOpenRastaApplication>
     {
 

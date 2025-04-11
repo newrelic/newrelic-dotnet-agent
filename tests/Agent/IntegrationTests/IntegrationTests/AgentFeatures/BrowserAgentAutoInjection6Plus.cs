@@ -94,7 +94,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusRumUnCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -103,7 +102,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusRumCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -112,7 +110,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -121,7 +118,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -130,7 +126,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusSpa : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusSpa(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -139,7 +134,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusFull : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusFull(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)

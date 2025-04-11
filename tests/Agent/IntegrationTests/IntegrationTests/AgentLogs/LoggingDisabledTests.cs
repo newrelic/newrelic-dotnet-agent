@@ -51,7 +51,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetFrameworkTest]
     public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,7 +59,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetFrameworkTest]
     public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -69,7 +67,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetCoreTest]
     public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LoggingDisabledCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -78,7 +75,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetCoreTest]
     public class LoggingDisabledCoreOldestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public LoggingDisabledCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
