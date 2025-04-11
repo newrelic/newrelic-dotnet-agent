@@ -45,7 +45,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
                 _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // shut down the container and wait for the agent log to see it
                 _fixture.ShutdownRemoteApplication();

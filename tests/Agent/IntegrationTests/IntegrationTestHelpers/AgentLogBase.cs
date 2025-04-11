@@ -24,8 +24,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorLogLinePrefixRegex = @"^.*?NewRelic\s+ERROR: " + LogLineContextDataRegex;
         public const string FinestLogLinePrefixRegex = @"^.*?NewRelic\s+FINEST: " + LogLineContextDataRegex;
         public const string WarnLogLinePrefixRegex = @"^.*?NewRelic\s+WARN: " + LogLineContextDataRegex;
-        public const string HarvestLogLineRegex = InfoLogLinePrefixRegex + @"Harvest starting";
-        public const string HarvestFinishedLogLineRegex = DebugLogLinePrefixRegex + @"Metric harvest finished.";
         public const string AgentReportingToLogLineRegex = InfoLogLinePrefixRegex + @"Reporting to: (.*)";
         public const string AgentConnectedLogLineRegex = InfoLogLinePrefixRegex + @"Agent fully connected.";
 
