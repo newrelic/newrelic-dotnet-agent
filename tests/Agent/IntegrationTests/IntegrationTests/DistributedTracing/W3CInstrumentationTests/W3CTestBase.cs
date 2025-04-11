@@ -4,7 +4,6 @@
 
 using System.Linq;
 using Xunit;
-
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
