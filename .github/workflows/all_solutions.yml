@@ -269,7 +269,7 @@ jobs:
           Errors, 
           HttpClientInstrumentation, 
           InfiniteTracing,
-          # LLM, 03/18/2025 - Skipping test until account issues are resolved
+          LLM
           Logging.AuditLog,
           Logging.ContextData, 
           Logging.HsmAndCsp, 
