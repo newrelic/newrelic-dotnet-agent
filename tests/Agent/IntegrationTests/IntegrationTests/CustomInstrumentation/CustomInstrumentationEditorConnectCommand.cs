@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Testing.Assertions;
 
-
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     public class CustomInstrumentationEditorConnectCommand : NewRelicIntegrationTest<MvcWithCollectorFixture>
