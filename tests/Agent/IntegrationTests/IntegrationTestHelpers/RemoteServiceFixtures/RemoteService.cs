@@ -131,17 +131,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
-            // create a named semaphore to synchronize dotnet publish access for a given application
-            var semaphore = new Semaphore(1, 1, ApplicationDirectoryName);
-            semaphore.WaitOne();
-            try
+            //We cannot run dotnet publish against the same directory concurrently.
+            //Doing so causes the publish job to fail because it can't obtain a lock on files in the obj and bin directories.
+            lock (GetPublishLockObjectForCoreApp())
             {
-                TestLogger?.WriteLine($"[RemoteService]: Semaphore acquired; Publishing {ApplicationDirectoryName} to {deployPath}.");
-
                 process.Start();
 
                 var processOutput = new ProcessOutput(TestLogger, process, true);
-
                 // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
                 // 10 minutes may or may not be extreme but stabilizes these failures.
                 const int timeoutInMilliseconds = 10 * 60 * 1000;
@@ -167,24 +163,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 {
                     Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
                 }
-
                 processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
-
                 if (!process.HasExited || process.ExitCode != 0)
                 {
                     var failedToPublishMessage = "Failed to publish Core application";
-
                     TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
                     throw new Exception(failedToPublishMessage);
                 }
+            }
 
-                sw.Stop();
-                Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            sw.Stop();
+            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
         }
 
         private object GetPublishLockObjectForCoreApp()
