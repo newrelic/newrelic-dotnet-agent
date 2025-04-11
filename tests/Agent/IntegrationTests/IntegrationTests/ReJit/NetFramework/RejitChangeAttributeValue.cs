@@ -18,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Logging: finest
     /// Files: Integration.Testing.ChangeAttributeTest.xml
     /// </summary>
-    [NetFrameworkTest]
     public class RejitChangeAttributeValue : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

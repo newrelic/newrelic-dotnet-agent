@@ -14,7 +14,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
-    [NetCoreTest]
     public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;

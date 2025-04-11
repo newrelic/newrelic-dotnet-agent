@@ -125,7 +125,6 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
     }
 }
 
-[NetCoreTest]
 public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreOldest>
 {
     public AzureFunctionQueueTriggerTestsCoreOldest(AzureFunctionApplicationFixtureQueueTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -134,7 +133,6 @@ public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTrigge
     }
 }
 
-[NetCoreTest]
 public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreLatest>
 {
     public AzureFunctionQueueTriggerTestsCoreLatest(AzureFunctionApplicationFixtureQueueTriggerCoreLatest fixture, ITestOutputHelper output)

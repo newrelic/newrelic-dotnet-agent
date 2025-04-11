@@ -14,7 +14,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
-    [NetFrameworkTest]
     public abstract class RabbitMqW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
     {
         protected readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";

@@ -12,7 +12,6 @@ using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
-    [NetFrameworkTest]
     public abstract class OwinWebApiStatusCodeRollupTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {

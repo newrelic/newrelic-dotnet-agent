@@ -15,7 +15,6 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
-    [NetCoreTest]
     public class NetCoreCustomInstrumentationCodeAttributeTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
     {
         private readonly NetCoreAsyncTestsFixture _fixture;

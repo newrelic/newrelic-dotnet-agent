@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
-    [NetCoreTest]
     public class ExpectedErrorTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
