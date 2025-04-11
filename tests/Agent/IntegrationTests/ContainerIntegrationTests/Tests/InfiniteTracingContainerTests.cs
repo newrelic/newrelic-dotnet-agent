@@ -42,7 +42,7 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
                 _fixture.ExerciseApplication();
 
                 _fixture.Delay(12); // wait long enough to ensure a metric harvest occurs after we exercise the app
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // Now wait to see that the 8T spans were sent successfully
                 _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
