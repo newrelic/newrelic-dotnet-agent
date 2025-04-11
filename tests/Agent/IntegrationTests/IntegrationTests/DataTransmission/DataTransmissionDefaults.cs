@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     public class DataTransmissionDefaults : NewRelicIntegrationTest<MvcWithCollectorFixture>

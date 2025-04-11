@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     public abstract class TransactionNameTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture

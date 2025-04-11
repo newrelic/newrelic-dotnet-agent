@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
 {
     public abstract class AwsLambdaCustomEventsTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomEventsTriggerFixtureBase

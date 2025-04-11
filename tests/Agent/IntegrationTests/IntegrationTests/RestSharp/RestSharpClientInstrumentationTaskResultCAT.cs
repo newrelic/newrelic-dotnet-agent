@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
     public abstract class RestSharpInstrumentationTaskResultCATBase<TFixture> : NewRelicIntegrationTest<TFixture>

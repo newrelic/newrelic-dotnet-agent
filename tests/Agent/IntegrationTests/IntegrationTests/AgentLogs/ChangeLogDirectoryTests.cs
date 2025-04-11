@@ -6,7 +6,6 @@ using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
     public class ChangeLogDirectoryTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

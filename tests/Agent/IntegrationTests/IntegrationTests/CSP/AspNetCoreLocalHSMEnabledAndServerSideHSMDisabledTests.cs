@@ -5,7 +5,6 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>

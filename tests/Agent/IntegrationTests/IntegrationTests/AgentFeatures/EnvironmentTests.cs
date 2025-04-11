@@ -8,7 +8,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public abstract class EnvironmentTests<T> : NewRelicIntegrationTest<T> where T : RemoteApplicationFixture

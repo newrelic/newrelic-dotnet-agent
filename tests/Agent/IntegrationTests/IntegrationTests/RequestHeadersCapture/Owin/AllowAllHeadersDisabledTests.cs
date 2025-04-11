@@ -10,7 +10,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
 {
     public abstract class AllowAllHeadersDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

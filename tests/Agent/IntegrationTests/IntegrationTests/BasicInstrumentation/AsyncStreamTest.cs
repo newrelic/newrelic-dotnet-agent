@@ -8,7 +8,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>

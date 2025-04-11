@@ -8,7 +8,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     public class InterfaceDefaultsInstrumentationTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>

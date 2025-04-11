@@ -6,7 +6,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Configuration
 {
     public abstract class GuidConfigurationTest<TFixture> : NewRelicIntegrationTest<TFixture>

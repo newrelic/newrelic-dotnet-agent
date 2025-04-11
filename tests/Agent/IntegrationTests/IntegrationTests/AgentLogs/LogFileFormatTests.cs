@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
     public class LogFileFormatTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

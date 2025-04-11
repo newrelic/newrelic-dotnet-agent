@@ -6,7 +6,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public class TransactionThreshold : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>

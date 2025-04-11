@@ -6,7 +6,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public abstract class BrowserAgentAutoInjectionBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

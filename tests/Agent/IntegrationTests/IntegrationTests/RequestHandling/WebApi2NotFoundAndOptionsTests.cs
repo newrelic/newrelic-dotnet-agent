@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHandling
 {
     public class WebApi2NotFoundAndOptionsTests : NotFoundAndOptionsTests<WebApiAsyncFixture>

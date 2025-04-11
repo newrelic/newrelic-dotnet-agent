@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsSdk
 {
     public abstract class InvokeLambdaTestBase<TFixture> : NewRelicIntegrationTest<TFixture>

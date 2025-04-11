@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.WCF.Service
 {
     public abstract class WCFServiceExternalCallsTestsBase : WCFEmptyTestBase<ConsoleDynamicMethodFixtureFWLatest>

@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
     public abstract class LlmApiTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

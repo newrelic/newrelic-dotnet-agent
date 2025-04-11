@@ -6,7 +6,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.WCF.Service.IIS.ASPDisabled
 {
     public class WCFService_IIS_ExternalCallsTests_ASPDisabled : WCFServiceExternalCallsTestsBase

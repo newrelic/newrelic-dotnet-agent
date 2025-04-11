@@ -11,7 +11,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTests.DistributedTracing;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.WCF.Client
 {
     public abstract class WCFClientTestBase : WCFLegacyTestBase

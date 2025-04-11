@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     public class ServiceStackApplicationTests : NewRelicIntegrationTest<ServiceStackApplicationFixture>

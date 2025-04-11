@@ -9,7 +9,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     public class ErrorTraceMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

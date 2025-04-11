@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 {
     public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

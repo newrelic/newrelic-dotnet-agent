@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVariables
 {
     

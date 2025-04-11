@@ -9,7 +9,6 @@ using System;
 using System.IO;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
     /// <summary>

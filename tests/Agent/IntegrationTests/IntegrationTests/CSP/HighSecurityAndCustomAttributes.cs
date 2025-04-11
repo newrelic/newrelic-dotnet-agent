@@ -11,7 +11,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     public class HighSecurityAndCustomAttributes : NewRelicIntegrationTest<HSMCustomAttributesWebApi>

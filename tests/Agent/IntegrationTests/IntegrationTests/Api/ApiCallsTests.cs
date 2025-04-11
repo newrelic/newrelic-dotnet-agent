@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     public class ApiCallsTestsFWLatest : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>

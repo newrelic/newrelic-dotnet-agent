@@ -6,7 +6,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.WCF.Service.IIS
 {
     public abstract class WCFService_IIS : WCFServiceTestBase

@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.AutoInstrumentation;
 
 public abstract class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<T> : NewRelicIntegrationTest<T> where T : AspNetCoreWebApiLambdaFixtureBase

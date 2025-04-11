@@ -6,7 +6,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self
 {
     public abstract class WCFClient_Self : WCFClientTestBase

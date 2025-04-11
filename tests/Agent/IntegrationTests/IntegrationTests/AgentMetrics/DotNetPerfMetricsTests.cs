@@ -9,7 +9,6 @@ using NewRelic.Testing.Assertions;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 

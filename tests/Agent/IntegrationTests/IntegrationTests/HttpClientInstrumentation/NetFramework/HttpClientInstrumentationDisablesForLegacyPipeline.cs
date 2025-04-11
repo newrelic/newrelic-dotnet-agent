@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetFramework
 {
     public class HttpClientInstrumentationDisablesForLegacyPipeline : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

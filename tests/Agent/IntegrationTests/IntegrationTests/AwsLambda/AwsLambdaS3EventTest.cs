@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
 {
     public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where T : LambdaS3EventTriggerFixtureBase

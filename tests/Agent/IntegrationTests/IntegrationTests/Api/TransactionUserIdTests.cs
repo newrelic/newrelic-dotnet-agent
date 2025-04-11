@@ -10,7 +10,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture

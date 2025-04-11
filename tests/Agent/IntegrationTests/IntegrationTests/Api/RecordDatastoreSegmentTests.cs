@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     public class RecordDatastoreSegment_Full_TestsFWLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureFWLatest>

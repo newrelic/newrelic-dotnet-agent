@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>

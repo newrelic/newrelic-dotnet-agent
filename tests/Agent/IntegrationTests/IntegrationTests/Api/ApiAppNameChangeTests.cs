@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     public class ApiAppNameChangeTests : NewRelicIntegrationTest<RemoteServiceFixtures.ApiAppNameChangeFixture>

@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHandling
 {
     public class Mvc3NotFoundAndOptionsTests : NotFoundAndOptionsTests<BasicMvcApplicationTestFixture>

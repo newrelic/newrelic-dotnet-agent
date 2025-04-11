@@ -10,7 +10,6 @@ using System.Threading;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public class ThreadProfileTests : NewRelicIntegrationTest<MvcWithCollectorFixture>

@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncForceNewTransactionTests

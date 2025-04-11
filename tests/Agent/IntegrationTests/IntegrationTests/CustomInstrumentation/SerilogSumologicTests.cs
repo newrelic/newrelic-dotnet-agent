@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     public class SerilogSumologicSyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.SerilogSumologicFixture>

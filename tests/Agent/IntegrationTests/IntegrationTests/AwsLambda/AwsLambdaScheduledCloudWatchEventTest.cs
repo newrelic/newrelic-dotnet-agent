@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.CloudWatch
 {
     public abstract class AwsLambdaScheduledCloudWatchEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaScheduledCloudWatchEventTriggerFixtureBase

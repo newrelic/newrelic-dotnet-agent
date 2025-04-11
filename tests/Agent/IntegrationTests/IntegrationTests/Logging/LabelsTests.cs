@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Logging.Labels
 {
     public abstract class LabelsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {
     public abstract class AllowAllHeadersEnabledTests : AllowAllHeadersDisabledTests

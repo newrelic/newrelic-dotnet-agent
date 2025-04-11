@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFWLatest>

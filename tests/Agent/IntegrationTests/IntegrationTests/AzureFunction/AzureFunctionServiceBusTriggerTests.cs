@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
 public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

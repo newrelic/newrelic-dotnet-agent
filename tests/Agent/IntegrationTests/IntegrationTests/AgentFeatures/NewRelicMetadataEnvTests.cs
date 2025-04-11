@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public class NewRelicMetadataEnvTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>

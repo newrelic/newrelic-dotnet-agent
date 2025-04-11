@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
     public class LogLevelInfoAndAuditLogFalseTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

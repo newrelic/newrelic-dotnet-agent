@@ -10,7 +10,6 @@ using System.Threading;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: AspNetCoreWebApiWithCollectorFixture

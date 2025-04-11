@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     public class CatEnabledDoesStatusCodeRollupNaming : NewRelicIntegrationTest<BasicMvcApplicationTestFixture>

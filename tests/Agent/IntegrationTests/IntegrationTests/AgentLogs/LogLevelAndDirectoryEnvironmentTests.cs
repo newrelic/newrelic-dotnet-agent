@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
     public abstract class LogLevelAndDirectoryEnvironmentTests<T> : NewRelicIntegrationTest<T> where T : ConsoleDynamicMethodFixture

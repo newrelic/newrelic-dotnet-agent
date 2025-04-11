@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTests.WCF;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {
     public abstract class AllowAllHeadersDisabledTests : WCFEmptyTestBase<ConsoleDynamicMethodFixtureFWLatest>

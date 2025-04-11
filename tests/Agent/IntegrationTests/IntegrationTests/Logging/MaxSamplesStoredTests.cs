@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
 {
     public abstract class MaxSamplesStoredTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>

@@ -11,7 +11,6 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     public class ConsoleAsyncTests : NewRelicIntegrationTest<ConsoleAsyncFixture>

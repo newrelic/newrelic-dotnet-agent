@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     public class AspNetCoreMvcAsyncTests : NewRelicIntegrationTest<AspNetCoreMvcAsyncTestsFixture>

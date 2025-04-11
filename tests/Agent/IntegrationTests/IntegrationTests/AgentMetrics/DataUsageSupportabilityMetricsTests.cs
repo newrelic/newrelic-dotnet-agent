@@ -8,7 +8,6 @@ using System;
 using System.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 

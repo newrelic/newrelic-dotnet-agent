@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
     public class DTSupportabilityMetricTests : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>

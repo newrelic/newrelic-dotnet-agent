@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
     public abstract class AwsLambdaContextOnlyParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaContextOnlyParameterFixtureBase

@@ -9,7 +9,6 @@ using NewRelic.Testing.Assertions;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
     public class Labels : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
