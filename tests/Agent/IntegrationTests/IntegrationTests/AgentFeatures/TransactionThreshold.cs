@@ -9,7 +9,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
     public class TransactionThreshold : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;

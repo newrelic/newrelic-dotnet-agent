@@ -98,7 +98,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public PostgresSqlIteratorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -107,7 +106,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlIteratorTestsFW471 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public PostgresSqlIteratorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -116,7 +114,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlIteratorTestsFW48 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public PostgresSqlIteratorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -125,7 +122,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public PostgresSqlIteratorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -134,7 +130,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlIteratorTestsCoreOldest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public PostgresSqlIteratorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -143,7 +138,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlIteratorTestsCoreLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public PostgresSqlIteratorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -19,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.ChangeAttributeTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : AspNetCoreReJitMvcApplicationFixture
     {

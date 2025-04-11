@@ -11,7 +11,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
-    [NetFrameworkTest]
     public class FrameworkAspNetMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

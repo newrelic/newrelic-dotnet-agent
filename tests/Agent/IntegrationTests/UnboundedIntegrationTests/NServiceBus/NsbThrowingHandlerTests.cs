@@ -91,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     /// <summary>
     /// This harness targets to NServiceBus 6.5.10
     /// </summary>
-    [NetFrameworkTest]
     public class NsbThrowingHandlerTestsFW471 : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbThrowingHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -103,7 +102,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     /// <summary>
     /// This harness, and all the others, target to NServiceBus 7.5
     /// </summary>
-    [NetFrameworkTest]
     public class NsbThrowingHandlerTestsFW48 : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbThrowingHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -112,7 +110,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbThrowingHandlerTestsFWLatest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NsbThrowingHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -121,7 +118,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbThrowingHandlerTestsCoreOldest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NsbThrowingHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -130,7 +126,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbThrowingHandlerTestsCoreLatest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbThrowingHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

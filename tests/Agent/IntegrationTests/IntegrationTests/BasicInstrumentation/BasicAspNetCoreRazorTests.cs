@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetCoreTest]
     public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture>
     {
         private readonly RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture _fixture;

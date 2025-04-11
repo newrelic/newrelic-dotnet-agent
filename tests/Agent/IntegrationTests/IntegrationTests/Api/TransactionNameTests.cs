@@ -51,7 +51,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetFrameworkTest]
     public class TransactionNameTestsFW : TransactionNameTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public TransactionNameTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,7 +59,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class TransactionNameTestsCore : TransactionNameTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public TransactionNameTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

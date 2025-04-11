@@ -14,7 +14,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
-    [NetFrameworkTest]
     public class ConnectResponseHandlingTests : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;

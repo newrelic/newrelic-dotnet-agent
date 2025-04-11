@@ -127,7 +127,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class BedrockInvokeTests_Basic_CoreLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public BedrockInvokeTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -136,7 +135,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetFrameworkTest]
     public class BedrockInvokeTests_Basic_FWLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public BedrockInvokeTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

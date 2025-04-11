@@ -18,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Disables: Browser Monitoring
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
-    [NetFrameworkTest]
     public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

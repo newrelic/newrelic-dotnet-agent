@@ -19,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Logging: finest
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
-    [NetFrameworkTest]
     public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : AspNetFrameworkReJitMvcApplicationFixture
     {

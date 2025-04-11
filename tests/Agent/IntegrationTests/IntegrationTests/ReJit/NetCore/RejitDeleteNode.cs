@@ -19,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.DeleteNodeTest.xml 
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitDeleteNodeBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : AspNetCoreReJitMvcApplicationFixture
     {
