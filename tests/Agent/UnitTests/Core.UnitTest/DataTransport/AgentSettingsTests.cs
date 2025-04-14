@@ -76,6 +76,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "cross_application_tracer.cross_process_id": "CrossApplicationTracingCrossProcessId",
                     "cross_application_tracer.enabled": true,
                     "distributed_tracing.enabled": true,
+                    "distributed_tracing.sampler.remote_parent_sampled": "default",
+                    "distributed_tracing.sampler.remote_parent_not_sampled": "default",
                     "span_events.enabled": true,
                     "span_events.harvest_cycle": "00:20:34",
                     "span_events.attributes_enabled": true,

@@ -413,6 +413,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool EnableAspNetCore6PlusBrowserInjection => true;
 
         public bool ExcludeNewrelicHeader => true;
+
         public string RemoteParentSampledBehavior => "default";
         public string RemoteParentNotSampledBehavior => "default";
 

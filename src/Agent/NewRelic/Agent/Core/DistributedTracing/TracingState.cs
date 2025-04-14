@@ -11,6 +11,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 {
     public class TracingState : ITracingState
     {
+        private readonly string _remoteParentSampledBehavior;
+        private readonly string _remoteParentNotSampledBehavior;
+
         // not valid for this enum, but will be replaced on first call to Type
         private DistributedTracingParentType _type = (DistributedTracingParentType)(-2);
         private DateTime _timestamp;
@@ -152,17 +155,32 @@ namespace NewRelic.Agent.Core.DistributedTracing
         {
             get
             {
-                if (_sampled != null && _sampled.HasValue)
+                if (_sampled is not null)
                 {
                     return _sampled;
                 }
 
-                if (_traceContext?.Tracestate != null && _traceContext.Tracestate.Sampled.HasValue)
+                if (_traceContext?.Tracestate is { Sampled: not null })
                 {
-                    return _sampled = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
+                    var sampledBool = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
+                    var sampledBehavior = sampledBool ? _remoteParentSampledBehavior : _remoteParentNotSampledBehavior;
+
+                    // if there is a valid traceparent, sampling behavior is determined by configuration
+                    if (_traceContext.TraceparentPresent && sampledBehavior != "default")
+                    {
+                        return sampledBehavior switch
+                        {
+                            "always_on" => _sampled = true,
+                            "always_off" => _sampled = false,
+                            _ => throw new ArgumentException($"Invalid {(sampledBool ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")}: {sampledBehavior}.")
+                        };
+                    }
+
+                    // either there's no traceparent or the behavior is default, so we use the sampled value
+                    return _sampled = sampledBool;
                 }
 
-                if (_newRelicPayload?.Sampled != null && _newRelicPayload.Sampled.HasValue)
+                if (_newRelicPayload?.Sampled is not null)
                 {
                     return _sampled = _newRelicPayload.Sampled;
                 }
@@ -204,9 +222,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private DistributedTracePayload _newRelicPayload;
         private W3CTraceContext _traceContext;
 
-        public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
+        private TracingState(string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
         {
-            var tracingState = new TracingState();
+            _remoteParentSampledBehavior = remoteParentSampledBehavior;
+            _remoteParentNotSampledBehavior = remoteParentNotSampledBehavior;
+        }
+
+        public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime, string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
+        {
+            var tracingState = new TracingState(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
             var errors = new List<IngestErrorType>();
 
             // w3c
