@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {

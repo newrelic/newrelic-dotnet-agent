@@ -12,7 +12,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {

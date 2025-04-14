@@ -396,7 +396,7 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -534,7 +534,7 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          dotnet test ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"

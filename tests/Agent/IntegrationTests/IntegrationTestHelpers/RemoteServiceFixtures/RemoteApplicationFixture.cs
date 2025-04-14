@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {

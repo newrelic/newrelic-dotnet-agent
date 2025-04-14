@@ -5,7 +5,6 @@
 using System;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;

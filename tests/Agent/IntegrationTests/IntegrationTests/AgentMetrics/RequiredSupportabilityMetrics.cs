@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
