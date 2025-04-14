@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 using System;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 

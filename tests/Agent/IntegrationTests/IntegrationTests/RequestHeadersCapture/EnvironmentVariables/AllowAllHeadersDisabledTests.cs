@@ -8,7 +8,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVariables
 {
@@ -27,12 +26,22 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
             _fixture.TestLogger = output;
             _fixture.Actions
             (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                    configModifier.SetAllowAllHeaders(true)
+                    .EnableDistributedTrace().ForceTransactionTraces();
+                },
                 exerciseApplication: () =>
                 {
                     var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
         }

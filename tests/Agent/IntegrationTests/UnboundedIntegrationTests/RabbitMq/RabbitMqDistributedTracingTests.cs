@@ -7,7 +7,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using System.Collections.Generic;
 using Xunit;
-using Xunit.Abstractions;
+
 
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
