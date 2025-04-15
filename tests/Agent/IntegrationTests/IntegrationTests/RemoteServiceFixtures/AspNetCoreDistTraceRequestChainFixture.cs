@@ -42,6 +42,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 configModifier.SetOrDeleteSpanEventsEnabled(true);
                 configModifier.SetLogLevel("all");
 
+                configModifier.SetDistributedTraceRemoteParentSamplingBehavior("always_on", "always_on");
+
                 //Do during setup so TestLogger is set.
                 FirstCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
                 SecondCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);

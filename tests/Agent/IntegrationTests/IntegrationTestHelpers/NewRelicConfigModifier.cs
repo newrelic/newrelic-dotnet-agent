@@ -263,6 +263,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
+        public NewRelicConfigModifier SetDistributedTraceRemoteParentSamplingBehavior(string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "distributedTracing", "sampler" },
+                "remoteParentSampled", remoteParentSampledBehavior);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "distributedTracing", "sampler" },
+                "remoteParentNotSampled", remoteParentNotSampledBehavior);
+
+            return this;
+        }
+
         public NewRelicConfigModifier SetAllowAllHeaders(bool? enabled)
         {
             const string config = "configuration";

@@ -6,18 +6,15 @@ using NewRelic.Agent.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
     public class TracingState : ITracingState
     {
-        private readonly string _remoteParentSampledBehavior;
-        private readonly string _remoteParentNotSampledBehavior;
-
         // not valid for this enum, but will be replaced on first call to Type
         private DistributedTracingParentType _type = (DistributedTracingParentType)(-2);
         private DateTime _timestamp;
-        private bool? _sampled;
         private bool _validTracestateWasAccepted = false;
         private DateTime _transactionStartTime;
 
@@ -151,43 +148,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
         }
 
-        public bool? Sampled
-        {
-            get
-            {
-                if (_sampled is not null)
-                {
-                    return _sampled;
-                }
-
-                if (_traceContext?.Tracestate is { Sampled: not null })
-                {
-                    var sampledBool = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
-                    var sampledBehavior = sampledBool ? _remoteParentSampledBehavior : _remoteParentNotSampledBehavior;
-
-                    // if there is a valid traceparent, sampling behavior is determined by configuration
-                    if (_traceContext.TraceparentPresent && sampledBehavior != "default")
-                    {
-                        return sampledBehavior switch
-                        {
-                            "always_on" => _sampled = true,
-                            "always_off" => _sampled = false,
-                            _ => throw new ArgumentException($"Invalid {(sampledBool ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")}: {sampledBehavior}.")
-                        };
-                    }
-
-                    // either there's no traceparent or the behavior is default, so we use the sampled value
-                    return _sampled = sampledBool;
-                }
-
-                if (_newRelicPayload?.Sampled is not null)
-                {
-                    return _sampled = _newRelicPayload.Sampled;
-                }
-
-                return null;
-            }
-        }
+        public bool? Sampled { get; private set; }
 
         public float? Priority
         {
@@ -222,15 +183,13 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private DistributedTracePayload _newRelicPayload;
         private W3CTraceContext _traceContext;
 
-        private TracingState(string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
+        private TracingState()
         {
-            _remoteParentSampledBehavior = remoteParentSampledBehavior;
-            _remoteParentNotSampledBehavior = remoteParentNotSampledBehavior;
         }
 
         public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime, string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
         {
-            var tracingState = new TracingState(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            var tracingState = new TracingState();
             var errors = new List<IngestErrorType>();
 
             // w3c
@@ -241,6 +200,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
 
+            tracingState.SetSampledAndPriority(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
 
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
@@ -277,6 +237,43 @@ namespace NewRelic.Agent.Core.DistributedTracing
             tracingState.TransportType = transportType;
 
             return tracingState;
+        }
+
+        private void SetSampledAndPriority(string remoteParentSampledBehavior, string remoteParentNotSampledBehavior)
+        {
+            if (_traceContext?.Tracestate is { Sampled: not null })
+            {
+                var sampledBool = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
+                var sampledBehavior = sampledBool ? remoteParentSampledBehavior : remoteParentNotSampledBehavior;
+
+                // if there is a valid traceparent, sampling behavior is determined by configuration
+                if (_traceContext.TraceparentPresent && sampledBehavior != "default")
+                {
+                    if (sampledBehavior == "always_on")
+                    {
+                        _traceContext.Tracestate.Priority = 2.0f; // per the spec, set priority high so that this sample is always kept
+                        Sampled = true;
+                    }
+                    else if (sampledBehavior == "always_off")
+                    {
+                        Sampled = false;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid {(sampledBool ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")}: {sampledBehavior}.");
+                    }
+                }
+                else
+                {
+                    // either there's no traceparent or the behavior is default, so we use the sampled value
+                    Sampled = sampledBool;
+                }
+
+                Log.Info($"SetSampledAndPriority:  _traceContext.Tracestate.Sampled={sampledBool}, {(sampledBool ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} Priority:{Priority}");
+                return;
+            }
+
+            Sampled = _newRelicPayload?.Sampled;
         }
     }
 }

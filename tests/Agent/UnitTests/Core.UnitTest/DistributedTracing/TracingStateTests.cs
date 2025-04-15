@@ -280,20 +280,20 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
         }
 
-        [TestCase(true, true, "always_on", "doesnt_matter", true, TestName = "Sampled_TraceStateSampled_AlwaysOn")]
-        [TestCase(true, true, "always_off", "doesnt_matter", false, TestName = "Sampled_TraceStateSampled_AlwaysOff")]
-        [TestCase(true, true, "default", "doesnt_matter", true, TestName = "Sampled_TraceStateSampled_Default")]
-        [TestCase(true, false, "doesnt_matter", "always_on", true, TestName = "Sampled_TraceStateNotSampled_AlwaysOn")]
-        [TestCase(true, false, "doesnt_matter", "always_off", false, TestName = "Sampled_TraceStateNotSampled_AlwaysOff")]
-        [TestCase(true, false, "doesnt_matter", "default", false, TestName = "Sampled_TraceStateNotSampled_Default")]
-        [TestCase(false, false, "doesnt_matter", "doesnt_matter", null, TestName = "Sampled_TraceParentNotValid_TraceStateNotSampled")]
-        [TestCase(false, true, "doesnt_matter", "doesnt_matter", null, TestName = "Sampled_TraceParentNotValid_TraceStateSampled")]
+        [TestCase(true, true, "always_on", "doesnt_matter", true, 2.0f, TestName = "Sampled_TraceStateSampled_AlwaysOn")]
+        [TestCase(true, true, "always_off", "doesnt_matter", false, .65f, TestName = "Sampled_TraceStateSampled_AlwaysOff")]
+        [TestCase(true, true, "default", "doesnt_matter", true, .65f, TestName = "Sampled_TraceStateSampled_Default")]
+        [TestCase(true, false, "doesnt_matter", "always_on", true, 2.0f, TestName = "Sampled_TraceStateNotSampled_AlwaysOn")]
+        [TestCase(true, false, "doesnt_matter", "always_off", false, .65f, TestName = "Sampled_TraceStateNotSampled_AlwaysOff")]
+        [TestCase(true, false, "doesnt_matter", "default", false, .65f, TestName = "Sampled_TraceStateNotSampled_Default")]
+        [TestCase(false, false, "doesnt_matter", "doesnt_matter", null, null, TestName = "Sampled_TraceParentNotValid_TraceStateNotSampled")]
+        [TestCase(false, true, "doesnt_matter", "doesnt_matter", null, null, TestName = "Sampled_TraceParentNotValid_TraceStateSampled")]
         public void Sampled_TestMatrix(
             bool traceParentValid,
             bool traceStateSampled,
             string remoteParentSampledBehavior,
             string remoteParentNotSampledBehavior,
-            bool? expectedSampled)
+            bool? expectedSampled, float? expectedPriority)
         {
             // Arrange
             var traceparent = traceParentValid ? ValidTraceparent : null;
@@ -316,22 +316,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow,
-                remoteParentSampledBehavior: remoteParentSampledBehavior,
-                remoteParentNotSampledBehavior: remoteParentNotSampledBehavior
+                remoteParentSampledBehavior,
+                remoteParentNotSampledBehavior
             );
 
             // Assert
             Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
+            Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
         }
 
         [Test]
         public void Sampled_ThrowsException_WhenInvalidRemoteParentSampledBehavior()
         {
             var headers = new Dictionary<string, string>
-        {
-            { "traceparent", ValidTraceparent },
-            { "tracestate", ValidTracestate }
-        };
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate }
+            };
 
             Assert.Throws<ArgumentException>(() =>
             {
@@ -354,10 +355,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var headers = new Dictionary<string, string>
             {
                 { "traceparent", ValidTraceparent },
-                { "tracestate", ValidTracestate }
+                { "tracestate", ValidTracestateWithSampledFalse }
             };
 
             // Act & Assert
+
             Assert.Throws<ArgumentException>(() =>
             {
                 TracingState.AcceptDistributedTraceHeaders(
