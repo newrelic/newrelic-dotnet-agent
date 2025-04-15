@@ -1,14 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Kinesis" Version="3.7.402.101" />
-    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.402.39" />
+    <PackageReference Include="AWSSDK.Kinesis" Version="3.7.402.111" />
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.402.49" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.415.17" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
@@ -17,8 +15,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.124" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.406.12" />
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.38.0" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.134" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.406.22" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.40.0" />
   </ItemGroup>
 </Project>
