@@ -42,7 +42,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 configModifier.SetOrDeleteSpanEventsEnabled(true);
                 configModifier.SetLogLevel("all");
 
-                configModifier.SetDistributedTraceRemoteParentSamplingBehavior("always_on", "always_on");
+                // TODO: Testing, pass values as fixture ctor parameters eventually
+                configModifier.SetDistributedTraceRemoteParentSamplingBehavior("alwaysOff", "alwaysOff");
 
                 //Do during setup so TestLogger is set.
                 FirstCallApplication = SetupDistributedTracingApplication(ExcludeNewRelicHeader);
@@ -98,6 +99,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             configModifier.SetOrDeleteSpanEventsEnabled(true);
             configModifier.SetOrDeleteDistributedTraceExcludeNewRelicHeader(excludeNewRelicHeader);
             configModifier.SetLogLevel("all");
+
+            // TODO: Testing, pass values as fixture ctor parameters eventually
+            configModifier.SetDistributedTraceRemoteParentSamplingBehavior("alwaysOff", "alwaysOff");
 
             return service;
         }

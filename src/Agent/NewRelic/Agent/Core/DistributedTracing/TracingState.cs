@@ -249,13 +249,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 // if there is a valid traceparent, sampling behavior is determined by configuration
                 if (_traceContext.TraceparentPresent && sampledBehavior != "default")
                 {
-                    if (sampledBehavior == "always_on")
+                    if (sampledBehavior == "alwaysOn")
                     {
                         _traceContext.Tracestate.Priority = 2.0f; // per the spec, set priority high so that this sample is always kept
                         Sampled = true;
                     }
-                    else if (sampledBehavior == "always_off")
+                    else if (sampledBehavior == "alwaysOff")
                     {
+                        _traceContext.Tracestate.Priority = 0.0f; // set lowest possible priority
                         Sampled = false;
                     }
                     else
@@ -269,11 +270,13 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     Sampled = sampledBool;
                 }
 
-                Log.Info($"SetSampledAndPriority:  _traceContext.Tracestate.Sampled={sampledBool}, {(sampledBool ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} Priority:{Priority}");
-                return;
+                // TODO: testing only
+                Log.Info($"SetSampledAndPriority:  _traceContext.Tracestate.Sampled={_traceContext.Tracestate.Sampled}, {(sampledBool ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {Sampled}, Priority:{Priority}");
             }
-
-            Sampled = _newRelicPayload?.Sampled;
+            else
+            {
+                Sampled = _newRelicPayload?.Sampled;
+            }
         }
     }
 }
