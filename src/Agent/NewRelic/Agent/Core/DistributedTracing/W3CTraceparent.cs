@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -49,21 +50,21 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public string ParentId { get; } // 8 bytes
 
         /// <summary>
-        /// TraceFlags is a 2 character string that represents an 8-bit field that controls tracing flags such as sampling, trace level, etc. 
+        /// TraceFlags is a 2 character hex string that represents an 8-bit field that controls tracing flags such as sampling, trace level, etc. 
         /// 
         /// As this is a bit field, you cannot interpret flags by decoding the hex value and looking at the resulting number.
         /// </summary>
-        public string TraceFlags { get; } // 2 bytes/8 bits
+        public string TraceFlags { get; } // 2 hex characters / 1 byte / 8 bits
 
-        private const byte FLAG_SAMPLED = 1;
+        private const byte FLAG_SAMPLED = 1; // 0b00000001
 
         public bool Sampled
         {
             get
             {
-                var traceFlagsInt = Convert.ToInt16(TraceFlags);
                 // see https://www.w3.org/TR/trace-context/#trace-flags
-                return (traceFlagsInt & FLAG_SAMPLED) == FLAG_SAMPLED;
+                var traceFlagsInt = TraceFlags.AsSpan().FromHexString();
+                return (traceFlagsInt[0] & FLAG_SAMPLED) == FLAG_SAMPLED;
             }
         }
 

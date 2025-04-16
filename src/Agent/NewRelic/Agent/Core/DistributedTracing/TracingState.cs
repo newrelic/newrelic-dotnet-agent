@@ -204,10 +204,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private DistributedTracePayload _newRelicPayload;
         private W3CTraceContext _traceContext;
 
-        private TracingState()
-        {
-        }
-
         public static ITracingState AcceptDistributedTraceHeaders<T>(
             T carrier,
             Func<T, string, IEnumerable<string>> getter,
@@ -228,7 +224,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
 
-            tracingState.RespectW3CTraceParentSampleFlag(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
 
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
@@ -267,34 +263,42 @@ namespace NewRelic.Agent.Core.DistributedTracing
             return tracingState;
         }
 
-        private void RespectW3CTraceParentSampleFlag(
+        /// <summary>
+        /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
+        /// if the transaction should be sampled.
+        /// </summary>
+        private void ApplyRemoteParentSampledBehavior(
             RemoteParentSampledBehavior remoteParentSampledBehavior,
             RemoteParentSampledBehavior remoteParentNotSampledBehavior)
         {
-            if (_traceContext.TraceparentPresent &&
-                (remoteParentNotSampledBehavior != RemoteParentSampledBehavior.Default ||
-                 remoteParentSampledBehavior != RemoteParentSampledBehavior.Default))
+            // don't do anything if the traceparent is not present or if behavior is configured to default
+            if (!_traceContext.TraceparentPresent ||
+                (remoteParentNotSampledBehavior == RemoteParentSampledBehavior.Default &&
+                 remoteParentSampledBehavior == RemoteParentSampledBehavior.Default))
             {
-                var sampledBehavior = _traceContext.Traceparent.Sampled
-                    ? remoteParentSampledBehavior
-                    : remoteParentNotSampledBehavior;
-
-                switch (sampledBehavior)
-                {
-                    case RemoteParentSampledBehavior.AlwaysOn:
-                        _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
-                        _sampled = true;
-                        break;
-                    case RemoteParentSampledBehavior.AlwaysOff:
-                        _priority = 0.0f; // set lowest possible priority
-                        _sampled = false;
-                        break;
-                    default:
-                        throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
-                }
-
-                Log.Finest($"RespectW3CTraceParentSampleFlag:  _traceContext.Traceparent.Sampled={_traceContext.Traceparent.Sampled}, {(_sampled.Value ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {Sampled}, Priority:{Priority}");
+                return;
             }
+
+            var sampledBehavior = _traceContext.Traceparent.Sampled
+                ? remoteParentSampledBehavior
+                : remoteParentNotSampledBehavior;
+
+            switch (sampledBehavior)
+            {
+                case RemoteParentSampledBehavior.AlwaysOn:
+                    _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
+                    _sampled = true;
+                    break;
+                case RemoteParentSampledBehavior.AlwaysOff:
+                    _priority = 0.0f; // set lowest possible priority
+                    _sampled = false;
+                    break;
+                // don't need a case for Default, as it is handled above
+                default:
+                    throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
+            }
+
+            Log.Finest($"ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={_traceContext.Traceparent.Sampled}, {(_sampled.Value ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {Sampled}, Priority:{Priority}");
         }
     }
 }
