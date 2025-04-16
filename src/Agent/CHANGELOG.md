@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.40.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.0...v10.40.1) (2025-04-15)
+
+
+### Fixes
+
+* Specify a non-infinite timeout when creating `HttpClient` and `SocketsHttpHandler` instances. ([#3084](https://github.com/newrelic/newrelic-dotnet-agent/issues/3084)) ([6f72158](https://github.com/newrelic/newrelic-dotnet-agent/commit/6f72158b201f1b7f134c2336ecd02c6ac8fca261))
+* When sql explain plan generation fails, don't attempt to generate an explain plan on future invocations of the same query. ([#3075](https://github.com/newrelic/newrelic-dotnet-agent/issues/3075)) ([12e1743](https://github.com/newrelic/newrelic-dotnet-agent/commit/12e17434496fdf9da9f357853578fa1548d266d0))
+
 ## [10.40.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.39.0...v10.40.0) (2025-04-01)
 
 
