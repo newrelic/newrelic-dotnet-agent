@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.UnitTest.Utilities
             var expected = new byte[] { 0x4a, 0x6f, 0x68, 0x6e, 0x44, 0x6f, 0x65 };
 
             // Act
-            var result = HexStringConverter.FromHexString(hexString.AsSpan());
+            var result = hexString.AsSpan().FromHexString();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.UnitTest.Utilities
             var invalidHexString = "4a6f6g";
 
             // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => HexStringConverter.FromHexString(invalidHexString.AsSpan()));
+            var ex = Assert.Throws<ArgumentException>(() => invalidHexString.AsSpan().FromHexString());
             Assert.That(ex.Message, Does.Contain("Invalid hexadecimal character"));
         }
 
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.UnitTest.Utilities
             var oddLengthHexString = "4a6f6";
 
             // Act & Assert
-            var ex = Assert.Throws<ArgumentException>(() => HexStringConverter.FromHexString(oddLengthHexString.AsSpan()));
+            var ex = Assert.Throws<ArgumentException>(() => oddLengthHexString.AsSpan().FromHexString());
             Assert.That(ex.Message, Does.Contain("Hex string must have an even length"));
         }
 
@@ -54,25 +54,61 @@ namespace NewRelic.Agent.Core.UnitTest.Utilities
             var emptyHexString = "";
 
             // Act
-            var result = HexStringConverter.FromHexString(emptyHexString.AsSpan());
+            var result = emptyHexString.AsSpan().FromHexString();
 
             // Assert
             Assert.That(result, Is.Empty);
         }
 
         [Test]
-        public void FromHexString_LargeHexString_ReturnsCorrectByteArray()
+        public void FromHexString_MixedCaseHexString_ReturnsCorrectByteArray()
         {
             // Arrange
-            var hexString = new string('A', 1000); // 500 bytes of 0xAA
-            var expected = new byte[500];
-            for (int i = 0; i < expected.Length; i++)
-            {
-                expected[i] = 0xAA;
-            }
+            var hexString = "aBcDeF"; // Mixed-case hex string
+            var expected = new byte[] { 0xAB, 0xCD, 0xEF };
 
             // Act
-            var result = HexStringConverter.FromHexString(hexString.AsSpan());
+            var result = hexString.AsSpan().FromHexString();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void FromHexString_SpecialCharacters_ThrowsArgumentException()
+        {
+            // Arrange
+            var invalidHexString = "4a6f6@";
+
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(() => invalidHexString.AsSpan().FromHexString());
+            Assert.That(ex.Message, Does.Contain("Invalid hexadecimal character"));
+        }
+
+        [Test]
+        public void FromHexString_MinimumValidInput_ReturnsSingleByte()
+        {
+            // Arrange
+            var hexString = "0A"; // Single byte
+            var expected = new byte[] { 0x0A };
+
+            // Act
+            var result = hexString.AsSpan().FromHexString();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+
+        [Test]
+        public void FromHexString_UpperAndLowerBound_ReturnsByteArray()
+        {
+            // Arrange
+            var hexString = "0aA9fF"; // upper and lower bound hex characters
+            var expected = new byte[] { 0x0A, 0xA9, 0xFF };
+
+            // Act
+            var result = hexString.AsSpan().FromHexString();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
