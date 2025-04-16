@@ -167,10 +167,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
         }
 
+        private float? _priority;
         public float? Priority
         {
             get
             {
+                if (_priority is not null)
+                    return _priority;
+
                 if (_traceContext?.Tracestate != null)
                 {
                     return _traceContext.Tracestate.Priority;
@@ -278,18 +282,18 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 switch (sampledBehavior)
                 {
                     case RemoteParentSampledBehavior.AlwaysOn:
-                        _traceContext.Tracestate.Priority = 2.0f; // per the spec, set priority high so that this sample is always kept
+                        _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
                         _sampled = true;
                         break;
                     case RemoteParentSampledBehavior.AlwaysOff:
-                        _traceContext.Tracestate.Priority = 0.0f; // set lowest possible priority
+                        _priority = 0.0f; // set lowest possible priority
                         _sampled = false;
                         break;
                     default:
                         throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
                 }
 
-                Log.Debug($"RespectW3CTraceParentSampleFlag:  _traceContext.Traceparent.Sampled={_traceContext.Traceparent.Sampled}, {(_sampled.Value ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {_sampled}, Priority:{Priority}");
+                Log.Finest($"RespectW3CTraceParentSampleFlag:  _traceContext.Traceparent.Sampled={_traceContext.Traceparent.Sampled}, {(_sampled.Value ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {Sampled}, Priority:{Priority}");
             }
         }
     }

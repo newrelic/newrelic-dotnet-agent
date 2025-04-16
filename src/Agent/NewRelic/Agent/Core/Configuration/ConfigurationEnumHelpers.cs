@@ -24,5 +24,21 @@ namespace NewRelic.Agent.Core.Configuration
                     throw new ArgumentOutOfRangeException(nameof(localConfigEnumValue), localConfigEnumValue, null);
             }
         }
+
+        public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(
+            this RemoteParentSampledBehavior remoteParentSampledBehavior)
+        {
+            switch (remoteParentSampledBehavior)
+            {
+                case RemoteParentSampledBehavior.Default:
+                    return RemoteParentSampledBehaviorType.@default;
+                case RemoteParentSampledBehavior.AlwaysOn:
+                    return RemoteParentSampledBehaviorType.alwaysOn;
+                case RemoteParentSampledBehavior.AlwaysOff:
+                    return RemoteParentSampledBehaviorType.alwaysOff;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(remoteParentSampledBehavior), remoteParentSampledBehavior, null);
+            }
+        }
     }
 }
