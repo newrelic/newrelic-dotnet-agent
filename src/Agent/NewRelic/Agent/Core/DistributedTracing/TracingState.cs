@@ -170,23 +170,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private float? _priority;
         public float? Priority
         {
-            get
-            {
-                if (_priority is not null)
-                    return _priority;
-
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _traceContext.Tracestate.Priority;
-                }
-
-                if (_newRelicPayload?.Priority != null && _newRelicPayload.Priority.HasValue)
-                {
-                    return _newRelicPayload.Priority;
-                }
-
-                return null;
-            }
+            get => _priority ??
+                   (_traceContext?.Tracestate is { Priority: not null } ?
+                       _traceContext.Tracestate.Priority : _newRelicPayload?.Priority);
         }
 
         public bool NewRelicPayloadWasAccepted { get; private set; } = false;
