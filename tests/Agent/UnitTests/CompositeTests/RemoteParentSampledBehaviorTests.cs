@@ -50,8 +50,7 @@ namespace CompositeTests
 
             var headers = new Dictionary<string, string>
             {
-                { "traceparent", $"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-{traceparentSampledFlag}" },
-                { "tracestate", "vendor1=value1,vendor2=value2" } // Example W3C tracestate header
+                { "traceparent", $"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-{traceparentSampledFlag}" }
             };
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, (carrier, key) => carrier.ContainsKey(key) ? new[] { carrier[key] } : null, TransportType.HTTP);
@@ -65,7 +64,7 @@ namespace CompositeTests
 
             // Assert
             var spanEvents = _compositeTestAgent.SpanEvents;
-            if (behavior == RemoteParentSampledBehavior.AlwaysOff)
+            if (behavior == RemoteParentSampledBehavior.AlwaysOff) // if we don't sample, there will be no span events
             {
                 Assert.That(spanEvents, Is.Empty);
                 return;
