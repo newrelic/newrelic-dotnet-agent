@@ -44,6 +44,32 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:simpleType name="RemoteParentSampledBehaviorType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="default">
+                <xs:annotation>
+                    <xs:documentation>
+                        Default behavior. The agent will use existing sampling logic.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOn">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOff">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will NOT sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:element name="configuration">
         <xs:complexType>
             <xs:all>
@@ -1207,79 +1233,29 @@
                 </xs:element>
 
                 <xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Distributed tracing lets you see the path that a request takes through your distributed system. Enabling distributed tracing changes the behavior of some New Relic features, so carefully consult the transition guide before you enable this feature: https://docs.newrelic.com/docs/transition-guide-distributed-tracing
+                            Default is false.
+                        </xs:documentation>
+                    </xs:annotation>
                     <xs:complexType>
-                        <xs:annotation>
-                            <xs:documentation>
-                                Distributed tracing lets you see the path that a request takes through your distributed system. Enabling distributed tracing changes the behavior of some New Relic features, so carefully consult the transition guide before you enable this feature: https://docs.newrelic.com/docs/transition-guide-distributed-tracing
-                                Default is false.
-                            </xs:documentation>
-                        </xs:annotation>
                         <xs:sequence>
                             <xs:element name="sampler" minOccurs="0" maxOccurs="1">
                                 <xs:complexType>
-                                    <xs:attribute name="remoteParentSampled" default="default">
+                                    <xs:attribute name="remoteParentSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Controls span sampling behavior when the trace parent was sampled.
                                             </xs:documentation>
                                         </xs:annotation>
-                                        <xs:simpleType>
-                                            <xs:restriction base="xs:string">
-                                                <xs:enumeration value="default">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            Default behavior. The agent will use existing sampling logic.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                                <xs:enumeration value="alwaysOn">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            The agent will sample spans.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                                <xs:enumeration value="alwaysOff">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            The agent will NOT sample spans.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                            </xs:restriction>
-                                        </xs:simpleType>
                                     </xs:attribute>
-                                    <xs:attribute name="remoteParentNotSampled" default="default">
+                                    <xs:attribute name="remoteParentNotSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Controls span sampling behavior when the trace parent was not sampled.
                                             </xs:documentation>
                                         </xs:annotation>
-                                        <xs:simpleType>
-                                            <xs:restriction base="xs:string">
-                                                <xs:enumeration value="default">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            Default behavior. The agent will use existing sampling logic.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                                <xs:enumeration value="alwaysOn">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            The agent will sample spans.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                                <xs:enumeration value="alwaysOff">
-                                                    <xs:annotation>
-                                                        <xs:documentation>
-                                                            The agent will NOT sample spans.
-                                                        </xs:documentation>
-                                                    </xs:annotation>
-                                                </xs:enumeration>
-                                            </xs:restriction>
-                                        </xs:simpleType>
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>

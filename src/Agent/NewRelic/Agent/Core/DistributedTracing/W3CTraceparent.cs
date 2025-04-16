@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -53,6 +54,18 @@ namespace NewRelic.Agent.Core.DistributedTracing
         /// As this is a bit field, you cannot interpret flags by decoding the hex value and looking at the resulting number.
         /// </summary>
         public string TraceFlags { get; } // 2 bytes/8 bits
+
+        private const byte FLAG_SAMPLED = 1;
+
+        public bool Sampled
+        {
+            get
+            {
+                var traceFlagsInt = Convert.ToInt16(TraceFlags);
+                // see https://www.w3.org/TR/trace-context/#trace-flags
+                return (traceFlagsInt & FLAG_SAMPLED) == FLAG_SAMPLED;
+            }
+        }
 
         /// <summary>
         /// This is used to create the object and expects to only be called with validated values from the two CreateW3CTraceparent builders.

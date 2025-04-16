@@ -264,7 +264,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             try
             {
-                var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier, getter, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime, _configurationService.Configuration.RemoteParentSampledBehavior, _configurationService.Configuration.RemoteParentNotSampledBehavior);
+                var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                    carrier,
+                    getter,
+                    transportType,
+                    _configurationService.Configuration.TrustedAccountKey,
+                    transactionStartTime,
+                    _configurationService.Configuration.RemoteParentSampledBehavior,
+                    _configurationService.Configuration.RemoteParentNotSampledBehavior
+                );
 
                 if (tracingState?.IngestErrors != null)
                 {

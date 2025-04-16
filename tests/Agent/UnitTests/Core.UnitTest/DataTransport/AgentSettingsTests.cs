@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.TestUtilities;
+using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Configuration
 {

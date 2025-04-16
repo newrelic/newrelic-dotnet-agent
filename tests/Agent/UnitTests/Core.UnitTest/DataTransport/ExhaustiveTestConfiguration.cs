@@ -414,8 +414,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ExcludeNewrelicHeader => true;
 
-        public string RemoteParentSampledBehavior => "default";
-        public string RemoteParentNotSampledBehavior => "default";
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => RemoteParentSampledBehavior.Default;
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => RemoteParentSampledBehavior.Default;
 
         public bool ApplicationLoggingEnabled => true;
 
