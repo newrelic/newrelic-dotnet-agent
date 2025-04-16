@@ -1015,6 +1015,12 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
+        // TODO: Do we need to check serverless mode? Need to support environment variable?
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => _localConfiguration.distributedTracing.sampler.remoteParentSampled.ToRemoteParentSampledBehavior();
+
+        // TODO: Do we need to check serverless mode? Need to support environment variable?
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => _localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToRemoteParentSampledBehavior();
+
         #endregion Distributed Tracing
 
         #region Infinite Tracing

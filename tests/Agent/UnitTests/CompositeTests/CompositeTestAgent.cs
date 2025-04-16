@@ -133,7 +133,7 @@ namespace CompositeTests
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, RemoteParentSampledBehavior remoteParentSampledBehavior = RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior remoteParentNotSampledBehavior = RemoteParentSampledBehavior.Default)
         {
             Log.Initialize(new Logger());
 
@@ -227,7 +227,7 @@ namespace CompositeTests
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration();
+            LocalConfiguration = GetDefaultTestLocalConfiguration(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -410,12 +410,14 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration()
+        private static configuration GetDefaultTestLocalConfiguration(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
+            configuration.distributedTracing.sampler.remoteParentSampled = remoteParentSampledBehavior.ToRemoteParentSampledBehaviorType();
+            configuration.distributedTracing.sampler.remoteParentNotSampled = remoteParentNotSampledBehavior.ToRemoteParentSampledBehaviorType();
 
             return configuration;
         }

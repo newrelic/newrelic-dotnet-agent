@@ -1,5 +1,6 @@
-When generating new source code files, always include the copyright header.
-
-When writing unit tests, always use modern NUnit assertions.
-
-We use JustMock.Lite, so use only mock configurations that are valid for that package.
+- Always use the latest C# features and syntax.
+- Use the latest C# language version available in the project.
+- Ensure all files include the standard license header at the top.
+- When writing unit tests, always use modern NUnit assertions.
+- We use JustMock.Lite, so use only mock configurations that are valid for that package.
+- Always include the required usings at the top of the file.

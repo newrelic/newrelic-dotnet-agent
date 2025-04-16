@@ -207,6 +207,11 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("distributed_tracing.enabled")]
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled")]
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled")]
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+
         [JsonProperty("span_events.enabled")]
         public bool SpanEventsEnabled => _configuration.SpanEventsEnabled;
 
