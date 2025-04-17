@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public Task Invoke(HttpContext context)
         {
-            if (!BrowserInjectingStreamWrapper.Disabled)
+            if (!BrowserInjectingStreamWrapper.Disabled || !_agent.CurrentTransaction.IsValid)
             {
                 // wrap the response body in our stream wrapper which will inject the RUM script if appropriate
                 using var injectedResponse = new BrowserInjectingStreamWrapper(_agent, context.Response.Body, context);
