@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.40.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.1...v10.40.2) (2025-04-17)
+
+
+### Fixes
+
+* Null reference exception in Asp.NET Core 6+ browser monitoring injection.  ([#3102](https://github.com/newrelic/newrelic-dotnet-agent/issues/3102)) ([49df7bf](https://github.com/newrelic/newrelic-dotnet-agent/commit/49df7bfb75fbccc5961cc59a597b2e92f371982c))
+
 ## [10.40.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.0...v10.40.1) (2025-04-15)
 
 
