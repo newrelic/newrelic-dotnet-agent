@@ -40,6 +40,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private void TryCreateActivityListener()
         {
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
+
+            if (assembly == null)
+            {
+                return;
+            }
+
             var activityListenerType = assembly.GetType("System.Diagnostics.ActivityListener", throwOnError: false);
             var activitySourceType = assembly.GetType("System.Diagnostics.ActivitySource", throwOnError: false);
 
