@@ -519,14 +519,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public const string SegmentCustomPropertyName = "NewRelicSegment";
 
         private const string ActivitySourceName = "NewRelic.Agent";
-        private static INewRelicActivitySource _activitySource = CreateDefaultActivitySource();
+        private static INewRelicActivitySource _activitySource = null;
         private static int _usingRuntimeActivitySource = 0;
-
-        private static INewRelicActivitySource CreateDefaultActivitySource()
-        {
-            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-            return new DefaultActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion);
-        }
 
         public static void SetAndCreateRuntimeActivitySource(Type activitySourceType, Type activityKindType)
         {
@@ -540,8 +534,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             originalActivitySource?.Dispose();
         }
 
-        public INewRelicActivity CreateActivity(string activityName, ActivityKind kind)
+        public INewRelicActivity TryCreateActivity(string activityName, ActivityKind kind)
         {
+            if (_activitySource == null)
+            {
+                return null;
+            }
             return _activitySource.CreateActivity(activityName, kind);
         }
     }
@@ -549,26 +547,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public interface INewRelicActivitySource : IDisposable
     {
         INewRelicActivity CreateActivity(string activityName, ActivityKind kind);
-    }
-
-    public class DefaultActivitySource : INewRelicActivitySource
-    {
-        private readonly ActivitySource _activitySource;
-
-        public DefaultActivitySource(string name, string version)
-        {
-            _activitySource = new ActivitySource(name, version);
-        }
-        public void Dispose()
-        {
-            _activitySource.Dispose();
-        }
-
-        public INewRelicActivity CreateActivity(string activityName, ActivityKind kind)
-        {
-            var activity = _activitySource.CreateActivity(activityName, kind);
-            return new DefaultNewRelicActivity(activity);
-        }
     }
 
     public class RuntimeActivitySource : INewRelicActivitySource
@@ -608,45 +586,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
     }
 
-    public class DefaultNewRelicActivity : INewRelicActivity
-    {
-        private readonly Activity _activity;
-
-        public DefaultNewRelicActivity(Activity activity)
-        {
-            _activity = activity;
-        }
-
-        public bool IsStopped => _activity == default || _activity.IsStopped;
-
-        public string SpanId => _activity == default ? null : _activity.SpanId.ToString();
-
-        public string TraceId => _activity == default ? null : _activity.TraceId.ToString();
-
-        public string DisplayName => _activity == default ? "unknown" : _activity.DisplayName;
-
-        public ISegment Segment
-        {
-            get => _activity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
-            set => _activity.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
-        }
-
-        public void Dispose()
-        {
-            _activity.Dispose();
-        }
-
-        public void Start()
-        {
-            _activity.Start();
-        }
-
-        public void Stop()
-        {
-            _activity.Stop();
-        }
-    }
-
     public class RuntimeNewRelicActivity : INewRelicActivity
     {
         private readonly object _activity;
@@ -667,7 +606,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public ISegment Segment
         {
             get => GetSegmentFromActivity(_activity);
-            set => ((dynamic)_activity).SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
+            set => ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
         }
 
         public void Dispose()
@@ -679,93 +618,18 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public void Start()
         {
             dynamic dynamicActivity = _activity;
-            dynamicActivity.Start();
+            dynamicActivity?.Start();
         }
 
         public void Stop()
         {
             dynamic dynamicActivity = _activity;
-            dynamicActivity.Stop();
+            dynamicActivity?.Stop();
         }
 
         public static ISegment GetSegmentFromActivity(object activity)
         {
-            return ((dynamic)activity).GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
+            return ((dynamic)activity)?.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
         }
     }
-
-    // This implementation will only be compatible with W3C trace context and will not support the older New Relic format or
-    // the CAT format.
-    public class NewRelicDistributedTracingPropator : DistributedContextPropagator
-    {
-        // This will be the default propagator used by the agent because this class is using the ILRepacked version of the
-        // DistributedContextPropagator class.
-        private static DistributedContextPropagator DefaultContextPropagator = Current;
-
-        private IAgent _agent;
-
-        public NewRelicDistributedTracingPropator(IAgent agent)
-        {
-            _agent = agent;
-        }
-
-        public override IReadOnlyCollection<string> Fields { get; } = DefaultContextPropagator.Fields;
-
-        public override void Inject(Activity activity, object carrier, PropagatorSetterCallback setter)
-        {
-            if (activity is null || setter is null)
-            {
-                return;
-            }
-
-            string id = activity.Id;
-            if (id is null)
-            {
-                return;
-            }
-
-            var transaction = _agent.CurrentTransaction;
-            if (transaction.IsValid && !transaction.IsFinished)
-            {
-                transaction.InsertDistributedTraceHeaders(carrier, InjectHeader);
-            }
-
-            // TODO: Supoprt injecting baggage items. The method is internal in the base class, so we cannot directly reuse it.
-            //InjectBaggage(carrier, activity.Baggage, setter);
-            return;
-
-            void InjectHeader(object c, string key, string value)
-            {
-                setter(c, key, value);
-            }
-        }
-
-        public override void ExtractTraceIdAndState(object carrier, PropagatorGetterCallback getter, out string traceId, out string traceState)
-        {
-            // We only need the default propagator logic here, because the New Relic API requires a transaction to be
-            // available before the trace context can be accepted, but there will not be a transaction yet.
-            // The ActivityStarted callback will be used to accept the trace context by pulling it from the activity ParentId
-            // and updating the transaction with the trace context.
-            DefaultContextPropagator.ExtractTraceIdAndState(carrier, getter, out traceId, out traceState);
-        }
-
-        public override IEnumerable<KeyValuePair<string, string>> ExtractBaggage(object carrier, PropagatorGetterCallback getter)
-        {
-            return DefaultContextPropagator.ExtractBaggage(carrier, getter);
-        }
-    }
-
-    // TODO: Need to inject a type that implements the DistributedContextPropagator abstract class defined in the application's
-    // version of the library. The class will need to have a similar structure to the NewRelicDistributedTracingPropagator class.
-    // This class will be a wrapper class around NewRelicDistributedTracingPropagator and will be used to bridge the OpenTelemetry
-    // API to the New Relic API.
-    // The new class should have a static field that will hold the instance of the NewRelicDistributedTracingPropagator class.
-    // The Fields property can just return the Fields property of the NewRelicDistributedTracingPropagator instance.
-    // The Inject, ExtractTraceIdAndState, and ExtractBaggage methods should call the corresponding methods on the
-    // NewRelicDistributedTracingPropagator instance. These methods may need to have a dynamically generated translation method
-    // for the getter and setter delegates.
-    // To dynamically generate the classes, we can use the System.Reflection.Emit namespace to generate the classes at runtime in
-    // a similar way to how we use that namespace to implement the VisibilityBypasser.
-    // The example in https://learn.microsoft.com/en-us/dotnet/api/system.reflection.emit.typebuilder.definemethodoverride
-    // shows how we could potential define the type and the necessary abstract method overrides.
 }

@@ -223,19 +223,22 @@ namespace NewRelic.Agent.Core.Transactions
             if (activity == null)
             {
                 // We cannot start the new Activity until the segment and activity are associated with each other
-                activity = Agent.ActivitySourceProxy.CreateActivity("temp segment name", ActivityKind.Internal);
+                activity = Agent.ActivitySourceProxy.TryCreateActivity("temp segment name", ActivityKind.Internal);
 
                 // Delay starting the activity until the segment is associated with it
                 shouldStartActivity = true;
             }
 
             // Associate the segment and activity with each other
-            segment.SetActivity(activity);
-            activity.Segment = segment;
-
-            if (shouldStartActivity)
+            if (activity != null)
             {
-                activity.Start();
+                segment.SetActivity(activity);
+                activity.Segment = segment;
+
+                if (shouldStartActivity)
+                {
+                    activity.Start();
+                }
             }
 
             return segment;
