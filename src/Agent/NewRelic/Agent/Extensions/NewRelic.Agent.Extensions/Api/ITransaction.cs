@@ -40,6 +40,15 @@ namespace NewRelic.Agent.Api
         /// </summary>
         void End(bool captureResponseTime = true);
 
+        //TODO: Update the documentation for this method and determine if this is the right interface for it.
+        /// <summary>
+        /// Starts a segment from an Activity.
+        /// </summary>
+        /// <param name="methodCall">The method call that is responsible for starting this segmnt.</param>
+        /// <param name="activity">The Activity that corresponds to the segment.</param>
+        /// <returns>An opaque object that will be needed when you want to end the segment.</returns>
+        ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity);
+
         /// <summary>
         /// Creates a segment for a datastore operation.
         /// </summary>
@@ -316,5 +325,19 @@ namespace NewRelic.Agent.Api
 
         void AddFaasAttribute(string name, object value);
         object GetFaasAttribute(string name);
+    }
+
+    // TODO: Move to separate file and determine if this is the appropriate namespace
+    public interface INewRelicActivity : IDisposable
+    {
+        string SpanId { get; }
+        string TraceId { get; }
+        string DisplayName { get; }
+        bool IsStopped { get; }
+        ISegment Segment { get; set; }
+
+        void Start();
+
+        void Stop();
     }
 }

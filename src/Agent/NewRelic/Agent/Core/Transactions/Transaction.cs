@@ -36,7 +36,7 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core.Transactions
 {
-    public class Transaction : IInternalTransaction, ITransactionSegmentState
+    public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybridAgentTransaction
     {
         private static readonly int MaxSegmentLength = 255;
 
@@ -78,7 +78,23 @@ namespace NewRelic.Agent.Core.Transactions
 
         public string TraceId
         {
-            get => (TracingState != null && TracingState.TraceId != null) ? TracingState.TraceId : _traceId;
+            get
+            {
+                if (TracingState != null && TracingState.TraceId != null)
+                {
+                    return TracingState.TraceId;
+                }
+                else if (Segments.Count > 0)
+                {
+                    var firstSegment = Segments[0];
+                    var activityTraceId = firstSegment?.TryGetActivityTraceId();
+                    if (activityTraceId != null)
+                    {
+                        return activityTraceId;
+                    }
+                }
+                return _traceId;
+            }
 
             internal set => _traceId = value;
         }
@@ -197,11 +213,32 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        private Segment StartSegmentImpl(MethodCall methodCall)
+        private Segment StartSegmentImpl(MethodCall methodCall, INewRelicActivity activity = null)
         {
             var methodCallData = GetMethodCallData(methodCall);
+            var segment = new Segment(this, methodCallData);
 
-            return new Segment(this, methodCallData);
+            // We should only do this if the segment was not created from an activity
+            bool shouldStartActivity = false;
+            if (activity == null)
+            {
+                // We cannot start the new Activity until the segment and activity are associated with each other
+                activity = Agent.ActivitySourceProxy.CreateActivity("temp segment name", ActivityKind.Internal);
+
+                // Delay starting the activity until the segment is associated with it
+                shouldStartActivity = true;
+            }
+
+            // Associate the segment and activity with each other
+            segment.SetActivity(activity);
+            activity.Segment = segment;
+
+            if (shouldStartActivity)
+            {
+                activity.Start();
+            }
+
+            return segment;
         }
 
         // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
@@ -210,6 +247,18 @@ namespace NewRelic.Agent.Core.Transactions
             var methodCallData = GetMethodCallData(typeName, methodName, invocationTargetHashCode);
 
             return new Segment(this, methodCallData, relativeStartTime, relativeEndTime);
+        }
+
+        public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
+        {
+            var segment = StartSegmentImpl(methodCall, activity);
+            var segmentData = new SimpleSegmentData(activity.DisplayName);
+
+            segment.SetSegmentData(segmentData);
+
+            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+
+            return segment;
         }
 
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
@@ -708,7 +757,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var errorData = _errorService.FromException(exception);
 
                 TransactionMetadata.TransactionErrorState.AddExceptionData(errorData);
-                TryNoticeErrorOnCurrentSpan(errorData);
+                TryNoticeErrorOnSegment(errorData, CurrentSegment);
             }
             else
             {
@@ -718,20 +767,37 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(ErrorData errorData)
         {
-
-            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
-            TryNoticeErrorOnCurrentSpan(errorData);
+            NoticeErrorOnTransactionAndSegment(errorData, CurrentSegment);
         }
 
-        private void TryNoticeErrorOnCurrentSpan(ErrorData errorData)
+        public void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment)
         {
-            var currentSpan = CurrentSegment as IInternalSpan;
-            if (currentSpan != null) currentSpan.ErrorData = errorData;
+            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
+            TryNoticeErrorOnSegment(errorData, segment);
+        }
+
+        private void TryNoticeErrorOnSegment(ErrorData errorData, ISegment segment)
+        {
+            var internalSpan = segment as IInternalSpan;
+            if (internalSpan != null) internalSpan.ErrorData = errorData;
         }
 
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
         {
             TransactionMetadata.SetHttpResponseStatusCode(statusCode, subStatusCode, _errorService);
+        }
+
+        public bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString)
+        {
+            if (!_configuration.DistributedTracingEnabled)
+            {
+                sampled = false;
+                traceStateString = null;
+                return false;
+            }
+
+            _distributedTracePayloadHandler.GetTraceFlagsAndState(this, out sampled, out traceStateString);
+            return true;
         }
 
         public void AttachToAsync()
@@ -1399,5 +1465,13 @@ namespace NewRelic.Agent.Core.Transactions
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             return TransactionMetadata.UserAndRequestAttributes.GetAttributeValues(AttributeClassification.Intrinsics).FirstOrDefault(v => v.AttributeDefinition == faasAttrib)?.Value;
         }
+    }
+
+    // TODO: Find a better name for this interface or add the members to an existing interface.
+    public interface IHybridAgentTransaction
+    {
+        string TraceId { get; }
+        void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment);
+        bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString);
     }
 }

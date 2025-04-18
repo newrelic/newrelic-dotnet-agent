@@ -10,5 +10,7 @@ namespace NewRelic.Agent.Core.Segments
     public interface IInternalSpan : ISegment, ISegmentExperimental, ISpan
     {
         ErrorData ErrorData { get; set; }
+
+        string TryGetActivityTraceId();
     }
 }
