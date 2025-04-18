@@ -193,11 +193,22 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             shouldListenToProperty.SetValue(activityListener, shouldListenToLambda.Compile());
         }
 
+        // This hard coded list contains the activity sources used for the hybrid agent cross agent tests
+        // and the activity source used to create activities from New Relic segments.
+        private static readonly List<string> _includedActivitySourceNames = new List<string>
+        {
+            "NewRelic.Agent",
+            "TestApp activity source"
+        };
         private static bool ShouldListenToActivitySource(object activitySource)
         {
             dynamic dynamicActivitySource = activitySource;
-            // Listen to all non-legacy activity sources for now
-            return !string.IsNullOrEmpty((string)dynamicActivitySource.Name);
+
+            // TODO: Make the activity source names that should be listened to configurable.
+            // It probably needs to be a combination of exclude and include lists.
+
+            string activitySourceName = (string)dynamicActivitySource.Name;
+            return !string.IsNullOrEmpty(activitySourceName) && _includedActivitySourceNames.Contains(activitySourceName);
         }
 
         // Activity will not actually be created by an activity source unless an activity listener is listening to it and the
