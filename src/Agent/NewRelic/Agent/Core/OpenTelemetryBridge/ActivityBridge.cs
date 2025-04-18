@@ -449,7 +449,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
                 // the ones that we map to intrinsic or agent attributes.
-                segment.AddCustomAttribute(tag.Key, tag.Value);
+                segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
             }
         }
 
@@ -484,7 +484,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         //}
 
                         // Add all of the original attributes to the segment.
-                        segment.AddCustomAttribute(tag.Key, tag.Value);
+                        segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
                     }
 
                     if (exceptionMessage != null)
