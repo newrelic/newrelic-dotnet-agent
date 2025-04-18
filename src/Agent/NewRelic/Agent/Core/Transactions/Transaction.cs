@@ -84,8 +84,12 @@ namespace NewRelic.Agent.Core.Transactions
                 {
                     return TracingState.TraceId;
                 }
-                else if (Segments.Count > 0)
+                else if (Segments.Count > 1)
                 {
+                    // Only try to grab the trace id from the first segment if we have more than one segment
+                    // otherwise we might be trying to grab the trace id for the first segment and we might be
+                    // in the middle of creating the activity for that segment. The first segment will need a new
+                    // trace id anyways.
                     var firstSegment = Segments[0];
                     var activityTraceId = firstSegment?.TryGetActivityTraceId();
                     if (activityTraceId != null)
