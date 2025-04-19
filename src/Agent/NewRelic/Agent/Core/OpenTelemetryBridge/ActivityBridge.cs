@@ -17,6 +17,9 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
+    // TODO: Review all usages of the Activity class to ensure that we are only using the things are available in the
+    // supported versions of the DiagnosticSource assembly. We could also support some backwards compatibility by only
+    // having certain features available in the necessary properties or methods are available.
     public class ActivityBridge : IDisposable
     {
         private IAgent _agent;
@@ -39,9 +42,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private void TryCreateActivityListener()
         {
+            // TODO: Add logging to indicate why the activity listener was not created in the failure scenarios
+
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
 
-            if (assembly == null)
+            // TODO: Enforce that an appropriate minimum version of the DiagnosticSource assembly is loaded.
+            if (assembly == null || (assembly.GetName().Version?.Major ?? 0) < 7)
             {
                 return;
             }
@@ -54,10 +60,25 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return;
             }
 
+            var memoryAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Memory");
+            if (memoryAssembly == null)
+            {
+                // System.Memory is a dependency of System.Diagnostics.DiagnosticSource, but it may not be loaded yet.
+                // TODO: Wrap this in a try catch block to handle the case where the assembly is not found and log the error.
+                memoryAssembly = Assembly.Load("System.Memory");
+            }
+
+            var memoryExtensionsType = memoryAssembly.GetType("System.MemoryExtensions", throwOnError: false);
+            if (memoryExtensionsType == null)
+            {
+                return;
+            }
+
             var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
             var activityTraceIdType = assembly.GetType("System.Diagnostics.ActivityTraceId", throwOnError: false);
+
             SetDefaultActivityIdFormat(activityType);
-            ConfigureTraceIdGenerator(activityType, activityTraceIdType);
+            ConfigureTraceIdGenerator(activityType, activityTraceIdType, memoryExtensionsType);
             CreateActivityTraceFlagsSetter(activityType);
 
             _activityListener = Activator.CreateInstance(activityListenerType);
@@ -110,27 +131,30 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         // Creates a Func<ActivityTraceId> using expression syntax trees based on the following code.
         // Activity.TraceIdGenerator = () => {
         //    var currentTraceId = TryGetCurrentTraceId();
-        //    if (currentTraceId.Length > 0)
+        //    if (currentTraceId != null)
         //    {
-        //        return ActivityTraceId.CreateFromString(currentTraceId);
+        //        return ActivityTraceId.CreateFromString(currentTraceId.AsSpan());
         //    }
         //    return ActivityTraceId.CreateRandom();
         // };
-        private void ConfigureTraceIdGenerator(Type activityType, Type activityTraceIdType)
+        private void ConfigureTraceIdGenerator(Type activityType, Type activityTraceIdType, Type memoryExtensionsType)
         {
             var traceIdGeneratorPropertyInfo = activityType.GetProperty("TraceIdGenerator", BindingFlags.Public | BindingFlags.Static);
 
             var callTryGetCurrentTraceIdMethod = typeof(ActivityBridge).GetMethod(nameof(TryGetCurrentTraceId), BindingFlags.NonPublic | BindingFlags.Instance);
-            var currentTraceIdVariable = Expression.Variable(typeof(ReadOnlySpan<char>), "currentTraceId");
+            var currentTraceIdVariable = Expression.Variable(typeof(string), "currentTraceId");
             var assignCurrentTraceIdExpression = Expression.Assign(currentTraceIdVariable, Expression.Call(Expression.Constant(this), callTryGetCurrentTraceIdMethod));
 
-            var hasCurrentTraceIdExpression = Expression.GreaterThan(Expression.Property(currentTraceIdVariable, "Length"), Expression.Constant(0));
+            var hasCurrentTraceIdExpression = Expression.NotEqual(currentTraceIdVariable, Expression.Constant(null));
 
             var generateRandomTraceIdMethod = activityTraceIdType.GetMethod("CreateRandom", BindingFlags.Public | BindingFlags.Static);
             var generateNewTraceIdExpression = Expression.Call(null, generateRandomTraceIdMethod);
 
+            // We need to call AsSpan from an expression, because we ILRepack System.Memory in our netframework build
+            // of the agent which causes the ReadOnlySpan type to be internalized.
+            var currentTraceIdAsSpanExpression = Expression.Call(memoryExtensionsType, "AsSpan", null, currentTraceIdVariable);
             var parseTraceIdMethod = activityTraceIdType.GetMethod("CreateFromString", BindingFlags.Public | BindingFlags.Static);
-            var parseTraceIdExpression = Expression.Call(null, parseTraceIdMethod, currentTraceIdVariable);
+            var parseTraceIdExpression = Expression.Call(null, parseTraceIdMethod, currentTraceIdAsSpanExpression);
 
             var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, parseTraceIdExpression, generateNewTraceIdExpression);
 
@@ -140,15 +164,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             traceIdGeneratorPropertyInfo.SetValue(null, traceIdGenerator);
         }
 
-        private ReadOnlySpan<char> TryGetCurrentTraceId()
+        private string TryGetCurrentTraceId()
         {
             var transaction = _agent.CurrentTransaction;
             var hybridAgentTransaction = transaction as IHybridAgentTransaction;
             if (transaction.IsValid && !transaction.IsFinished && hybridAgentTransaction != null)
             {
-                return hybridAgentTransaction.TraceId.AsSpan();
+                return hybridAgentTransaction.TraceId;
             }
-            return default;
+            return null;
         }
 
         private static void CreateActivityTraceFlagsSetter(Type activityType)
@@ -603,6 +627,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
     }
 
+    // TODO: Not all of these properties on activities are available in all versions of the DiagnosticSource assembly.
+    // We should either have code that gracefully handles the property or method not being available, or we need to
+    // ensure that we only enable the bridging code when an appropriate minimum version of the DiagnosticSource
+    // assembly is loaded.
     public class RuntimeNewRelicActivity : INewRelicActivity
     {
         private readonly object _activity;
