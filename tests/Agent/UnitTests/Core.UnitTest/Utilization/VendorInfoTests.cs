@@ -160,6 +160,150 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
         [Test]
+        public void GetVendors_ParseAzureVendorInfo_VirtualMachineScaleSet()
+        {
+
+            // This JSON was returned from the following API call in an Azure Virtual Machine Scale Set instance
+            //  curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/compute?api-version=2023-11-15" | jq
+
+            var json = @"{
+  ""additionalCapabilities"": {
+    ""hibernationEnabled"": ""false""
+  },
+  ""azEnvironment"": ""AzurePublicCloud"",
+  ""customData"": """",
+  ""evictionPolicy"": """",
+  ""extendedLocation"": {
+    ""name"": """",
+    ""type"": """"
+  },
+  ""host"": {
+    ""id"": """"
+  },
+  ""hostGroup"": {
+    ""id"": """"
+  },
+  ""isHostCompatibilityLayerVm"": ""false"",
+  ""isVmInStandbyPool"": """",
+  ""licenseType"": """",
+  ""location"": ""westus2"",
+  ""name"": ""FakeName"",
+  ""offer"": ""ubuntu-24_04-lts"",
+  ""osProfile"": {
+    ""adminUsername"": ""admin"",
+    ""computerName"": ""compy000000"",
+    ""disablePasswordAuthentication"": ""false""
+  },
+  ""osType"": ""Linux"",
+  ""physicalZone"": """",
+  ""placementGroupId"": ""1399d2cd-b4f8-482a-9eb7-b9f121d7fb71"",
+  ""plan"": {
+    ""name"": """",
+    ""product"": """",
+    ""publisher"": """"
+  },
+  ""platformFaultDomain"": ""0"",
+  ""platformSubFaultDomain"": """",
+  ""platformUpdateDomain"": ""0"",
+  ""priority"": """",
+  ""provider"": ""Microsoft.Compute"",
+  ""publicKeys"": [],
+  ""publisher"": ""canonical"",
+  ""resourceGroupName"": ""MyResourceGroup"",
+  ""resourceId"": ""/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/MyResourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/MyVMSS/virtualMachines/0"",
+  ""securityProfile"": {
+    ""encryptionAtHost"": ""false"",
+    ""secureBootEnabled"": ""false"",
+    ""securityType"": """",
+    ""virtualTpmEnabled"": ""false""
+  },
+  ""sku"": ""server"",
+  ""storageProfile"": {
+    ""dataDisks"": [],
+    ""imageReference"": {
+      ""communityGalleryImageId"": """",
+      ""exactVersion"": ""24.04.202504080"",
+      ""id"": """",
+      ""offer"": ""ubuntu-24_04-lts"",
+      ""publisher"": ""canonical"",
+      ""sharedGalleryImageId"": """",
+      ""sku"": ""server"",
+      ""version"": ""24.04.202504080""
+    },
+    ""osDisk"": {
+      ""caching"": ""ReadWrite"",
+      ""createOption"": ""FromImage"",
+      ""diffDiskSettings"": {
+        ""option"": """"
+      },
+      ""diskSizeGB"": ""30"",
+      ""encryptionSettings"": {
+        ""diskEncryptionKey"": {
+          ""secretUrl"": """",
+          ""sourceVault"": {
+            ""id"": """"
+          }
+        },
+        ""enabled"": ""false"",
+        ""keyEncryptionKey"": {
+          ""keyUrl"": """",
+          ""sourceVault"": {
+            ""id"": """"
+          }
+        }
+      },
+      ""image"": {
+        ""uri"": """"
+      },
+      ""managedDisk"": {
+        ""id"": ""/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/MyResourceGroup/providers/Microsoft.Compute/disks/MyVMOS__1_3ebde41376894ccba1c9c426778fc720"",
+        ""storageAccountType"": ""Premium_LRS""
+      },
+      ""name"": ""MyVMOS__1_3ebde41376894ccba1c9c426778fc720"",
+      ""osType"": ""Linux"",
+      ""vhd"": {
+        ""uri"": """"
+      },
+      ""writeAcceleratorEnabled"": ""false""
+    },
+    ""resourceDisk"": {
+      ""size"": ""7168""
+    }
+  },
+  ""subscriptionId"": ""b808887b-cb91-49e0-b922-c9188372bdba"",
+  ""tags"": ""team:.NET Agent"",
+  ""tagsList"": [
+    {
+      ""name"": ""team"",
+      ""value"": "".NET Agent""
+    }
+  ],
+  ""userData"": """",
+  ""version"": ""24.04.202504080"",
+  ""virtualMachineScaleSet"": {
+    ""id"": """"
+  },
+  ""vmId"": ""5146a02f-78b4-49f2-a5b7-37a2a84f550d"",
+  ""vmScaleSetName"": ""MyVMSS"",
+  ""vmSize"": ""Standard_DS1_v2"",
+  ""zone"": """"
+}
+";
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
+
+            Assert.That(model, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(model.Location, Is.EqualTo("westus2"));
+                Assert.That(model.Name, Is.EqualTo("FakeName"));
+                Assert.That(model.VmId, Is.EqualTo("5146a02f-78b4-49f2-a5b7-37a2a84f550d"));
+                Assert.That(model.VmSize, Is.EqualTo("Standard_DS1_v2"));
+                Assert.That(model.VmScaleSetName, Is.EqualTo("MyVMSS"));
+            });
+        }
+
+        [Test]
         public void GetVendors_ParseAzureVendorInfo_MissingInvalidValues()
         {
             var json = @"{

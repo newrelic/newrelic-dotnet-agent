@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 var vendors = new Dictionary<string, IVendorModel>()
                 {
                     { "aws", new AwsVendorModel("myZone", "myInstanceId", "myInstanceType") },
-                    { "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize") },
+                    { "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize", null) },
                     { "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
                     { "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
                     { "kubernetes", new KubernetesVendorModel("10.96.0.1") },

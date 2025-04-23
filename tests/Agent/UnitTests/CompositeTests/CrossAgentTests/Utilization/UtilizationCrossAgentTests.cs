@@ -327,7 +327,7 @@ namespace CompositeTests.CrossAgentTests.Utilization
 
         private AzureVendorModel GetAzureVendorModel(UtilizationTestData testData)
         {
-            var model = new AzureVendorModel(testData.InputAzureLocation, testData.InputAzureName, testData.InputAzureId, testData.InputAzureSize);
+            var model = new AzureVendorModel(testData.InputAzureLocation, testData.InputAzureName, testData.InputAzureId, testData.InputAzureSize, null);
             var json = JsonConvert.SerializeObject(model);
             return (AzureVendorModel)_vendorInfo.ParseAzureVendorInfo(json);
         }

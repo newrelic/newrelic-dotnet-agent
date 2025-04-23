@@ -220,18 +220,20 @@ namespace NewRelic.Agent.Core.Utilization
                 var nameToken = jObject.SelectToken("name");
                 var vmIdToken = jObject.SelectToken("vmId");
                 var vmSizeToken = jObject.SelectToken("vmSize");
+                var vmScaleSetNameToken = jObject.SelectToken("vmScaleSetName"); // optional, not required
 
                 var location = NormalizeAndValidateMetadata((string)locationToken, "location", AzureName);
                 var name = NormalizeAndValidateMetadata((string)nameToken, "name", AzureName);
                 var vmId = NormalizeAndValidateMetadata((string)vmIdToken, "vmId", AzureName);
                 var vmSize = NormalizeAndValidateMetadata((string)vmSizeToken, "vmSize", AzureName);
+                var vmScaleSetName = NormalizeAndValidateMetadata((string)vmScaleSetNameToken, "vmScaleSetName", AzureName);
 
                 if (location == null || name == null || vmId == null || vmSize == null)
                 {
                     return null;
                 }
 
-                return new AzureVendorModel(location, name, vmId, vmSize);
+                return new AzureVendorModel(location, name, vmId, vmSize, vmScaleSetName);
             }
             catch
             {
