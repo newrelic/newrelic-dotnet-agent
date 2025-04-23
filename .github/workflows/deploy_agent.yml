@@ -432,9 +432,17 @@ jobs:
         shell: bash
 
       - name: Clear Fastly cache
+        continue-on-error: true
         if: ${{ inputs.deploy && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
+        shell: bash
+
+      - name: Clear Cloudflare cache
+        continue-on-error: true
+        if: ${{ inputs.deploy && success() }}
+        run: |
+          curl ${{ secrets.CLOUDFLARE_CACHE_URL }} -H 'Content-Type: application/json' -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}" -d '{"purge_everything": true}'
         shell: bash
 
   publish-release-notes:
