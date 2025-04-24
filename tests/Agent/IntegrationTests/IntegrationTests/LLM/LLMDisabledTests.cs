@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -37,7 +36,7 @@ where TFixture : ConsoleDynamicMethodFixture
                 }
             );
 
-            _fixture.AddCommand($"LLMExerciser InvokeModel {_model} {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModel {_model} {LLMHelpers.ConvertToBase64(_prompt)}");
 
             _fixture.Initialize();
         }
@@ -46,7 +45,7 @@ where TFixture : ConsoleDynamicMethodFixture
         public void BedrockDisabledTest()
         {
             // Make sure it actually got called
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModel");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModel");
             Assert.NotNull(transactionEvent);
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -61,7 +60,6 @@ where TFixture : ConsoleDynamicMethodFixture
 
         }
     }
-    [NetCoreTest]
     public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmDisabledTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -70,7 +68,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmDisabledTest_FWLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

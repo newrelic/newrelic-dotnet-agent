@@ -9,11 +9,9 @@ using Xunit;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Testing.Assertions;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class CustomInstrumentationEditorAgentCommand : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;

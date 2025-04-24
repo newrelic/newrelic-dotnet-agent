@@ -273,6 +273,49 @@ namespace Agent.Extensions.Tests.Cache
             EvaluateCacheMetrics(cache, 0, 2, 2, 0);
         }
 
+        [Test]
+        public void TryAdd_AddsNewItemToCache()
+        {
+            var val1 = "value1";
+            int capacity = 5;
+            var cache = new SimpleCache<string, string>(capacity);
+
+            var result = cache.TryAdd("key1", () => val1);
+
+            Assert.That(result, Is.True);
+            Assert.That(cache.Peek("key1"), Is.SameAs(val1));
+        }
+
+        [Test]
+        public void TryAdd_DoesNotAddExistingItemToCache()
+        {
+            var val1 = "value1";
+            var val2 = "value2";
+            int capacity = 5;
+            var cache = new SimpleCache<string, string>(capacity);
+
+            cache.TryAdd("key1", () => val1);
+            var result = cache.TryAdd("key1", () => val2);
+
+            Assert.That(result, Is.False);
+            Assert.That(cache.Peek("key1"), Is.SameAs(val1));
+        }
+
+        [Test]
+        public void Dispose_ClearsCache()
+        {
+            var val1 = "value1";
+            int capacity = 5;
+            var cache = new SimpleCache<string, string>(capacity);
+
+            cache.GetOrAdd("key1", () => val1);
+            cache.Dispose();
+
+            Assert.That(cache.Size, Is.EqualTo(0));
+            Assert.That(cache.Peek("key1"), Is.Null);
+        }
+
+
         private void EvaluateCacheMetrics<T, V>(SimpleCache<T, V> cache, int expectedHits, int expectedMisses,
             int expectedEjections, int expectedSize) where V : class
         {

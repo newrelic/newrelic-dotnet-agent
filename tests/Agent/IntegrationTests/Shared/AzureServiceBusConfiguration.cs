@@ -9,15 +9,15 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     {
         private static string _connectionString;
 
-        public static string ConnectionString
+    public static string ConnectionString
+    {
+        get
         {
-            get
-            {
                 if (_connectionString == null)
                 {
                     try
                     {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("AzureServiceBusTests");
+            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("AzureServiceBusTests");
                         _connectionString = testConfiguration["ConnectionString"];
                     }
                     catch (Exception ex)

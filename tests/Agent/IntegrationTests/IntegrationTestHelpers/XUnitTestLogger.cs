@@ -3,7 +3,7 @@
 
 
 using System;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -29,6 +29,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public void WriteLine(string format, params object[] args)
         {
             _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
+        }
+
+        public void WriteFormattedOutput(string formattedOutput)
+        {
+            _xunitOutput?.WriteLine(formattedOutput);
         }
     }
 }

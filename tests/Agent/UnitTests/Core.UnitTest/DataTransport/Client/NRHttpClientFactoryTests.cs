@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
@@ -27,6 +27,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns("12345");
             Mock.Arrange(() => _mockConfiguration.AgentRunId).Returns("123");
             Mock.Arrange(() => _mockConfiguration.CollectorMaxPayloadSizeInBytes).Returns(int.MaxValue);
+            Mock.Arrange(() => _mockConfiguration.CollectorTimeout).Returns(12345);
 
             _mockProxy = Mock.Create<IWebProxy>();
 
@@ -36,7 +37,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         [Test]
         public void CreateClient_NotNull()
         {
-            var client = _httpClientFactory.CreateClient(null, _mockConfiguration);
+            var client = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
             Assert.That(client, Is.Not.Null);
         }
@@ -44,8 +45,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         [Test]
         public void CreateClient_NoProxy_ReturnsSameClient()
         {
-            var clientA = _httpClientFactory.CreateClient(null, _mockConfiguration);
-            var clientB = _httpClientFactory.CreateClient(null, _mockConfiguration);
+            var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+            var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
             Assert.That(clientA, Is.EqualTo(clientB));
         }
@@ -53,8 +54,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         [Test]
         public void CreateClient_Proxy_ReturnsSameClient()
         {
-            var clientA = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
-            var clientB = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
+            var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+            var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
 
             Assert.That(clientA, Is.EqualTo(clientB));
         }
@@ -62,8 +63,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         [Test]
         public void CreateClient_NoProxyToProxy_ReturnsNewClient()
         {
-            var clientA = _httpClientFactory.CreateClient(null, _mockConfiguration);
-            var clientB = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
+            var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+            var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
 
             Assert.That(clientA, Is.Not.EqualTo(clientB));
         }
@@ -71,8 +72,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         [Test]
         public void CreateClient_ProxyToNoProxy_ReturnsNewClient()
         {
-            var clientA = _httpClientFactory.CreateClient(_mockProxy, _mockConfiguration);
-            var clientB = _httpClientFactory.CreateClient(null, _mockConfiguration);
+            var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+            var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
             Assert.That(clientA, Is.Not.EqualTo(clientB));
         }

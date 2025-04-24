@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {
-    [NetFrameworkTest]
     public class RecordDatastoreSegment_Full_TestsFWLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public RecordDatastoreSegment_Full_TestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -20,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetFrameworkTest]
     public class RecordDatastoreSegment_RequiredOnly_TestsFWLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public RecordDatastoreSegment_RequiredOnly_TestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -29,7 +26,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class RecordDatastoreSegment_Full_TestsCoreLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public RecordDatastoreSegment_Full_TestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -38,7 +34,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class RecordDatastoreSegment_RequiredOnly_TestsCoreLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public RecordDatastoreSegment_RequiredOnly_TestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

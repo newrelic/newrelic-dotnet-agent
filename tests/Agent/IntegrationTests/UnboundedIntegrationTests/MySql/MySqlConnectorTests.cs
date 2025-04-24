@@ -12,7 +12,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
@@ -39,7 +39,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlConnectorTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMySql();
 
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -219,7 +218,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         private static string GetTransactionName(string command) => $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser/{command}";
     }
 
-    [NetFrameworkTest]
     public class MySqlConnectorTestFW462 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MySqlConnectorTestFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -228,7 +226,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlConnectorTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -237,7 +234,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlConnectorTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MySqlConnectorTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -246,7 +242,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlConnectorTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -255,7 +250,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlConnectorTestCoreOldest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MySqlConnectorTestCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -264,7 +258,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlConnectorTestCoreLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MySqlConnectorTestCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

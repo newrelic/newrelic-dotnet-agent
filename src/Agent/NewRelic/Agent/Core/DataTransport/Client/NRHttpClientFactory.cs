@@ -1,9 +1,8 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
 using System.Net;
-using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         private bool? _hasProxy;
 
-        public IHttpClient CreateClient(IWebProxy proxy, IConfiguration configuration)
+        public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration)
         {
             var proxyRequired = (proxy != null);
             if (_httpClient != null && (_hasProxy == proxyRequired))

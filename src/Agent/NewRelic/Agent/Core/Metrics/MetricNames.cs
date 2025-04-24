@@ -708,7 +708,7 @@ namespace NewRelic.Agent.Core.Metrics
         };
 
 
-        ///DistributedTracing
+        //DistributedTracing
 
         private const string SupportabilityDistributedTracePs = SupportabilityPs + "DistributedTrace" + PathSeparator;
 
@@ -761,7 +761,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityDistributedTraceCreatePayloadException =
             SupportabilityDistributedTraceCreatePayloadPs + "Exception";
 
-        ///Trace Context
+        //Trace Context
 
         private const string SupportabilityTraceContextPs = SupportabilityPs + "TraceContext" + PathSeparator;
 
@@ -838,6 +838,17 @@ namespace NewRelic.Agent.Core.Metrics
 
         public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
         public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
+        public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPs + "AwsAccountId/Config";
+
+        public static string SupportabilityAzureFunctionMode(bool enabled)
+        {
+            return SupportabilityDotnetPs + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
+
+        public static string SupportabilityAspNetCore6PlusBrowserInjection(bool enabled)
+        {
+            return SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
 
         #endregion Supportability
 
@@ -1152,6 +1163,15 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return SupportabilityLogForwardingEnabledWithFrameworkNamePs + loggingFramework + PathSeparator + Enabled;
         }
+
+        #endregion
+
+        #region Agent Control
+
+        private const string AgentControl = "AgentControl";
+        private const string Health = "Health";
+        private const string SupportabilityAgentControlPs = SupportabilityPs + AgentControl + PathSeparator;
+        public const string SupportabilityAgentControlHealthEnabled = SupportabilityAgentControlPs + Health + PathSeparator + Enabled;
 
         #endregion
     }

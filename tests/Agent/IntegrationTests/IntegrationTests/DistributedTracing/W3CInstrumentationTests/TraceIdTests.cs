@@ -5,13 +5,11 @@
 using System;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
-    [NetCoreTest]
     public class TraceIdTests : NewRelicIntegrationTest<AspNetCoreBasicWebApiApplicationFixture>
     {
         private readonly AspNetCoreBasicWebApiApplicationFixture _fixture;

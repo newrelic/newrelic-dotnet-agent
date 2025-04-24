@@ -1,0 +1,27 @@
+name: Build the Build Tools solution
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'build/**'
+      - '.github/workflows/scripts/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+    build:
+        runs-on: windows-latest
+    
+        steps:
+        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    
+        - name: Add msbuild to PATH (required for MsiInstaller build)
+          uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
+    
+        - name: Build the solution
+          run:  MSBuild.exe -restore -m -p:Configuration=Release -p:Platform="Any CPU" build/BuildTools.sln

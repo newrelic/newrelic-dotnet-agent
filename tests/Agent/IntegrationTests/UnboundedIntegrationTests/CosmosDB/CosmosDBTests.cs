@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Azure;
-using Couchbase.Core;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -15,10 +13,9 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.PeerToPeer.Collaboration;
 using System.Reflection;
-using System.Windows.Forms;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 {
@@ -251,7 +248,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         }
     }
 
-    [NetFrameworkTest]
     public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public CosmosDBTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -260,7 +256,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         }
     }
 
-    [NetFrameworkTest]
     public class CosmosDBTestsFWLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public CosmosDBTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -270,7 +265,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
     }
 
 
-    [NetCoreTest]
     public class CosmosDBTestsCoreOldest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public CosmosDBTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -279,7 +273,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         }
     }
 
-    [NetCoreTest]
     public class CosmosDBTestsCoreLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public CosmosDBTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

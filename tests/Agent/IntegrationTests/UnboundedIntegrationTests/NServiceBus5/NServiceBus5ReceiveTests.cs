@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
+
 using Assert = Xunit.Assert;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
@@ -91,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
         }
     }
 
-    [NetFrameworkTest]
     public class NServiceBus5ReceiveOnFW462Tests : NServiceBus5ReceiveTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public NServiceBus5ReceiveOnFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)

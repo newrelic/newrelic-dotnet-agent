@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
 {
@@ -84,7 +83,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetFrameworkTest]
     public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ContextDataNotSupportedFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -93,7 +91,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetCoreTest]
     public class ContextDataNotSupportedNetCoreLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ContextDataNotSupportedNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -102,7 +99,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         }
     }
 
-    [NetCoreTest]
     public class ContextDataNotSupportedNetCoreOldestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ContextDataNotSupportedNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

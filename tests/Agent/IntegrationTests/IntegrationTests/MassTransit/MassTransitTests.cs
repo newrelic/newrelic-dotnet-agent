@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -91,7 +90,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
     }
 
     // Tests using StartHost (hosted service configuration method)
-    [NetFrameworkTest]
     public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -99,7 +97,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetFrameworkTest]
     public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -107,7 +104,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartHost_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MassTransitTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -115,7 +111,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MassTransitTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -125,7 +120,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
     }
 
     // Tests using StartBus (bus factory configuration method)
-    [NetFrameworkTest]
     public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -133,7 +127,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetFrameworkTest]
     public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -141,7 +134,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartBus_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MassTransitTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -149,7 +141,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartBus_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MassTransitTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

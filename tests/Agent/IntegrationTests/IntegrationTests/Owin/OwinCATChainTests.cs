@@ -5,7 +5,6 @@
 using System;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
@@ -13,7 +12,6 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
-    [NetFrameworkTest]
     public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
     {
         private readonly OwinTracingChainFixture _fixture;

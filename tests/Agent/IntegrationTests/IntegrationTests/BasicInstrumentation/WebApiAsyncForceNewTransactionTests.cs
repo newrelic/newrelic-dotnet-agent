@@ -10,11 +10,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class WebApiAsyncForceNewTransactionTests_Instrumented : WebApiAsyncForceNewTransactionTests
     {
         private const decimal ExpectedWebTransactionCount = 6;
@@ -109,7 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
     }
 
-    [NetFrameworkTest]
     public class WebApiAsyncForceNewTransactionTests_NotInstrumented : WebApiAsyncForceNewTransactionTests
     {
         private const decimal ExpectedWebTransactionCount = 6;

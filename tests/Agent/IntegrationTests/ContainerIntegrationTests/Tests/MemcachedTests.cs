@@ -8,7 +8,6 @@ using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests
 {
@@ -26,7 +25,6 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("debug");
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.LogToConsole();
                 },
                 exerciseApplication: () =>
                 {
@@ -34,7 +32,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
                     _fixture.ExerciseApplication();
 
                     _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                     // shut down the container and wait for the agent log to see it
                     _fixture.ShutdownRemoteApplication();
@@ -129,12 +127,15 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
         }
     }
 
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
     {
         public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
+
+    [Trait("Architecture", "amd64")]
     public class MemcachedDotNet9Test : LinuxMemcachedTest<MemcachedDotNet9TestFixture>
     {
         public MemcachedDotNet9Test(MemcachedDotNet9TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

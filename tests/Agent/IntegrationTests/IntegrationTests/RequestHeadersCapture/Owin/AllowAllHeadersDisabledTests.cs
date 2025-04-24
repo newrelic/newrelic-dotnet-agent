@@ -9,11 +9,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
 {
-    [NetFrameworkTest]
     public abstract class AllowAllHeadersDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
@@ -36,13 +34,13 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                     configModifier.AddAttributesInclude("request.parameters.*");
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Post();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

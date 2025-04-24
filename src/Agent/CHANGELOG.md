@@ -4,6 +4,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.40.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.0...v10.40.1) (2025-04-15)
+
+
+### Fixes
+
+* Specify a non-infinite timeout when creating `HttpClient` and `SocketsHttpHandler` instances. ([#3084](https://github.com/newrelic/newrelic-dotnet-agent/issues/3084)) ([6f72158](https://github.com/newrelic/newrelic-dotnet-agent/commit/6f72158b201f1b7f134c2336ecd02c6ac8fca261))
+* When sql explain plan generation fails, don't attempt to generate an explain plan on future invocations of the same query. ([#3075](https://github.com/newrelic/newrelic-dotnet-agent/issues/3075)) ([12e1743](https://github.com/newrelic/newrelic-dotnet-agent/commit/12e17434496fdf9da9f357853578fa1548d266d0))
+
+## [10.40.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.39.0...v10.40.0) (2025-04-01)
+
+
+### New features
+
+* Add Couchbase 3.x instrumentation ([#3048](https://github.com/newrelic/newrelic-dotnet-agent/issues/3048)) ([7ef0c82](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ef0c82be230438f99e1398b81455de7d2b88e48))
+* Add instrumentation for AWS Kinesis Data Streams and Kinesis Delivery Streams (Firehose) ([7b52a67](https://github.com/newrelic/newrelic-dotnet-agent/commit/7b52a67c65f9f3fdb78e0ac194b608c75726090a))
+* Add support for MongoDB.Driver 3.x and above. ([#3065](https://github.com/newrelic/newrelic-dotnet-agent/issues/3065)) ([c8acbc5](https://github.com/newrelic/newrelic-dotnet-agent/commit/c8acbc5b3767402b08544e550a771712c802f24a))
+
+
+### Fixes
+
+* Add more null checks to Asp.NET Core 6+ browser instrumentation logic ([#3070](https://github.com/newrelic/newrelic-dotnet-agent/issues/3070)) ([5f5cf12](https://github.com/newrelic/newrelic-dotnet-agent/commit/5f5cf12703264fde15ef0bd332734329dc3355a3))
+* In-process Azure Function publishes Nuget agent DLLs to the wrong folder ([#3068](https://github.com/newrelic/newrelic-dotnet-agent/issues/3068)) ([ee04d25](https://github.com/newrelic/newrelic-dotnet-agent/commit/ee04d257a2dbddb40bce0c6c2601a53fa90a7364))
+* Profiler should not log "with parent process" unless parent process is non-empty ([#3066](https://github.com/newrelic/newrelic-dotnet-agent/issues/3066)) ([a6c6d7d](https://github.com/newrelic/newrelic-dotnet-agent/commit/a6c6d7d15f516ae65671d0146af3d7785334a190))
+
+## [10.39.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.38.0...v10.39.0) (2025-03-19)
+
+
+### Notice
+
+* Automatic browser agent injection for ASP.NET Core v6+ web applications has been enabled by default. If you experience any issues with this feature, please see item 2 on [this page](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/browser-monitoring-net-agent/#enable_netcore6plus) for a setting that can be set to `false` to disable the feature and [contact us for support](https://docs.newrelic.com/docs/new-relic-solutions/solve-common-issues/find-help-use-support-portal/). ([051ceab](https://github.com/newrelic/newrelic-dotnet-agent/commit/051ceab6e2747209c965dc7d9156d9cf59dbf9e2))
+
+
+### New features
+
+* Enable ASP.NET Core browser auto-injection by default. ([051ceab](https://github.com/newrelic/newrelic-dotnet-agent/commit/051ceab6e2747209c965dc7d9156d9cf59dbf9e2))
+* Instrument In-Process Azure Function invocations, with distributed tracing support for Http and Service Bus triggers. ([#3003](https://github.com/newrelic/newrelic-dotnet-agent/issues/3003)) ([47d22a1](https://github.com/newrelic/newrelic-dotnet-agent/commit/47d22a11321f160084d230785b8d6475181e77c7))
+
+
+### Fixes
+
+* Look for `ASPNETCORE_IIS_APP_POOL_ID` if `APP_POOL_ID` isn't found. ([#3036](https://github.com/newrelic/newrelic-dotnet-agent/issues/3036)) ([620064c](https://github.com/newrelic/newrelic-dotnet-agent/commit/620064c3c3c59891f5daa3948663bf892bed8358))
+* Remove diagnostics tracing output from agent API calls ([#3029](https://github.com/newrelic/newrelic-dotnet-agent/issues/3029)) ([be7b7f4](https://github.com/newrelic/newrelic-dotnet-agent/commit/be7b7f4b3b57a5d056313c940026c4681243b038))
+* Remove unnecessary dependency on `System.Runtime.InteropServices.RuntimeInformation` in .NET 4.6.2  builds. ([#3033](https://github.com/newrelic/newrelic-dotnet-agent/issues/3033)) ([ab81d1c](https://github.com/newrelic/newrelic-dotnet-agent/commit/ab81d1c5eaed14b3928bcaed0fe2c64b31795ad9))
+* Set Profiler logger to initialized when configuration load fails. ([#3015](https://github.com/newrelic/newrelic-dotnet-agent/issues/3015)) ([7ab30d7](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ab30d712ab59901d21c434019b8d28eb95f7280))
+
+## [10.38.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.37.0...v10.38.0) (2025-03-04)
+
+
+### New features
+
+* Add support for PackageReference with NewRelic.Azure.WebSites packages. ([#3001](https://github.com/newrelic/newrelic-dotnet-agent/issues/3001)) ([8fb397f](https://github.com/newrelic/newrelic-dotnet-agent/commit/8fb397fe4d7b8c11f5939182119ce00097ae0640))
+* Azure Function instrumentation is enabled by default ([#3007](https://github.com/newrelic/newrelic-dotnet-agent/issues/3007)) ([8eba1bf](https://github.com/newrelic/newrelic-dotnet-agent/commit/8eba1bf0da15d8efdb606bd49ffdb881c8c0549f))
+
+## [10.37.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.36.0...v10.37.0) (2025-02-19)
+
+
+### New features
+
+* Add AI Monitoring instrumentation for `AmazonBedrockRuntimeClient.ConverseAsync()` ([#2997](https://github.com/newrelic/newrelic-dotnet-agent/issues/2997)) ([cdc2f6c](https://github.com/newrelic/newrelic-dotnet-agent/commit/cdc2f6c6de6640a72ad2c729f8f3abe31a14289c))
+* Add AI Monitoring instrumentation for OpenAI and Azure.AI.OpenAI ([#2987](https://github.com/newrelic/newrelic-dotnet-agent/issues/2987)) ([aa06d9d](https://github.com/newrelic/newrelic-dotnet-agent/commit/aa06d9db633f12f345fdfa6a574dd9e1a8fbec85))
+* Add support for .NET Framework Azure Function Apps ([#2992](https://github.com/newrelic/newrelic-dotnet-agent/issues/2992)) ([5b077f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/5b077f3dc898f57a3637de01d5da4bf4a3b5e143))
+* Improve logging and validation for license keys. ([#2982](https://github.com/newrelic/newrelic-dotnet-agent/issues/2982)) ([19e8387](https://github.com/newrelic/newrelic-dotnet-agent/commit/19e8387a49e01d706691512dea1bb32e8d124b87))
+
+## [10.36.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.35.0...v10.36.0) (2025-02-05)
+
+
+### New features
+
+* Add .NET 8+ support for System.Data.Odbc ([#2948](https://github.com/newrelic/newrelic-dotnet-agent/issues/2948)) ([7ee9825](https://github.com/newrelic/newrelic-dotnet-agent/commit/7ee9825b21fbd442c066ccfe9040a0bd129840dd))
+* Add support for instrumenting OpenSearchClient requests. ([#2956](https://github.com/newrelic/newrelic-dotnet-agent/issues/2956)) ([4309938](https://github.com/newrelic/newrelic-dotnet-agent/commit/4309938c5d0593029398d7658a37b5ebe78c283c))
+
+
+### Fixes
+
+* Add Azure Function app name prefix to `faas.name` attribute in Azure Function transactions. ([#2973](https://github.com/newrelic/newrelic-dotnet-agent/issues/2973)) ([80d4c76](https://github.com/newrelic/newrelic-dotnet-agent/commit/80d4c7619cbe8876b0ceacbf561b55b458a1189b))
+* Custom attribute values of type float and decimal were not serialized correctly. ([#2975](https://github.com/newrelic/newrelic-dotnet-agent/issues/2975)) ([8812fe1](https://github.com/newrelic/newrelic-dotnet-agent/commit/8812fe1127270937fa869370443afff7aeb862e3))
+* Improve error handling in AWS account ID parsing logic ([#2984](https://github.com/newrelic/newrelic-dotnet-agent/issues/2984)) ([9b66750](https://github.com/newrelic/newrelic-dotnet-agent/commit/9b66750e3343bccd10f269701d257b056eb660cc))
+
+## [10.35.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.1...v10.35.0) (2025-01-21)
+
+
+### New features
+
+* Enable DynamoDB entity relationships ([#2923](https://github.com/newrelic/newrelic-dotnet-agent/issues/2923)) ([f70b64a](https://github.com/newrelic/newrelic-dotnet-agent/commit/f70b64aa20ac21e5b30dfa5d2f63ab59850bcf58))
+* Instrument Lambda invocations in AWS SDK ([#2901](https://github.com/newrelic/newrelic-dotnet-agent/issues/2901)) ([3b655e4](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b655e423de4d5bf77ba491d63eec38b3323ffda))
+* Use `SocketsHttpHandler` to configure `HttpClient` in .NET 6+. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
+
+### Fixes
+
+* Console logging is inconsistent between Agent and Profiler ([#2955](https://github.com/newrelic/newrelic-dotnet-agent/issues/2955)) ([7c42b33](https://github.com/newrelic/newrelic-dotnet-agent/commit/7c42b33279c948a69ea36aaf54630554ebf5a5e6))
+* Incorrect string comparison in the profiler caused constructor instrumentation to fail on Linux ([#2912](https://github.com/newrelic/newrelic-dotnet-agent/issues/2912)) ([49a71c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/49a71c50d43f2cb18e208dddb258a456aebb7e61))
+* Refactoring to reduce the likelihood of a deadlock in `HttpClient.SendAsync()`. ([#2931](https://github.com/newrelic/newrelic-dotnet-agent/issues/2931)) ([eb3afda](https://github.com/newrelic/newrelic-dotnet-agent/commit/eb3afdafc450f4b268885a45264c328fab6bfd9a))
+
 ## [10.34.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.34.0...v10.34.1) (2024-12-02)
 
 

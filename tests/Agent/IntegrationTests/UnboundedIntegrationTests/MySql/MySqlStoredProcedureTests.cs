@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
@@ -22,8 +22,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMySql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
 
@@ -142,7 +140,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MySqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -151,7 +148,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -160,7 +156,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MySqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -169,7 +164,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -178,7 +172,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlStoredProcedureTestsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MySqlStoredProcedureTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -187,7 +180,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlStoredProcedureTestsCoreLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MySqlStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

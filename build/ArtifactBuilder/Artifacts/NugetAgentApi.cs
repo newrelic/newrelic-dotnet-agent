@@ -83,6 +83,7 @@ namespace ArtifactBuilder.Artifacts
             // root folder
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents,installedFilesRoot, "LICENSE.txt");
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "THIRD_PARTY_NOTICES.txt");
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "README.md");
 
             return expectedComponents;
         }

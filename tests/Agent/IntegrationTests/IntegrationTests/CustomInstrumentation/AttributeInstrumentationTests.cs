@@ -7,13 +7,11 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class AttributeInstrumentationTestsFW462 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW462>
     {
         public AttributeInstrumentationTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -22,7 +20,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class AttributeInstrumentationTestsCoreOldest : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public AttributeInstrumentationTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

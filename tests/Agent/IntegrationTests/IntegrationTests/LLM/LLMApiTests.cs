@@ -6,7 +6,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -44,8 +43,8 @@ where TFixture : ConsoleDynamicMethodFixture
             );
 
             // Setting the token count callback will result in us dumping the event queues, so do that first
-            _fixture.AddCommand($"LLMExerciser InvokeModelWithCallbackAndCustomAttributes {_attributeModel} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount} {_customAttributes}");
-            _fixture.AddCommand($"LLMExerciser InvokeModelWithFeedback {_feedbackModel} {LLMHelpers.ConvertToBase64(_prompt)} {_rating} {_category} {_message} {_feedbackAttributes}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModelWithCallbackAndCustomAttributes {_attributeModel} {LLMHelpers.ConvertToBase64(_prompt)} {_fakeTokenCount} {_customAttributes}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModelWithFeedback {_feedbackModel} {LLMHelpers.ConvertToBase64(_prompt)} {_rating} {_category} {_message} {_feedbackAttributes}");
 
             _fixture.Initialize();
         }
@@ -86,12 +85,11 @@ where TFixture : ConsoleDynamicMethodFixture
             Assert.Equal("mycategory", feedback.SafeGetAttribute("category"));
             Assert.Equal("good_job", feedback.SafeGetAttribute("message"));
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModelWithCallbackAndCustomAttributes");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModelWithCallbackAndCustomAttributes");
 
             Assert.NotNull(transactionEvent);
         }
     }
-    [NetCoreTest]
     public class LlmApiTest_CoreLatest : LlmApiTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmApiTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -100,7 +98,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmApiTest_FWLatest : LlmApiTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmApiTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
-    [NetFrameworkTest]
     public class ErrorTraceWebService : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebService>
     {
         private const string ExpectedExceptionType = "System.Exception";

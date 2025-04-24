@@ -10,11 +10,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncForceNewTransactionTests
     {
         private const decimal ExpectedTransactionCount = 10;
@@ -105,7 +103,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
     }
 
-    [NetFrameworkTest]
     public class ConsoleAsyncForceNewTransactionTests_NotInstrumented : ConsoleAsyncForceNewTransactionTests
     {
         private const decimal ExpectedTransactionCount = 6;

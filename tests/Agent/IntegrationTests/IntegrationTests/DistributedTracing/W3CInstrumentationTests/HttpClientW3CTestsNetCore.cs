@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
@@ -18,7 +17,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Test W3C support when chaining multiple requests by using HttpClient.
     /// Instrumentations occur in this test are AspNetCore and HttpClient.
     /// </summary>
-    [NetCoreTest]
     public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;

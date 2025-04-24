@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
     public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture>
     {
         private const string QueryStringParameterValue = @"my thing";

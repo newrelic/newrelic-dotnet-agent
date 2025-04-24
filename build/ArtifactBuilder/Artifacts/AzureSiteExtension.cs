@@ -85,6 +85,9 @@ namespace ArtifactBuilder.Artifacts
             // images folder - New Relic icon
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, "images"), "icon.png");
 
+            // README
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "README.md");
+
             // content folder - installation items
             var contentFolder = Path.Combine(installedFilesRoot, "content");
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "applicationHost.xdt");
@@ -103,6 +106,7 @@ namespace ArtifactBuilder.Artifacts
         {
             var unpackedComponents = ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "content"));
             unpackedComponents.UnionWith(ValidationHelpers.GetUnpackedComponents(Path.Combine(installedFilesRoot, "images")));
+            unpackedComponents.Add(Path.Combine(installedFilesRoot, "README.md"));
 
             return unpackedComponents;
         }

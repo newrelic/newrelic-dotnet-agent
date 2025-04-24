@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
@@ -107,7 +107,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public PostgresSqlStoredProcedureAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -116,7 +115,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlStoredProcedureAsyncTestsFW471 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public PostgresSqlStoredProcedureAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -125,7 +123,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlStoredProcedureAsyncTestsFW48 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public PostgresSqlStoredProcedureAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -134,7 +131,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public PostgresSqlStoredProcedureAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -143,7 +139,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlStoredProcedureAsyncTestsCoreOldest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public PostgresSqlStoredProcedureAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -152,7 +147,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlStoredProcedureAsyncTestsCoreLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public PostgresSqlStoredProcedureAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

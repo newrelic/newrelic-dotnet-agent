@@ -9,11 +9,9 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using System.Threading;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetCoreTest]
     public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: AspNetCoreWebApiWithCollectorFixture
     {
         private readonly AspNetCoreWebApiWithCollectorFixture _fixture;

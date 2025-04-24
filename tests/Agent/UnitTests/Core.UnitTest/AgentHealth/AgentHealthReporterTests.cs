@@ -3,20 +3,18 @@
 
 using Grpc.Core;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth
@@ -28,18 +26,20 @@ namespace NewRelic.Agent.Core.AgentHealth
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
         private bool _enableLogging;
+        private bool _enableAspNetCore6PlusBrowserInjection;
         private List<IDictionary<string, string>> _ignoredInstrumentation;
 
         [SetUp]
         public void SetUp()
         {
             _enableLogging = true;
+            _enableAspNetCore6PlusBrowserInjection = true;
             _ignoredInstrumentation = new List<IDictionary<string, string>>();
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
         }
@@ -61,7 +61,12 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
             Mock.Arrange(() => configuration.IgnoredInstrumentation).Returns(() => _ignoredInstrumentation);
             Mock.Arrange(() => configuration.GCSamplerV2Enabled).Returns(true);
+            Mock.Arrange(() => configuration.AwsAccountId).Returns("123456789012");
             Mock.Arrange(() => configuration.LabelsEnabled).Returns(true);
+            Mock.Arrange(() => configuration.EnableAspNetCore6PlusBrowserInjection).Returns(() => _enableAspNetCore6PlusBrowserInjection);
+            Mock.Arrange(() => configuration.AgentControlEnabled).Returns(true);
+            Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
+            Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
 
             return configuration;
         }
@@ -507,7 +512,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void IgnoredInstrumentationSupportabiltyMetricPresent()
+        public void IgnoredInstrumentationSupportabilityMetricPresent()
         {
             var expectedMetricName = new MetricNameWireModel("Supportability/Dotnet/IgnoredInstrumentation", null);
             var expectedMetricData = MetricDataWireModel.BuildGaugeValue(1);
@@ -521,7 +526,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void IgnoredInstrumentationSupportabiltyMetricMissing()
+        public void IgnoredInstrumentationSupportabilityMetricMissing()
         {
             _agentHealthReporter.CollectMetrics();
 
@@ -529,10 +534,62 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void GCSamplerV2EnabledSupportabiliityMetricPresent()
+        public void GCSamplerV2EnabledSupportabilityMetricPresent()
         {
             _agentHealthReporter.CollectMetrics();
             Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/GCSamplerV2/Enabled"), Is.True);
+        }
+
+        [Test]
+        public void AwsAccountIdSupportabilityMetricPresent()
+        {
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AwsAccountId/Config"), Is.True);
+        }
+
+        [Test]
+        public void AspNetCore6PlusBrowserInjectionEnabledMetricPresent()
+        {
+            _enableAspNetCore6PlusBrowserInjection = true;
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/enabled"), Is.True);
+        }
+
+        [Test]
+        public void AspNetCore6PlusBrowserInjectionDisabledMetricPresent()
+        {
+            _enableAspNetCore6PlusBrowserInjection = false;
+            _agentHealthReporter.CollectMetrics();
+            Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/disabled"), Is.True);
+        }
+      
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        public void AzureFunctionModeSupportabilityMetricPresent_OnlyWhenAzureFunctionModeDetected(bool azureFunctionModeDetected, bool enableAzureFunctionMode)
+        {
+            // ARRANGE
+            var configuration = GetDefaultConfiguration();
+            Mock.Arrange(() => configuration.AzureFunctionModeDetected).Returns(azureFunctionModeDetected);
+            Mock.Arrange(() => configuration.AzureFunctionModeEnabled).Returns(enableAzureFunctionMode);
+
+            _configurationAutoResponder.Dispose();
+            _agentHealthReporter.Dispose();
+            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+            var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+            _publishedMetrics = new List<MetricWireModel>();
+            _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+            // ACT
+            _agentHealthReporter.CollectMetrics();
+
+            // ASSERT
+            if (enableAzureFunctionMode)
+                Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AzureFunctionMode/enabled"), azureFunctionModeDetected ? Is.True : Is.False);
+            else
+                Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AzureFunctionMode/disabled"), azureFunctionModeDetected ? Is.True : Is.False);
         }
     }
 }

@@ -1,29 +1,38 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    [NetFrameworkTest]
-    public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW462>
     {
-        private readonly RemoteServiceFixtures.MsSqlBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly string _expectedTransactionName;
+        private readonly string _tableName;
 
-        public EnterpriseLibraryMsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture)
+        public EnterpriseLibraryMsSqlTests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMsSql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.EnterpriseLibraryClientExerciser/MsSql";
+
+            _tableName = Utilities.GenerateTableName();
+
+            _fixture.AddCommand($"EnterpriseLibraryClientExerciser CreateTable {_tableName}");
+            _fixture.AddCommand($"EnterpriseLibraryClientExerciser MsSql {_tableName}");
+            _fixture.AddCommand($"EnterpriseLibraryClientExerciser Wait 5000"); // TBD if this is really necessary
+            _fixture.AddCommand($"EnterpriseLibraryClientExerciser DropTable {_tableName}");
 
             _fixture.AddActions
             (
@@ -37,6 +46,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
                     configModifier.ForceTransactionTraces();
 
+                    configModifier.SetLogLevel("finest");
+
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
@@ -45,12 +56,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetEnterpriseLibraryMsSql();
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
             _fixture.Initialize();
         }
 
@@ -68,35 +77,35 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql"},
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql"},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/insert", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/insert", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql"},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/delete", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql"},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql"}
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = _expectedTransactionName}
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                // The datastore operation happened inside a web transaction so there should be no allOther metrics
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
+                // The datastore operation happened outside a web transaction so there should be no allWeb metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allWeb", callCount = expectedDatastoreCallCount },
 
                 // The operation metric should not be scoped because the statement metric is scoped instead
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql" },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql" },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql" }
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2, metricScope = _expectedTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = _expectedTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = _expectedTransactionName }
             };
 
             var expectedTransactionTraceSegments = new List<string>
@@ -122,7 +131,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql",
+                    TransactionName = _expectedTransactionName,
                     Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?",
                     DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
 
@@ -130,33 +139,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql",
-                    Sql = $"SELECT COUNT(*) FROM {_fixture.TableName} WITH(nolock)",
-                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_fixture.TableName}/select",
+                    TransactionName = _expectedTransactionName,
+                    Sql = $"SELECT COUNT(*) FROM {_tableName} WITH(nolock)",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/select",
 
                     HasExplainPlan = true
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql",
-                    Sql = $"INSERT INTO {_fixture.TableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
-                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_fixture.TableName}/insert",
+                    TransactionName = _expectedTransactionName,
+                    Sql = $"INSERT INTO {_tableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/insert",
 
                     HasExplainPlan = true
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql",
-                    Sql = $"DELETE FROM {_fixture.TableName} WHERE Email = ?",
-                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_fixture.TableName}/delete",
+                    TransactionName = _expectedTransactionName,
+                    Sql = $"DELETE FROM {_tableName} WHERE Email = ?",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/delete",
 
                     HasExplainPlan = true
                 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MsSqlController/EnterpriseLibraryMsSql");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_expectedTransactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_expectedTransactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             NrAssert.Multiple(

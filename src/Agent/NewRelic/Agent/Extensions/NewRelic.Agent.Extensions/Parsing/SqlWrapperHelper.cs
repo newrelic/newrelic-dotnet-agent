@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.Text.RegularExpressions;
 #if NETFRAMEWORK
-using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
 using NewRelic.Agent.Api;
@@ -19,6 +20,9 @@ namespace NewRelic.Agent.Extensions.Parsing
     {
         private const string NullQueryParameterValue = "Null";
 
+        private static Regex _getDriverFromConnectionStringRegex = new Regex(@"DRIVER\=\{(.+?)\}", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static ConcurrentDictionary<string, DatastoreVendor> _vendorNameCache = new ConcurrentDictionary<string, DatastoreVendor>();
+
         /// <summary>
         /// Gets the name of the datastore being used by a dbCommand.
         /// </summary>
@@ -29,18 +33,32 @@ namespace NewRelic.Agent.Extensions.Parsing
         {
 
 #if NETFRAMEWORK
-			// If this is an OdbcCommand, the only way to give the data store name is by looking at the connection driver
+            // If this is an OleDbCommand, the only way to give the data store name is by looking at the connection provider
+            var oleCommand = command as OleDbCommand;
+            if (oleCommand != null && oleCommand.Connection != null)
+                return ExtractVendorNameFromString(oleCommand.Connection.Provider);
 
-			var odbcCommand = command as OdbcCommand;
-			if (odbcCommand != null && odbcCommand.Connection != null)
-				return ExtractVendorNameFromString(odbcCommand.Connection.Driver);
-
-			// If this is an OleDbCommand, the only way to give the data store name is by looking at the connection provider
-			var oleCommand = command as OleDbCommand;
-			if (oleCommand != null && oleCommand.Connection != null)
-				return ExtractVendorNameFromString(oleCommand.Connection.Provider);
 #endif
             return GetVendorName(command.GetType().Name);
+        }
+
+        public static DatastoreVendor GetVendorNameFromOdbcConnectionString(string connectionString)
+        {
+            // Example connection string: DRIVER={SQL Server Native Client 11.0};Server=127.0.0.1;Database=NewRelic;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;
+            if (_vendorNameCache.TryGetValue(connectionString, out DatastoreVendor vendor))
+            {
+                return vendor;
+            }
+
+            var match = _getDriverFromConnectionStringRegex.Match(connectionString);
+            if (match.Success)
+            {
+                var driver = match.Groups[1].Value;
+                vendor = ExtractVendorNameFromString(driver);
+                _vendorNameCache[connectionString] = vendor;
+                return vendor;
+            }
+            return DatastoreVendor.ODBC;
         }
 
         public static DatastoreVendor GetVendorName(string typeName)
@@ -61,7 +79,7 @@ namespace NewRelic.Agent.Extensions.Parsing
             { "OracleCommand", DatastoreVendor.Oracle },
             { "OracleDatabase", DatastoreVendor.Oracle },
             { "NpgsqlCommand", DatastoreVendor.Postgres },
-            { "DB2Command", DatastoreVendor.IBMDB2 },
+            { "DB2Command", DatastoreVendor.IBMDB2 }
         };
 
         /// <summary>
@@ -71,6 +89,9 @@ namespace NewRelic.Agent.Extensions.Parsing
         /// <returns></returns>
         private static DatastoreVendor ExtractVendorNameFromString(string text)
         {
+            // Note that, because of the ordering of the following checks, an ODBC connection string for a known DB vendor should result in that vendor
+            // being returned, instead of ODBC
+            // example: Driver={ODBC Driver 17 for SQL Server};Server=myServerAddress;Database=myDataBase;
             if (text.IndexOf("SQL Server", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("SQLServer", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.MSSQL;
 
@@ -85,6 +106,11 @@ namespace NewRelic.Agent.Extensions.Parsing
 
             if (text.IndexOf("DB2", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("IBM", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.IBMDB2;
+
+            // This works for redshift since the driver reports as "Amazon Redshift (x64)"
+            // Other drivers may not report as expected
+            if (text.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("Redshift", StringComparison.OrdinalIgnoreCase) != -1)
+                return DatastoreVendor.ODBC;
 
             return DatastoreVendor.Other;
         }

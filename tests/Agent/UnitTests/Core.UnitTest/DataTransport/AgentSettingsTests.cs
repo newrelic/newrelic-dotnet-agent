@@ -344,12 +344,17 @@ namespace NewRelic.Agent.Core.Configuration
                     "ai_monitoring.enabled": true,
                     "ai_monitoring.streaming.enabled": true,
                     "ai_monitoring.record_content.enabled": true,
-                    "gc_sampler_v2.enabled": true
+                    "gc_sampler_v2.enabled": true,
+                    "agent_control.enabled" : true,
+                    "agent_control.health.delivery_location": "file:///tmp/health",
+                    "agent_control.health.frequency": 5
                 }
                 """;
 
             Assert.Multiple(() =>
             {
+                Assert.That(json, Is.EqualTo(expectedJson.Condense()));
+
                 // Confirm that JsonIgnored properties are present, but not serialized
                 Assert.That(agentSettings.AgentLicenseKey, Is.Not.Null);
                 Assert.That(agentSettings.BrowserMonitoringJavaScriptAgent, Is.Not.Null);
@@ -361,7 +366,6 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(agentSettings.LoggingLevel, Is.Not.Null);
                 Assert.That(agentSettings.ServerlessFunctionName, Is.Null);
                 Assert.That(agentSettings.ServerlessFunctionVersion, Is.Null);
-                Assert.That(json, Is.EqualTo(expectedJson.Condense()));
                 Assert.That(agentSettings.AwsAccountId, Is.Empty);
             });
         }

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
@@ -123,7 +123,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlExecuteScalarAsyncTestsFW462 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public PostgresSqlExecuteScalarAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -132,7 +131,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlExecuteScalarAsyncTestsFW471 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public PostgresSqlExecuteScalarAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -141,7 +139,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlExecuteScalarAsyncTestsFW48 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public PostgresSqlExecuteScalarAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -150,7 +147,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetFrameworkTest]
     public class PostgresSqlExecuteScalarAsyncTestsFWLatest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public PostgresSqlExecuteScalarAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -159,7 +155,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlExecuteScalarAsyncTestsCoreOldest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public PostgresSqlExecuteScalarAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -168,7 +163,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         }
     }
 
-    [NetCoreTest]
     public class PostgresSqlExecuteScalarAsyncTestsCoreLatest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public PostgresSqlExecuteScalarAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
