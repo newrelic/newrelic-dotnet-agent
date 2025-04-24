@@ -49,7 +49,7 @@
             <xs:enumeration value="default">
                 <xs:annotation>
                     <xs:documentation>
-                        Default behavior. The agent will use existing sampling logic.
+                        Default behavior. The agent will use New Relic adaptive sampling logic.
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
