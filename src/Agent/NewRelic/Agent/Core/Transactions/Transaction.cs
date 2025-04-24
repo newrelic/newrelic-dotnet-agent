@@ -715,6 +715,11 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (_configuration.DistributedTracingEnabled)
             {
+                if (Segments.Any())
+                {
+                    Log.Finest($"Trx {Guid}: AcceptDistributedTraceHeaders should usually be called before any segments are started.");
+                }
+
                 // Headers have already been received, do not allow multiple calls to AcceptDistributedTraceHeaders
                 if (TracingState != null)
                 {
