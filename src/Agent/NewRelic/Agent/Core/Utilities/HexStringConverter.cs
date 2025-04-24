@@ -7,6 +7,10 @@ namespace NewRelic.Agent.Core.Utilities
 {
     public static class HexStringConverter
     {
+        /// <summary>
+        /// Converts a string of hex bytes (2 characters per byte) to a byte array.
+        /// </summary>
+        /// <exception cref="ArgumentException">Hex string must have an even length</exception>
         public static byte[] FromHexString(this ReadOnlySpan<char> chars)
         {
             if (chars.Length % 2 != 0)
