@@ -15,11 +15,6 @@ namespace CompositeTests
         private CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
 
-        [SetUp]
-        public void SetUp()
-        {
-        }
-
         [TearDown]
         public void TearDown()
         {
@@ -35,7 +30,6 @@ namespace CompositeTests
         public void RemoteParentSampledBehavior_Combinations(RemoteParentSampledBehavior behavior, string traceparentSampledFlag, bool expectedSampled)
         {
             // Initialize CompositeTestAgent with the specified RemoteParentSampledBehavior
-            _compositeTestAgent?.Dispose();
             _compositeTestAgent = new CompositeTestAgent(false, false,
                 remoteParentSampledBehavior: behavior,
                 remoteParentNotSampledBehavior: behavior);

@@ -170,9 +170,20 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private float? _priority;
         public float? Priority
         {
-            get => _priority ??
-                   (_traceContext?.Tracestate is { Priority: not null } ?
-                       _traceContext.Tracestate.Priority : _newRelicPayload?.Priority);
+            get
+            {
+                if (_priority != null)
+                {
+                    return _priority;
+                }
+
+                if (_traceContext?.Tracestate is { Priority: not null })
+                {
+                    return _traceContext.Tracestate.Priority;
+                }
+
+                return _newRelicPayload?.Priority;
+            }
         }
 
         public bool NewRelicPayloadWasAccepted { get; private set; } = false;
@@ -284,7 +295,13 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
             }
 
-            Log.Finest($"ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={_traceContext.Traceparent.Sampled}, {(_sampled.Value ? "remoteParent" : "remoteParentNot")}SampledBehavior: {sampledBehavior} ==> Sampled: {Sampled}, Priority:{Priority}");
+            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, {ParentType}SampledBehavior: {SampledBehavior} ==> Sampled: {Sampled}, Priority: {Priority}",
+                    _traceContext.Traceparent.Sampled,
+                    _sampled.Value ? "remoteParent" : "remoteParentNot",
+                    sampledBehavior,
+                    Sampled,
+                    Priority
+                );
         }
     }
 }
