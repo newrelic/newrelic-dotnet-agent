@@ -25,6 +25,21 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public static RemoteParentSampledBehavior ToRemoteParentSampledBehavior(this string remoteParentSampledBehavior)
+        {
+            switch (remoteParentSampledBehavior.ToLower())
+            {
+                case "default":
+                    return RemoteParentSampledBehavior.Default;
+                case "alwayson":
+                    return RemoteParentSampledBehavior.AlwaysOn;
+                case "alwaysoff":
+                    return RemoteParentSampledBehavior.AlwaysOff;
+                default:
+                    return RemoteParentSampledBehavior.Default;
+            }
+        }
+
         public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(
             this RemoteParentSampledBehavior remoteParentSampledBehavior)
         {
