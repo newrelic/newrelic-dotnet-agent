@@ -3109,8 +3109,8 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (_includedActivitySources == null)
                 {
-
                     var includedActivitySources = DefaultIncludedActivitySources.ToList();
+
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Include");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
@@ -3119,6 +3119,7 @@ namespace NewRelic.Agent.Core.Configuration
 
                     _includedActivitySources = includedActivitySources;
                 }
+
                 return _includedActivitySources;
             }
         }
@@ -3131,6 +3132,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (_excludedActivitySources == null)
                 {
                     _excludedActivitySources = new List<string>();
+
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
