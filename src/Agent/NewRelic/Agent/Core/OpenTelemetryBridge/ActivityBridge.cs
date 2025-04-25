@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             _activityListener = Activator.CreateInstance(activityListenerType);
 
-            ConfigureShouldListenToCallback(_activityListener, activityListenerType, activitySourceType);
+            ConfigureShouldListenToCallback(this, _activityListener, activityListenerType, activitySourceType);
 
             // Need to subscribe to ActivityStarted and ActivityStopped callbacks. These methods will be used to trigger the starting and stopping
             // of segments and potentially transactions using the agent's API.
@@ -201,8 +201,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         // Generates code similar to the following.
-        // activityListener.ShouldListenTo = (activitySource) => ShouldListenToActivitySource(activitySource);
-        private static void ConfigureShouldListenToCallback(object activityListener, Type activityListenerType, Type activitySourceType)
+        // activityListener.ShouldListenTo = (activitySource) => instance.ShouldListenToActivitySource(activitySource);
+        private static void ConfigureShouldListenToCallback(ActivityBridge instance, object activityListener, Type activityListenerType, Type activitySourceType)
         {
             var shouldListenToProperty = activityListenerType.GetProperty("ShouldListenTo");
 
@@ -211,8 +211,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var shouldListenToActivitySourceMethod =
                 typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource),
                     BindingFlags.NonPublic | BindingFlags.Instance);
+            var activityBridgeInstanceExpression = Expression.Constant(instance);
 
-            var shouldListenToCall = Expression.Call(null, shouldListenToActivitySourceMethod, activitySourceParameter);
+            var shouldListenToCall = Expression.Call(activityBridgeInstanceExpression, shouldListenToActivitySourceMethod, activitySourceParameter);
 
             var shouldListenToLambda = Expression.Lambda(shouldListenToProperty.PropertyType, shouldListenToCall, activitySourceParameter);
 
