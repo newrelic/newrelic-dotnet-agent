@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
@@ -4604,6 +4605,40 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         }
 
+        [TestCase("alwaysOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentSampledBehavior_AlwaysOn_EnvironmentVariableOverride")]
+        [TestCase("AlWaYSOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentSampledBehavior_AlwaysOnMixedCase_EnvironmentVariableOverride")]
+        [TestCase("alwaysOff", RemoteParentSampledBehavior.AlwaysOff, TestName = "RemoteParentSampledBehavior_AlwaysOff_EnvironmentVariableOverride")]
+        [TestCase("default", RemoteParentSampledBehavior.Default, TestName = "RemoteParentSampledBehavior_Default_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", RemoteParentSampledBehavior.Default, TestName = "RemoteParentSampledBehavior_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        public void RemoteParentSampledBehavior_UsesEnvironmentVariableOverride(string environmentVariableValue, RemoteParentSampledBehavior expectedRemoteParentSampledBehavior)
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
+                .Returns(environmentVariableValue);
+
+            // Act
+            var result = _defaultConfig.RemoteParentSampledBehavior;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledBehavior));
+        }
+
+        [TestCase("alwaysOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentNotSampledBehavior_AlwaysOn_EnvironmentVariableOverride")]
+        [TestCase("alwaysOff", RemoteParentSampledBehavior.AlwaysOff, TestName = "RemoteParentNotSampledBehavior_AlwaysOff_EnvironmentVariableOverride")]
+        [TestCase("default", RemoteParentSampledBehavior.Default, TestName = "RemoteParentNotSampledBehavior_Default_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", RemoteParentSampledBehavior.Default, TestName = "RemoteParentNotSampledBehavior_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        public void RemoteParentNotSampledBehavior_UsesEnvironmentVariableOverride(string environmentVariableValue, RemoteParentSampledBehavior expectedRemoteParentSampledBehavior)
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
+                .Returns(environmentVariableValue);
+
+            // Act
+            var result = _defaultConfig.RemoteParentNotSampledBehavior;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledBehavior));
+        }
 
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
