@@ -208,7 +208,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var activitySourceParameter = Expression.Parameter(activitySourceType, "activitySource");
 
-            var shouldListenToActivitySourceMethod = typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource), BindingFlags.NonPublic | BindingFlags.Static);
+            var shouldListenToActivitySourceMethod =
+                typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource),
+                    BindingFlags.NonPublic | BindingFlags.Instance);
 
             var shouldListenToCall = Expression.Call(null, shouldListenToActivitySourceMethod, activitySourceParameter);
 
