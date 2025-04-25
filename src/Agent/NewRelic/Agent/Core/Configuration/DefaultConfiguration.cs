@@ -3136,7 +3136,7 @@ namespace NewRelic.Agent.Core.Configuration
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
-                        _excludedActivitySources = new List<string>(appSetting.Split(','));
+                        _excludedActivitySources.AddRange(appSetting.Split(','));
                     }
                 }
 
