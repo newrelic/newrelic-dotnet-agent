@@ -3098,6 +3098,53 @@ namespace NewRelic.Agent.Core.Configuration
         }
         #endregion
 
+        #region Otel Bridge
+
+        // TODO: configure the initial list of activity sources to include
+        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent", "TestApp activity source"];
+
+        private List<string> _includedActivitySources;
+        public List<string> IncludedActivitySources
+        {
+            get
+            {
+                if (_includedActivitySources == null)
+                {
+
+                    var includedActivitySources = DefaultIncludedActivitySources.ToList();
+                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Include");
+                    if (!string.IsNullOrEmpty(appSetting))
+                    {
+                        includedActivitySources.AddRange(appSetting.Split(','));
+                    }
+
+                    _includedActivitySources = includedActivitySources;
+                }
+                return _includedActivitySources;
+            }
+        }
+
+        private List<string> _excludedActivitySources;
+        public List<string> ExcludedActivitySources
+        {
+            get
+            {
+                if (_excludedActivitySources == null)
+                {
+                    _excludedActivitySources = new List<string>();
+                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
+                    if (!string.IsNullOrEmpty(appSetting))
+                    {
+                        _excludedActivitySources = new List<string>(appSetting.Split(','));
+                    }
+                }
+
+                return _excludedActivitySources;
+            }
+        }
+
+        #endregion
+
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
         {
             return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

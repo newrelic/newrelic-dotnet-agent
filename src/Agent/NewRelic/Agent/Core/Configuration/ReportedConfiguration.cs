@@ -737,6 +737,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent_control.health.frequency")]
         public int HealthFrequency => _configuration.HealthFrequency;
 
+        [JsonProperty("otel_bridge.included_activity_sources")]
+        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+
+        [JsonProperty("otel_bridge.excluded_activity_sources")]
+        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+
         #endregion
     }
 }

@@ -240,5 +240,8 @@ namespace NewRelic.Agent.Configuration
         bool AgentControlEnabled { get; }
         string HealthDeliveryLocation { get; }
         int HealthFrequency { get; }
+
+        List<string> IncludedActivitySources { get; }
+        List<string> ExcludedActivitySources { get; }
     }
 }
