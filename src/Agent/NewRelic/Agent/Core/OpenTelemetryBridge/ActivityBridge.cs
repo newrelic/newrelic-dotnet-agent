@@ -202,7 +202,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         // Generates code similar to the following.
         // activityListener.ShouldListenTo = (activitySource) => instance.ShouldListenToActivitySource(activitySource);
-        private static void ConfigureShouldListenToCallback(ActivityBridge instance, object activityListener, Type activityListenerType, Type activitySourceType)
+        private void ConfigureShouldListenToCallback(object activityListener, Type activityListenerType, Type activitySourceType)
         {
             var shouldListenToProperty = activityListenerType.GetProperty("ShouldListenTo");
 
@@ -211,7 +211,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var shouldListenToActivitySourceMethod =
                 typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource),
                     BindingFlags.NonPublic | BindingFlags.Instance);
-            var activityBridgeInstanceExpression = Expression.Constant(instance);
+            var activityBridgeInstanceExpression = Expression.Constant(this);
 
             var shouldListenToCall = Expression.Call(activityBridgeInstanceExpression, shouldListenToActivitySourceMethod, activitySourceParameter);
 
