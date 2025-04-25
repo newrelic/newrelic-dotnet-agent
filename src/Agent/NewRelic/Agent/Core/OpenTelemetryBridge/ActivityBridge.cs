@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             _activityListener = Activator.CreateInstance(activityListenerType);
 
-            ConfigureShouldListenToCallback(this, _activityListener, activityListenerType, activitySourceType);
+            ConfigureShouldListenToCallback(_activityListener, activityListenerType, activitySourceType);
 
             // Need to subscribe to ActivityStarted and ActivityStopped callbacks. These methods will be used to trigger the starting and stopping
             // of segments and potentially transactions using the agent's API.
