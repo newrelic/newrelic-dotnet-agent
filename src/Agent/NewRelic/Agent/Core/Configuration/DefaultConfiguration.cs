@@ -3100,8 +3100,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Otel Bridge
 
-        // TODO: configure the initial list of activity sources to include
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent", "TestApp activity source"];
+        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"];
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources

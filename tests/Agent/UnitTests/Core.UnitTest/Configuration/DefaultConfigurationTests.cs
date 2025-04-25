@@ -4612,7 +4612,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var includedActivitySources = defaultConfig.IncludedActivitySources;
 
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "TestApp activity source", "Foo", "Bar", "Baz"]));
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
         }
 
         [Test]
