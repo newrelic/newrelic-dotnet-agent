@@ -201,38 +201,36 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         // Generates code similar to the following.
-        // activityListener.ShouldListenTo = (activitySource) => ShouldListenToActivitySource(activitySource);
-        private static void ConfigureShouldListenToCallback(object activityListener, Type activityListenerType, Type activitySourceType)
+        // activityListener.ShouldListenTo = (activitySource) => instance.ShouldListenToActivitySource(activitySource);
+        private void ConfigureShouldListenToCallback(object activityListener, Type activityListenerType, Type activitySourceType)
         {
             var shouldListenToProperty = activityListenerType.GetProperty("ShouldListenTo");
 
             var activitySourceParameter = Expression.Parameter(activitySourceType, "activitySource");
 
-            var shouldListenToActivitySourceMethod = typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource), BindingFlags.NonPublic | BindingFlags.Static);
+            var shouldListenToActivitySourceMethod =
+                typeof(ActivityBridge).GetMethod(nameof(ShouldListenToActivitySource),
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+            var activityBridgeInstanceExpression = Expression.Constant(this);
 
-            var shouldListenToCall = Expression.Call(null, shouldListenToActivitySourceMethod, activitySourceParameter);
+            var shouldListenToCall = Expression.Call(activityBridgeInstanceExpression, shouldListenToActivitySourceMethod, activitySourceParameter);
 
             var shouldListenToLambda = Expression.Lambda(shouldListenToProperty.PropertyType, shouldListenToCall, activitySourceParameter);
 
             shouldListenToProperty.SetValue(activityListener, shouldListenToLambda.Compile());
         }
 
-        // This hard coded list contains the activity sources used for the hybrid agent cross agent tests
-        // and the activity source used to create activities from New Relic segments.
-        private static readonly List<string> _includedActivitySourceNames = new List<string>
-        {
-            "NewRelic.Agent",
-            "TestApp activity source"
-        };
-        private static bool ShouldListenToActivitySource(object activitySource)
+        private bool ShouldListenToActivitySource(object activitySource)
         {
             dynamic dynamicActivitySource = activitySource;
-
-            // TODO: Make the activity source names that should be listened to configurable.
-            // It probably needs to be a combination of exclude and include lists.
-
             string activitySourceName = (string)dynamicActivitySource.Name;
-            return !string.IsNullOrEmpty(activitySourceName) && _includedActivitySourceNames.Contains(activitySourceName);
+
+            var includedActivitySources = _agent.Configuration.IncludedActivitySources;
+            var excludedActivitySources = _agent.Configuration.ExcludedActivitySources;
+
+            return !string.IsNullOrEmpty(activitySourceName)
+                   && includedActivitySources.Contains(activitySourceName)
+                   && !excludedActivitySources.Contains(activitySourceName);
         }
 
         // Activity will not actually be created by an activity source unless an activity listener is listening to it and the

@@ -418,7 +418,9 @@ namespace NewRelic.Agent.Core.DataTransport
                             "gc_sampler_v2.enabled": true,
                             "agent_control.enabled" : true,
                             "agent_control.health.delivery_location": "file:///tmp/health",
-                            "agent_control.health.frequency": 5
+                            "agent_control.health.frequency": 5,
+                            "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
+                            "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"]
                         },
                         "metadata": {
                             "hello": "there"

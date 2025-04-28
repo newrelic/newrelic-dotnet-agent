@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Segments;
@@ -32,6 +33,10 @@ namespace CompositeTests.CrossAgentTests.HybridAgent
             _compositeTestAgent = new CompositeTestAgent();
             // Used for the DT tests to identify the correct tracestate header component
             _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "1";
+
+            // configure the activity source we want to listen to
+            _compositeTestAgent.LocalConfiguration.appSettings.Add(new configurationAdd() { key = "OpenTelemetry.ActivitySource.Include", value = "TestApp activity source" });
+            _compositeTestAgent.PushConfiguration();
 
             _agent = _compositeTestAgent.GetAgent();
             _newRelicAgentOperations = new NewRelicAgentOperations(_agent);

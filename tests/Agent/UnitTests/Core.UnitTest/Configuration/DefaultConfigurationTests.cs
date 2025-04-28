@@ -4604,6 +4604,28 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         }
 
+        [Test]
+        public void IncludedActivitySources_IncludesDefaultPlusConfigured()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "Foo,Bar,Baz" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            var includedActivitySources = defaultConfig.IncludedActivitySources;
+
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
+        }
+
+        [Test]
+        public void ExcludedActivitySources_IncludesConfigured()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "Foo,Bar,Baz" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            var excludedActivitySources= defaultConfig.ExcludedActivitySources;
+
+            Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
+        }
+
 
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
