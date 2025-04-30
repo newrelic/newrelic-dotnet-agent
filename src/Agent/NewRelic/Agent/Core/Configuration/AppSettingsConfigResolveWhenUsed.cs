@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static IConfigurationRoot InitializeConfiguration()
         {
+            var env = new SharedInterfaces.Environment();
+
             // Get application base directory, where appsettings*.json will be if they exist
             var applicationDirectory = string.Empty;
             try
@@ -48,22 +50,29 @@ namespace NewRelic.Agent.Core.Configuration
             _appSettingsFilePaths = Path.Combine(applicationDirectory, "appsettings.json");
 
             // Determine if there is a .NET environment configured, or default to "Production"
-            var environment = GetDotnetEnvironment();
+            var environment = GetDotnetEnvironment(env);
             builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
             var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
             _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, appSettingsEnvPath);
 
+            // Add optional appsettings location from environment variable
+            var customAppSettingsPath = env.GetEnvironmentVariable("NEW_RELIC_APPSETTINGS_PATH");
+            if (!string.IsNullOrWhiteSpace(customAppSettingsPath) && File.Exists(customAppSettingsPath))
+            {
+                builder.AddJsonFile(customAppSettingsPath, optional: true, reloadOnChange: false);
+                _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, customAppSettingsPath);
+            }
+
             return builder.Build();
         }
 
-        private static string GetDotnetEnvironment()
+        private static string GetDotnetEnvironment(SharedInterfaces.Environment env)
         {
-            var env = new SharedInterfaces.Environment();
             // Determine the environment (e.g. Production, Development, Staging, etc.) by considering the following env vars in order
             // "DOTNET_ENVIRONMENT" takes precedence over "ASPNETCORE_ENVIRONMENT", even for ASP.NET Core applications
             // EnvironmentName is proprietary to our agent and the behavior as of version 10.20 is to not take precedence over the .NET builtins
             var envVarsToCheck = new List<string>() { "DOTNET_ENVIRONMENT", "ASPNETCORE_ENVIRONMENT", "EnvironmentName" };
-            foreach ( var envVar in envVarsToCheck )
+            foreach (var envVar in envVarsToCheck)
             {
                 var environment = env.GetEnvironmentVariable(envVar);
                 if (!string.IsNullOrEmpty(environment))
@@ -82,7 +91,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return null;
             }
-            
+
             var value = Configuration[key];
 
             if (Log.IsDebugEnabled)
