@@ -100,6 +100,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCloud cloudField;
         
+        private configurationOpenTelemetryBridge openTelemetryBridgeField;
+        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -123,6 +125,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
+            this.openTelemetryBridgeField = new configurationOpenTelemetryBridge();
             this.cloudField = new configurationCloud();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
@@ -612,6 +615,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.cloudField = value;
+            }
+        }
+        
+        public configurationOpenTelemetryBridge openTelemetryBridge
+        {
+            get
+            {
+                return this.openTelemetryBridgeField;
+            }
+            set
+            {
+                this.openTelemetryBridgeField = value;
             }
         }
         
@@ -6171,6 +6186,48 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationCloudAws Clone()
         {
             return ((configurationCloudAws)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationOpenTelemetryBridge
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationOpenTelemetryBridge class constructor
+        /// </summary>
+        public configurationOpenTelemetryBridge()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationOpenTelemetryBridge object
+        /// </summary>
+        public virtual configurationOpenTelemetryBridge Clone()
+        {
+            return ((configurationOpenTelemetryBridge)(this.MemberwiseClone()));
         }
         #endregion
     }

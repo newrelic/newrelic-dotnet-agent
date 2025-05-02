@@ -243,5 +243,7 @@ namespace NewRelic.Agent.Configuration
 
         List<string> IncludedActivitySources { get; }
         List<string> ExcludedActivitySources { get; }
+
+        bool OpenTelemetryBridgeEnabled { get; }
     }
 }
