@@ -12,7 +12,9 @@
         "packageName": "amazon.lambda.dynamodbevents"
     },
     {
-        "packageName": "amazon.lambda.kinesisevents"
+        "packageName": "amazon.lambda.kinesisevents",
+        "ignoreTFMs" : "net8.0",
+        "ignoreReason": "net8.0 tests 2.x.x version"
     },
     {
         "packageName": "amazon.lambda.kinesisfirehoseevents"
