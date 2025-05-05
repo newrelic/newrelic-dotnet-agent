@@ -3144,7 +3144,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(_localConfiguration.openTelemetryBridge.enabled, "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
+        public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
 
         #endregion
 

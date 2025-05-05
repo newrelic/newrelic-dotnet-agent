@@ -2072,23 +2072,6 @@
                         </xs:all>
                     </xs:complexType>
                 </xs:element>
-
-                <xs:element name="openTelemetryBridge" minOccurs="0" maxOccurs="1">
-                    <xs:annotation>
-                        <xs:documentation>
-                            Settings related to the OpenTelemetry Bridge.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:complexType>
-                        <xs:attribute name="enabled" type="xs:boolean" default="false">
-                            <xs:annotation>
-                                <xs:documentation>
-                                    Enables OpenTelemetry Bridge. Disabled by default.
-                                </xs:documentation>
-                            </xs:annotation>
-                        </xs:attribute>
-                    </xs:complexType>
-                </xs:element>
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">
