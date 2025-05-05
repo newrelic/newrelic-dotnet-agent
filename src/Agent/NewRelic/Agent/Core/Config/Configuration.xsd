@@ -1722,7 +1722,7 @@
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                            
+
                             <xs:element name="recordContent" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -1741,7 +1741,7 @@
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
-                        
+
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1753,7 +1753,7 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-                
+
                 <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>

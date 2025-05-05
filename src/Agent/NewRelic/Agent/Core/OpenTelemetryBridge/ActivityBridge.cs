@@ -37,7 +37,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void Start()
         {
-            TryCreateActivityListener();
+            if (_agent.Configuration.OpenTelemetryBridgeEnabled)
+                TryCreateActivityListener();
+            else
+                Log.Debug("OpenTelemetry Bridge is disabled. Not starting the activity listener.");
         }
 
         private void TryCreateActivityListener()

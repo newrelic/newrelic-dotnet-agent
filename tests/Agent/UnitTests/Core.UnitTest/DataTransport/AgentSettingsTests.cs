@@ -349,7 +349,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "agent_control.health.delivery_location": "file:///tmp/health",
                     "agent_control.health.frequency": 5,
                     "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
-                    "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"]
+                    "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
+                    "otel_bridge.enabled": true
                 }
                 """;
 

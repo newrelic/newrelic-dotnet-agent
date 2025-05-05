@@ -505,5 +505,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public int HealthFrequency => 5;
         public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"];
         public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"];
+        public bool OpenTelemetryBridgeEnabled => true;
     }
 }
