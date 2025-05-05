@@ -39,6 +39,12 @@
         "packageName": "awssdk.kinesisfirehose"
     },
     {
+        "packageName": "awssdk.s3"
+    },
+    {
+        "packageName": "awssdk.securitytoken"
+    },
+    {
         "packageName": "awssdk.sqs"
     },
     {
