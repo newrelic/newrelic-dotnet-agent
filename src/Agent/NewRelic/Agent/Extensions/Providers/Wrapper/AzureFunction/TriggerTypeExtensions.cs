@@ -15,6 +15,8 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
             // The return values are based on https://opentelemetry.io/docs/specs/semconv/attributes-registry/faas/ (scroll to the bottom)
             // 08/27/2024 - All trigger types added from https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings?tabs=isolated-process%2Cpython-v2&pivots=programming-language-csharp
 
+            // 02/28/2025 - Updates here also need to be reflected in Angler's supportability metrics list
+
             string resolvedTriggerType;
 
             switch (trigger)
@@ -50,6 +52,9 @@ namespace NewRelic.Providers.Wrapper.AzureFunction
                     break;
 
                 case "DaprServiceInvocation": // RPC call to another Dapr service - no group so other.
+                case "Activity": // Durable Functions - no group so other.
+                case "Entity": // Durable Functions - no group so other.
+                case "Orchestration": // Durable Functions - no group so other.
                     resolvedTriggerType = "other";
                     break;
                 default:

@@ -78,7 +78,7 @@ namespace NewRelic.Agent.TestUtilities
                 case TypeCode.Single:
                 case TypeCode.Double:
                 case TypeCode.Decimal:
-                    return Math.Abs((double)val1Comp - (double)val2Comp) < .0001;
+                    return Math.Abs(Convert.ToDouble(val1Comp) - Convert.ToDouble(val2Comp)) < .0001; // close enough, I guess?
 
                 default:
                     return val1Comp.Equals(val2Comp);
@@ -111,24 +111,23 @@ namespace NewRelic.Agent.TestUtilities
             {
                 case TypeCode.SByte:
                 case TypeCode.Byte:
-                case TypeCode.Int16:
                 case TypeCode.UInt16:
-                case TypeCode.Int32:
                 case TypeCode.UInt32:
-                case TypeCode.Int64:
                 case TypeCode.UInt64:
+                case TypeCode.Int16:
+                case TypeCode.Int32:
                     return Convert.ToInt64(val);
 
+                case TypeCode.Decimal:
                 case TypeCode.Single:
                 case TypeCode.Double:
-                case TypeCode.Decimal:
-                    return Convert.ToDouble(val);
+                case TypeCode.Int64:
+                case TypeCode.Boolean:
+                case TypeCode.String:
+                    return val;
 
                 case TypeCode.DateTime:
                     return ((DateTime)val).ToString("o");
-
-                case TypeCode.String:
-                    return val;
 
                 default:
                     return val.ToString();

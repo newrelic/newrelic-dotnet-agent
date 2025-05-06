@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -47,6 +48,7 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
         /// <summary>
         /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
@@ -72,7 +74,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
             : this()
         {
             _environment = environment;
@@ -84,7 +86,7 @@ namespace NewRelic.Agent.Core.Configuration
             _utilizationFullHostName = new Lazy<string>(_dnsStatic.GetFullHostName);
             _utilizationHostName = new Lazy<string>(_dnsStatic.GetHostName);
 
-
+            _agentHealthReporter = agentHealthReporter;
 
             if (localConfiguration != null)
             {
@@ -208,17 +210,66 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if (_agentLicenseKey != null)
-                    return _agentLicenseKey;
-
-                _agentLicenseKey = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey)
-                                   ?? EnvironmentOverrides(_localConfiguration.service.licenseKey, "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY");
-
-                if (_agentLicenseKey != null)
-                    _agentLicenseKey = _agentLicenseKey.Trim();
+                _agentLicenseKey ??= TryGetLicenseKey();
+                if (string.IsNullOrWhiteSpace(_agentLicenseKey) && !ServerlessModeEnabled)
+                {
+                    TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
+                }
 
                 return _agentLicenseKey;
             }
+        }
+
+        private string TryGetLicenseKey()
+        {
+            // same order as old process - appsettings > env var(a/b) > newrelic.config
+            var candidateKeys = new Dictionary<string, string>
+            {
+                { "AppSettings", _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey) },
+                { "EnvironmentVariable", _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY") },
+                { "newrelic.config", _localConfiguration.service.licenseKey }
+            };
+
+            foreach (var candidateKey in candidateKeys)
+            {
+                // Did we find a key?
+                if (string.IsNullOrWhiteSpace(candidateKey.Value))
+                {
+                    continue;
+                }
+
+                // We found something, but is it a valid key?
+
+                // If the key is the default value from newrelic.config, we return the default value
+                // AgentManager.AssertAgentEnabled() relies on this behavior and will throw an exception if the key is the default value
+                if (candidateKey.Value.ToLower().Contains("license"))
+                {
+                    // newrelic.config is the last place to look
+                    return candidateKey.Value;
+                }
+
+                // Keys are only 40 characters long, but we trim to be safe
+                var trimmedCandidateKey = candidateKey.Value.Trim();
+                if (trimmedCandidateKey.Length != 40)
+                {
+                    Log.Warn($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
+                    continue;
+                }
+
+                // Keys can only contain printable ASCII characters from 0x21 to 0x7E
+                if (!trimmedCandidateKey.All(c => c >= 0x21 && c <= 0x7E))
+                {
+                    Log.Warn($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
+                    continue;
+                }
+
+                Log.Info($"License key from {candidateKey.Key} appears to be in the correct format.");
+                return trimmedCandidateKey;
+            }
+
+            // return string.Empty instead of null to allow caching and prevent checking repeatedly
+            Log.Warn("No valid license key found.");
+            return string.Empty;
         }
 
         private IEnumerable<string> _applicationNames;
@@ -265,11 +316,11 @@ namespace NewRelic.Agent.Core.Configuration
                 return appName.Split(StringSeparators.Comma);
             }
 
-            if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionServiceName))
+            if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionAppName))
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
-                return new List<string> { AzureFunctionServiceName };
+                return new List<string> { AzureFunctionAppName };
             }
 
             appName = _environment.GetEnvironmentVariable("RoleName");
@@ -316,16 +367,19 @@ namespace NewRelic.Agent.Core.Configuration
                 return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
             }
 
+            TrySetAgentControlStatus(HealthCodes.ApplicationNameMissing);
             throw new Exception("An application name must be provided");
         }
 
         private string GetAppPoolId()
         {
-            var appPoolId = _environment.GetEnvironmentVariable("APP_POOL_ID");
-            if (!string.IsNullOrEmpty(appPoolId)) return appPoolId;
+            var appPoolId = _environment.GetEnvironmentVariableFromList("APP_POOL_ID", "ASPNETCORE_IIS_APP_POOL_ID");
+            if (!string.IsNullOrEmpty(appPoolId))
+                return appPoolId;
 
             var isW3wp = _processStatic.GetCurrentProcess().ProcessName?.Equals("w3wp", StringComparison.InvariantCultureIgnoreCase);
-            if (!isW3wp.HasValue || !isW3wp.Value) return appPoolId;
+            if (!isW3wp.HasValue || !isW3wp.Value)
+                return null;
 
             var commandLineArgs = _environment.GetCommandLineArgs();
             const string appPoolCommandLineArg = "-ap";
@@ -2164,7 +2218,7 @@ namespace NewRelic.Agent.Core.Configuration
         private bool? _azureFunctionModeEnabled;
         public bool AzureFunctionModeEnabled =>
             _azureFunctionModeEnabled ??
-            (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", false), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
+            (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", true), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
 
         public string AzureFunctionResourceId
         {
@@ -2178,7 +2232,7 @@ namespace NewRelic.Agent.Core.Configuration
                     return string.Empty;
                 }
 
-                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionServiceName) ? "unknown" : AzureFunctionServiceName)}";
+                return $"/subscriptions/{subscriptionId}/resourceGroups/{websiteResourceGroup}/providers/Microsoft.Web/sites/{(string.IsNullOrEmpty(AzureFunctionAppName) ? "unknown" : AzureFunctionAppName)}";
             }
         }
 
@@ -2238,7 +2292,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public string AzureFunctionServiceName => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+        public string AzureFunctionAppName => _environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
         #endregion
 
         #endregion
@@ -2321,7 +2375,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return _enableAspNetCore6PlusBrowserInjection.HasValue
                     ? _enableAspNetCore6PlusBrowserInjection.Value
-                    : (_enableAspNetCore6PlusBrowserInjection = TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", false)).Value;
+                    : (_enableAspNetCore6PlusBrowserInjection = TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true)).Value;
             }
         }
 
@@ -2495,7 +2549,17 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool GCSamplerV2Enabled => _bootstrapConfiguration.GCSamplerV2Enabled;
 
-        #endregion
+        #region Agent Control
+
+        public bool AgentControlEnabled => _bootstrapConfiguration.AgentControlEnabled;
+
+        public string HealthDeliveryLocation => _bootstrapConfiguration.HealthDeliveryLocation;
+
+        public int HealthFrequency => _bootstrapConfiguration.HealthFrequency;
+
+        #endregion Agent Control
+
+        #endregion Properties
 
         #region Helpers
 
@@ -2857,6 +2921,18 @@ namespace NewRelic.Agent.Core.Configuration
         private static int? GetNullableIntValue(bool specified, int value)
         {
             return specified ? value : default(int?);
+        }
+
+        // Since the configuration is initialized before the AgentHealthReporter, needed a way to not call it till it was ready 
+        private void TrySetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus)
+        {
+            if (_agentHealthReporter == null)
+            {
+                Log.Debug("DefaultConfiguration: Unable to set Agent Control status {status} because agent health reporter has not been initialized.", healthStatus);
+                return;
+            }
+
+            _agentHealthReporter.SetAgentControlStatus(healthStatus);
         }
 
         #endregion

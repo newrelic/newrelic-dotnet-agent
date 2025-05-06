@@ -2,32 +2,33 @@
 Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <!-- Some useful definitions for 64-bit vs 32-bit installers. -->
   <?if $(var.Platform) = x64?>
-    <?define ProductName = "New Relic .NET Agent (64-bit)"?>
-    <?define IsWin64?>
+  <?define ProductName = "New Relic .NET Agent (64-bit)"?>
+  <?define IsWin64?>
   <?else?>
-    <?define ProductName = "New Relic .NET Agent (32-bit)"?>
-    <?define IsWin32?>
+  <?define ProductName = "New Relic .NET Agent (32-bit)"?>
+  <?define IsWin32?>
   <?endif?>
 
   <?define RootSourcePath = "$(var.SolutionDir)..\..\.."?>
   <?define AgentSourcePath = "$(var.RootSourcePath)\src\Agent"?>
 
-  <?ifdef "$(env.NR_DEV_HOMEROOT)"?> <?define HomeRootPath = "$(env.NR_DEV_HOMEROOT)"?>
-    <?else?> <?define HomeRootPath = "$(var.AgentSourcePath)"?>
+  <?ifdef "$(env.NR_DEV_HOMEROOT)"?>  <?define HomeRootPath = "$(env.NR_DEV_HOMEROOT)"?>
+  <?else?>  <?define HomeRootPath = "$(var.AgentSourcePath)"?>
   <?endif?>
-  
+
   <?define HomeFolderPath = "$(var.HomeRootPath)\newrelichome_$(var.Platform)"?>
   <?define HomeFolderPathx86 = "$(var.HomeRootPath)\newrelichome_x86"?>
   <?define HomeFolderPathx64 = "$(var.HomeRootPath)\newrelichome_x64"?>
 
-  
-  
+
+
   <Package Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}" InstallerVersion="200">
-    
+
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate EmbedCab="yes" />
@@ -58,7 +59,7 @@ SPDX-License-Identifier: Apache-2.0
         <Feature Id="InstrumentAllNETFramework" Display="hidden">
         </Feature>
       </FeatureRef>
-      
+
       <FeatureRef Id="CoreIISRegistryFeature" IgnoreParent="yes">
         <Feature Id="NETCoreSupport" Display="hidden">
         </Feature>
@@ -123,13 +124,13 @@ SPDX-License-Identifier: Apache-2.0
       <Feature Id="UninstallFeature" Title="Uninstall" Description="Uninstall shortcut." Display="hidden" Level="1" TypicalDefault="install" AllowAdvertise="no" AllowAbsent="no">
         <ComponentGroupRef Id="UninstallComponents" />
       </Feature>
-      
+
       <!-- We are now installing the API by default, but if this feature is missing customers using ADDLOCAL=ApiFeature will see failed installs.  Having this be a hidden, level=1, absent=disallow feature accomplishes both installing by default and not breaking installs.-->
       <Feature Id="ApiFeature" Title="ApiFeature" Description="ApiFeature." Display="hidden" Level="1" AllowAbsent="no">
         <ComponentGroupRef Id="ApiComponents" />
       </Feature>
     </Feature>
-    
+
     <UIRef Id="WizardUI" />
 
     <!-- Add a checkbox to the exit dialog. -->
@@ -149,7 +150,8 @@ SPDX-License-Identifier: Apache-2.0
     <WixVariable Id="WixUILicenseRtf" Value="$(var.RootSourcePath)\licenses\License.rtf" />
   </Package>
 
-  <Fragment><Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+  <Fragment>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
 
     <!-- Get the .NET Framework properties. -->
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED" />
@@ -182,7 +184,7 @@ SPDX-License-Identifier: Apache-2.0
     <InstallUISequence>
       <Custom Action="CheckBitness" Before="CostInitialize" />
     </InstallUISequence>
-    
+
     <!-- Run the custom actions at the end of the install. -->
     <InstallExecuteSequence>
       <Custom Action="FindPreviousLicenseKey" After="CostFinalize" Condition="NOT Installed" />
@@ -191,23 +193,23 @@ SPDX-License-Identifier: Apache-2.0
     </InstallExecuteSequence>
 
     <!-- Directory structure setup. -->
-    
+
 
     <!-- Main Product Framework -->
     <ComponentGroup Id="ProductComponents" Directory="FRAMEWORKAGENTFOLDER">
       <!-- Libraries -->
       <?ifdef IsWin64?>
-        <Component Id="Profiler64Component" Guid="{EA2D3EC9-2109-4004-AD12-E8ACB49B1242}" Bitness="always64">
-          <File Id="Profiler64File" Name="NewRelic.Profiler.dll" ShortName="nrprfr64.dll" KeyPath="yes" Source="$(var.HomeFolderPathx64)\NewRelic.Profiler.dll">
-            <Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
-          </File>
-        </Component>
+      <Component Id="Profiler64Component" Guid="{EA2D3EC9-2109-4004-AD12-E8ACB49B1242}" Bitness="always64">
+        <File Id="Profiler64File" Name="NewRelic.Profiler.dll" ShortName="nrprfr64.dll" KeyPath="yes" Source="$(var.HomeFolderPathx64)\NewRelic.Profiler.dll">
+          <Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
+        </File>
+      </Component>
       <?else?>
-        <Component Id="Profiler32Component" Guid="{548B1319-EB04-42A9-82C4-E6CF975ADC8A}" Bitness="always32">
-          <File Id="Profiler32File" Name="NewRelic.Profiler.dll" ShortName="nrprfr32.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)\NewRelic.Profiler.dll">
-            <Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
-          </File>
-        </Component>
+      <Component Id="Profiler32Component" Guid="{548B1319-EB04-42A9-82C4-E6CF975ADC8A}" Bitness="always32">
+        <File Id="Profiler32File" Name="NewRelic.Profiler.dll" ShortName="nrprfr32.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)\NewRelic.Profiler.dll">
+          <Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
+        </File>
+      </Component>
       <?endif?>
 
       <Component Id="NewRelic.Agent.Core" Guid="{C9F6F481-4FDE-4DAB-8008-AF394F3CA3D4}">
@@ -217,7 +219,7 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="NewRelic.Agent.Extensions" Guid="{C2A377FD-A722-4767-81BE-42CE1C6E74CE}">
         <File Id="NewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\NewRelic.Agent.Extensions.dll" />
       </Component>
- 
+
       <!--Google gRPC CSharp Extensions-->
       <Component Id="gRPCCSharpExtensionsLibx64" Guid="{D792750F-42D9-4DA0-A342-0222607DD357}">
         <File Id="grpc_csharp_ext.x64.dll" Name="grpc_csharp_ext.x64.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\grpc_csharp_ext.x64.dll" />
@@ -225,14 +227,14 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="gRPCCSharpExtensionsLibx86" Guid="{D792750F-42D9-4DA0-A342-0222607DD358}">
         <File Id="grpc_csharp_ext.x86.dll" Name="grpc_csharp_ext.x86.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\grpc_csharp_ext.x86.dll" />
       </Component>
-      
+
       <!-- Configuration -->
       <Component Id="FrameworkConfigurationShortcuts" Guid="{4E0DEB3D-4A7C-4AD8-9F20-78FB9C163DD0}">
         <Shortcut Id="ExtensionsShortcut" Name="Extensions" Target="[FrameworkExtensionsFolder]" WorkingDirectory="FrameworkExtensionsFolder" Advertise="no" />
         <RegistryValue Root="HKLM" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="NetFrameworkProgramFilesToProgramDataShortcuts" Type="integer" Value="1" />
       </Component>
     </ComponentGroup>
-    
+
     <?ifdef IsWin64?>
     <ComponentGroup Id="Product32On64Components" Directory="NETAGENT32ON64FOLDER">
       <Component Id="Profiler32On64Component" Guid="{5AA9EE48-2D0B-41C7-B958-EA4BC1D4BE9B}" Bitness="always32">
@@ -248,17 +250,17 @@ SPDX-License-Identifier: Apache-2.0
     <ComponentGroup Id="CoreProductComponents" Directory="COREAGENTFOLDER">
       <!-- Libraries -->
       <?ifdef IsWin64?>
-        <Component Id="CoreProfiler64Component" Guid="{46400E23-2D23-4DAC-A2E4-D5C80FFC805E}" Bitness="always64">
-          <File Id="CoreProfiler64File" Name="NewRelic.Profiler.dll" ShortName="nrprco64.dll" KeyPath="yes" Source="$(var.HomeFolderPathx64)_coreclr\NewRelic.Profiler.dll">
-            <Class Id="{36032161-FFC0-4B61-B559-F6C5D41BAE5A}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
-          </File>
-        </Component>
+      <Component Id="CoreProfiler64Component" Guid="{46400E23-2D23-4DAC-A2E4-D5C80FFC805E}" Bitness="always64">
+        <File Id="CoreProfiler64File" Name="NewRelic.Profiler.dll" ShortName="nrprco64.dll" KeyPath="yes" Source="$(var.HomeFolderPathx64)_coreclr\NewRelic.Profiler.dll">
+          <Class Id="{36032161-FFC0-4B61-B559-F6C5D41BAE5A}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
+        </File>
+      </Component>
       <?else?>
-        <Component Id="CoreProfiler32Component" Guid="{1FC92968-A5FB-4D76-8050-DA9433945454}" Bitness="always32">
-          <File Id="CoreProfiler32File" Name="NewRelic.Profiler.dll" ShortName="nrprco32.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)_coreclr\NewRelic.Profiler.dll">
-            <Class Id="{36032161-FFC0-4B61-B559-F6C5D41BAE5A}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
-          </File>
-        </Component>
+      <Component Id="CoreProfiler32Component" Guid="{1FC92968-A5FB-4D76-8050-DA9433945454}" Bitness="always32">
+        <File Id="CoreProfiler32File" Name="NewRelic.Profiler.dll" ShortName="nrprco32.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)_coreclr\NewRelic.Profiler.dll">
+          <Class Id="{36032161-FFC0-4B61-B559-F6C5D41BAE5A}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" />
+        </File>
+      </Component>
       <?endif?>
 
       <Component Id="CoreNewRelic.Agent.Core" Guid="{BE45F5AF-0E38-4175-87FB-8AD4C09C927B}">
@@ -358,6 +360,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseWrapperComponent" Guid="{21A0A03D-4799-4D8B-B6DB-553DD66C7020}">
         <File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.dll" />
       </Component>
+      <Component Id="Couchbase3WrapperComponent" Guid="{5C26ECDA-11E8-46FE-93BA-006694940A78}">
+        <File Id="Couchbase3WrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase3.dll" />
+      </Component>
       <Component Id="CosmosDbWrapperComponent" Guid="{C72D656C-B55D-4690-9BD7-9343096D4553}">
         <File Id="CosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll" />
       </Component>
@@ -395,6 +400,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="BedrockWrapperComponent" Guid="{C913E912-97D1-4042-8E11-A35E04C6A6E5}">
         <File Id="BedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.dll" />
       </Component>
+      <Component Id="OpenAIWrapperComponent" Guid="{9B0D7E44-021B-412B-95B0-CC77D5913712}">
+        <File Id="OpenAIWrapperFile" Name="NewRelic.Providers.Wrapper.OpenAI.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenAI.dll" />
+      </Component>
       <Component Id="AwsSdkWrapperComponent" Guid="{00D58C03-D517-41CA-BBAD-DAC605EADD3E}">
         <File Id="AwsSdkWrapperFile" Name="NewRelic.Providers.Wrapper.AwsSdk.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll" />
       </Component>
@@ -403,6 +411,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="MemcachedWrapperComponent" Guid="{2FF15179-BBEB-460C-A145-10F20C0CAD07}">
         <File Id="MemcachednWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
+      </Component>
+      <Component Id="OpenSearchWrapperComponent" Guid="{7C996233-F71E-48C2-B389-82F0E0CAB002}">
+        <File Id="OpenSearchWrapperFile" Name="NewRelic.Providers.Wrapper.OpenSearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll" />
       </Component>
       <Component Id="AzureServiceBusWrapperComponent" Guid="{5B625630-B816-4E9D-BE30-9403D8C1682A}">
         <File Id="AzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
@@ -440,6 +451,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreCosmosDbWrapperComponent" Guid="{3855755F-2A69-43EC-AE31-8D778E4B41E2}">
         <File Id="CoreCosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll" />
       </Component>
+      <Component Id="CoreCouchbase3WrapperComponent" Guid="{B16DD3A3-49C2-4DCE-888E-EA6957145EA0}">
+        <File Id="CoreCouchbase3WrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Couchbase3.dll" />
+      </Component>
       <Component Id="CoreLog4NetLoggingWrapperComponent" Guid="{882392E9-9403-41EC-9321-9C6E53781744}">
         <File Id="CoreLog4NetLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.dll" />
       </Component>
@@ -473,6 +487,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreBedrockWrapperComponent" Guid="{7DA522F5-38D4-4E7E-AA2B-857D01812152}">
         <File Id="CoreBedrockWrapperFile" Name="NewRelic.Providers.Wrapper.Bedrock.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.dll" />
       </Component>
+      <Component Id="CoreOpenAIWrapperComponent" Guid="{268AAA92-8752-44A7-8E0D-861535243019}">
+        <File Id="CoreOpenAIWrapperFile" Name="NewRelic.Providers.Wrapper.OpenAI.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenAI.dll" />
+      </Component>
       <Component Id="CoreAwsLambdaWrapperComponent" Guid="{778F507F-97D7-48B2-BE51-46D6DAB2D234}">
         <File Id="CoreAwsLambdaWrapperFile" Name="NewRelic.Providers.Wrapper.AwsLambda.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.dll"/>
       </Component>
@@ -484,7 +501,10 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreMemcachedWrapperComponent" Guid="{1D7D04A1-24D5-4716-B7CB-EACB21D66D7D}">
         <File Id="CoreMemcachedWrapperFile" Name="NewRelic.Providers.Wrapper.Memcached.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.dll" />
-      </Component>      
+      </Component>
+      <Component Id="CoreOpenSearchWrapperComponent" Guid="{C04FA73A-3232-409E-9E82-7CD27C18845D}">
+        <File Id="CoreOpenSearchWrapperFile" Name="NewRelic.Providers.Wrapper.OpenSearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll" />
+      </Component>
       <Component Id="CoreAzureServiceBusWrapperComponent" Guid="{E2F1AE1C-9EE8-410D-932B-D6B9C25FE405}">
         <File Id="CoreAzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
       </Component>
@@ -564,6 +584,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseInstrumentationComponent" Guid="{03FA7D3A-3368-45B1-92B8-19DA97A659B8}">
         <File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" />
       </Component>
+      <Component Id="Couchbase3InstrumentationComponent" Guid="{3D23BC6A-9FB2-4192-ADAF-886B3A8EBD4C}">
+        <File Id="Couchbase3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml" />
+      </Component>
       <Component Id="CosmosDbInstrumentationComponent" Guid="{56DEAF3E-5F51-4C47-82E5-1C2D0FF4E7DD}">
         <File Id="CosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" />
       </Component>
@@ -597,6 +620,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="BedrockInstrumentationComponent" Guid="{D6F0A2D6-D8D5-4C61-8056-1C9AA4D07132}">
         <File Id="BedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" />
       </Component>
+      <Component Id="OpenAIInstrumentationComponent" Guid="{3AB7F39E-164B-4ADF-BD39-44094B2CA75A}">
+        <File Id="OpenAIInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml" />
+      </Component>
       <Component Id="AwsSdkInstrumentationComponent" Guid="{E719FAC8-8D69-41EA-9395-B71868DA7449}">
         <File Id="AwsSdkInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml" />
       </Component>
@@ -605,6 +631,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="MemcachedInstrumentationComponent" Guid="{065F899F-4942-43C6-9589-538C432E3E4D}">
         <File Id="MemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" />
+      </Component>
+      <Component Id="OpenSearchInstrumentationComponent" Guid="{A4ACAB67-AC69-43C5-8FDF-DF3FF6794104}">
+        <File Id="OpenSearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" />
       </Component>
       <Component Id="AzureServiceBusInstrumentationComponent" Guid="{77A2B667-7535-45A6-9CAC-27BFCFEF95B8}">
         <File Id="AzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" />
@@ -639,6 +668,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreCosmosDbInstrumentationComponent" Guid="{1B6D4139-9217-4A03-94D0-D6E3AFFE0A8E}">
         <File Id="CoreCosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" />
       </Component>
+      <Component Id="CoreCouchbase3InstrumentationComponent" Guid="{B4200037-3CB1-444C-B3D7-D4D06542E22C}">
+        <File Id="CoreCouchbase3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml" />
+      </Component>
       <Component Id="CoreLog4NetLoggingInstrumentationComponent" Guid="{A40554DF-870C-477C-8910-1113A221820C}">
         <File Id="CoreLog4NetLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml" />
       </Component>
@@ -672,6 +704,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreBedrockInstrumentationComponent" Guid="{CF3A17F1-3C5C-4B72-8E3B-10E53EB94913}">
         <File Id="CoreBedrockInstrumentationFile" Name="NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml" />
       </Component>
+      <Component Id="CoreOpenAIInstrumentationComponent" Guid="{3A256866-C952-4D0D-8D36-89C072B719A9}">
+        <File Id="CoreOpenAIInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml" />
+      </Component>
       <Component Id="CoreAwsLambdaInstrumentationComponent" Guid="{FD3BEB1B-B093-4FF6-A1FA-76E621CF26D6}">
         <File Id="CoreAwsLambdaInstrumentationFile" Name="NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AwsLambda.Instrumentation.xml"/>
       </Component>
@@ -683,6 +718,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreMemcachedInstrumentationComponent" Guid="{5A78488A-837C-4CA5-BD20-4A1ED734C085}">
         <File Id="CoreMemcachedInstrumentationFile" Name="NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreOpenSearchInstrumentationComponent" Guid="{E2676B80-D7E2-4DFB-BDAF-75383810B0AB}">
+        <File Id="CoreOpenSearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" />
       </Component>
       <Component Id="CoreAzureServiceBusInstrumentationComponent" Guid="{78AF8B95-BC14-41DA-8046-8F9348BA4769}">
         <File Id="CoreAzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml"/>
@@ -709,7 +747,7 @@ SPDX-License-Identifier: Apache-2.0
         <File Id="ApiFileLegacy" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll" />
       </Component>
     </ComponentGroup>
-        
+
     <!-- Configuration -->
     <ComponentGroup Id="ConfigurationComponents" Directory="NETAGENTCOMMONFOLDER">
       <Component Id="ConfigSchemaComponent" Guid="{62C95105-4972-44CA-99D8-A03E349926AE}">
@@ -761,7 +799,7 @@ SPDX-License-Identifier: Apache-2.0
         <util:EventSource Log="Application" Name="New Relic .NET Profiler" EventMessageFile="[FRAMEWORKAGENTFOLDER]\NewRelic.Agent.Messages.dll" KeyPath="yes" />
       </Component>
       <Component Id="AgentEventSource4Component" Guid="{0A541B33-D4D7-4A97-B5C5-0B3FAF05CB09}" Condition="WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED">
-        
+
         <?ifdef IsWin64?>
         <util:EventSource Log="Application" Name="New Relic .NET Agent" EventMessageFile="[NETFRAMEWORK40FULLINSTALLROOTDIR64]EventLogMessages.dll" KeyPath="yes" />
         <?else?>
@@ -777,7 +815,7 @@ SPDX-License-Identifier: Apache-2.0
         <RegistryValue Root="HKLM" Key="Software\New Relic\.NET Agent" Name="NewRelicInstallPathEnvironmentInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
-    
+
     <ComponentGroup Id="AllAppsEnvironmentComponents" Directory="TARGETDIR">
       <Component Guid="{2307138B-CF12-4EE4-9E68-9939CB122F84}">
         <Environment Id="CorEnableProfilerEnvironment" System="yes" Name="COR_ENABLE_PROFILING" Value="1" Action="set" />
@@ -822,7 +860,7 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
           <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
-            <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
+          <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
         </RegistryValue>
       </Component>
@@ -832,7 +870,7 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue Value="COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" />
           <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
-            <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
+          <MultiStringValue Value="COR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
         </RegistryValue>
       </Component>
@@ -846,7 +884,7 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
           <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
-            <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
+          <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
         </RegistryValue>
       </Component>
@@ -857,7 +895,7 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue Value="CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" />
           <MultiStringValue Value="NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]" />
           <?ifdef IsWin64?>
-            <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
+          <MultiStringValue Value="CORECLR_PROFILER_PATH_32=[NETAGENT32ON64FOLDER]NewRelic.Profiler.dll" />
           <?endif?>
         </RegistryValue>
       </Component>
@@ -908,71 +946,71 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
     </ComponentGroup>
 
-      <StandardDirectory Id="ProgramFiles6432Folder">
-        <Directory Id="NewRelicFolder" Name="New Relic">
-          <Directory Id="NETAGENTFOLDER" Name=".NET Agent">
-            <Directory Id="FRAMEWORKAGENTFOLDER" Name="netframework">
-              <Directory Id="NewRelic.Agent.Core" />
-              <!-- Alias name for FRAMEWORKAGENTFOLDER -->
-              <Directory Id="ToolsFolder" Name="Tools" />
-              <Directory Id="ProgramFilesExtensionsFolder" Name="Extensions" />
-            </Directory>
-            <Directory Id="COREAGENTFOLDER" Name="netcore">
-              <Directory Id="CoreNewRelic.Agent.Core" />
-              <!-- Alias name for COREAGENTFOLDER -->
-              <Directory Id="CoreProgramFilesExtensionsFolder" Name="Extensions" />
-            </Directory>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="NewRelicFolder" Name="New Relic">
+        <Directory Id="NETAGENTFOLDER" Name=".NET Agent">
+          <Directory Id="FRAMEWORKAGENTFOLDER" Name="netframework">
+            <Directory Id="NewRelic.Agent.Core" />
+            <!-- Alias name for FRAMEWORKAGENTFOLDER -->
+            <Directory Id="ToolsFolder" Name="Tools" />
+            <Directory Id="ProgramFilesExtensionsFolder" Name="Extensions" />
+          </Directory>
+          <Directory Id="COREAGENTFOLDER" Name="netcore">
+            <Directory Id="CoreNewRelic.Agent.Core" />
+            <!-- Alias name for COREAGENTFOLDER -->
+            <Directory Id="CoreProgramFilesExtensionsFolder" Name="Extensions" />
           </Directory>
         </Directory>
-      </StandardDirectory>
+      </Directory>
+    </StandardDirectory>
 
-      <!-- This is for installing the 32-bit profiler DLL during a 64-bit install and setting it up in the registry -->
-      <?ifdef IsWin64?>
-      <StandardDirectory Id="ProgramFilesFolder">
-        <Directory Id="NewRelic32On64Folder" Name="New Relic">
-          <Directory Id="NETAGENT32ON64FOLDER" Name=".NET Agent" />
-        </Directory>
-      </StandardDirectory>
-      <?endif?>
+    <!-- This is for installing the 32-bit profiler DLL during a 64-bit install and setting it up in the registry -->
+    <?ifdef IsWin64?>
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="NewRelic32On64Folder" Name="New Relic">
+        <Directory Id="NETAGENT32ON64FOLDER" Name=".NET Agent" />
+      </Directory>
+    </StandardDirectory>
+    <?endif?>
 
-      <StandardDirectory Id="CommonAppDataFolder">
-        <Directory Id="NewRelicCommonFolder" Name="New Relic">
-          <Directory Id="NETAGENTCOMMONFOLDER" Name=".NET Agent">
-            <Directory Id="ExtensionsFolder" Name="Extensions">
-              <Directory Id="CoreExtensionsFolder" Name="netcore" />
-              <Directory Id="FrameworkExtensionsFolder" Name="netframework" />
-            </Directory>
-            <Directory Id="LOGSFOLDER" Name="Logs">
-              <Component Id="LogsFolderComponent" KeyPath="yes" Guid="{5184B29E-ED0F-4809-BA87-80CA2B5AAA49}">
-                <CreateFolder>
-                  <util:PermissionEx User="Everyone" GenericAll="yes" />
-                </CreateFolder>
-              </Component>
-            </Directory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="NewRelicCommonFolder" Name="New Relic">
+        <Directory Id="NETAGENTCOMMONFOLDER" Name=".NET Agent">
+          <Directory Id="ExtensionsFolder" Name="Extensions">
+            <Directory Id="CoreExtensionsFolder" Name="netcore" />
+            <Directory Id="FrameworkExtensionsFolder" Name="netframework" />
           </Directory>
-        </Directory>
-      </StandardDirectory>
-
-      <StandardDirectory Id="ProgramMenuFolder">
-        <Directory Id="NewRelicProgramsFolder" Name="New Relic">
-          <Component Id="NewRelicProgramsRemovalComponent" Guid="{C17E237E-856C-40FF-98E1-4145A98C580A}">
-            <RemoveFolder Id="NewRelicProgramsFolder" On="uninstall" />
-            <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="NewRelicProgramsFoldersInstalled" Type="integer" Value="1" />
-          </Component>
-          <Directory Id="NetAgentProgramsFolder" Name=".NET Agent">
-            <Component Id="NetAgentProgramsRemovalComponent" Guid="{A373267C-F3DF-426C-9F87-77B578BAB0A0}">
-              <RemoveFolder Id="NetAgentProgramsFolder" On="uninstall" />
-              <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="NetAgentProgramsFoldersInstalled" Type="integer" Value="1" />
+          <Directory Id="LOGSFOLDER" Name="Logs">
+            <Component Id="LogsFolderComponent" KeyPath="yes" Guid="{5184B29E-ED0F-4809-BA87-80CA2B5AAA49}">
+              <CreateFolder>
+                <util:PermissionEx User="Everyone" GenericAll="yes" />
+              </CreateFolder>
             </Component>
-            <Directory Id="ToolsProgramsFolder" Name="Tools">
-              <Component Id="ToolsProgramsRemovalComponent" Guid="{8777BE40-79C3-4916-BC2E-E43A32AB8724}">
-                <RemoveFolder Id="ToolsProgramsFolder" On="uninstall" />
-                <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="ToolsProgramsFoldersInstalled" Type="integer" Value="1" />
-              </Component>
-            </Directory>
           </Directory>
         </Directory>
-      </StandardDirectory>
-    </Fragment>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="NewRelicProgramsFolder" Name="New Relic">
+        <Component Id="NewRelicProgramsRemovalComponent" Guid="{C17E237E-856C-40FF-98E1-4145A98C580A}">
+          <RemoveFolder Id="NewRelicProgramsFolder" On="uninstall" />
+          <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="NewRelicProgramsFoldersInstalled" Type="integer" Value="1" />
+        </Component>
+        <Directory Id="NetAgentProgramsFolder" Name=".NET Agent">
+          <Component Id="NetAgentProgramsRemovalComponent" Guid="{A373267C-F3DF-426C-9F87-77B578BAB0A0}">
+            <RemoveFolder Id="NetAgentProgramsFolder" On="uninstall" />
+            <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="NetAgentProgramsFoldersInstalled" Type="integer" Value="1" />
+          </Component>
+          <Directory Id="ToolsProgramsFolder" Name="Tools">
+            <Component Id="ToolsProgramsRemovalComponent" Guid="{8777BE40-79C3-4916-BC2E-E43A32AB8724}">
+              <RemoveFolder Id="ToolsProgramsFolder" On="uninstall" />
+              <RegistryValue Root="HKCU" KeyPath="yes" Key="Software\New Relic\.NET Agent" Name="ToolsProgramsFoldersInstalled" Type="integer" Value="1" />
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
 
 </Wix>

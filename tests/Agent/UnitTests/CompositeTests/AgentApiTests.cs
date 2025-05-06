@@ -2280,5 +2280,50 @@ namespace CompositeTests
         }
 
         #endregion
+
+        #region Span Cloud SDK Attributes
+        [Test]
+        public void SpanCloudSdkAttributes()
+        {
+            var agentWrapperApi = _compositeTestAgent.GetAgent();
+            var dtm1 = DateTime.Now;
+            var dtm2 = DateTimeOffset.Now;
+
+            // ACT
+            var transaction = agentWrapperApi.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: true);
+
+            var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+            segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
+            segment.AddCloudSdkAttribute("aws.region", "us-west-2");
+            segment.AddCloudSdkAttribute("cloud.resource_id", "arn:aws:lambda:us-west-2:123456789012:function:myfunction");
+
+            var expectedAttributes = new[]
+            {
+                new ExpectedAttribute(){ Key = "cloud.platform", Value = "aws_lambda"},
+                new ExpectedAttribute(){ Key = "aws.region", Value = "us-west-2"},
+                new ExpectedAttribute(){ Key = "cloud.resource_id", Value = "arn:aws:lambda:us-west-2:123456789012:function:myfunction"},
+            };
+
+            segment.End();
+            transaction.End();
+
+            _compositeTestAgent.Harvest();
+
+            var allSpans = _compositeTestAgent.SpanEvents;
+            var testSpan = allSpans.LastOrDefault();
+
+            NrAssert.Multiple
+            (
+                () => Assert.That(allSpans, Has.Count.EqualTo(2)),
+                () => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.AgentAttributes, testSpan)
+            );
+        }
+
+        #endregion
     }
 }

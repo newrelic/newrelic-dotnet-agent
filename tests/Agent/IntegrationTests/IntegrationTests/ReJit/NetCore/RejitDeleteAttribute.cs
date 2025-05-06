@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.DeleteAttributeTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitDeleteAttributeBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture: AspNetCoreReJitMvcApplicationFixture
     {

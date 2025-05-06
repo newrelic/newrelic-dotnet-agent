@@ -3,7 +3,6 @@
 
 using System.Linq;
 using NewRelic.Agent.Helpers;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {

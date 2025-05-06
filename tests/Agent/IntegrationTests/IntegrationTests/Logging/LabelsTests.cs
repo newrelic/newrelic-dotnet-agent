@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.Labels
 {
@@ -104,7 +103,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class SerilogLabelsEnabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogLabelsEnabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -113,7 +111,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogLabelsEnabledWithExcludesFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogLabelsEnabledWithExcludesFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -122,7 +119,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogLabelsDisabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogLabelsDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -131,7 +127,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
         }
     }
 
-    [NetCoreTest]
     public class SerilogLabelsEnabledNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogLabelsEnabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -140,7 +135,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
         }
     }
 
-    [NetCoreTest]
     public class SerilogLabelsEnabledWithExcludesNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogLabelsEnabledWithExcludesNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -149,7 +143,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.Labels
         }
     }
 
-    [NetCoreTest]
     public class SerilogLabelsDisabledNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogLabelsDisabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

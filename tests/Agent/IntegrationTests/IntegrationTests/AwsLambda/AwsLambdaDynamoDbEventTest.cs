@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
 {
-    [NetCoreTest]
     public abstract class AwsLambdaDynamoDbEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaDynamoDbEventTriggerFixtureBase
     {
         private readonly LambdaDynamoDbEventTriggerFixtureBase _fixture;

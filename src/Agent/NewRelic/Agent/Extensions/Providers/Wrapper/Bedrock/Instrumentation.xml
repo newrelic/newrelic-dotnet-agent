@@ -13,6 +13,14 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="InvokeModelAsync" />
       </match>
     </tracerFactory>
-    
+
+    <tracerFactory name="BedrockConverseAsync">
+      <!--
+      public virtual Task<ConverseResponse> ConverseAsync(ConverseRequest request, System.Threading.CancellationToken cancellationToken = default(CancellationToken))
+      -->
+      <match assemblyName="AWSSDK.BedrockRuntime" className="Amazon.BedrockRuntime.AmazonBedrockRuntimeClient">
+        <exactMethodMatcher methodName="ConverseAsync" />
+       </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

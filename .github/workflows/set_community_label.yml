@@ -15,7 +15,7 @@ jobs:
       issues: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -23,7 +23,7 @@ jobs:
       - name: Check if organization member
         id: is_organization_member
         if: github.event.action == 'opened'
-        uses: jamessingleton/is-organization-member@fb5924a6287762ee5fc71bf9e95a60842af5528d # 1.0.1
+        uses: jamessingleton/is-organization-member@311430b0670cdec4036e721029b78018236a0b74 # 1.1.0
         with:
           organization: newrelic
           username: ${{ github.event.issue.user.login }}

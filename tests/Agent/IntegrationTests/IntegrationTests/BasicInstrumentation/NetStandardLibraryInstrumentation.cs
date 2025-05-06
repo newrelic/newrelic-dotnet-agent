@@ -9,11 +9,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NetStandardLibraryInstrumentationFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -21,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class NetStandardLibraryInstrumentationNetCoreOldest : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NetStandardLibraryInstrumentationNetCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -29,7 +26,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class NetStandardLibraryInstrumentationNetCoreLatest : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NetStandardLibraryInstrumentationNetCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

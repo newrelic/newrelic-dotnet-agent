@@ -5,7 +5,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
@@ -60,7 +59,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetFrameworkTest]
     public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
     {
         public BrowserAgentAutoInjectionDefault(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -69,7 +67,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetFrameworkTest]
     public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
     {
         public BrowserAgentAutoInjectionRum(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -78,7 +75,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetFrameworkTest]
     public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
     {
         public BrowserAgentAutoInjectionFull(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -87,7 +83,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetFrameworkTest]
     public class BrowserAgentAutoInjectionSpa : BrowserAgentAutoInjectionBase
     {
         public BrowserAgentAutoInjectionSpa(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)

@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
 {
-    [NetCoreTest]
     public abstract class AwsLambdaCustomEventsTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomEventsTriggerFixtureBase
     {
         private readonly LambdaCustomEventsTriggerFixtureBase _fixture;

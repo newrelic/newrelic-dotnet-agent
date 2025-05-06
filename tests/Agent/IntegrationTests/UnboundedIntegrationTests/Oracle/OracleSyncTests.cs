@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
@@ -170,7 +170,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public OracleSyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -178,7 +177,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public OracleSyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -186,7 +184,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleSyncTestsFrameworkLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public OracleSyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -194,7 +191,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetCoreTest]
     public class OracleSyncTestsCoreLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public OracleSyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

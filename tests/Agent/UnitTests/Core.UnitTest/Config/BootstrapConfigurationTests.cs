@@ -38,6 +38,9 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.ServerlessFunctionName, Is.Null);
                 Assert.That(config.ServerlessFunctionVersion, Is.Null);
                 Assert.That(config.GCSamplerV2Enabled, Is.False);
+                Assert.That(config.AgentControlEnabled, Is.False);
+                Assert.That(config.HealthDeliveryLocation, Is.Null);
+                Assert.That(config.HealthFrequency, Is.EqualTo(5));
             });
         }
 
@@ -196,6 +199,72 @@ namespace NewRelic.Agent.Core.Config
                     Assert.That(config.GCSamplerV2Enabled, Is.True);
                 });
 
+            }
+            finally
+            {
+                ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            }
+        }
+
+        [Test]
+        public void TestAgentControlEnabled_EnabledViaEnvironmentVariable()
+        {
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            try
+            {
+                var environmentMock = Mock.Create<IEnvironment>();
+                Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+                ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
+                SetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_ENABLED", "true");
+
+                var config = CreateBootstrapConfiguration();
+
+                Assert.That(config.AgentControlEnabled, Is.True);
+            }
+            finally
+            {
+                ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            }
+        }
+
+        [Test]
+        public void TestHealthDeliveryLocation_SetViaEnvironmentVariable()
+        {
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            try
+            {
+                var environmentMock = Mock.Create<IEnvironment>();
+                Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+                ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
+                SetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION", "http://example.com");
+
+                var config = CreateBootstrapConfiguration();
+
+                Assert.That(config.HealthDeliveryLocation, Is.EqualTo("http://example.com"));
+            }
+            finally
+            {
+                ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            }
+        }
+
+        [Test]
+        public void TestHealthFrequency_SetViaEnvironmentVariable()
+        {
+            _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            try
+            {
+                var environmentMock = Mock.Create<IEnvironment>();
+                Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+                ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
+                SetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY", "10");
+
+                var config = CreateBootstrapConfiguration();
+
+                Assert.That(config.HealthFrequency, Is.EqualTo(10));
             }
             finally
             {

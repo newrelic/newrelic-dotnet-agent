@@ -10,8 +10,8 @@
     <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The New Relic .NET Agent API supports custom error and metric reporting, and custom transaction parameters. If the agent is not installed or is disabled, method invocations of this API will have no effect. You can find more information about the NewRelic.Agent.Api at https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api.</description>
-    <summary>The New Relic .NET Agent API supports custom error and metric reporting, and custom transaction parameters. This is the ANY CPU build of the API.</summary>
+    <description>The New Relic .NET Agent API supports custom error and metric reporting, custom transaction parameters, custom instrumentation of methods with attributes, and more. If the agent is not installed or is disabled, method invocations of this API will have no effect. You can find more information about the API at https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api.</description>
+    <readme>README.md</readme>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
     <language>en-US</language>
     <tags>New Relic</tags>
@@ -22,5 +22,6 @@
     <file src="LICENSE.txt" target="." />
     <file src="THIRD_PARTY_NOTICES.txt" target="." />
     <file src="..\..\icon.png" target="images\" />
+    <file src="README.md" target="." />
   </files>
 </package>

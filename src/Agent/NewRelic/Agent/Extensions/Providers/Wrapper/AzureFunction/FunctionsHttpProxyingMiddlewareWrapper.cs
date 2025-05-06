@@ -10,13 +10,11 @@ namespace NewRelic.Providers.Wrapper.AzureFunction;
 
 public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 {
-    private const string WrapperName = "FunctionsHttpProxyingMiddlewareWrapper";
-
     public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(FunctionsHttpProxyingMiddlewareWrapper).Equals(methodInfo.RequestedWrapperName));
     }
 
     /// <summary>
@@ -25,7 +23,7 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
     /// </summary>
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        if (agent.Configuration.AzureFunctionModeEnabled)
+        if (agent.Configuration.AzureFunctionModeDetected && agent.Configuration.AzureFunctionModeEnabled)
         {
             dynamic httpContext;
             switch (instrumentedMethodCall.MethodCall.Method.MethodName)

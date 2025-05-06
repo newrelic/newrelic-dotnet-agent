@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
@@ -113,7 +113,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetFrameworkTest]
     public class OracleStoredProcedureTestsFramework462 : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public OracleStoredProcedureTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -122,14 +121,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
     }
 
 
-    [NetFrameworkTest]
     public class OracleStoredProcedureTestsFramework471 : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public OracleStoredProcedureTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
-    [NetFrameworkTest]
     public class OracleStoredProcedureTestsFrameworkLatest : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public OracleStoredProcedureTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -137,7 +134,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         }
     }
 
-    [NetCoreTest]
     public class OracleStoredProcedureTestsCoreLatest : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public OracleStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

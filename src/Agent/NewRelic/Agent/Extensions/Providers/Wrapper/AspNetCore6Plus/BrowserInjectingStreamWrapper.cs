@@ -37,46 +37,45 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            if (!Disabled && !_isContentLengthSet && IsHtmlResponse())
+            if (_context is { Response: not null } && !Disabled && !_isContentLengthSet && IsHtmlResponse())
             {
                 if (!_context.Response.HasStarted)  // can't set headers if response has already started
                     _context.Response.ContentLength = null;
                 _isContentLengthSet = true;
             }
 
-            return _baseStream.FlushAsync(cancellationToken);
+            return _baseStream?.FlushAsync(cancellationToken) ?? Task.CompletedTask;
         }
 
-        public override void Flush() => _baseStream.Flush();
+        public override void Flush() => _baseStream?.Flush();
 
-        public override int Read(byte[] buffer, int offset, int count) => _baseStream.Read(buffer, offset, count);
+        public override int Read(byte[] buffer, int offset, int count) => _baseStream?.Read(buffer, offset, count) ?? 0;
 
-        public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+        public override long Seek(long offset, SeekOrigin origin) => _baseStream?.Seek(offset, origin) ?? 0;
 
         public override void SetLength(long value)
         {
-            _baseStream.SetLength(value);
+            _baseStream?.SetLength(value);
 
             if (!Disabled)
                 IsHtmlResponse(forceReCheck: true);
         }
 
-        public override void Write(ReadOnlySpan<byte> buffer) => _baseStream.Write(buffer);
+        public override void Write(ReadOnlySpan<byte> buffer) => _baseStream?.Write(buffer);
 
-        public override void WriteByte(byte value) => _baseStream.WriteByte(value);
-
+        public override void WriteByte(byte value) => _baseStream?.WriteByte(value);
 
         public override void Write(byte[] buffer, int offset, int count)
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!Disabled && !CurrentlyInjecting() && IsHtmlResponse())
+            if (_context != null && !Disabled && !CurrentlyInjecting() && IsHtmlResponse())
             {
                 try
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     StartInjecting();
-                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
+                    _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer, _baseStream)
                         .GetAwaiter().GetResult();
                 }
                 finally
@@ -96,13 +95,13 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!Disabled && !CurrentlyInjecting() && IsHtmlResponse())
+            if (_context != null & !Disabled && !CurrentlyInjecting() && IsHtmlResponse())
             {
                 try
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     StartInjecting();
-                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                    await _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer.ToArray(), _baseStream);
                 }
                 finally
                 {
@@ -126,8 +125,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             _context = null;
 
-            await _baseStream.DisposeAsync();
-            _baseStream = null;
+            if (_baseStream != null)
+            {
+                await _baseStream.DisposeAsync();
+                _baseStream = null;
+            }
         }
 
         public override bool CanRead { get; }
@@ -154,15 +156,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 // Requirements for script injection:
                 // * text/html response
                 // * UTF-8 formatted (either explicitly or no charset defined)
+                var responseContentType = _context.Response.ContentType;
                 _isHtmlResponse =
-                    _context.Response.ContentType != null &&
-                    _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
-                    (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
-                     !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
+                    !string.IsNullOrEmpty(responseContentType) && 
+                    responseContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
+                    (responseContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
+                     !responseContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
 
                 if (!_isHtmlResponse.Value)
                 {
-                    _agent.CurrentTransaction?.LogFinest($"Skipping RUM injection: Not an HTML response. ContentType is {_context.Response.ContentType}");
+                    _agent.CurrentTransaction?.LogFinest($"Skipping RUM injection: Not an HTML response. ContentType is {responseContentType}");
                     return false;
                 }
 
@@ -186,8 +189,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private void LogExceptionAndDisable(Exception e)
         {
-            _agent.Logger.Log(Level.Error,
-                $"Unexpected exception. Browser injection will be disabled. Exception: {e.Message}: {e.StackTrace}");
+            _agent.Logger.Log(Level.Error, e, "Unexpected exception. Browser injection will be disabled.");
 
             Disabled = true;
         }

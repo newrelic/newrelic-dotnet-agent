@@ -5,7 +5,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Configuration
 {
@@ -54,14 +53,12 @@ namespace NewRelic.Agent.IntegrationTests.Configuration
         }
     }
 
-    [NetFrameworkTest]
     public class GuidConfigurationTest_FW : GuidConfigurationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         public GuidConfigurationTest_FW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
-    [NetCoreTest]
     public class GuidConfigurationTest_Core : GuidConfigurationTest<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public GuidConfigurationTest_Core(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

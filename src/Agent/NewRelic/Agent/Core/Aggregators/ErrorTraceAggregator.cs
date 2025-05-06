@@ -79,12 +79,14 @@ namespace NewRelic.Agent.Core.Aggregators
                 _readerWriterLock.ExitWriteLock();
             }
 
-            if (errorTraceWireModels.Count <= 0)
-                return;
+            // if we don't have any events to publish then don't
+            var traceCount = errorTraceWireModels.Count;
+            if (traceCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
 
-            var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
-
-            HandleResponse(responseStatus, errorTraceWireModels);
+                HandleResponse(responseStatus, errorTraceWireModels);
+            }
 
             Log.Finest("Error Trace harvest finished.");
         }
@@ -146,10 +148,12 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     Retain(errorTraceWireModels);
+                    Log.Debug("Retaining {count} error traces.", errorTraceWireModels.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} error traces.", errorTraceWireModels.Count);
                     break;
             }
         }

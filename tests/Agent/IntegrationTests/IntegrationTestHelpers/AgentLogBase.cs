@@ -12,7 +12,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -24,8 +24,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorLogLinePrefixRegex = @"^.*?NewRelic\s+ERROR: " + LogLineContextDataRegex;
         public const string FinestLogLinePrefixRegex = @"^.*?NewRelic\s+FINEST: " + LogLineContextDataRegex;
         public const string WarnLogLinePrefixRegex = @"^.*?NewRelic\s+WARN: " + LogLineContextDataRegex;
-        public const string HarvestLogLineRegex = InfoLogLinePrefixRegex + @"Harvest starting";
-        public const string HarvestFinishedLogLineRegex = DebugLogLinePrefixRegex + @"Metric harvest finished.";
         public const string AgentReportingToLogLineRegex = InfoLogLinePrefixRegex + @"Reporting to: (.*)";
         public const string AgentConnectedLogLineRegex = InfoLogLinePrefixRegex + @"Agent fully connected.";
 
@@ -44,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
 
         // Collector responses
-        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
+        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":(.*)";
         public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
 
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
@@ -86,6 +84,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // wrapper exceptions and application errors
         public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
         public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
+
+        // explain plan failure
+        public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
 
         public AgentLogBase(ITestOutputHelper testLogger)
         {
@@ -497,7 +498,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             foreach (var match in matches)
             {
-                var json = "{ \"agent_run_id\"" + match;
+                var json = match;
                 json = json?.Trim('[', ']');
                 json = json.Remove(json.Length - 1); // remove the extra }
 

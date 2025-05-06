@@ -1,23 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
-  <metadata>
+  <metadata minClientVersion="3.3.0">
     <id>NewRelic.Azure.WebSites.x64</id>
     <version>REPLACE_WITH_VERSION</version>
     <title>New Relic for Windows Azure Web Sites (x64)</title>
     <authors>New Relic</authors>
     <license type="expression">Apache-2.0</license>
-    <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</projectUrl>
+    <projectUrl>https://docs.newrelic.com/install/dotnet/?deployment=azure&amp;azure=azurenugetframework</projectUrl>
     <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Go to New Relic to sign up and get your license key at https://newrelic.com or you can get a license key through the Windows Azure management portal via Add-On store.</description>
-    <summary>This package will add all of the resources needed to profile your Windows Azure Web Site running as a reserved 64-bit instance. For more information on this package visit: https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</summary>
+    <readme>README.md</readme>
+    <description>This package will add all of the resources needed to profile your Windows Azure Web Site running as a reserved 64-bit instance. For more information on this package visit: https://docs.newrelic.com/install/dotnet/?deployment=azure&amp;azure=azurenugetframework</description>
+    <summary></summary>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
+    <contentFiles>
+      <files include="**/newrelic/**/*.*" buildAction="None" copyToOutput="true" flatten="false" />
+    </contentFiles>
   </metadata>
   <files>
-    <file src="content\**" target="content" />
+    <file src="**\newrelic\**\*" target="." />
     <file src="lib\**" target="lib" />
     <file src="tools\**" target="tools" />
     <file src="..\..\icon.png" target="images\" />
+    <file src="README.md" target="." />
   </files>
 </package>

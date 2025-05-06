@@ -88,26 +88,25 @@ namespace NewRelic.Agent.Core.Aggregators
             Interlocked.Add(ref _logsDroppedCount, originalLogEvents.GetAndResetDroppedItemCount());
 
             // if we don't have any events to publish then don't
-            if (aggregatedEvents.Count <= 0)
+            var eventCount = aggregatedEvents.Count;
+            if (eventCount > 0)
             {
-                return;
+                // matches metadata so that utilization and this match
+                var hostname = !string.IsNullOrEmpty(_configuration.UtilizationFullHostName)
+                    ? _configuration.UtilizationFullHostName
+                    : _configuration.UtilizationHostName;
+
+                var modelsCollection = new LogEventWireModelCollection(
+                    _configuration.ApplicationNames.ElementAt(0),
+                    _configuration.EntityGuid,
+                    hostname,
+                    _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
+                    aggregatedEvents);
+
+                var responseStatus = DataTransportService.Send(modelsCollection, transactionId);
+
+                HandleResponse(responseStatus, aggregatedEvents);
             }
-
-            // matches metadata so that utilization and this match
-            var hostname = !string.IsNullOrEmpty(_configuration.UtilizationFullHostName)
-                ? _configuration.UtilizationFullHostName
-                : _configuration.UtilizationHostName;
-
-            var modelsCollection = new LogEventWireModelCollection(
-                _configuration.ApplicationNames.ElementAt(0),
-                _configuration.EntityGuid,
-                hostname,
-                _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
-                aggregatedEvents);
-
-            var responseStatus = DataTransportService.Send(modelsCollection, transactionId);
-
-            HandleResponse(responseStatus, aggregatedEvents);
 
             Log.Finest("Log Event harvest finished.");
         }
@@ -156,16 +155,20 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportLoggingEventsSent(logEvents.Count);
+                    Log.Debug("Successfully sent {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(logEvents);
+                    Log.Debug("Retaining {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(logEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(logEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} log events.", logEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} log events.", logEvents.Count);
                     break;
             }
 

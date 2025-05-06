@@ -6,7 +6,6 @@ using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
 {
@@ -79,7 +78,6 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
     }
 
     #region Enabled (not disabled) tests
-    [NetFrameworkTest]
     public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -88,7 +86,6 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
         }
     }
 
-    [NetCoreTest]
     public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -99,7 +96,6 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
     #endregion
 
     #region Disabled tests
-    [NetFrameworkTest]
     public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -108,7 +104,6 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
         }
     }
 
-    [NetCoreTest]
     public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

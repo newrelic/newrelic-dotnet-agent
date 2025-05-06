@@ -6,7 +6,9 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Logging;
 using NUnit.Framework;
 using System.IO;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core
 {
@@ -14,10 +16,39 @@ namespace NewRelic.Agent.Core
     [TestFixture]
     public class LoggerBootstrapperTest
     {
+        private IEnvironment _originalEnvironmentProxy;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _originalEnvironmentProxy = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = Mock.Create<IEnvironment>();
+        }
+        [TearDown]
+        public void TearDown()
+        {
+            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironmentProxy;
+        }
+
         [Test]
         public static void No_log_levels_are_enabled_when_config_log_is_off()
         {
             ILogConfig config = GetLogConfig("off");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+            NrAssert.Multiple(
+                () => Assert.That(Log.IsFinestEnabled, Is.False),
+                () => Assert.That(Log.IsDebugEnabled, Is.False),
+                () => Assert.That(Log.IsInfoEnabled, Is.False),
+                () => Assert.That(Log.IsWarnEnabled, Is.False),
+                () => Assert.That(Log.IsErrorEnabled, Is.False)
+            );
+        }
+
+        [Test]
+        public void NoLogLevelsAreEnabled_WhenLogIsDisabled()
+        {
+            ILogConfig config = LogConfigFixtureWithLogEnabled(false);
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
             NrAssert.Multiple(
@@ -210,7 +241,7 @@ namespace NewRelic.Agent.Core
                 "   <application>" +
                 "       <name>Test</name>" +
                 "   </application>" +
-                "   <log level=\"debug\" console=\"true\" enabled=\"{0}\" />" +
+                "   <log level=\"all\" console=\"false\" enabled=\"{0}\" />" +
                 "</configuration>",
                 enabled.ToString().ToLower());
 

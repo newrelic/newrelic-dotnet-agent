@@ -6,7 +6,6 @@ using NewRelic.Testing.Assertions;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using NUnit.Framework.Internal;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
@@ -25,38 +24,17 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [TestCase((ulong)8, 8L)]
         [TestCase((float)1.0, 1D)]
         [TestCase(/*(double)*/2.0, 2D)]
+        [TestCase(0.2D, 0.2D)]
+        [TestCase(0.2F, 0.2F)]
         public void Attributes_with_valid_type_are_valid_attributes(object attributeValue, object expectedResult)
         {
             TestValue(attributeValue, expectedResult);
         }
 
-
-        private void TestValue(object attributeValue, object expectedResult)
-        {
-            var filter = new AttributeFilter(new AttributeFilter.Settings());
-
-            var attribDef = AttributeDefinitionBuilder
-                .CreateCustomAttribute("test", AttributeDestinations.All)
-                .Build(filter);
-
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-
-            attribDef.TrySetValue(attribVals, attributeValue);
-
-            var actualAttribVal = attribVals.GetAttributeValues(AttributeClassification.UserAttributes)
-                .FirstOrDefault(x => x.AttributeDefinition == attribDef);
-
-
-            NrAssert.Multiple(
-                () => Assert.That(actualAttribVal, Is.Not.Null),
-                () => Assert.That(actualAttribVal.Value, Is.EqualTo(expectedResult))
-            );
-        }
-
         [Test]
         public void Attributes_with_decimal_type_are_valid_attributes()
         {
-            TestValue(1.0m, 1D);
+            TestValue(0.2M, 0.2M);
         }
 
         [Test]
@@ -259,6 +237,28 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 () => Assert.That(values.ElementAt(0).Value.ToString(), Has.Length.EqualTo(255)),
                 () => Assert.That(values.ElementAt(1).Value.ToString(), Has.Length.EqualTo(255)),
                 () => Assert.That(values.ElementAt(2).Value.ToString(), Has.Length.EqualTo(255))
+            );
+        }
+
+        private void TestValue(object attributeValue, object expectedResult)
+        {
+            var filter = new AttributeFilter(new AttributeFilter.Settings());
+
+            var attribDef = AttributeDefinitionBuilder
+                .CreateCustomAttribute("test", AttributeDestinations.All)
+                .Build(filter);
+
+            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+
+            attribDef.TrySetValue(attribVals, attributeValue);
+
+            var actualAttribVal = attribVals.GetAttributeValues(AttributeClassification.UserAttributes)
+                .FirstOrDefault(x => x.AttributeDefinition == attribDef);
+
+
+            NrAssert.Multiple(
+                () => Assert.That(actualAttribVal, Is.Not.Null),
+                () => Assert.That(actualAttribVal.Value, Is.EqualTo(expectedResult))
             );
         }
     }

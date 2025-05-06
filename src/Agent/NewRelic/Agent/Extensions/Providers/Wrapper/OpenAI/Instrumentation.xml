@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <!--
+    public virtual ClientResult<ChatCompletion> CompleteChat(IEnumerable<ChatMessage> messages, ChatCompletionOptions options = null, CancellationToken cancellationToken = default)
+    public virtual async Task<ClientResult<ChatCompletion>> CompleteChatAsync(IEnumerable<ChatMessage> messages, ChatCompletionOptions options = null, CancellationToken cancellationToken = default)
+    -->
+    <tracerFactory name="OpenAiChat">
+      <match assemblyName="OpenAI" className="OpenAI.Chat.ChatClient">
+        <exactMethodMatcher methodName="CompleteChat" parameters="System.Collections.Generic.IEnumerable`1[OpenAI.Chat.ChatMessage],OpenAI.Chat.ChatCompletionOptions,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="CompleteChatAsync" parameters="System.Collections.Generic.IEnumerable`1[OpenAI.Chat.ChatMessage], OpenAI.Chat.ChatCompletionOptions, System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

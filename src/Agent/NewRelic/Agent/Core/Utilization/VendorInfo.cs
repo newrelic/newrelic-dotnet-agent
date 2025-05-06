@@ -53,16 +53,18 @@ namespace NewRelic.Agent.Core.Utilization
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environment;
         private readonly VendorHttpApiRequestor _vendorHttpApiRequestor;
+        private readonly IFileWrapper _fileWrapper;
 
         private const string GetMethod = "GET";
         private const string PutMethod = "PUT";
 
-        public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor)
+        public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor, IFileWrapper fileWrapper)
         {
             _configuration = configuration;
             _agentHealthReporter = agentHealthReporter;
             _environment = environment;
             _vendorHttpApiRequestor = vendorHttpApiRequestor;
+            _fileWrapper = fileWrapper;
         }
 
         public IDictionary<string, IVendorModel> GetVendors()
@@ -117,7 +119,7 @@ namespace NewRelic.Agent.Core.Utilization
             // If we get AWS ECS info, we don't need to check Docker.
             if (_configuration.UtilizationDetectDocker && !vendors.ContainsKey(EcsName))
             {
-                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
+                var dockerVendorInfo = GetDockerVendorInfo(_fileWrapper, IsLinux());
                 if (dockerVendorInfo != null)
                 {
                     vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
@@ -138,7 +140,8 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IVendorModel GetAzureFunctionVendorInfo()
         {
-            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
+            // per the spec, only report Azure Function metadata if the agent is running in an Azure Function mode and instrumentation is enabled
+            if (!(_configuration.AzureFunctionModeEnabled &&_configuration.AzureFunctionModeDetected))
                 return null;
 
             var appName = _configuration.AzureFunctionResourceId;
@@ -308,7 +311,7 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 
-        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper, bool isLinux)
+        public IVendorModel GetDockerVendorInfo(IFileWrapper fileReaderWrapper, bool isLinux)
         {
             IVendorModel vendorModel = null;
             if (isLinux)
@@ -504,20 +507,6 @@ namespace NewRelic.Agent.Core.Utilization
 #else
             return false; // No Linux on .NET Framework
 #endif
-        }
-    }
-
-    // needed for unit testing only
-    public interface IFileReaderWrapper
-    {
-        string ReadAllText(string fileName);
-    }
-
-    public class FileReaderWrapper : IFileReaderWrapper
-    {
-        public string ReadAllText(string fileName)
-        {
-            return File.ReadAllText(fileName);
         }
     }
 }

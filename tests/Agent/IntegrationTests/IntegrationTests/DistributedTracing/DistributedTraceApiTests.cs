@@ -6,12 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
 
-    [NetFrameworkTest]
     public class DistributedTracingApiTests_W3C : DtApiTestBase
     {
         public DistributedTracingApiTests_W3C(RemoteServiceFixtures.DistributedTracingApiFixture fixture, ITestOutputHelper output)

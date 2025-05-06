@@ -99,12 +99,13 @@ namespace NewRelic.Agent.Core.Aggregators
             var eventHarvestData = new EventHarvestData(originalErrorEvents.Size, originalErrorEvents.GetAddAttemptsCount());
 
             // if we don't have any events to publish then don't
-            if (aggregatedEvents.Count <= 0)
-                return;
+            var eventCount = aggregatedEvents.Count;
+            if (eventCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents, transactionId);
 
-            var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents, transactionId);
-
-            HandleResponse(responseStatus, aggregatedEvents);
+                HandleResponse(responseStatus, aggregatedEvents);
+            }
 
             Log.Finest("Error Event harvest finished.");
         }
@@ -169,13 +170,16 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(errorEvents);
+                    Log.Debug("Retaining {count} error events.", errorEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(errorEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(errorEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} error events.", errorEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} transaction events.", errorEvents.Count);
                     break;
             }
         }

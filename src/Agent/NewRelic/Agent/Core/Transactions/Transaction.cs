@@ -1380,7 +1380,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
+                Log.Debug($"AddLambdaAttribute - Name cannot be null/empty");
                 return;
             }
 
@@ -1392,12 +1392,18 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddFaasAttribute - Unable to set FaaS value on transaction because the key is null/empty");
+                Log.Debug($"AddFaasAttribute - Name cannot be null/empty");
                 return;
             }
 
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
+        }
+
+        public object GetFaasAttribute(string name)
+        {
+            var faasAttrib = _attribDefs.GetFaasAttribute(name);
+            return TransactionMetadata.UserAndRequestAttributes.GetAttributeValues(AttributeClassification.Intrinsics).FirstOrDefault(v => v.AttributeDefinition == faasAttrib)?.Value;
         }
     }
 }

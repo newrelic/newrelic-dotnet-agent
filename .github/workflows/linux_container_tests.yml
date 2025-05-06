@@ -1,0 +1,154 @@
+name: Linux Container Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      external_call:
+        type: boolean
+        default: true
+        required: false
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the build workflow (all_solutions.yml) to use the agent from. ID can be found in URL for run.'
+        required: true
+
+env:
+  DOTNET_NOLOGO: true
+  NR_DEV_BUILD_HOME: false
+
+
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: linux-container-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  run-amd64-linux-container-tests:
+    name: Run amd64 Linux Container Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      test_results_path: tests\TestResults
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+  
+  
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+          
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Download Agent Home Folders (Call)
+        if: ${{ inputs.external_call }}
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Agent Home Folders (Dispatch)
+        if: ${{ !inputs.external_call }}
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/src/Agent
+          repository: ${{ github.repository }}
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: '9.0.x'
+  
+      - name: Build & Run amd64 Linux Container Integration Tests
+        env:
+          BUILD_ARCH: amd64
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=amd64  --logger "console;verbosity=detailed" --logger "trx;verbosity=detailed" --results-directory ${{ env.test_results_path }}
+      
+      - name: Archive test results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+            name: ContainerTestResults-amd64
+            path: ${{ env.test_results_path }} # Directory containing files to upload
+          
+
+  run-arm64-linux-container-tests:
+    name: Run arm64 Linux Container Integration Tests
+    runs-on: ubuntu-24.04-arm
+
+    env:
+      test_results_path: tests\TestResults
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+    
+  
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+          
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Download Agent Home Folders (Call)
+        if: ${{ inputs.external_call }}
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Agent Home Folders (Dispatch)
+        if: ${{ !inputs.external_call }}
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/src/Agent
+          repository: ${{ github.repository }}
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: '9.0.x'
+  
+      - name: Build & Run arm64 Linux Container Integration Tests
+        env:
+          BUILD_ARCH: arm64
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net9.0 --filter Architecture=arm64 --logger "console;verbosidty=detailed" --logger "trx;verbosity=detailed" --results-directory ${{ env.test_results_path }} 
+      
+      - name: Archive test results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+            name: ContainerTestResults-arm64
+            path: ${{ env.test_results_path }} # Directory containing files to upload

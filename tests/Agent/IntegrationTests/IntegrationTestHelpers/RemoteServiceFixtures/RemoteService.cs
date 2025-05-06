@@ -138,7 +138,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 process.Start();
 
                 var processOutput = new ProcessOutput(TestLogger, process, true);
-
                 // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
                 // 10 minutes may or may not be extreme but stabilizes these failures.
                 const int timeoutInMilliseconds = 10 * 60 * 1000;
@@ -164,13 +163,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 {
                     Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
                 }
-
                 processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
-
                 if (!process.HasExited || process.ExitCode != 0)
                 {
                     var failedToPublishMessage = "Failed to publish Core application";
-
                     TestLogger?.WriteLine($"[RemoteService]: {failedToPublishMessage}");
                     throw new Exception(failedToPublishMessage);
                 }

@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Amazon.BedrockRuntime.Model;
@@ -20,7 +17,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
     internal class BedrockModels
     {
         private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient =
-            new AmazonBedrockRuntimeClient(AwsBedrockConfiguration.AwsAccessKeyId, AwsBedrockConfiguration.AwsSecretAccessKey, AwsBedrockConfiguration.AwsRegion.ToRegionId());
+            new AmazonBedrockRuntimeClient(AwsConfiguration.AwsAccessKeyId, AwsConfiguration.AwsSecretAccessKey, AwsConfiguration.AwsRegion.ToRegionId());
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static async Task<string> InvokeAmazonEmbedAsync(string prompt, bool generateError) => await InvokeTitanAsync(prompt, true, generateError);
@@ -290,6 +287,49 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 Accept = "application/json"
             });
         }
+
+#if NET481 ||  NET9_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net9.0 tfms
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static async Task<string> ConverseNovaMicro(string prompt, bool generateError)
+        {
+            string responseText = "";
+            try
+            {
+                var response = await Converse("us.amazon.nova-micro-v1:0" + (generateError ? "bogus" : ""), prompt);
+
+                responseText = response?.Output?.Message?.Content?[0]?.Text ?? "";
+            }
+            catch (AmazonBedrockRuntimeException e)
+            {
+                Console.WriteLine(e);
+            }
+            return responseText;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static async Task<ConverseResponse> Converse(string model, string payload)
+        {
+
+            // Create a request with the model ID, the user message, and an inference configuration.
+            var request = new ConverseRequest
+            {
+                ModelId = model,
+
+                Messages =
+                [
+                    new Message { Role = ConversationRole.User, Content = [new ContentBlock { Text = payload }] }
+                ],
+                InferenceConfig = new InferenceConfiguration
+                {
+                    MaxTokens = 512,
+                    Temperature = 0.5F,
+                    TopP = 0.9F
+                }
+            };
+
+            return await _amazonBedrockRuntimeClient.ConverseAsync(request);
+        }
+#endif
     }
 
     internal static class BedrockRegionExtensions

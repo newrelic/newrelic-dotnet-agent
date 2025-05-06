@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
@@ -75,12 +76,16 @@ namespace NewRelic.Agent.Core.Aggregators
             var oldMetrics = GetStatsCollectionForHarvest();
 
             oldMetrics.MergeUnscopedStats(MetricNames.SupportabilityMetricHarvestTransmit, MetricDataWireModel.BuildCountData());
-            var metricsToSend = oldMetrics.ConvertToJsonForSending(_metricNameService);
+            var metricsToSend = oldMetrics.ConvertToJsonForSending(_metricNameService).ToList();
 
-            var responseStatus = DataTransportService.Send(metricsToSend, transactionId);
-            HandleResponse(responseStatus, metricsToSend);
+            var metricCount = metricsToSend.Count;
+            if (metricCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(metricsToSend, transactionId);
+                HandleResponse(responseStatus, metricsToSend);
+            }
 
-            Log.Debug("Metric harvest finished.");
+            Log.Finest("Metric harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -93,7 +98,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         #endregion
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<MetricWireModel> unsuccessfulSendMetrics)
         {
             switch (responseStatus)
             {
@@ -101,10 +106,12 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainMetricData(unsuccessfulSendMetrics);
+                    Log.Debug("Retaining {count} metrics.", unsuccessfulSendMetrics.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} metrics.", unsuccessfulSendMetrics.Count);
                     break;
             }
         }

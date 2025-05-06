@@ -50,5 +50,11 @@ namespace NewRelic.Agent.Core.Utilities
             _configurationUpdatedEventSubscription.Dispose();
             base.Dispose();
         }
+
+        /// <summary>
+        /// For testing only!
+        /// </summary>
+        /// <param name="config"></param>
+        public void OverrideConfigForTesting(IConfiguration config) => _configuration = config;
     }
 }

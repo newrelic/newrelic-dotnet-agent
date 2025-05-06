@@ -18,15 +18,17 @@ namespace NewRelic.Agent.Core.Instrumentation
         private readonly IInstrumentationService _instrumentationService;
         private readonly IWrapperService _wrapperService;
         private readonly IConfigurationService _configurationService;
+        private readonly IDirectoryWrapper _directoryWrapper;
 
         private List<FileSystemWatcher> _fileWatchers;
         private SignalableAction _action;
 
-        public InstrumentationWatcher(IWrapperService wrapperService, IInstrumentationService instrumentationService, IConfigurationService configurationService)
+        public InstrumentationWatcher(IWrapperService wrapperService, IInstrumentationService instrumentationService, IConfigurationService configurationService, IDirectoryWrapper directoryWrapper)
         {
             _wrapperService = wrapperService;
             _instrumentationService = instrumentationService;
             _configurationService = configurationService;
+            _directoryWrapper = directoryWrapper;
         }
 
         public void Start()
@@ -52,7 +54,7 @@ namespace NewRelic.Agent.Core.Instrumentation
 
         private void SetupFileWatcherForDirectory(string path)
         {
-            if (!Directory.Exists(path)) return;
+            if (!_directoryWrapper.Exists(path)) return;
             var watcher = new FileSystemWatcher(path, "*.xml");
             watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
             watcher.Changed += OnChanged;

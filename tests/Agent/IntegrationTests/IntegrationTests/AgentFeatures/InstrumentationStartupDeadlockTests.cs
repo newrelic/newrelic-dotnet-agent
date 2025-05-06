@@ -6,14 +6,12 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     /// <summary>
     /// Tests that the agent doesn't deadlock at startup
     /// </summary>
-    [NetCoreTest]
     public class InstrumentationStartupDeadlockTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore>
     {
         private readonly RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore _fixture;

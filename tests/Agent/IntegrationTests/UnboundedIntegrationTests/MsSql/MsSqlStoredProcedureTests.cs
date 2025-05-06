@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
@@ -24,8 +24,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         public MsSqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMsSql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedure";
@@ -76,7 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName }
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName }
             };
 
             var expectedTransactionTraceSegments = new List<string>
@@ -137,7 +135,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     #region System.Data (.NET Framework only)
-    [NetFrameworkTest]
     public class MsSqlStoredProcedureTests_SystemData_FWLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlStoredProcedureTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -153,7 +150,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region Microsoft.Data.SqlClient (FW and Core/5+)
 
-    [NetFrameworkTest]
     public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FWLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -165,7 +161,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -177,7 +172,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -189,7 +183,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

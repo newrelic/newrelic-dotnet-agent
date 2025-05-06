@@ -6,7 +6,7 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -75,7 +75,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
             );
         }
     }
-    [NetFrameworkTest]
     public class MsmqSendTestsFW462 : MsmqSendTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsmqSendTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -84,7 +83,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         }
     }
 
-    [NetFrameworkTest]
     public class MsmqSendTestsFW471 : MsmqSendTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MsmqSendTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -93,7 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         }
     }
 
-    [NetFrameworkTest]
     public class MsmqSendTestsFW48 : MsmqSendTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MsmqSendTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -102,7 +99,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         }
     }
 
-    [NetFrameworkTest]
     public class MsmqSendTestsFWLatest : MsmqSendTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsmqSendTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
