@@ -1,8 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -48,11 +50,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public string ParentId { get; } // 8 bytes
 
         /// <summary>
-        /// TraceFlags is a 2 character string that represents an 8-bit field that controls tracing flags such as sampling, trace level, etc. 
+        /// TraceFlags is a 2 character hex string that represents an 8-bit field that controls tracing flags such as sampling, trace level, etc. 
         /// 
         /// As this is a bit field, you cannot interpret flags by decoding the hex value and looking at the resulting number.
         /// </summary>
-        public string TraceFlags { get; } // 2 bytes/8 bits
+        public string TraceFlags { get; } // 2 hex characters / 1 byte / 8 bits
+
+        private const byte FLAG_SAMPLED = 1; // 0b00000001
+
+        public bool Sampled
+        {
+            get
+            {
+                // see https://www.w3.org/TR/trace-context/#trace-flags
+                var traceFlagsInt = TraceFlags.AsSpan().FromHexString();
+                return (traceFlagsInt[0] & FLAG_SAMPLED) == FLAG_SAMPLED;
+            }
+        }
 
         /// <summary>
         /// This is used to create the object and expects to only be called with validated values from the two CreateW3CTraceparent builders.

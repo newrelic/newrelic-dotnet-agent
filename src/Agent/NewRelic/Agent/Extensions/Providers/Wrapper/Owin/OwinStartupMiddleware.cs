@@ -33,6 +33,8 @@ namespace NewRelic.Providers.Wrapper.Owin
                 transaction.AttachToAsync();
                 transaction.DetachFromPrimary();
 
+                ProcessHeaders(context);
+
                 segment = SetupSegment(transaction, context);
                 segment.AlwaysDeductChildDuration = true;
 
@@ -44,8 +46,6 @@ namespace NewRelic.Providers.Wrapper.Owin
                 {
                     transaction.SetRequestHeaders(context.Request.Headers, Statics.DefaultCaptureHeaders, GetHeaderValue);
                 }
-
-                ProcessHeaders(context);
 
                 context.Response.OnSendingHeaders(SetOutboundTracingDataAsync, null);
             }
