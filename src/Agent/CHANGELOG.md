@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.41.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.1...v10.41.0) (2025-04-25)
+
+
+### New features
+
+* Allow incoming W3C traceparent `sampled` flag to influence .NET agent sampling decision. ([#3100](https://github.com/newrelic/newrelic-dotnet-agent/issues/3100)) ([6047bda](https://github.com/newrelic/newrelic-dotnet-agent/commit/6047bda423e7d6a8c0d639142584c3651618f4a5))
+
+
+### Fixes
+
+* Null reference exception in Asp.NET Core 6+ browser monitoring injection.  ([#3102](https://github.com/newrelic/newrelic-dotnet-agent/issues/3102)) ([49df7bf](https://github.com/newrelic/newrelic-dotnet-agent/commit/49df7bfb75fbccc5961cc59a597b2e92f371982c))
+
 ## [10.40.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.0...v10.40.1) (2025-04-15)
 
 

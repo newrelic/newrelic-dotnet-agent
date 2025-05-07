@@ -44,6 +44,32 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:simpleType name="RemoteParentSampledBehaviorType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="default">
+                <xs:annotation>
+                    <xs:documentation>
+                        Default behavior. The agent will use New Relic adaptive sampling logic.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOn">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOff">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will NOT sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:element name="configuration">
         <xs:complexType>
             <xs:all>
@@ -1214,6 +1240,26 @@
                         </xs:documentation>
                     </xs:annotation>
                     <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="sampler" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:attribute name="remoteParentSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls span sampling behavior when the trace parent was sampled.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="remoteParentNotSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls span sampling behavior when the trace parent was not sampled.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1722,7 +1768,7 @@
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                            
+
                             <xs:element name="recordContent" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -1741,7 +1787,7 @@
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
-                        
+
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1753,7 +1799,7 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-                
+
                 <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>

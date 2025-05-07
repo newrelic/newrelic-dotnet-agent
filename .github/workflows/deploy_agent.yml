@@ -61,7 +61,7 @@ jobs:
       workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -155,13 +155,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
@@ -184,7 +184,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -263,7 +263,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -350,7 +350,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -366,7 +366,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
@@ -432,9 +432,17 @@ jobs:
         shell: bash
 
       - name: Clear Fastly cache
+        continue-on-error: true
         if: ${{ inputs.deploy && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
+        shell: bash
+
+      - name: Clear Cloudflare cache
+        continue-on-error: true
+        if: ${{ inputs.deploy && success() }}
+        run: |
+          curl ${{ secrets.CLOUDFLARE_CACHE_URL }} -H 'Content-Type: application/json' -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}" -d '{"purge_everything": true}'
         shell: bash
 
   publish-release-notes:
