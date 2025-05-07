@@ -29,9 +29,14 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
             {
                 "SendMessagesAsync" => MessageBrokerAction.Produce,
                 "ScheduleMessagesAsync" => MessageBrokerAction.Produce,
-                "CancelScheduledMessagesAsync" => MessageBrokerAction.Purge, // TODO is this correct ???
+                "CancelScheduledMessagesAsync" => MessageBrokerAction.Cancel,
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
             };
+
+        if (instrumentedMethodCall.IsAsync)
+        {
+            transaction.AttachToAsync();
+        }
 
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
