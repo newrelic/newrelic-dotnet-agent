@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus;
 
@@ -162,7 +161,6 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
-[NetFrameworkTest]
 public class AzureServiceBusTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -170,7 +168,6 @@ public class AzureServiceBusTestsFWLatest : AzureServiceBusTestsBase<ConsoleDyna
     }
 }
 
-[NetFrameworkTest]
 public class AzureServiceBusTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -178,7 +175,6 @@ public class AzureServiceBusTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamic
     }
 }
 
-[NetCoreTest]
 public class AzureServiceBusTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public AzureServiceBusTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -186,7 +182,6 @@ public class AzureServiceBusTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDy
     }
 }
 
-[NetCoreTest]
 public class AzureServiceBusTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AzureServiceBusTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
