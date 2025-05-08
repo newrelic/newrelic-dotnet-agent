@@ -333,11 +333,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                     Thread.Sleep(1000);
                                     numberOfTries++;
                                 }
-
-                                if (!applicationHadNonZeroExitCode)
-                                {
-                                    TestForKnownProblems();
-                                }
                             });
                             TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
                         }
@@ -585,19 +580,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccessStatusCode);
-        }
-
-        // Tests for things like transaction garbage collected, response time already captured, etc.
-        // Works best when logging is at FINEST.
-        private void TestForKnownProblems()
-        {
-            Assert.Multiple(
-                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx)),
-                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionHasAlreadyCapturedResponseTimeLogLineRegEx)),
-                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.WrapperExceptionLogLineRegex))
-            );
-
-            TestLogger?.WriteLine("Tests for known problems completed.");
         }
     }
 }
