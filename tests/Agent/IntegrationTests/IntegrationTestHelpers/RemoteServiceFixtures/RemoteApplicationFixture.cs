@@ -591,8 +591,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         // Works best when logging is at FINEST.
         private void TestForKnownProblems()
         {
-            Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx));
-            Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionHasAlreadyCapturedResponseTimeLogLineRegEx));
+            Assert.Multiple(
+                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx)),
+                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionHasAlreadyCapturedResponseTimeLogLineRegEx)),
+                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.WrapperExceptionLogLineRegex))
+            );
+
             TestLogger?.WriteLine("Tests for known problems completed.");
         }
     }
