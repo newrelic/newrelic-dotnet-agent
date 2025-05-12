@@ -335,6 +335,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                     Thread.Sleep(1000);
                                     numberOfTries++;
                                 }
+
+                                if (!applicationHadNonZeroExitCode)
+                                {
+                                    TestForKnownProblems();
+                                }
                             });
                             TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
                         }
@@ -584,8 +589,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             Assert.True(result.IsSuccessStatusCode);
         }
 
-    }
+        // Tests for things like transaction garbage collected and other errors.
+        // Works best when logging is at FINEST.
+        public virtual void TestForKnownProblems()
+        {
+            Assert.Multiple(
+                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx))
+            );
 
+            TestLogger?.WriteLine("Tests for known problems completed.");
+        }
+    }
 
     // borrowed from XUnit.Sdk.ExecutionTimer, as using their implementation caused a runtime error looking for xunit.execution.dotnet.dll
     /// <summary>
