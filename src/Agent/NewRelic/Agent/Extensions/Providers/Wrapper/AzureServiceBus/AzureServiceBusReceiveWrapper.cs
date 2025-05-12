@@ -44,6 +44,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 
         var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 
+        // OTEL naming convention for message broker actions: https://opentelemetry.io/docs/specs/semconv/messaging/messaging-spans/#operation-types
         MessageBrokerAction action =
             instrumentedMethodName switch
             {

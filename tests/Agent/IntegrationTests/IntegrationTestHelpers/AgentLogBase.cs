@@ -54,6 +54,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ConfigFileChangeDetected = DebugLogLinePrefixRegex + @"newrelic.config file changed, reloading.";
         public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
         public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
+
+        // Problems
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
