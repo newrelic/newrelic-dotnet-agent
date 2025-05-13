@@ -225,6 +225,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return exitCode.Value.ToString("X8");
         }
 
+        /// <summary>
+        /// Adds or replaces known problems to check for. This is used to check for things like transaction garbage collected.
+        /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
+        ///
+        /// Includes by default:
+        /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        /// </summary>
+        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
+        /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
+        public void KnownProblemsToCheck(bool keepDefaults = true, params string[] problems)
+        {
+            _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
+        }
+
+        private List<string> _problemsToCheck = new List<string>
+        {
+            AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        };
+
         public virtual void Initialize()
         {
             lock (_initializeLock)
@@ -591,13 +610,32 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         // Tests for things like transaction garbage collected and other errors.
         // Works best when logging is at FINEST.
-        public virtual void TestForKnownProblems()
+        private void TestForKnownProblems()
         {
-            Assert.Multiple(
-                () => Assert.Null(AgentLog.TryGetLogLine(AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx))
-            );
+            try
+            {
+                // If agent log is not expected, we don't need to check for known problems.
+                // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+                if (!AgentLogExpected || !Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+                    !File.Exists(Path.Combine(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName)))
+                {
+                    return;
+                }
 
-            TestLogger?.WriteLine("Tests for known problems completed.");
+                Assert.Multiple(
+                    _problemsToCheck.Select(problem => (Action)(
+                        () => Assert.Null(AgentLog.WaitForLogLine(problem, TimeSpan.FromSeconds(5)))
+                    )).ToArray()
+                );
+            }
+            catch
+            {
+                TestLogger?.WriteLine("Could not find agent log for known problem tests, skipping tests.");
+            }
+            finally
+            {
+                TestLogger?.WriteLine("Finished known problems check.");
+            }
         }
     }
 

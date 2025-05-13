@@ -24,6 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 {
                     _fixture.AddCommand($"ConfigBuilderDeadlock Run");
                     _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+                    _fixture.AgentLogExpected = false;
                     _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DELAY_AGENT_INIT_METHOD_LIST", "ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.ConfigBuilderDeadlock.DoTransaction");
                 }
             );
