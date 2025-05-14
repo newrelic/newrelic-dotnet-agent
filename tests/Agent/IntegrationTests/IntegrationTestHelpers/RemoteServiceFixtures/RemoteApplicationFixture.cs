@@ -612,30 +612,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         // Works best when logging is at FINEST.
         private void TestForKnownProblems()
         {
-            try
+            // If agent log is not expected, we don't need to check for known problems.
+            // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+            if (!AgentLogExpected || !Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+                !File.Exists(Path.Combine(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName)))
             {
-                // If agent log is not expected, we don't need to check for known problems.
-                // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
-                if (!AgentLogExpected || !Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
-                    !File.Exists(Path.Combine(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName)))
-                {
-                    return;
-                }
+                return;
+            }
 
-                Assert.Multiple(
-                    _problemsToCheck.Select(problem => (Action)(
-                        () => Assert.Null(AgentLog.WaitForLogLine(problem, TimeSpan.FromSeconds(5)))
-                    )).ToArray()
-                );
-            }
-            catch
-            {
-                TestLogger?.WriteLine("Could not find agent log for known problem tests, skipping tests.");
-            }
-            finally
-            {
-                TestLogger?.WriteLine("Finished known problems check.");
-            }
+            Assert.Multiple(
+                _problemsToCheck.Select(problem => (Action)(
+                    () => Assert.Null(AgentLog.WaitForLogLine(problem, TimeSpan.FromSeconds(5)))
+                )).ToArray()
+            );
+
+            TestLogger?.WriteLine("Finished known problems check.");
         }
     }
 
