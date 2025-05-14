@@ -622,7 +622,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             Assert.Multiple(
                 _problemsToCheck.Select(problem => (Action)(
-                    () => Assert.Null(AgentLog.WaitForLogLine(problem, TimeSpan.FromSeconds(5)))
+                    () => Assert.Null(AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
                 )).ToArray()
             );
 
