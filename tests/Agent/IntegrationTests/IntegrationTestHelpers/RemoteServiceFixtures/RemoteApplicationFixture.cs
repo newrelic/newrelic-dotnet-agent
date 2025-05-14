@@ -226,15 +226,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
 
         /// <summary>
-        /// Adds or replaces known problems to check for. This is used to check for things like transaction garbage collected.
+        /// Adds or replaces known problems. This is used to check for things like transaction garbage collected.
         /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
         ///
         /// Includes by default:
         /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
         /// </summary>
-        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
         /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
-        public void KnownProblemsToCheck(bool keepDefaults = true, params string[] problems)
+        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
+        public void SetKnownProblems(bool keepDefaults = true, params string[] problems)
         {
             _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
         }
