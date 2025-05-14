@@ -225,6 +225,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return exitCode.Value.ToString("X8");
         }
 
+        /// <summary>
+        /// Adds or replaces known problems. This is used to check for things like transaction garbage collected.
+        /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
+        ///
+        /// Includes by default:
+        /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        /// </summary>
+        /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
+        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
+        public void SetKnownProblems(bool keepDefaults = true, params string[] problems)
+        {
+            _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
+        }
+
+        private List<string> _problemsToCheck = new List<string>
+        {
+            AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        };
+
         public virtual void Initialize()
         {
             lock (_initializeLock)
@@ -334,6 +353,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                     TestLogger?.WriteLine(retryMessage + " Retrying test.");
                                     Thread.Sleep(1000);
                                     numberOfTries++;
+                                }
+
+                                if (!applicationHadNonZeroExitCode)
+                                {
+                                    TestForKnownProblems();
                                 }
                             });
                             TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
@@ -584,8 +608,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             Assert.True(result.IsSuccessStatusCode);
         }
 
-    }
+        // Tests for things like transaction garbage collected and other errors.
+        // Works best when logging is at FINEST.
+        private void TestForKnownProblems()
+        {
+            // If agent log is not expected, we don't need to check for known problems.
+            // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+            if (!AgentLogExpected || !Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+                !File.Exists(Path.Combine(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName)))
+            {
+                return;
+            }
 
+            Assert.Multiple(
+                _problemsToCheck.Select(problem => (Action)(
+                    () => Assert.Null(AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
+                )).ToArray()
+            );
+
+            TestLogger?.WriteLine("Finished known problems check.");
+        }
+    }
 
     // borrowed from XUnit.Sdk.ExecutionTimer, as using their implementation caused a runtime error looking for xunit.execution.dotnet.dll
     /// <summary>
