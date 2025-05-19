@@ -259,12 +259,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 
                 var numberOfTries = 0;
+                var applicationHadNonZeroExitCode = false;
 
                 try
                 {
                     var retryTest = false;
                     var retryMessage = "";
-                    var applicationHadNonZeroExitCode = false;
 
                     do
                     {
@@ -354,11 +354,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                     Thread.Sleep(1000);
                                     numberOfTries++;
                                 }
-
-                                if (!applicationHadNonZeroExitCode)
-                                {
-                                    TestForKnownProblems();
-                                }
                             });
                             TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
                         }
@@ -392,6 +387,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                             TestLogger?.WriteLine("No log file found.");
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
+
+                        if (!applicationHadNonZeroExitCode)
+                        {
+                            TestForKnownProblems();
+                        }
                     }
                 }
             }
@@ -612,19 +612,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         // Works best when logging is at FINEST.
         private void TestForKnownProblems()
         {
-            // If agent log is not expected, we don't need to check for known problems.
             // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
-            if (!AgentLogExpected || !Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
-                !File.Exists(Path.Combine(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName)))
+            if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+                !File.Exists(AgentLog.FilePath))
             {
                 return;
             }
 
-            Assert.Multiple(
-                _problemsToCheck.Select(problem => (Action)(
-                    () => Assert.Null(AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
-                )).ToArray()
-            );
+            try
+            {
+                Assert.Multiple(
+                    _problemsToCheck.Select(problem => (Action)(
+                        () => Assert.Null(
+                            AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
+                    )).ToArray()
+                );
+            }
+            catch
+            {
+                TestLogger?.WriteLine("WARNING: Found one or more known problems!");
+                throw;
+            }
 
             TestLogger?.WriteLine("Finished known problems check.");
         }
