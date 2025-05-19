@@ -244,5 +244,7 @@ namespace NewRelic.Agent.Configuration
         bool AgentControlEnabled { get; }
         string HealthDeliveryLocation { get; }
         int HealthFrequency { get; }
+
+        bool AwsLambdaApmModeEnabled { get; }
     }
 }

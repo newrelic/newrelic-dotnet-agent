@@ -2224,6 +2224,12 @@ namespace NewRelic.Agent.Core.Configuration
             _azureFunctionModeEnabled ??
             (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", true), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
 
+        // Code to support AWS Lambda APM mode for transaction naming [ By default it is disabled ]
+        private bool? _awsLambdaApmModeEnabled;
+        public bool AwsLambdaApmModeEnabled =>
+            _awsLambdaApmModeEnabled ??
+            (_awsLambdaApmModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AwsLambdaApmModeEnabled", false), "NEW_RELIC_APM_LAMBDA_MODE")).Value;
+
         public string AzureFunctionResourceId
         {
             get
