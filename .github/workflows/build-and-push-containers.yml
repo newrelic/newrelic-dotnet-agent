@@ -110,7 +110,7 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/rabbitmq" >> $GITHUB_OUTPUT
               echo "tag=rabbitmq:latest" >> $GITHUB_OUTPUT
               echo "ports=5671,5672,15671,15672" >> $GITHUB_OUTPUT
-              echo "command=rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server" >> $GITHUB_OUTPUT
+              echo "command=/bin/sh -c 'rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server'" >> $GITHUB_OUTPUT
               echo "env=RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_DEFAULT_USER }}\nRABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}" >> $GITHUB_OUTPUT
               ;;
             mongodb32)
@@ -185,6 +185,7 @@ jobs:
             --registry-password "${{ secrets.REGISTRY_PASSWORD }}" \
             --dns-name-label "dotnet-unboundedservices-${{ matrix.service }}-server" \
             --location "${{ secrets.AZURE_LOCATION }}" \
+            --os-type Linux \
             --ports $(echo ${{ steps.config.outputs.ports }} | tr ',' ' ') \
             $MEM_ARG \
             $CMD_ARG \
