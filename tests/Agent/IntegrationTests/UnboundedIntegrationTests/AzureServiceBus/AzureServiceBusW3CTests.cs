@@ -56,11 +56,14 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
 
             var spanEvents = _fixture.AgentLog.GetSpanEvents();
 
-            var produceSpan = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Contains("MessageBroker/AzureServiceBus/Queue/Produce/Named/"))
+            var produceSpan = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Contains("MessageBroker/ServiceBus/Queue/Produce/Named/"))
                 .FirstOrDefault();
 
-            var consumeSpan = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Contains("MessageBroker/AzureServiceBus/Queue/Consume/Named/"))
+            var consumeSpan = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Contains("MessageBroker/ServiceBus/Queue/Consume/Named/"))
                 .FirstOrDefault();
+
+            Assert.NotNull(produceSpan);
+            Assert.NotNull(consumeSpan);
 
             Assert.Equal(headerValueTx.IntrinsicAttributes["guid"], produceSpan.IntrinsicAttributes["transactionId"]);
             Assert.Equal(headerValueTx.IntrinsicAttributes["traceId"], produceSpan.IntrinsicAttributes["traceId"]);
