@@ -23,8 +23,33 @@ permissions:
   pull-requests: read
 
 jobs:
-  build:
+  set-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set matrix based on input
+        id: set-matrix
+        run: |
+          ALL_SERVICES=(couchbase postgres mssql mysql rabbitmq mongodb32 mongodb60 oracle elastic elastic7)
+          if [ -z "${{ github.event.inputs.services }}" ]; then
+            SELECTED=("${ALL_SERVICES[@]}")
+          else
+            IFS=',' read -ra SELECTED <<< "${{ github.event.inputs.services }}"
+            # Trim whitespace
+            for i in "${!SELECTED[@]}"; do
+              SELECTED[$i]="$(echo \"${SELECTED[$i]}\" | xargs)"
+            done
+          fi
+          # Build JSON array
+          JSON_MATRIX=$(printf '%s\n' "${SELECTED[@]}" | jq -R . | jq -s '{service: .}')
+          echo "matrix=$JSON_MATRIX" >> $GITHUB_OUTPUT
+
+  build-and-deploy:
+    needs: set-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     permissions:
       contents: read
       id-token: write
@@ -32,12 +57,6 @@ jobs:
       pull-requests: read
     env:
       REGISTRY: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-    outputs:
-      services: ${{ steps.set-services.outputs.services }}
-      ports: ${{ steps.set-ports.outputs.ports }}
-      memory: ${{ steps.set-memory.outputs.memory }}
-      command: ${{ steps.set-command.outputs.command }}
-      env: ${{ steps.set-env.outputs.env }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
@@ -46,129 +65,6 @@ jobs:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Azure Login
-        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 #v 2.3.0
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Azure Container Registry Login
-        uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
-        with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Set services list
-        id: set-services
-        run: |
-          if [ -z "${{ github.event.inputs.services }}" ]; then
-            echo 'services=["couchbase","postgres","mssql","mysql","rabbitmq","mongodb32","mongodb60","oracle","elastic","elastic7"]' >> $GITHUB_OUTPUT
-          else
-            # Convert comma-separated to JSON array
-            services_json=$(echo "${{ github.event.inputs.services }}" | awk -F, '{for(i=1;i<=NF;i++) printf "%s\"%s\"%s", (i==1?"[":""), $i, (i==NF?"]":",") }')
-            echo "services=$services_json" >> $GITHUB_OUTPUT
-          fi
-      - name: Set ports for each service
-        id: set-ports
-        run: |
-          echo 'ports={"couchbase":"8091,8092,8093,8094,8095,11210","postgres":"5432","mssql":"1433","mysql":"3306","rabbitmq":"5671,5672,15671,15672","mongodb32":"27017","mongodb60":"27017","oracle":"1521","elastic":"9200","elastic7":"9201"}' >> $GITHUB_OUTPUT
-      - name: Set memory for each service
-        id: set-memory
-        run: |
-          echo 'memory={"couchbase":"3.0","postgres":"","mssql":"","mysql":"","rabbitmq":"","mongodb32":"","mongodb60":"","oracle":"","elastic":"2.0","elastic7":"2.0"}' >> $GITHUB_OUTPUT
-      - name: Set command for each service
-        id: set-command
-        run: |
-          echo 'command={"mysql":"mysqld --default-authentication-plugin=mysql_native_password","rabbitmq":"rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server"}' >> $GITHUB_OUTPUT
-      - name: Set env for each service
-        id: set-env
-        run: |
-          echo 'env={"couchbase":"COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}","postgres":"POSTGRES_USER=postgres\nPOSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}","mssql":"SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}","mysql":"MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}","rabbitmq":"RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_DEFAULT_USER }}\nRABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}","mongodb32":"MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}","mongodb60":"MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}","oracle":"ORACLE_PWD=${{ secrets.ORACLE_PWD }}","elastic":"discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false","elastic7":"discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false"}' >> $GITHUB_OUTPUT
-
-      # Build steps for each service
-      - name: Build and push Couchbase image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'couchbase') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/couchbase
-          push: true
-          tags: ${{ env.REGISTRY }}/couchbase:latest
-      - name: Build and push Postgres image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'postgres') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/postgres
-          push: true
-          tags: ${{ env.REGISTRY }}/postgres:latest
-      - name: Build and push MSSQL image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'mssql') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mssql
-          push: true
-          tags: ${{ env.REGISTRY }}/mssql:latest
-      - name: Build and push MySQL image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'mysql') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mysql
-          push: true
-          tags: ${{ env.REGISTRY }}/mysql:latest
-      - name: Build and push RabbitMQ image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'rabbitmq') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/rabbitmq
-          push: true
-          tags: ${{ env.REGISTRY }}/rabbitmq:latest
-      - name: Build and push MongoDB32 image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'mongodb32') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mongodb32
-          push: true
-          tags: ${{ env.REGISTRY }}/mongodb32:latest
-      - name: Build and push MongoDB60 image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'mongodb60') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mongodb60
-          push: true
-          tags: ${{ env.REGISTRY }}/mongodb60:latest
-      - name: Build and push Oracle image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'oracle') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/oracle
-          push: true
-          tags: ${{ env.REGISTRY }}/oracle:latest
-      - name: Build and push Elastic image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'elastic') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/elastic
-          push: true
-          tags: ${{ env.REGISTRY }}/elastic:latest
-      - name: Build and push Elastic7 image
-        if: ${{ contains(fromJson(steps.set-services.outputs.services), 'elastic7') }}
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/elastic7
-          push: true
-          tags: ${{ env.REGISTRY }}/elastic7:latest
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: ${{ fromJson(needs.build.outputs.services) }}
-    env:
-      REGISTRY: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
-        with:
-          disable-sudo: true
-          egress-policy: audit
       - name: Azure Login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
@@ -179,6 +75,82 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Set service config
+        id: config
+        run: |
+          case "${{ matrix.service }}" in
+            couchbase)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/couchbase" >> $GITHUB_OUTPUT
+              echo "tag=couchbase:latest" >> $GITHUB_OUTPUT
+              echo "ports=8091,8092,8093,8094,8095,11210" >> $GITHUB_OUTPUT
+              echo "memory=3.0" >> $GITHUB_OUTPUT
+              echo "env=COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            postgres)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/postgres" >> $GITHUB_OUTPUT
+              echo "tag=postgres:latest" >> $GITHUB_OUTPUT
+              echo "ports=5432" >> $GITHUB_OUTPUT
+              echo "env=POSTGRES_USER=postgres\nPOSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            mssql)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/mssql" >> $GITHUB_OUTPUT
+              echo "tag=mssql:latest" >> $GITHUB_OUTPUT
+              echo "ports=1433" >> $GITHUB_OUTPUT
+              echo "env=SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            mysql)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/mysql" >> $GITHUB_OUTPUT
+              echo "tag=mysql:latest" >> $GITHUB_OUTPUT
+              echo "ports=3306" >> $GITHUB_OUTPUT
+              echo "command=mysqld --default-authentication-plugin=mysql_native_password" >> $GITHUB_OUTPUT
+              echo "env=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            rabbitmq)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/rabbitmq" >> $GITHUB_OUTPUT
+              echo "tag=rabbitmq:latest" >> $GITHUB_OUTPUT
+              echo "ports=5671,5672,15671,15672" >> $GITHUB_OUTPUT
+              echo "command=rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server" >> $GITHUB_OUTPUT
+              echo "env=RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_DEFAULT_USER }}\nRABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}" >> $GITHUB_OUTPUT
+              ;;
+            mongodb32)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb32" >> $GITHUB_OUTPUT
+              echo "tag=mongodb32:latest" >> $GITHUB_OUTPUT
+              echo "ports=27017" >> $GITHUB_OUTPUT
+              echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            mongodb60)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb60" >> $GITHUB_OUTPUT
+              echo "tag=mongodb60:latest" >> $GITHUB_OUTPUT
+              echo "ports=27017" >> $GITHUB_OUTPUT
+              echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
+              ;;
+            oracle)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/oracle" >> $GITHUB_OUTPUT
+              echo "tag=oracle:latest" >> $GITHUB_OUTPUT
+              echo "ports=1521" >> $GITHUB_OUTPUT
+              echo "env=ORACLE_PWD=${{ secrets.ORACLE_PWD }}" >> $GITHUB_OUTPUT
+              ;;
+            elastic)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/elastic" >> $GITHUB_OUTPUT
+              echo "tag=elastic:latest" >> $GITHUB_OUTPUT
+              echo "ports=9200" >> $GITHUB_OUTPUT
+              echo "memory=2.0" >> $GITHUB_OUTPUT
+              echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
+              ;;
+            elastic7)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/elastic7" >> $GITHUB_OUTPUT
+              echo "tag=elastic7:latest" >> $GITHUB_OUTPUT
+              echo "ports=9201" >> $GITHUB_OUTPUT
+              echo "memory=2.0" >> $GITHUB_OUTPUT
+              echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      - name: Build and push ${{ matrix.service }} image
+        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+        with:
+          context: ${{ steps.config.outputs.context }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
       - name: Deploy ${{ matrix.service }} to Azure Container Instance
         uses: azure/aci-deploy@28cafb864979bc5b44cd1f3fd45522727eb5a3db # v1.1.3
         with:
@@ -186,11 +158,11 @@ jobs:
           location: ${{ secrets.AZURE_LOCATION }}
           dns-name-label: dotnet-unboundedservices-${{ matrix.service }}-server
           name: ${{ matrix.service }}-server
-          image: ${{ env.REGISTRY }}/${{ matrix.service }}:latest
+          image: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
           registry-login-server: ${{ env.REGISTRY }}
           registry-username: ${{ secrets.REGISTRY_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-          ports: ${{ fromJson(needs.build.outputs.ports)[matrix.service] }}
-          memory: ${{ fromJson(needs.build.outputs.memory)[matrix.service] }}
-          command-line: ${{ fromJson(needs.build.outputs.command)[matrix.service] }}
-          environment-variables: ${{ fromJson(needs.build.outputs.env)[matrix.service] }}
+          ports: ${{ steps.config.outputs.ports }}
+          memory: ${{ steps.config.outputs.memory }}
+          command-line: ${{ steps.config.outputs.command }}
+          environment-variables: ${{ steps.config.outputs.env }}
