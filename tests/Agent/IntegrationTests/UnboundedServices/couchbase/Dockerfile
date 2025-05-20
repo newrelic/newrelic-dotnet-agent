@@ -1,5 +1,5 @@
 # sandbox image with travel-sample bucket pre-installed
-FROM couchbase/server-sandbox:7.6.5@sha256:daaac2c1291f0ac383fe0daba6c1e8c5b845d3e166e3e252c85bce63c555beb7
+FROM couchbase/server-sandbox:7.6.6@sha256:584258b112afa1512baa11e272c904c7cf8ffa35b99ab02fa6ff87942a60e4a3
 
 COPY configure-server.sh /opt/couchbase
 

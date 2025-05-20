@@ -121,7 +121,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: rabbitmq-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-rabbitmq-server
           name: rabbitmq-server
           image: ${{ env.REGISTRY }}/rabbitmq:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -138,7 +138,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: mongodb32-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-mongodb32-server
           name: mongodb32-server
           image: ${{ env.REGISTRY }}/mongodb32:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -154,7 +154,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: mongodb60-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-mongodb60-server
           name: mongodb60-server
           image: ${{ env.REGISTRY }}/mongodb60:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -170,13 +170,14 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: couchbase-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-couchbase-server
           name: couchbase-server
           image: ${{ env.REGISTRY }}/couchbase:latest
           registry-login-server: ${{ env.REGISTRY }}
           registry-username: ${{ secrets.REGISTRY_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_PASSWORD }}
           ports: 8091,8092,8093,8094,8095,11210
+          memory: 3.0
           environment-variables: |
             COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}
 
@@ -185,7 +186,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: postgres-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-postgres-server
           name: postgres-server
           image: ${{ env.REGISTRY }}/postgres:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -201,7 +202,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: mssql-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-mssql-server
           name: mssql-server
           image: ${{ env.REGISTRY }}/mssql:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -216,13 +217,14 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: mysql-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-mysql-server
           name: mysql-server
           image: ${{ env.REGISTRY }}/mysql:latest
           registry-login-server: ${{ env.REGISTRY }}
           registry-username: ${{ secrets.REGISTRY_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_PASSWORD }}
           ports: 3306
+          command-line: mysqld --default-authentication-plugin=mysql_native_password
           environment-variables: |
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 
@@ -231,7 +233,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: oracle-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-oracle-server
           name: oracle-server
           image: ${{ env.REGISTRY }}/oracle:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -246,7 +248,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: elastic-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-elastic-server
           name: elastic-server
           image: ${{ env.REGISTRY }}/elastic:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -264,7 +266,7 @@ jobs:
         with:
           resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
           location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: elastic7-server-${{ github.run_id }}
+          dns-name-label: dotnet-unboundedservices-elastic7-server
           name: elastic7-server
           image: ${{ env.REGISTRY }}/elastic7:latest
           registry-login-server: ${{ env.REGISTRY }}
@@ -282,7 +284,7 @@ jobs:
     #     with:
     #       resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
     #       location: ${{ secrets.AZURE_LOCATION }}
-    #       dns-name-label: kibanapwsetup-server-${{ github.run_id }}
+    #       dns-name-label: dotnet-unboundedservices-kibanapwsetup-server
     #       name: kibanapwsetup-server
     #       image: curlimages/curl
     #       command-line: >-
@@ -293,7 +295,7 @@ jobs:
     #     with:
     #       resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
     #       location: ${{ secrets.AZURE_LOCATION }}
-    #       dns-name-label: kibana-server-${{ github.run_id }}
+    #       dns-name-label: dotnet-unboundedservices-kibana-server
     #       name: kibana-server
     #       image: kibana:8.6.2
     #       ports: 5601
