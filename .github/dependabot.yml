@@ -24,14 +24,14 @@ updates:
 #        patterns:
 #          - "*"
           
-  # We do not scan anything in the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
-  # intentionally reference old versions of the Nuget packages they instrument.
   - package-ecosystem: nuget
-    directories:
-      - /src/Agent/NewRelic/Agent/Core
-      - /src/Agent/NewRelic.Api.Agent
-      - /build
-      - /src/Agent/MsiInstaller
+    directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
+      - /src/Agent/NewRelic/Agent/Core # Core.csproj
+      - /src/Agent/NewRelic.Api.Agent # NewRelic.Api.Agent.csproj
+      - /build # BuildTools.sln
+      - /src/Agent/MsiInstaller # MsiInstaller.sln
+      # We do not scan the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
+      # intentionally reference old versions of the Nuget packages they instrument.
     schedule:
       interval: weekly
     commit-message:
@@ -41,7 +41,7 @@ updates:
         patterns:
           - "*"
     ignore:
-      - dependency-name: "WixToolset.*"
+      - dependency-name: "WixToolset*"
         versions: [ "6.*" ] # WIX 6.0+ requires payment for commerical projects, avoiding upgrade for now
 
   # Update a specific set of packages for unit and integration tests
