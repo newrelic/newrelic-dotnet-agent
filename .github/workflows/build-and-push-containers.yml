@@ -153,17 +153,39 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
       - name: Deploy ${{ matrix.service }} to Azure Container Instance
-        uses: azure/aci-deploy@28cafb864979bc5b44cd1f3fd45522727eb5a3db # v1.1.3
-        with:
-          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          location: ${{ secrets.AZURE_LOCATION }}
-          dns-name-label: dotnet-unboundedservices-${{ matrix.service }}-server
-          name: ${{ matrix.service }}-server
-          image: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
-          registry-login-server: ${{ env.REGISTRY }}
-          registry-username: ${{ secrets.REGISTRY_USERNAME }}
-          registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-          ports: ${{ steps.config.outputs.ports }}
-          memory: ${{ steps.config.outputs.memory }}
-          command-line: ${{ steps.config.outputs.command }}
-          environment-variables: ${{ steps.config.outputs.env }}
+        shell: bash
+        run: |
+          # Parse environment variables (newline separated) into --environment-variables args
+          ENV_ARGS=""
+          if [ -n "${{ steps.config.outputs.env }}" ]; then
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              ENV_ARGS="$ENV_ARGS --environment-variables $line"
+            done <<< "$(echo -e "${{ steps.config.outputs.env }}")"
+          fi
+
+          # Parse command-line if present
+          CMD_ARG=""
+          if [ -n "${{ steps.config.outputs.command }}" ]; then
+            CMD_ARG="--command-line '${{ steps.config.outputs.command }}'"
+          fi
+
+          # Parse memory if present
+          MEM_ARG=""
+          if [ -n "${{ steps.config.outputs.memory }}" ]; then
+            MEM_ARG="--memory ${{ steps.config.outputs.memory }}"
+          fi
+
+          az container create \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ matrix.service }}-server" \
+            --image "${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}" \
+            --registry-login-server "${{ env.REGISTRY }}" \
+            --registry-username "${{ secrets.REGISTRY_USERNAME }}" \
+            --registry-password "${{ secrets.REGISTRY_PASSWORD }}" \
+            --dns-name-label "dotnet-unboundedservices-${{ matrix.service }}-server" \
+            --location "${{ secrets.AZURE_LOCATION }}" \
+            --ports $(echo ${{ steps.config.outputs.ports }} | tr ',' ' ') \
+            $MEM_ARG \
+            $CMD_ARG \
+            $ENV_ARGS
