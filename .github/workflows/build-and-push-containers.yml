@@ -41,15 +41,16 @@ jobs:
               SELECTED[$i]="$(echo \"${SELECTED[$i]}\" | xargs)"
             done
           fi
-          # Build compact JSON array of objects for matrix
-          JSON_MATRIX=$(printf '%s\n' "${SELECTED[@]}" | jq -R '{service: .}' | jq -s -c .)
+          # Build compact JSON array of strings for matrix
+          JSON_MATRIX=$(printf '%s\n' "${SELECTED[@]}" | jq -R -s -c '. / "\n" | map(select(length > 0))')
           echo "matrix=${JSON_MATRIX}" >> $GITHUB_OUTPUT
 
   build-and-deploy:
     needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      matrix:
+        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     permissions:
       contents: read
       id-token: write
