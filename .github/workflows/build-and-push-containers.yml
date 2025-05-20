@@ -46,75 +46,75 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push Couchbase image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/couchbase
-          push: true
-          tags: ${{ env.REGISTRY }}/couchbase:latest
+    #   - name: Build and push Couchbase image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/couchbase
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/couchbase:latest
 
-      - name: Build and push Postgres image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/postgres
-          push: true
-          tags: ${{ env.REGISTRY }}/postgres:latest
+    #   - name: Build and push Postgres image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/postgres
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/postgres:latest
 
-      - name: Build and push MSSQL image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mssql
-          push: true
-          tags: ${{ env.REGISTRY }}/mssql:latest
+    #   - name: Build and push MSSQL image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/mssql
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/mssql:latest
 
-      - name: Build and push MySQL image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mysql
-          push: true
-          tags: ${{ env.REGISTRY }}/mysql:latest
+    #   - name: Build and push MySQL image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/mysql
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/mysql:latest
 
-      - name: Build and push RabbitMQ image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/rabbitmq
-          push: true
-          tags: ${{ env.REGISTRY }}/rabbitmq:latest
+    #   - name: Build and push RabbitMQ image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/rabbitmq
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/rabbitmq:latest
 
-      - name: Build and push MongoDB32 image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mongodb32
-          push: true
-          tags: ${{ env.REGISTRY }}/mongodb32:latest
+    #   - name: Build and push MongoDB32 image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/mongodb32
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/mongodb32:latest
 
-      - name: Build and push MongoDB60 image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/mongodb60
-          push: true
-          tags: ${{ env.REGISTRY }}/mongodb60:latest
+    #   - name: Build and push MongoDB60 image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/mongodb60
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/mongodb60:latest
 
-      - name: Build and push Oracle image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/oracle
-          push: true
-          tags: ${{ env.REGISTRY }}/oracle:latest
+    #   - name: Build and push Oracle image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/oracle
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/oracle:latest
 
-      - name: Build and push Elastic image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/elastic
-          push: true
-          tags: ${{ env.REGISTRY }}/elastic:latest
+    #   - name: Build and push Elastic image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/elastic
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/elastic:latest
 
-      - name: Build and push Elastic7 image
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
-        with:
-          context: tests/Agent/IntegrationTests/UnboundedServices/elastic7
-          push: true
-          tags: ${{ env.REGISTRY }}/elastic7:latest
+    #   - name: Build and push Elastic7 image
+    #     uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
+    #     with:
+    #       context: tests/Agent/IntegrationTests/UnboundedServices/elastic7
+    #       push: true
+    #       tags: ${{ env.REGISTRY }}/elastic7:latest
 
       - name: Deploy RabbitMQ to Azure Container Instance
         uses: azure/aci-deploy@28cafb864979bc5b44cd1f3fd45522727eb5a3db # v1.1.3
