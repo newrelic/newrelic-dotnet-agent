@@ -85,18 +85,23 @@ jobs:
               echo "tag=couchbase:latest" >> $GITHUB_OUTPUT
               echo "ports=8091,8092,8093,8094,8095,11210" >> $GITHUB_OUTPUT
               echo "memory=3.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             postgres)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/postgres" >> $GITHUB_OUTPUT
               echo "tag=postgres:latest" >> $GITHUB_OUTPUT
               echo "ports=5432" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=POSTGRES_USER=postgres\nPOSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             mssql)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mssql" >> $GITHUB_OUTPUT
               echo "tag=mssql:latest" >> $GITHUB_OUTPUT
               echo "ports=1433" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             mysql)
@@ -104,6 +109,8 @@ jobs:
               echo "tag=mysql:latest" >> $GITHUB_OUTPUT
               echo "ports=3306" >> $GITHUB_OUTPUT
               echo "command=mysqld --default-authentication-plugin=mysql_native_password" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             rabbitmq)
@@ -111,24 +118,32 @@ jobs:
               echo "tag=rabbitmq:latest" >> $GITHUB_OUTPUT
               echo "ports=5671,5672,15671,15672" >> $GITHUB_OUTPUT
               echo "command=/bin/sh -c 'rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server'" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=RABBITMQ_DEFAULT_USER=${{ secrets.RABBITMQ_DEFAULT_USER }}\nRABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}" >> $GITHUB_OUTPUT
               ;;
             mongodb32)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb32" >> $GITHUB_OUTPUT
               echo "tag=mongodb32:latest" >> $GITHUB_OUTPUT
               echo "ports=27017" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             mongodb60)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb60" >> $GITHUB_OUTPUT
               echo "tag=mongodb60:latest" >> $GITHUB_OUTPUT
               echo "ports=27017" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             oracle)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/oracle" >> $GITHUB_OUTPUT
               echo "tag=oracle:latest" >> $GITHUB_OUTPUT
               echo "ports=1521" >> $GITHUB_OUTPUT
+              echo "memory=1.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=ORACLE_PWD=${{ secrets.ORACLE_PWD }}" >> $GITHUB_OUTPUT
               ;;
             elastic)
@@ -136,6 +151,7 @@ jobs:
               echo "tag=elastic:latest" >> $GITHUB_OUTPUT
               echo "ports=9200" >> $GITHUB_OUTPUT
               echo "memory=2.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
               ;;
             elastic7)
@@ -143,6 +159,7 @@ jobs:
               echo "tag=elastic7:latest" >> $GITHUB_OUTPUT
               echo "ports=9201" >> $GITHUB_OUTPUT
               echo "memory=2.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
               ;;
           esac
@@ -170,11 +187,13 @@ jobs:
             CMD_ARG="--command-line '${{ steps.config.outputs.command }}'"
           fi
 
-          # Parse memory if present
-          MEM_ARG=""
-          if [ -n "${{ steps.config.outputs.memory }}" ]; then
-            MEM_ARG="--memory ${{ steps.config.outputs.memory }}"
-          fi
+          # Always set memory and cpu (default 1.0 if not set)
+          MEMORY="${{ steps.config.outputs.memory }}"
+          CPU="${{ steps.config.outputs.cpu }}"
+          if [ -z "$MEMORY" ]; then MEMORY=1.0; fi
+          if [ -z "$CPU" ]; then CPU=1.0; fi
+          MEM_ARG="--memory $MEMORY"
+          CPU_ARG="--cpu $CPU"
 
           az container create \
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
@@ -188,5 +207,6 @@ jobs:
             --os-type Linux \
             --ports $(echo ${{ steps.config.outputs.ports }} | tr ',' ' ') \
             $MEM_ARG \
+            $CPU_ARG \
             $CMD_ARG \
             $ENV_ARGS
