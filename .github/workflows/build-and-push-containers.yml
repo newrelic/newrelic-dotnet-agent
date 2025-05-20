@@ -238,7 +238,8 @@ jobs:
           registry-username: ${{ secrets.REGISTRY_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_PASSWORD }}
           ports: 1521
-          environment-variables: ORACLE_PWD=${{ secrets.ORACLE_PWD }}
+          environment-variables: |
+            ORACLE_PWD=${{ secrets.ORACLE_PWD }}
 
       - name: Deploy Elastic to Azure Container Instance
         uses: azure/aci-deploy@28cafb864979bc5b44cd1f3fd45522727eb5a3db # v1.1.3
