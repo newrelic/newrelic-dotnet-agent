@@ -117,7 +117,7 @@ services:
         container_name: MySqlServer
 
     elastic:
-        image: elasticsearch:8.6.2
+        build: ./elastic
         ports:
             - 9200:9200
         environment:
@@ -136,7 +136,7 @@ services:
         container_name: ElasticServer
 
     elastic7:
-        image: elasticsearch:7.17.10
+        build: ./elastic7
         ports:
             - 9201:9200
         environment:
