@@ -4,6 +4,8 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
     groups:
       github-actions:
         patterns:
@@ -32,13 +34,15 @@ updates:
       - /src/Agent/MsiInstaller
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps):"
     groups: 
       nuget-agent:
         patterns:
           - "*"
     ignore:
-      - dependency-name: "WixToolset*"
-        versions: [ ">=6.0.0" ] # WIX 6.0+ requires payment for commerical projects, avoiding upgrade for now
+      - dependency-name: "WixToolset.*"
+        versions: [ "6.*" ] # WIX 6.0+ requires payment for commerical projects, avoiding upgrade for now
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
@@ -47,6 +51,8 @@ updates:
       - / # will pick up FullAgent.sln which contains the unit tests
     schedule:
       interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
     groups:
       nuget-tests:
         patterns:
