@@ -49,6 +49,7 @@ jobs:
     needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     permissions:
