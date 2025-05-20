@@ -41,9 +41,9 @@ jobs:
               SELECTED[$i]="$(echo \"${SELECTED[$i]}\" | xargs)"
             done
           fi
-          # Build JSON array of objects for matrix
-          JSON_MATRIX=$(printf '%s\n' "${SELECTED[@]}" | jq -R '{service: .}' | jq -s .)
-          echo "matrix=$JSON_MATRIX" >> $GITHUB_OUTPUT
+          # Build compact JSON array of objects for matrix
+          JSON_MATRIX=$(printf '%s\n' "${SELECTED[@]}" | jq -R '{service: .}' | jq -s -c .)
+          echo "matrix=${JSON_MATRIX}" >> $GITHUB_OUTPUT
 
   build-and-deploy:
     needs: set-matrix
