@@ -79,6 +79,7 @@ namespace NewRelic.Agent.Core.Transactions
                 if (finishedTransaction)
                 {
                     // Finally, we announce the event to our agent health reporter
+                    var transactionGuid = internalTransaction.Guid ?? "<unknown>";
                     var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
                     var lastFinishedSegmentName = lastFinishedSegment != null
                         ? lastFinishedSegment.GetTransactionTraceName()
@@ -86,7 +87,7 @@ namespace NewRelic.Agent.Core.Transactions
                     var lastStartedSegmentName = lastStartedSegment != null
                         ? lastStartedSegment.GetTransactionTraceName()
                         : "<unknown>";
-                    _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
+                    _agentHealthReporter.ReportTransactionGarbageCollected(transactionGuid, transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
                 }
             }
         }

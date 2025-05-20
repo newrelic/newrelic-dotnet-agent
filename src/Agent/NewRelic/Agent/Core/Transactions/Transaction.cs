@@ -1072,7 +1072,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var transactionName = CandidateTransactionName.CurrentTransactionName;
                 var transactionMetricName = Agent?._transactionMetricNameMaker?.GetTransactionMetricName(transactionName);
                 var stackTrace = new StackTrace();
-                Log.Finest($"Transaction \"{transactionMetricName}\" is being ignored from {stackTrace}");
+                Log.Finest($"Transaction {Guid} \"{transactionMetricName}\" is being ignored from {stackTrace}");
             }
         }
 

@@ -55,7 +55,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 "CompleteMessageAsync" => MessageBrokerAction.Settle,
                 "DeadLetterInternalAsync" => MessageBrokerAction.Settle,
                 "DeferMessageAsync" => MessageBrokerAction.Settle,
-                "RenewMessageLockAsync" => MessageBrokerAction.Consume, // TODO This doesn't quite fit. OTEL uses a default action with no name for this
+                "RenewMessageLockAsync" => MessageBrokerAction.Consume, //  OTEL uses a default action with no name for this, but we don't have that option
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodName}")
             };
 
@@ -85,7 +85,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         {
             transaction.AttachToAsync();
         }
-
 
         // start a message broker segment (only happens if transaction is not NoOpTransaction)
         var segment = transaction.StartMessageBrokerSegment(
@@ -127,6 +126,10 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                         {
                             transaction.LogFinest("ReceiveMessagesAsync task was canceled in processor mode. Ignoring transaction.");
                             transaction.Ignore();
+
+                            // End the transaction here since end in the AzureServiceBusReceiverManagerWrapper is never called
+                            // In FW this results in a transaction has been garbage collected message, probably due to different GC settings in FW vs. Core
+                            transaction.End(); 
                         }
                     }
                 },
