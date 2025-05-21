@@ -85,8 +85,8 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/couchbase" >> $GITHUB_OUTPUT
               echo "tag=couchbase:latest" >> $GITHUB_OUTPUT
               echo "ports=8091,8092,8093,8094,8095,11210" >> $GITHUB_OUTPUT
-              echo "memory=3.0" >> $GITHUB_OUTPUT
-              echo "cpu=2.0" >> $GITHUB_OUTPUT
+              echo "memory=5.0" >> $GITHUB_OUTPUT
+              echo "cpu=4.0" >> $GITHUB_OUTPUT
               echo "env=COUCHBASE_ADMINISTRATOR_PASSWORD=\"${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}\"" >> $GITHUB_OUTPUT
               ;;
             postgres)
