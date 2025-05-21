@@ -221,6 +221,11 @@ jobs:
           MEM_ARG="--memory $MEMORY"
           CPU_ARG="--cpu $CPU"
 
+          echo "ENV_ARGS: $ENV_ARGS"
+          echo "CMD_ARG: $CMD_ARG"
+          echo "CPU_ARG: $CPU_ARG"
+          echo "MEM_ARG: $MEM_ARG"
+
           az container create \
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
             --name "${{ matrix.service }}-server" \
