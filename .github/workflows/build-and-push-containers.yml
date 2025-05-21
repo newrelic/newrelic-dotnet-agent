@@ -103,7 +103,8 @@ jobs:
               echo "ports=1433" >> $GITHUB_OUTPUT
               echo "memory=3.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
-              echo "build_args=SA_PASSWORD=\"${{ secrets.MSSQL_SA_PASSWORD }}\"" >> $GITHUB_OUTPUT
+              echo "build_args=SA_PASS=\"${{ secrets.MSSQL_SA_PASSWORD }}\"" >> $GITHUB_OUTPUT
+              echo "env=ACCEPT_EULA=\"Y\" MSSQL_SA_PASSWORD=\"${{ secrets.MSSQL_SA_PASSWORD }}\" SQLCMDPASSWORD=\"${{ secrets.MSSQL_SA_PASSWORD }}\" SA_PASSWORD=\"${{ secrets.MSSQL_SA_PASSWORD }}\"" >> $GITHUB_OUTPUT
               ;;
             mysql)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mysql" >> $GITHUB_OUTPUT
