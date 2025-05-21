@@ -36,11 +36,16 @@ fi
 
 # Ports
 PORT_YAML=""
+IP_PORTS_YAML=""
 for port in $(echo "$PORTS_INPUT" | tr ',' ' '); do
   PORT_YAML+="            - port: $port\n"
+  IP_PORTS_YAML+="      - protocol: tcp\n        port: $port\n"
 done
 
-# Write YAML file with correct indentation
+# Generate DNS name label in required format
+DNS_NAME_LABEL="dotnet-unboundedservices-${SERVICE}-server"
+
+# Write YAML file with correct indentation and public IP
 cat > aci-$SERVICE.yaml <<EOF
 apiVersion: '2021-09-01'
 location: $LOCATION
@@ -58,13 +63,18 @@ properties:
 $(echo -e "$ENV_YAML")
 $(echo -e "$CMD_YAML")
         ports:
-$(echo -e "$PORT_YAML")      
+$(echo -e "$PORT_YAML")
   osType: Linux
   imageRegistryCredentials:
     - server: $REGISTRY
       username: $REGISTRY_USERNAME
       password: $REGISTRY_PASSWORD
   restartPolicy: Always
+  ipAddress:
+    type: Public
+    dnsNameLabel: $DNS_NAME_LABEL
+    ports:
+$(echo -e "$IP_PORTS_YAML")
   diagnostics:
     logAnalytics:
       workspaceId: $LOG_ANALYTICS_WORKSPACE_ID
