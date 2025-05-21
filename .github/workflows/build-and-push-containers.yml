@@ -118,7 +118,7 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/rabbitmq" >> $GITHUB_OUTPUT
               echo "tag=rabbitmq:latest" >> $GITHUB_OUTPUT
               echo "ports=5671,5672,15671,15672" >> $GITHUB_OUTPUT
-              echo "command=/bin/sh -c 'rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server'" >> $GITHUB_OUTPUT
+              echo "command=rabbitmq-plugins enable --offline rabbitmq_management && rabbitmq-server" >> $GITHUB_OUTPUT
               echo "memory=3.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
               echo "env=RABBITMQ_DEFAULT_USER=\"${{ secrets.RABBITMQ_DEFAULT_USER }}\" RABBITMQ_DEFAULT_PASS=\"${{ secrets.RABBITMQ_DEFAULT_PASS }}\"" >> $GITHUB_OUTPUT
@@ -198,4 +198,18 @@ jobs:
       - name: Deploy ${{ matrix.service }} to Azure Container Instance
         shell: bash
         run: |
-          bash tests/Agent/IntegrationTests/UnboundedServices/deploy-aci.sh "${{ matrix.service }}" "${{ steps.config.outputs.tag }}" "${{ steps.config.outputs.env }}" "${{ steps.config.outputs.command }}" "${{ steps.config.outputs.ports }}" "${{ steps.config.outputs.memory }}" "${{ steps.config.outputs.cpu }}" "${{ env.REGISTRY }}" "${{ secrets.REGISTRY_USERNAME }}" "${{ secrets.REGISTRY_PASSWORD }}" "${{ secrets.AZURE_RESOURCE_GROUP }}" "${{ secrets.AZURE_LOCATION }}" "${{ secrets.LOG_ANALYTICS_WORKSPACE_ID }}" "${{ secrets.LOG_ANALYTICS_WORKSPACE_KEY }}"
+          bash tests/Agent/IntegrationTests/UnboundedServices/deploy-aci.sh \
+          "${{ matrix.service }}" \
+          "${{ steps.config.outputs.tag }}" \
+          "${{ steps.config.outputs.env }}" \
+          "${{ steps.config.outputs.command }}" \
+          "${{ steps.config.outputs.ports }}" \
+          "${{ steps.config.outputs.memory }}" \
+          "${{ steps.config.outputs.cpu }}" \
+          "${{ env.REGISTRY }}" \
+          "${{ secrets.REGISTRY_USERNAME }}" \
+          "${{ secrets.REGISTRY_PASSWORD }}" \
+          "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+          "${{ secrets.AZURE_LOCATION }}" \
+          "${{ secrets.LOG_ANALYTICS_WORKSPACE_ID }}" \
+          "${{ secrets.LOG_ANALYTICS_WORKSPACE_KEY }}"

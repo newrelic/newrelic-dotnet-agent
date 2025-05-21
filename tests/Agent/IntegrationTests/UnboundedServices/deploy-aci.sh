@@ -21,27 +21,27 @@ LOG_ANALYTICS_WORKSPACE_KEY="${14}"
 # Parse environment variables (space separated, quoted values)
 ENV_YAML=""
 if [ -n "$ENV_INPUT" ]; then
-  for envvar in $ENV_INPUT; do
-    key=$(echo $envvar | cut -d'=' -f1)
-    value=$(echo $envvar | cut -d'=' -f2-)
-    ENV_YAML="$ENV_YAML            - name: $key\n              value: $value\n"
-  done
+  while IFS= read -r envvar; do
+    key="$(echo "$envvar" | cut -d'=' -f1)"
+    value="$(echo "$envvar" | cut -d'=' -f2-)"
+    ENV_YAML+="            - name: $key\n              value: $value\n"
+  done < <(echo "$ENV_INPUT" | tr ' ' '\n')
 fi
 
 # Parse command-line if present
 CMD_YAML=""
 if [ -n "$COMMAND_INPUT" ]; then
-  CMD_YAML="            command:\n              - /bin/sh\n              - -c\n              - $COMMAND_INPUT\n"
+  CMD_YAML="        command:\n          - /bin/sh\n          - -c\n          - $COMMAND_INPUT\n"
 fi
 
 # Ports
 PORT_YAML=""
-for port in $(echo $PORTS_INPUT | tr ',' ' '); do
-  PORT_YAML="$PORT_YAML            - port: $port\n"
-fi
+for port in $(echo "$PORTS_INPUT" | tr ',' ' '); do
+  PORT_YAML+="            - port: $port\n"
+done
 
-# Generate YAML file with correct indentation and top-level properties
-cat <<EOF > aci-$SERVICE.yaml
+# Write YAML file with correct indentation
+cat > aci-$SERVICE.yaml <<EOF
 apiVersion: '2021-09-01'
 location: $LOCATION
 name: $SERVICE-server
@@ -55,8 +55,11 @@ properties:
             cpu: $CPU
             memoryInGb: $MEMORY
         environmentVariables:
-$ENV_YAML$CMD_YAML        ports:
-$PORT_YAML  osType: Linux
+$(echo -e "$ENV_YAML")
+$(echo -e "$CMD_YAML")
+        ports:
+$(echo -e "$PORT_YAML")      
+  osType: Linux
   imageRegistryCredentials:
     - server: $REGISTRY
       username: $REGISTRY_USERNAME
@@ -68,17 +71,10 @@ $PORT_YAML  osType: Linux
       workspaceKey: $LOG_ANALYTICS_WORKSPACE_KEY
 EOF
 
-# Fix indentation for top-level properties
-awk '/^  osType:/ {print "osType:"; next} \
-     /^  imageRegistryCredentials:/ {print "imageRegistryCredentials:"; next} \
-     /^  restartPolicy:/ {print "restartPolicy:"; next} \
-     /^  diagnostics:/ {print "diagnostics:"; next} \
-     {print}' aci-$SERVICE.yaml > aci-$SERVICE-fixed.yaml
-mv aci-$SERVICE-fixed.yaml aci-$SERVICE.yaml
-
 echo "Generated YAML for $SERVICE:"
+echo "----------------------"
 cat aci-$SERVICE.yaml
-
+echo "----------------------"
 az container create --resource-group "$RESOURCE_GROUP" --file aci-$SERVICE.yaml
 
 rm -f aci-$SERVICE.yaml
