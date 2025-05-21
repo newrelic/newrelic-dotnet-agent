@@ -47,7 +47,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_LAMBDA_FUNCTION_VERSION", lambdaVersion);
                     AddAdditionalEnvironmentVariableIfNotNull("AWS_EXECUTION_ENV", lambdaExecutionEnvironment);
 
-                    AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_APM_LAMBDA_MODE", "true");
+                    AddAdditionalEnvironmentVariableIfNotNull("NEW_RELIC_APM_LAMBDA_MODE", "false");
 
                     // Finest level logs are necessary to read the uncompressed payloads from the agent logs
                     remoteApplication.NewRelicConfig.SetLogLevel("finest");
