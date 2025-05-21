@@ -85,7 +85,7 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/couchbase" >> $GITHUB_OUTPUT
               echo "tag=couchbase:latest" >> $GITHUB_OUTPUT
               echo "ports=8091,8092,8093,8094,8095,11210" >> $GITHUB_OUTPUT
-              echo "memory=3.0" >> $GITHUB_OUTPUT
+              echo "memory=.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
               echo "env=COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
@@ -127,15 +127,15 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb32" >> $GITHUB_OUTPUT
               echo "tag=mongodb32:latest" >> $GITHUB_OUTPUT
               echo "ports=27017" >> $GITHUB_OUTPUT
-              echo "memory=3.0" >> $GITHUB_OUTPUT
+              echo "memory=5.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
               echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             mongodb60)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mongodb60" >> $GITHUB_OUTPUT
               echo "tag=mongodb60:latest" >> $GITHUB_OUTPUT
-              echo "ports=27018:27017" >> $GITHUB_OUTPUT
-              echo "memory=3.0" >> $GITHUB_OUTPUT
+              echo "ports=27017" >> $GITHUB_OUTPUT
+              echo "memory=5.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
               echo "env=MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}\nMONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
@@ -158,7 +158,7 @@ jobs:
             elastic7)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/elastic7" >> $GITHUB_OUTPUT
               echo "tag=elastic7:latest" >> $GITHUB_OUTPUT
-              echo "ports=9201:9200" >> $GITHUB_OUTPUT
+              echo "ports=9200" >> $GITHUB_OUTPUT
               echo "memory=2.0" >> $GITHUB_OUTPUT
               echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> $GITHUB_OUTPUT
@@ -170,6 +170,32 @@ jobs:
           context: ${{ steps.config.outputs.context }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
+      - name: Delete existing ${{ matrix.service }} ACI container (if exists)
+        shell: bash
+        run: |
+          az container show \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ matrix.service }}-server" \
+            --only-show-errors > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "Deleting existing container: ${{ matrix.service }}-server"
+            az container delete \
+              --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ matrix.service }}-server" \
+              --yes
+            # Wait for deletion to complete
+            for i in {1..30}; do
+              az container show --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --name "${{ matrix.service }}-server" --only-show-errors > /dev/null 2>&1
+              if [ $? -ne 0 ]; then
+                echo "Container deleted."
+                break
+              fi
+              echo "Waiting for container deletion... ($i)"
+              sleep 5
+            done
+          else
+            echo "No existing container to delete."
+          fi
       - name: Deploy ${{ matrix.service }} to Azure Container Instance
         shell: bash
         run: |
