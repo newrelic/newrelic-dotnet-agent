@@ -85,7 +85,7 @@ jobs:
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/couchbase" >> $GITHUB_OUTPUT
               echo "tag=couchbase:latest" >> $GITHUB_OUTPUT
               echo "ports=8091,8092,8093,8094,8095,11210" >> $GITHUB_OUTPUT
-              echo "memory=.0" >> $GITHUB_OUTPUT
+              echo "memory=3.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
               echo "env=COUCHBASE_ADMINISTRATOR_PASSWORD=${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
@@ -103,7 +103,7 @@ jobs:
               echo "ports=1433" >> $GITHUB_OUTPUT
               echo "memory=3.0" >> $GITHUB_OUTPUT
               echo "cpu=2.0" >> $GITHUB_OUTPUT
-              echo "env=SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}" >> $GITHUB_OUTPUT
+              echo "build_args=SA_PASSWORD=${{ secrets.MSSQL_SA_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             mysql)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/mysql" >> $GITHUB_OUTPUT
@@ -170,6 +170,7 @@ jobs:
           context: ${{ steps.config.outputs.context }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.config.outputs.tag }}
+          build-args: ${{ steps.config.outputs.build_args }}
       - name: Delete existing ${{ matrix.service }} ACI container (if exists)
         shell: bash
         run: |
