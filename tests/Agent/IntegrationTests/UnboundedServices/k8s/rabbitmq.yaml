@@ -1,0 +1,43 @@
+# Standard License Header
+# Kubernetes Deployment and Service for RabbitMQ
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: <ACR_LOGIN_SERVER>/unbounded-rabbitmq:latest
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5672
+      targetPort: 5672
+      name: amqp
+    - port: 15672
+      targetPort: 15672
+      name: management
+  selector:
+    app: rabbitmq

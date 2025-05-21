@@ -1,0 +1,38 @@
+# Standard License Header
+# Kubernetes Deployment and Service for MongoDB 6.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb60
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb60
+  template:
+    metadata:
+      labels:
+        app: mongodb60
+    spec:
+      containers:
+      - name: mongodb60
+        image: <ACR_LOGIN_SERVER>/unbounded-mongodb60:latest
+        ports:
+        - containerPort: 27017
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb60
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb60

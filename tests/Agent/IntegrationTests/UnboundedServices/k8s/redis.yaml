@@ -1,0 +1,39 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: <ACR_LOGIN_SERVER>/unbounded-redis:latest
+        command: ["redis-server", "--requirepass", "RedisPassword"]
+        ports:
+        - containerPort: 6379
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis

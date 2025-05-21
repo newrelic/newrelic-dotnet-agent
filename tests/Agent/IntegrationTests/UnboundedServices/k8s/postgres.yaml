@@ -1,0 +1,38 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Postgres
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: <ACR_LOGIN_SERVER>/unbounded-postgres:latest
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

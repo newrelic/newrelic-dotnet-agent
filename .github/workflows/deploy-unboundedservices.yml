@@ -1,0 +1,87 @@
+# Standard License Header
+# GitHub Actions workflow to build, push, and deploy to AKS
+name: Deploy UnboundedServices to AKS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      ACR_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+      RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      CLUSTER_NAME: dotnet-unbounded-services
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Azure Login
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Container Registry Login
+        uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Create Kubernetes Secrets Manifest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          COUCHBASE_ADMINISTRATOR_PASSWORD: ${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          RABBITMQ_DEFAULT_USER: ${{ secrets.RABBITMQ_DEFAULT_USER }}
+          RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_DEFAULT_PASS }}
+          ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
+          ORACLE_PWD: ${{ secrets.ORACLE_PWD }}
+        run: |
+          cat <<EOF > k8s/unboundedservices-secrets.yaml
+            apiVersion: v1
+            kind: Secret
+            metadata:
+            name: unboundedservices-secrets
+            namespace: unbounded-services
+            type: Opaque
+            data:
+            MONGO_INITDB_ROOT_USERNAME: $(echo -n "$MONGO_INITDB_ROOT_USERNAME" | base64)
+            MONGO_INITDB_ROOT_PASSWORD: $(echo -n "$MONGO_INITDB_ROOT_PASSWORD" | base64)
+            POSTGRES_USER: $(echo -n "$POSTGRES_USER" | base64)
+            POSTGRES_PASSWORD: $(echo -n "$POSTGRES_PASSWORD" | base64)
+            SA_PASSWORD: $(echo -n "$SA_PASSWORD" | base64)
+            MYSQL_ROOT_PASSWORD: $(echo -n "$MYSQL_ROOT_PASSWORD" | base64)
+            COUCHBASE_ADMINISTRATOR_PASSWORD: $(echo -n "$COUCHBASE_ADMINISTRATOR_PASSWORD" | base64)
+            REDIS_PASSWORD: $(echo -n "$REDIS_PASSWORD" | base64)
+            RABBITMQ_DEFAULT_USER: $(echo -n "$RABBITMQ_DEFAULT_USER" | base64)
+            RABBITMQ_DEFAULT_PASS: $(echo -n "$RABBITMQ_DEFAULT_PASS" | base64)
+            ELASTIC_PASSWORD: $(echo -n "$ELASTIC_PASSWORD" | base64)
+            ORACLE_PWD: $(echo -n "$ORACLE_PWD" | base64)
+          EOF
+      - name: Build and Push Docker Images
+        shell: bash
+        run: |
+          ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP $AZURE_SUBSCRIPTION_ID
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: dotnet-unbounded-services
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/unboundedservices-secrets.yaml
+          kubectl apply -f k8s/unboundedservices-deployment.yaml
+          kubectl apply -f k8s/unboundedservices-service.yaml
+          kubectl apply -f k8s/ingress.yaml

@@ -1,0 +1,38 @@
+# Standard License Header
+# Kubernetes Deployment and Service for MSSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mssql
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      containers:
+      - name: mssql
+        image: <ACR_LOGIN_SERVER>/unbounded-mssql:latest
+        ports:
+        - containerPort: 1433
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 1433
+      targetPort: 1433
+  selector:
+    app: mssql

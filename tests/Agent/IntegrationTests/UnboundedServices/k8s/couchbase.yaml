@@ -1,0 +1,53 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Couchbase
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: couchbase
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchbase
+  template:
+    metadata:
+      labels:
+        app: couchbase
+    spec:
+      containers:
+      - name: couchbase
+        image: <ACR_LOGIN_SERVER>/unbounded-couchbase:latest
+        ports:
+        - containerPort: 8091
+        - containerPort: 8092
+        - containerPort: 8093
+        - containerPort: 8094
+        - containerPort: 8095
+        - containerPort: 11210
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchbase
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8091
+      targetPort: 8091
+    - port: 8092
+      targetPort: 8092
+    - port: 8093
+      targetPort: 8093
+    - port: 8094
+      targetPort: 8094
+    - port: 8095
+      targetPort: 8095
+    - port: 11210
+      targetPort: 11210
+  selector:
+    app: couchbase

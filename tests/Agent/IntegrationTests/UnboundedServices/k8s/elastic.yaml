@@ -1,0 +1,52 @@
+# Standard License Header
+# Kubernetes Deployment and Service for ElasticSearch 8.x
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastic
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic
+  template:
+    metadata:
+      labels:
+        app: elastic
+    spec:
+      containers:
+      - name: elastic
+        image: elasticsearch:8.6.2
+        ports:
+        - containerPort: 9200
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ELASTIC_PASSWORD
+          value: "ElasticPassword"
+        - name: xpack.security.enabled
+          value: "true"
+        - name: xpack.security.http.ssl.enabled
+          value: "false"
+        envFrom:
+        - secretRef:
+            name: unboundedservices-secrets
+        resources:
+          limits:
+            memory: 2Gi
+        securityContext:
+          privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elastic
+  namespace: unbounded-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+  selector:
+    app: elastic
