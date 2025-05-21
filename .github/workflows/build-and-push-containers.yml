@@ -173,11 +173,10 @@ jobs:
       - name: Delete existing ${{ matrix.service }} ACI container (if exists)
         shell: bash
         run: |
-          az container show \
+          if az container show \
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
             --name "${{ matrix.service }}-server" \
-            --only-show-errors > /dev/null 2>&1
-          if [ $? -eq 0 ]; then
+            --only-show-errors > /dev/null 2>&1; then
             echo "Deleting existing container: ${{ matrix.service }}-server"
             az container delete \
               --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
@@ -185,8 +184,7 @@ jobs:
               --yes
             # Wait for deletion to complete
             for i in {1..30}; do
-              az container show --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --name "${{ matrix.service }}-server" --only-show-errors > /dev/null 2>&1
-              if [ $? -ne 0 ]; then
+              if ! az container show --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --name "${{ matrix.service }}-server" --only-show-errors > /dev/null 2>&1; then
                 echo "Container deleted."
                 break
               fi
