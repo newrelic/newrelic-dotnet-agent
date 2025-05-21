@@ -36,7 +36,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
                 MessageBrokerDestinationType.Queue,
-                MessageBrokerAction.Process, // TODO: This is a new action, added for this instrumentation
+                MessageBrokerAction.Process,
                 BrokerVendorName,
                 queueName,
                 serverAddress: fqns);

@@ -29,8 +29,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        transaction.LogFinest("AzureServiceBusReceiveWrapper.BeforeWrappedMethod() is starting.");
-
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
         string queueName = serviceBusReceiver.EntityPath; // some-queue-name
         string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
@@ -119,7 +117,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     }
                     finally
                     {
-                        transaction.LogFinest($"Ending segment for {instrumentedMethodName}.");
                         segment.End();
 
                         if (isProcessor && responseTask.IsCanceled)
@@ -166,6 +163,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         var resultObj = GetTaskResultFromObject(responseTask);
         ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor);
     }
+
     private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor)
     {
         if (resultObj != null)
@@ -191,6 +189,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     {
                         transaction.LogFinest("No messages received. Ignoring transaction.");
                         transaction.Ignore();
+                        // Do not end transaction here - this will happen in the GetAsyncDelegateFor finally statement, see #127-129.
                     }
                     break;
             }
