@@ -153,7 +153,7 @@ jobs:
               echo "ports=9200" >> $GITHUB_OUTPUT
               echo "memory=2.0" >> $GITHUB_OUTPUT
               echo "cpu=1.0" >> $GITHUB_OUTPUT
-              echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
+              echo "env=ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
             elastic7)
               echo "context=tests/Agent/IntegrationTests/UnboundedServices/elastic7" >> $GITHUB_OUTPUT
@@ -161,7 +161,7 @@ jobs:
               echo "ports=9201" >> $GITHUB_OUTPUT
               echo "memory=2.0" >> $GITHUB_OUTPUT
               echo "cpu=1.0" >> $GITHUB_OUTPUT
-              echo "env=discovery.type=single-node\nELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}\nxpack.security.enabled=true\nxpack.security.http.ssl.enabled=false" >> $GITHUB_OUTPUT
+              echo "env=ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> $GITHUB_OUTPUT
               ;;
           esac
       - name: Build and push ${{ matrix.service }} image
@@ -185,7 +185,7 @@ jobs:
           # Parse command-line if present
           CMD_ARG=""
           if [ -n "${{ steps.config.outputs.command }}" ]; then
-            CMD_ARG="--command-line '${{ steps.config.outputs.command }}'"
+            CMD_ARG="--command-line \"${{ steps.config.outputs.command }}\""
           fi
 
           # Always set memory and cpu (default 1.0 if not set)

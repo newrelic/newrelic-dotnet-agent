@@ -121,10 +121,7 @@ services:
         ports:
             - 9200:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
@@ -140,10 +137,7 @@ services:
         ports:
             - 9201:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
