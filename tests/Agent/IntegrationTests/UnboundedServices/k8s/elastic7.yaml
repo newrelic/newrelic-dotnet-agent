@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: elastic7
-        image: elasticsearch:7.17.10
+        image: dotnetunboundedservices.azurecr.io/elastic7:latest
         ports:
         - containerPort: 9200
         env:
@@ -43,10 +43,14 @@ kind: Service
 metadata:
   name: elastic7
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
-    - port: 9200
+    - port: 9201
       targetPort: 9200
   selector:
     app: elastic7

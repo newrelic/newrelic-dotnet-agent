@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: <ACR_LOGIN_SERVER>/unbounded-postgres:latest
+        image: dotnetunboundedservices.azurecr.io/postgres:latest
         ports:
         - containerPort: 5432
         envFrom:
@@ -29,8 +29,12 @@ kind: Service
 metadata:
   name: postgres
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 5432
       targetPort: 5432

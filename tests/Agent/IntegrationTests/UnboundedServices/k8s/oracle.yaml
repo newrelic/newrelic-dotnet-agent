@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: oracle
-        image: container-registry.oracle.com/database/free:23.4.0.0-lite
+        image: dotnetunboundedservices.azurecr.io/oracle:latest
         ports:
         - containerPort: 1521
         envFrom:
@@ -32,8 +32,12 @@ kind: Service
 metadata:
   name: oracle
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 1521
       targetPort: 1521

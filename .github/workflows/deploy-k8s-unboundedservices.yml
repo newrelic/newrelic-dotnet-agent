@@ -49,30 +49,31 @@ jobs:
           ORACLE_PWD: ${{ secrets.ORACLE_PWD }}
         run: |
           cat <<EOF > k8s/unboundedservices-secrets.yaml
+            # Shared Kubernetes Secret for all service credentials
             apiVersion: v1
             kind: Secret
             metadata:
-            name: unboundedservices-secrets
-            namespace: unbounded-services
+              name: unboundedservices-secrets
+              namespace: unbounded-services
             type: Opaque
             data:
-            MONGO_INITDB_ROOT_USERNAME: $(echo -n "$MONGO_INITDB_ROOT_USERNAME" | base64)
-            MONGO_INITDB_ROOT_PASSWORD: $(echo -n "$MONGO_INITDB_ROOT_PASSWORD" | base64)
-            POSTGRES_USER: $(echo -n "$POSTGRES_USER" | base64)
-            POSTGRES_PASSWORD: $(echo -n "$POSTGRES_PASSWORD" | base64)
-            SA_PASSWORD: $(echo -n "$SA_PASSWORD" | base64)
-            MYSQL_ROOT_PASSWORD: $(echo -n "$MYSQL_ROOT_PASSWORD" | base64)
-            COUCHBASE_ADMINISTRATOR_PASSWORD: $(echo -n "$COUCHBASE_ADMINISTRATOR_PASSWORD" | base64)
-            REDIS_PASSWORD: $(echo -n "$REDIS_PASSWORD" | base64)
-            RABBITMQ_DEFAULT_USER: $(echo -n "$RABBITMQ_DEFAULT_USER" | base64)
-            RABBITMQ_DEFAULT_PASS: $(echo -n "$RABBITMQ_DEFAULT_PASS" | base64)
-            ELASTIC_PASSWORD: $(echo -n "$ELASTIC_PASSWORD" | base64)
-            ORACLE_PWD: $(echo -n "$ORACLE_PWD" | base64)
+              MONGO_INITDB_ROOT_USERNAME: $(echo -n "$MONGO_INITDB_ROOT_USERNAME" | base64)
+              MONGO_INITDB_ROOT_PASSWORD: $(echo -n "$MONGO_INITDB_ROOT_PASSWORD" | base64)
+              POSTGRES_USER: $(echo -n "$POSTGRES_USER" | base64)
+              POSTGRES_PASSWORD: $(echo -n "$POSTGRES_PASSWORD" | base64)
+              SA_PASSWORD: $(echo -n "$SA_PASSWORD" | base64)
+              MYSQL_ROOT_PASSWORD: $(echo -n "$MYSQL_ROOT_PASSWORD" | base64)
+              COUCHBASE_ADMINISTRATOR_PASSWORD: $(echo -n "$COUCHBASE_ADMINISTRATOR_PASSWORD" | base64)
+              REDIS_PASSWORD: $(echo -n "$REDIS_PASSWORD" | base64)
+              RABBITMQ_DEFAULT_USER: $(echo -n "$RABBITMQ_DEFAULT_USER" | base64)
+              RABBITMQ_DEFAULT_PASS: $(echo -n "$RABBITMQ_DEFAULT_PASS" | base64)
+              ELASTIC_PASSWORD: $(echo -n "$ELASTIC_PASSWORD" | base64)
+              ORACLE_PWD: $(echo -n "$ORACLE_PWD" | base64)
           EOF
       - name: Build and Push Docker Images
         shell: bash
         run: |
-          ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP $AZURE_SUBSCRIPTION_ID
+          ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
       - name: Set AKS Context
         uses: azure/aks-set-context@v3
         with:
@@ -80,8 +81,17 @@ jobs:
           cluster-name: dotnet-unbounded-services
       - name: Deploy to AKS
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/unboundedservices-secrets.yaml
-          kubectl apply -f k8s/unboundedservices-deployment.yaml
-          kubectl apply -f k8s/unboundedservices-service.yaml
-          kubectl apply -f k8s/ingress.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/namespace.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/unboundedservices-secrets.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/rabbitmq.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb32.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb60.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/redis.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/couchbase.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/postgres.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mssql.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mysql.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic7.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/oracle.yaml
+

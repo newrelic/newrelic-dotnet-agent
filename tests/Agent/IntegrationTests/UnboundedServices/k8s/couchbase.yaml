@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: couchbase
-        image: <ACR_LOGIN_SERVER>/unbounded-couchbase:latest
+        image: dotnetunboundedservices.azurecr.io/couchbase:latest
         ports:
         - containerPort: 8091
         - containerPort: 8092
@@ -34,8 +34,12 @@ kind: Service
 metadata:
   name: couchbase
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 8091
       targetPort: 8091

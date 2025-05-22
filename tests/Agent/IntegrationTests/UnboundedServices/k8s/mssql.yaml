@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mssql
-        image: <ACR_LOGIN_SERVER>/unbounded-mssql:latest
+        image: dotnetunboundedservices.azurecr.io/mssql:latest
         ports:
         - containerPort: 1433
         envFrom:
@@ -29,8 +29,12 @@ kind: Service
 metadata:
   name: mssql
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 1433
       targetPort: 1433

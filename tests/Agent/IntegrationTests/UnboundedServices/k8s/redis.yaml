@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: redis
-        image: <ACR_LOGIN_SERVER>/unbounded-redis:latest
-        command: ["redis-server", "--requirepass", "RedisPassword"]
+        image: dotnetunboundedservices.azurecr.io/redis:latest
+        command: ["sh", "-c", "redis-server --requirepass $REDIS_PASSWORD"]
         ports:
         - containerPort: 6379
         envFrom:
@@ -30,8 +30,12 @@ kind: Service
 metadata:
   name: redis
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 6379
       targetPort: 6379

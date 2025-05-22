@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: <ACR_LOGIN_SERVER>/unbounded-rabbitmq:latest
+        image: dotnetunboundedservices.azurecr.io/rabbitmq:latest
         ports:
         - containerPort: 5672
         - containerPort: 15672
@@ -30,8 +30,12 @@ kind: Service
 metadata:
   name: rabbitmq
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 5672
       targetPort: 5672

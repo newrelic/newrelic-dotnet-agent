@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mongodb32
-        image: <ACR_LOGIN_SERVER>/unbounded-mongodb32:latest
+        image: dotnetunboundedservices.azurecr.io/mongodb32:latest
         ports:
         - containerPort: 27017
         envFrom:
@@ -29,8 +29,12 @@ kind: Service
 metadata:
   name: mongodb32
   namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: integration-test-services
+    service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 4.246.122.173
   ports:
     - port: 27017
       targetPort: 27017
