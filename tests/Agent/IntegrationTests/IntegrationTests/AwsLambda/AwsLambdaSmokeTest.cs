@@ -29,6 +29,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
+                if (_awsLambdaApmModeEnabled)
+                {
+                    configModifier.EnableAwsLambdaAPMMode(true);
+                }
             };
 
             _fixture.Actions(

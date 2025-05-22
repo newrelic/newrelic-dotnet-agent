@@ -538,5 +538,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enabled}");
             return this;
         }
+        public NewRelicConfigModifier EnableAwsLambdaAPMMode(bool awsLambdaApmModeEnabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "AwsLambdaApmModeEnabled", awsLambdaApmModeEnabled.ToString(), "urn:newrelic-config");
+            return this;
+        }
     }
 }
