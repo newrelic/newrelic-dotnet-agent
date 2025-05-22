@@ -31,7 +31,7 @@ jobs:
       - name: Set matrix based on input
         id: set-matrix
         run: |
-          ALL_SERVICES=(couchbase postgres mssql mysql rabbitmq mongodb32 mongodb60 oracle elastic elastic7)
+          ALL_SERVICES=(couchbase postgres mssql mysql rabbitmq mongodb32 mongodb60 oracle elastic elastic7 redis)
           if [ -z "${{ github.event.inputs.services }}" ]; then
             SELECTED=("${ALL_SERVICES[@]}")
           else
@@ -163,6 +163,15 @@ jobs:
               echo "memory=2.0" >> $GITHUB_OUTPUT
               echo "cpu=1.0" >> $GITHUB_OUTPUT
               echo "env=ELASTIC_PASSWORD=\"${{ secrets.ELASTIC_PASSWORD }}\"" >> $GITHUB_OUTPUT
+              ;;
+            redis)
+              echo "context=tests/Agent/IntegrationTests/UnboundedServices/redis" >> $GITHUB_OUTPUT
+              echo "tag=redis:6.2.5" >> $GITHUB_OUTPUT
+              echo "ports=6379" >> $GITHUB_OUTPUT
+              echo "command=redis-server --requirepass \"${{ secrets.REDIS_PASSWORD }}\"" >> $GITHUB_OUTPUT
+              echo "memory=2.0" >> $GITHUB_OUTPUT
+              echo "cpu=1.0" >> $GITHUB_OUTPUT
+              echo "env=" >> $GITHUB_OUTPUT
               ;;
           esac
       - name: Build and push ${{ matrix.service }} image
