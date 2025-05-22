@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.42.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.41.0...v10.42.0) (2025-05-22)
+
+
+### New features
+
+* Added transaction renaming requirement for Serverless APM mode ([#3128](https://github.com/newrelic/newrelic-dotnet-agent/issues/3128)) ([46c4cd0](https://github.com/newrelic/newrelic-dotnet-agent/commit/46c4cd06864ebef502490b4afdf7c2e2e36962f9))
+
 ## [10.41.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.1...v10.41.0) (2025-04-25)
 
 
