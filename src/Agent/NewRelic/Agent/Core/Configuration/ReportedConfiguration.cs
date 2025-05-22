@@ -742,6 +742,10 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent_control.health.frequency")]
         public int HealthFrequency => _configuration.HealthFrequency;
 
+        [JsonIgnore]
+        public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
+        
+
         #endregion
     }
 }
