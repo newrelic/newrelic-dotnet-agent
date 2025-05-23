@@ -249,11 +249,7 @@ namespace NewRelic.Agent.Core.Segments
         private volatile bool _parentNotified;
         private long _childDurationTicks = 0;
 
-        public bool TryGetTransactionFromSegment(out ITransaction transaction)
-        {
-            transaction = _transactionSegmentState as ITransaction;
-            return transaction != null;
-        }
+        public ITransaction GetTransactionFromSegment => _transactionSegmentState as ITransaction;
 
         public bool ActivityStartedTransaction { get; set; } = false;
 
@@ -510,7 +506,8 @@ namespace NewRelic.Agent.Core.Segments
     // activity class instance.
     public interface IHybridAgentSegment
     {
-        bool TryGetTransactionFromSegment(out ITransaction transaction);
+        ITransaction GetTransactionFromSegment { get; }
+
         bool ActivityStartedTransaction { get; set; }
     }
 }

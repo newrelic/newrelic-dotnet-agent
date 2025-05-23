@@ -35,24 +35,32 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _errorService = errorService;
         }
 
-        public void Start()
+        public bool Start()
         {
-            if (_agent.Configuration.OpenTelemetryBridgeEnabled)
-                TryCreateActivityListener();
-            else
+            if (!_agent.Configuration.OpenTelemetryBridgeEnabled)
+            {
                 Log.Debug("OpenTelemetry Bridge is disabled. Not starting the activity listener.");
+                return true;
+            }
+
+            if (_activityListener != null)
+            {
+                Log.Debug("Activity listener has already been created. Not starting a new one.");
+                return false;
+            }
+
+            return TryCreateActivityListener();
         }
 
-        private void TryCreateActivityListener()
+        private bool TryCreateActivityListener()
         {
-            // TODO: Add logging to indicate why the activity listener was not created in the failure scenarios
-
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
 
             // TODO: Enforce that an appropriate minimum version of the DiagnosticSource assembly is loaded.
             if (assembly == null || (assembly.GetName().Version?.Major ?? 0) < 7)
             {
-                return;
+                Log.Debug("DiagnosticSource assembly version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
+                return false;
             }
 
             var activityListenerType = assembly.GetType("System.Diagnostics.ActivityListener", throwOnError: false);
@@ -60,21 +68,44 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (activityListenerType == null || activitySourceType == null)
             {
-                return;
+                Log.Debug("ActivityListener or ActivitySource type not found in DiagnosticSource assembly. Not starting the activity listener.");
+                return false;
+            }
+
+            var addActivityListenerMethod = activitySourceType.GetMethod("AddActivityListener", [activityListenerType]);
+            if (addActivityListenerMethod == null)
+            {
+                Log.Debug("AddActivityListener method not found in ActivitySource type. Not starting the activity listener.");
+                return false;
+            }
+
+            var activityKindType = assembly.GetType("System.Diagnostics.ActivityKind", throwOnError: false);
+            if (activityKindType == null)
+            {
+                Log.Debug("ActivityKind type not found in DiagnosticSource assembly. Not starting the activity listener.");
+                return false;
             }
 
             var memoryAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Memory");
             if (memoryAssembly == null)
             {
                 // System.Memory is a dependency of System.Diagnostics.DiagnosticSource, but it may not be loaded yet.
-                // TODO: Wrap this in a try catch block to handle the case where the assembly is not found and log the error.
-                memoryAssembly = Assembly.Load("System.Memory");
+                try
+                {
+                    memoryAssembly = Assembly.Load("System.Memory");
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "Error loading System.Memory assembly");
+                    return false;
+                }
             }
 
             var memoryExtensionsType = memoryAssembly.GetType("System.MemoryExtensions", throwOnError: false);
             if (memoryExtensionsType == null)
             {
-                return;
+                Log.Debug("System.MemoryExtensions type not found in System.Memory assembly. Not starting the activity listener.");
+                return false;
             }
 
             var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
@@ -107,17 +138,18 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // change in the future, and the exceptions will no longer be stored as events on the span.
 
             // Enable the listener
-            var addActivityListenerMethod = activitySourceType.GetMethod("AddActivityListener", [activityListenerType]);
-            addActivityListenerMethod.Invoke(null, new object[] { _activityListener });
+            addActivityListenerMethod.Invoke(null, [_activityListener]);
 
             // Allow agent instrumentation to create activities visible to the customer's application code.
-            var activityKindType = assembly.GetType("System.Diagnostics.ActivityKind", throwOnError: false);
             NewRelicActivitySourceProxy.SetAndCreateRuntimeActivitySource(activitySourceType, activityKindType);
+
+            return true;
         }
 
         public void Dispose()
         {
             _activityListener?.Dispose();
+            _activityListener = null;
         }
 
         // Only .net 5 and newer libraries and applications will use the W3C id format by default.
@@ -170,8 +202,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private string TryGetCurrentTraceId()
         {
             var transaction = _agent.CurrentTransaction;
-            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
-            if (transaction.IsValid && !transaction.IsFinished && hybridAgentTransaction != null)
+            if (transaction.IsValid && !transaction.IsFinished && transaction is IHybridAgentTransaction hybridAgentTransaction)
             {
                 return hybridAgentTransaction.TraceId;
             }
@@ -393,17 +424,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             if (activity.DisplayName != "temp segment name")
             {
                 var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
-                var methodCall = new MethodCall(method, null, Array.Empty<object>(), false);
-                var segment = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) as IHybridAgentSegment;
+                var methodCall = new MethodCall(method, null, [], false);
 
-                if (segment != null)
+                if (transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
                     segment.ActivityStartedTransaction = shouldStartTransaction;
                 }
             }
 
-            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
-            if (hybridAgentTransaction != null)
+            if (transaction is IHybridAgentTransaction hybridAgentTransaction)
             {
                 // Update the activity to contain the expected trace flags and trace state that the New Relic
                 // data model expects.
@@ -421,16 +450,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return !ShouldStartTransactionForActivity(originalActivity);
         }
 
-        private static readonly List<int> _activityKindsThatStartATransaction = new List<int>
-        {
+        private static readonly List<int> _activityKindsThatStartATransaction =
+        [
             (int)ActivityKind.Server,
             (int)ActivityKind.Consumer
-        };
+        ];
 
         private static bool ShouldStartTransactionForActivity(object originalActivity)
         {
             dynamic activity = originalActivity;
-            
+
             return (bool)activity.HasRemoteParent || _activityKindsThatStartATransaction.Contains((int)activity.Kind);
         }
 
@@ -453,7 +482,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 case "tracestate":
                     return [(string)activity.TraceStateString ?? string.Empty];
                 default:
-                    return Enumerable.Empty<string>();
+                    return [];
             }
         }
 
@@ -474,13 +503,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 segment.End();
             }
 
-            var hybridAgentSegment = segment as IHybridAgentSegment;
-            if (hybridAgentSegment != null && hybridAgentSegment.ActivityStartedTransaction)
+            if (segment is IHybridAgentSegment { ActivityStartedTransaction: true } hybridAgentSegment)
             {
-                if (hybridAgentSegment.TryGetTransactionFromSegment(out var transaction))
-                {
-                    transaction.End();
-                }
+                var transaction = hybridAgentSegment.GetTransactionFromSegment;
+                transaction?.End();
             }
         }
 
@@ -541,11 +567,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         //span.ErrorData = errorData;
 
                         // TODO: Record the errorData on the transaction.
-                        var hybridAgentSegment = segment as IHybridAgentSegment;
-                        if (hybridAgentSegment != null && hybridAgentSegment.TryGetTransactionFromSegment(out var transaction))
+                        if (segment is IHybridAgentSegment hybridAgentSegment)
                         {
-                            var internalTransaction = (IHybridAgentTransaction)transaction;
-                            internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
+                            var transaction = hybridAgentSegment.GetTransactionFromSegment;
+                            if (transaction is IHybridAgentTransaction internalTransaction)
+                            {
+                                internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
+                            }
                         }
                     }
 
@@ -564,7 +592,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private static INewRelicActivitySource _activitySource = null;
         private static int _usingRuntimeActivitySource = 0;
 
-        public static void SetAndCreateRuntimeActivitySource(Type activitySourceType, Type activityKindType)
+        public static void SetAndCreateRuntimeActivitySource(Type activitySourceType, Type activityKindType, IActivitySourceFactory factory = null)
         {
             // We only need to create the runtime activity source once. If it has already been created, we can return early.
             if (Interlocked.CompareExchange(ref _usingRuntimeActivitySource, 1, 0) == 1)
@@ -572,7 +600,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return;
             }
 
-            var originalActivitySource = Interlocked.Exchange(ref _activitySource, new RuntimeActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion, activitySourceType, activityKindType)) as IDisposable;
+            var originalActivitySource = Interlocked.Exchange(ref _activitySource,
+                new RuntimeActivitySource(ActivitySourceName, AgentInstallConfiguration.AgentVersion, activitySourceType, activityKindType, factory)) as IDisposable;
             originalActivitySource?.Dispose();
         }
 
@@ -591,14 +620,27 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         INewRelicActivity CreateActivity(string activityName, ActivityKind kind);
     }
 
+    public interface IActivitySourceFactory
+    {
+        object CreateActivitySource(string name, string version);
+    }
+
+
     public class RuntimeActivitySource : INewRelicActivitySource
     {
         private readonly dynamic _activitySource;
         private readonly Func<string, int, object> _createActivityMethod;
 
-        public RuntimeActivitySource(string name, string version, Type activitySourceType, Type activityKindType)
+        public RuntimeActivitySource(string name, string version, Type activitySourceType, Type activityKindType, IActivitySourceFactory factory = null)
         {
-            _activitySource = Activator.CreateInstance(activitySourceType, name, version);
+            if (factory != null)
+            {
+                _activitySource = factory.CreateActivitySource(name, version);
+            }
+            else
+            {
+                _activitySource = Activator.CreateInstance(activitySourceType, name, version);
+            }
             _createActivityMethod = CreateCreateActivityMethod(activitySourceType, activityKindType);
         }
 

@@ -1269,5 +1269,27 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
         }
 
         #endregion helpers
+
+        [Test]
+        public void GetTraceFlagsAndState_SetsSampledAndTraceStateString()
+        {
+            // Arrange
+            var transaction = BuildMockTransaction(sampled: true);
+            Mock.Arrange(() => transaction.Priority).Returns(Priority);
+            Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
+            Mock.Arrange(() => transaction.TraceId).Returns(GuidGenerator.GenerateNewRelicTraceId());
+            Mock.Arrange(() => transaction.TracingState).Returns(BuildMockTracingState());
+
+            bool sampled;
+            string traceStateString;
+
+            // Act
+            _distributedTracePayloadHandler.GetTraceFlagsAndState(transaction, out sampled, out traceStateString);
+
+            // Assert
+            Assert.That(sampled, Is.True);
+            Assert.That(traceStateString, Is.Not.Null.And.Not.Empty);
+            Assert.That(traceStateString, Does.Contain("@nr="));
+        }
     }
 }
