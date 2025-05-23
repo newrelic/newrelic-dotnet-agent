@@ -246,5 +246,10 @@ namespace NewRelic.Agent.Configuration
         int HealthFrequency { get; }
 
         bool AwsLambdaApmModeEnabled { get; }
+
+        List<string> IncludedActivitySources { get; }
+        List<string> ExcludedActivitySources { get; }
+
+        bool OpenTelemetryBridgeEnabled { get; }
     }
 }

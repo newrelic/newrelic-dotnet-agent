@@ -17,6 +17,7 @@ using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -31,7 +32,7 @@ namespace NewRelic.Agent.Core.Segments
         string TypeName { get; }
     }
 
-    public class Segment : IInternalSpan, ISegmentDataState
+    public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     {
         private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
 
@@ -134,12 +135,22 @@ namespace NewRelic.Agent.Core.Segments
             get
             {
                 // If _spanId is null and this is called rapidly from different threads, the returned value could be different for each.
-                return _spanId ?? (_spanId = GuidGenerator.GenerateNewRelicGuid());
+                return _spanId ?? (_spanId = _activity?.SpanId ?? GuidGenerator.GenerateNewRelicGuid());
             }
             set
             {
                 _spanId = value;
             }
+        }
+
+        public string TryGetActivityTraceId()
+        {
+            if (_activity == null)
+            {
+                return null;
+            }
+
+            return _activity.TraceId;
         }
 
         public void End()
@@ -151,6 +162,11 @@ namespace NewRelic.Agent.Core.Segments
                 var endTime = _transactionSegmentState.GetRelativeTime();
                 Agent.Instance?.StackExchangeRedisCache?.Harvest(this);
                 RelativeEndTime = endTime;
+
+                if (_activity != null && !_activity.IsStopped)
+                {
+                    _activity.Stop();
+                }
 
                 Finish();
 
@@ -199,6 +215,12 @@ namespace NewRelic.Agent.Core.Segments
             End();
         }
 
+        private INewRelicActivity _activity;
+        public void SetActivity(INewRelicActivity activity)
+        {
+            _activity = activity;
+        }
+
         public void MakeCombinable()
         {
             Combinable = true;
@@ -226,6 +248,14 @@ namespace NewRelic.Agent.Core.Segments
         protected IEnumerable<KeyValuePair<string, object>> _parameters = EmptyImmutableParameters;
         private volatile bool _parentNotified;
         private long _childDurationTicks = 0;
+
+        public bool TryGetTransactionFromSegment(out ITransaction transaction)
+        {
+            transaction = _transactionSegmentState as ITransaction;
+            return transaction != null;
+        }
+
+        public bool ActivityStartedTransaction { get; set; } = false;
 
         // We start and end segments on different threads (sometimes) so we need _relativeEndTicks
         // to be threadsafe.  Be careful when using this variable and use the RelativeEndTime property instead 
@@ -473,5 +503,14 @@ namespace NewRelic.Agent.Core.Segments
             return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
 
+    }
+
+    // TODO: Rename this experimental to something else, or find a better way to solve this problem.
+    // This is merely an attempt to prevent needing to store a reference to the transaction directly on the
+    // activity class instance.
+    public interface IHybridAgentSegment
+    {
+        bool TryGetTransactionFromSegment(out ITransaction transaction);
+        bool ActivityStartedTransaction { get; set; }
     }
 }
