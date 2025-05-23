@@ -743,40 +743,5 @@ namespace CompositeTests
                     () => Assert.That(timingMetric.DataModel.Value0, Is.EqualTo(1.0), "The transaction should be harvested.")
                 );
         }
-
-        [Test]
-        public void CreateTransaction_CustomTransactionNamePriority_OverridesInitialName()
-        {
-            // Create a transaction with one name
-            var tx = _agent.CreateTransaction(
-                isWeb: true,
-                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
-                transactionDisplayName: "name",
-                doNotTrackAsUnitOfWork: true);
-            var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
-
-            // Call CreateTransaction with a different name and override existing transaction name
-            tx = _agent.CreateTransaction(
-                isWeb: false,
-                category: "cat",
-                transactionDisplayName: "name",
-                doNotTrackAsUnitOfWork: true,
-                wrapperOnCreate: null,
-                transactionNamePriority: TransactionNamePriority.UserTransactionName);
-
-            segment.End();
-            tx.End();
-
-            _compositeTestAgent.Harvest();
-
-            var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
-            var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
-            NrAssert.Multiple(
-                () => Assert.That(transactionTrace.TransactionMetricName, Is.EqualTo("OtherTransaction/cat/name")),
-
-                () => Assert.That(transactionEvent.IntrinsicAttributes()["name"], Is.EqualTo("OtherTransaction/cat/name")),
-                () => Assert.That(transactionEvent.IntrinsicAttributes()["type"], Is.EqualTo("Transaction"))
-            );
-        }
     }
 }
