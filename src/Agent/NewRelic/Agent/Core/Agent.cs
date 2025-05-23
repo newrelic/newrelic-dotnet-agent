@@ -131,6 +131,11 @@ namespace NewRelic.Agent.Core
 
         public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate)
         {
+            return CreateTransaction(isWeb, category, transactionDisplayName, doNotTrackAsUnitOfWork, wrapperOnCreate, (TransactionNamePriority)9999);
+        }
+
+        public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate, TransactionNamePriority transactionNamePriority)
+        {
             if (transactionDisplayName == null)
             {
                 throw new ArgumentNullException("transactionDisplayName");
@@ -145,7 +150,21 @@ namespace NewRelic.Agent.Core
                 ? TransactionName.ForWebTransaction(category, transactionDisplayName)
                 : TransactionName.ForOtherTransaction(category, transactionDisplayName);
 
-            return CreateTransaction(initialTransactionName, doNotTrackAsUnitOfWork, wrapperOnCreate ?? NoOpWrapperOnCreate);
+            var transaction = CreateTransaction(initialTransactionName, doNotTrackAsUnitOfWork, wrapperOnCreate ?? NoOpWrapperOnCreate);
+
+            if (transactionNamePriority != (TransactionNamePriority)9999)
+            {
+                if (initialTransactionName.IsWeb)
+                {
+                    transaction.SetWebTransactionName(initialTransactionName.Category, initialTransactionName.Name, transactionNamePriority);
+                }
+                else
+                {
+                    transaction.SetOtherTransactionName(initialTransactionName.Category, initialTransactionName.Name, transactionNamePriority);
+                }
+            }
+
+            return transaction;
         }
 
         public ITransaction CurrentTransaction => _transactionService.GetCurrentInternalTransaction() ?? _noOpTransaction;

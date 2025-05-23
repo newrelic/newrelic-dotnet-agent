@@ -77,6 +77,9 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
         var sendMessageTransactionName = "WebTransaction/AzureFunction/HttpTrigger_SendServiceBusMessage";
         var receiveMessageTransactionName = "OtherTransaction/AzureFunction/ServiceBusTriggerFunction";
 
+        // With Azure Service Bus, the transaction name is not always the same as the function name.
+        //var receiveMessageTransactionName = "OtherTransaction/Message/ServiceBus/Queue/Named/func-test-queue";
+
         var sendServiceBusMessageTransaction = transactionEvents.SingleOrDefault(e => e.IntrinsicAttributes["name"].ToString() == sendMessageTransactionName);
         var receiveServiceBusMessageTransaction = transactionEvents.SingleOrDefault(e => e.IntrinsicAttributes["name"].ToString() == receiveMessageTransactionName);
 

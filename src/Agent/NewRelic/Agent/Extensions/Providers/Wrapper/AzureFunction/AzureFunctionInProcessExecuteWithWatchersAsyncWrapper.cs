@@ -68,7 +68,9 @@ public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
             isWeb: inProcessFunctionDetails.IsWebTrigger,
             category: "AzureFunction",
             transactionDisplayName: inProcessFunctionDetails.FunctionName,
-            doNotTrackAsUnitOfWork: true);
+            doNotTrackAsUnitOfWork: false,
+            wrapperOnCreate: null,
+            transactionNamePriority: TransactionNamePriority.FrameworkHigh);
 
         if (instrumentedMethodCall.IsAsync)
         {

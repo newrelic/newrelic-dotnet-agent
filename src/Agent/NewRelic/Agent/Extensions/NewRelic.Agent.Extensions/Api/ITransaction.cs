@@ -200,6 +200,15 @@ namespace NewRelic.Agent.Api
         /// <param name="name">The name of the transaction. Must not be null.</param>
         /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
         /// <exception cref="ArgumentNullException"></exception>
+        void SetWebTransactionName(string type, string name, TransactionNamePriority priority);
+
+        /// <summary>
+        /// Sets the name of the current transaction to a name in the WebTransaction namespace. Does nothing if there is no current transaction.
+        /// </summary>
+        /// <param name="type">The type of web transaction.</param>
+        /// <param name="name">The name of the transaction. Must not be null.</param>
+        /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
+        /// <exception cref="ArgumentNullException"></exception>
         void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
         /// <summary>

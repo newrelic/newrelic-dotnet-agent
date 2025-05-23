@@ -62,6 +62,18 @@ namespace NewRelic.Agent.Api
         ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate = null);
 
         /// <summary>
+        /// Create a new transaction for processing a request with a custom transaction name priority.
+        /// </summary>
+        /// <param name="isWeb"></param>
+        /// <param name="category"></param>
+        /// <param name="transactionDisplayName"></param>
+        /// <param name="doNotTrackAsUnitOfWork"></param>
+        /// <param name="wrapperOnCreate"></param>
+        /// /// <param name="transactionNamePriority"></param>
+        /// <returns></returns>
+        ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate, TransactionNamePriority transactionNamePriority);
+
+        /// <summary>
         /// Instructs the Agent to try to track async work under a new transaction where there is a desire to track work spawned on a new thread as a separate transaction.
         /// This may be useful in asynchronous scenarios where there is a desire to track Fire and Forget actions.
         /// </summary>
