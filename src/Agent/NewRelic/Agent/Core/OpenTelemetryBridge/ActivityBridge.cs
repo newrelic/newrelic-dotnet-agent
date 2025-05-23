@@ -202,8 +202,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private string TryGetCurrentTraceId()
         {
             var transaction = _agent.CurrentTransaction;
-            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
-            if (transaction.IsValid && !transaction.IsFinished && hybridAgentTransaction != null)
+            if (transaction.IsValid && !transaction.IsFinished && transaction is IHybridAgentTransaction hybridAgentTransaction)
             {
                 return hybridAgentTransaction.TraceId;
             }
@@ -426,16 +425,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
                 var methodCall = new MethodCall(method, null, [], false);
-                var segment = transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) as IHybridAgentSegment;
 
-                if (segment != null)
+                if (transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
                     segment.ActivityStartedTransaction = shouldStartTransaction;
                 }
             }
 
-            var hybridAgentTransaction = transaction as IHybridAgentTransaction;
-            if (hybridAgentTransaction != null)
+            if (transaction is IHybridAgentTransaction hybridAgentTransaction)
             {
                 // Update the activity to contain the expected trace flags and trace state that the New Relic
                 // data model expects.
