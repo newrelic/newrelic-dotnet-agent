@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using NewRelic.Agent.Core.DistributedTracing;
 using NUnit.Framework;
 
@@ -95,7 +96,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         [TestCase("0z-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-00")]
         [TestCase("00-zaf7651916cd43dd8448ebc80319c-b7ad6b7169203331-00")]
         [TestCase("00-0af7651916cd43dd8448ebc80319c-z7ad6b7169203331-00")]
-        [TestCase("00-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-z0")]
+        [TestCase("00-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-zz")]
         [TestCase(",0-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-00")]
         [TestCase("00-,af7651916cd43dd8448ebc80319c-b7ad6b7169203331-00")]
         [TestCase("00-0af7651916cd43dd8448ebc80319c-,7ad6b7169203331-00")]
@@ -107,6 +108,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void Header_InvalidCharacters(string traceparentValue)
         {
             Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
+        }
+
+        [TestCase("00", false)] // TraceFlags with sampled bit not set
+        [TestCase("01", true)]  // TraceFlags with sampled bit set
+        [TestCase("ff", true)]  // TraceFlags with all bits set
+        [TestCase("ac", false)] // TraceFlags with sampled bit not set
+        public void SampledProperty_ReturnsExpectedValue(string traceFlags, bool expectedSampled)
+        {
+            // Arrange
+            var traceparentValue = $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-{traceFlags}";
+            var traceparent = W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue);
+
+            // Act
+            var isSampled = traceparent?.Sampled;
+
+            // Assert
+            Assert.That(isSampled, Is.EqualTo(expectedSampled));
         }
     }
 }

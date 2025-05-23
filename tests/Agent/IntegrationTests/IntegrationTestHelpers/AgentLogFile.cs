@@ -15,10 +15,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class AgentLogFile : AgentLogBase
     {
-        private readonly string _filePath;
+        public string FilePath { get; }
         private readonly string _fileName;
 
-        public bool Found => File.Exists(_filePath);
+        public bool Found => File.Exists(FilePath);
 
         public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool logFileExpected = true)
             : base(testLogger)
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                     if (mostRecentlyUpdatedFile != null)
                     {
-                        _filePath = mostRecentlyUpdatedFile;
+                        FilePath = mostRecentlyUpdatedFile;
                         return;
                     }
 
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 yield break;
 
             string line;
-            using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
                 while ((line = streamReader.ReadLine()) != null)
                 {
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public string GetFullLogAsString()
         {
-            using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
             {
                 return streamReader.ReadToEnd();
@@ -86,9 +86,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var timeTaken = Stopwatch.StartNew();
             do
             {
-                if (!CommonUtils.IsFileLocked(_filePath))
+                if (!CommonUtils.IsFileLocked(FilePath))
                 {
-                    File.WriteAllText(_filePath, string.Empty);
+                    File.WriteAllText(FilePath, string.Empty);
                     return;
                 }
 
@@ -103,9 +103,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var timeTaken = Stopwatch.StartNew();
             do
             {
-                if (!CommonUtils.IsFileLocked(_filePath))
+                if (!CommonUtils.IsFileLocked(FilePath))
                 {
-                    File.Delete(_filePath);
+                    File.Delete(FilePath);
                     return;
                 }
 

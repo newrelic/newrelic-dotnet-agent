@@ -1015,6 +1015,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED").ToRemoteParentSampledBehavior();
+
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
+
         #endregion Distributed Tracing
 
         #region Infinite Tracing
@@ -2219,6 +2223,12 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AzureFunctionModeEnabled =>
             _azureFunctionModeEnabled ??
             (_azureFunctionModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AzureFunctionModeEnabled", true), "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED")).Value;
+
+        // Code to support AWS Lambda APM mode for transaction naming [ By default it is disabled ]
+        private bool? _awsLambdaApmModeEnabled;
+        public bool AwsLambdaApmModeEnabled =>
+            _awsLambdaApmModeEnabled ??
+            (_awsLambdaApmModeEnabled = EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("AwsLambdaApmModeEnabled", false), "NEW_RELIC_APM_LAMBDA_MODE")).Value;
 
         public string AzureFunctionResourceId
         {

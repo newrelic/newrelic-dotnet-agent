@@ -3862,6 +3862,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationDistributedTracing
     {
         
+        private configurationDistributedTracingSampler samplerField;
+        
         private bool enabledField;
         
         private bool excludeNewrelicHeaderField;
@@ -3879,10 +3881,23 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationDistributedTracing()
         {
+            this.samplerField = new configurationDistributedTracingSampler();
             this.enabledField = false;
             this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
             this.primary_application_idField = "Unknown";
+        }
+        
+        public configurationDistributedTracingSampler sampler
+        {
+            get
+            {
+                return this.samplerField;
+            }
+            set
+            {
+                this.samplerField = value;
+            }
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -3976,6 +3991,87 @@ namespace NewRelic.Agent.Core.Config
             return ((configurationDistributedTracing)(this.MemberwiseClone()));
         }
         #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationDistributedTracingSampler
+    {
+        
+        private RemoteParentSampledBehaviorType remoteParentSampledField;
+        
+        private RemoteParentSampledBehaviorType remoteParentNotSampledField;
+        
+        /// <summary>
+        /// configurationDistributedTracingSampler class constructor
+        /// </summary>
+        public configurationDistributedTracingSampler()
+        {
+            this.remoteParentSampledField = RemoteParentSampledBehaviorType.@default;
+            this.remoteParentNotSampledField = RemoteParentSampledBehaviorType.@default;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(RemoteParentSampledBehaviorType.@default)]
+        public RemoteParentSampledBehaviorType remoteParentSampled
+        {
+            get
+            {
+                return this.remoteParentSampledField;
+            }
+            set
+            {
+                this.remoteParentSampledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(RemoteParentSampledBehaviorType.@default)]
+        public RemoteParentSampledBehaviorType remoteParentNotSampled
+        {
+            get
+            {
+                return this.remoteParentNotSampledField;
+            }
+            set
+            {
+                this.remoteParentNotSampledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationDistributedTracingSampler object
+        /// </summary>
+        public virtual configurationDistributedTracingSampler Clone()
+        {
+            return ((configurationDistributedTracingSampler)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
+    public enum RemoteParentSampledBehaviorType
+    {
+        
+        /// <summary>
+        /// Default behavior. The agent will use existing sampling logic.
+        /// </summary>
+        @default,
+        
+        /// <summary>
+        /// The agent will sample spans.
+        /// </summary>
+        alwaysOn,
+        
+        /// <summary>
+        /// The agent will NOT sample spans.
+        /// </summary>
+        alwaysOff,
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]

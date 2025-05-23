@@ -63,6 +63,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 transaction.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
+                ProcessHeaders(context);
+
                 segment = SetupSegment(transaction, context);
                 segment.AlwaysDeductChildDuration = true;
 
@@ -74,8 +76,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 {
                     transaction.SetRequestHeaders(context.Request.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValue);
                 }
-
-                ProcessHeaders(context);
 
                 context.Response.OnStarting(SetOutboundTracingDataAsync);
             }

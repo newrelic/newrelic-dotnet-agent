@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -48,10 +48,10 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, BrokerVendorName, queueName);
-
             var headers = NServiceBusHelpers.GetHeadersFromIncomingLogicalMessageContext(incomingLogicalMessageContext);
             NServiceBusHelpers.ProcessHeaders(headers, agent);
+
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, BrokerVendorName, queueName);
 
             void OnComplete(Task task)
             {
