@@ -4,3 +4,4 @@
 - When writing unit tests, always use modern NUnit assertions.
 - We use JustMock.Lite, so use only mock configurations that are valid for that package.
 - Always include the required usings at the top of the file.
+- Do not use reflection in unit tests to access private members of the class under test.
