@@ -414,6 +414,12 @@ namespace NewRelic.Agent.Core.Transactions
                     return MetricNames.MessageBrokerAction.Produce;
                 case MessageBrokerAction.Purge:
                     return MetricNames.MessageBrokerAction.Purge;
+                case MessageBrokerAction.Process:
+                    return MetricNames.MessageBrokerAction.Process;
+                case MessageBrokerAction.Settle:
+                    return MetricNames.MessageBrokerAction.Settle;
+                case MessageBrokerAction.Cancel:
+                    return MetricNames.MessageBrokerAction.Cancel;
                 default:
                     throw new InvalidOperationException("Unexpected enum value: " + wrapper);
             }
@@ -800,6 +806,12 @@ namespace NewRelic.Agent.Core.Transactions
             CandidateTransactionName.TrySet(transactionName, priority);
         }
 
+        public void SetWebTransactionName(string type, string name, TransactionNamePriority priority)
+        {
+            var trxName = TransactionName.ForWebTransaction(type, name);
+            SetTransactionName(trxName, priority);
+        }
+
         public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
         {
             var trxName = TransactionName.ForWebTransaction(type, name);
@@ -1066,7 +1078,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var transactionName = CandidateTransactionName.CurrentTransactionName;
                 var transactionMetricName = Agent?._transactionMetricNameMaker?.GetTransactionMetricName(transactionName);
                 var stackTrace = new StackTrace();
-                Log.Finest($"Transaction \"{transactionMetricName}\" is being ignored from {stackTrace}");
+                Log.Finest($"Transaction {Guid} \"{transactionMetricName}\" is being ignored from {stackTrace}");
             }
         }
 

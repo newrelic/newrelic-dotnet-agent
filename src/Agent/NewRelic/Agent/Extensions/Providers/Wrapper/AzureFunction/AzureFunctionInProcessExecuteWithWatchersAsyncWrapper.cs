@@ -68,12 +68,21 @@ public class AzureFunctionInProcessExecuteWithWatchersAsyncWrapper : IWrapper
             isWeb: inProcessFunctionDetails.IsWebTrigger,
             category: "AzureFunction",
             transactionDisplayName: inProcessFunctionDetails.FunctionName,
-            doNotTrackAsUnitOfWork: true);
+            doNotTrackAsUnitOfWork: false);
 
         if (instrumentedMethodCall.IsAsync)
         {
             transaction.AttachToAsync();
             transaction.DetachFromPrimary(); //Remove from thread-local type storage
+        }
+
+        if (inProcessFunctionDetails.IsWebTrigger)
+        {
+            transaction.SetWebTransactionName("AzureFunction", inProcessFunctionDetails.FunctionName, TransactionNamePriority.FrameworkHigh);
+        }
+        else
+        {
+            transaction.SetOtherTransactionName("AzureFunction", inProcessFunctionDetails.FunctionName, TransactionNamePriority.FrameworkHigh);
         }
 
         if (IsColdStart) // only report this attribute if it's a cold start

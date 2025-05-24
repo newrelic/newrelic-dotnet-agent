@@ -252,10 +252,10 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(_metricBuilder.TryBuildInstallTypeMetric(AgentInstallConfiguration.AgentInfo?.ToString() ?? "Unknown"));
         }
 
-        public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
+        public void ReportTransactionGarbageCollected(string transactionGuid, TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
         {
             var transactionName = transactionMetricName.PrefixedName;
-            Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
+            Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Guid: {transactionGuid}\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
             _agentHealthEventCounters[AgentHealthEvent.TransactionGarbageCollected]?.Increment();
         }
 

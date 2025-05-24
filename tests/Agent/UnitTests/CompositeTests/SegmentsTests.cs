@@ -635,15 +635,21 @@ namespace CompositeTests
                 );
         }
 
-        [Test]
-        public void MessageBrokerSegment_HasCorrectTraceNameAndMetrics()
+        [TestCase(MessageBrokerAction.Consume, "Consume")]
+        [TestCase(MessageBrokerAction.Peek, "Peek")]
+        [TestCase(MessageBrokerAction.Produce, "Produce")]
+        [TestCase(MessageBrokerAction.Purge, "Purge")]
+        [TestCase(MessageBrokerAction.Process, "Process")]
+        [TestCase(MessageBrokerAction.Settle, "Settle")]
+        [TestCase(MessageBrokerAction.Cancel, "Cancel")]
+        public void MessageBrokerSegment_HasCorrectTraceNameAndMetrics(MessageBrokerAction operation, string operationName)
         {
             var tx = _agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
                 brokerVendorName: "vendor1",
                 destination: "queueA");
             var segment = _agent.StartMessageBrokerSegmentOrThrow("vendor1", MessageBrokerDestinationType.Queue, "queueA",
-                MessageBrokerAction.Consume);
+                operation);
             segment.End();
             tx.End();
 
@@ -651,15 +657,15 @@ namespace CompositeTests
 
             var expectedMetrics = new[]
             {
-                new ExpectedMetric {Name = "MessageBroker/vendor1/Queue/Consume/Named/queueA"},
+                new ExpectedMetric {Name = $"MessageBroker/vendor1/Queue/{operationName}/Named/queueA"},
                 new ExpectedMetric {Name = "OtherTransaction/Message/vendor1/Queue/Named/queueA" },
                 new ExpectedMetric {Name = "OtherTransactionTotalTime/Message/vendor1/Queue/Named/queueA" },
-                new ExpectedMetric {Name = "MessageBroker/vendor1/Queue/Consume/Named/queueA", Scope = "OtherTransaction/Message/vendor1/Queue/Named/queueA"}
+                new ExpectedMetric {Name = $"MessageBroker/vendor1/Queue/{operationName}/Named/queueA", Scope = "OtherTransaction/Message/vendor1/Queue/Named/queueA"}
 
             };
             var expectedSegments = new[]
             {
-                 "MessageBroker/vendor1/Queue/Consume/Named/queueA"
+                 $"MessageBroker/vendor1/Queue/{operationName}/Named/queueA"
             };
             var actualMetrics = _compositeTestAgent.Metrics.ToList();
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
@@ -667,6 +673,26 @@ namespace CompositeTests
                 () => TransactionTraceAssertions.SegmentsExist(expectedSegments, transactionTrace),
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics)
                 );
+        }
+
+        [Test]
+        public void MessageBrokerSegment_ThrowsUnexpectedEnumValue()
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                var badOperation = (MessageBrokerAction)9999;
+                var tx = _agent.CreateTransaction(
+                    destinationType: MessageBrokerDestinationType.Queue,
+                    brokerVendorName: "vendor1",
+                    destination: "queueA");
+                var segment = _agent.StartMessageBrokerSegmentOrThrow("vendor1", MessageBrokerDestinationType.Queue,
+                    "queueA",
+                    badOperation);
+                segment.End();
+                tx.End();
+            });
+
+            Assert.That(ex.Message, Does.Contain("Unexpected enum value"));
         }
 
         [Test]

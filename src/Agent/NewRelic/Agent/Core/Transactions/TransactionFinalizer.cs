@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Transactions
                     var lastStartedSegmentName = lastStartedSegment != null
                         ? lastStartedSegment.GetTransactionTraceName()
                         : "<unknown>";
-                    _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
+                    _agentHealthReporter.ReportTransactionGarbageCollected(internalTransaction.Guid, transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
                 }
             }
         }
