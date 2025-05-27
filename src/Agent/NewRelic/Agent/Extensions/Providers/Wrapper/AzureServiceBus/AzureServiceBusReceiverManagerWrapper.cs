@@ -11,7 +11,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 {
     public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
     {
-        private Func<object, object> _receiverAccessor;
+        private static Func<object, object> _receiverAccessor;
         public override bool IsTransactionRequired => true;
 
         public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)

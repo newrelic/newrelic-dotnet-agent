@@ -16,8 +16,8 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 {
     private static readonly ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
 
-    private Func<object, object> _innerReceiverAccessor;
-    private Func<object, bool> _innerReceiverIsProcessorAccessor;
+    private static Func<object, object> _innerReceiverAccessor;
+    private static Func<object, bool> _innerReceiverIsProcessorAccessor;
 
     public override bool IsTransactionRequired => false; // only partially true. See the code below...
 
@@ -164,6 +164,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor);
     }
 
+    // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
     private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor)
     {
         if (resultObj != null)

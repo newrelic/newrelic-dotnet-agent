@@ -51,6 +51,7 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
         {
             dynamic messages = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
+            // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
             // iterate all messages that are being sent,
             // insert DT headers into each message
             foreach (var message in messages)
