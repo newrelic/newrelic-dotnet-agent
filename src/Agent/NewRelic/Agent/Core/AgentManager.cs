@@ -295,7 +295,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
                     "NEW_RELIC_AGENT_CONTROL_ENABLED",
                     "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION",
-                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY"
+                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY",
+                    "NEW_RELIC_APM_LAMBDA_MODE"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {
