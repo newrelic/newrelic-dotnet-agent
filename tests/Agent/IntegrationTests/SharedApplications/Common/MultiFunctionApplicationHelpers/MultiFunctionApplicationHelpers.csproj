@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net462;net471;net48;net481</TargetFrameworks>
@@ -309,6 +309,14 @@
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
+  <!-- Azure ServiceBus -->
+  <ItemGroup>
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.0" Condition="'$(TargetFramework)' == 'net462'" />
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net471'" />
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.12.0" Condition="'$(TargetFramework)' == 'net48'" />
+	  <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.0" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
   <!-- Couchbase -->

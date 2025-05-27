@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportSqlTracesSent(int count);
 
-        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName);
+        void ReportTransactionGarbageCollected(string transactionGuid, TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName);
 
         void ReportWrapperShutdown(IWrapper wrapper, Method method);
 
