@@ -1,8 +1,6 @@
 name: Deploy UnboundedServices to AKS
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
