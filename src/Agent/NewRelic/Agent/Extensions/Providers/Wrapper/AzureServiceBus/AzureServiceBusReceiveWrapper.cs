@@ -178,7 +178,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                     dynamic messages = resultObj;
                     if (messages.Count > 0)
                     {
-                        transaction.LogFinest($"Received {messages.Count} message(s). Accepting DT headers.");
+                        transaction.LogFinest($"Received {messages.Count} message(s). Accepting DT headers from the first message.");
                         var msg = messages[0];
                         if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
                         {
