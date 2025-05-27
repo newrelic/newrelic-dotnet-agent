@@ -1,5 +1,3 @@
-# Standard License Header
-# GitHub Actions workflow to build, push, and deploy to AKS
 name: Deploy UnboundedServices to AKS
 
 on:
@@ -83,15 +81,15 @@ jobs:
         run: |
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/namespace.yaml
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/unboundedservices-secrets.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/rabbitmq.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb32.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb60.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/redis.yaml
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/couchbase.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/postgres.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mssql.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mysql.yaml
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic.yaml
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic7.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb32.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb60.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mssql.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mysql.yaml
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/oracle.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/postgres.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/rabbitmq.yaml
+          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/redis.yaml
 

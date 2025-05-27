@@ -1,5 +1,3 @@
-# Standard License Header
-# Kubernetes Deployment and Service for MSSQL
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,11 +13,20 @@ spec:
       labels:
         app: mssql
     spec:
+      securityContext:
+       fsGroup: 10001
       containers:
       - name: mssql
         image: dotnetunboundedservices.azurecr.io/mssql:latest
         ports:
         - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_ENABLE_HADR
+          value: "1"
+        - name: MSSQL_AGENT_ENABLED
+          value: "1"
         envFrom:
         - secretRef:
             name: unboundedservices-secrets

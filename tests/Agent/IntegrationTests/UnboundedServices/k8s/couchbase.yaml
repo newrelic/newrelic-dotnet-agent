@@ -28,6 +28,11 @@ spec:
         envFrom:
         - secretRef:
             name: unboundedservices-secrets
+        resources:
+          requests:
+            memory: "8Gi"
+          limits:
+            memory: "16Gi"
 ---
 apiVersion: v1
 kind: Service
@@ -43,15 +48,21 @@ spec:
   ports:
     - port: 8091
       targetPort: 8091
+      name: web
     - port: 8092
       targetPort: 8092
+      name: views
     - port: 8093
       targetPort: 8093
+      name: query
     - port: 8094
       targetPort: 8094
+      name: fts
     - port: 8095
       targetPort: 8095
+      name: analytics
     - port: 11210
       targetPort: 11210
+      name: data
   selector:
     app: couchbase

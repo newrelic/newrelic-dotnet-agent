@@ -24,8 +24,10 @@ spec:
         - secretRef:
             name: unboundedservices-secrets
         resources:
+          requests:
+            memory: "8Gi"
           limits:
-            memory: 1Gi
+            memory: "12Gi"
 ---
 apiVersion: v1
 kind: Service
