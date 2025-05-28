@@ -1,0 +1,62 @@
+# Copyright 2020 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bagetter
+  namespace: bagetter
+spec:
+  selector:
+    matchLabels:
+      app: bagetter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bagetter
+    spec:
+      containers:
+      - name: bagetter
+        image: bagetter/bagetter:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: "Storage__Type"
+          value: "AzureBlobStorage"
+        - name: "Storage__AzureBlobStorage__ConnectionString"
+          valueFrom:
+            secretKeyRef:
+              name: bagetter-secrets
+              key: azure-blob-connection-string
+        - name: "Storage__AzureBlobStorage__Container"
+          value: "bagetter"
+        - name: "Database__Type"
+          value: "MySql"
+        - name: "Database__ConnectionString"
+          valueFrom:
+            secretKeyRef:
+              name: bagetter-secrets
+              key: bagetter-connection-string
+        - name: "Search__Type"
+          value: "Database"
+
+        volumeMounts:
+        - name: bagetter-data
+          mountPath: /var/baget
+      volumes:
+      - name: bagetter-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bagetter
+  namespace: bagetter
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 5000
+      targetPort: 8080
+  selector:
+    app: bagetter
