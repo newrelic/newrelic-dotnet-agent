@@ -181,7 +181,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected Process RemoteProcess { get; set; }
 
-        public virtual string AppName { get; set; } = "IntegrationTestAppName";
+        private string _appName;
+        public virtual string AppName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_appName))
+                {
+                    return _appName;
+                }
+                var envAppName = Environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME"); // this will only be set by the all_solutions workflow for the nightly scheduled runs
+                return !string.IsNullOrWhiteSpace(envAppName) ? envAppName : "IntegrationTestAppName";
+            }
+            set
+            {
+                _appName = value;
+            }
+        }
 
         private string _uniqueFolderName;
         public string UniqueFolderName
