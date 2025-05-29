@@ -305,10 +305,8 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
       NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
-      # TODO: Temporary for testing
-      CI_NEW_RELIC_APP_NAME: DotNetIngestTracking 
       # Set an environment variable that the tests will use to set the application name.
-      #CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
       - name: Checkout
