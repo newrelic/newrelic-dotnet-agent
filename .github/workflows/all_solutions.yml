@@ -453,10 +453,8 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
-      # TODO: Temporary for testing
-      CI_NEW_RELIC_APP_NAME: DotNetIngestTracking 
       # Set an environment variable that the tests will use to set the application name.
-      #CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
       - name: My IP
