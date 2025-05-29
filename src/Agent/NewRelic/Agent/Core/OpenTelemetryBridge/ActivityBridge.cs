@@ -22,6 +22,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     // having certain features available in the necessary properties or methods are available.
     public class ActivityBridge : IDisposable
     {
+        public const string TemporarySegmentName = "temp segment name";
+
         private IAgent _agent;
         private IErrorService _errorService;
 
@@ -416,7 +418,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // TODO: We need a better way to detect activities created by a segment.
-            if (activity.DisplayName != "temp segment name")
+            if (activity.DisplayName != TemporarySegmentName)
             {
                 if (transaction.StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
@@ -669,42 +671,41 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class RuntimeNewRelicActivity : INewRelicActivity
     {
         private readonly object _activity;
+        private readonly dynamic _dynamicActivity;
 
         public RuntimeNewRelicActivity(object activity)
         {
             _activity = activity;
+            _dynamicActivity = (dynamic)_activity;
         }
+`
+        public bool IsStopped => (bool?)(_dynamicActivity)?.IsStopped ?? true;
 
-        public bool IsStopped => (bool?)((dynamic)_activity)?.IsStopped ?? true;
+        public string SpanId => (string)(_dynamicActivity)?.SpanId.ToString();
 
-        public string SpanId => (string)((dynamic)_activity)?.SpanId.ToString();
+        public string TraceId => (string)(_dynamicActivity)?.TraceId.ToString();
 
-        public string TraceId => (string)((dynamic)_activity)?.TraceId.ToString();
-
-        public string DisplayName => (string)((dynamic)_activity)?.DisplayName;
+        public string DisplayName => (string)(_dynamicActivity)?.DisplayName;
 
         public ISegment Segment
         {
             get => GetSegmentFromActivity(_activity);
-            set => ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
+            set => (_dynamicActivity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
         }
 
         public void Dispose()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Dispose();
+            _dynamicActivity?.Dispose();
         }
 
         public void Start()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Start();
+            _dynamicActivity?.Start();
         }
 
         public void Stop()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Stop();
+            _dynamicActivity?.Stop();
         }
 
         public static ISegment GetSegmentFromActivity(object activity)
