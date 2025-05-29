@@ -183,14 +183,21 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var newRelicTracestate = sb.ToString();
 
+            var otherVendorTracestates = String.Empty;
             var vendorEntries = transaction.TracingState?.VendorStateEntries;
-            if (vendorEntries == null || vendorEntries.Count == 0)
+            if (vendorEntries != null && vendorEntries.Any())
+            {
+                otherVendorTracestates = string.Join(",", vendorEntries);
+            }
+
+            // If otherVendorTracestates is null/empty we get a trailing comma.
+            if (string.IsNullOrWhiteSpace(otherVendorTracestates))
             {
                 return newRelicTracestate;
             }
 
             // Use string.Join only if there are vendor entries
-            return string.Concat(newRelicTracestate, ",", string.Join(",", vendorEntries));
+            return string.Concat(newRelicTracestate, ",", otherVendorTracestates);
         }
 
         public IDistributedTracePayload TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment = null)
