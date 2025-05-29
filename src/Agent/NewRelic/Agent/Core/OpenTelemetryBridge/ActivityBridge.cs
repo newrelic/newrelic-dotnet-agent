@@ -29,6 +29,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static Action<object, bool> _activityTraceFlagsSetter = null;
 
+        // Static Method and MethodCall for ActivityStarted
+        private static readonly Method ActivityStartedMethod = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
+        private static readonly MethodCall ActivityStartedMethodCall = new MethodCall(ActivityStartedMethod, null, Array.Empty<object>(), false);
+
         public ActivityBridge(IAgent agent, IErrorService errorService)
         {
             _agent = agent;
@@ -365,27 +369,23 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var existingTransactionRequired = IsTransactionRequiredForActivity(originalActivity);
             dynamic activity = originalActivity;
 
+            var activityId = activity.Id;
+
             if (transaction.IsFinished)
             {
                 if (Log.IsFinestEnabled)
                 {
                     if (existingTransactionRequired)
-                    {
-                        transaction.LogFinest($"Transaction has already ended, skipping activity {activity.Id}.");
-                    }
+                        transaction.LogFinest($"Transaction has already ended, skipping activity {activityId}.");
                     else
-                    {
                         transaction.LogFinest("Transaction has already ended, detaching from transaction storage context.");
-                    }
                 }
 
                 transaction.Detach();
                 transaction = agent.CurrentTransaction;
 
                 if (existingTransactionRequired)
-                {
                     return;
-                }
             }
 
             if (existingTransactionRequired)
@@ -393,19 +393,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 if (!transaction.IsValid)
                 {
                     if (Log.IsFinestEnabled)
-                    {
-                        transaction.LogFinest($"No transaction, skipping activity {activity.Id}.");
-                    }
-
+                        transaction.LogFinest($"No transaction, skipping activity {activityId}.");
                     return;
                 }
 
                 if (transaction.CurrentSegment.IsLeaf)
                 {
                     if (Log.IsFinestEnabled)
-                    {
-                        transaction.LogFinest($"Parent segment is a leaf segment, skipping activity {activity.Id}.");
-                    }
+                        transaction.LogFinest($"Parent segment is a leaf segment, skipping activity {activityId}.");
                     return;
                 }
             }
@@ -423,10 +418,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // TODO: We need a better way to detect activities created by a segment.
             if (activity.DisplayName != "temp segment name")
             {
-                var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
-                var methodCall = new MethodCall(method, null, [], false);
-
-                if (transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
+                if (transaction.StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
                     segment.ActivityStartedTransaction = shouldStartTransaction;
                 }
