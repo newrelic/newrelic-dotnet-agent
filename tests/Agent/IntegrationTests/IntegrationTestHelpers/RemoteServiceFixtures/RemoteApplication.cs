@@ -190,7 +190,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 {
                     return _appName;
                 }
-                var envAppName = Environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME"); // this will only be set by the all_solutions workflow for the nightly scheduled runs
+
+                // Use the app name specified in the all_solutions CI workflow, if it exists
+                // this will only be set for the nightly scheduled runs so we can aggregate all integration test data under a single APM entity
+                var envAppName = Environment.GetEnvironmentVariable("CI_NEW_RELIC_APP_NAME"); 
                 return !string.IsNullOrWhiteSpace(envAppName) ? envAppName : "IntegrationTestAppName";
             }
             set
