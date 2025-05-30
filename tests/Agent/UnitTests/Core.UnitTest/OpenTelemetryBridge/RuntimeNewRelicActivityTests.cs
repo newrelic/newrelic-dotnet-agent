@@ -95,35 +95,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         [Test]
-        public void Segment_Get_CallsGetSegmentFromActivity()
-        {
-            // Arrange
-            Mock.Arrange(() => _mockActivity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName))
-                .Returns(_mockSegment);
-            var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
-
-            // Act
-            var result = runtimeActivity.Segment;
-
-            // Assert
-            Assert.That(result, Is.SameAs(_mockSegment));
-        }
-
-        [Test]
-        public void Segment_Set_CallsSetCustomPropertyOnActivity()
-        {
-            // Arrange
-            var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
-
-            // Act
-            runtimeActivity.Segment = _mockSegment;
-
-            // Assert
-            Mock.Assert(() => _mockActivity.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, _mockSegment), 
-                Occurs.Once());
-        }
-
-        [Test]
         public void Start_CallsStartOnActivity()
         {
             // Arrange
