@@ -30,7 +30,9 @@ namespace HostedWebCore
             var environmentVariables = new StringBuilder();
             foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
             {
-                environmentVariables.Append($"  {de.Key} = {de.Value}; ");
+                // strip newlines in the environment variable value - otherwise our log parsing may fail
+                var valueStr = de.Value?.ToString().Replace("\r", string.Empty).Replace("\n", string.Empty);
+                environmentVariables.Append($"  {de.Key} = {valueStr}; ");
             }
             Log("Environment Variables: " + environmentVariables.ToString());
 

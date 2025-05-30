@@ -334,7 +334,6 @@ namespace NewRelic.Agent.Api
         string TraceId { get; }
         string DisplayName { get; }
         bool IsStopped { get; }
-        ISegment Segment { get; set; }
 
         void Start();
 
