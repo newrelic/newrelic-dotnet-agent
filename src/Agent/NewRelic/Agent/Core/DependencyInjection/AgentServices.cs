@@ -45,6 +45,7 @@ using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -232,6 +233,9 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<NewRelic.Agent.Api.Experimental.ISimpleSchedulingService, SimpleSchedulingService>();
 
             container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
+
+            container.Register<ActivityBridge, ActivityBridge>();
+            container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
 
             container.Build();
         }
