@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.42.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.41.0...v10.42.0) (2025-05-30)
+
+
+### New features
+
+* Add support for Azure Service Bus. ([#3124](https://github.com/newrelic/newrelic-dotnet-agent/issues/3124)) ([6a075cc](https://github.com/newrelic/newrelic-dotnet-agent/commit/6a075ccbb2b7b59c509ce93fcad36202d4d5a6da))
+
 ## [10.41.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.1...v10.41.0) (2025-04-25)
 
 
