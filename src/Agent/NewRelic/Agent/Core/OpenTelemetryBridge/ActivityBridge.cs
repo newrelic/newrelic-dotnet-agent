@@ -678,7 +678,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _activity = activity;
             _dynamicActivity = (dynamic)_activity;
         }
-`
+
         public bool IsStopped => (bool?)(_dynamicActivity)?.IsStopped ?? true;
 
         public string SpanId => (string)(_dynamicActivity)?.SpanId.ToString();
