@@ -154,23 +154,40 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         private string BuildTracestate(IInternalTransaction transaction, DateTime timestamp)
         {
-            var accountKey = _configurationService.Configuration.TrustedAccountKey;
-            var version = 0;
-            var parentType = ParentType;
-            var parentAccountId = _configurationService.Configuration.AccountId;
-            var appId = _configurationService.Configuration.PrimaryApplicationId;
-            var spanId = _configurationService.Configuration.SpanEventsEnabled ? transaction.CurrentSegment.SpanId : string.Empty;
-            var transactionId = _configurationService.Configuration.TransactionEventsEnabled ? transaction.Guid : string.Empty;
+            // Cache configuration values to avoid repeated property access
+            var config = _configurationService.Configuration;
+            var accountKey = config.TrustedAccountKey;
+            var parentAccountId = config.AccountId;
+            var appId = config.PrimaryApplicationId;
+            var spanEventsEnabled = config.SpanEventsEnabled;
+            var transactionEventsEnabled = config.TransactionEventsEnabled;
+
+            var spanId = spanEventsEnabled ? transaction.CurrentSegment.SpanId : string.Empty;
+            var transactionId = transactionEventsEnabled ? transaction.Guid : string.Empty;
             var sampled = transaction.Sampled.Value ? "1" : "0";
-            var priority = string.Format(System.Globalization.CultureInfo.InvariantCulture, PriorityFormat, transaction.Priority);
+            var priority = transaction.Priority.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture);
             var timestampInMillis = timestamp.ToUnixTimeMilliseconds();
 
-            var newRelicTracestate = $"{accountKey}@nr={version}-{parentType}-{parentAccountId}-{appId}-{spanId}-{transactionId}-{sampled}-{priority}-{timestampInMillis}";
-            var otherVendorTracestates = string.Empty;
+            // Use StringBuilder to avoid intermediate string allocations
+            var sb = new System.Text.StringBuilder(128);
+            sb.Append(accountKey)
+                .Append("@nr=0-")
+                .Append(ParentType).Append('-')
+                .Append(parentAccountId).Append('-')
+                .Append(appId).Append('-')
+                .Append(spanId).Append('-')
+                .Append(transactionId).Append('-')
+                .Append(sampled).Append('-')
+                .Append(priority).Append('-')
+                .Append(timestampInMillis);
 
-            if (transaction.TracingState?.VendorStateEntries != null && transaction.TracingState.VendorStateEntries.Any())
+            var newRelicTracestate = sb.ToString();
+
+            var otherVendorTracestates = String.Empty;
+            var vendorEntries = transaction.TracingState?.VendorStateEntries;
+            if (vendorEntries != null && vendorEntries.Any())
             {
-                otherVendorTracestates = string.Join(",", transaction.TracingState.VendorStateEntries);
+                otherVendorTracestates = string.Join(",", vendorEntries);
             }
 
             // If otherVendorTracestates is null/empty we get a trailing comma.
@@ -179,7 +196,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return newRelicTracestate;
             }
 
-            return string.Join(",", newRelicTracestate, otherVendorTracestates);
+            // Use string.Join only if there are vendor entries
+            return string.Concat(newRelicTracestate, ",", otherVendorTracestates);
         }
 
         public IDistributedTracePayload TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment = null)
@@ -252,7 +270,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             return new DistributedTraceApiModel(encodedPayload);
         }
 
-        public void GetTraceFlagsAndState(IInternalTransaction transaction,  out bool sampled, out string traceStateString)
+        public void GetTraceFlagsAndState(IInternalTransaction transaction, out bool sampled, out string traceStateString)
         {
             transaction.SetSampled(_adaptiveSampler);
             traceStateString = BuildTracestate(transaction, DateTime.UtcNow);

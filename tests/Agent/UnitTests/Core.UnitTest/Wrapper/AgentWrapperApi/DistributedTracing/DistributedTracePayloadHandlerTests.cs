@@ -1050,9 +1050,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         [TestCase(true)]
         [TestCase(true, "")]
+        [TestCase(true, "k1=v1")]
         [TestCase(true, "k1=v1", "k2=v2")]
         [TestCase(false)]
         [TestCase(false, "")]
+        [TestCase(true, "k1=v1")]
         [TestCase(false, "k1=v1", "k2=v2")]
         public void W3C_BuildTracestate_EmptyVendors_NoCommas(bool hasIncomingPayload, params string[] vendorState)
         {
