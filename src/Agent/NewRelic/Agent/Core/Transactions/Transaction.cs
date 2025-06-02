@@ -228,7 +228,7 @@ namespace NewRelic.Agent.Core.Transactions
             if (activity == null)
             {
                 // We cannot start the new Activity until the segment and activity are associated with each other
-                activity = Agent.ActivitySourceProxy.TryCreateActivity("temp segment name", ActivityKind.Internal);
+                activity = Agent.ActivitySourceProxy.TryCreateActivity(ActivityBridge.TemporarySegmentName, ActivityKind.Internal);
 
                 // Delay starting the activity until the segment is associated with it
                 shouldStartActivity = true;

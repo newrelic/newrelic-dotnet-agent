@@ -22,12 +22,18 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     // having certain features available in the necessary properties or methods are available.
     public class ActivityBridge : IDisposable
     {
+        public const string TemporarySegmentName = "temp segment name";
+
         private IAgent _agent;
         private IErrorService _errorService;
 
         private dynamic _activityListener;
 
         private static Action<object, bool> _activityTraceFlagsSetter = null;
+
+        // Static Method and MethodCall for ActivityStarted
+        private static readonly Method ActivityStartedMethod = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
+        private static readonly MethodCall ActivityStartedMethodCall = new MethodCall(ActivityStartedMethod, null, Array.Empty<object>(), false);
 
         public ActivityBridge(IAgent agent, IErrorService errorService)
         {
@@ -365,27 +371,23 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var existingTransactionRequired = IsTransactionRequiredForActivity(originalActivity);
             dynamic activity = originalActivity;
 
+            var activityId = activity.Id;
+
             if (transaction.IsFinished)
             {
                 if (Log.IsFinestEnabled)
                 {
                     if (existingTransactionRequired)
-                    {
-                        transaction.LogFinest($"Transaction has already ended, skipping activity {activity.Id}.");
-                    }
+                        transaction.LogFinest($"Transaction has already ended, skipping activity {activityId}.");
                     else
-                    {
                         transaction.LogFinest("Transaction has already ended, detaching from transaction storage context.");
-                    }
                 }
 
                 transaction.Detach();
                 transaction = agent.CurrentTransaction;
 
                 if (existingTransactionRequired)
-                {
                     return;
-                }
             }
 
             if (existingTransactionRequired)
@@ -393,19 +395,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 if (!transaction.IsValid)
                 {
                     if (Log.IsFinestEnabled)
-                    {
-                        transaction.LogFinest($"No transaction, skipping activity {activity.Id}.");
-                    }
-
+                        transaction.LogFinest($"No transaction, skipping activity {activityId}.");
                     return;
                 }
 
                 if (transaction.CurrentSegment.IsLeaf)
                 {
                     if (Log.IsFinestEnabled)
-                    {
-                        transaction.LogFinest($"Parent segment is a leaf segment, skipping activity {activity.Id}.");
-                    }
+                        transaction.LogFinest($"Parent segment is a leaf segment, skipping activity {activityId}.");
                     return;
                 }
             }
@@ -421,12 +418,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // TODO: We need a better way to detect activities created by a segment.
-            if (activity.DisplayName != "temp segment name")
+            if (activity.DisplayName != TemporarySegmentName)
             {
-                var method = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
-                var methodCall = new MethodCall(method, null, [], false);
-
-                if (transaction.StartActivitySegment(methodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
+                if (transaction.StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
                     segment.ActivityStartedTransaction = shouldStartTransaction;
                 }
@@ -677,36 +671,35 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class RuntimeNewRelicActivity : INewRelicActivity
     {
         private readonly object _activity;
+        private readonly dynamic _dynamicActivity;
 
         public RuntimeNewRelicActivity(object activity)
         {
             _activity = activity;
+            _dynamicActivity = (dynamic)_activity;
         }
 
-        public bool IsStopped => (bool?)((dynamic)_activity)?.IsStopped ?? true;
+        public bool IsStopped => (bool?)(_dynamicActivity)?.IsStopped ?? true;
 
-        public string SpanId => (string)((dynamic)_activity)?.SpanId.ToString();
+        public string SpanId => (string)(_dynamicActivity)?.SpanId.ToString();
 
-        public string TraceId => (string)((dynamic)_activity)?.TraceId.ToString();
+        public string TraceId => (string)(_dynamicActivity)?.TraceId.ToString();
 
-        public string DisplayName => (string)((dynamic)_activity)?.DisplayName;
+        public string DisplayName => (string)(_dynamicActivity)?.DisplayName;
 
         public void Dispose()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Dispose();
+            _dynamicActivity?.Dispose();
         }
 
         public void Start()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Start();
+            _dynamicActivity?.Start();
         }
 
         public void Stop()
         {
-            dynamic dynamicActivity = _activity;
-            dynamicActivity?.Stop();
+            _dynamicActivity?.Stop();
         }
 
         public ISegment GetSegment()
