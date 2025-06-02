@@ -709,6 +709,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             dynamicActivity?.Stop();
         }
 
+        public ISegment GetSegmentFromActivity()
+        {
+            return GetSegmentFromActivity(_activity);
+        }
+
+        public void SetSegmentOnActivity(ISegment segment)
+        {
+            ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, segment);
+        }
+
         public static ISegment GetSegmentFromActivity(object activity)
         {
             return ((dynamic)activity)?.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;

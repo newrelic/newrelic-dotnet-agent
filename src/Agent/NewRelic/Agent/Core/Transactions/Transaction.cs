@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -237,6 +238,7 @@ namespace NewRelic.Agent.Core.Transactions
             if (activity != null)
             {
                 segment.SetActivity(activity);
+                activity.SetSegmentOnActivity(segment);
 
                 if (shouldStartActivity)
                 {

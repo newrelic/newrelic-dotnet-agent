@@ -249,7 +249,10 @@ namespace NewRelic.Agent.Core.Segments
         private volatile bool _parentNotified;
         private long _childDurationTicks = 0;
 
-        public ITransaction GetTransactionFromSegment() => _transactionSegmentState as ITransaction;
+        public ITransaction GetTransactionFromSegment()
+        {
+            return _transactionSegmentState as ITransaction;
+        }
 
         public bool ActivityStartedTransaction { get; set; } = false;
 

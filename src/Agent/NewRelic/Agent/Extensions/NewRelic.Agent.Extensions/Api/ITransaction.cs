@@ -347,6 +347,9 @@ namespace NewRelic.Agent.Api
         string DisplayName { get; }
         bool IsStopped { get; }
 
+        void SetSegmentOnActivity(ISegment segment);
+        ISegment GetSegmentFromActivity();
+
         void Start();
 
         void Stop();
