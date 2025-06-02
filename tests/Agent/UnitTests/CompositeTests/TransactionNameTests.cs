@@ -31,15 +31,25 @@ namespace CompositeTests
 
         #region Segment metrics and trace names
 
-        [Test]
-        public void SetWebTransactionName_UpdatesTransactionNameCorrectly()
+        [TestCase("ASP")]
+        [TestCase(WebTransactionType.ASP)]
+        public void SetWebTransactionName_UpdatesTransactionNameCorrectly(object category)
         {
             var transaction = _agent.CreateTransaction(
                 isWeb: true,
                 category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
                 transactionDisplayName: "name",
                 doNotTrackAsUnitOfWork: true);
-            transaction.SetWebTransactionName(WebTransactionType.ASP, "foo", TransactionNamePriority.Route);
+
+            if (category is WebTransactionType webTransactionType)
+            {
+                transaction.SetWebTransactionName(webTransactionType, "foo", TransactionNamePriority.Route);
+            }
+            else
+            {
+                transaction.SetWebTransactionName(category.ToString(), "foo", TransactionNamePriority.Route);
+            }
+
             var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
             segment.End();
             transaction.End();

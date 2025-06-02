@@ -415,6 +415,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="OpenSearchWrapperComponent" Guid="{7C996233-F71E-48C2-B389-82F0E0CAB002}">
         <File Id="OpenSearchWrapperFile" Name="NewRelic.Providers.Wrapper.OpenSearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll" />
       </Component>
+      <Component Id="AzureServiceBusWrapperComponent" Guid="{5B625630-B816-4E9D-BE30-9403D8C1682A}">
+        <File Id="AzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -501,6 +504,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreOpenSearchWrapperComponent" Guid="{C04FA73A-3232-409E-9E82-7CD27C18845D}">
         <File Id="CoreOpenSearchWrapperFile" Name="NewRelic.Providers.Wrapper.OpenSearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll" />
+      </Component>
+      <Component Id="CoreAzureServiceBusWrapperComponent" Guid="{E2F1AE1C-9EE8-410D-932B-D6B9C25FE405}">
+        <File Id="CoreAzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
       </Component>
    </ComponentGroup>
 
@@ -629,6 +635,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="OpenSearchInstrumentationComponent" Guid="{A4ACAB67-AC69-43C5-8FDF-DF3FF6794104}">
         <File Id="OpenSearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" />
       </Component>
+      <Component Id="AzureServiceBusInstrumentationComponent" Guid="{77A2B667-7535-45A6-9CAC-27BFCFEF95B8}">
+        <File Id="AzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" />
+      </Component>
    </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -712,6 +721,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreOpenSearchInstrumentationComponent" Guid="{E2676B80-D7E2-4DFB-BDAF-75383810B0AB}">
         <File Id="CoreOpenSearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml" />
+      </Component>
+      <Component Id="CoreAzureServiceBusInstrumentationComponent" Guid="{78AF8B95-BC14-41DA-8046-8F9348BA4769}">
+        <File Id="CoreAzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

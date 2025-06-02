@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
 
             // Act
-            var result = runtimeActivity.Segment;
+            var result = runtimeActivity.GetSegment();
 
             // Assert
             Assert.That(result, Is.SameAs(_mockSegment));
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
 
             // Act
-            runtimeActivity.Segment = _mockSegment;
+            runtimeActivity.SetSegment(_mockSegment);
 
             // Assert
             Mock.Assert(() => _mockActivity.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, _mockSegment), 

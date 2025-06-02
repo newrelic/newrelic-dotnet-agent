@@ -12,6 +12,8 @@
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.2" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="CouchbaseNetClient" Version="3.6.6" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="CouchbaseNetClient" Version="3.6.6" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />

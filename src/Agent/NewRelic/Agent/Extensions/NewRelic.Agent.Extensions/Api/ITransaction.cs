@@ -101,6 +101,9 @@ namespace NewRelic.Agent.Api
         /// <param name="messagingSystemName"></param>
         /// <param name="cloudAccountId"></param>
         /// <param name="cloudRegion"></param>
+        /// <param name="serverAddress"></param>
+        /// <param name="serverPort"></param>
+        /// <param name="routingKey"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
@@ -198,6 +201,15 @@ namespace NewRelic.Agent.Api
         /// Allows transaction to end.
         /// </summary>
         void Release();
+
+        /// <summary>
+        /// Sets the name of the current transaction to a name in the WebTransaction namespace. Does nothing if there is no current transaction.
+        /// </summary>
+        /// <param name="type">The type of web transaction.</param>
+        /// <param name="name">The name of the transaction. Must not be null.</param>
+        /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        void SetWebTransactionName(string type, string name, TransactionNamePriority priority);
 
         /// <summary>
         /// Sets the name of the current transaction to a name in the WebTransaction namespace. Does nothing if there is no current transaction.
@@ -334,7 +346,10 @@ namespace NewRelic.Agent.Api
         string TraceId { get; }
         string DisplayName { get; }
         bool IsStopped { get; }
-        ISegment Segment { get; set; }
+
+        // can't use a Segment {get; set;} property here because it causes a circular reference between Activity and Segment
+        void SetSegment(ISegment segment);
+        ISegment GetSegment();
 
         void Start();
 
