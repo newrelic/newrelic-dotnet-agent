@@ -180,6 +180,11 @@ namespace NewRelic.Agent.Core.Transactions
 
         }
 
+        public void SetWebTransactionName(string type, string name, TransactionNamePriority priority)
+        {
+
+        }
+
         public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
         {
 

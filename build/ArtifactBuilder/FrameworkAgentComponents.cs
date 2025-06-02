@@ -70,6 +70,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll",
             };
 
             var wrapperXmls = new[]
@@ -115,6 +116,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml",
             };
 
             ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";
