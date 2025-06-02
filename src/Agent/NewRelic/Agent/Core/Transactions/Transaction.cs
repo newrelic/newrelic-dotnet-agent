@@ -238,7 +238,7 @@ namespace NewRelic.Agent.Core.Transactions
             if (activity != null)
             {
                 segment.SetActivity(activity);
-                activity.SetSegmentOnActivity(segment);
+                activity.SetSegment(segment);
 
                 if (shouldStartActivity)
                 {

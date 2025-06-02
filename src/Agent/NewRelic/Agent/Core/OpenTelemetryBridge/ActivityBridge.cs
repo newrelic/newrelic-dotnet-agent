@@ -709,12 +709,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             dynamicActivity?.Stop();
         }
 
-        public ISegment GetSegmentFromActivity()
+        public ISegment GetSegment()
         {
             return GetSegmentFromActivity(_activity);
         }
 
-        public void SetSegmentOnActivity(ISegment segment)
+        public void SetSegment(ISegment segment)
         {
             ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, segment);
         }

@@ -347,8 +347,9 @@ namespace NewRelic.Agent.Api
         string DisplayName { get; }
         bool IsStopped { get; }
 
-        void SetSegmentOnActivity(ISegment segment);
-        ISegment GetSegmentFromActivity();
+        // can't use a Segment {get; set;} property here because it causes a circular reference between Activity and Segment
+        void SetSegment(ISegment segment);
+        ISegment GetSegment();
 
         void Start();
 
