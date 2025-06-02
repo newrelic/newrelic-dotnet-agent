@@ -505,7 +505,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (segment is IHybridAgentSegment { ActivityStartedTransaction: true } hybridAgentSegment)
             {
-                var transaction = hybridAgentSegment.GetTransactionFromSegment;
+                var transaction = hybridAgentSegment.GetTransactionFromSegment();
                 transaction?.End();
             }
         }
@@ -569,7 +569,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         // TODO: Record the errorData on the transaction.
                         if (segment is IHybridAgentSegment hybridAgentSegment)
                         {
-                            var transaction = hybridAgentSegment.GetTransactionFromSegment;
+                            var transaction = hybridAgentSegment.GetTransactionFromSegment();
                             if (transaction is IHybridAgentTransaction internalTransaction)
                             {
                                 internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
@@ -691,12 +691,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public string DisplayName => (string)((dynamic)_activity)?.DisplayName;
 
-        public ISegment Segment
-        {
-            get => GetSegmentFromActivity(_activity);
-            set => ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, value);
-        }
-
         public void Dispose()
         {
             dynamic dynamicActivity = _activity;
@@ -713,6 +707,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             dynamic dynamicActivity = _activity;
             dynamicActivity?.Stop();
+        }
+
+        public ISegment GetSegment()
+        {
+            return GetSegmentFromActivity(_activity);
+        }
+
+        public void SetSegment(ISegment segment)
+        {
+            ((dynamic)_activity)?.SetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName, segment);
         }
 
         public static ISegment GetSegmentFromActivity(object activity)

@@ -176,10 +176,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 "explainThreshold", "1");
         }
 
-        public void SetLogLevel(string level)
+        public NewRelicConfigModifier SetLogLevel(string level)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "level",
                 level);
+            return this;
         }
 
         public void LogToConsole()

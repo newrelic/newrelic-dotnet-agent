@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <tracerFactory name="AzureServiceBusReceiveWrapper">
+      <!--
+            internal async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesAsync(
+            int maxMessages,
+            TimeSpan? maxWaitTime,
+            bool isProcessor,
+            CancellationToken cancellationToken)-->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="ReceiveMessagesAsync" parameters="System.Int32,System.Nullable`1[System.TimeSpan],System.Boolean,System.Threading.CancellationToken" />
+      </match>
+      <!--
+            public virtual async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveDeferredMessagesAsync(
+            IEnumerable<long> sequenceNumbers,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="ReceiveDeferredMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[System.Int64],System.Threading.CancellationToken" />
+      </match>
+      <!--
+            private async Task<IReadOnlyList<ServiceBusReceivedMessage>> PeekMessagesInternalAsync(
+            long? sequenceNumber,
+            int maxMessages,
+            CancellationToken cancellationToken)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="PeekMessagesInternalAsync" parameters="System.Nullable`1[System.Int64],System.Int32,System.Threading.CancellationToken" />
+      </match>
+      <!--
+            public virtual async Task CompleteMessageAsync(
+            ServiceBusReceivedMessage message,
+            CancellationToken cancellationToken = default)
+      -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="CompleteMessageAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.Threading.CancellationToken" />
+      </match>
+      <!--
+      public virtual async Task AbandonMessageAsync(
+            ServiceBusReceivedMessage message,
+            IDictionary<string, object> propertiesToModify = null,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="AbandonMessageAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.Collections.Generic.IDictionary`2[System.String,System.Object],System.Threading.CancellationToken" />
+      </match>
+      <!--
+      internal virtual async Task DeadLetterInternalAsync(
+            ServiceBusReceivedMessage message,
+            string deadLetterReason = default,
+            string deadLetterErrorDescription = default,
+            IDictionary<string, object> propertiesToModify = default,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="DeadLetterInternalAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.String,System.String,System.Collections.Generic.IDictionary`2[System.String,System.Object],System.Threading.CancellationToken" />
+      </match>
+      <!--
+      public virtual async Task DeferMessageAsync(
+            ServiceBusReceivedMessage message,
+            IDictionary<string, object> propertiesToModify = null,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="DeferMessageAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.Collections.Generic.IDictionary`2[System.String,System.Object],System.Threading.CancellationToken" />
+      </match>
+      <!--
+      internal virtual async Task<DateTimeOffset> RenewMessageLockAsync(
+            Guid lockToken,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusReceiver">
+        <exactMethodMatcher methodName="RenewMessageLockAsync" parameters="System.Guid,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+
+
+    <tracerFactory name="AzureServiceBusSendWrapper">
+      <!--
+            public virtual async Task SendMessagesAsync(
+            IEnumerable<ServiceBusMessage> messages,
+            CancellationToken cancellationToken = default))-->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusSender">
+        <exactMethodMatcher methodName="SendMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[Azure.Messaging.ServiceBus.ServiceBusMessage],System.Threading.CancellationToken" />
+      </match>
+      <!--
+            public virtual async Task<IReadOnlyList<long>> ScheduleMessagesAsync(
+            IEnumerable<ServiceBusMessage> messages,
+            DateTimeOffset scheduledEnqueueTime,
+            CancellationToken cancellationToken = default)-->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusSender">
+        <exactMethodMatcher methodName="ScheduleMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[Azure.Messaging.ServiceBus.ServiceBusMessage],System.DateTimeOffset,System.Threading.CancellationToken" />
+      </match>
+      <!--
+      public virtual async Task CancelScheduledMessagesAsync(
+            IEnumerable<long> sequenceNumbers,
+            CancellationToken cancellationToken = default)
+            -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusSender">
+        <exactMethodMatcher methodName="CancelScheduledMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[System.Int64],System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+    <tracerFactory name="AzureServiceBusProcessorWrapper">
+      <!--
+      https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ServiceBusProcessor.cs#L520
+      protected internal virtual async Task OnProcessMessageAsync(ProcessMessageEventArgs args)
+      -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ServiceBusProcessor">
+        <exactMethodMatcher methodName="OnProcessMessageAsync" parameters="Azure.Messaging.ServiceBus.ProcessMessageEventArgs" />
+      </match>
+    </tracerFactory>
+    <tracerFactory name="AzureServiceBusReceiverManagerWrapper">
+      <!--
+      https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ReceiverManager.cs#L149
+      protected async Task ProcessOneMessageWithinScopeAsync(ServiceBusReceivedMessage message, string activityName, CancellationToken cancellationToken)
+      -->
+      <match assemblyName="Azure.Messaging.ServiceBus" className="Azure.Messaging.ServiceBus.ReceiverManager">
+        <exactMethodMatcher methodName="ProcessOneMessageWithinScopeAsync" parameters="Azure.Messaging.ServiceBus.ServiceBusReceivedMessage,System.String,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

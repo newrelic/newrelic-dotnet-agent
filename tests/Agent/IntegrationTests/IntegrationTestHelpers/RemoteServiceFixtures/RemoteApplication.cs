@@ -181,7 +181,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected Process RemoteProcess { get; set; }
 
-        public virtual string AppName { get; set; } = "IntegrationTestAppName";
+        private string _appName;
+        public virtual string AppName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_appName))
+                {
+                    return _appName;
+                }
+
+                // Use the app name specified in the all_solutions CI workflow, if it exists
+                // this will only be set for the nightly scheduled runs so we can aggregate all integration test data under a single APM entity
+                var envAppName = Environment.GetEnvironmentVariable("CI_NEW_RELIC_APP_NAME"); 
+                return !string.IsNullOrWhiteSpace(envAppName) ? envAppName : "IntegrationTestAppName";
+            }
+            set
+            {
+                _appName = value;
+            }
+        }
 
         private string _uniqueFolderName;
         public string UniqueFolderName
