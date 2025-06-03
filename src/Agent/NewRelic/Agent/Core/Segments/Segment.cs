@@ -143,15 +143,7 @@ namespace NewRelic.Agent.Core.Segments
             }
         }
 
-        public string TryGetActivityTraceId()
-        {
-            if (_activity == null)
-            {
-                return null;
-            }
-
-            return _activity.TraceId;
-        }
+        public string TryGetActivityTraceId() => _activity?.TraceId;
 
         public void End()
         {

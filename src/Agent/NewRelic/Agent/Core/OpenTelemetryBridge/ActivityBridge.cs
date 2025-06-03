@@ -45,7 +45,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             if (!_agent.Configuration.OpenTelemetryBridgeEnabled)
             {
-                Log.Debug("OpenTelemetry Bridge is disabled. Not starting the activity listener.");
                 return true;
             }
 
@@ -55,6 +54,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
+            Log.Debug("OpenTelemetry Bridge is enabled. Starting the activity listener.");
             return TryCreateActivityListener();
         }
 
@@ -599,14 +599,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             originalActivitySource?.Dispose();
         }
 
-        public INewRelicActivity TryCreateActivity(string activityName, ActivityKind kind)
-        {
-            if (_activitySource == null)
-            {
-                return null;
-            }
-            return _activitySource.CreateActivity(activityName, kind);
-        }
+        public INewRelicActivity TryCreateActivity(string activityName, ActivityKind kind) => _activitySource?.CreateActivity(activityName, kind);
     }
 
     public interface INewRelicActivitySource : IDisposable
