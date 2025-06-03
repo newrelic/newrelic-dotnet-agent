@@ -18,6 +18,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Segments
 {

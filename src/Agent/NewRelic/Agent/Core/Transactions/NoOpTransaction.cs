@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions
 {

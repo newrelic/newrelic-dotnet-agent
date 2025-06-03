@@ -9,9 +9,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -420,7 +422,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // TODO: We need a better way to detect activities created by a segment.
             if (activity.DisplayName != TemporarySegmentName)
             {
-                if (transaction.StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
+                if (transaction.GetExperimentalApi().StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
                 {
                     segment.ActivityStartedTransaction = shouldStartTransaction;
                 }

@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Api.Experimental;
 using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Segments.Tests
