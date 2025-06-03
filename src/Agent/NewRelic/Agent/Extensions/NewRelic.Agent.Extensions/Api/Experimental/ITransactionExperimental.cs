@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
@@ -56,5 +57,13 @@ namespace NewRelic.Agent.Api.Experimental
         DateTime StartTime { get; }
 
         ISegment StartStackExchangeRedisSegment(int invocationTargetHashCode, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, TimeSpan relativeStartTime, TimeSpan relativeEndTime);
+
+        /// <summary>
+        /// Starts a segment from an Activity.
+        /// </summary>
+        /// <param name="methodCall">The method call that is responsible for starting this segmnt.</param>
+        /// <param name="activity">The Activity that corresponds to the segment.</param>
+        /// <returns>An opaque object that will be needed when you want to end the segment.</returns>
+        ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity);
     }
 }
