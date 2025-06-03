@@ -2,5 +2,8 @@
 - Use the latest C# language version available in the project.
 - Ensure all files include the standard license header at the top.
 - When writing unit tests, always use modern NUnit assertions.
-- We use JustMock.Lite, so use only mock configurations that are valid for that package.
+- We use the free version of JustMock (JustMock Lite), so use only mock configurations that are valid for that package.
 - Always include the required usings at the top of the file.
+- Do not use reflection in unit tests to access private members of the class under test.
+- Always add [Teardown] attributes to the test class and test methods, respectively, when the test class uses disposable resources in the [Setup] method.
+- When refactoring code, preserve existing comments and documentation.

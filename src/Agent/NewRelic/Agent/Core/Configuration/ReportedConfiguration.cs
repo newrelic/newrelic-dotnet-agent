@@ -746,6 +746,15 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
         
 
+        [JsonProperty("otel_bridge.included_activity_sources")]
+        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+
+        [JsonProperty("otel_bridge.excluded_activity_sources")]
+        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+
+        [JsonProperty("otel_bridge.enabled")]
+        public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
+
         #endregion
     }
 }
