@@ -7,6 +7,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
 
 namespace AzureFunctionInProcApplication
@@ -14,7 +15,7 @@ namespace AzureFunctionInProcApplication
     public class ServiceBusTriggerFunction
     {
         [FunctionName("ServiceBusTriggerFunction")]
-        public void Run([ServiceBusTrigger("func-test-queue")] ServiceBusReceivedMessage message, ILogger log)
+        public void Run([ServiceBusTrigger(AzureServiceBusConfiguration.FuncTestQueueName)] ServiceBusReceivedMessage message, ILogger log)
         {
             var jsonMessage = JsonConvert.SerializeObject(message, Formatting.Indented);
 
@@ -25,7 +26,7 @@ namespace AzureFunctionInProcApplication
         /// Takes input from an HTTP trigger and sends a Service Bus message, which should then trigger ServiceBusTriggerFunction automagically
         /// </summary>
         [FunctionName("HttpTrigger_SendServiceBusMessage")]
-        [return: ServiceBus("func-test-queue")]
+        [return: ServiceBus(AzureServiceBusConfiguration.FuncTestQueueName)]
         public async Task<ServiceBusMessage> ServiceBusOutput([HttpTrigger(AuthorizationLevel.Admin, "post", Route = null)] HttpRequestMessage requestMessage, ILogger log)
         {
             var input = await requestMessage!.Content!.ReadAsStringAsync();
