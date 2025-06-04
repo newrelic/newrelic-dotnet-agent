@@ -35,7 +35,6 @@ jobs:
     env:
       test_results_path: tests\TestResults
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      CONTAINER_TEST_ACR_NAME: ${{ secrets.CONTAINER_TEST_ACR_NAME }}
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
