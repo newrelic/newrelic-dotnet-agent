@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace AzureFunctionApplication;
 
 public class ServiceBusTriggerFunction
 {
     [Function("ServiceBusTriggerFunction")]
-    public void Run([ServiceBusTrigger("func-test-queue")] ServiceBusReceivedMessage message, ILogger log)
+    public void Run([ServiceBusTrigger(AzureServiceBusConfiguration.FuncTestQueueName)] ServiceBusReceivedMessage message, ILogger log)
     {
         var jsonMessage = JsonSerializer.Serialize(message, new JsonSerializerOptions() { WriteIndented = true });
 
@@ -24,7 +25,7 @@ public class ServiceBusTriggerFunction
     /// Takes input from an HTTP trigger and sends a Service Bus message, which should then trigger ServiceBusTriggerFunction automagically
     /// </summary>
     [Function("HttpTrigger_SendServiceBusMessage")]
-    [ServiceBusOutput("func-test-queue")]
+    [ServiceBusOutput(AzureServiceBusConfiguration.FuncTestQueueName)]
     public async Task<ServiceBusMessage> ServiceBusOutput([HttpTrigger(AuthorizationLevel.Admin, "post", Route = null)] HttpRequestMessage requestMessage, ILogger log)
     {
         var input = await requestMessage!.Content!.ReadAsStringAsync();
