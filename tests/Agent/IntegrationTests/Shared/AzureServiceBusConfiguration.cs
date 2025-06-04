@@ -7,6 +7,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class AzureServiceBusConfiguration
     {
+        public const string FuncTestQueueName = "azure_func_test_queue";
         private static string _connectionString;
 
     public static string ConnectionString
