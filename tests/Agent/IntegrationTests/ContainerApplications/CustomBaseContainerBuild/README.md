@@ -33,3 +33,7 @@ docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.FedoraBaseIm
 
 5. Log out of the {container registry name} container repository
 `docker logout $acrName`
+
+# Enabling Anonymous Pull Access
+
+By default, anonymous pull access is disabled but is required for the container integration tests workflow. See [Configure anonymous pull access](https://learn.microsoft.com/en-us/azure/container-registry/anonymous-pull-access) for details. 
