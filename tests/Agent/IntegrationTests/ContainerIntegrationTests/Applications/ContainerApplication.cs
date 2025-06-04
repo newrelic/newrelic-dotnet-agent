@@ -140,6 +140,8 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
         startInfo.EnvironmentVariables.Add("TARGET_ARCH", _targetArch);
 
+        startInfo.EnvironmentVariables.Add("CONTAINER_TEST_ACR_NAME", testConfiguration.DefaultSetting.ContainerTestAcrName);
+
         // Workflow will set BUILD_ARCH if it's a CI build
         // otherwise, assume it's a local build and set it to amd64
         if (!startInfo.EnvironmentVariables.ContainsKey("BUILD_ARCH"))
