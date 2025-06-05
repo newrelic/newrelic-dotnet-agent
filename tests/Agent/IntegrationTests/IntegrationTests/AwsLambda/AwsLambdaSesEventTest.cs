@@ -81,7 +81,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
     public class AwsLambdaSesEventTestCoreOldest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaSesEventTestCoreOldest(LambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/SesEvent")
+            : base(fixture, output, "OtherTransaction/Function/SesEvent")
         {
         }
     }
@@ -89,7 +89,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
     public class AwsLambdaAsyncSesEventTestCoreOldest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncSesEventTestCoreOldest(AsyncLambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/SesEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/SesEventAsync")
         {
         }
     }
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
     public class AwsLambdaSesEventTestCoreLatest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaSesEventTestCoreLatest(LambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/SesEvent")
+            : base(fixture, output, "OtherTransaction/Function/SesEvent")
         {
         }
     }
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Ses
     public class AwsLambdaAsyncSesEventTestCoreLatest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncSesEventTestCoreLatest(AsyncLambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/SesEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/SesEventAsync")
         {
         }
     }

@@ -80,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaKinesisEventTestCoreOldest : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaKinesisEventTestCoreOldest(LambdaKinesisEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEvent")
+            : base(fixture, output, "OtherTransaction/Function/KinesisEvent")
         {
         }
     }
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaAsyncKinesisEventTestCoreOldest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncKinesisEventTestCoreOldest(AsyncLambdaKinesisEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/KinesisEventAsync")
         {
         }
     }
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaKinesisEventTestCoreLatest : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaKinesisEventTestCoreLatest(LambdaKinesisEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEvent")
+            : base(fixture, output, "OtherTransaction/Function/KinesisEvent")
         {
         }
     }
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaAsyncKinesisEventTestCoreLatest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncKinesisEventTestCoreLatest(AsyncLambdaKinesisEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/KinesisEventAsync")
         {
         }
     }
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaKinesisTimeWindowEventTestCoreOldest : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaKinesisTimeWindowEventTestCoreOldest(LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEvent")
+            : base(fixture, output, "OtherTransaction/Function/KinesisTimeWindowEvent")
         {
         }
     }
@@ -120,7 +120,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaAsyncKinesisTimeWindowEventTestCoreOldest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncKinesisTimeWindowEventTestCoreOldest(AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/KinesisTimeWindowEventAsync")
         {
         }
     }
@@ -128,7 +128,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaKinesisTimeWindowEventTestCoreLatest : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaKinesisTimeWindowEventTestCoreLatest(LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEvent")
+            : base(fixture, output, "OtherTransaction/Function/KinesisTimeWindowEvent")
         {
         }
     }
@@ -136,7 +136,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
     public class AwsLambdaAsyncKinesisTimeWindowEventTestCoreLatest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncKinesisTimeWindowEventTestCoreLatest(AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Lambda/KinesisTimeWindowEventAsync")
+            : base(fixture, output, "OtherTransaction/Function/KinesisTimeWindowEventAsync")
         {
         }
     }

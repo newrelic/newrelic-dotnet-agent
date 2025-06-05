@@ -80,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaSmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaSmokeTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
+            : base("OtherTransaction/Function/SnsHandler", fixture, output, false)
         {
         }
     }
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncSmokeTestCoreOldest(AsyncLambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
+            : base("OtherTransaction/Function/SnsHandlerAsync", fixture, output,false)
         {
         }
     }
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaHandlerOnlySmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
         public AwsLambdaHandlerOnlySmokeTestCoreOldest(LambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
+            : base("OtherTransaction/Function/SnsHandler", fixture, output, false)
         {
         }
     }
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
         public AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
+            : base("OtherTransaction/Function/SnsHandlerAsync", fixture, output, false)
         {
         }
     }
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output,false)
+            : base("OtherTransaction/Function/SnsHandler", fixture, output,false)
         {
         }
     }
@@ -120,7 +120,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncSmokeTestCoreLatest(AsyncLambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
+            : base("OtherTransaction/Function/SnsHandlerAsync", fixture, output, false)
         {
         }
     }
@@ -128,7 +128,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaHandlerOnlySmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
         public AwsLambdaHandlerOnlySmokeTestCoreLatest(LambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
+            : base("OtherTransaction/Function/SnsHandler", fixture, output, false)
         {
         }
     }
@@ -136,14 +136,14 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
         public AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
+            : base("OtherTransaction/Function/SnsHandlerAsync", fixture, output,false)
         {
         }
     }
     public class AwsLambdaServerlessModeSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaServerlessModeSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
+            : base("OtherTransaction/Function/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
         {
         }
     }

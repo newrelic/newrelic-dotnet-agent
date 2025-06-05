@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
     public abstract class AwsLambdaOutOfOrderParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaOutOfOrderParameterFixtureBase
     {
-        private const string ExpectedTransactionName = "OtherTransaction/Lambda/OutOfOrderParameters";
+        private const string ExpectedTransactionName = "OtherTransaction/Function/OutOfOrderParameters";
 
         private readonly LambdaOutOfOrderParameterFixtureBase _fixture;
 

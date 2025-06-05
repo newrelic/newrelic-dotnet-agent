@@ -74,7 +74,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
     public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreOldest>
     {
         public AwsLambdaCustomParametersTestCoreOldest(LambdaCustomParametersFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
+            : base("OtherTransaction/Function/StringInputAndOutput", fixture, output)
         {
         }
     }
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
     public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreLatest>
     {
         public AwsLambdaCustomParametersTestCoreLatest(LambdaCustomParametersFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
+            : base("OtherTransaction/Function/StringInputAndOutput", fixture, output)
         {
         }
     }
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
     public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreOldest>
     {
         public AwsLambdaCustomParametersAsyncTestCoreOldest(LambdaCustomParametersAsyncFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
+            : base("OtherTransaction/Function/StringInputAndOutputAsync", fixture, output)
         {
         }
     }
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
     public class AwsLambdaCustomParametersAsyncTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreLatest>
     {
         public AwsLambdaCustomParametersAsyncTestCoreLatest(LambdaCustomParametersAsyncFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
+            : base("OtherTransaction/Function/StringInputAndOutputAsync", fixture, output)
         {
         }
     }

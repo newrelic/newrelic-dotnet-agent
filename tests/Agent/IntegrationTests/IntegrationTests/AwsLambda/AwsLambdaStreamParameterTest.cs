@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
     public abstract class AwsLambdaStreamParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaStreamParameterFixtureBase
     {
-        private const string ExpectedTransactionName = "OtherTransaction/Lambda/StreamParameter";
+        private const string ExpectedTransactionName = "OtherTransaction/Function/StreamParameter";
 
         private readonly LambdaStreamParameterFixtureBase _fixture;
 

@@ -150,7 +150,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest>
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreOldest(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
+            : base(fixture, output, "WebTransaction/Function/ApiGatewayHttpApiV2ProxyRequestHandler", false)
         {
         }
     }
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest>
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestCoreLatest(LambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandler", false)
+            : base(fixture, output, "WebTransaction/Function/ApiGatewayHttpApiV2ProxyRequestHandler", false)
         {
         }
     }
@@ -166,7 +166,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest>
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreOldest(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
+            : base(fixture, output, "WebTransaction/Function/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
         {
         }
     }
@@ -174,7 +174,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestTest<AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest>
     {
         public AwsLambdaAPIGatewayHttpApiV2ProxyRequestTestAsyncCoreLatest(AsyncLambdaAPIGatewayHttpApiV2ProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Lambda/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
+            : base(fixture, output, "WebTransaction/Function/ApiGatewayHttpApiV2ProxyRequestHandlerAsync", false)
         {
         }
     }

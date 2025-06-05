@@ -36,7 +36,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 
             Assert.Multiple(
                 () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
-                () => Assert.Equal("OtherTransaction/Lambda/LambdaContextOnly", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
+                () => Assert.Equal("OtherTransaction/Function/LambdaContextOnly", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
                 );
         }
     }

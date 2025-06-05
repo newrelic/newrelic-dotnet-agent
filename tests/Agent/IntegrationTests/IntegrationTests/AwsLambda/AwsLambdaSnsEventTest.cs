@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sns
         private readonly LambdaSnsEventTriggerFixtureBase _fixture;
         private const string TestTraceId = "74be672b84ddc4e4b28be285632bbc0a";
         private const string TestParentSpanId = "27ddd2d8890283b4";
-        private const string ExpectedTransactionName = "OtherTransaction/Lambda/SnsHandler";
+        private const string ExpectedTransactionName = "OtherTransaction/Function/SnsHandler";
 
         protected AwsLambdaSnsEventTest(T fixture, ITestOutputHelper output)
             : base(fixture)

@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Sqs
         private readonly LambdaSqsEventTriggerFixtureBase _fixture;
         private const string TestTraceId = "74be672b84ddc4e4b28be285632bbc0a";
         private const string TestParentSpanId = "27ddd2d8890283b4";
-        private const string ExpectedTransactionName = "OtherTransaction/Lambda/SqsHandler";
+        private const string ExpectedTransactionName = "OtherTransaction/Function/SqsHandler";
 
         protected AwsLambdaSqsEventTest(T fixture, ITestOutputHelper output)
             : base(fixture)
