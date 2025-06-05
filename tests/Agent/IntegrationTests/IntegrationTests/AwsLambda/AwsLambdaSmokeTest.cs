@@ -143,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
     public class AwsLambdaServerlessModeSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaServerlessModeSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
+            : base("OtherTransaction/Function/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
         {
         }
     }

@@ -248,7 +248,7 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             // else WebTransaction/Function/myFunction
             transaction = agent.CreateTransaction(
                 isWeb: _functionDetails.EventType.IsWebEvent(),
-                category: "Lambda",
+                category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
                 transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
                                         ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
                                         : _functionDetails.FunctionName,
