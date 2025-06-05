@@ -50,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
             var customEventPayload = serverlessPayload.Telemetry.CustomEventsPayload;
 
             Assert.Multiple(
-                () => Assert.Equal("OtherTransaction/Function/CustomEvent", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"]),
+                () => Assert.Equal("OtherTransaction/Lambda/CustomEvent", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"]),
                 () => Assert.Single(customEventPayload.CustomEvents),
                 () => Assert.Equal("TestLambdaCustomEvent", customEventPayload.CustomEvents[0].Header.Type),
                 () => Assert.Single(customEventPayload.CustomEvents[0].Attributes),

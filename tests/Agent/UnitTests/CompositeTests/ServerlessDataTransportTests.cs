@@ -72,7 +72,7 @@ namespace CompositeTests
             // ACT
             var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
                 isWeb: true,
-                category: "Function",
+                category: "Lambda",
                 transactionDisplayName: "TransactionName",
                 doNotTrackAsUnitOfWork: true);
 

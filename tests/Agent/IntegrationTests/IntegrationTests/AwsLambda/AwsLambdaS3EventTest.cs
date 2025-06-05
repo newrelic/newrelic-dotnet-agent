@@ -89,7 +89,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
     public class AwsLambdaS3EventTestCoreOldest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreOldest>
     {
         public AwsLambdaS3EventTestCoreOldest(LambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/S3Event")
+            : base(fixture, output, "OtherTransaction/Lambda/S3Event")
         {
         }
     }
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
     public class AwsLambdaAsyncS3EventTestCoreOldest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncS3EventTestCoreOldest(AsyncLambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/S3EventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/S3EventAsync")
         {
         }
     }
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
     public class AwsLambdaS3EventTestCoreLatest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreLatest>
     {
         public AwsLambdaS3EventTestCoreLatest(LambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/S3Event")
+            : base(fixture, output, "OtherTransaction/Lambda/S3Event")
         {
         }
     }
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.S3
     public class AwsLambdaAsyncS3EventTestCoreLatest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncS3EventTestCoreLatest(AsyncLambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/S3EventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/S3EventAsync")
         {
         }
     }

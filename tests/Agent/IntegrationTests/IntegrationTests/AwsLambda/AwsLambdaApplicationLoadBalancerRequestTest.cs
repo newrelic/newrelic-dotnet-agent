@@ -133,7 +133,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
     {
         public AwsLambdaApplicationLoadBalancerRequestTestCoreOldest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandler", false)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandler", false)
         {
         }
     }
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
     {
         public AwsLambdaApplicationLoadBalancerRequestTestCoreLatest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandler", false)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandler", false)
         {
         }
     }
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
     {
         public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerAsync", false)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
         {
         }
     }
@@ -157,7 +157,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
     {
         public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerAsync", false)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerAsync", false)
         {
         }
     }
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
         {
         }
     }
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStream", true)
         {
         }
     }
@@ -181,7 +181,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
         {
         }
     }
@@ -189,7 +189,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.WebRequest
     public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
     {
         public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/Function/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
+            : base(fixture, output, "WebTransaction/Lambda/ApplicationLoadBalancerRequestHandlerReturnsStreamAsync", true)
         {
         }
     }

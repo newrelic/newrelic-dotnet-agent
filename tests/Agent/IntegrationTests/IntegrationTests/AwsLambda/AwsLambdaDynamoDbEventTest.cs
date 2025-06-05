@@ -78,7 +78,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaDynamoDbEventTestCoreOldest(LambdaDynamoDbEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbEvent")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEvent")
         {
         }
     }
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaDynamoDbEventTestCoreLatest(LambdaDynamoDbEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbEvent")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEvent")
         {
         }
     }
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaAsyncDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncDynamoDbEventTestCoreOldest(AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbEventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
         {
         }
     }
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaAsyncDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncDynamoDbEventTestCoreLatest(AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbEventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbEventAsync")
         {
         }
     }
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaDynamoDbTimeWindowEventTestCoreOldest(LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbTimeWindowEvent")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEvent")
         {
         }
     }
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaDynamoDbTimeWindowEventTestCoreLatest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaDynamoDbTimeWindowEventTestCoreLatest(LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbTimeWindowEvent")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEvent")
         {
         }
     }
@@ -126,7 +126,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest>
     {
         public AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreOldest(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbTimeWindowEventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEventAsync")
         {
         }
     }
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.DynamoDb
     public class AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreLatest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest>
     {
         public AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreLatest(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "OtherTransaction/Function/DynamoDbTimeWindowEventAsync")
+            : base(fixture, output, "OtherTransaction/Lambda/DynamoDbTimeWindowEventAsync")
         {
         }
     }
