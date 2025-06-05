@@ -9,8 +9,8 @@ jobs:
     env:
       ACR_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}
       RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      PUBLIC_IP_NAME: dotnet-unbounded-services-k8s # does this need to be a secret?
       CLUSTER_NAME: dotnet-unbounded-services
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
@@ -75,6 +75,10 @@ jobs:
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: dotnet-unbounded-services
+      - name: Get the public IP address from Azure and set it as an environment variable
+        run: |
+          PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name $PUBLIC_IP_NAME --query ipAddress -o tsv)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
       - name: Deploy to AKS
         run: |
           kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/namespace.yaml

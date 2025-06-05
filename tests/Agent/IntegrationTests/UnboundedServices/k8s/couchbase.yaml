@@ -44,7 +44,7 @@ metadata:
     service.beta.kubernetes.io/azure-pip-name: dotnet-unbounded-services-k8s
 spec:
   type: LoadBalancer
-  loadBalancerIP: 4.246.122.173
+  loadBalancerIP: ${PUBLIC_IP}
   ports:
     - port: 8091
       targetPort: 8091
