@@ -59,9 +59,9 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
         private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         private readonly IBootstrapConfiguration _bootstrapConfiguration = BootstrapConfiguration.GetDefault();
-        private Dictionary<string, string> _newRelicAppSettings { get; }
+        private readonly Dictionary<string, string> _newRelicAppSettings;
 
-        public bool UseResourceBasedNamingForWCFEnabled { get; }
+        public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
         public bool EventListenerSamplersEnabled { get; set; }
 
         public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.Configuration
         private Dictionary<string, string> TransformAppSettings()
         {
             if (_localConfiguration.appSettings == null)
-                return new Dictionary<string, string>();
+                return [];
 
             return _localConfiguration.appSettings
                 .Where(setting => setting != null)
@@ -141,8 +141,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             var value = _newRelicAppSettings.GetValueOrDefault(key);
 
-            bool parsedBool;
-            var parsedSuccessfully = bool.TryParse(value, out parsedBool);
+            var parsedSuccessfully = bool.TryParse(value, out var parsedBool);
             if (!parsedSuccessfully)
                 return defaultValue;
 
@@ -189,9 +188,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
-        // protected to allow unit test wrapper to manipulate
-        protected static bool? _agentEnabledAppSettingParsed;
-        protected static bool _appSettingAgentEnabled;
         private static readonly object _lockObj = new object();
 
 
