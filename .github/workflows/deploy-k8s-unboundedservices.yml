@@ -1,16 +1,19 @@
 name: Deploy UnboundedServices to AKS
 
 on:
+  push: # temporary to test the workflow
+    branches:
+      - ci/unbounded-k8s-cluster
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      ACR_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-      RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      PUBLIC_IP_NAME: dotnet-unbounded-services-k8s # does this need to be a secret?
-      CLUSTER_NAME: dotnet-unbounded-services
+      ACR_NAME: ${{ secrets.AZURE_REGISTRY_NAME }}
+      RESOURCE_GROUP: ${{ secrets.AZURE_INTEGRATION_TEST_SERVICES_RESOURCE_GROUP }}
+      PUBLIC_IP_NAME: ${{ secrets.AZURE_K8S_PUBLIC_IP_NAME }}
+      CLUSTER_NAME: ${{ secrets.AZURE_K8S_CLUSTER_NAME }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
@@ -22,13 +25,13 @@ jobs:
       - name: Azure Login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_SP_CREDENTIALS }}
       - name: Azure Container Registry Login
         uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
         with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
       - name: Create Kubernetes Secrets Manifest
         env:
           MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}

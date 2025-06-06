@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: oracle
-        image: dotnetunboundedservices.azurecr.io/oracle:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/oracle:latest
         ports:
         - containerPort: 1521
         envFrom:

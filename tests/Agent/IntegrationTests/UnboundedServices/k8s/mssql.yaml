@@ -17,7 +17,7 @@ spec:
        fsGroup: 10001
       containers:
       - name: mssql
-        image: dotnetunboundedservices.azurecr.io/mssql:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/mssql:latest
         ports:
         - containerPort: 1433
         env:

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mongodb32
-        image: dotnetunboundedservices.azurecr.io/mongodb32:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/mongodb32:latest
         ports:
         - containerPort: 27017
         envFrom:

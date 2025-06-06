@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: dotnetunboundedservices.azurecr.io/redis:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/redis:latest
         command: ["sh", "-c", "redis-server --requirepass $REDIS_PASSWORD"]
         ports:
         - containerPort: 6379

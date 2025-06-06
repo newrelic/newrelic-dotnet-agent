@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: dotnetunboundedservices.azurecr.io/postgres:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/postgres:latest
         ports:
         - containerPort: 5432
         envFrom:

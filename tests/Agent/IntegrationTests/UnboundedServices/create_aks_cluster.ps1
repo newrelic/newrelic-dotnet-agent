@@ -1,11 +1,19 @@
-az login
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$resourceGroup,
+    [Parameter(Mandatory=$true)]
+    [string]$acrName,
+    [Parameter(Mandatory=$true)]
+    [string]$managedIdentity,
+    [Parameter(Mandatory=$true)]
+    [string]$aksName,
+    [Parameter(Mandatory=$true)]
+    [string]$publicIpName,
+    [Parameter(Mandatory=$true)]
+    [string]$publicIpDnsName
+)
 
-$resourceGroup = "integration-test-services"
-$acrName="dotnetunboundedservicesregistry" # try using dotnetunboundedservices after mid-July 2025 when the name is available
-$managedIdentity="unbounded-services-identity"
-$aksName = "dotnet-unbounded-services"
-$publicIpName = "dotnet-unbounded-services-k8s"
-$publicIpDnsName = "dotnet-unbounded-services-k8s"
+az login
 
 # Get the current Azure subscription ID and store it in a variable
 $subscriptionId = az account show --query id -o tsv
@@ -14,6 +22,9 @@ $subscriptionId = az account show --query id -o tsv
 az identity create --name $managedIdentity --resource-group $resourceGroup
 
 $managedIdentityClientId = az identity show --name $managedIdentity --resource-group $resourceGroup --query clientId -o tsv
+$managedIdentityResourceId = az identity show --name $managedIdentity --resource-group $resourceGroup --query id -o tsv
+Write-Output "Managed Identity Client ID: $managedIdentityClientId"
+Write-Output "Managed Identity Resource ID: $managedIdentityResourceId"
 
 # Create the Azure Container Registry
 az acr create --resource-group $resourceGroup --name $acrName --sku Standard --admin-enabled true
@@ -25,24 +36,28 @@ az role assignment create --assignee $managedIdentityClientId --scope $registryI
 $acrLoginServer = az acr show --name $acrName --resource-group $resourceGroup --query loginServer --output tsv
 Write-Output "ACR Login Server: $acrLoginServer"
 
-# build and push docker images to the acr for all services
-build_and_push_acr.ps1 $acrName $resourceGroup
+# make sure the subscription has access to the Microsft.ContainerService resource provider
+az provider register --namespace Microsoft.ContainerService
 
-# Create the AKS cluster
-az aks create --resource-group $resourceGroup --name $aksName --node-count 1 --enable-managed-identity --assign-identity $managedIdentityClientId --generate-ssh-keys --node-vm-size Standard_DS4_v2
+# Create the AKS cluster - Standard_D4a_v4 is 4 vCPUs and 16 GB RAM, which is sufficient for running the unbounded services
+az aks create --resource-group $resourceGroup --name $aksName --node-count 1 --enable-managed-identity --assign-identity $managedIdentityResourceId --generate-ssh-keys --node-vm-size Standard_D4a_v4
 
 # give the cluster permission to access the ACR
 az aks update -n $aksName -g $resourceGroup --attach-acr $acrName
 
-# create a public IP and write it to the console
-$publicIpAddress = az network public-ip create --resource-group $resourceGroup --name $publicIpName --sku Standard
+# create a public IP
+az network public-ip create --resource-group $resourceGroup --name $publicIpName --sku Standard
+# get the public IP address
+$publicIpAddress = az network public-ip show --resource-group $resourceGroup --name $publicIpName --query ipAddress -o json
 Write-Output "Public IP address: $publicIpAddress"
 
 # assign a dns label to the public IP
-$publicIpDnsHost = az network public-ip update --resource-group $resourceGroup --name $publicIpName --dns-name $publicIpDnsName
-Write-Output "Public IP DNS Host: $publicIpDnsHost"
+az network public-ip update --resource-group $resourceGroup --name $publicIpName --dns-name $publicIpDnsName
+# get the fqdn for the public IP
+$publicIpFqdn = az network public-ip show --resource-group $resourceGroup --name $publicIpName --query dnsSettings.fqdn -o tsv
+Write-Output "Public IP FQDN: $publicIpFqdn"
 
 # authorize the managed identity to use the public IP, which enables the cluster to use the public IP in load balancers
 az role assignment create --assignee $managedIdentityClientId --role "Network Contributor" --scope /subscriptions/$subscriptionId/resourceGroups/$resourceGroup
 
-Write-Output "AKS cluster $aksName created successfully with managed identity $managedIdentity and public IP $publicIpDnsName ($publicIpAddress)."
+Write-Output "AKS cluster $aksName created successfully with managed identity $managedIdentity and hostname $publicIpFqdn ($publicIpAddress)."

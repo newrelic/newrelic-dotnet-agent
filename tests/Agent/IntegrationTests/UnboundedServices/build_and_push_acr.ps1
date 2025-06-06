@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $loginServer = az acr show --name $AcrName --resource-group $ResourceGroup --query loginServer --output tsv
 az acr login --name $AcrName
 
-$allServices = @('rabbitmq', 'mongodb32', 'mongodb60', 'redis', 'couchbase', 'postgres', 'mssql', 'mysql', 'elastic', 'elastic7', 'oracle')
+$allServices = @('couchbase', 'elastic', 'elastic7', 'mongodb32', 'mongodb60', 'mssql', 'mysql', 'oracle', 'postgres', 'rabbitmq', 'redis')
 
 if ($ServicesToBuild) {
     $services = $ServicesToBuild.Split(",") | ForEach-Object { $_.Trim() }
