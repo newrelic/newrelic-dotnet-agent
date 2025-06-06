@@ -21,13 +21,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
     internal class TestableDefaultConfiguration : DefaultConfiguration
     {
         public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
-            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter) { }
-
-        public static void ResetStatics()
-        {
-            _agentEnabledAppSettingParsed = null;
-            _appSettingAgentEnabled = false;
-        }
+            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter)
+        { }
     }
 
     [TestFixture, Category("Configuration")]
@@ -62,8 +57,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
-
-            TestableDefaultConfiguration.ResetStatics();
         }
 
         [TestCase(true, "something", true, "something")]
