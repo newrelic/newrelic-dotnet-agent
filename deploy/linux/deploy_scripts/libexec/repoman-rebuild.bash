@@ -82,16 +82,19 @@ rebuild_apt() (
   echo "apt-ftparchive release -c '$release_conf_file' 'dists/$REPO' > 'dists/$REPO/Release'"
   apt-ftparchive release  -c "$release_conf_file" "dists/$REPO" > "dists/$REPO/Release"
 
-  echo "untarring GPG_KEYS"
-  tar -xjvf "$GPG_KEYS"
+  echo "Importing signing keys"
+  gpg --import "${OLD_PRIVATE_KEY}"
+  gpg --import "${NEW_PRIVATE_KEY}"
 
   echo "rm -f dists/$REPO/Release.gpg"
   rm -f "dists/$REPO/Release.gpg"
 
-  echo "gpg signing"
-  # We're using gpg1 (from the 'gnupg1' package) because newer versions of gpg (2.x+) do not support a separate secret key ring, and
-  # the keys we use to sign the repo currently come as separate public and secret ring files
-  gpg1 -abs --digest-algo SHA256 --keyring gpg-conf/pubring.gpg --secret-keyring gpg-conf/secring.gpg -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
+  echo "rm -f dists/$REPO/InRelease"
+  rm -f "dists/$REPO/InRelease"
+
+  echo "gpg signing" 
+  gpg --armor --digest-algo SHA256 --clear-sign -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/InRelease" "dists/$REPO/Release"
+  gpg --armor --digest-algo SHA256 --detach-sign -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
   chmod 644 dists/"$REPO"/Contents-*.{gz,bz2}
 
   popd >/dev/null
