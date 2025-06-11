@@ -557,7 +557,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
                         segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
                     }
-                    else if (tags.TryGetValue("db.system", out var dbType)) // it's a database call
+                    else if (tags.TryGetValue("db.system.name", out var dbSystemName)) // it's a database call
                     {
                         // TODO: need IDatabaseService here so we can create a DatastoreSegmentData instance.
                         //var dbSegmentData = new DatastoreSegmentData( );
