@@ -13,9 +13,11 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
@@ -67,7 +69,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // TODO: Enforce that an appropriate minimum version of the DiagnosticSource assembly is loaded.
             if (assembly == null || (assembly.GetName().Version?.Major ?? 0) < 7)
             {
-                Log.Debug("DiagnosticSource assembly version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
+                Log.Debug("DiagnosticSource assembly not found or version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
                 return false;
             }
 
@@ -494,7 +496,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (segment != null)
             {
-                AddActivityTagsToSegment(originalActivity, segment);
+                AddActivityTagsToSegment(originalActivity, segment, agent);
                 AddExceptionEventInformationToSegment(originalActivity, segment, errorService);
                 segment.End();
             }
@@ -506,14 +508,79 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
         }
 
-        private static void AddActivityTagsToSegment(object originalActivity, ISegment segment)
+        private static void AddActivityTagsToSegment(object originalActivity, ISegment segment, IAgent agent)
         {
             dynamic activity = originalActivity;
-            foreach (var tag in activity.TagObjects)
+            ActivityKind activityKind = (ActivityKind)activity.Kind;
+            var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
+            if (tags.Count == 0)
             {
-                // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
-                // the ones that we map to intrinsic or agent attributes.
-                segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
+                Log.Debug($"Activity {activity.Id} has no tags. Not adding tags to segment.");
+                return;
+            }
+
+            // based on activity kind, create the appropriate segment data
+            switch (activityKind)
+            {
+                case ActivityKind.Client:
+                    // could be an http call or a database call, so need to look for specific tags to decide
+                    if (tags.TryGetValue<string, string, object>("http.request.method", out var method) || tags.TryGetValue<string, string, object>("http.method", out method)) // it's an HTTP call
+                    {
+                        if (!tags.TryGetValue<string, string, object>("url.full", out var url) && !tags.TryGetValue<string, string, object>("http.url", out url))
+                        {
+                            Log.Debug($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags for url. Not creating an ExternalSegmentData.");
+                            break;
+                        }
+                        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(method))
+                        {
+                            Log.Debug($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags for url and method. Not creating an ExternalSegmentData.");
+                            break;
+                        }
+
+                        Uri uri = new Uri(url);
+                        var externalSegmentData = new ExternalSegmentData(uri, method);
+                        // set the http status code
+                        if (tags.TryGetValue<int, string, object>("http.response.status_code", out var statusCode) || tags.TryGetValue<int, string, object>("http.status_code", out statusCode))
+                        {
+                            tags.TryGetValue<string, string, object>("http.status_text", out var statusText);
+                            externalSegmentData.SetHttpStatus(statusCode, statusText);
+                        }
+
+                        // check for AWS
+                        if (!string.IsNullOrEmpty(agent.Configuration.AwsAccountId))
+                        {
+                            if (tags.TryGetValue<string, string, object>("faas.invoked_name", out var awsName))
+                                segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
+                            if (tags.TryGetValue<string, string, object>("faas.invoked_provider", out var awsProvider) && tags.TryGetValue<string, string, object>("aws.region", out var awsRegion))
+                                segment.AddCloudSdkAttribute("cloud.resource_id", $"arn:aws:lambda:{awsRegion}:{agent.Configuration.AwsAccountId}:function:{awsName}");
+                        }
+
+                        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+                    }
+                    else if (tags.TryGetValue("db.system", out var dbType)) // it's a database call
+                    {
+                        // TODO: need IDatabaseService here so we can create a DatastoreSegmentData instance.
+                        //var dbSegmentData = new DatastoreSegmentData( );
+                        //segment.GetExperimentalApi().SetSegmentData(dbSegmentData);
+                    }
+                    else
+                    {
+                        Log.Debug($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags to determine whether it's an HTTP or database activity.");
+                    }
+                    break;
+                case ActivityKind.Internal:
+                case ActivityKind.Server:
+                case ActivityKind.Producer:
+                case ActivityKind.Consumer:
+                default:
+                    // as a fallback, add all tags to the segment as custom attributes if we did not create a specific segment data type.
+                    foreach (var tag in tags)
+                    {
+                        // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
+                        // the ones that we map to intrinsic or agent attributes.
+                        segment.AddCustomAttribute(tag.Key, tag.Value);
+                    }
+                    break;
             }
         }
 
@@ -674,6 +741,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _dynamicActivity = (dynamic)_activity;
         }
 
+        public dynamic DynamicActivity => _dynamicActivity;
+
         public bool IsStopped => (bool?)(_dynamicActivity)?.IsStopped ?? true;
 
         public string SpanId => (string)(_dynamicActivity)?.SpanId.ToString();
@@ -681,6 +750,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public string TraceId => (string)(_dynamicActivity)?.TraceId.ToString();
 
         public string DisplayName => (string)(_dynamicActivity)?.DisplayName;
+
+        /// <summary>
+        /// Gets the ActivityKind for the activity. Can be safely cast to ActivityKind when needed.
+        /// Defaults to Internal if there's no dynamic activity
+        /// </summary>
+        public int Kind => (int?)(_dynamicActivity)?.Kind ?? (int)ActivityKind.Internal;
 
         public void Dispose()
         {
