@@ -520,6 +520,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // based on activity kind, create the appropriate segment data
+            // remove all tags that are used in segment data creation
             switch (activityKind)
             {
                 case ActivityKind.Client:
@@ -528,14 +529,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     {
                         if (!tags.TryGetValue<string, string, object>("url.full", out var url) && !tags.TryGetValue<string, string, object>("http.url", out url))
                         {
-                            Log.Debug($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags for url. Not creating an ExternalSegmentData.");
+                            Log.Finest($"Activity {activity.Id} with Activity.Kind {activityKind} is missing `url.full` and `http.request.method`. Not creating an ExternalSegmentData.");
                             break;
                         }
                         if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(method))
                         {
-                            Log.Debug($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags for url and method. Not creating an ExternalSegmentData.");
+                            Log.Finest($"Activity {activity.Id} with Activity.Kind {activityKind} is missing required tags for url and method. Not creating an ExternalSegmentData.");
                             break;
                         }
+
+                        tags.Remove("http.request.method");
+                        tags.Remove("http.method");
+                        tags.Remove("url.full");
+                        tags.Remove("http.url");
 
                         Uri uri = new Uri(url);
                         var externalSegmentData = new ExternalSegmentData(uri, method);
@@ -544,15 +550,22 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         {
                             tags.TryGetValue<string, string, object>("http.status_text", out var statusText);
                             externalSegmentData.SetHttpStatus(statusCode, statusText);
+
+                            tags.Remove("http.response.status_code");
+                            tags.Remove("http.status_code");
+                            tags.Remove("http.status_text");
                         }
 
-                        // check for AWS
+                        // check for AWS lambda invocation call
                         if (!string.IsNullOrEmpty(agent.Configuration.AwsAccountId))
                         {
                             if (tags.TryGetValue<string, string, object>("faas.invoked_name", out var awsName))
                                 segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
                             if (tags.TryGetValue<string, string, object>("faas.invoked_provider", out var awsProvider) && tags.TryGetValue<string, string, object>("aws.region", out var awsRegion))
                                 segment.AddCloudSdkAttribute("cloud.resource_id", $"arn:aws:lambda:{awsRegion}:{agent.Configuration.AwsAccountId}:function:{awsName}");
+
+                            tags.Remove("faas.invoked_name");
+                            tags.Remove("faas.invoked_provider");
                         }
 
                         segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
@@ -562,6 +575,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         // TODO: need IDatabaseService here so we can create a DatastoreSegmentData instance.
                         //var dbSegmentData = new DatastoreSegmentData( );
                         //segment.GetExperimentalApi().SetSegmentData(dbSegmentData);
+                        //tags.Remove("db.system.name");
                     }
                     else
                     {
@@ -573,15 +587,17 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 case ActivityKind.Producer:
                 case ActivityKind.Consumer:
                 default:
-                    // as a fallback, add all tags to the segment as custom attributes if we did not create a specific segment data type.
-                    foreach (var tag in tags)
-                    {
-                        // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
-                        // the ones that we map to intrinsic or agent attributes.
-                        segment.AddCustomAttribute(tag.Key, tag.Value);
-                    }
                     break;
             }
+
+            // add any tags left in the collection as custom attributes
+            foreach (var tag in tags)
+            {
+                // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
+                // the ones that we map to intrinsic or agent attributes.
+                segment.AddCustomAttribute(tag.Key, tag.Value);
+            }
+
         }
 
         private static void AddExceptionEventInformationToSegment(object originalActivity, ISegment segment, IErrorService errorService)
