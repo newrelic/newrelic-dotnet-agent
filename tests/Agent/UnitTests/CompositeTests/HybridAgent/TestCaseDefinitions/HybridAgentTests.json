@@ -1,0 +1,130 @@
+[
+    {
+        "testDescription": "Client Http External test",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "GET"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "https://google.com"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.status_text",
+                                    "value": "OK"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/google.com/Stream/GET",
+                    "parentName": "Foo",
+                    "catgory": "http",
+                    "attributes": {
+                        "server.address": "google.com",
+                        "server.port": 443,
+                        "span.kind": "client",
+                        "http.request.method": "GET",
+                        "http.statusCode": 200,
+                        "http.statusText": "OK",
+                        "http.url": "https://google.com:443/"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database test",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system.name",
+                                    "value": "oracle.db"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.namespace",
+                                    "value": "ORCL1|DB1|order-processing-service"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OTelSpan1",
+                    "parentName": "Foo",
+                    "catgory": "database",
+                    "attributes": {
+                        "db.system.name": "oracle.db",
+                        "db.namespace": "ORCL1|DB1|order-processing-service"
+                    }
+                }
+            ]
+        }
+    }
+]
