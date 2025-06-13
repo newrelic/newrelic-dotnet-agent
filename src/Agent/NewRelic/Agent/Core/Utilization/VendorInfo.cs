@@ -102,6 +102,10 @@ namespace NewRelic.Agent.Core.Utilization
             {
                 vendorMethods.Add(GetAzureFunctionVendorInfo);
             }
+            if (_configuration.UtilizationDetectAzureAppService)
+            {
+                vendorMethods.Add(GetAzureAppServiceVendorInfo);
+            }
 
             foreach (var vendorMethod in vendorMethods)
             {
@@ -153,6 +157,27 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return new AzureFunctionVendorModel(appName, cloudRegion);
+        }
+
+        public IVendorModel GetAzureAppServiceVendorInfo()
+        {
+            // WEBSITE_OWNER_NAME should container the subscription ID and the resource group name, separated by a '+' sign.
+            var candidateSubscriptionId = GetProcessEnvironmentVariable("WEBSITE_OWNER_NAME");
+            if (string.IsNullOrWhiteSpace(candidateSubscriptionId) || !candidateSubscriptionId.Contains('+'))
+            {
+                return null;
+            }
+
+            var subscriptionId = candidateSubscriptionId.Split('+')[0];
+            var resourceGroupName = GetProcessEnvironmentVariable("WEBSITE_RESOURCE_GROUP");
+            var siteName = GetProcessEnvironmentVariable("WEBSITE_SITE_NAME");
+
+            if (string.IsNullOrWhiteSpace(subscriptionId) || string.IsNullOrWhiteSpace(resourceGroupName) || string.IsNullOrWhiteSpace(siteName))
+            {
+                return null;
+            }
+
+            return new AzureAppServiceVendorModel($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}");
         }
 
         private IVendorModel GetAwsVendorInfo()

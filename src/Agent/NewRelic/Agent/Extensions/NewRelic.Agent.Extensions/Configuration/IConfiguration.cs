@@ -238,6 +238,8 @@ namespace NewRelic.Agent.Configuration
 
         bool UtilizationDetectAzureFunction { get; }
 
+        bool UtilizationDetectAzureAppService { get; }
+
         string AwsAccountId { get; }
         bool GCSamplerV2Enabled { get; }
 
