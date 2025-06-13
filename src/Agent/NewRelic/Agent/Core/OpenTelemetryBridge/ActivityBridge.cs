@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,12 +11,14 @@ using System.Reflection;
 using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
@@ -572,10 +575,41 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     }
                     else if (tags.TryGetValue("db.system.name", out var dbSystemName)) // it's a database call
                     {
-                        // TODO: need IDatabaseService here so we can create a DatastoreSegmentData instance.
-                        //var dbSegmentData = new DatastoreSegmentData( );
-                        //segment.GetExperimentalApi().SetSegmentData(dbSegmentData);
-                        //tags.Remove("db.system.name");
+                        tags.TryGetValue<string, string, object>("db.query.text", out var commandText);
+                        var commandType = CommandType.Text; // TODO: What should this be? How to deduce from tags?
+
+                        DatastoreVendor vendor = dbSystemName switch
+                        {
+                            "couchdb" =>  DatastoreVendor.Couchbase,
+                            "oracle.db" => DatastoreVendor.Oracle,
+                            "microsoft.sql_server" => DatastoreVendor.MSSQL,
+                            "mongodb" => DatastoreVendor.MongoDB,
+                            "mysql" => DatastoreVendor.MySQL,
+                            "postgresql" => DatastoreVendor.Postgres,
+                            "redis" => DatastoreVendor.Redis,
+                            "azure.cosmosdb" => DatastoreVendor.CosmosDB,
+                            "elasticsearch" => DatastoreVendor.Elasticsearch,
+                            "aws.dynamodb" => DatastoreVendor.DynamoDB,
+                            _ => DatastoreVendor.Other
+                        };
+
+                        var parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(vendor, commandType, commandText);
+
+                        tags.TryGetValue<string, string, object>("server.address", out var serverAddress);
+                        tags.TryGetValue<int, string, object>("server.port", out var serverPort);
+                        tags.TryGetValue<string, string, object>("db.namespace", out var databaseName);
+
+                        var connectionInfo = new ConnectionInfo(serverAddress, serverPort, databaseName);
+
+                        var dbSegmentData = new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, commandText, connectionInfo);
+
+                        segment.GetExperimentalApi().SetSegmentData(dbSegmentData);
+
+                        tags.Remove("db.system.name");
+                        tags.Remove("db.query.text");
+                        tags.Remove("db.namespace");
+                        tags.Remove("server.address");
+                        tags.Remove("server.port");
                     }
                     else
                     {

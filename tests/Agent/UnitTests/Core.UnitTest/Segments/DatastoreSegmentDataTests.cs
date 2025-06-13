@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

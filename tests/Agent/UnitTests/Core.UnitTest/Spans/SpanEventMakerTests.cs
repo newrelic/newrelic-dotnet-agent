@@ -30,6 +30,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Spans.UnitTest
 {

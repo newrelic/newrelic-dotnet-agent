@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Segments;
 using System.Collections.Generic;
 using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions;
 
