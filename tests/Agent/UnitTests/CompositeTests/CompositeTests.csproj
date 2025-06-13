@@ -56,7 +56,7 @@
     <None Update="CrossAgentTests\DistributedTracing\trace_context.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="CrossAgentTests\HybridAgent\HybridAgentTestCaseDefinitions.json">
+    <None Update="CrossAgentTests\HybridAgent\TestCaseDefinitions\HybridAgentSmokeTests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="CrossAgentTests\SecurityPolicies\security_policies.json">
@@ -66,6 +66,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="CrossAgentTests\Utilization\utilization_json.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="HybridAgent\TestCaseDefinitions\HybridAgentTests.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

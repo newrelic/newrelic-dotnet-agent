@@ -261,9 +261,11 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
         {
             var segment = StartSegmentImpl(methodCall, activity);
-            var segmentData = new SimpleSegmentData(activity.DisplayName);
 
-            segment.SetSegmentData(segmentData);
+            // create a simple segment data with the activity's display name
+            // this will likely get replaced with a more specific segment data when the activity is stopped
+            var simpleSegmentData = new SimpleSegmentData(activity.DisplayName);
+            segment.SetSegmentData(simpleSegmentData);
 
             if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
 

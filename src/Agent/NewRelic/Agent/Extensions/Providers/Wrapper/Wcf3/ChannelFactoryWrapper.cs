@@ -97,7 +97,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 headerValue = httpResponse.Headers[AppDataHttpHeader];
 
                 var externalSegmentData = typedCorrelationState?.Segment?.GetExperimentalApi()?.SegmentData as IExternalSegmentData;
-                externalSegmentData?.SetHttpStatusCode((int)httpResponse.StatusCode);
+                externalSegmentData?.SetHttpStatus((int)httpResponse.StatusCode);
             }
 
             if (string.IsNullOrEmpty(headerValue))

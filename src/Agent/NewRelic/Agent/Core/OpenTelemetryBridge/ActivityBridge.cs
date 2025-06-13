@@ -13,9 +13,11 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
@@ -67,7 +69,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // TODO: Enforce that an appropriate minimum version of the DiagnosticSource assembly is loaded.
             if (assembly == null || (assembly.GetName().Version?.Major ?? 0) < 7)
             {
-                Log.Debug("DiagnosticSource assembly version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
+                Log.Debug("DiagnosticSource assembly not found or version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
                 return false;
             }
 
@@ -494,7 +496,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (segment != null)
             {
-                AddActivityTagsToSegment(originalActivity, segment);
+                AddActivityTagsToSegment(originalActivity, segment, agent);
                 AddExceptionEventInformationToSegment(originalActivity, segment, errorService);
                 segment.End();
             }
@@ -506,15 +508,122 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
         }
 
-        private static void AddActivityTagsToSegment(object originalActivity, ISegment segment)
+        private static void AddActivityTagsToSegment(object originalActivity, ISegment segment, IAgent agent)
         {
             dynamic activity = originalActivity;
-            foreach (var tag in activity.TagObjects)
+            ActivityKind activityKind = (ActivityKind)activity.Kind;
+            string activityId = activity.Id;
+            string displayName = activity.DisplayName;
+
+            Log.Debug($"Activity {activityId} (Kind: {activityKind}, DisplayName: {displayName}) has stopped.");
+
+            var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
+            if (tags.Count == 0)
+            {
+                Log.Finest($"Activity {activityId} has no tags. Not adding tags to segment.");
+                return;
+            }
+
+            // based on activity kind, create the appropriate segment data
+            // remove all tags that are used in segment data creation
+            switch (activityKind)
+            {
+                case ActivityKind.Client:
+                    // could be an http call or a database call, so need to look for specific tags to decide
+                    if (TryGetAndRemoveTag<string>(tags, ["http.request.method", "http.method"], out var method)) // it's an HTTP call
+                    {
+                        if (!TryGetAndRemoveTag<string>(tags, ["url.full", "http.url"], out var url))
+                        {
+                            Log.Finest($"Activity {activityId} with Activity.Kind {activityKind} is missing `url.full` and `http.request.method`. Not creating an ExternalSegmentData.");
+                            break;
+                        }
+                        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(method))
+                        {
+                            Log.Finest($"Activity {activityId} with Activity.Kind {activityKind} is missing required tags for url and method. Not creating an ExternalSegmentData.");
+                            break;
+                        }
+
+                        Uri uri = new Uri(url);
+                        var externalSegmentData = new ExternalSegmentData(uri, method);
+                        // set the http status code
+                        if (TryGetAndRemoveTag<int>(tags, ["http.response.status_code", "http.status_code"], out var statusCode))
+                        {
+                            TryGetAndRemoveTag<string>(tags, ["http.status_text"], out var statusText);
+                            externalSegmentData.SetHttpStatus(statusCode, statusText);
+                        }
+
+                        // check for AWS lambda invocation call
+                        if (!string.IsNullOrEmpty(agent.Configuration.AwsAccountId))
+                        {
+                            if (TryGetAndRemoveTag<string>(tags, ["faas.invoked_name"], out var awsName))
+                                segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
+                            if (TryGetAndRemoveTag<string>(tags, ["faas.invoked_provider"], out var awsProvider) && TryGetAndRemoveTag<string>(tags, ["aws.region"], out var awsRegion))
+                                segment.AddCloudSdkAttribute("cloud.resource_id", $"arn:aws:lambda:{awsRegion}:{agent.Configuration.AwsAccountId}:function:{awsName}");
+                        }
+
+                        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+                    }
+                    else if (TryGetAndRemoveTag<string>(tags, ["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
+                    {
+                        // TODO: need IDatabaseService here so we can create a DatastoreSegmentData instance.
+                        //var dbSegmentData = new DatastoreSegmentData( );
+                        //segment.GetExperimentalApi().SetSegmentData(dbSegmentData);
+                        //tags.Remove("db.system.name");
+                    }
+                    else
+                    {
+                        Log.Finest($"Activity {activityId} with Activity.Kind {activityKind} is missing required tags to determine whether it's an HTTP or database activity.");
+                    }
+                    break;
+                case ActivityKind.Internal:
+                case ActivityKind.Server:
+                case ActivityKind.Producer:
+                case ActivityKind.Consumer:
+                default:
+                    break;
+            }
+
+            // add any tags left in the collection as custom attributes
+            foreach (var tag in tags)
             {
                 // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
                 // the ones that we map to intrinsic or agent attributes.
-                segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
+                segment.AddCustomAttribute(tag.Key, tag.Value);
             }
+
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a value of the specified type associated with any of the given keys from the provided
+        /// dictionary, and removes the corresponding key-value pair(s) from the dictionary.
+        /// </summary>
+        /// <remarks>This method iterates through the provided keys and attempts to retrieve the
+        /// associated value from the dictionary. If a match is found, the corresponding key-value pair is removed from
+        /// the dictionary. All keys in the <paramref name="keys"/> array are removed from the dictionary, regardless of
+        /// whether a value is successfully retrieved.</remarks>
+        /// <typeparam name="T">The type of the value to retrieve.</typeparam>
+        /// <param name="tags">The dictionary containing key-value pairs to search and modify. Cannot be null.</param>
+        /// <param name="keys">An array of keys to search for in the dictionary. Cannot be null or empty.</param>
+        /// <param name="value">When this method returns, contains the value associated with the first matching key, if found; otherwise,
+        /// the default value for the type <typeparamref name="T"/>.</param>
+        /// <returns><see langword="true"/> if a value was successfully retrieved and at least one key-value pair was removed;
+        /// otherwise, <see langword="false"/>.</returns>
+        private static bool TryGetAndRemoveTag<T>(Dictionary<string, object> tags, string[] keys, out T value)
+        {
+            value = default;
+            var retVal = false;
+
+            foreach (var key in keys)
+            {
+                if (!retVal && tags.TryGetValue<T, string, object>(key, out value))
+                {
+                    retVal = true;
+                }
+
+                tags.Remove(key);
+            }
+
+            return retVal;
         }
 
         private static void AddExceptionEventInformationToSegment(object originalActivity, ISegment segment, IErrorService errorService)

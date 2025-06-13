@@ -947,7 +947,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 _baseHttpSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var externalSegmentData = segments[0].Data as ExternalSegmentData;
-            externalSegmentData.SetHttpStatusCode(200);
+            externalSegmentData.SetHttpStatus(200, "OK");
 
             var immutableTransaction = BuildTestTransaction(segments, true, false);
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
@@ -960,6 +960,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             Assert.That(spanEvent.AgentAttributes()["http.statusCode"], Is.EqualTo(200));
+            Assert.That(spanEvent.AgentAttributes()["http.statusText"], Is.EqualTo("OK"));
         }
 
         #endregion

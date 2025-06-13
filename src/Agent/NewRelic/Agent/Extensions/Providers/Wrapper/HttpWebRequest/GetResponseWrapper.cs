@@ -65,7 +65,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
             var statusCode = httpWebResponse?.StatusCode;
             if (statusCode.HasValue)
             {
-                externalSegmentData.SetHttpStatusCode((int)statusCode.Value);
+                externalSegmentData.SetHttpStatus((int)statusCode.Value);
             }
 
             var headers = response?.Headers?.ToDictionary();
