@@ -2038,6 +2038,14 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
+
+                        <xs:attribute name="detectAzureAppService" type="xs:boolean" default="true"  use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    This attribute controls whether to look for Azure AppService environment variables (optional). The default is true.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                         <xs:attribute name="logicalProcessors" type="xs:int" use="optional">
                             <xs:annotation>
                                 <xs:documentation>

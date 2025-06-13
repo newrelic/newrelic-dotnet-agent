@@ -1712,6 +1712,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool UtilizationDetectAzureFunction => AzureFunctionModeEnabled && EnvironmentOverrides(_localConfiguration.utilization.detectAzureFunction, "NEW_RELIC_UTILIZATION_DETECT_AZURE_FUNCTION");
 
+        public bool UtilizationDetectAzureAppService => EnvironmentOverrides(_localConfiguration.utilization.detectAzureAppService, "NEW_RELIC_UTILIZATION_DETECT_AZURE_APPSERVICE");
+
         public int? UtilizationLogicalProcessors
         {
             get

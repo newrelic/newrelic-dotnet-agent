@@ -3062,6 +3062,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             Assert.That(_defaultConfig.AzureFunctionModeEnabled, Is.True, "AzureFunctionMode should be enabled by default");
         }
+
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectAzureAppServiceConfigurationWorksProperly(string environmentSetting, bool? localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_AZURE_APPSERVICE")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAzureAppService = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAzureAppService;
+        }
+
         #endregion
 
         #region Log Metrics and Events
