@@ -757,8 +757,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _dynamicActivity = (dynamic)_activity;
         }
 
-        public dynamic DynamicActivity => _dynamicActivity;
-
         public bool IsStopped => (bool?)(_dynamicActivity)?.IsStopped ?? true;
 
         public string SpanId => (string)(_dynamicActivity)?.SpanId.ToString();
@@ -766,12 +764,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public string TraceId => (string)(_dynamicActivity)?.TraceId.ToString();
 
         public string DisplayName => (string)(_dynamicActivity)?.DisplayName;
-
-        /// <summary>
-        /// Gets the ActivityKind for the activity. Can be safely cast to ActivityKind when needed.
-        /// Defaults to Internal if there's no dynamic activity
-        /// </summary>
-        public int Kind => (int?)(_dynamicActivity)?.Kind ?? (int)ActivityKind.Internal;
 
         public void Dispose()
         {
