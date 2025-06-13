@@ -416,9 +416,8 @@
                 {
                     "name": "OTelSpan1",
                     "parentName": "Foo",
-                    "category": "generic", // will be "database" when support is implemented
+                    "category": "generic", // will be "database" when real support is implemented
                     "attributes": {
-                        "db.system.name": "oracle.db",
                         "db.namespace": "ORCL1|DB1|order-processing-service"
                     }
                 }
