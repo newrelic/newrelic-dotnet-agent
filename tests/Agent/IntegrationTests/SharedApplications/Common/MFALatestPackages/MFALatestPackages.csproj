@@ -4,12 +4,12 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.4" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.4" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.4" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.4" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net481'" />
@@ -30,16 +30,16 @@
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="MassTransit" Version="8.4.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="8.4.1" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.51.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.51.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.5" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.5" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.6" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="MongoDB.Driver" Version="3.4.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MongoDB.Driver" Version="3.4.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="MySql.Data" Version="9.3.0" Condition="'$(TargetFramework)' == 'net481'" />
@@ -78,15 +78,15 @@
     <PackageReference Include="Serilog" Version="4.3.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog" Version="4.3.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.37" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.37" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="System.Data.Odbc" Version="9.0.5" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="System.Data.Odbc" Version="9.0.5" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.41" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.41" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="System.Data.Odbc" Version="9.0.6" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="System.Data.Odbc" Version="9.0.6" Condition="'$(TargetFramework)' == 'net9.0'" />
   </ItemGroup>
 </Project>
