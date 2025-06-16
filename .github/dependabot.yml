@@ -23,15 +23,16 @@ updates:
 #      docker:
 #        patterns:
 #          - "*"
-          
+
+  # Update all NuGet packages used by core agent projects
   - package-ecosystem: nuget
     directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
+      - /build # BuildTools.sln
       - /src/Agent/NewRelic/Agent/Core # Core.csproj
       - /src/Agent/NewRelic.Api.Agent # NewRelic.Api.Agent.csproj
-      - /build # BuildTools.sln
-      - /src/Agent/MsiInstaller # MsiInstaller.sln
-      # We do not scan the /src/Agent/NewRelic/Agent/Extensions folder, as those projects
-      # intentionally reference old versions of the Nuget packages they instrument.
+      - /src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions # NewRelic.Agent.Extensions.csproj
+      # Do not scan the /src/Agent/NewRelic/Agent/Extensions/Providers folder, as those projects intentionally reference old versions of the Nuget packages they instrument.
+      # Do not scan the src/Agent/MsiInstaller folder. We are not updating Wix packages to v6.x currently and there are no non-Wix packages referenced there.
     schedule:
       interval: weekly
     commit-message:
@@ -40,9 +41,6 @@ updates:
       nuget-agent:
         patterns:
           - "*"
-    ignore:
-      - dependency-name: "WixToolset*"
-        versions: [ "6.*" ] # WIX 6.0+ requires payment for commerical projects, avoiding upgrade for now
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
