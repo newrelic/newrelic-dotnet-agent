@@ -148,6 +148,103 @@
         }
     },
     {
+        "testDescription": "Client Http External with AWS Lambda tags sets cloud sdk attributes",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "GET"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "https://google.com"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.status_text",
+                                    "value": "OK"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "faas.invoked_name",
+                                    "value": "SomeLamdaFunction"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "faas.invoked_provider",
+                                    "value": "SomeProvider"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "aws.region",
+                                    "value": "SomeRegion"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/google.com/Stream/GET",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "server.address": "google.com",
+                        "server.port": 443,
+                        "span.kind": "client",
+                        "http.request.method": "GET",
+                        "http.statusCode": 200,
+                        "http.statusText": "OK",
+                        "http.url": "https://google.com:443/",
+                        "cloud.platform": "aws_lambda",
+                        "cloud.resource_id": "arn:aws:lambda:SomeRegion:123456:function:SomeLamdaFunction"
+                    }
+                }
+            ]
+        }
+    },
+    {
         "testDescription": "Client Http External without url.full or http.url does not create http span",
         "operations": [
             {
@@ -264,7 +361,7 @@
         }
     },
     {
-        "testDescription": "Client without required tags does not create http span or database span",
+        "testDescription": "Client Http External without required tags does not create http span or database span",
         "operations": [
             {
                 "command": "DoWorkInTransaction",

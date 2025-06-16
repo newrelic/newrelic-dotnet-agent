@@ -16,6 +16,11 @@ namespace CompositeTests.HybridAgent
     [TestFixture]
     public class HybridAgentGeneralTests : HybridAgentTestsBase
     {
+        public HybridAgentGeneralTests() : base()
+        {
+            _enableAwsLambda = true;
+        }
+
         [TestCaseSource(nameof(GetHybridAgentGeneralTestData))]
         public override void Tests(HybridAgentTestCase test)
         {

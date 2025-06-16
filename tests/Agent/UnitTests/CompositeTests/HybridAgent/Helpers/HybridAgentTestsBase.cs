@@ -23,6 +23,8 @@ public abstract class HybridAgentTestsBase
     private NewRelicAgentOperations _newRelicAgentOperations;
     private ActivityBridge _activityBridge;
 
+    protected bool _enableAwsLambda = false;
+
     [SetUp]
     public virtual void Setup()
     {
@@ -30,6 +32,11 @@ public abstract class HybridAgentTestsBase
         // Used for the DT tests to identify the correct tracestate header component
         _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "1";
 
+        // add config for AWS Lambda (used in General tests)
+        if (_enableAwsLambda)
+        {
+            _compositeTestAgent.LocalConfiguration.cloud.aws.accountId = "123456";
+        }
 
         // enable the OTel bridge
         _compositeTestAgent.LocalConfiguration.appSettings.Add(new configurationAdd() { key = "OpenTelemetry.Enabled", value = "true" });
