@@ -17,7 +17,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
-    public static class ActivityStoppedSegmentHelpers
+    public static class ActivityBridgeSegmentHelpers
     {
         public static void AddActivityTagsToSegment(this ISegment segment, object originalActivity, IAgent agent)
         {
