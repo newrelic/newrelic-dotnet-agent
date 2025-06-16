@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Core.Segments
         private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
         private int? _httpStatusCode;
+        private string _httpStatusText;
 
         public override SpanCategory SpanCategory => SpanCategory.Http;
 
@@ -36,9 +37,10 @@ namespace NewRelic.Agent.Core.Segments
 
         public CrossApplicationResponseData CrossApplicationResponseData { get; set; }
 
-        public void SetHttpStatusCode(int httpStatusCode)
+        public void SetHttpStatus(int httpStatusCode, string httpStatusText = null)
         {
             _httpStatusCode = httpStatusCode;
+            _httpStatusText = httpStatusText;
         }
 
         internal override IEnumerable<KeyValuePair<string, object>> Finish()
@@ -92,6 +94,7 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.Component.TrySetValue(attribVals, _segmentState.TypeName);
             AttribDefs.SpanKind.TrySetDefault(attribVals);
             AttribDefs.HttpStatusCode.TrySetValue(attribVals, _httpStatusCode);   //Attrib handles null
+            AttribDefs.HttpStatusText.TrySetValue(attribVals, _httpStatusText);
             AttribDefs.ServerAddress.TrySetValue(attribVals, Uri.Host);
             AttribDefs.ServerPort.TrySetValue(attribVals, Uri.Port);
         }

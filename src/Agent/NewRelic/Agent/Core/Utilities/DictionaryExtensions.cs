@@ -98,5 +98,20 @@ namespace NewRelic.Agent.Core.Utilities
         {
             return new ReadOnlyDictionary<TKey, TValue>(new Dictionary<TKey, TValue>(source));
         }
+
+        /// <summary>
+        /// Attempts to get a value from the dictionary and cast it to the specified type.
+        /// </summary>
+        public static bool TryGetValue<TResult, TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, out TResult defaultValue)
+        {
+            if (dictionary.TryGetValue(key, out var value) && value is TResult typedValue)
+            {
+                defaultValue = typedValue;
+                return true;
+            }
+
+            defaultValue = default;
+            return false;
+        }
     }
 }

@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 	<instrumentation>
 
 		<tracerFactory>
-			<match assemblyName="System.Net.Http" className="System.Net.Http.HttpClient" maxVersion="5.0">
+      <match assemblyName="System.Net.Http" className="System.Net.Http.HttpClient" maxVersion="5.0">
 				<exactMethodMatcher methodName="SendAsync" parameters="System.Net.Http.HttpRequestMessage,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken" />
 			</match>
 			<match assemblyName="System.Net.Http" className="System.Net.Http.SocketsHttpHandler" minVersion="5.0">
