@@ -384,7 +384,7 @@ jobs:
           echo "new_key_file=$new_key_file" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Move Artifacts and GPG Key to Staging Location
+      - name: Move Artifacts and GPG Keys to Staging Location
         run: |
           cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
