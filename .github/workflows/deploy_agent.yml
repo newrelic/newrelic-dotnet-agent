@@ -371,19 +371,25 @@ jobs:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
 
-      - name: Get GPG Key
-        id: write_gpgkey
+      - name: Get GPG Keys
+        id: write_gpgkeys
         run: |
-          filePath="/tmp/gpg.tar.bz2"
-          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "filePath=$filePath" >> $GITHUB_OUTPUT
+          # old signing key
+          old_key_file="/tmp/old-secret-key.gpg"
+          echo "${{ secrets.OLD_GPG_KEY }}" | base64 -d > $old_key_file
+          echo "old_key_file=$old_key_file" >> $GITHUB_OUTPUT
+          # new signing key
+          new_key_file="/tmp/new-secret-key.gpg"
+          echo "${{ secrets.NEW_GPG_KEY }}" | base64 -d > $new_key_file
+          echo "new_key_file=$new_key_file" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Move Artifacts and GPG Key to Staging Location
         run: |
           cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
-          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/deploy/linux/deploy_scripts/gpg.tar.bz2
+          cp -f ${{ steps.write_gpgkeys.outputs.old_key_file }} ${{ github.workspace }}/deploy/linux/deploy_scripts/old-private-key.gpg
+          cp -f ${{ steps.write_gpgkeys.outputs.new_key_file }} ${{ github.workspace }}/deploy/linux/deploy_scripts/new-private-key.gpg
         shell: bash
 
       - name: Prepare docker.env
@@ -414,7 +420,11 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.TEST_BUCKET_AWS_ACCESS_KEY_ID }}" >> docker.env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TEST_BUCKET_AWS_SECRET_ACCESS_KEY }}" >> docker.env
           fi
-          echo "GPG_KEYS=/data/deploy_scripts/gpg.tar.bz2" >> docker.env
+          echo "OLD_PRIVATE_KEY=/data/deploy_scripts/old-private-key.gpg" >> docker.env
+          echo "NEW_PRIVATE_KEY=/data/deploy_scripts/new-private-key.gpg" >> docker.env
+          echo "NEW_PRIVATE_KEY_PASSPHRASE=${{ secrets.NEW_GPG_KEY_PASSPHRASE }}" >> docker.env
+          echo "OLD_KEY_ID=${{ secrets.OLD_GPG_KEY_ID }}" >> docker.env
+          echo "NEW_KEY_ID=${{ secrets.NEW_GPG_KEY_ID }}" >> docker.env
         shell: bash
 
       - name: Build and Run Container
