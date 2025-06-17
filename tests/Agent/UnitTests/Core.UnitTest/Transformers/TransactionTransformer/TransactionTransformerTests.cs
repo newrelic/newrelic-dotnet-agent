@@ -31,6 +31,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Labels;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {

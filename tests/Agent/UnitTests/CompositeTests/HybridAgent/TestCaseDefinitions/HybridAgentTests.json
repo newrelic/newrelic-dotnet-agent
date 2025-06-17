@@ -480,7 +480,7 @@
                     {
                         "command": "DoWorkInSpan",
                         "parameters": {
-                            "spanName": "OTelSpan1",
+                            "spanName": "Execute",
                             "spanKind": "Client"
                         },
                         "childOperations": [
@@ -488,14 +488,36 @@
                                 "command": "AddOTelAttribute",
                                 "parameters": {
                                     "name": "db.system.name",
-                                    "value": "oracle.db"
+                                    "value": "mysql"
                                 }
                             },
                             {
                                 "command": "AddOTelAttribute",
                                 "parameters": {
                                     "name": "db.namespace",
-                                    "value": "ORCL1|DB1|order-processing-service"
+                                    "value": "newrelic"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.query.text",
+                                    "value": "SELECT _date FROM dates ORDER BY _date DESC LIMIT 1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 3306,
+                                    "type": "int"
                                 }
                             }
                         ]
@@ -511,11 +533,17 @@
             ],
             "spans": [
                 {
-                    "name": "OTelSpan1",
+                    "name": "Datastore/statement/MySQL/dates/select",
                     "parentName": "Foo",
-                    "category": "generic", // will be "database" when real support is implemented
+                    "category": "datastore",
                     "attributes": {
-                        "db.namespace": "ORCL1|DB1|order-processing-service"
+                        "db.collection": "dates",
+                        "db.instance": "newrelic",
+                        "db.operation": "select",
+                        "db.statement": "SELECT _date FROM dates ORDER BY _date DESC LIMIT ?",
+                        "db.system": "mysql",
+                        "peer.address": "localhost:3306",
+                        "peer.hostname": "localhost"
                     }
                 }
             ]
