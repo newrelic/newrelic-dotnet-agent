@@ -107,16 +107,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
         }
 
-        private static void ProcessClientDatabaseTags(ISegment segment, IAgent agent, dynamic activity, Dictionary<string, object> tags,
-            string dbSystemName)
+        private static void ProcessClientDatabaseTags(ISegment segment, IAgent agent, dynamic activity, Dictionary<string, object> tags, string dbSystemName)
         {
-            // TODO: we get two activities with "db.system" tags - one with a DisplayName of "Open" and one with a DisplayName of "Execute"
-            // what do we do with the "Open" activity? Do we need to create a DataStoreSegmentData for it? For now, we'll ignore it
+            // TODO: We may get two activities with "db.system" tags - one with a DisplayName of "Open" and one with a DisplayName of "Execute".
+            // The "Execute" activity will have the SQL command text in the tags, while the "Open" activity will not.
+            // What do we do with the "Open" activity? For now, we'll ignore it
             if (activity.DisplayName != "Execute")
                 return;
 
             tags.TryGetAndRemoveTag<string>(["db.query.text", "db.statement"], out var commandText);
-            var commandType = CommandType.Text; // TODO: What should this be? How to deduce from tags?
 
             DatastoreVendor vendor = dbSystemName switch
             {
@@ -132,6 +131,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 "aws.dynamodb" => DatastoreVendor.DynamoDB,
                 _ => DatastoreVendor.Other
             };
+
+            // TODO: Where do we get commandType? Existing SQL wrappers get it from the IDbCommand.CommandType property.
+            var commandType = CommandType.Text;
 
             var parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(vendor, commandType, commandText);
 
