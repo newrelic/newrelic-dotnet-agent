@@ -84,7 +84,7 @@ rebuild_apt() (
 
   echo "Importing signing keys"
   gpg --import "${OLD_PRIVATE_KEY}"
-  gpg --import "${NEW_PRIVATE_KEY}"
+  gpg --import --batch --pinentry-mode loopback --passphrase "${NEW_PRIVATE_KEY_PASSPHRASE}" "${NEW_PRIVATE_KEY}"
 
   echo "rm -f dists/$REPO/Release.gpg"
   rm -f "dists/$REPO/Release.gpg"
@@ -93,8 +93,7 @@ rebuild_apt() (
   rm -f "dists/$REPO/InRelease"
 
   echo "gpg signing" 
-  gpg --armor --digest-algo SHA256 --clear-sign -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/InRelease" "dists/$REPO/Release"
-  gpg --armor --digest-algo SHA256 --detach-sign -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
+  gpg --armor --digest-algo SHA256 --detach-sign --batch --pinentry-mode loopback --passphrase "${NEW_PRIVATE_KEY_PASSPHRASE}" -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
   chmod 644 dists/"$REPO"/Contents-*.{gz,bz2}
 
   popd >/dev/null

@@ -3,3 +3,4 @@ docker.env
 gpg.tar.bz2
 # ASCII-armored GPG key files
 *.asc
+*.gpg
