@@ -89,9 +89,6 @@ rebuild_apt() (
   echo "rm -f dists/$REPO/Release.gpg"
   rm -f "dists/$REPO/Release.gpg"
 
-  echo "rm -f dists/$REPO/InRelease"
-  rm -f "dists/$REPO/InRelease"
-
   echo "gpg signing" 
   gpg --armor --digest-algo SHA256 --detach-sign --batch --pinentry-mode loopback --passphrase "${NEW_PRIVATE_KEY_PASSPHRASE}" -u "${OLD_KEY_ID}" -u "${NEW_KEY_ID}" -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
   chmod 644 dists/"$REPO"/Contents-*.{gz,bz2}
