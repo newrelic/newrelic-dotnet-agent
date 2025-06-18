@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -32,6 +33,9 @@ namespace NewRelic.Agent.Core.Utilization
         private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
         private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
         private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
+        private const string AzureAppServiceWebSiteOwnerName = "WEBSITE_OWNER_NAME";
+        private const string AzureAppServiceWebSiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
+        private const string AzureAppServiceWebSiteSiteName = "WEBSITE_SITE_NAME";
 
         [SetUp]
         public void Setup()
@@ -987,6 +991,107 @@ namespace NewRelic.Agent.Core.Utilization
             var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
             var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
 
+            Assert.That(model, Is.Null);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetVendors_GetAzureAppServiceVendorInfo_Complete(bool enableAzureAppServiceUtilization)
+        {
+            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+            var resourceGroupName = "testgroup";
+            var siteName = "testsitename";
+
+            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace", EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName, EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName, EnvironmentVariableTarget.Process);
+
+            var cloudResourceId =
+                $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}";
+
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(enableAzureAppServiceUtilization);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var vendors = vendorInfo.GetVendors();
+
+            if (enableAzureAppServiceUtilization)
+            {
+                Assert.That(vendors, Contains.Key("azureappservice"));
+                Assert.That(vendors["azureappservice"], Is.Not.Null);
+                var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+                Assert.That(model, Is.Not.Null);
+                Assert.That(model.CloudResourceId, Is.EqualTo(cloudResourceId));
+            }
+            else
+            {
+                Assert.That(vendors, Does.Not.ContainKey("azureappservice"));
+            }
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("      ")]
+        [TestCase("this is not properly formatted!")]
+        [TestCase("+some-name-here-WestUS2webspace")] // Missing subscription ID
+        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_BadFormat(string webSiteOwnerName)
+        {
+            var resourceGroupName = "testgroup";
+            var siteName = "testsitename";
+
+            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, webSiteOwnerName, EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName, EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName, EnvironmentVariableTarget.Process);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+            Assert.That(model, Is.Null);
+        }
+
+        [Test]
+        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_NotAvailable()
+        {
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
+
+            var resourceGroupName = "testgroup";
+            var siteName = "testsitename";
+
+            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName, EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName, EnvironmentVariableTarget.Process);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+            Assert.That(model, Is.Null);
+        }
+
+        [Test]
+        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenAppServiceWebSiteResourceGroup_NotAvailable()
+        {
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
+
+            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+            var siteName = "testsitename";
+
+            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace", EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName, EnvironmentVariableTarget.Process);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+            Assert.That(model, Is.Null);
+        }
+
+        [Test]
+        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteSiteName_NotAvailable()
+        {
+            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
+
+            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+            var resourceGroupName = "testgroup";
+
+            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace", EnvironmentVariableTarget.Process);
+            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName, EnvironmentVariableTarget.Process);
+
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
             Assert.That(model, Is.Null);
         }
 
