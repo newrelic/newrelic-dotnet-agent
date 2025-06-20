@@ -25,8 +25,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         private readonly bool _createsPidFile;
         private readonly string _targetFramework;
 
-        public virtual string ProfilerGuidOverride { get; set; }
-
         /// <summary>
         /// Determines whether this service/application uses a port setting as an input parameter into the
         /// process.
@@ -181,124 +179,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return PublishCoreAppLocks.GetOrAdd(ApplicationDirectoryName, _ => new object());
         }
 
-
-
-
-        public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
+        protected override string GetStartInfoArgs(string arguments)
         {
-            var arguments = UsesSpecificPort
-                ? $"--port={Port} {commandLineArguments}"
-                : commandLineArguments;
+            return UsesSpecificPort
+                ? $"{arguments} --port {Port} {arguments}"
+                : arguments;
+        }
 
-            var applicationFilePath = DestinationApplicationExecutablePath;
-            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
-            var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
-            var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
+        protected override string StartInfoFileName => DestinationApplicationExecutablePath;
 
-            var startInfo = new ProcessStartInfo
-            {
-                Arguments = arguments,
-                FileName = applicationFilePath,
-                UseShellExecute = false,
-                WorkingDirectory = DestinationApplicationDirectoryPath,
-                RedirectStandardOutput = captureStandardOutput,
-                RedirectStandardError = captureStandardOutput,
-                RedirectStandardInput = RedirectStandardInput
-            };
+        protected override string StartInfoWorkingDirectory => DestinationApplicationDirectoryPath;
 
-            Console.WriteLine($"[{DateTime.Now}] RemoteService.Start(): FileName={applicationFilePath}, Arguments={arguments}, WorkingDirectory={DestinationApplicationDirectoryPath}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
-
-            startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
-
-            startInfo.EnvironmentVariables.Remove("CORECLR_ENABLE_PROFILING");
-            startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
-            startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
-
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("CORECLR_NEWRELIC_HOME");
-
-            // configure env vars as needed for testing environment overrides
-            foreach (var envVar in environmentVariables)
-            {
-                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
-            }
-
-            if (!doProfile)
-            {
-                startInfo.EnvironmentVariables.Add("CORECLR_ENABLE_PROFILING", "0");
-            }
-            else if (IsCoreApp)
-            {
-                startInfo.EnvironmentVariables.Add("CORECLR_ENABLE_PROFILING", "1");
-                startInfo.EnvironmentVariables.Add("CORECLR_PROFILER", this.ProfilerGuidOverride ?? "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}");
-                startInfo.EnvironmentVariables.Add("CORECLR_PROFILER_PATH", profilerFilePath);
-                startInfo.EnvironmentVariables.Add("CORECLR_NEW_RELIC_HOME", newRelicHomeDirectoryPath);
-
-                if (UseTieredCompilation)
-                {
-                    startInfo.EnvironmentVariables.Add("COMPlus_TieredCompilation", "1");
-                }
-            }
-            else
-            {
-                startInfo.EnvironmentVariables.Add("COR_ENABLE_PROFILING", "1");
-                startInfo.EnvironmentVariables.Add("COR_PROFILER", this.ProfilerGuidOverride ?? "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
-                startInfo.EnvironmentVariables.Add("COR_PROFILER_PATH", profilerFilePath);
-                startInfo.EnvironmentVariables.Add("NEW_RELIC_HOME", newRelicHomeDirectoryPath);
-            }
-
-            startInfo.EnvironmentVariables.Add("NEW_RELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
-
-            if (AdditionalEnvironmentVariables != null)
-            {
-                foreach (var kp in AdditionalEnvironmentVariables)
-                {
-                    if (startInfo.EnvironmentVariables.ContainsKey(kp.Key))
-                        startInfo.EnvironmentVariables[kp.Key] = kp.Value;
-                    else
-                        startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
-                }
-            }
-
-            RemoteProcess = new Process();
-            RemoteProcess.StartInfo = startInfo;
-            RemoteProcess.Start();
-
-            if (RemoteProcess == null)
-            {
-                throw new Exception("Process failed to start.");
-            }
-
-            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
-
-            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
-            {
-                if (captureStandardOutput)
-                {
-                    CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
-                }
-                throw new Exception("App server shutdown unexpectedly.");
-            }
-
+        protected override void WaitForProcessToStartListening(bool captureStandardOutput)
+        {
             WaitForAppServerToStartListening(RemoteProcess, captureStandardOutput);
         }
 
-        protected virtual void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
+        private void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
         {
             if (!_createsPidFile)
             {
@@ -333,7 +230,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             if (captureStandardOutput)
             {
-                CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
+                CaptureOutput("[RemoteService]: WaitForAppServerToStartListening");
             }
 
             Assert.Fail("Remote process never generated a .pid file!");

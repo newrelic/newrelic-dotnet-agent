@@ -18,6 +18,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected override string ApplicationDirectoryName => string.Empty;
 
+        protected override string GetStartInfoArgs(string arguments) => $"{_toolName} {arguments}";
+
+        protected override string StartInfoFileName => "dotnet";
+        protected override string StartInfoWorkingDirectory => _workingDirectory;
+
+
         public DotnetTool(string packageName, string toolName, string workingDirectory) : base(ApplicationType.DotnetTool, true)
         {
             _packageName = packageName;
@@ -95,87 +101,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             sw.Stop();
             Console.WriteLine($"[DotnetTool]: [{DateTime.Now}] Successfully installed dotnet tool {_packageName} to {deployPath} in {sw.Elapsed}");
-        }
-
-        public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
-        {
-            var arguments = $"{_toolName} {commandLineArguments}";
-
-            var applicationFilePath = "dotnet";
-
-            var startInfo = new ProcessStartInfo
-            {
-                Arguments = arguments,
-                FileName = applicationFilePath,
-                UseShellExecute = false,
-                WorkingDirectory = _workingDirectory,
-                RedirectStandardOutput = captureStandardOutput,
-                RedirectStandardError = captureStandardOutput,
-                RedirectStandardInput = RedirectStandardInput
-            };
-
-            Console.WriteLine($"[{DateTime.Now}] DotnetTool.Start(): FileName={applicationFilePath}, Arguments={arguments}, WorkingDirectory={_workingDirectory}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
-
-            startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
-
-            startInfo.EnvironmentVariables.Remove("CORECLR_ENABLE_PROFILING");
-            startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
-            startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
-
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("CORECLR_NEWRELIC_HOME");
-
-            // configure env vars as needed for testing environment overrides
-            foreach (var envVar in environmentVariables)
-            {
-                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
-            }
-
-            if (AdditionalEnvironmentVariables != null)
-            {
-                foreach (var kp in AdditionalEnvironmentVariables)
-                {
-                    if (startInfo.EnvironmentVariables.ContainsKey(kp.Key))
-                        startInfo.EnvironmentVariables[kp.Key] = kp.Value;
-                    else
-                        startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
-                }
-            }
-
-            RemoteProcess = new Process();
-            RemoteProcess.StartInfo = startInfo;
-            RemoteProcess.Start();
-
-            if (RemoteProcess == null)
-            {
-                throw new Exception("Process failed to start.");
-            }
-
-            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
-
-            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
-            {
-                if (captureStandardOutput)
-                {
-                    CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
-                }
-                throw new Exception("App server shutdown unexpectedly.");
-            }
         }
 
         public override void Shutdown(bool force = false)

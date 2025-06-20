@@ -35,14 +35,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
         }
 
-        protected override void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
-        {
-            // The logic was removed here to simplify console app execution.
-            // We may want to double-check that the process actually started before we try to 
-            // perform operations against it (like writing to standard input).
-            // This may cause us trouble in the future.
-        }
-
         public override void Shutdown(bool force = false)
         {
             if (RemoteProcess is null)

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(GetAssemblyFolderFromAssembly(Assembly.GetExecutingAssembly())).LocalPath);
 
-        private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..","..",".."));
+        private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", ".."));
 
         protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
@@ -148,7 +149,38 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public abstract void CopyToRemote();
 
-        public abstract void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true);
+        public void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
+        {
+            var startInfo = new ProcessStartInfo();
+
+            ConfigureStartInfo(startInfo, commandLineArguments, captureStandardOutput);
+
+            Console.WriteLine($"[{DateTime.Now}] ${GetType().Name}.Start(): FileName={StartInfoFileName}, Arguments={GetStartInfoArgs(commandLineArguments)}, WorkingDirectory={StartInfoWorkingDirectory}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
+
+            ConfigureEnvironmentVariables(startInfo, environmentVariables, doProfile);
+
+            RemoteProcess = new Process();
+            RemoteProcess.StartInfo = startInfo;
+            ConfigureRemoteProcess();
+
+            RemoteProcess.Start();
+            if (RemoteProcess == null)
+            {
+                throw new Exception("Process failed to start.");
+            }
+
+            ConfigureRemoteProcessAfterStart();
+
+            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
+
+            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
+            {
+                CaptureOutput("[RemoteService]: Start");
+                throw new Exception("App server shutdown unexpectedly.");
+            }
+
+            WaitForProcessToStartListening(true);
+        }
 
         #endregion
 
@@ -193,7 +225,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 // Use the app name specified in the all_solutions CI workflow, if it exists
                 // this will only be set for the nightly scheduled runs so we can aggregate all integration test data under a single APM entity
-                var envAppName = Environment.GetEnvironmentVariable("CI_NEW_RELIC_APP_NAME"); 
+                var envAppName = Environment.GetEnvironmentVariable("CI_NEW_RELIC_APP_NAME");
                 return !string.IsNullOrWhiteSpace(envAppName) ? envAppName : "IntegrationTestAppName";
             }
             set
@@ -258,6 +290,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public bool UseLocalConfig { get; set; }
 
+        private string CoreClrProfilerGuid => "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}";
+        private string CorProfilerGuid => "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}";
+        public virtual string ProfilerGuidOverride { get; set; } = null;
+
         static RemoteApplication()
         {
             AssemblySetUp.TouchMe();
@@ -316,7 +352,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public bool IsRunning
         {
-            get 
+            get
             {
                 try
                 {
@@ -328,7 +364,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     return false;
                 }
             }
-        }   
+        }
 
         /// <summary>
         /// Determines if the process' standard input will be exposed and thus be manipulated.
@@ -368,7 +404,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
 
             var shutdownChannelName = "app_server_wait_for_all_request_done_" + Port;
-            
+
             TestLogger?.WriteLine($"[RemoteApplication] Sending shutdown signal to {ApplicationDirectoryName}.");
 
             if (Utilities.IsLinux)
@@ -470,6 +506,136 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             RandomPortGenerator.TryReleasePort(_port.Value);
             _port = null;
+        }
+
+        protected abstract string GetStartInfoArgs(string arguments);
+        protected abstract string StartInfoFileName { get; }
+        protected abstract string StartInfoWorkingDirectory { get; }
+
+        protected virtual void ConfigureRemoteProcess() { }
+        protected virtual void ConfigureRemoteProcessAfterStart() { }
+
+        protected virtual void CaptureOutput(string processDescription)
+        {
+            CapturedOutput.WriteProcessOutputToLog(processDescription);
+        }
+
+        protected virtual void WaitForProcessToStartListening(bool captureStandardOutput) { }
+
+        /// <summary>
+        /// Adds custom environment variables to the specified <see cref="ProcessStartInfo"/>.
+        /// </summary>
+        /// <remarks>Override this method in a derived class to define custom environment variables  that
+        /// should be included when starting a process. The base implementation does nothing.</remarks>
+        /// <param name="startInfo">The <see cref="ProcessStartInfo"/> instance to which custom environment variables will be added.</param>
+        protected virtual void AddCustomEnvironmentVariables(ProcessStartInfo startInfo)
+        {
+        }
+
+        protected virtual void ConfigureStartInfo(ProcessStartInfo startInfo, string commandLineArguments, bool captureStandardOutput )
+        {
+            startInfo.Arguments = GetStartInfoArgs(commandLineArguments);
+            startInfo.FileName = StartInfoFileName;
+            startInfo.WorkingDirectory = StartInfoWorkingDirectory;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = captureStandardOutput;
+            startInfo.RedirectStandardError = captureStandardOutput;
+            startInfo.RedirectStandardInput = RedirectStandardInput;
+        }
+
+        protected void ConfigureEnvironmentVariables(ProcessStartInfo startInfo, Dictionary<string, string> environmentVariables, bool doProfile)
+        {
+            // Remove any existing New Relic environment variables to avoid conflicts
+            RemoveNewRelicEnvironmentVariables(startInfo.EnvironmentVariables);
+
+            ConfigureProfilerEnvironmentVariables(startInfo, doProfile);
+
+            // configure env vars as needed for testing environment overrides
+            foreach (var envVar in environmentVariables)
+            {
+                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
+            }
+
+            var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
+            startInfo.EnvironmentVariables.Add("NEW_RELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
+
+            if (AdditionalEnvironmentVariables != null)
+            {
+                foreach (var kp in AdditionalEnvironmentVariables)
+                {
+                    if (startInfo.EnvironmentVariables.ContainsKey(kp.Key))
+                        startInfo.EnvironmentVariables[kp.Key] = kp.Value;
+                    else
+                        startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
+                }
+            }
+
+            AddCustomEnvironmentVariables(startInfo);
+        }
+
+
+        /// <summary>
+        /// Removes all New Relic-related environment variables from the specified collection of environment variables.
+        /// </summary>
+        /// <remarks>This method removes both legacy and current New Relic environment variables,
+        /// including those  related to the .NET Framework and .NET Core profiling configurations.  It is intended to
+        /// ensure that no New Relic-specific settings remain in the provided environment variable collection.</remarks>
+        /// <param name="environmentVariables">A <see cref="StringDictionary"/> containing the environment variables to modify.  This parameter cannot be
+        /// <see langword="null"/>.</param>
+        private void RemoveNewRelicEnvironmentVariables(StringDictionary environmentVariables)
+        {
+            environmentVariables.Remove("COR_ENABLE_PROFILING");
+            environmentVariables.Remove("COR_PROFILER");
+            environmentVariables.Remove("COR_PROFILER_PATH");
+            environmentVariables.Remove("NEW_RELIC_HOME");
+            environmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
+            environmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
+            environmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
+            environmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
+            environmentVariables.Remove("NEW_RELIC_HOST");
+            environmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
+
+            environmentVariables.Remove("CORECLR_ENABLE_PROFILING");
+            environmentVariables.Remove("CORECLR_PROFILER");
+            environmentVariables.Remove("CORECLR_PROFILER_PATH");
+            environmentVariables.Remove("CORECLR_NEW_RELIC_HOME");
+
+            environmentVariables.Remove("NEWRELIC_HOME");
+            environmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
+            environmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
+            environmentVariables.Remove("NEWRELIC_LOG_LEVEL");
+            environmentVariables.Remove("NEWRELIC_LICENSEKEY");
+            environmentVariables.Remove("NEWRELIC_INSTALL_PATH");
+            environmentVariables.Remove("CORECLR_NEWRELIC_HOME");
+        }
+
+        private void ConfigureProfilerEnvironmentVariables(ProcessStartInfo startInfo, bool doProfile)
+        {
+            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
+            var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
+
+            var coreClrProfilerGuid = this.ProfilerGuidOverride ?? CoreClrProfilerGuid;
+            var corProfilerGuid = this.ProfilerGuidOverride ?? CorProfilerGuid;
+
+            if (!doProfile)
+            {
+                return;
+            }
+
+            if (IsCoreApp)
+            {
+                startInfo.EnvironmentVariables["CORECLR_ENABLE_PROFILING"] = "1";
+                startInfo.EnvironmentVariables["CORECLR_PROFILER"] = coreClrProfilerGuid;
+                startInfo.EnvironmentVariables["CORECLR_PROFILER_PATH"] = profilerFilePath;
+                startInfo.EnvironmentVariables["CORECLR_NEWRELIC_HOME"] = newRelicHomeDirectoryPath;
+            }
+            else
+            {
+                startInfo.EnvironmentVariables["COR_ENABLE_PROFILING"] = "1";
+                startInfo.EnvironmentVariables["COR_PROFILER"] = corProfilerGuid;
+                startInfo.EnvironmentVariables["COR_PROFILER_PATH"] = profilerFilePath;
+                startInfo.EnvironmentVariables["NEWRELIC_HOME"] = newRelicHomeDirectoryPath;
+            }
         }
 
         protected void CopyNewRelicHomeDirectoryToRemote()

@@ -52,79 +52,49 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", HostedWebCoreProcessName);
         }
 
-        public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
+
+        protected override string GetStartInfoArgs(string arguments)
         {
-            var arguments = $"--port={Port} {commandLineArguments}";
-            var applicationFilePath = Path.Combine(DestinationHostedWebCoreDirectoryPath, "HostedWebCore.exe");
-            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"NewRelic.Profiler.dll");
-            var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
-            var profilerLogDirectoryPath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"Logs");
+            return $"--port={Port} {arguments}";
+        }
+        protected override string StartInfoFileName => Path.Combine(DestinationHostedWebCoreDirectoryPath, "HostedWebCore.exe");
 
-            var startInfo = new ProcessStartInfo
+        protected override string StartInfoWorkingDirectory => DestinationHostedWebCoreDirectoryPath;
+
+        protected override void WaitForProcessToStartListening(bool captureStandardOutput)
+        {
+            var pidFilePath = DestinationHostedWebCoreExecutablePath + ".pid";
+            Console.Write("[" + DateTime.Now + "] Waiting for process to start (" + pidFilePath + ") ... " + Environment.NewLine);
+            var stopwatch = Stopwatch.StartNew();
+            while (!RemoteProcess.HasExited && stopwatch.Elapsed < Timing.TimeToColdStart)
             {
-                Arguments = arguments,
-                FileName = applicationFilePath,
-                UseShellExecute = false,
-                WorkingDirectory = DestinationHostedWebCoreDirectoryPath,
-                RedirectStandardOutput = captureStandardOutput,
-                RedirectStandardError = captureStandardOutput,
-                RedirectStandardInput = RedirectStandardInput
-            };
-
-            startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER");
-            startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEW_RELIC_LOG_LEVEL");
-
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_INSTALL_PATH");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
-            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
-
-
-            // configure env vars as needed for testing environment overrides
-            foreach (var envVar in environmentVariables)
-            {
-                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
-            }
-
-            if (!doProfile)
-            {
-                startInfo.EnvironmentVariables.Add("COR_ENABLE_PROFILING", "0");
-            }
-            else
-            {
-                startInfo.EnvironmentVariables.Add("COR_ENABLE_PROFILING", "1");
-                startInfo.EnvironmentVariables.Add("COR_PROFILER", "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
-                startInfo.EnvironmentVariables.Add("COR_PROFILER_PATH", profilerFilePath);
-                startInfo.EnvironmentVariables.Add("NEW_RELIC_HOME", newRelicHomeDirectoryPath);
-                startInfo.EnvironmentVariables.Add("NEW_RELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
-            }
-
-            if (AdditionalEnvironmentVariables != null)
-            {
-                foreach (var kp in AdditionalEnvironmentVariables)
+                if (File.Exists(pidFilePath))
                 {
-                    startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
+                    Console.Write("Done." + Environment.NewLine);
+                    return;
+                }
+                Thread.Sleep(Timing.TimeBetweenFileExistChecks);
+            }
+
+            if (!RemoteProcess.HasExited)
+            {
+                try
+                {
+                    //We need to attempt to clean up the process that did not successfully start.
+                    RemoteProcess.Kill();
+                }
+                catch (Exception)
+                {
+                    TestLogger?.WriteLine("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening could not kill hung remote process.");
                 }
             }
 
-            RemoteProcess = Process.Start(startInfo);
+            if (captureStandardOutput)
+            {
+                CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
+            }
 
-            if (RemoteProcess == null)
-                throw new Exception("Process failed to start.");
-
-            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
-
-            WaitForHostedWebCoreToStartListening(RemoteProcess, captureStandardOutput);
+            Assert.Fail("Remote process never generated a .pid file!");
         }
 
         private void CopyHostedWebCoreToRemote()
@@ -226,41 +196,4 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             XmlUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
-
-        private void WaitForHostedWebCoreToStartListening(Process process, bool captureStandardOutput)
-        {
-            var pidFilePath = DestinationHostedWebCoreExecutablePath + ".pid";
-            Console.Write("[" + DateTime.Now + "] Waiting for process to start (" + pidFilePath + ") ... " + Environment.NewLine);
-            var stopwatch = Stopwatch.StartNew();
-            while (!process.HasExited && stopwatch.Elapsed < Timing.TimeToColdStart)
-            {
-                if (File.Exists(pidFilePath))
-                {
-                    Console.Write("Done." + Environment.NewLine);
-                    return;
-                }
-                Thread.Sleep(Timing.TimeBetweenFileExistChecks);
-            }
-
-            if (!process.HasExited)
-            {
-                try
-                {
-                    //We need to attempt to clean up the process that did not successfully start.
-                    process.Kill();
-                }
-                catch (Exception)
-                {
-                    TestLogger?.WriteLine("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening could not kill hung remote process.");
-                }
-            }
-
-            if (captureStandardOutput)
-            {
-                CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
-            }
-
-            Assert.Fail("Remote process never generated a .pid file!");
-        }
     }
-}
