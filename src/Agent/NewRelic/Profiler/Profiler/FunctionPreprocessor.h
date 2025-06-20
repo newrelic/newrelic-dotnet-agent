@@ -524,15 +524,20 @@ namespace NewRelic {
                     return true;
                 }
 
+#ifdef DEBUG
                 static void PrintInstructions(OffsetToInstructionMapPtr instructions)
                 {
-#ifdef DEBUG
                     for (auto iter : *instructions.get())
                     {
                         LogInfo(iter.second->ToString());
                     }
-#endif
                 }
+#else
+                static void PrintInstructions(OffsetToInstructionMapPtr)
+                {
+
+                }
+#endif
 
                 bool WriteSEH(ByteVectorPtr newByteCode, OffsetToInstructionMapPtr instructions) {
                     if (_headerInfo->HasSEH()) {
