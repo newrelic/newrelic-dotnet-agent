@@ -99,15 +99,15 @@ namespace NewRelic {
                     return xstring_t((_valid ? _X("[") : _X("*["))) + to_hex_string(_offset) + _X("] : ") + _opcode->name;
                 }
 
-                virtual void ResolveTargets(ByteVectorPtr methodBody, std::shared_ptr<std::map<unsigned, std::shared_ptr<Instruction>>> instructions)
+                virtual void ResolveTargets(ByteVectorPtr, std::shared_ptr<std::map<unsigned, std::shared_ptr<Instruction>>>)
                 {
                 }
 
-                virtual void WriteBranches(ByteVectorPtr instructions, std::shared_ptr<std::map<unsigned, std::shared_ptr<Instruction>>> instructionMap)
+                virtual void WriteBranches(ByteVectorPtr, std::shared_ptr<std::map<unsigned, std::shared_ptr<Instruction>>>)
                 {
                 }
 
-                virtual void OnInstructionChange(std::shared_ptr<Instruction> oldInstruction, std::shared_ptr<Instruction> newInstruction)
+                virtual void OnInstructionChange(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>)
                 {
                 }
 
@@ -171,7 +171,7 @@ namespace NewRelic {
                     _targets = std::make_shared<std::list<InstructionPtr>>();
                 }
 
-                virtual void WriteBranches(ByteVectorPtr instructions, OffsetToInstructionMapPtr instructionMap) override
+                virtual void WriteBranches(ByteVectorPtr instructions, OffsetToInstructionMapPtr) override
                 {
                     if (_valid)
                     {
@@ -254,7 +254,7 @@ namespace NewRelic {
                     }
                 }
 
-                virtual void WriteBranches(ByteVectorPtr instructions, OffsetToInstructionMapPtr instructionMap) override
+                virtual void WriteBranches(ByteVectorPtr instructions, OffsetToInstructionMapPtr) override
                 {
                     if (_valid)
                     {
@@ -498,7 +498,7 @@ namespace NewRelic {
                     return true;
                 }
 
-                static bool PassesCheck(ByteVectorPtr functionBytes, OffsetToInstructionMapPtr firstPassInstructions)
+                static bool PassesCheck(ByteVectorPtr functionBytes, OffsetToInstructionMapPtr)
                 {
                     const unsigned headerSize = sizeof(COR_ILMETHOD_FAT);
                     COR_ILMETHOD_FAT* header = (COR_ILMETHOD_FAT*)functionBytes->data();
