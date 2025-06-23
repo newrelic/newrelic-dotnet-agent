@@ -30,9 +30,9 @@ namespace AspNetCoreMvcFrameworkAsyncApplication
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
-            var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true);
+            var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true).ToList();
 
-            var argPort = result.FirstOrDefault()?.Split('=')[1];
+            var argPort = result[1];
             _port = argPort ?? DefaultPort;
 
             Console.WriteLine($"[{_applicationName}] Received port: {argPort} | Using port: {_port}");
