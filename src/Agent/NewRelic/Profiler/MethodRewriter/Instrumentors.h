@@ -116,7 +116,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     // An instrumentor for the methods we inject into mscorlib
     struct HelperInstrumentor : public IInstrumentor
     {
-        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) override
+        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr) override
         {
             if (!Strings::EndsWith(function->GetModuleName(), _X("mscorlib.dll")))
                 return false;
