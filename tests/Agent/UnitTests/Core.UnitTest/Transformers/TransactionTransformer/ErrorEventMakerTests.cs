@@ -22,6 +22,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
