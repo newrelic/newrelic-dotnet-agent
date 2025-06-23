@@ -510,7 +510,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
 
         MvarType(uint32_t number) : Type(Kind::MVAR), _number(number) {}
 
-        virtual xstring_t ToString(ITokenResolverPtr tokenResolver) const override
+        virtual xstring_t ToString(ITokenResolverPtr) const override
         {
             return _X("!!") + to_xstring(_number);
         }
@@ -531,7 +531,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
 
         VarType(uint32_t number) : Type(Kind::VAR), _number(number) {}
         
-        virtual xstring_t ToString(ITokenResolverPtr tokenResolver) const override
+        virtual xstring_t ToString(ITokenResolverPtr) const override
         {
             return _X("!") + to_xstring(_number);
         }
@@ -573,7 +573,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
     {
         VoidPointerType() : Type(Kind::VOIDPOINTER) {}
 
-        virtual xstring_t ToString(ITokenResolverPtr tokenResolver) const override
+        virtual xstring_t ToString(ITokenResolverPtr) const override
         {
             return _X("void*");
         }
