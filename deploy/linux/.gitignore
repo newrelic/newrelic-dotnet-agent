@@ -1,2 +1,6 @@
 docker.env
+# old tarball method of adding signing keys to the container
 gpg.tar.bz2
+# ASCII-armored GPG key files
+*.asc
+*.gpg
