@@ -149,6 +149,8 @@ public abstract class RemoteApplication : IDisposable
 
     public void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
     {
+        PrepareForStart();
+
         var startInfo = new ProcessStartInfo();
 
         ConfigureStartInfo(startInfo, commandLineArguments, captureStandardOutput);
@@ -549,6 +551,13 @@ public abstract class RemoteApplication : IDisposable
     }
 
     /// <summary>
+    /// Performs any necessary preparation before starting the process.
+    /// </summary>
+    /// <remarks>This method is intended to be overridden in derived classes to implement custom preparation
+    /// logic.  The base implementation does nothing.</remarks>
+    protected virtual void PrepareForStart() { }
+
+    /// <summary>
     /// Waits for the process to start listening for incoming connections or data.
     /// </summary>
     /// <remarks>This method is intended to be overridden in derived classes to implement custom logic
@@ -577,7 +586,7 @@ public abstract class RemoteApplication : IDisposable
     /// <param name="commandLineArguments">The command-line arguments to pass to the process.</param>
     /// <param name="captureStandardOutput"><see langword="true"/> to redirect the standard output and error streams; otherwise, <see
     /// langword="false"/>.</param>
-    protected virtual void ConfigureStartInfo(ProcessStartInfo startInfo, string commandLineArguments, bool captureStandardOutput )
+    protected virtual void ConfigureStartInfo(ProcessStartInfo startInfo, string commandLineArguments, bool captureStandardOutput)
     {
         startInfo.Arguments = GetStartInfoArgs(commandLineArguments);
         startInfo.FileName = StartInfoFileName;
@@ -668,6 +677,17 @@ public abstract class RemoteApplication : IDisposable
         environmentVariables.Remove("NEWRELIC_LICENSEKEY");
         environmentVariables.Remove("NEWRELIC_INSTALL_PATH");
         environmentVariables.Remove("CORECLR_NEWRELIC_HOME");
+    }
+
+    /// <summary>
+    /// Removes custom environment variables from the specified collection.
+    /// </summary>
+    /// <remarks>This method is intended to be overridden in derived classes to implement custom logic for 
+    /// removing specific environment variables. The base implementation does not perform any operations.</remarks>
+    /// <param name="environmentVariables">A collection of environment variables represented as key-value pairs.  This method modifies the collection by
+    /// removing custom entries as needed.</param>
+    protected virtual void RemoveCustomEnvironmentVariables(StringDictionary environmentVariables)
+    {
     }
 
     /// <summary>
