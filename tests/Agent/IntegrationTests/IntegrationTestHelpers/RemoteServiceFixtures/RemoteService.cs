@@ -179,7 +179,7 @@ public class RemoteService : RemoteApplication
     protected override string GetStartInfoArgs(string arguments)
     {
         return UsesSpecificPort
-            ? $"{arguments} --port {Port} {arguments}"
+            ? $"{arguments} --port {Port}"
             : arguments;
     }
 
