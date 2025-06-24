@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - ".github/**" # skip changes to the .github branch (workflows, etc.)
+  workflow_dispatch:
   
 permissions:
   contents: read
