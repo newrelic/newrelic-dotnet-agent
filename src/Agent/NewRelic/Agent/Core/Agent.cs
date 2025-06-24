@@ -33,6 +33,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.Database;
 
 namespace NewRelic.Agent.Core
 {
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.Core
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
             ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService,
-            ICustomEventTransformer customEventTransformer, NewRelicActivitySourceProxy activitySourceProxy)
+            ICustomEventTransformer customEventTransformer, NewRelicActivitySourceProxy activitySourceProxy, IDatabaseService databaseService)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -104,6 +105,7 @@ namespace NewRelic.Agent.Core
             _customEventTransformer = customEventTransformer;
 
             _activitySourceProxy = activitySourceProxy;
+            DatabaseService = databaseService;
 
             Instance = this;
         }
@@ -502,6 +504,8 @@ namespace NewRelic.Agent.Core
         {
             get { return _simpleSchedulingService; }
         }
+
+        public IDatabaseService DatabaseService { get; }
 
         public IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
 

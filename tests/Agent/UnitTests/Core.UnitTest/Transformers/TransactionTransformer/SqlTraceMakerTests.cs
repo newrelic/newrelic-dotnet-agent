@@ -17,6 +17,7 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {

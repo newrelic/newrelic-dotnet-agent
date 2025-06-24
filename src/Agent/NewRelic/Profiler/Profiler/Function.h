@@ -246,7 +246,7 @@ namespace NewRelic { namespace Profiler
             const FunctionID functionId,
             CComPtr<IMetaDataImport2> metaDataImport,
             CComPtr<IMetaDataAssemblyImport> metaDataAssemblyImport,
-            std::shared_ptr<MethodRewriter::MethodRewriter> methodRewriter,
+            std::shared_ptr<MethodRewriter::MethodRewriter>,
             AppDomainID appDomainId,
             ULONG signatureSize,
             const uint8_t* signature,

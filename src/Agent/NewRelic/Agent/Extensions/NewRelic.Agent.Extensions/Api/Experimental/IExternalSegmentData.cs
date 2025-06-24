@@ -9,6 +9,6 @@ namespace NewRelic.Agent.Api.Experimental
     /// </summary>
     public interface IExternalSegmentData : ISegmentData
     {
-        void SetHttpStatusCode(int httpStatusCode);
+        void SetHttpStatus(int httpStatusCode, string httpStatusText = null);
     }
 }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 New Relic, Inc. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config -->
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:tns="urn:newrelic-config" targetNamespace="urn:newrelic-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nr="Configuration.xsd">
 
@@ -2035,6 +2037,14 @@
                             <xs:annotation>
                                 <xs:documentation>
                                     This attribute controls whether to look for Azure Function environment variables (optional). The default is true.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
+                        <xs:attribute name="detectAzureAppService" type="xs:boolean" default="true"  use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    This attribute controls whether to look for Azure AppService environment variables (optional). The default is true.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

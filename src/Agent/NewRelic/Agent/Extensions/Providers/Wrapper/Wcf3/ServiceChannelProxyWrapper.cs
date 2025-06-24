@@ -200,7 +200,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                     var statusCode = httpResponse?.StatusCode;
                     if (statusCode.HasValue)
                     {
-                        externalSegmentData.SetHttpStatusCode((int)statusCode.Value);
+                        externalSegmentData.SetHttpStatus((int)statusCode.Value);
                     }
 
                     transaction.ProcessInboundResponse(response?.Headers?.ToDictionary(), segment);

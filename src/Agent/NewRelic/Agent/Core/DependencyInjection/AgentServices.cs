@@ -46,6 +46,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {

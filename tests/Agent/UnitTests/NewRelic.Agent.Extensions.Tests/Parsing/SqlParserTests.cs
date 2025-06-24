@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using Microsoft.SqlServer.Server;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using NewRelic.Agent.Api.Experimental;
 
 namespace ParsingTests
 {

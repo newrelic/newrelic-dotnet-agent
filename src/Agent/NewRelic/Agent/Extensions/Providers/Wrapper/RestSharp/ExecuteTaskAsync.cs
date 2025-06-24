@@ -72,7 +72,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
                 var statusCode = RestSharpHelper.GetResponseStatusCode(restResponse);
                 if (statusCode != 0)
                 {
-                    externalSegmentData.SetHttpStatusCode(statusCode);
+                    externalSegmentData.SetHttpStatus(statusCode);
                 }
 
                 var headers = RestSharpHelper.GetResponseHeaders(restResponse);

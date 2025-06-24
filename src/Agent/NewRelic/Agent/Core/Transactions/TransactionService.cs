@@ -15,6 +15,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions
 {
