@@ -547,6 +547,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("utilization.detect_azure_function_enabled")]
         public bool UtilizationDetectAzureFunction => _configuration.UtilizationDetectAzureFunction;
 
+        [JsonProperty("utilization.detect_azure_appservice_enabled")]
+        public bool UtilizationDetectAzureAppService => _configuration.UtilizationDetectAzureAppService;
+
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
 
