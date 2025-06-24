@@ -58,6 +58,10 @@ namespace NewRelic.Agent.Core.Utilization
         private const string GetMethod = "GET";
         private const string PutMethod = "PUT";
 
+        private const string AzureWebsiteOwnerName = "WEBSITE_OWNER_NAME";
+        private const string AzureWebsiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
+        private const string AzureWebsiteSiteName = "WEBSITE_SITE_NAME";
+
         public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor, IFileWrapper fileWrapper)
         {
             _configuration = configuration;
@@ -101,6 +105,10 @@ namespace NewRelic.Agent.Core.Utilization
             if (_configuration.UtilizationDetectAzureFunction)
             {
                 vendorMethods.Add(GetAzureFunctionVendorInfo);
+            }
+            if (_configuration.UtilizationDetectAzureAppService)
+            {
+                vendorMethods.Add(GetAzureAppServiceVendorInfo);
             }
 
             foreach (var vendorMethod in vendorMethods)
@@ -153,6 +161,40 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return new AzureFunctionVendorModel(appName, cloudRegion);
+        }
+
+        public IVendorModel GetAzureAppServiceVendorInfo()
+        {
+            // WEBSITE_OWNER_NAME should container the subscription ID and the resource group name, separated by a '+' sign.
+            var candidateSubscriptionId = GetProcessEnvironmentVariable(AzureWebsiteOwnerName);
+            if (string.IsNullOrWhiteSpace(candidateSubscriptionId) || !candidateSubscriptionId.Contains('+'))
+            {
+                return null;
+            }
+
+            var subscriptionId = candidateSubscriptionId.Split('+')[0];
+            var resourceGroupName = GetProcessEnvironmentVariable(AzureWebsiteResourceGroup);
+            var siteName = GetProcessEnvironmentVariable(AzureWebsiteSiteName);
+
+            if (!IsValidAndLog(subscriptionId, AzureWebsiteOwnerName)
+                || !IsValidAndLog(resourceGroupName, AzureWebsiteResourceGroup)
+                || !IsValidAndLog(siteName, AzureWebsiteSiteName))
+            {
+                return null;
+            }
+
+            return new AzureAppServiceVendorModel($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}");
+
+            bool IsValidAndLog(string value, string valueSource)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    Log.Finest($"When building Azure App Service resource id, {valueSource} was null.");
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         private IVendorModel GetAwsVendorInfo()
