@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.42.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.41.0...v10.42.0) (2025-06-24)
+
+
+### Notice
+
+* As of this release, there is a new public key available for apt.newrelic.com at https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public. This key uses a more secure GPG algorithm than the current public key. If you use APT to install or upgrade the agent on APT-based Linux hosts, we recommend that you switch to using the new key, following the instructions found here: https://docs.newrelic.com/install/dotnet/?deployment=linux&docker=noDocker#apt ([1001cf7](https://github.com/newrelic/newrelic-dotnet-agent/commit/1001cf7fc5b250a580dd75168b8440eb86573278))
+
+
+### New features
+
+* Add support for Azure Service Bus. ([#3124](https://github.com/newrelic/newrelic-dotnet-agent/issues/3124)) ([6a075cc](https://github.com/newrelic/newrelic-dotnet-agent/commit/6a075ccbb2b7b59c509ce93fcad36202d4d5a6da))
+
+
+### Fixes
+
+* Fix Profiler build errors with latest VS ([#3162](https://github.com/newrelic/newrelic-dotnet-agent/issues/3162)) ([0cfdedb](https://github.com/newrelic/newrelic-dotnet-agent/commit/0cfdedb4ff2a9bfc602f6844e262c2d4d455583a))
+
 ## [10.41.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.40.1...v10.41.0) (2025-04-25)
 
 
