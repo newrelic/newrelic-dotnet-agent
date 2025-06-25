@@ -32,7 +32,7 @@ Write-Output "Managed Identity Client ID: $managedIdentityClientId"
 Write-Output "Managed Identity Resource ID: $managedIdentityResourceId"
 
 # Create a federated credential for the managed identity to allow GitHub Actions to authenticate from any branch
-az identity federated-credential create --name "github-unbounded-services-deployment" --identity-name $managedIdentity --resource-group $resourceGroup --issuer "https://token.actions.githubusercontent.com" --subject "repo:NewRelic/newrelic-dotnet-agent:ref:refs/heads/*" --audiences "api://AzureADTokenExchange"
+az identity federated-credential create --name "github-unbounded-services-all-branches" --identity-name $managedIdentity --resource-group $resourceGroup --issuer "https://token.actions.githubusercontent.com" --subject "repo:newrelic/newrelic-dotnet-agent:ref:refs/heads/*" --audiences "api://AzureADTokenExchange"
 
 # Create the Azure Container Registry
 az acr create --resource-group $resourceGroup --name $acrName --sku Standard --admin-enabled true
