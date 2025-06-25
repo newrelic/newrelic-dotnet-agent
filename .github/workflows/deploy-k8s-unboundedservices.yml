@@ -25,7 +25,9 @@ jobs:
       - name: Azure Login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
-          creds: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Azure Container Registry Login
         uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
         with:
