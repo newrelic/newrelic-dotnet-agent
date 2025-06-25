@@ -18,7 +18,12 @@ param(
     [string]$publicIpDnsName
 )
 
-az login
+# Login if not already logged in
+$loginStatus = az account show 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Output "Logging in to Azure..."
+    az login
+}
 
 # Get the current Azure subscription ID and store it in a variable
 $subscriptionId = az account show --query id -o tsv
@@ -37,9 +42,22 @@ az identity federated-credential create --name "github-unbounded-services-all-br
 # Create the Azure Container Registry
 az acr create --resource-group $resourceGroup --name $acrName --sku Standard --admin-enabled true
 
-# assign the acrpush role to the rbac principal created above
+# assign ACR roles to the managed identity
 $registryId = az acr show --name $acrName --resource-group $resourceGroup --query id --output tsv
+Write-Output "Assigning ACR roles to managed identity..."
+
+# AcrPush role allows pushing images
 az role assignment create --assignee $managedIdentityClientId --scope $registryId --role AcrPush
+
+# AcrPull role allows pulling images
+az role assignment create --assignee $managedIdentityClientId --scope $registryId --role AcrPull
+
+# Reader role allows reading registry properties
+az role assignment create --assignee $managedIdentityClientId --scope $registryId --role Reader
+
+# Wait for role assignments to propagate
+Write-Output "Waiting for role assignments to propagate..."
+Start-Sleep -Seconds 60
 
 $acrLoginServer = az acr show --name $acrName --resource-group $resourceGroup --query loginServer --output tsv
 Write-Output "ACR Login Server: $acrLoginServer"
