@@ -41,7 +41,9 @@ jobs:
       - name: Build and Push Docker Images to ACR
         shell: bash
         run: |
-          ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
       - name: Create Kubernetes Secrets Manifest
         env:
           TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
