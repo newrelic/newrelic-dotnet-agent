@@ -55,10 +55,6 @@ az role assignment create --assignee $managedIdentityClientId --scope $registryI
 # Reader role allows reading registry properties
 az role assignment create --assignee $managedIdentityClientId --scope $registryId --role Reader
 
-# Wait for role assignments to propagate
-Write-Output "Waiting for role assignments to propagate..."
-Start-Sleep -Seconds 60
-
 $acrLoginServer = az acr show --name $acrName --resource-group $resourceGroup --query loginServer --output tsv
 Write-Output "ACR Login Server: $acrLoginServer"
 
@@ -70,6 +66,25 @@ az aks create --resource-group $resourceGroup --name $aksName --node-count 1 --e
 
 # give the cluster permission to access the ACR
 az aks update -n $aksName -g $resourceGroup --attach-acr $acrName
+
+# Get AKS resource ID
+$aksResourceId = az aks show --name $aksName --resource-group $resourceGroup --query id --output tsv
+Write-Output "AKS Resource ID: $aksResourceId"
+
+# Assign required AKS roles
+Write-Output "Assigning AKS cluster roles to managed identity..."
+
+# Azure Kubernetes Service Cluster User Role - allows listing cluster user credentials
+Write-Output "Assigning Azure Kubernetes Service Cluster User Role..."
+az role assignment create --assignee $managedIdentityClientId --scope $aksResourceId --role "Azure Kubernetes Service Cluster User Role"
+
+# Azure Kubernetes Service Cluster Admin Role - allows full access to the cluster
+Write-Output "Assigning Azure Kubernetes Service Cluster Admin Role..."
+az role assignment create --assignee $managedIdentityClientId --scope $aksResourceId --role "Azure Kubernetes Service Cluster Admin Role"
+
+# Reader role on the AKS resource
+Write-Output "Assigning Reader role on the AKS resource..."
+az role assignment create --assignee $managedIdentityClientId --scope $aksResourceId --role "Reader"
 
 # create a public IP
 az network public-ip create --resource-group $resourceGroup --name $publicIpName --sku Standard
