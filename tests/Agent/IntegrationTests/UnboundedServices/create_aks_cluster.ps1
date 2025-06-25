@@ -4,17 +4,17 @@
 # PowerShell script to create an Azure Kubernetes Service (AKS) cluster with a managed identity and public IP
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$resourceGroup,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$acrName,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$managedIdentity,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$aksName,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$publicIpName,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$publicIpDnsName
 )
 
@@ -30,6 +30,9 @@ $managedIdentityClientId = az identity show --name $managedIdentity --resource-g
 $managedIdentityResourceId = az identity show --name $managedIdentity --resource-group $resourceGroup --query id -o tsv
 Write-Output "Managed Identity Client ID: $managedIdentityClientId"
 Write-Output "Managed Identity Resource ID: $managedIdentityResourceId"
+
+# Create a federated credential for the managed identity to allow GitHub Actions to authenticate from any branch
+az identity federated-credential create --name "github-unbounded-services-deployment" --identity-name $managedIdentity --resource-group $resourceGroup --issuer "https://token.actions.githubusercontent.com" --subject "repo:NewRelic/newrelic-dotnet-agent:ref:refs/heads/*" --audiences "api://AzureADTokenExchange"
 
 # Create the Azure Container Registry
 az acr create --resource-group $resourceGroup --name $acrName --sku Standard --admin-enabled true
