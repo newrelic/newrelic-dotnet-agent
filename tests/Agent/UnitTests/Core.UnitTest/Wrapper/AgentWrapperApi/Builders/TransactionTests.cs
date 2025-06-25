@@ -20,6 +20,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using System.Collections.Generic;
 using NewRelic.Agent.TestUtilities;
 using NUnit.Framework.Legacy;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

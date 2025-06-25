@@ -2,18 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database
 {
-    public interface IDatabaseService : IDisposable
-    {
-        long GetSqlId(string sql, DatastoreVendor vendor);
-        string GetObfuscatedSql(string sql, DatastoreVendor vendor);
-    }
-
     public class DatabaseService : ConfigurationBasedService, IDatabaseService
     {
         private SqlObfuscator _sqlObfuscator;

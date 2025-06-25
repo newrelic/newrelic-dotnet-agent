@@ -1,8 +1,9 @@
 ARG DOTNET_VERSION
 ARG BUILD_ARCH
+ARG CONTAINER_TEST_ACR_NAME
 # Uses a custom-built Fedora image with ASP.NET Core pre-installed, served from a private
 # container repository under the .NET Team Sandbox Azure subscription
-FROM dotnetreg.azurecr.io/fedora-aspnet:${DOTNET_VERSION} AS base
+FROM ${CONTAINER_TEST_ACR_NAME}/fedora-aspnet:${DOTNET_VERSION} AS base
 WORKDIR /app
 EXPOSE 80
 

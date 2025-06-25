@@ -176,10 +176,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 "explainThreshold", "1");
         }
 
-        public void SetLogLevel(string level)
+        public NewRelicConfigModifier SetLogLevel(string level)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "level",
                 level);
+            return this;
         }
 
         public void LogToConsole()
@@ -536,6 +537,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "GCSamplerV2Enabled");
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enabled}");
+            return this;
+        }
+        public NewRelicConfigModifier EnableAwsLambdaAPMMode(bool awsLambdaApmModeEnabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "AwsLambdaApmModeEnabled", awsLambdaApmModeEnabled.ToString(), "urn:newrelic-config");
             return this;
         }
     }

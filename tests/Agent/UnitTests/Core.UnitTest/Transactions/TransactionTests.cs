@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Segments;
 using System.Collections.Generic;
 using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions;
 
@@ -606,4 +607,36 @@ public class TransactionTests
         // Assert
         Assert.That(result, Is.False);
     }
+    [Test]
+    public void TraceId_Returns_TracingState_TraceId_If_NotNull()
+    {
+        // Arrange
+        var mockTracingState = Mock.Create<ITracingState>();
+        Mock.Arrange(() => mockTracingState.TraceId).Returns("tracing-state-trace-id");
+        var transaction = CreateTransaction();
+        typeof(Transaction).GetProperty("TracingState").SetValue(transaction, mockTracingState);
+
+        // Act
+        var traceId = transaction.TraceId;
+
+        // Assert
+        Assert.That(traceId, Is.EqualTo("tracing-state-trace-id"));
+    }
+
+    // Helper to create a Transaction with minimal dependencies
+    private Transaction CreateTransaction()
+    {
+        var config = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => config.DistributedTracingEnabled).Returns(true);
+        var transactionName = Mock.Create<ITransactionName>();
+        var timer = Mock.Create<ISimpleTimer>();
+        var callStackManager = Mock.Create<ICallStackManager>();
+        var databaseService = Mock.Create<IDatabaseService>();
+        var databaseStatementParser = Mock.Create<IDatabaseStatementParser>();
+        var distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
+        var errorService = Mock.Create<IErrorService>();
+        var attribDefs = Mock.Create<IAttributeDefinitions>();
+        return new Transaction(config, transactionName, timer, DateTime.UtcNow, callStackManager, databaseService, 0.5f, databaseStatementParser, distributedTracePayloadHandler, errorService, attribDefs);
+    }
+
 }

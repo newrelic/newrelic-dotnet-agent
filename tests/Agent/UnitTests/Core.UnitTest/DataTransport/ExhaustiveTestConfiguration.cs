@@ -378,6 +378,9 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool UtilizationDetectKubernetes => true;
 
         public bool UtilizationDetectAzureFunction => true;
+
+        public bool UtilizationDetectAzureAppService => true;
+
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -506,5 +509,10 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool AgentControlEnabled => true;
         public string HealthDeliveryLocation => "file:///tmp/health";
         public int HealthFrequency => 5;
+
+        public bool AwsLambdaApmModeEnabled => true;
+        public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"];
+        public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"];
+        public bool OpenTelemetryBridgeEnabled => true;
     }
 }

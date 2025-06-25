@@ -63,6 +63,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> HostDisplayName { get; }
         AttributeDefinition<string, string> HttpMethod { get; }
         AttributeDefinition<long?, long> HttpStatusCode { get; }
+        AttributeDefinition<string, string> HttpStatusText { get; }
         AttributeDefinition<Uri, string> HttpUrl { get; }
         AttributeDefinition<bool, bool> IsError { get; }
         AttributeDefinition<string, string> NameForSpan { get; }
@@ -438,6 +439,17 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier
                 .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _httpStatusText;
+        public AttributeDefinition<string, string> HttpStatusText => _httpStatusText ??=
+            AttributeDefinitionBuilder.CreateString("http.statusText", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent)
+                .AppliesTo(AttributeDestinations.ErrorTrace)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.ErrorEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter);
 
         private AttributeDefinition<string, string> _clientCrossProcessId;
         public AttributeDefinition<string, string> ClientCrossProcessId => _clientCrossProcessId ?? (_clientCrossProcessId =

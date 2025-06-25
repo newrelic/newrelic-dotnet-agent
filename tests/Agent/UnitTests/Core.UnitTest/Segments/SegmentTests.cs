@@ -7,6 +7,13 @@ using NUnit.Framework;
 using System;
 using NewRelic.Agent.Core.Metrics;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
+using Telerik.JustMock;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Api.Experimental;
+using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -108,7 +115,178 @@ namespace NewRelic.Agent.Core.Segments.Tests
             Assert.DoesNotThrow(() => segment.SetName("name"));
             Assert.That(segment.GetCategory(), Is.EqualTo(string.Empty));
             Assert.That(segment.DurationOrZero, Is.EqualTo(TimeSpan.Zero));
+        }
 
+        [Test]
+        public void TryGetActivityTraceId_ReturnsNull_WhenNoActivitySet()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            // Act
+            var traceId = segment.TryGetActivityTraceId();
+
+            // Assert
+            Assert.That(traceId, Is.Null);
+        }
+
+        [Test]
+        public void TryGetActivityTraceId_ReturnsTraceId_WhenActivitySet()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            var mockActivity = Mock.Create<INewRelicActivity>();
+            Mock.Arrange(() => mockActivity.TraceId).Returns("trace-id-123");
+
+            segment.SetActivity(mockActivity);
+
+            // Act
+            var traceId = segment.TryGetActivityTraceId();
+
+            // Assert
+            Assert.That(traceId, Is.EqualTo("trace-id-123"));
+        }
+
+        [Test]
+        public void SpanId_ReturnsExistingSpanId_IfAlreadySet()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            // Set _spanId via property
+            segment.SpanId = "existing-span-id";
+
+            // Act
+            var result = segment.SpanId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("existing-span-id"));
+        }
+
+        [Test]
+        public void SpanId_UsesActivitySpanId_IfNotSetAndActivityPresent()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            var mockActivity = Mock.Create<INewRelicActivity>();
+            Mock.Arrange(() => mockActivity.SpanId).Returns("activity-span-id");
+            segment.SetActivity(mockActivity);
+
+            // Act
+            var result = segment.SpanId;
+
+            // Assert
+            Assert.That(result, Is.EqualTo("activity-span-id"));
+            // Should be cached
+            Assert.That(segment.SpanId, Is.EqualTo("activity-span-id"));
+        }
+
+        [Test]
+        public void SpanId_GeneratesNewGuid_IfNotSetAndNoActivity()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            // Act
+            var result = segment.SpanId;
+
+            // Assert
+            Assert.That(result, Is.Not.Null.And.Not.Empty);
+            // Should be cached
+            Assert.That(segment.SpanId, Is.EqualTo(result));
+        }
+
+        [Test]
+        public void End_CallsStop_WhenActivityIsNotNullAndNotStopped()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.ErrorService).Returns(Mock.Create<IErrorService>());
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            var mockActivity = Mock.Create<INewRelicActivity>();
+            Mock.Arrange(() => mockActivity.IsStopped).Returns(false);
+            bool stopCalled = false;
+            Mock.Arrange(() => mockActivity.Stop()).DoInstead(() => stopCalled = true);
+
+            segment.SetActivity(mockActivity);
+
+            // Act
+            segment.End();
+
+            // Assert
+            Assert.That(stopCalled, Is.True);
+        }
+
+        [Test]
+        public void End_DoesNotCallStop_WhenActivityIsAlreadyStopped()
+        {
+            // Arrange
+            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+            Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+            Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+            Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+            Mock.Arrange(() => transactionSegmentState.ErrorService).Returns(Mock.Create<IErrorService>());
+
+            var methodCallData = new MethodCallData("Type", "Method", 1);
+            var segment = new Segment(transactionSegmentState, methodCallData);
+
+            var mockActivity = Mock.Create<INewRelicActivity>();
+            Mock.Arrange(() => mockActivity.IsStopped).Returns(true);
+            bool stopCalled = false;
+            Mock.Arrange(() => mockActivity.Stop()).DoInstead(() => stopCalled = true);
+
+            segment.SetActivity(mockActivity);
+
+            // Act
+            segment.End();
+
+            // Assert
+            Assert.That(stopCalled, Is.False);
         }
     }
 }

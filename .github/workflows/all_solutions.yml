@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -305,6 +305,8 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
       NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
+      # Set an environment variable that the tests will use to set the application name.
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
       - name: Checkout
@@ -426,6 +428,7 @@ jobs:
       matrix:
         namespace:
           [
+            AzureServiceBus,
             CosmosDB,
             Couchbase,
             Elasticsearch,
@@ -448,6 +451,8 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
+      # Set an environment variable that the tests will use to set the application name.
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
       - name: My IP
@@ -563,7 +568,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -630,7 +635,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -741,7 +746,7 @@ jobs:
     if: always()
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -750,4 +755,4 @@ jobs:
         run: exit 0
       - name: Failing test run
         if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1          
+        run: exit 1

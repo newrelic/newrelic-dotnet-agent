@@ -32,20 +32,11 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         private static System.Diagnostics.Process _currentSystemProcess;
         private static IProcess _currentProcess;
 
-        public IProcess GetCurrentProcess()
-        {
-            return Memoizer.Memoize(ref _currentProcess, CreateProcess);
-        }
+        public IProcess GetCurrentProcess() => _currentProcess ??= CreateProcess();
 
-        private static IProcess CreateProcess()
-        {
-            return new Process(Memoizer.Memoize(ref _currentSystemProcess, GetCurrentSystemProcess));
-        }
+        private static IProcess CreateProcess() => new Process(_currentSystemProcess ??= GetCurrentSystemProcess());
 
-        private static System.Diagnostics.Process GetCurrentSystemProcess()
-        {
-            return System.Diagnostics.Process.GetCurrentProcess();
-        }
+        private static System.Diagnostics.Process GetCurrentSystemProcess() => System.Diagnostics.Process.GetCurrentProcess();
     }
 
     public class Process : IProcess

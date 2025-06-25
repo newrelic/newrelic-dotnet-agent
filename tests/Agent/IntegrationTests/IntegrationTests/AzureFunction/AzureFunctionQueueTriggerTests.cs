@@ -57,9 +57,9 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         {
             { "faas.coldStart", true},
             //new("faas.invocation_id", "test_invocation_id"), This one is a random guid, not something we can specifically look for
-            { "faas.name", "IntegrationTestAppName/QueueTriggerFunction" },
+            { "faas.name", $"{_fixture.RemoteApplication.AppName}/QueueTriggerFunction" },
             { "faas.trigger", "datasource" },
-            { "cloud.resource_id", "/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction" }
+            { "cloud.resource_id", $"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/QueueTriggerFunction" }
         };
 
         var transactionName = "OtherTransaction/AzureFunction/QueueTriggerFunction";
@@ -97,9 +97,9 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
             Assertions.TransactionEventHasAttributes(transactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, transaction);
 
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
-            Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction", cloudResourceIdValue);
+            Assert.Equal($"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/QueueTriggerFunction", cloudResourceIdValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("IntegrationTestAppName/QueueTriggerFunction", faasNameValue);
+            Assert.Equal($"{_fixture.RemoteApplication.AppName}/QueueTriggerFunction", faasNameValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("datasource", faasTriggerValue);
         }

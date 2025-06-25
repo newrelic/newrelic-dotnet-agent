@@ -10,6 +10,7 @@
 # PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
 # DOTNET_VERSION  The dotnet version number to use (8.0, etc)
 # TEST_DOCKERFILE The path and dockerfile to use for the service.
+# CONTAINER_TEST_ACR_NAME The name of the Azure Container Registry to use for tests that use a custom container image.
 # 
 # and the usual suspects:
 # NEW_RELIC_LICENSE_KEY
@@ -37,6 +38,7 @@ services:
                 NEW_RELIC_HOST: ${NEW_RELIC_HOST}
                 DOTNET_VERSION: ${DOTNET_VERSION}
                 APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
+                CONTAINER_TEST_ACR_NAME: ${CONTAINER_TEST_ACR_NAME}
         ports:
           - "${PORT}:80"
         volumes:

@@ -21,13 +21,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
     internal class TestableDefaultConfiguration : DefaultConfiguration
     {
         public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
-            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter) { }
-
-        public static void ResetStatics()
-        {
-            _agentEnabledAppSettingParsed = null;
-            _appSettingAgentEnabled = false;
-        }
+            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter)
+        { }
     }
 
     [TestFixture, Category("Configuration")]
@@ -62,8 +57,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
-
-            TestableDefaultConfiguration.ResetStatics();
         }
 
         [TestCase(true, "something", true, "something")]
@@ -3069,6 +3062,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             Assert.That(_defaultConfig.AzureFunctionModeEnabled, Is.True, "AzureFunctionMode should be enabled by default");
         }
+
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectAzureAppServiceConfigurationWorksProperly(string environmentSetting, bool? localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_UTILIZATION_DETECT_AZURE_APPSERVICE")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAzureAppService = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAzureAppService;
+        }
+
         #endregion
 
         #region Log Metrics and Events
@@ -4639,6 +4657,28 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             // Assert
             Assert.That(result, Is.EqualTo(expectedRemoteParentSampledBehavior));
         }
+        [Test]
+        public void IncludedActivitySources_IncludesDefaultPlusConfigured()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "Foo,Bar,Baz" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            var includedActivitySources = defaultConfig.IncludedActivitySources;
+
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
+        }
+
+        [Test]
+        public void ExcludedActivitySources_IncludesConfigured()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "Foo,Bar,Baz" });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            var excludedActivitySources= defaultConfig.ExcludedActivitySources;
+
+            Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
+        }
+
 
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {

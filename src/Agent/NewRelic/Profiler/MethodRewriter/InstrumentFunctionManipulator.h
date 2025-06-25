@@ -32,9 +32,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
     private:
         InstrumentationSettingsPtr _instrumentationSettings;
-        uint16_t _tracerLocalIndex;
-        uint16_t _resultLocalIndex;
-        uint16_t _userExceptionLocalIndex;
+        uint16_t _tracerLocalIndex = 0;
+        uint16_t _resultLocalIndex = 0;
+        uint16_t _userExceptionLocalIndex = 0;
 
         void BuildDefaultInstructions(Configuration::InstrumentationPointPtr instrumentationPoint)
         {

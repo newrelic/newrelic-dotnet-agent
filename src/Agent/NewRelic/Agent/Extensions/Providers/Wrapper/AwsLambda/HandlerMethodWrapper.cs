@@ -244,10 +244,14 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
+            // create a transaction for the function invocation if AwsLambdaApmModeEnabled is enabled then based on spec WebTransaction/Function/APIGATEWAY myFunction
+            // else WebTransaction/Function/myFunction
             transaction = agent.CreateTransaction(
                 isWeb: _functionDetails.EventType.IsWebEvent(),
-                category: "Lambda",
-                transactionDisplayName: _functionDetails.FunctionName,
+                category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
+                transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
+                                        ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
+                                        : _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             if (isAsync)

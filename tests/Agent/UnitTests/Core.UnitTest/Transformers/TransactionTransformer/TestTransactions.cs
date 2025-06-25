@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {

@@ -32,6 +32,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {

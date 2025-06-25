@@ -238,11 +238,20 @@ namespace NewRelic.Agent.Configuration
 
         bool UtilizationDetectAzureFunction { get; }
 
+        bool UtilizationDetectAzureAppService { get; }
+
         string AwsAccountId { get; }
         bool GCSamplerV2Enabled { get; }
 
         bool AgentControlEnabled { get; }
         string HealthDeliveryLocation { get; }
         int HealthFrequency { get; }
+
+        bool AwsLambdaApmModeEnabled { get; }
+
+        List<string> IncludedActivitySources { get; }
+        List<string> ExcludedActivitySources { get; }
+
+        bool OpenTelemetryBridgeEnabled { get; }
     }
 }

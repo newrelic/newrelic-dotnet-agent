@@ -33,7 +33,8 @@ namespace NewRelic.Agent.Core.DataTransport
                     { "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
                     { "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
                     { "kubernetes", new KubernetesVendorModel("10.96.0.1") },
-                    { "azurefunction", new AzureFunctionVendorModel("myAppName", "myCloudRegion") }
+                    { "azurefunction", new AzureFunctionVendorModel("myAppName", "myCloudRegion") },
+                    { "azureappservice", new AzureAppServiceVendorModel("/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/testgroup/providers/Microsoft.Web/sites/testwebsitename")}
                 };
 
                 var fullyPopulatedTestConfiguration = new ExhaustiveTestConfiguration();
@@ -358,6 +359,7 @@ namespace NewRelic.Agent.Core.DataTransport
                             "utilization.detect_docker_enabled": true,
                             "utilization.detect_kubernetes_enabled": true,
                             "utilization.detect_azure_function_enabled": true,
+                            "utilization.detect_azure_appservice_enabled": true,
                             "utilization.logical_processors": 22,
                             "utilization.total_ram_mib": 33,
                             "utilization.billing_host": "UtilizationBillingHost",
@@ -420,7 +422,10 @@ namespace NewRelic.Agent.Core.DataTransport
                             "gc_sampler_v2.enabled": true,
                             "agent_control.enabled" : true,
                             "agent_control.health.delivery_location": "file:///tmp/health",
-                            "agent_control.health.frequency": 5
+                            "agent_control.health.frequency": 5,
+                            "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
+                            "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
+                            "otel_bridge.enabled": true
                         },
                         "metadata": {
                             "hello": "there"
@@ -466,6 +471,9 @@ namespace NewRelic.Agent.Core.DataTransport
                                 "azurefunction": {
                                     "faas.app_name": "myAppName",
                                     "cloud.region": "myCloudRegion"
+                                },
+                                "azureappservice": {
+                                    "cloud.resource_id": "/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/testgroup/providers/Microsoft.Web/sites/testwebsitename"
                                 }
                             }
                         },
