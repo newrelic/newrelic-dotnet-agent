@@ -1,3 +1,8 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# PowerShell script to create an Azure Kubernetes Service (AKS) cluster with a managed identity and public IP
+
 param(
     [Parameter(Mandatory=$true)]
     [string]$resourceGroup,

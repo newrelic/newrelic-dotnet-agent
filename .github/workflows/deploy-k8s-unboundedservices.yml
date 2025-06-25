@@ -10,7 +10,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      ACR_NAME: ${{ secrets.AZURE_REGISTRY_NAME }}
+      ACR_NAME: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_NAME }}
       RESOURCE_GROUP: ${{ secrets.AZURE_INTEGRATION_TEST_SERVICES_RESOURCE_GROUP }}
       PUBLIC_IP_NAME: ${{ secrets.AZURE_K8S_PUBLIC_IP_NAME }}
       CLUSTER_NAME: ${{ secrets.AZURE_K8S_CLUSTER_NAME }}
@@ -25,76 +25,36 @@ jobs:
       - name: Azure Login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
-          creds: ${{ secrets.AZURE_SP_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_CREDENTIALS }}
       - name: Azure Container Registry Login
         uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
         with:
-          login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
-          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-      - name: Create Kubernetes Secrets Manifest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
-          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          COUCHBASE_ADMINISTRATOR_PASSWORD: ${{ secrets.COUCHBASE_ADMINISTRATOR_PASSWORD }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          RABBITMQ_DEFAULT_USER: ${{ secrets.RABBITMQ_DEFAULT_USER }}
-          RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_DEFAULT_PASS }}
-          ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
-          ORACLE_PWD: ${{ secrets.ORACLE_PWD }}
-        run: |
-          cat <<EOF > k8s/unboundedservices-secrets.yaml
-            # Shared Kubernetes Secret for all service credentials
-            apiVersion: v1
-            kind: Secret
-            metadata:
-              name: unboundedservices-secrets
-              namespace: unbounded-services
-            type: Opaque
-            data:
-              MONGO_INITDB_ROOT_USERNAME: $(echo -n "$MONGO_INITDB_ROOT_USERNAME" | base64)
-              MONGO_INITDB_ROOT_PASSWORD: $(echo -n "$MONGO_INITDB_ROOT_PASSWORD" | base64)
-              POSTGRES_USER: $(echo -n "$POSTGRES_USER" | base64)
-              POSTGRES_PASSWORD: $(echo -n "$POSTGRES_PASSWORD" | base64)
-              SA_PASSWORD: $(echo -n "$SA_PASSWORD" | base64)
-              MYSQL_ROOT_PASSWORD: $(echo -n "$MYSQL_ROOT_PASSWORD" | base64)
-              COUCHBASE_ADMINISTRATOR_PASSWORD: $(echo -n "$COUCHBASE_ADMINISTRATOR_PASSWORD" | base64)
-              REDIS_PASSWORD: $(echo -n "$REDIS_PASSWORD" | base64)
-              RABBITMQ_DEFAULT_USER: $(echo -n "$RABBITMQ_DEFAULT_USER" | base64)
-              RABBITMQ_DEFAULT_PASS: $(echo -n "$RABBITMQ_DEFAULT_PASS" | base64)
-              ELASTIC_PASSWORD: $(echo -n "$ELASTIC_PASSWORD" | base64)
-              ORACLE_PWD: $(echo -n "$ORACLE_PWD" | base64)
-          EOF
-      - name: Build and Push Docker Images
+          login-server: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
+      - name: Build and Push Docker Images to ACR
         shell: bash
         run: |
           ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
+      - name: Create Kubernetes Secrets Manifest
+        env:
+          TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/create_k8s_secrets.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./create_k8s_secrets.sh
       - name: Set AKS Context
         uses: azure/aks-set-context@v3
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
-          cluster-name: dotnet-unbounded-services
+          cluster-name: ${{ env.CLUSTER_NAME }}
       - name: Get the public IP address from Azure and set it as an environment variable
         run: |
           PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name $PUBLIC_IP_NAME --query ipAddress -o tsv)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
       - name: Deploy to AKS
         run: |
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/namespace.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/unboundedservices-secrets.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/couchbase.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/elastic7.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb32.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mongodb60.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mssql.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/mysql.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/oracle.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/postgres.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/rabbitmq.yaml
-          kubectl apply -f tests/Agent/IntegrationTests/UnboundedServices/k8s/redis.yaml
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./deploy_to_aks.sh
 
