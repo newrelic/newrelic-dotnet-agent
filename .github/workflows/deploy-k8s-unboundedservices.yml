@@ -6,6 +6,10 @@ on:
       - ci/unbounded-k8s-cluster
   workflow_dispatch:
 
+permissions:
+  id-token: write # Required for Azure login
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
