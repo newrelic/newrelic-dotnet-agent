@@ -6,8 +6,58 @@ on:
       - ci/unbounded-k8s-cluster
   workflow_dispatch:
     inputs:
-      skip_build_push:
-        description: "Don't build and push Docker images"
+      build_mssql:
+        description: "Build and push MSSQL image"
+        required: false
+        type: boolean
+        default: false
+      build_mongodb32:
+        description: "Build and push MongoDB 3.2 image"
+        required: false
+        type: boolean
+        default: false
+      build_mongodb60:
+        description: "Build and push MongoDB 6.0 image"
+        required: false
+        type: boolean
+        default: false
+      build_mysql:
+        description: "Build and push MySQL image"
+        required: false
+        type: boolean
+        default: false
+      build_postgres:
+        description: "Build and push PostgreSQL image"
+        required: false
+        type: boolean
+        default: false
+      build_redis:
+        description: "Build and push Redis image"
+        required: false
+        type: boolean
+        default: false
+      build_rabbitmq:
+        description: "Build and push RabbitMQ image"
+        required: false
+        type: boolean
+        default: false
+      build_elastic:
+        description: "Build and push ElasticSearch 8.x image"
+        required: false
+        type: boolean
+        default: false
+      build_elastic7:
+        description: "Build and push ElasticSearch 7.x image"
+        required: false
+        type: boolean
+        default: false
+      build_couchbase:
+        description: "Build and push Couchbase image"
+        required: false
+        type: boolean
+        default: false
+      build_oracle:
+        description: "Build and push Oracle image"
         required: false
         type: boolean
         default: false
@@ -45,13 +95,63 @@ jobs:
           login-server: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
-      - name: Build and Push Docker Images to ACR
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_build_push == false }}
+      - name: Build and Push All Docker Images to ACR
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         shell: bash
         run: |
           chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
           cd ./tests/Agent/IntegrationTests/UnboundedServices
           ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
+      - name: Build and Push Selected Docker Images to ACR
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          
+          # For workflow_dispatch, build only selected images
+          SERVICES=""
+          
+          if [ "${{ inputs.build_mssql }}" == "true" ]; then
+            SERVICES="$SERVICES mssql"
+          fi
+          if [ "${{ inputs.build_mongodb32 }}" == "true" ]; then
+            SERVICES="$SERVICES mongodb32"
+          fi
+          if [ "${{ inputs.build_mongodb60 }}" == "true" ]; then
+            SERVICES="$SERVICES mongodb60"
+          fi
+          if [ "${{ inputs.build_mysql }}" == "true" ]; then
+            SERVICES="$SERVICES mysql"
+          fi
+          if [ "${{ inputs.build_postgres }}" == "true" ]; then
+            SERVICES="$SERVICES postgres"
+          fi
+          if [ "${{ inputs.build_redis }}" == "true" ]; then
+            SERVICES="$SERVICES redis"
+          fi
+          if [ "${{ inputs.build_rabbitmq }}" == "true" ]; then
+            SERVICES="$SERVICES rabbitmq"
+          fi
+          if [ "${{ inputs.build_elastic }}" == "true" ]; then
+            SERVICES="$SERVICES elastic"
+          fi
+          if [ "${{ inputs.build_elastic7 }}" == "true" ]; then
+            SERVICES="$SERVICES elastic7"
+          fi
+          if [ "${{ inputs.build_couchbase }}" == "true" ]; then
+            SERVICES="$SERVICES couchbase"
+          fi
+          if [ "${{ inputs.build_oracle }}" == "true" ]; then
+            SERVICES="$SERVICES oracle"
+          fi
+          
+          if [ -n "$SERVICES" ]; then
+            echo "Building selected services: $SERVICES"
+            ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP $SERVICES
+          else
+            echo "No services selected for build"
+          fi
       - name: Create Kubernetes Secrets Manifest
         env:
           TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
@@ -70,6 +170,9 @@ jobs:
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
       - name: Deploy to AKS
         run: |
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./deploy_to_aks.sh
           chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
           cd ./tests/Agent/IntegrationTests/UnboundedServices
           ./deploy_to_aks.sh

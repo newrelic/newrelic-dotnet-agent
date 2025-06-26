@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Script to deploy Kubernetes manifests to AKS with environment variable substitution
+# Deploys all manifests, even if nothing has changed.
 
 set -e
 
