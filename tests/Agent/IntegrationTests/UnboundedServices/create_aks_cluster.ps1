@@ -36,8 +36,9 @@ $managedIdentityResourceId = az identity show --name $managedIdentity --resource
 Write-Output "Managed Identity Client ID: $managedIdentityClientId"
 Write-Output "Managed Identity Resource ID: $managedIdentityResourceId"
 
-# Create a federated credential for the managed identity to allow GitHub Actions to authenticate
-az identity federated-credential create --name "github-unbounded-services-all-branches" --identity-name $managedIdentity --resource-group $resourceGroup --issuer "https://token.actions.githubusercontent.com" --subject "repo:newrelic/newrelic-dotnet-agent:ref:refs/heads/*" --audiences "api://AzureADTokenExchange"
+# Create a federated credential for the managed identity to allow GitHub Actions in the integration-test environment to authenticate
+Write-Output "Creating federated credential for integration-test environment..."
+az identity federated-credential create --name "github-unbounded-services-integration-test" --identity-name $managedIdentity --resource-group $resourceGroup --issuer "https://token.actions.githubusercontent.com" --subject "repo:newrelic/newrelic-dotnet-agent:environment:integration-test" --audiences "api://AzureADTokenExchange"
 
 # Create the Azure Container Registry
 az acr create --resource-group $resourceGroup --name $acrName --sku Standard --admin-enabled true
@@ -61,8 +62,8 @@ Write-Output "ACR Login Server: $acrLoginServer"
 # make sure the subscription has access to the Microsft.ContainerService resource provider
 az provider register --namespace Microsoft.ContainerService
 
-# Create the AKS cluster - Standard_D4a_v4 is 4 vCPUs and 16 GB RAM, which is sufficient for running the unbounded services
-az aks create --resource-group $resourceGroup --name $aksName --node-count 1 --enable-managed-identity --assign-identity $managedIdentityResourceId --generate-ssh-keys --node-vm-size Standard_D4a_v4
+# Create the AKS cluster - Standard_A4m_v2 is 4 vCPUs and 32 GB RAM, which is sufficient for running the unbounded services
+az aks create --resource-group $resourceGroup --name $aksName --node-count 1 --enable-managed-identity --assign-identity $managedIdentityResourceId --generate-ssh-keys --node-vm-size Standard_A4m_v2
 
 # give the cluster permission to access the ACR
 az aks update -n $aksName -g $resourceGroup --attach-acr $acrName

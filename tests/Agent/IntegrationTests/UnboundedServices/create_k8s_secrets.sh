@@ -17,8 +17,8 @@ fi
 echo "$TEST_SECRETS" > test_secrets.json
 
 # Extract database credentials from the JSON file
-MONGO_USER=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MongoDBTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'mongodb://[^:]*' | sed 's/mongodb:\/\///')
-MONGO_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MongoDBTests.CustomSettings.ConnectionString' test_secrets.json | grep -o ':[^@]*@' | sed 's/://;s/@//')
+MONGO_USER=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MongoDBTests.CustomSettings.ConnectionString' test_secrets.json | sed -E 's/mongodb:\/\/([^:]+):.+/\1/')
+MONGO_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MongoDBTests.CustomSettings.ConnectionString' test_secrets.json | sed -E 's/mongodb:\/\/[^:]+:([^@]+)@.+/\1/')
 
 POSTGRES_USER=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.PostgresTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'User Id=[^;]*' | sed 's/User Id=//')
 POSTGRES_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.PostgresTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
@@ -34,7 +34,7 @@ REDIS_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.Stack
 RABBITMQ_DEFAULT_USER=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.RabbitMqTests.CustomSettings.Username' test_secrets.json)
 RABBITMQ_DEFAULT_PASS=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.RabbitMqTests.CustomSettings.Password' test_secrets.json)
 
-ELASTIC_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.CosmosDBTests.ElasticSearchTests.CustomSettings.Password' test_secrets.json)
+ELASTIC_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.ElasticSearchTests.CustomSettings.Password' test_secrets.json)
 
 ORACLE_PWD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.OracleTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
 
