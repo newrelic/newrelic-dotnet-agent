@@ -5,6 +5,12 @@ on:
     branches:
       - ci/unbounded-k8s-cluster
   workflow_dispatch:
+    inputs:
+      skip_build_push:
+        description: "Don't build and push Docker images"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write # Required for Azure login
@@ -13,7 +19,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: integration-test
+    environment: integration-test # required for azure login; federated credentials reference this environment
     env:
       ACR_NAME: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_NAME }}
       RESOURCE_GROUP: ${{ secrets.AZURE_INTEGRATION_TEST_SERVICES_RESOURCE_GROUP }}
@@ -40,6 +46,7 @@ jobs:
           username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
       - name: Build and Push Docker Images to ACR
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_build_push == false }}
         shell: bash
         run: |
           chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
