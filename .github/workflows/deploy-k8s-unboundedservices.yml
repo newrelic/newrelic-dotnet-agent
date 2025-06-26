@@ -1,9 +1,6 @@
 name: Deploy UnboundedServices to AKS
 
 on:
-  push: # temporary to test the workflow
-    branches:
-      - ci/unbounded-k8s-cluster
   workflow_dispatch:
     inputs:
       build_mssql:
