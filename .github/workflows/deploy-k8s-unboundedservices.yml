@@ -1,4 +1,6 @@
 name: Deploy UnboundedServices to AKS
+# placeholder to allow manual triggering of the workflow from the test branch. 
+# Will be replaced when that branch is merged into main.
 
 on:
   workflow_dispatch:
