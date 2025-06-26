@@ -33,9 +33,9 @@ spec:
               key: COUCHBASE_ADMINISTRATOR_PASSWORD
         resources:
           requests:
-            memory: "8Gi"
+            memory: "6Gi"
           limits:
-            memory: "16Gi"
+            memory: "8Gi"
 ---
 apiVersion: v1
 kind: Service

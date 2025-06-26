@@ -155,5 +155,3 @@ jobs:
           done
           
           echo "All services have been restarted and are running with the latest images."
-            fi
-          done
