@@ -23,10 +23,6 @@ spec:
         env:
         - name: ACCEPT_EULA
           value: "Y"
-        - name: MSSQL_ENABLE_HADR
-          value: "1"
-        - name: MSSQL_AGENT_ENABLED
-          value: "1"
         envFrom:
         - secretRef:
             name: unboundedservices-secrets
