@@ -23,8 +23,6 @@ spec:
         env:
         - name: discovery.type
           value: "single-node"
-        - name: ELASTIC_PASSWORD
-          value: "ElasticPassword"
         - name: xpack.security.enabled
           value: "true"
         - name: xpack.security.http.ssl.enabled
