@@ -45,13 +45,14 @@ jobs:
           login-server: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
-      - name: Build and Push Docker Images to ACR
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_build_push == false }}
-        shell: bash
-        run: |
-          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
-          cd ./tests/Agent/IntegrationTests/UnboundedServices
-          ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
+      # temporarily disabled to avoid building and pushing images on every commit
+      # - name: Build and Push Docker Images to ACR
+      #   if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_build_push == false }}
+      #   shell: bash
+      #   run: |
+      #     chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
+      #     cd ./tests/Agent/IntegrationTests/UnboundedServices
+      #     ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
       - name: Create Kubernetes Secrets Manifest
         env:
           TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
