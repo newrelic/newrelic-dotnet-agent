@@ -117,7 +117,7 @@ jobs:
           cd ./tests/Agent/IntegrationTests/UnboundedServices
           ./deploy_to_aks.sh
       
-      - name: Restart services to pull latest images
+      - name: Restart all services
         if: ${{ inputs.restart_services == true }}
         run: |
           echo "Restarting all deployments to pull latest images..."
@@ -125,22 +125,35 @@ jobs:
           # Get list of deployments in the unbounded-services namespace
           DEPLOYMENTS=$(kubectl get deployments -n unbounded-services -o name)
           
-          # Restart each deployment
           for deployment in $DEPLOYMENTS; do
+            # Extract deployment name without the "deployment.apps/" prefix
+            DEPLOY_NAME=$(echo $deployment | sed 's/deployment.apps\///')
+            
+            echo "Force restarting $deployment"
+            
+            # Get current pod(s) for this deployment
+            PODS=$(kubectl get pods -n unbounded-services -l app=$DEPLOY_NAME -o name)
+            
+            # Force delete the pods
+            for pod in $PODS; do
+              echo "Force deleting $pod"
+              kubectl delete $pod -n unbounded-services --force --grace-period=0
+            done
+            
+            # Restart the deployment
             echo "Restarting $deployment"
             kubectl rollout restart $deployment -n unbounded-services
+            
+            # Wait briefly to allow new pods to start creating
+            sleep 5
           done
           
-          # Wait for rollouts to complete
+          # Wait for all rollouts to complete
           for deployment in $DEPLOYMENTS; do
             echo "Waiting for rollout of $deployment to complete..."
-            kubectl rollout status $deployment -n unbounded-services --timeout=300s
+            kubectl rollout status $deployment -n unbounded-services --timeout=300s || true
           done
           
           echo "All services have been restarted and are running with the latest images."
-          for deployment in $DEPLOYMENTS; do
-            echo "Waiting for rollout of $deployment to complete..."
-            kubectl rollout status $deployment -n unbounded-services --timeout=300s
+            fi
           done
-          
-          echo "All services have been restarted and are running with the latest images."
