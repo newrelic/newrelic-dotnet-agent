@@ -23,7 +23,7 @@ MONGO_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.Mongo
 POSTGRES_USER=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.PostgresTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'User Id=[^;]*' | sed 's/User Id=//')
 POSTGRES_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.PostgresTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
 
-SA_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MSSQLTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
+MSSQL_SA_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MSSQLTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
 
 MYSQL_ROOT_PASSWORD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.MySQLTests.CustomSettings.ConnectionString' test_secrets.json | grep -o 'Password=[^;]*' | sed 's/Password=//')
 
@@ -45,7 +45,7 @@ ORACLE_PWD=$(jq -r '.IntegrationTestConfiguration.TestSettingOverrides.OracleTes
 # echo "MongoDB Password: $MONGO_PASSWORD"
 # echo "Postgres User: $POSTGRES_USER"
 # echo "Postgres Password: $POSTGRES_PASSWORD"
-# echo "MSSQL SA Password: $SA_PASSWORD"
+# echo "MSSQL SA Password: $MSSQL_SA_PASSWORD"
 # echo "MySQL Root Password: $MYSQL_ROOT_PASSWORD"
 # echo "Couchbase Admin Password: $COUCHBASE_ADMINISTRATOR_PASSWORD"
 # echo "Redis Password: $REDIS_PASSWORD"
@@ -72,7 +72,7 @@ data:
   MONGO_INITDB_ROOT_PASSWORD: $(echo -n "$MONGO_PASSWORD" | base64)
   POSTGRES_USER: $(echo -n "$POSTGRES_USER" | base64)
   POSTGRES_PASSWORD: $(echo -n "$POSTGRES_PASSWORD" | base64)
-  SA_PASSWORD: $(echo -n "$SA_PASSWORD" | base64)
+  MSSQL_SA_PASSWORD: $(echo -n "$MSSQL_SA_PASSWORD" | base64)
   MYSQL_ROOT_PASSWORD: $(echo -n "$MYSQL_ROOT_PASSWORD" | base64)
   COUCHBASE_ADMINISTRATOR_PASSWORD: $(echo -n "$COUCHBASE_ADMINISTRATOR_PASSWORD" | base64)
   REDIS_PASSWORD: $(echo -n "$REDIS_PASSWORD" | base64)
