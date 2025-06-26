@@ -25,9 +25,12 @@ spec:
         - containerPort: 8094
         - containerPort: 8095
         - containerPort: 11210
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        env:
+        - name: COUCHBASE_ADMINISTRATOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: COUCHBASE_ADMINISTRATOR_PASSWORD
         resources:
           requests:
             memory: "8Gi"

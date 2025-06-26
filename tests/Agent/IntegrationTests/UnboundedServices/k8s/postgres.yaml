@@ -20,9 +20,17 @@ spec:
         image: dotnetunboundedservicesregistry.azurecr.io/postgres:latest
         ports:
         - containerPort: 5432
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: POSTGRES_PASSWORD
 ---
 apiVersion: v1
 kind: Service

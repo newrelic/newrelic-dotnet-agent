@@ -23,9 +23,11 @@ spec:
         env:
         - name: ACCEPT_EULA
           value: "Y"
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: MSSQL_SA_PASSWORD
 ---
 apiVersion: v1
 kind: Service

@@ -21,9 +21,17 @@ spec:
         ports:
         - containerPort: 5672
         - containerPort: 15672
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: RABBITMQ_DEFAULT_PASS
 ---
 apiVersion: v1
 kind: Service

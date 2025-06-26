@@ -20,9 +20,12 @@ spec:
         image: dotnetunboundedservicesregistry.azurecr.io/oracle:latest
         ports:
         - containerPort: 1521
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        env:
+        - name: ORACLE_PWD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: ORACLE_PWD
         resources:
           requests:
             memory: "8Gi"

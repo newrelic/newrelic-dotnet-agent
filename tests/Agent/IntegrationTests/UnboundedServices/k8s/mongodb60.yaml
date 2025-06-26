@@ -20,9 +20,17 @@ spec:
         image: dotnetunboundedservicesregistry.azurecr.io/mongodb60:latest
         ports:
         - containerPort: 27017
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: MONGO_INITDB_ROOT_PASSWORD
 ---
 apiVersion: v1
 kind: Service

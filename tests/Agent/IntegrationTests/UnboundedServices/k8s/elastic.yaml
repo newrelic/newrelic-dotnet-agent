@@ -23,13 +23,15 @@ spec:
         env:
         - name: discovery.type
           value: "single-node"
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: ELASTIC_PASSWORD
         - name: xpack.security.enabled
           value: "true"
         - name: xpack.security.http.ssl.enabled
           value: "false"
-        envFrom:
-        - secretRef:
-            name: unboundedservices-secrets
         resources:
           limits:
             memory: 2Gi
