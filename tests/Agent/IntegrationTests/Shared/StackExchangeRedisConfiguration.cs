@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Text.RegularExpressions;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -12,6 +13,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _stackExchangeRedisServer;
         private static string _stackExchangeRedisPort;
         private static string _stackExchangeRedisPassword;
+        private static bool _parsedHostPort = false;
 
         // example: "1.2.3.4:4444"
         public static string StackExchangeRedisConnectionString
@@ -39,19 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         {
             get
             {
-                if (_stackExchangeRedisServer == null)
-                {
-                    try
-                    {
-                        var uri = new UriBuilder(StackExchangeRedisConnectionString);
-                        _stackExchangeRedisServer = uri.Host;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("StackExchangeRedisServer configuration is invalid.", ex);
-                    }
-                }
-
+                EnsureHostPortParsed();
                 return _stackExchangeRedisServer;
             }
         }
@@ -60,20 +50,42 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         {
             get
             {
-                if (_stackExchangeRedisPort == null)
-                {
-                    try
-                    {
-                        var uri = new UriBuilder(StackExchangeRedisConnectionString);
-                        _stackExchangeRedisPort = uri.Port.ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("StackExchangeRedisPort configuration is invalid.", ex);
-                    }
-                }
-
+                EnsureHostPortParsed();
                 return _stackExchangeRedisPort;
+            }
+        }
+
+        // Ensures host and port are parsed and cached only once
+        private static void EnsureHostPortParsed()
+        {
+            if (!_parsedHostPort)
+            {
+                try
+                {
+                    ParseHostAndPort(StackExchangeRedisConnectionString, out _stackExchangeRedisServer, out _stackExchangeRedisPort);
+                    _parsedHostPort = true;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("StackExchangeRedisServer or StackExchangeRedisPort configuration is invalid.", ex);
+                }
+            }
+        }
+
+        // Parses host and port from a connection string like host:port
+        private static void ParseHostAndPort(string connectionString, out string host, out string port)
+        {
+            var match = Regex.Match(connectionString, @"^(?<host>[^:/\[]+(?:\.[^:/\[]+)*)[:](?<port>\d+)");
+            if (match.Success)
+            {
+                host = match.Groups["host"].Value;
+                port = match.Groups["port"].Value;
+            }
+            else
+            {
+                host = string.Empty;
+                port = string.Empty;
+                throw new FormatException($"Could not parse host and port from connection string: {connectionString}");
             }
         }
         public static string StackExchangeRedisPassword
