@@ -28,9 +28,9 @@ spec:
               key: ORACLE_PWD
         resources:
           requests:
-            memory: "8Gi"
+            memory: "4Gi"
           limits:
-            memory: "12Gi"
+            memory: "8Gi"
 ---
 apiVersion: v1
 kind: Service
