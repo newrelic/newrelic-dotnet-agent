@@ -4,10 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       images_to_build:
-        description: "Space-delimited list of images to build (valid: couchbase elastic elastic7 mongodb32 mongodb60 mssql mysql oracle postgres rabbitmq redis)"
+        description: "Images to build and push (optional; valid values: couchbase elastic elastic7 mongodb32 mongodb60 mssql mysql oracle postgres rabbitmq redis)"
         required: false
         type: string
         default: ""
+      deploy_to_aks:
+        description: "Deploy to AKS"
+        required: false
+        type: boolean
+        default: false
+      restart_services:
+        description: "Restart services"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write # Required for Azure login
@@ -43,6 +53,7 @@ jobs:
           username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
       - name: Build and Push Docker Images to ACR
+        if: ${{ inputs.images_to_build != '' }}
         shell: bash
         run: |
           chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
@@ -52,13 +63,6 @@ jobs:
           SERVICES="${{ inputs.images_to_build }}"
           # Trim leading/trailing whitespace
           SERVICES=$(echo "$SERVICES" | xargs)
-          
-          # Check if empty
-          if [ -z "$SERVICES" ]; then
-            echo "No services specified. Building all services."
-            ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP
-            exit 0
-          fi
           
           # Validate each service name
           VALID_SERVICES=("couchbase" "elastic" "elastic7" "mongodb32" "mongodb60" "mssql" "mysql" "oracle" "postgres" "rabbitmq" "redis")
@@ -88,6 +92,7 @@ jobs:
           echo "Building selected services: $SERVICES"
           ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP $SERVICES
       - name: Create Kubernetes Secrets Manifest
+        if: ${{ inputs.deploy_to_aks == true }}
         env:
           TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
         run: |
@@ -95,20 +100,47 @@ jobs:
           cd ./tests/Agent/IntegrationTests/UnboundedServices
           ./create_k8s_secrets.sh
       - name: Set AKS Context
+        if: ${{ inputs.deploy_to_aks == true || inputs.restart_services == true }}
         uses: azure/aks-set-context@v3
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
       - name: Get the public IP address from Azure and set it as an environment variable
+        if: ${{ inputs.deploy_to_aks == true }}
         run: |
           PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name $PUBLIC_IP_NAME --query ipAddress -o tsv)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
       - name: Deploy to AKS
+        if: ${{ inputs.deploy_to_aks == true }}
         run: |
           chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
           cd ./tests/Agent/IntegrationTests/UnboundedServices
           ./deploy_to_aks.sh
-          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
-          cd ./tests/Agent/IntegrationTests/UnboundedServices
-          ./deploy_to_aks.sh
-
+      
+      - name: Restart services to pull latest images
+        if: ${{ inputs.restart_services == true }}
+        run: |
+          echo "Restarting all deployments to pull latest images..."
+          
+          # Get list of deployments in the unbounded-services namespace
+          DEPLOYMENTS=$(kubectl get deployments -n unbounded-services -o name)
+          
+          # Restart each deployment
+          for deployment in $DEPLOYMENTS; do
+            echo "Restarting $deployment"
+            kubectl rollout restart $deployment -n unbounded-services
+          done
+          
+          # Wait for rollouts to complete
+          for deployment in $DEPLOYMENTS; do
+            echo "Waiting for rollout of $deployment to complete..."
+            kubectl rollout status $deployment -n unbounded-services --timeout=300s
+          done
+          
+          echo "All services have been restarted and are running with the latest images."
+          for deployment in $DEPLOYMENTS; do
+            echo "Waiting for rollout of $deployment to complete..."
+            kubectl rollout status $deployment -n unbounded-services --timeout=300s
+          done
+          
+          echo "All services have been restarted and are running with the latest images."
