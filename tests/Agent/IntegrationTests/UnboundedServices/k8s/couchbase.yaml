@@ -33,7 +33,7 @@ spec:
               key: COUCHBASE_ADMINISTRATOR_PASSWORD
         resources:
           requests:
-            memory: "6Gi"
+            memory: "8Gi"
           limits:
             memory: "8Gi"
 ---
