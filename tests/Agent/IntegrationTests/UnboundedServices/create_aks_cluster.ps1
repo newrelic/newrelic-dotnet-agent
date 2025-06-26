@@ -19,7 +19,7 @@ param(
 )
 
 # Login if not already logged in
-$loginStatus = az account show 2>&1
+az account show 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Output "Logging in to Azure..."
     az login
