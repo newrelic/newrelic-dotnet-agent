@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _oraclePort;
         private static bool _parsedHostPort = false;
 
-        // example: "Data Source=1.2.3.4:4444/XE;User Id=SYSTEM;Password=oraclePassword;"
+        // example: "Data Source=some.server.name:4444/FREEPDB1;User Id=SYSTEM;Password=oraclePassword;"
         public static string OracleConnectionString
         {
             get

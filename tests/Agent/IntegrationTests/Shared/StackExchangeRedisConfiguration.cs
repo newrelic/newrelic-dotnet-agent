@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _stackExchangeRedisPassword;
         private static bool _parsedHostPort = false;
 
-        // example: "1.2.3.4:4444"
+        // example: "some.server.name:4444"
         public static string StackExchangeRedisConnectionString
         {
             get
