@@ -3,38 +3,8 @@ name: Deploy UnboundedServices to AKS
 on:
   workflow_dispatch:
     inputs:
-      build_mssql:
-        description: "Build and push MSSQL image"
-        required: false
-        type: boolean
-        default: false
-      build_mongodb32:
-        description: "Build and push MongoDB 3.2 image"
-        required: false
-        type: boolean
-        default: false
-      build_mongodb60:
-        description: "Build and push MongoDB 6.0 image"
-        required: false
-        type: boolean
-        default: false
-      build_mysql:
-        description: "Build and push MySQL image"
-        required: false
-        type: boolean
-        default: false
-      build_postgres:
-        description: "Build and push PostgreSQL image"
-        required: false
-        type: boolean
-        default: false
-      build_redis:
-        description: "Build and push Redis image"
-        required: false
-        type: boolean
-        default: false
-      build_rabbitmq:
-        description: "Build and push RabbitMQ image"
+      build_couchbase:
+        description: "Build and push Couchbase image"
         required: false
         type: boolean
         default: false
@@ -48,13 +18,43 @@ on:
         required: false
         type: boolean
         default: false
-      build_couchbase:
-        description: "Build and push Couchbase image"
+      build_mongodb32:
+        description: "Build and push MongoDB 3.2 image"
+        required: false
+        type: boolean
+        default: false
+      build_mongodb60:
+        description: "Build and push MongoDB 6.0 image"
+        required: false
+        type: boolean
+        default: false
+      build_mssql:
+        description: "Build and push MSSQL image"
+        required: false
+        type: boolean
+        default: false
+      build_mysql:
+        description: "Build and push MySQL image"
         required: false
         type: boolean
         default: false
       build_oracle:
         description: "Build and push Oracle image"
+        required: false
+        type: boolean
+        default: false
+      build_postgres:
+        description: "Build and push PostgreSQL image"
+        required: false
+        type: boolean
+        default: false
+      build_rabbitmq:
+        description: "Build and push RabbitMQ image"
+        required: false
+        type: boolean
+        default: false
+      build_redis:
+        description: "Build and push Redis image"
         required: false
         type: boolean
         default: false
