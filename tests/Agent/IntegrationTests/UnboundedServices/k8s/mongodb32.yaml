@@ -1,0 +1,51 @@
+# Standard License Header
+# Kubernetes Deployment and Service for MongoDB 3.2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb32
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb32
+  template:
+    metadata:
+      labels:
+        app: mongodb32
+    spec:
+      containers:
+      - name: mongodb32
+        image: dotnetunboundedservicesregistry.azurecr.io/mongodb32
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: MONGO_INITDB_ROOT_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb32
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb32

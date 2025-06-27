@@ -1,0 +1,6 @@
+# Standard License Header
+# Kubernetes manifests for UnboundedServices
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unbounded-services

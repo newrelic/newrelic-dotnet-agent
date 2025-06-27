@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - "feature/**"
+    paths-ignore:
+      - "tests/Agent/IntegrationTests/UnboundedServices/**"
 
   release:
     types: [published]

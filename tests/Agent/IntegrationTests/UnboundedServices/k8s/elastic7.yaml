@@ -1,0 +1,57 @@
+# Standard License Header
+# Kubernetes Deployment and Service for ElasticSearch 7.x
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastic7
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic7
+  template:
+    metadata:
+      labels:
+        app: elastic7
+    spec:
+      containers:
+      - name: elastic7
+        image: dotnetunboundedservicesregistry.azurecr.io/elastic7
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9200
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: ELASTIC_PASSWORD
+        - name: xpack.security.enabled
+          value: "true"
+        - name: xpack.security.http.ssl.enabled
+          value: "false"
+        resources:
+          limits:
+            memory: 2Gi
+        securityContext:
+          privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elastic7
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 9201
+      targetPort: 9200
+  selector:
+    app: elastic7

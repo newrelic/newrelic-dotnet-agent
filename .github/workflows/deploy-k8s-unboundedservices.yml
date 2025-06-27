@@ -4,12 +4,156 @@ name: Deploy UnboundedServices to AKS
 
 on:
   workflow_dispatch:
+    inputs:
+      images_to_build:
+        description: "Images to build and push (optional; valid values: couchbase elastic elastic7 mongodb32 mongodb60 mssql mysql oracle postgres rabbitmq redis)"
+        required: false
+        type: string
+        default: ""
+      deploy_to_aks:
+        description: "Deploy to AKS"
+        required: false
+        type: boolean
+        default: false
+      restart_services:
+        description: "Restart services"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write # Required for Azure login
+  contents: read
 
 jobs:
-  placeholder:
-    name: Placeholder Job
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment: integration-test # required for azure login; federated credentials reference this environment
+    env:
+      ACR_NAME: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_NAME }}
+      RESOURCE_GROUP: ${{ secrets.AZURE_INTEGRATION_TEST_SERVICES_RESOURCE_GROUP }}
+      PUBLIC_IP_NAME: ${{ secrets.AZURE_K8S_PUBLIC_IP_NAME }}
+      CLUSTER_NAME: ${{ secrets.AZURE_K8S_CLUSTER_NAME }}
     steps:
-      - name: Do nothing
+      - name: Harden Runner
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Azure Login
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          client-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Azure Container Registry Login
+        uses: azure/docker-login@15c4aadf093404726ab2ff205b2cdd33fa6d054c # v2.0.0
+        with:
+          login-server: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_UNBOUNDED_SERVICES_REGISTRY_PASSWORD }}
+      - name: Build and Push Docker Images to ACR
+        if: ${{ inputs.images_to_build != '' }}
+        shell: bash
         run: |
-          echo "This is a placeholder workflow that doesn't actually do anything."
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/build_and_push_acr.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          
+          # Validate input
+          SERVICES="${{ inputs.images_to_build }}"
+          # Trim leading/trailing whitespace
+          SERVICES=$(echo "$SERVICES" | xargs)
+          
+          # Validate each service name
+          VALID_SERVICES=("couchbase" "elastic" "elastic7" "mongodb32" "mongodb60" "mssql" "mysql" "oracle" "postgres" "rabbitmq" "redis")
+          INVALID_SERVICES=()
+          
+          for service in $SERVICES; do
+            VALID=false
+            for valid_service in "${VALID_SERVICES[@]}"; do
+              if [ "$service" = "$valid_service" ]; then
+                VALID=true
+                break
+              fi
+            done
+            
+            if [ "$VALID" = "false" ]; then
+              INVALID_SERVICES+=("$service")
+            fi
+          done
+          
+          # If any invalid services, show error and exit
+          if [ ${#INVALID_SERVICES[@]} -gt 0 ]; then
+            echo "Error: Invalid service names found: ${INVALID_SERVICES[*]}"
+            echo "Valid service names are: ${VALID_SERVICES[*]}"
+            exit 1
+          fi
+          
+          echo "Building selected services: $SERVICES"
+          ./build_and_push_acr.sh $ACR_NAME $RESOURCE_GROUP $SERVICES
+      - name: Create Kubernetes Secrets Manifest
+        if: ${{ inputs.deploy_to_aks == true }}
+        env:
+          TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/create_k8s_secrets.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./create_k8s_secrets.sh
+      - name: Set AKS Context
+        if: ${{ inputs.deploy_to_aks == true || inputs.restart_services == true }}
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+      - name: Get the public IP address from Azure and set it as an environment variable
+        if: ${{ inputs.deploy_to_aks == true }}
+        run: |
+          PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name $PUBLIC_IP_NAME --query ipAddress -o tsv)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Deploy to AKS
+        if: ${{ inputs.deploy_to_aks == true }}
+        run: |
+          chmod +x ./tests/Agent/IntegrationTests/UnboundedServices/deploy_to_aks.sh
+          cd ./tests/Agent/IntegrationTests/UnboundedServices
+          ./deploy_to_aks.sh
+      
+      - name: Restart all services
+        if: ${{ inputs.restart_services == true }}
+        run: |
+          echo "Restarting all deployments to pull latest images..."
+          
+          # Get list of deployments in the unbounded-services namespace
+          DEPLOYMENTS=$(kubectl get deployments -n unbounded-services -o name)
+          
+          for deployment in $DEPLOYMENTS; do
+            # Extract deployment name without the "deployment.apps/" prefix
+            DEPLOY_NAME=$(echo $deployment | sed 's/deployment.apps\///')
+            
+            echo "Force restarting $deployment"
+            
+            # Get current pod(s) for this deployment
+            PODS=$(kubectl get pods -n unbounded-services -l app=$DEPLOY_NAME -o name)
+            
+            # Force delete the pods
+            for pod in $PODS; do
+              echo "Force deleting $pod"
+              kubectl delete $pod -n unbounded-services --force --grace-period=0
+            done
+            
+            # Restart the deployment
+            echo "Restarting $deployment"
+            kubectl rollout restart $deployment -n unbounded-services
+            
+            # Wait briefly to allow new pods to start creating
+            sleep 5
+          done
+          
+          # Wait for all rollouts to complete
+          for deployment in $DEPLOYMENTS; do
+            echo "Waiting for rollout of $deployment to complete..."
+            kubectl rollout status $deployment -n unbounded-services --timeout=300s || true
+          done
+          
+          echo "All services have been restarted and are running with the latest images."

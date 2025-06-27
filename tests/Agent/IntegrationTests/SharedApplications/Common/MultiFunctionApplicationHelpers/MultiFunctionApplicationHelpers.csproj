@@ -59,13 +59,14 @@
     <PackageReference Include="EnterpriseLibrary.Data" Version="6.0.1304" Condition="'$(TargetFramework)' == 'net462'" />
 
     <!-- MySql.Data framework references -->
-    <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="MySql.Data" Version="8.0.30" Condition="'$(TargetFramework)' == 'net48'" />
+    <!-- Oldest we can test with the "modern" MySql database we're running is 8.0.28 due to a character encoding bug -->
+    <PackageReference Include="MySql.Data" Version="8.0.28" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MySql.Data" Version="8.0.33" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MySql.Data" Version="8.4.0" Condition="'$(TargetFramework)' == 'net48'" />
     <!-- MySql.Data v8.0.33 is a breaking change for the agent and requires agent version 10.11.1 or greater -->
 
     <!-- MySql.Data .NET/Core references -->
-    <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="MySql.Data" Version="8.0.28" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <!-- mongocsharpdriver Legacy MongoDB driver references -->
     <PackageReference Include="mongocsharpdriver" Version="1.10.0" Condition="'$(TargetFramework)' == 'net462'" />

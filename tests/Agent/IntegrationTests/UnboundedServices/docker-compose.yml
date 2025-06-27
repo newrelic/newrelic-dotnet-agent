@@ -94,7 +94,7 @@ services:
         container_name: MssqlServer
 
     oracle:
-        image: container-registry.oracle.com/database/free:23.4.0.0-lite
+        build: ./oracle
         shm_size: 1g
         ports:
             - "1521:1521"
@@ -117,14 +117,11 @@ services:
         container_name: MySqlServer
 
     elastic:
-        image: elasticsearch:8.6.2
+        build: ./elastic
         ports:
             - 9200:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
@@ -136,14 +133,11 @@ services:
         container_name: ElasticServer
 
     elastic7:
-        image: elasticsearch:7.17.10
+        build: ./elastic7
         ports:
             - 9201:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
