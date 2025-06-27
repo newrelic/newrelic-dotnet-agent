@@ -26,11 +26,11 @@ spec:
             secretKeyRef:
               name: unboundedservices-secrets
               key: ORACLE_PWD
-        resources:
-          requests:
-            memory: "4Gi"
-          limits:
-            memory: "8Gi"
+        # resources:
+        #   requests:
+        #     memory: "4Gi"
+        #   limits:
+        #     memory: "8Gi"
 ---
 apiVersion: v1
 kind: Service

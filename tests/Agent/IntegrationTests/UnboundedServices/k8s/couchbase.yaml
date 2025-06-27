@@ -31,11 +31,11 @@ spec:
             secretKeyRef:
               name: unboundedservices-secrets
               key: COUCHBASE_ADMINISTRATOR_PASSWORD
-        resources:
-          requests:
-            memory: "8Gi"
-          limits:
-            memory: "8Gi"
+        # resources:
+        #   requests:
+        #     memory: "8Gi"
+        #   limits:
+        #     memory: "8Gi"
 ---
 apiVersion: v1
 kind: Service
