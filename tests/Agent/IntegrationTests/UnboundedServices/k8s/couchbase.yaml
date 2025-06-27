@@ -31,6 +31,16 @@ spec:
             secretKeyRef:
               name: unboundedservices-secrets
               key: COUCHBASE_ADMINISTRATOR_PASSWORD
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "couchbase-cli server-info -c localhost:8091 -u Administrator -p $COUCHBASE_ADMINISTRATOR_PASSWORD | grep -q '\"status\": \"healthy\"' || exit 1"
+          initialDelaySeconds: 120 # wait a while because couchbase takes time to start
+          periodSeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 3
         # resources:
         #   requests:
         #     memory: "8Gi"
