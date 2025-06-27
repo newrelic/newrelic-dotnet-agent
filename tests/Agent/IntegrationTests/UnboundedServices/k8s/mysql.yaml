@@ -17,8 +17,9 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: dotnetunboundedservicesregistry.azurecr.io/mysql:latest
-        #command: ["mysqld", "--default-authentication-plugin=mysql_native_password"]
+        image: dotnetunboundedservicesregistry.azurecr.io/mysql
+        imagePullPolicy: Always
+
         ports:
         - containerPort: 3306
         env:

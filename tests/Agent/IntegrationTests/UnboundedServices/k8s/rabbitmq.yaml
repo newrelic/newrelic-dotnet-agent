@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: dotnetunboundedservicesregistry.azurecr.io/rabbitmq:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/rabbitmq
+        imagePullPolicy: Always
         ports:
         - containerPort: 5672
         - containerPort: 15672

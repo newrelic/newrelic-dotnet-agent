@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: mongodb60
-        image: dotnetunboundedservicesregistry.azurecr.io/mongodb60:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/mongodb60
+        imagePullPolicy: Always
         ports:
         - containerPort: 27017
         env:

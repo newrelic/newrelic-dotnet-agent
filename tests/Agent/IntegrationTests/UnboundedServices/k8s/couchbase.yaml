@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: couchbase
-        image: dotnetunboundedservicesregistry.azurecr.io/couchbase:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/couchbase
+        imagePullPolicy: Always
         ports:
         - containerPort: 8091
         - containerPort: 8092

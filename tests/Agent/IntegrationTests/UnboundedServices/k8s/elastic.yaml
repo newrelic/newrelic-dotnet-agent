@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
       - name: elastic
-        image: dotnetunboundedservicesregistry.azurecr.io/elastic:latest
+        image: dotnetunboundedservicesregistry.azurecr.io/elastic
+        imagePullPolicy: Always
         ports:
         - containerPort: 9200
         env:
