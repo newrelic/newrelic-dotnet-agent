@@ -4,8 +4,6 @@ set -e
 
 if [ ! -f /nr-container-configured ]; then
 
-  apt-get update && apt-get install -y jq
-
   # wait for the server to be up and running
   # when the file /opt/couchbase/var/lib/couchbase/container-configured exists, the server is ready
   while [ ! -f /opt/couchbase/var/lib/couchbase/container-configured ]; do
