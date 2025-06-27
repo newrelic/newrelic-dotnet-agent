@@ -97,12 +97,15 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         // Parses host and port from a data source string like host:port/service
         private static void ParseHostAndPort(string dataSource, out string host, out string port)
         {
-            // Regex matches host (hostname or IPv4), port, and ignores service name
-            var match = Regex.Match(dataSource, @"^(?<host>[^:/\[]+(?:\.[^:/\[]+)*)[:](?<port>\d+)");
-            if (match.Success)
+            // Split the data source string by '/' to isolate the host:port part
+            var hostPortPart = dataSource.Split('/')[0];
+
+            // Find the position of ':' to separate host and port
+            var colonIndex = hostPortPart.IndexOf(':');
+            if (colonIndex > 0 && colonIndex < hostPortPart.Length - 1)
             {
-                host = match.Groups["host"].Value;
-                port = match.Groups["port"].Value;
+                host = hostPortPart.Substring(0, colonIndex);
+                port = hostPortPart.Substring(colonIndex + 1);
             }
             else
             {
