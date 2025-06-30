@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _stackExchangeRedisPassword;
         private static bool _parsedHostPort = false;
 
-        // example: "1.2.3.4:4444"
+        // example: "some.server.name:4444"
         public static string StackExchangeRedisConnectionString
         {
             get
@@ -72,22 +72,27 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
-        // Parses host and port from a connection string like host:port
-        private static void ParseHostAndPort(string connectionString, out string host, out string port)
+        // Parses host and port from a data source string like host:port/service
+        private static void ParseHostAndPort(string dataSource, out string host, out string port)
         {
-            var match = Regex.Match(connectionString, @"^(?<host>[^:/\[]+(?:\.[^:/\[]+)*)[:](?<port>\d+)");
-            if (match.Success)
+            // Split the data source string by '/' to isolate the host:port part
+            var hostPortPart = dataSource.Split('/')[0];
+
+            // Find the position of ':' to separate host and port
+            var colonIndex = hostPortPart.IndexOf(':');
+            if (colonIndex > 0 && colonIndex < hostPortPart.Length - 1)
             {
-                host = match.Groups["host"].Value;
-                port = match.Groups["port"].Value;
+                host = hostPortPart.Substring(0, colonIndex);
+                port = hostPortPart.Substring(colonIndex + 1);
             }
             else
             {
                 host = string.Empty;
                 port = string.Empty;
-                throw new FormatException($"Could not parse host and port from connection string: {connectionString}");
+                throw new FormatException($"Could not parse host and port from data source: {dataSource}");
             }
         }
+
         public static string StackExchangeRedisPassword
         {
             get
