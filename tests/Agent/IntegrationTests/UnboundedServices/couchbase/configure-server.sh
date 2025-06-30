@@ -4,19 +4,17 @@ set -e
 
 if [ ! -f /nr-container-configured ]; then
 
-  apt-get update && apt-get install -y jq
-
   # wait for the server to be up and running
   # when the file /opt/couchbase/var/lib/couchbase/container-configured exists, the server is ready
   while [ ! -f /opt/couchbase/var/lib/couchbase/container-configured ]; do
     sleep 1
   done
 
-  echo "Waiting for the server to be ready"
+  echo "Waiting a bit longer for the server to be ready..."
   sleep 15s
 
   # use the couchbase cli to change the administrator password
-  echo "Changing administrator password to ${COUCHBASE_ADMINISTRATOR_PASSWORD}"
+  echo "Changing administrator password"
   /opt/couchbase/bin/couchbase-cli reset-admin-password --new-password ${COUCHBASE_ADMINISTRATOR_PASSWORD} || { echo "Error: Failed to reset administrator password"; exit 1; }
 
   # Get UUID of travel-sample bucket

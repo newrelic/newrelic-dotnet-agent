@@ -1,0 +1,51 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Postgres
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: dotnetunboundedservicesregistry.azurecr.io/postgres
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

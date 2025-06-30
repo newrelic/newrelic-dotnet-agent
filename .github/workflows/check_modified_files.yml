@@ -38,5 +38,6 @@ jobs:
               filters: |
                 non-workflow-files-changed:
                   - '!.github/**'
+                  - '!tests/Agent/IntegrationTests/UnboundedServices/**'
               list-files: 'csv'
     
