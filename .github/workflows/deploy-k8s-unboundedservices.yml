@@ -36,7 +36,7 @@ jobs:
       CLUSTER_NAME: ${{ secrets.AZURE_K8S_CLUSTER_NAME }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           disable-sudo: true
           egress-policy: audit
@@ -103,7 +103,7 @@ jobs:
           ./create_k8s_secrets.sh
       - name: Set AKS Context
         if: ${{ inputs.deploy_to_aks == true || inputs.restart_services == true }}
-        uses: azure/aks-set-context@v3
+        uses: azure/aks-set-context@v4
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
