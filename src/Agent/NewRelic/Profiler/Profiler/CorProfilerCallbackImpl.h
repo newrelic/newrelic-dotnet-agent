@@ -1007,7 +1007,7 @@ namespace NewRelic { namespace Profiler {
         static xstring_t ReadFile(const xstring_t& filePath)
         {
             // Open file with wide character path
-            std::wifstream file(filePath, std::ios::binary);
+            xifstream file(to_pathstring(filePath), std::ios::binary);
             if (!file.is_open()) {
                 LogError(L"Unable to open file. File path: ", filePath);
                 throw ProfilerException();
@@ -1017,10 +1017,10 @@ namespace NewRelic { namespace Profiler {
             file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
 
             // Read file content
-            std::wstringstream wss;
-            wss << file.rdbuf();
+            xstringstream ss;
+            ss << file.rdbuf();
 
-            return wss.str();
+            return ss.str();
         }
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromRegistry()
@@ -1104,7 +1104,7 @@ namespace NewRelic { namespace Profiler {
             {
                 try {
                     xstring_t logfilename(nrlog::DefaultFileLogLocation(_systemCalls).GetPathAndFileName());
-                    nrlog::StdLog.get_dest().open(logfilename);
+                    nrlog::StdLog.get_dest().open(to_pathstring(logfilename));
                     // Imbue with locale and codecvt facet is used to allow the log file to write non-ascii chars to the log
                     nrlog::StdLog.get_dest().imbue(std::locale(std::locale::classic(), new std::codecvt_utf8<wchar_t>));
                     nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
