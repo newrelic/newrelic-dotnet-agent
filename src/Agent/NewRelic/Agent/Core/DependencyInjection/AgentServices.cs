@@ -150,6 +150,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
             container.Register<IErrorEventAggregator, ErrorEventAggregator>();
             container.Register<ICustomEventAggregator, CustomEventAggregator>();
+            // TODO: Register the SpanEventAggregatorBatchingTransport
             container.Register<ISpanEventAggregator, SpanEventAggregator>();
             container.Register<ISpanEventAggregatorInfiniteTracing, SpanEventAggregatorInfiniteTracing>();
             container.Register<ILogEventAggregator, LogEventAggregator>();

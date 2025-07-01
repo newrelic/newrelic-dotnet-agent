@@ -319,6 +319,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, Func<IAttributeValueCollection> attributes)
         {
+            // TODO: Add logic to check if the spanEventAggregatorBatchingTransport is enabled is enabled and
+            // use it instead of the spanEventAggregator.
             var useInfiniteTracing = _spanEventAggregatorInfiniteTracing.IsServiceEnabled && _spanEventAggregatorInfiniteTracing.IsServiceAvailable;
             var useTraditionalTracing = !useInfiniteTracing && immutableTransaction.Sampled && _spanEventAggregator.IsServiceEnabled && _spanEventAggregator.IsServiceAvailable;
 
