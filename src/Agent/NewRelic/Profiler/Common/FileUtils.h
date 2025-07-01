@@ -20,7 +20,7 @@ namespace NewRelic {
         /// Handles UTF-8 encoding and BOM if present.
         /// If the file cannot be opened, logs an error and throws an exception.
         /// </summary>
-        static std::wstring ReadFile(const std::wstring& filePath) {
+        static xstring_t ReadFile(const xstring_t& filePath) {
             // Open file with wide character path
             std::wifstream file(filePath, std::ios::binary);
             if (!file.is_open()) {
