@@ -4,12 +4,12 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0.8" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.1.2" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.1.2" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" Condition="'$(TargetFramework)' == 'net481'" />
@@ -28,8 +28,8 @@
     <PackageReference Include="log4net" Version="3.1.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="MassTransit" Version="8.4.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="MassTransit" Version="8.4.1" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="MassTransit" Version="8.5.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="8.5.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" Condition="'$(TargetFramework)' == 'net481'" />
@@ -51,10 +51,10 @@
     <!-- required by Microsoft.Azure.Cosmos -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="NLog" Version="5.5.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NLog" Version="5.5.0" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="NLog" Version="6.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog" Version="6.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" Condition="'$(TargetFramework)' == 'net9.0'" />
     <!-- npgsql is on version 8, but we don't (currently) support it -->
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -68,8 +68,8 @@
     <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="OpenSearch.Client" Version="1.8.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <!-- modern oracle only supports net472+ and net6.0+ -->
-    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.8.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.8.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.9.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" Condition="'$(TargetFramework)' == 'net9.0'" />
     <!-- RabbitMQ v8+ only supports .NET+, so constrain FW target to the latest 6.x version -->
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" Condition="'$(TargetFramework)' == 'net9.0'" />
