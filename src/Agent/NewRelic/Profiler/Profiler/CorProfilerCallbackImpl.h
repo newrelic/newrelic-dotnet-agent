@@ -13,6 +13,7 @@
 #include "../MethodRewriter/MethodRewriter.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
+#include "../Common/FileUtils.h"
 #include "Function.h"
 #include "FunctionResolver.h"
 #include "Win32Helpers.h"
@@ -1002,25 +1003,6 @@ namespace NewRelic { namespace Profiler {
             LocalFree(commandLineArgv);
             return appPoolId;
 #endif
-        }
-
-        static xstring_t ReadFile(const xstring_t& filePath)
-        {
-            // Open file with wide character path
-            xifstream file(to_pathstring(filePath), std::ios::binary);
-            if (!file.is_open()) {
-                LogError(L"Unable to open file. File path: ", filePath);
-                throw ProfilerException();
-            }
-
-            // Configure locale for UTF-8 and handle BOM
-            file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
-
-            // Read file content
-            xstringstream ss;
-            ss << file.rdbuf();
-
-            return ss.str();
         }
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromRegistry()
