@@ -22,7 +22,7 @@ namespace NewRelic {
         /// </summary>
         static xstring_t ReadFile(const xstring_t& filePath) {
             // Open file with wide character path
-            std::wifstream file(filePath, std::ios::binary);
+            xifstream file(to_pathstring(filePath), std::ios::binary);
             if (!file.is_open()) {
                 LogError(L"Unable to open file. File path: ", filePath);
                 throw std::exception();
@@ -32,10 +32,10 @@ namespace NewRelic {
             file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
 
             // Read file content
-            std::wstringstream wss;
-            wss << file.rdbuf();
+            xstringstream ss;
+            ss << file.rdbuf();
 
-            return wss.str();
+            return ss.str();
         }
     }
 };
