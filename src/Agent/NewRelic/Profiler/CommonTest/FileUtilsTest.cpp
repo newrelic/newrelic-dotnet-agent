@@ -22,7 +22,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_WithJapaneseCharacters)
                 {
                     // create a temporary file with Japanese characters
-                    std::wstring tempFilePath = L"c:\\temp\\temp_japanese.txt";
+                    std::wstring tempFilePath = L"temp_japanese.txt";
                     std::wstring japaneseContent = L"こんにちは、世界！"; // "Hello, World!" in Japanese
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -38,7 +38,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_WithBOM)
                 {
                     // create a temporary file with BOM
-                    std::wstring tempFilePath = L"c:\\temp\\temp_bom.txt";
+                    std::wstring tempFilePath = L"temp_bom.txt";
                     std::wstring contentWithBOM = L"This file starts with a BOM and has some Japanese characters. こんにちは、世界！";
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -56,7 +56,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_EnglishCharactersOnly_NoBOM)
                 {
                     // create a temporary file with English characters only
-                    std::wstring tempFilePath = L"c:\\temp\\temp_english.txt";
+                    std::wstring tempFilePath = L"temp_english.txt";
                     std::wstring englishContent = L"This is a test file with English characters only.";
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -72,7 +72,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_EnglishCharactersOnly_WithBOM)
                 {
                     // create a temporary file with English characters only and BOM
-                    std::wstring tempFilePath = L"c:\\temp\\temp_english_bom.txt";
+                    std::wstring tempFilePath = L"temp_english_bom.txt";
                     std::wstring englishContentWithBOM = L"This is a test file with English characters only and BOM.";
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -90,7 +90,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_JapaneseFileName_JapaneseAndEnglishCharacters_NoBOM)
                 {
                     // create a temporary file with Japanese characters in the name and content
-                    std::wstring tempFilePath = L"c:\\temp\\テストファイル.txt"; // "Test file" in Japanese
+                    std::wstring tempFilePath = L"テストファイル.txt"; // "Test file" in Japanese
                     std::wstring content = L"This file has a Japanese filename and contains both English and Japanese characters. こんにちは、世界！";
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -106,7 +106,7 @@ namespace NewRelic {
                 TEST_METHOD(ReadFile_JapaneseFileName_JapaneseAndEnglishCharacters_WithBOM)
                 {
                     // create a temporary file with Japanese characters in the name and content with BOM
-                    std::wstring tempFilePath = L"c:\\temp\\テストファイル_bom.txt"; // "Test file" in Japanese
+                    std::wstring tempFilePath = L"テストファイル_bom.txt"; // "Test file" in Japanese
                     std::wstring contentWithBOM = L"This file has a Japanese filename and contains both English and Japanese characters with BOM. こんにちは、世界！";
                     {
                         std::wofstream outFile(tempFilePath, std::ios::binary);
@@ -118,6 +118,13 @@ namespace NewRelic {
                     // verify the content matches (BOM should be handled)
                     auto expected = contentWithBOM;
                     Assert::AreEqual(expected, actual);
+                }
+
+                TEST_METHOD(ReadFile_FileDoesNotExist_ThrowsException)
+                {
+                    std::wstring nonExistentFilePath = L"file_does_not_exist.txt";
+                    auto func = [&]() { ReadFile(nonExistentFilePath); };
+                    Assert::ExpectException<std::exception>(func);
                 }
 
             };

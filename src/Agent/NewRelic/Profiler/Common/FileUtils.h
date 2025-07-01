@@ -10,16 +10,22 @@
 #include <iostream>
 
 #include "xplat.h"
+#include "../Logging/Logger.h"
 
 namespace NewRelic {
     namespace Profiler
     {
+        /// <summary>
+        /// Reads the contents of a file specified by a wide string path and returns it as a wide string.
+        /// Handles UTF-8 encoding and BOM if present.
+        /// If the file cannot be opened, logs an error and throws an exception.
+        /// </summary>
         static std::wstring ReadFile(const std::wstring& filePath) {
             // Open file with wide character path
             std::wifstream file(filePath, std::ios::binary);
             if (!file.is_open()) {
-                std::wcerr << L"Failed to open file: " << filePath << std::endl;
-                return L"";
+                LogError(L"Unable to open file. File path: ", filePath);
+                throw std::exception();
             }
 
             // Configure locale for UTF-8 and handle BOM
@@ -31,7 +37,5 @@ namespace NewRelic {
 
             return wss.str();
         }
-
-
     }
 };
