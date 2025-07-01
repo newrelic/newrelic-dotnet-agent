@@ -19,7 +19,7 @@ namespace NewRelic {
             TEST_CLASS(FileUtilsTest)
             {
             public:
-                TEST_METHOD(ReadFile_WithJapaneseCharacters)
+                TEST_METHOD(ReadFile_JapaneseCharactersInContent_NoBOM)
                 {
                     // create a temporary file with Japanese characters
                     std::wstring tempFilePath = L"temp_japanese.txt";
@@ -35,7 +35,7 @@ namespace NewRelic {
                     Assert::AreEqual(japaneseContent, readContent);
                 }
 
-                TEST_METHOD(ReadFile_WithBOM)
+                TEST_METHOD(ReadFile_WithMixedCharactersInContent_WithBOM)
                 {
                     // create a temporary file with BOM
                     std::wstring tempFilePath = L"temp_bom.txt";
@@ -53,7 +53,7 @@ namespace NewRelic {
                     Assert::AreEqual(expected, actual);
                 }
 
-                TEST_METHOD(ReadFile_EnglishCharactersOnly_NoBOM)
+                TEST_METHOD(ReadFile_EnglishCharactersOnlyInContent_NoBOM)
                 {
                     // create a temporary file with English characters only
                     std::wstring tempFilePath = L"temp_english.txt";
@@ -69,7 +69,7 @@ namespace NewRelic {
                     Assert::AreEqual(englishContent, readContent);
                 }
 
-                TEST_METHOD(ReadFile_EnglishCharactersOnly_WithBOM)
+                TEST_METHOD(ReadFile_EnglishCharactersOnlyInContent_WithBOM)
                 {
                     // create a temporary file with English characters only and BOM
                     std::wstring tempFilePath = L"temp_english_bom.txt";
@@ -87,7 +87,7 @@ namespace NewRelic {
                     Assert::AreEqual(expected, actual); 
                 }
 
-                TEST_METHOD(ReadFile_JapaneseFileName_JapaneseAndEnglishCharacters_NoBOM)
+                TEST_METHOD(ReadFile_JapaneseCharactersInFileName_JapaneseAndEnglishCharactersInContent_NoBOM)
                 {
                     // create a temporary file with Japanese characters in the name and content
                     std::wstring tempFilePath = L"テストファイル.txt"; // "Test file" in Japanese
@@ -103,7 +103,7 @@ namespace NewRelic {
                     Assert::AreEqual(content, readContent);
                 }
 
-                TEST_METHOD(ReadFile_JapaneseFileName_JapaneseAndEnglishCharacters_WithBOM)
+                TEST_METHOD(ReadFile_JapaneseCharactersInFileName_JapaneseAndEnglishCharactersInContent_WithBOM)
                 {
                     // create a temporary file with Japanese characters in the name and content with BOM
                     std::wstring tempFilePath = L"テストファイル_bom.txt"; // "Test file" in Japanese
