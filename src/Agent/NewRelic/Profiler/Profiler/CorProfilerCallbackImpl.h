@@ -945,7 +945,12 @@ namespace NewRelic { namespace Profiler {
             auto filePaths = GetXmlFilesInExtensionsDirectory(systemCalls);
 
             for (auto filePath : filePaths) {
-                instrumentationXmls->emplace(filePath, ReadFile(filePath));
+                try {
+                    auto xml = ReadFile(filePath);
+                    instrumentationXmls->emplace(filePath, xml);
+                } catch (...) {
+                    LogError(L"An exception was thrown while reading instrumentation file: ", filePath, L" - ignoring this file.");
+                }
             }
 
             return instrumentationXmls;
