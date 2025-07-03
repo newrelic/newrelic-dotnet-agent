@@ -370,8 +370,8 @@ jobs:
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
             token: ${{ secrets.DOTNET_AGENT_GH_TOKEN}}
-            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
-            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"
+            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }}).\n\nBuilt from commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }})"
             branch: profiler-nuget-updates/${{ github.ref_name }}
             labels: |
               profiler nuget
