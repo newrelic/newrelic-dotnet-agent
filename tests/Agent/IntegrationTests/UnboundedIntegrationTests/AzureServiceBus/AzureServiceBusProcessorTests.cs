@@ -9,137 +9,215 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus;
-
-public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-    where TFixture : ConsoleDynamicMethodFixture
+namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
 {
-    private readonly TFixture _fixture;
-    private readonly string _queueName;
-
-    protected AzureServiceBusProcessorTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        _fixture = fixture;
-        _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-        _fixture.TestLogger = output;
+        private readonly TFixture _fixture;
+        private readonly string _queueOrTopicName;
+        private readonly string _destinationType;
 
-        _queueName = $"test-queue-{Guid.NewGuid()}";
+        private readonly string _consumeMetricNameBase;
+        private readonly string _processMetricNameBase;
+        private readonly string _settleMetricNameBase;
+        private readonly string _transactionNameBase;
 
-        _fixture.AddCommand($"AzureServiceBusExerciser InitializeQueue {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser DeleteQueue {_queueName}");
+        protected AzureServiceBusProcessorTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) : base(fixture)
+        {
+            _fixture = fixture;
+            _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+            _fixture.TestLogger = output;
 
-        _fixture.AddActions
-        (
-            setupConfiguration: () =>
+            _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
+            _destinationType = destinationType;
+
+             _consumeMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named";
+             _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
+             _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
+             _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
+
+            _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessorFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
+
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+
+                    configModifier
+                        .SetLogLevel("finest")
+                        .EnableDistributedTrace()
+                        .ForceTransactionTraces()
+                        .ConfigureFasterMetricsHarvestCycle(20)
+                        .ConfigureFasterSpanEventsHarvestCycle(20)
+                        .ConfigureFasterTransactionTracesHarvestCycle(25)
+                        ;
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
+                        TimeSpan.FromMinutes(1));
+                }
+            );
+
+            _fixture.Initialize();
+        }
+
+        [Fact]
+        public void Test()
+        {
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                new() { metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}", callCount = 2 },
+                new()
+                {
+                    metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                },
+                new()
+                {
+                    metricName = $"{_processMetricNameBase}/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                },
+                new()
+                {
+                    metricName = $"{_settleMetricNameBase}/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                },
+            };
 
-                configModifier
-                    .SetLogLevel("finest")
-                    .EnableDistributedTrace()
-                    .ForceTransactionTraces()
-                    .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25)
-                    ;
-            },
-            exerciseApplication: () =>
+            var expectedTransactionEvent =
+                _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueOrTopicName}");
+
+            var expectedTransactionTraceSegments = new List<string>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(1));
-            }
-        );
+                $"{_consumeMetricNameBase}/{_queueOrTopicName}",
+                $"{_processMetricNameBase}/{_queueOrTopicName}",
+                "DotNet/ServiceBusProcessor/OnProcessMessageAsync",
+                $"{_settleMetricNameBase}/{_queueOrTopicName}",
+            };
 
-        _fixture.Initialize();
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}");
+
+            var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_consumeMetricNameBase}/{_queueOrTopicName}");
+            var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
+
+            var expectedConsumeAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+            var expectedIntrinsicAttributes = new List<string> { "span.kind", };
+
+            Assertions.MetricsExist(expectedMetrics, metrics);
+
+            NrAssert.Multiple(
+                () => Assert.NotNull(expectedTransactionEvent),
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(queueConsumeSpanEvent),
+                () => Assert.NotNull(queueProcessSpanEvent),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+
+                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
+                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
+                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
+                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent)
+            );
+        }
     }
 
-    private readonly string _consumeMetricNameBase = "MessageBroker/ServiceBus/Queue/Consume/Named";
-    private readonly string _processMetricNameBase = "MessageBroker/ServiceBus/Queue/Process/Named";
-    private readonly string _settleMetricNameBase = "MessageBroker/ServiceBus/Queue/Settle/Named";
-    private readonly string _transactionNameBase = "OtherTransaction/Message/ServiceBus/Queue/Named";
+    #region Queue Tests
 
-    [Fact]
-    public void Test()
+    public class
+        AzureServiceBusProcessorQueueTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-        // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
-        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        public AzureServiceBusProcessorQueueTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture,
+            ITestOutputHelper output) : base(fixture, "Queue", output)
         {
-            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 2},
-            new() { metricName = $"{_consumeMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
-            new() { metricName = $"{_processMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
-            new() { metricName = $"{_settleMetricNameBase}/{_queueName}", callCount = 2, metricScope = $"{_transactionNameBase}/{_queueName}"},
-        };
+        }
+    }
 
-        var expectedTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueName}");
-
-        var expectedTransactionTraceSegments = new List<string>
+    public class
+        AzureServiceBusProcessorQueueTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public AzureServiceBusProcessorQueueTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) :
+            base(fixture, "Queue", output)
         {
-            $"{_consumeMetricNameBase}/{_queueName}",
-            $"{_processMetricNameBase}/{_queueName}",
-            "DotNet/ServiceBusProcessor/OnProcessMessageAsync",
-            $"{_settleMetricNameBase}/{_queueName}",
-        };
+        }
+    }
 
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueName}");
-
-        var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_consumeMetricNameBase}/{_queueName}");
-        var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueName}");
-
-        var expectedConsumeAgentAttributes = new List<string>
+    public class
+        AzureServiceBusProcessorQueueTestsCoreOldest : AzureServiceBusProcessorTestsBase<
+        ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public AzureServiceBusProcessorQueueTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture,
+            ITestOutputHelper output) : base(fixture, "Queue", output)
         {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-        var expectedIntrinsicAttributes = new List<string> { "span.kind", };
-
-        Assertions.MetricsExist(expectedMetrics, metrics);
-
-        NrAssert.Multiple(
-            () => Assert.NotNull(expectedTransactionEvent),
-            () => Assert.NotNull(transactionSample),
-            () => Assert.NotNull(queueConsumeSpanEvent),
-            () => Assert.NotNull(queueProcessSpanEvent),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-
-            () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
-            () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent)
-        );
+        }
     }
-}
 
-public class AzureServiceBusProcessorTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-{
-    public AzureServiceBusProcessorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    public class
+        AzureServiceBusProcessorQueueTestsCoreLatest : AzureServiceBusProcessorTestsBase<
+        ConsoleDynamicMethodFixtureCoreLatest>
     {
+        public AzureServiceBusProcessorQueueTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture,
+            ITestOutputHelper output) : base(fixture, "Queue", output)
+        {
+        }
     }
-}
 
-public class AzureServiceBusProcessorTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
-{
-    public AzureServiceBusProcessorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
+    #endregion Queue Tests
 
-public class AzureServiceBusProcessorTestsCoreOldest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-{
-    public AzureServiceBusProcessorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
+    #region Topic Tests
 
-public class AzureServiceBusProcessorTestsCoreLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public AzureServiceBusProcessorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    public class
+        AzureServiceBusProcessorTopicTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
+        public AzureServiceBusProcessorTopicTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture,
+            ITestOutputHelper output) : base(fixture, "Topic", output)
+        {
+        }
     }
+
+    public class
+        AzureServiceBusProcessorTopicTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public AzureServiceBusProcessorTopicTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) :
+            base(fixture, "Topic", output)
+        {
+        }
+    }
+
+    public class
+        AzureServiceBusProcessorTopicTestsCoreOldest : AzureServiceBusProcessorTestsBase<
+        ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public AzureServiceBusProcessorTopicTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture,
+            ITestOutputHelper output) : base(fixture, "Topic", output)
+        {
+        }
+    }
+
+    public class
+        AzureServiceBusProcessorTopicTestsCoreLatest : AzureServiceBusProcessorTestsBase<
+        ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public AzureServiceBusProcessorTopicTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture,
+            ITestOutputHelper output) : base(fixture, "Topic", output)
+        {
+        }
+    }
+
+    #endregion Topic Tests
+
 }

@@ -9,182 +9,321 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus;
-
-public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-    where TFixture : ConsoleDynamicMethodFixture
+namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
 {
-    private readonly TFixture _fixture;
-    private readonly string _queueName;
-
-    protected AzureServiceBusTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        _fixture = fixture;
-        _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-        _fixture.TestLogger = output;
+        private readonly TFixture _fixture;
+        private readonly string _queueOrTopicName;
+        private readonly string _destinationType;
 
-        _queueName = $"test-queue-{Guid.NewGuid()}";
+        protected AzureServiceBusTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) :
+            base(fixture)
+        {
+            _fixture = fixture;
+            _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+            _fixture.TestLogger = output;
 
-        _fixture.AddCommand($"AzureServiceBusExerciser InitializeQueue {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ExerciseMultipleReceiveOperationsOnAMessage {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ScheduleAndCancelAMessage {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndDeadLetterAMessage {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndAbandonAMessage {_queueName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser DeleteQueue {_queueName}");
+            _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
+            _destinationType = destinationType;
 
-        _fixture.AddActions
-        (
-            setupConfiguration: () =>
+            _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ScheduleAndCancelAMessage {_queueOrTopicName}");
+            if (_destinationType == "Queue")
             {
-                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
-                configModifier
-                    .SetLogLevel("finest")
-                    .EnableDistributedTrace()
-                    .ForceTransactionTraces()
-                    .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25)
-                    ;
+                _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndDeadLetterAMessageForQueue {_queueOrTopicName}");
             }
-        );
+            
+            _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndAbandonAMessageFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
 
-        _fixture.Initialize();
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+
+                    configModifier
+                        .SetLogLevel("finest")
+                        .EnableDistributedTrace()
+                        .ForceTransactionTraces()
+                        .ConfigureFasterMetricsHarvestCycle(20)
+                        .ConfigureFasterSpanEventsHarvestCycle(20)
+                        .ConfigureFasterTransactionTracesHarvestCycle(25)
+                        ;
+                }
+            );
+
+            _fixture.Initialize();
+        }
+
+        private readonly string _metricScopeBase =
+            "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus.AzureServiceBusExerciser";
+
+        [Fact]
+        public void Test()
+        {
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}", callCount = _destinationType == "Queue" ? 4 : 3
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
+                    callCount = 1,
+                    metricScope =
+                        $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
+                    callCount = 1,
+                    metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
+                    callCount = 1,
+                    metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
+                    callCount = _destinationType == "Queue" ? 6 : 5
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
+                    callCount = 3,
+                    metricScope =
+                        $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
+                    callCount = 1
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
+                    callCount = 1,
+                    metricScope =
+                        $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
+                    callCount = _destinationType == "Queue" ? 5 : 4
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope =
+                        $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
+                },
+                new()
+                {
+                    metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
+                },
+            };
+
+            if (_destinationType == "Queue")
+            {
+                expectedMetrics.Add(
+                    new()
+                    {
+                        metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
+                        callCount = 1,
+                        metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
+                    });
+                expectedMetrics.Add(
+                    new()
+                    {
+                        metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
+                        callCount = 1,
+                        metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
+                    });
+                expectedMetrics.Add(
+                    new()
+                    {
+                        metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
+                        callCount = 1,
+                        metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
+                    });
+                expectedMetrics.Add(
+                    new()
+                    {
+                        metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
+                        callCount = 1
+                    });
+                expectedMetrics.Add(
+                    new()
+                    {
+                        metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
+                        callCount = 1,
+                        metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
+                    });
+            }
+
+            var exerciseMultipleReceiveOperationsOnAMessageTransactionEvent =
+                _fixture.AgentLog.TryGetTransactionEvent(
+                    $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
+
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}"
+            };
+
+            var transactionSample =
+                _fixture.AgentLog.TryGetTransactionSample(
+                    $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
+
+            var queueProduceSpanEvents =
+                _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}");
+            var queueConsumeSpanEvents =
+                _fixture.AgentLog.TryGetSpanEvent(
+                    $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}");
+            var queuePeekSpanEvents =
+                _fixture.AgentLog.TryGetSpanEvent(
+                    $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}");
+            var queueSettleSpanEvents =
+                _fixture.AgentLog.TryGetSpanEvent(
+                    $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}");
+            var queueCancelSpanEvents =
+                _fixture.AgentLog.TryGetSpanEvent(
+                    $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}");
+
+            var expectedProduceAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+            var expectedConsumeAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+
+            var expectedPeekAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+            var expectedSettleAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+            var expectedCancelAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
+
+            var expectedIntrinsicAttributes = new List<string> { "span.kind", };
+
+            Assertions.MetricsExist(expectedMetrics, metrics);
+
+            NrAssert.Multiple(
+                () => Assert.True(exerciseMultipleReceiveOperationsOnAMessageTransactionEvent != null,
+                    "ExerciseMultipleReceiveOperationsOnAMessageTransactionEvent should not be null"),
+                () => Assert.True(transactionSample != null, "transactionSample should not be null"),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+
+                () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),
+                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueProduceSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvents),
+                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedPeekAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queuePeekSpanEvents),
+
+                () => Assertions.SpanEventHasAttributes(expectedSettleAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueSettleSpanEvents)
+            );
+
+            if (_destinationType == "Queue")
+            {
+                Assertions.SpanEventHasAttributes(expectedCancelAgentAttributes,
+                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueCancelSpanEvents);
+            }
+        }
     }
 
-    private readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus.AzureServiceBusExerciser";
+    #region Queue Tests
 
-    [Fact]
-    public void Test()
+    public class AzureServiceBusQueueTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        public AzureServiceBusQueueTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
+            base(fixture, "Queue", output)
         {
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 4},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
-
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 6},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 3, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage"},
-
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1 },
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage" },
-
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}", callCount = 1 },
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage" },
-
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 5 },
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage"},
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 1, metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessage" },
-            new() { metricName = $"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}", callCount = 2, metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessage" },
-        };
-
-        var exerciseMultipleReceiveOperationsOnAMessageTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage");
-
-        var expectedTransactionTraceSegments = new List<string>
-        {
-            $"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}"
-        };
-
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessage");
-
-        var queueProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueName}");
-        var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Consume/Named/{_queueName}");
-        var queuePeekSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Peek/Named/{_queueName}");
-        var queueSettleSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Settle/Named/{_queueName}");
-        var queueCancelSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Cancel/Named/{_queueName}");
-
-        var expectedProduceAgentAttributes = new List<string>
-        {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-        var expectedConsumeAgentAttributes = new List<string>
-        {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-
-        var expectedPeekAgentAttributes = new List<string>
-        {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-        var expectedSettleAgentAttributes = new List<string>
-        {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-        var expectedCancelAgentAttributes = new List<string>
-        {
-            "server.address",
-            "messaging.destination.name",
-        };
-
-        var expectedIntrinsicAttributes = new List<string> { "span.kind", };
-
-        Assertions.MetricsExist(expectedMetrics, metrics);
-
-        NrAssert.Multiple(
-            () => Assert.True(exerciseMultipleReceiveOperationsOnAMessageTransactionEvent != null, "ExerciseMultipleReceiveOperationsOnAMessageTransactionEvent should not be null"),
-            () => Assert.True(transactionSample != null, "transactionSample should not be null"),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-
-            () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),
-            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueProduceSpanEvents),
-
-            () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvents),
-            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvents),
-
-            () => Assertions.SpanEventHasAttributes(expectedPeekAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queuePeekSpanEvents),
-
-            () => Assertions.SpanEventHasAttributes(expectedSettleAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueSettleSpanEvents),
-
-            () => Assertions.SpanEventHasAttributes(expectedCancelAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueCancelSpanEvents)
-        );
+        }
     }
-}
 
-public class AzureServiceBusTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-{
-    public AzureServiceBusTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    public class AzureServiceBusQueueTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
+        public AzureServiceBusQueueTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(
+            fixture, "Queue", output)
+        {
+        }
     }
-}
 
-public class AzureServiceBusTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
-{
-    public AzureServiceBusTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+    public class AzureServiceBusQueueTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
+        public AzureServiceBusQueueTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) :
+            base(fixture, "Queue", output)
+        {
+        }
     }
-}
 
-public class AzureServiceBusTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-{
-    public AzureServiceBusTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    public class AzureServiceBusQueueTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
+        public AzureServiceBusQueueTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) :
+            base(fixture, "Queue", output)
+        {
+        }
     }
-}
 
-public class AzureServiceBusTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public AzureServiceBusTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    #endregion Queue Tests
+
+    #region Topic Tests
+
+    public class AzureServiceBusTopicTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
+        public AzureServiceBusTopicTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
+            base(fixture, "Topic", output)
+        {
+        }
     }
+
+    public class AzureServiceBusTopicTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public AzureServiceBusTopicTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(
+            fixture, "Topic", output)
+        {
+        }
+    }
+
+    public class AzureServiceBusTopicTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public AzureServiceBusTopicTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) :
+            base(fixture, "Topic", output)
+        {
+        }
+    }
+
+    public class AzureServiceBusTopicTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public AzureServiceBusTopicTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) :
+            base(fixture, "Topic", output)
+        {
+        }
+    }
+
+    #endregion Topic Tests
+
 }
