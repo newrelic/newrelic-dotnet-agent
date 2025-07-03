@@ -100,7 +100,7 @@ inline int xstoi(xstring_t str)
 inline xstring_t ToWideString(const char* const buf)
 {
     auto str = std::string(buf);
-    return xstring_t(str.begin(), str.end());
+    return std::wstring_convert<std::codecvt_utf8<xchar_t>, xchar_t>{}.from_bytes(str.data());
 }
 
 // implementations of windows apis
