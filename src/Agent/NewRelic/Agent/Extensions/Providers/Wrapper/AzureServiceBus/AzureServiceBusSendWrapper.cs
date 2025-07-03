@@ -20,7 +20,7 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusReceiver.EntityPath; // some-queue-name
+        string queueOrTopicName = serviceBusReceiver.EntityPath; // some-queue|topic-name
         string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net   
 
         // determine message broker action based on method name
@@ -41,10 +41,10 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
         // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
-            MessageBrokerDestinationType.Queue,
+            MessageBrokerDestinationType.Queue, // ASB doesn't differentiate between queue or topic when sending, so we default to Queue which has more features.
             action,
             BrokerVendorName,
-            queueName,
+            queueOrTopicName,
             serverAddress: fqns);
 
         if (action == MessageBrokerAction.Produce)

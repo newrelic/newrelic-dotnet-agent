@@ -30,7 +30,11 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
     public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
-        string queueName = serviceBusReceiver.EntityPath; // some-queue-name
+        string queueOrTopicName = serviceBusReceiver.EntityPath; // some-queue|topic-name
+
+        var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
+        queueOrTopicName = GetQueueOrTopicName(destinationType, queueOrTopicName);
+
         string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
 
         _innerReceiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(serviceBusReceiver.GetType(), "InnerReceiver");
@@ -62,9 +66,9 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         if (isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
         {
             transaction = agent.CreateTransaction(
-                destinationType: MessageBrokerDestinationType.Queue,
+                destinationType: destinationType,
                 BrokerVendorName,
-                destination: queueName);
+                destination: queueOrTopicName);
 
             if (instrumentedMethodCall.IsAsync)
             {
@@ -87,10 +91,10 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         // start a message broker segment (only happens if transaction is not NoOpTransaction)
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
-            MessageBrokerDestinationType.Queue,
+            destinationType,
             action,
             BrokerVendorName,
-            queueName,
+            queueOrTopicName,
             serverAddress: fqns);
 
         return instrumentedMethodCall.IsAsync

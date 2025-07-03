@@ -26,8 +26,9 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManager.GetType(), "Receiver");
             dynamic receiver = _receiverAccessor(receiverManager);
 
-            string queueName = receiver.EntityPath; // some-queue-name
+            string queueOrTopicName = receiver.EntityPath; // some-queue|topic-name
             string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+            var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
             if (instrumentedMethodCall.IsAsync)
                 transaction.AttachToAsync();
@@ -35,10 +36,10 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             // start a new MessageBroker segment that wraps ProcessOneMessageWithinScopeAsync
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
-                MessageBrokerDestinationType.Queue,
+                destinationType,
                 MessageBrokerAction.Process,
                 BrokerVendorName,
-                queueName,
+                GetQueueOrTopicName(destinationType, queueOrTopicName),
                 serverAddress: fqns);
 
             return instrumentedMethodCall.IsAsync
