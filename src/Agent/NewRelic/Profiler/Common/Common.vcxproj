@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="CorStandIn.h" />
     <ClInclude Include="AssemblyVersion.h" />
+    <ClInclude Include="FileUtils.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="OnDestruction.h" />
     <ClInclude Include="Strings.h" />
