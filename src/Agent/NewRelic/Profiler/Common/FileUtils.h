@@ -28,9 +28,8 @@ namespace NewRelic {
                 throw std::exception();
             }
 
-            std::codecvt_utf8_utf16<wchar_t, 1114111, std::consume_header> codeCvt;
             // Configure locale for UTF-8 and handle BOM
-            file.imbue(std::locale(file.getloc(), &codeCvt));
+            file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
 
             // Read file content
             xstringstream ss;
