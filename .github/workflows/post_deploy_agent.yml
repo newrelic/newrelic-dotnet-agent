@@ -58,7 +58,7 @@ jobs:
       - name: Validate
         run: |
           echo 'deb [signed-by=/usr/share/keyrings/newrelic-apt.gpg] https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
-          wget -O- https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public | sudo gpg --dearmor -o /usr/share/keyrings/newrelic-apt.gpg
+          wget -O- https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public | sudo gpg --import --batch --no-default-keyring --keyring /usr/share/keyrings/newrelic-apt.gpg
           sudo apt-get update
           sudo apt-get install newrelic-dotnet-agent
           installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
